@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #fff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9dee8;
+      --primary: #174ea6;
+      --primary-hover: #123f86;
+      --danger: #b42318;
+      --success: #027a48;
+      --soft: #f8fafc;
+      --shadow: 0 10px 26px rgba(23, 32, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .app-shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 0 calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: grid;
+      gap: 8px;
+      padding: 12px 12px 8px;
+      margin-bottom: 0;
+      background: var(--bg);
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: 22px;
+    }
+
+    h3 {
+      margin-bottom: 4px;
+      font-size: 20px;
+    }
+
+    .subtitle {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .user-pill {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .message {
+      padding: 0 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel {
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--panel);
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: grid;
+      gap: 12px;
+      padding: 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 8px;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    input, select, textarea {
+      min-height: 52px;
+      margin: 7px 0 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 13px 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: 3px solid rgba(23, 78, 166, 0.14);
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    button {
+      min-height: 52px;
+      border: 1px solid transparent;
+      background: var(--primary);
+      color: #fff;
+      padding: 13px 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    .button-secondary {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .button-secondary:hover {
+      background: #f2f4f7;
+    }
+
+    .button-danger {
+      border-color: #fecdca;
+      background: #fff;
+      color: var(--danger);
+    }
+
+    .button-danger:hover {
+      background: #fef3f2;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 15px;
+    }
+
+    .card-button {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 16px;
+      text-align: left;
+    }
+
+    .card-button:hover {
+      background: #fff;
+      border-color: var(--primary);
+    }
+
+    .card-title {
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 1.25;
+    }
+
+    .card-meta {
+      display: grid;
+      gap: 8px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid #eef1f5;
+      padding: 10px 0;
+    }
+
+    .meta-row:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .meta-value {
+      font-size: 16px;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .card-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .card-actions button {
+      min-width: 0;
+    }
+
+    .summary {
+      display: grid;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .mobile-action-bar {
+      position: sticky;
+      bottom: env(safe-area-inset-bottom);
+      z-index: 5;
+      margin: 14px -6px 0;
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 0 -8px 20px rgba(23, 32, 51, 0.12);
+    }
+
+    .admin-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .primary-action {
+      margin-top: 16px;
+    }
+
+    .combat-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .combat-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .combat-header .card-title {
+      margin-bottom: 0;
+      min-width: 0;
+    }
+
+    .result-badge {
+      flex: 0 0 auto;
+      min-width: 78px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .result-v {
+      border-color: #abefc6;
+      background: #ecfdf3;
+      color: var(--success);
+    }
+
+    .result-d {
+      border-color: #fecdca;
+      background: #fef3f2;
+      color: var(--danger);
+    }
+
+    .combat-comment {
+      margin-bottom: 0;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .danger-zone {
+      border-top: 1px solid #fecdca;
+      margin-top: 22px;
+      padding-top: 16px;
+    }
+
+    .section {
+      border-top: 1px solid var(--line);
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+
+    .section-heading {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .success,
+    .error {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+
+    .success {
+      border-color: #abefc6;
+      background: #ecfdf3;
+      color: var(--success);
+    }
+
+    .error {
+      border-color: #fecdca;
+      background: #fef3f2;
+      color: var(--danger);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (min-width: 721px) {
+      .app-shell {
+        padding: 30px 20px 44px;
+      }
+
+      .topbar,
+      .panel-header,
+      .section-heading {
+        align-items: center;
+        grid-template-columns: 1fr auto;
+      }
+
+      .user-pill {
+        min-width: 220px;
+        text-align: right;
+      }
+
+      .message {
+        padding: 0;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        padding: 18px 20px;
+      }
+
+      .panel-body {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      h2 {
+        font-size: 21px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      .subtitle,
+      .user-pill,
+      .meta-value {
+        font-size: 14px;
+      }
+
+      label {
+        font-size: 13px;
+      }
+
+      .card-title {
+        font-size: 16px;
+      }
+
+      .meta-label {
+        font-size: 12px;
+      }
+
+      .toolbar,
+      .form-actions,
+      .admin-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .toolbar button,
+      .form-actions button,
+      .admin-actions button {
+        width: auto;
+        min-width: 140px;
+      }
+
+      .card-actions {
+        display: flex;
+      }
+
+      .mobile-action-bar {
+        position: static;
+        margin: 14px 0 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 14px;
+      }
+
+      .full-row {
+        grid-column: 1 / -1;
+      }
+
+      .list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 360px) {
+      .app-shell {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .panel-header,
+      .panel-body {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .meta-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .meta-value {
+        text-align: left;
+      }
+    }
+
+    @media (pointer: coarse) {
+      button,
+      input,
+      select,
+      textarea {
+        font-size: 16px;
+      }
+
+      button {
+        min-height: 48px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>Suivi compétitions judo</h1>
+        <p class="subtitle">Compétitions et combats du club</p>
+      </div>
+      <div id="userInfo" class="user-pill">Chargement...</div>
+    </header>
+
+    <div id="message" class="message"></div>
+
+    <section id="homeView" class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Compétitions</h2>
+          <p class="subtitle">Touchez une compétition pour ouvrir ses combats</p>
+        </div>
+        <div id="homeAdminActions" class="toolbar admin-actions hidden">
+          <button id="addCompetitionButton" onclick="showCompetitionForm()">Ajouter une compétition</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="competitionsList"></div>
+      </div>
+    </section>
+
+    <section id="competitionView" class="panel hidden">
+      <div class="panel-header">
+        <div>
+          <h2 id="competitionTitle">Compétition</h2>
+          <p id="competitionSubtitle" class="subtitle"></p>
+        </div>
+        <div class="toolbar">
+          <button class="button-secondary" onclick="showHome()">Retour</button>
+          <div id="competitionAdminActions" class="toolbar admin-actions hidden">
+            <button id="editCompetitionButton" class="button-secondary" onclick="editCurrentCompetition()">Modifier la compétition</button>
+            <button id="deleteCompetitionButton" class="button-danger" onclick="deleteCurrentCompetition()">Supprimer la compétition</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="summary">
+          <div class="meta-row">
+            <span class="meta-label">Date</span>
+            <span id="competitionDate" class="meta-value"></span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Lieu</span>
+            <span id="competitionLieu" class="meta-value"></span>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Combats</h3>
+              <p class="subtitle">Liste des combats de cette compétition</p>
+            </div>
+          </div>
+          <div id="combatsList"></div>
+          <div class="mobile-action-bar primary-action">
+            <button onclick="showCombatForm()">Ajouter un combat</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="competitionFormView" class="panel hidden">
+      <div class="panel-header">
+        <div>
+          <h2 id="competitionFormTitle">Compétition</h2>
+          <p class="subtitle">Nom, date et lieu</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <input type="hidden" id="competition_id">
+
+        <label for="competition_nom">Nom</label>
+        <input type="text" id="competition_nom">
+
+        <label for="competition_date">Date</label>
+        <input type="date" id="competition_date">
+
+        <label for="competition_lieu">Lieu</label>
+        <input type="text" id="competition_lieu">
+
+        <div class="form-actions mobile-action-bar">
+          <button class="button-secondary" onclick="cancelCompetitionForm()">Annuler</button>
+          <button onclick="saveCompetition()">Enregistrer</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="combatFormView" class="panel hidden">
+      <div class="panel-header">
+        <div>
+          <h2 id="combatFormTitle">Ajouter un combat</h2>
+          <p id="combatFormSubtitle" class="subtitle">Combat de la compétition en cours</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <input type="hidden" id="combat_id">
+
+        <div class="form-grid">
+          <div id="adminJudokaBlock" class="hidden full-row">
+            <label for="combat_id_judoka">Judoka</label>
+            <select id="combat_id_judoka"></select>
+          </div>
+
+          <div>
+            <label for="combat_adversaire">Adversaire</label>
+            <input type="text" id="combat_adversaire">
+          </div>
+
+          <div>
+            <label for="combat_resultat">Résultat</label>
+            <select id="combat_resultat">
+              <option value="">Choisir</option>
+              <option value="V">Victoire</option>
+              <option value="D">Défaite</option>
+            </select>
+          </div>
+
+          <div class="full-row">
+            <label for="combat_commentaire">Commentaire</label>
+            <textarea id="combat_commentaire" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions mobile-action-bar">
+          <button class="button-secondary" onclick="cancelCombatForm()">Annuler</button>
+          <button id="saveCombatButton" onclick="saveCombat()">Ajouter le combat</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let currentUser = null;
+    let isAdmin = false;
+    let competitions = [];
+    let currentCompetition = null;
+    let judokas = [];
+    let currentCombats = [];
+    let previousView = "homeView";
+
+    function init() {
+      google.script.run
+        .withSuccessHandler(data => {
+          if (!data) {
+            showError({ message: "getInitialData() a renvoyé null." });
+            return;
+          }
+
+          if (data.error) {
+            showError({ message: data.error });
+            return;
+          }
+
+          currentUser = data.user;
+          isAdmin = data.isAdmin;
+          competitions = Array.isArray(data.competitions) ? data.competitions : [];
+
+          document.getElementById("userInfo").innerHTML =
+            `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${isAdmin ? "ADMIN" : "JUDOKA"}`;
+
+          document.getElementById("homeAdminActions").classList.toggle("hidden", !isAdmin);
+          renderCompetitions();
+        })
+        .withFailureHandler(showError)
+        .getInitialData();
+    }
+
+    function renderCompetitions() {
+      const target = document.getElementById("competitionsList");
+
+      if (!competitions.length) {
+        target.innerHTML = `<div class="empty-state">Aucune compétition enregistrée.</div>`;
+        return;
+      }
+
+      let html = `<div class="list">`;
+
+      competitions.forEach(c => {
+        html += `
+          <button class="card card-button" data-id="${escapeAttribute(c.id_competition)}" onclick="openCompetition(this.dataset.id)">
+            <p class="card-title">${escapeHtml(c.nom || "")}</p>
+            <div class="card-meta">
+              <div class="meta-row">
+                <span class="meta-label">Date</span>
+                <span class="meta-value">${formatDate(c.date)}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Lieu</span>
+                <span class="meta-value">${escapeHtml(c.lieu || "")}</span>
+              </div>
+            </div>
+          </button>
+        `;
+      });
+
+      html += `</div>`;
+      target.innerHTML = html;
+    }
+
+    function openCompetition(id, keepMessage) {
+      if (!keepMessage) {
+        clearMessage();
+      }
+      document.getElementById("competitionTitle").innerText = "Chargement...";
+      document.getElementById("competitionSubtitle").innerText = "";
+      document.getElementById("combatsList").innerHTML = `<div class="empty-state">Chargement des combats...</div>`;
+      showView("competitionView");
+
+      google.script.run
+        .withSuccessHandler(data => {
+          currentCompetition = data.competition;
+          currentCombats = Array.isArray(data.combats) ? data.combats : [];
+          judokas = Array.isArray(data.judokas) ? data.judokas : [];
+
+          if (data.isAdmin) {
+            document.getElementById("adminJudokaBlock").classList.remove("hidden");
+            fillJudokasSelect();
+          } else {
+            document.getElementById("adminJudokaBlock").classList.add("hidden");
+          }
+
+          renderCompetitionDetail();
+          renderCombats();
+        })
+        .withFailureHandler(showError)
+        .getCompetitionDetail(id);
+    }
+
+    function renderCompetitionDetail() {
+      document.getElementById("competitionTitle").innerText = currentCompetition.nom || "Compétition";
+      document.getElementById("competitionSubtitle").innerText = "Détail de la compétition";
+      document.getElementById("competitionDate").innerText = formatDate(currentCompetition.date);
+      document.getElementById("competitionLieu").innerText = currentCompetition.lieu || "";
+      document.getElementById("competitionAdminActions").classList.toggle("hidden", !isAdmin);
+    }
+
+    function editCurrentCompetition() {
+      if (!currentCompetition) {
+        showError({ message: "Compétition introuvable." });
+        return;
+      }
+
+      showCompetitionForm(currentCompetition.id_competition);
+    }
+
+    function renderCombats() {
+      const target = document.getElementById("combatsList");
+
+      if (!currentCombats.length) {
+        target.innerHTML = `<div class="empty-state">Aucun combat pour cette compétition.</div>`;
+        return;
+      }
+
+      let html = `<div class="list">`;
+
+      currentCombats.forEach(c => {
+        html += `
+          <article class="card combat-card">
+            <div class="combat-header">
+              <p class="card-title">${escapeHtml(c.adversaire || "Adversaire non renseigné")}</p>
+              <span class="result-badge result-${escapeAttribute(String(c.resultat || "").toLowerCase())}">${formatResultat(c.resultat)}</span>
+            </div>
+            ${isAdmin ? `
+              <div class="meta-row">
+                <span class="meta-label">Judoka</span>
+                <span class="meta-value">${escapeHtml(c.judoka_nom || "")}</span>
+              </div>
+            ` : ""}
+            <p class="combat-comment">${escapeHtml(c.commentaire || "Aucun commentaire")}</p>
+            <div class="card-actions">
+              <button class="button-secondary" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)">Éditer</button>
+              <button class="button-danger" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)">Supprimer</button>
+            </div>
+          </article>
+        `;
+      });
+
+      html += `</div>`;
+      target.innerHTML = html;
+    }
+
+    function showCompetitionForm(id) {
+      clearMessage();
+      previousView = currentCompetition ? "competitionView" : "homeView";
+
+      if (id) {
+        const c = competitions.find(x => String(x.id_competition) === String(id)) || currentCompetition;
+
+        if (!c) {
+          showError({ message: "Compétition introuvable." });
+          return;
+        }
+
+        document.getElementById("competitionFormTitle").innerText = "Modifier la compétition";
+        document.getElementById("competition_id").value = c.id_competition;
+        document.getElementById("competition_nom").value = c.nom || "";
+        document.getElementById("competition_date").value = toInputDate(c.date);
+        document.getElementById("competition_lieu").value = c.lieu || "";
+      } else {
+        previousView = "homeView";
+        document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
+        document.getElementById("competition_id").value = "";
+        document.getElementById("competition_nom").value = "";
+        document.getElementById("competition_date").value = "";
+        document.getElementById("competition_lieu").value = "";
+      }
+
+      showView("competitionFormView");
+    }
+
+    function cancelCompetitionForm() {
+      showView(previousView || "homeView");
+    }
+
+    function saveCompetition() {
+      const competition = {
+        id_competition: document.getElementById("competition_id").value,
+        nom: document.getElementById("competition_nom").value,
+        date: document.getElementById("competition_date").value,
+        lieu: document.getElementById("competition_lieu").value
+      };
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          reloadInitialData(response.id_competition);
+        })
+        .withFailureHandler(showError)
+        .saveCompetition(competition);
+    }
+
+    function showCombatForm(id) {
+      clearMessage();
+      resetCombatForm();
+
+      if (id) {
+        const combat = currentCombats.find(c => String(c.id_combat) === String(id));
+
+        if (!combat) {
+          showError({ message: "Combat introuvable." });
+          return;
+        }
+
+        document.getElementById("combatFormTitle").innerText = "Modifier le combat";
+        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
+        document.getElementById("saveCombatButton").innerText = "Enregistrer le combat";
+        document.getElementById("combat_id").value = combat.id_combat || "";
+        document.getElementById("combat_adversaire").value = combat.adversaire || "";
+        document.getElementById("combat_resultat").value = combat.resultat || "";
+        document.getElementById("combat_commentaire").value = combat.commentaire || "";
+
+        if (isAdmin) {
+          document.getElementById("combat_id_judoka").value = combat.id_judoka || "";
+        }
+      } else {
+        document.getElementById("combatFormTitle").innerText = "Ajouter un combat";
+        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
+      }
+
+      showView("combatFormView");
+      document.getElementById("combat_adversaire").focus();
+    }
+
+    function cancelCombatForm() {
+      resetCombatForm();
+      showView("competitionView");
+    }
+
+    function saveCombat() {
+      const idCombat = document.getElementById("combat_id").value;
+
+      if (idCombat) {
+        updateCombat(idCombat);
+      } else {
+        addCombat();
+      }
+    }
+
+    function addCombat() {
+      if (!currentCompetition) {
+        showError({ message: "Ouvre une compétition avant d'ajouter un combat." });
+        return;
+      }
+
+      const combat = getCombatFormValue();
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          resetCombatForm();
+          openCompetition(currentCompetition.id_competition, true);
+        })
+        .withFailureHandler(showError)
+        .ajouterCombat(combat);
+    }
+
+    function updateCombat(idCombat) {
+      const combat = getCombatFormValue();
+      combat.id_combat = idCombat;
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          resetCombatForm();
+          openCompetition(currentCompetition.id_competition, true);
+        })
+        .withFailureHandler(showError)
+        .updateCombat(combat);
+    }
+
+    function getCombatFormValue() {
+      const combat = {
+        id_competition: currentCompetition.id_competition,
+        adversaire: document.getElementById("combat_adversaire").value,
+        resultat: document.getElementById("combat_resultat").value,
+        commentaire: document.getElementById("combat_commentaire").value
+      };
+
+      if (isAdmin) {
+        combat.id_judoka = document.getElementById("combat_id_judoka").value;
+      }
+
+      return combat;
+    }
+
+    function deleteCurrentCompetition() {
+      if (!currentCompetition) return;
+
+      const label = currentCompetition.nom ? ` "${currentCompetition.nom}"` : "";
+
+      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          currentCompetition = null;
+          reloadInitialData();
+        })
+        .withFailureHandler(showError)
+        .deleteCompetition(currentCompetition.id_competition);
+    }
+
+    function deleteCombat(id) {
+      if (!window.confirm("Supprimer ce combat ?")) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          openCompetition(currentCompetition.id_competition, true);
+        })
+        .withFailureHandler(showError)
+        .deleteCombat(id);
+    }
+
+    function fillJudokasSelect() {
+      const select = document.getElementById("combat_id_judoka");
+      select.innerHTML = `<option value="">Choisir un judoka</option>`;
+
+      judokas.forEach(j => {
+        select.innerHTML += `
+          <option value="${escapeAttribute(j.id_judoka)}">
+            ${escapeHtml(j.prenom || "")} ${escapeHtml(j.nom || "")}
+          </option>
+        `;
+      });
+    }
+
+    function resetCombatForm() {
+      document.getElementById("combat_id").value = "";
+      document.getElementById("combat_adversaire").value = "";
+      document.getElementById("combat_resultat").value = "";
+      document.getElementById("combat_commentaire").value = "";
+      document.getElementById("saveCombatButton").innerText = "Ajouter le combat";
+
+      if (isAdmin) {
+        document.getElementById("combat_id_judoka").value = "";
+      }
+    }
+
+    function reloadInitialData(openCompetitionId) {
+      google.script.run
+        .withSuccessHandler(data => {
+          if (data.error) {
+            showError({ message: data.error });
+            return;
+          }
+
+          competitions = Array.isArray(data.competitions) ? data.competitions : [];
+          renderCompetitions();
+
+          if (openCompetitionId) {
+            openCompetition(openCompetitionId, true);
+          } else {
+            showHome();
+          }
+        })
+        .withFailureHandler(showError)
+        .getInitialData();
+    }
+
+    function showHome() {
+      currentCompetition = null;
+      currentCombats = [];
+      showView("homeView");
+    }
+
+    function showView(id) {
+      ["homeView", "competitionView", "competitionFormView", "combatFormView"].forEach(viewId => {
+        document.getElementById(viewId).classList.add("hidden");
+      });
+
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? value : d.toLocaleDateString("fr-FR");
+    }
+
+    function toInputDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? value : d.toISOString().slice(0, 10);
+    }
+
+    function formatResultat(value) {
+      if (value === "V") return "Victoire";
+      if (value === "D") return "Défaite";
+      return value || "";
+    }
+
+    function showSuccess(message) {
+      document.getElementById("message").innerHTML = `<p class="success">${escapeHtml(message)}</p>`;
+    }
+
+    function showError(error) {
+      document.getElementById("message").innerHTML = `<p class="error">${escapeHtml(error.message || error)}</p>`;
+    }
+
+    function clearMessage() {
+      document.getElementById("message").innerHTML = "";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value).replaceAll("`", "&#096;");
+    }
+
+    init();
+  </script>
+</body>
+</html>
