@@ -725,13 +725,13 @@
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p id="loginText">Connectez-vous avec l'email associé à votre fiche judoka.</p>
+        <p id="loginText">Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe.</p>
         <form id="supabaseLoginForm" class="login-form hidden">
           <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" autocomplete="email" required>
           <label for="loginPassword">Mot de passe</label>
           <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required>
-          <button type="submit">Se connecter</button>
+          <button type="submit">Se connecter ou créer le compte</button>
           <button type="button" class="button-secondary" onclick="requestPasswordReset()">Mot de passe oublié</button>
         </form>
         <a id="googleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
@@ -1191,7 +1191,7 @@
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Connectez-vous avec l'email associé à votre fiche judoka. Un compte Supabase est créé automatiquement si nécessaire.";
+      document.getElementById("loginText").innerText = "Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe.";
       document.getElementById("googleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.remove("hidden");
       showView("loginView");
