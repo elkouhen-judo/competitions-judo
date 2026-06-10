@@ -6,6 +6,10 @@
       "destination": "/api/rpc"
     },
     {
+      "source": "/api/auth-signup",
+      "destination": "/api/auth-signup"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/app"
     }
