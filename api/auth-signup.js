@@ -24,8 +24,11 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = await readBody(req);
-    await createConfirmedAuthUser(body.email, body.password);
-    res.status(200).json({ ok: true });
+    const result = await createConfirmedAuthUser(body.email, body.password);
+    res.status(200).json({
+      ok: true,
+      requiresEmailConfirmation: Boolean(result && result.requiresEmailConfirmation)
+    });
   } catch (error) {
     res.status(400).json({ error: error.message || "Création du compte impossible." });
   }
