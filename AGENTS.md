@@ -7,7 +7,7 @@
 
 ## Fin de développement
 
-À la fin de chaque développement :
+À la fin de chaque développement qui impacte le code de l'application :
 
 - Exécuter les vérifications pertinentes.
 - Committer les modifications dans Git avec un message explicite.
