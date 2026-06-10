@@ -42,6 +42,13 @@ test("successful initial load leaves the login view", () => {
   assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
 });
 
+test("vercel runtime exposes logout and clears local session", () => {
+  assert.match(html, /id="logoutButton"/);
+  assert.match(html, /function logoutUser\(\)/);
+  assert.match(html, /auth\/v1\/logout/);
+  assert.match(html, /clearVercelSession\(\)/);
+});
+
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(core, /\/auth\/v1\/user/);
