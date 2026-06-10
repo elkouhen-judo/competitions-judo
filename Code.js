@@ -364,7 +364,7 @@ function ajouterCombat(combat) {
     id_competition: combat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
-    commentaire: combat.commentaire || ""
+    deroule: combat.deroule || ""
   });
 
   return {
@@ -408,7 +408,7 @@ function updateCombat(combat) {
     id_competition: combat.id_competition || existingCombat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
-    commentaire: combat.commentaire || ""
+    deroule: combat.deroule || ""
   });
 
   return {

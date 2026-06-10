@@ -123,7 +123,7 @@ Le formulaire permet de renseigner :
 
 - l'adversaire ;
 - le résultat ;
-- un commentaire.
+- un champ pour décrire le déroulé du combat.
 
 Pour un judoka standard, le combat est automatiquement rattaché à son profil.
 
