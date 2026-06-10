@@ -147,6 +147,41 @@ async function verifySupabaseUser(accessToken) {
   return authUser.email;
 }
 
+async function createConfirmedAuthUser(email, password) {
+  const cleanEmail = cleanText(email).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    throw new Error("Email invalide.");
+  }
+  if (String(password || "").length < 6) {
+    throw new Error("Le mot de passe doit contenir au moins 6 caractères.");
+  }
+
+  const config = getSupabaseConfig();
+  const response = await fetch(`${config.url}/auth/v1/admin/users`, {
+    method: "POST",
+    headers: {
+      apikey: config.serviceRoleKey,
+      Authorization: `Bearer ${config.serviceRoleKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: cleanEmail,
+      password,
+      email_confirm: true
+    })
+  });
+  const body = await response.text();
+
+  if (!response.ok) {
+    if (/already|registered|exists|duplicate|unique/i.test(body)) {
+      throw new Error("Ce compte existe déjà. Vérifiez le mot de passe saisi ou utilisez mot de passe oublié.");
+    }
+    throw new Error(body || "Création du compte d'authentification impossible.");
+  }
+
+  return body ? JSON.parse(body) : {};
+}
+
 function isAdmin(user) {
   return String(user.role || "").toUpperCase().trim() === "ADMIN";
 }
@@ -464,6 +499,7 @@ const methods = {
 
 module.exports = {
   getSupabaseConfig,
+  createConfirmedAuthUser,
   methods,
   verifySupabaseUser
 };
