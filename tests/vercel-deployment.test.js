@@ -35,6 +35,10 @@ test("vercel runtime identifies the user by email without calling supabase auth"
   assert.doesNotMatch(html, /\/auth\/v1\/token/);
 });
 
+test("successful initial load leaves the login view", () => {
+  assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
+});
+
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.doesNotMatch(core, /\/auth\/v1\/user/);
