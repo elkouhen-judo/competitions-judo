@@ -194,6 +194,36 @@
       background: #fef3f2;
     }
 
+    .autocomplete-wrapper {
+      position: relative;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      z-index: 200;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      max-height: 220px;
+      overflow-y: auto;
+      width: 100%;
+      display: none;
+      box-shadow: var(--shadow);
+      top: calc(100% - 10px);
+    }
+    .autocomplete-option {
+      padding: 12px 14px;
+      cursor: pointer;
+      font-size: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+    .autocomplete-option:last-child { border-bottom: none; }
+    .autocomplete-option:hover { background: var(--soft); }
+    .autocomplete-empty {
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
     .data-table {
       width: 100%;
       border-collapse: collapse;
@@ -675,10 +705,12 @@
       </div>
       <div class="panel-body">
         <div id="homeFilters" class="filter-bar hidden">
-          <label for="filterJudoka">Filtrer par judoka :</label>
-          <select id="filterJudoka" onchange="renderCompetitions()">
-            <option value="">Tous les judokas</option>
-          </select>
+          <label>Filtrer par judoka :</label>
+          <div class="autocomplete-wrapper" style="flex:1; max-width: 300px;">
+            <input type="text" id="filterJudokaText" placeholder="Tous les judokas..." autocomplete="off">
+            <div class="autocomplete-dropdown" id="filterJudokaDropdown"></div>
+          </div>
+          <input type="hidden" id="filterJudoka">
         </div>
         <div id="competitionsList"></div>
       </div>
@@ -752,8 +784,12 @@
         <input type="hidden" id="competition_id">
 
         <div id="competitionOwnerBlock" class="hidden full-row">
-          <label for="competition_id_judoka">Judoka</label>
-          <select id="competition_id_judoka"></select>
+          <label>Judoka</label>
+          <div class="autocomplete-wrapper">
+            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off">
+            <div class="autocomplete-dropdown" id="competition_judoka_dropdown"></div>
+          </div>
+          <input type="hidden" id="competition_id_judoka">
         </div>
 
         <label for="competition_nom">Nom de la compétition</label>
@@ -897,10 +933,13 @@
           
           if (isAdmin && judokas.length > 0) {
             document.getElementById("homeFilters").classList.remove("hidden");
-            const filterSelect = document.getElementById("filterJudoka");
-            filterSelect.innerHTML = `<option value="">Tous les judokas</option>`;
-            judokas.forEach(j => {
-              filterSelect.innerHTML += `<option value="${escapeAttribute(j.id_judoka)}">${escapeHtml(j.prenom || "")} ${escapeHtml(j.nom || "")}</option>`;
+            bindAutocomplete({
+              inputId: "filterJudokaText",
+              dropdownId: "filterJudokaDropdown",
+              hiddenId: "filterJudoka",
+              getItems: () => judokas,
+              allowBlank: true,
+              onChange: () => renderCompetitions()
             });
           }
 
@@ -1290,25 +1329,67 @@
       return `${j.prenom || ""} ${j.nom || ""}`.trim();
     }
 
-    function fillCompetitionOwnersSelect(selectedId) {
-      const select = document.getElementById("competition_id_judoka");
-      
-      select.innerHTML = `<option value="">Choisir un judoka</option>`;
+    function bindAutocomplete({ inputId, dropdownId, hiddenId, getItems, allowBlank, onChange }) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      const hidden = document.getElementById(hiddenId);
 
-      if (!judokas.length) {
-        select.innerHTML += `<option value="" disabled>Aucun judoka trouvé</option>`;
-        return;
+      function renderOptions(items) {
+        dropdown.innerHTML = "";
+
+        if (allowBlank) {
+          const opt = document.createElement("div");
+          opt.className = "autocomplete-option";
+          opt.textContent = "— Tous —";
+          opt.addEventListener("mousedown", e => {
+            e.preventDefault();
+            input.value = "";
+            hidden.value = "";
+            dropdown.style.display = "none";
+            onChange && onChange(null);
+          });
+          dropdown.appendChild(opt);
+        }
+
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "autocomplete-empty";
+          empty.textContent = "Aucun résultat";
+          dropdown.appendChild(empty);
+        } else {
+          items.forEach(j => {
+            const name = getJudokaDisplayName(j);
+            const opt = document.createElement("div");
+            opt.className = "autocomplete-option";
+            opt.textContent = name;
+            opt.addEventListener("mousedown", e => {
+              e.preventDefault();
+              input.value = name;
+              hidden.value = j.id_judoka;
+              dropdown.style.display = "none";
+              onChange && onChange(j);
+            });
+            dropdown.appendChild(opt);
+          });
+        }
+
+        dropdown.style.display = "block";
       }
 
-      judokas.forEach(j => {
-        select.innerHTML += `
-          <option value="${escapeAttribute(j.id_judoka)}">
-            ${escapeHtml(getJudokaDisplayName(j))}
-          </option>
-        `;
+      input.addEventListener("focus", () => {
+        const q = input.value.toLowerCase().trim();
+        renderOptions(getItems().filter(j => !q || getJudokaDisplayName(j).toLowerCase().includes(q)));
       });
 
-      select.value = selectedId || "";
+      input.addEventListener("input", () => {
+        const q = input.value.toLowerCase().trim();
+        hidden.value = "";
+        renderOptions(getItems().filter(j => !q || getJudokaDisplayName(j).toLowerCase().includes(q)));
+      });
+
+      input.addEventListener("blur", () => {
+        setTimeout(() => { dropdown.style.display = "none"; }, 150);
+      });
     }
 
     function setCompetitionOwnerField(idJudoka) {
@@ -1320,7 +1401,22 @@
       }
 
       block.classList.remove("hidden");
-      fillCompetitionOwnersSelect(idJudoka);
+
+      // Branche l'autocomplete la première fois (évite les doublons de listeners)
+      const input = document.getElementById("competition_judoka_text");
+      if (!input.dataset.bound) {
+        bindAutocomplete({
+          inputId: "competition_judoka_text",
+          dropdownId: "competition_judoka_dropdown",
+          hiddenId: "competition_id_judoka",
+          getItems: () => judokas
+        });
+        input.dataset.bound = "1";
+      }
+
+      const owner = judokas.find(j => String(j.id_judoka) === String(idJudoka));
+      input.value = owner ? getJudokaDisplayName(owner) : "";
+      document.getElementById("competition_id_judoka").value = idJudoka || "";
     }
 
     function resetCombatForm() {
