@@ -44,6 +44,8 @@ test("successful initial load leaves the login view", () => {
 
 test("vercel runtime exposes logout and clears local session", () => {
   assert.match(html, /id="logoutButton"/);
+  assert.match(html, /id="logoutButton"[\s\S]*?<svg/);
+  assert.match(html, /\.user-actions\s*\{[\s\S]*?display: flex;/);
   assert.match(html, /function logoutUser\(\)/);
   assert.match(html, /auth\/v1\/logout/);
   assert.match(html, /clearVercelSession\(\)/);
