@@ -112,7 +112,7 @@ async function verifySupabaseUser(accessToken) {
   const body = await response.text();
 
   if (!response.ok) {
-    throw new Error(`Session Google invalide : ${body}`);
+    throw new Error(`Session Supabase invalide : ${body}`);
   }
 
   const authUser = body ? JSON.parse(body) : {};
