@@ -156,6 +156,10 @@
     }
 
     button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       min-height: 52px;
       border: 1px solid transparent;
       background: var(--primary);
@@ -163,6 +167,7 @@
       padding: 13px 15px;
       cursor: pointer;
       font-weight: bold;
+      border-radius: 8px; /* Slightly softer look */
     }
 
     button:hover {
@@ -600,8 +605,14 @@
         <div class="competition-header-actions">
           <button class="button-secondary" onclick="showHome()">Retour</button>
           <div id="competitionAdminActions" class="competition-management-actions hidden">
-            <button id="editCompetitionButton" class="button-secondary" onclick="editCurrentCompetition()">Modifier la compétition</button>
-            <button id="deleteCompetitionButton" class="button-danger" onclick="deleteCurrentCompetition()">Supprimer la compétition</button>
+            <button id="editCompetitionButton" class="button-secondary" onclick="editCurrentCompetition()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              Modifier
+            </button>
+            <button id="deleteCompetitionButton" class="button-danger" onclick="deleteCurrentCompetition()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              Supprimer
+            </button>
           </div>
         </div>
       </div>
@@ -658,7 +669,10 @@
 
         <div class="form-actions mobile-action-bar">
           <button class="button-secondary" onclick="cancelCompetitionForm()">Annuler</button>
-          <button onclick="saveCompetition()">Enregistrer</button>
+          <button onclick="saveCompetition()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Enregistrer
+          </button>
         </div>
       </div>
     </section>
@@ -701,7 +715,10 @@
 
         <div class="form-actions mobile-action-bar">
           <button class="button-secondary" onclick="cancelCombatForm()">Annuler</button>
-          <button id="saveCombatButton" onclick="saveCombat()">Ajouter le combat</button>
+          <button id="saveCombatButton" onclick="saveCombat()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span id="saveCombatButtonText">Ajouter le combat</span>
+          </button>
         </div>
       </div>
     </section>
@@ -772,7 +789,9 @@
               </div>
             </button>
             <div class="card-actions">
-              <button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">Supprimer</button>
+              <button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)" title="Supprimer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
             </div>
           </article>
         `;
@@ -854,8 +873,12 @@
             ` : ""}
             <p class="combat-comment">${escapeHtml(c.deroule || "Aucun déroulé renseigné")}</p>
             <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)">Éditer</button>
-              <button class="button-danger" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)">Supprimer</button>
+              <button class="button-secondary" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)" title="Éditer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="button-danger" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)" title="Supprimer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
             </div>
           </article>
         `;
@@ -935,7 +958,7 @@
 
         document.getElementById("combatFormTitle").innerText = "Modifier le combat";
         document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
-        document.getElementById("saveCombatButton").innerText = "Enregistrer le combat";
+        document.getElementById("saveCombatButtonText").innerText = "Enregistrer le combat";
         document.getElementById("combat_id").value = combat.id_combat || "";
         document.getElementById("combat_adversaire").value = combat.adversaire || "";
         document.getElementById("combat_resultat").value = combat.resultat || "";
@@ -1140,7 +1163,7 @@
       document.getElementById("combat_adversaire").value = "";
       document.getElementById("combat_resultat").value = "";
       document.getElementById("combat_deroule").value = "";
-      document.getElementById("saveCombatButton").innerText = "Ajouter le combat";
+      document.getElementById("saveCombatButtonText").innerText = "Ajouter le combat";
 
       if (isAdmin) {
         document.getElementById("combat_id_judoka").value = "";
