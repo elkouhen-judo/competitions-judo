@@ -38,7 +38,7 @@ Il peut :
 - modifier ou supprimer n'importe quelle compétition ;
 - consulter tous les combats d'une compétition ;
 - ajouter, modifier ou supprimer n'importe quel combat ;
-- choisir le judoka concerné lors de la création ou modification d'une compétition ou d'un combat.
+- rechercher puis sélectionner le judoka concerné lors de la création ou modification d'une compétition ou d'un combat.
 
 ## 3. Principes d'interface
 
@@ -81,7 +81,7 @@ L'utilisateur peut créer une compétition en renseignant :
 
 Pour un judoka standard, la compétition est automatiquement rattachée à son profil.
 
-Pour un administrateur, l'écran permet de choisir le judoka propriétaire de la compétition.
+Pour un administrateur, l'écran permet de saisir le nom ou le prénom du judoka propriétaire, de filtrer la liste des judokas disponibles, puis de sélectionner l'identité correspondante. La compétition est enregistrée avec l'`id_judoka` du judoka sélectionné.
 
 Après création, l'application recharge les données et ouvre la compétition créée.
 
@@ -103,7 +103,7 @@ Une compétition peut être modifiée depuis son écran de détail si l'utilisat
 
 Un judoka standard peut modifier uniquement ses propres compétitions.
 
-Un administrateur peut modifier n'importe quelle compétition et, si nécessaire, ajuster le judoka propriétaire.
+Un administrateur peut modifier n'importe quelle compétition et, si nécessaire, ajuster le judoka propriétaire via la même recherche par nom ou prénom.
 
 Après modification, l'application recharge les données et affiche la compétition mise à jour.
 
@@ -176,7 +176,7 @@ Un judoka standard peut créer, modifier et supprimer uniquement ses propres com
 
 Un administrateur peut créer, modifier et supprimer toutes les compétitions.
 
-Lorsqu'un administrateur crée ou modifie une compétition, il peut choisir le judoka propriétaire.
+Lorsqu'un administrateur crée ou modifie une compétition, il doit choisir le judoka propriétaire. Le formulaire propose une recherche par nom ou prénom, puis une sélection dans la liste filtrée des judokas. Une sauvegarde admin sans propriétaire sélectionné est refusée.
 
 ### 6.3 Visibilité des combats
 
