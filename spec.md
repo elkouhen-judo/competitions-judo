@@ -323,7 +323,9 @@ Sur Vercel :
 - l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
 - les appels navigateur vers Supabase Auth qui utilisent la clé anonyme doivent envoyer `apikey` et `Authorization: Bearer <SUPABASE_ANON_KEY>` ;
 - la connexion standard ne doit pas envoyer d'email ;
-- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la variable `SUPABASE_SERVICE_ROLE_KEY`, qui peut contenir soit une ancienne clé JWT `service_role`, soit une nouvelle clé secrète `sb_secret_...` ;
+- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur ;
+- si l'environnement expose `SUPABASE_AUTH_ADMIN_JWT` ou si `SUPABASE_SERVICE_ROLE_KEY` contient encore une ancienne clé JWT `service_role`, le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
+- si seul un `sb_secret_...` moderne est disponible côté serveur, l'application bascule sur `auth/v1/signup`, crée le compte puis indique clairement à l'utilisateur qu'une confirmation email est requise avant la première connexion ;
 - le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
 - si Supabase Auth répond `invalid_credentials` au premier essai, l'application retente l'inscription automatique avant de renvoyer une erreur ;
 - l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
@@ -354,4 +356,8 @@ Variables d'environnement obligatoires :
 - `SUPABASE_ANON_KEY` ;
 - `SUPABASE_SERVICE_ROLE_KEY`.
 
-La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire sans email de validation, vérifier la session côté API, puis appliquer les droits métier en recherchant l'email dans la table `judokas`, tout en restant compatible avec les anciennes clés `service_role` et les nouvelles clés `sb_secret_...` de Supabase."
+Variable d'environnement optionnelle :
+
+- `SUPABASE_AUTH_ADMIN_JWT` pour conserver une création de compte auto-confirmée sans email lorsque `SUPABASE_SERVICE_ROLE_KEY` contient une clé `sb_secret_...`.
+
+La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire, privilégier une création auto-confirmée sans email quand un JWT admin legacy est disponible, sinon basculer proprement sur une confirmation email explicite, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."
