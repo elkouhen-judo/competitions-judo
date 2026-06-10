@@ -85,6 +85,18 @@ test("judoka home keeps competition creation available", () => {
   assert.doesNotMatch(html, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });
 
+test("connected judoka can manage children from a dedicated screen", () => {
+  assert.match(html, /id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement\(\)"/);
+  assert.match(html, /id="childrenView" class="panel hidden"/);
+  assert.match(html, /function showChildrenManagement\(keepMessage\)/);
+  assert.match(html, /function saveManagedChild\(\)/);
+  assert.match(html, /function deleteManagedChild\(idJudoka,\s*name\)/);
+  assert.match(core, /async function getChildrenManagement\(email\)/);
+  assert.match(core, /async function saveManagedChild\(email,\s*child\)/);
+  assert.match(core, /async function deleteManagedChild\(email,\s*idJudoka\)/);
+  assert.match(core, /role: "PARENT"/);
+});
+
 test("vercel runtime exposes logout and clears local session", () => {
   assert.match(html, /id="logoutButton"/);
   assert.match(html, /id="logoutButton"[\s\S]*?<svg/);
@@ -104,6 +116,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /requiresEmailConfirmation: true/);
   assert.match(core, /\/auth\/v1\/admin\/users/);
   assert.match(core, /email_confirm: true/);
+  assert.match(core, /canManageChildren: canManageChildrenProfile\(user\)/);
   assert.match(authSignup, /createConfirmedAuthUser\(body\.email, body\.password\)/);
   assert.match(authSignup, /requiresEmailConfirmation/);
   assert.match(core, /\/auth\/v1\/user/);
