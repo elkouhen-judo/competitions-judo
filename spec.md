@@ -2,7 +2,7 @@
 
 ## 1. Objectif de l'application
 
-L'application permet à un club de judo de suivre les compétitions et les combats de ses judokas depuis une interface web Google Apps Script connectée à un classeur Google Sheets.
+L'application permet à un club de judo de suivre les compétitions et les combats de ses judokas depuis une interface web Google Apps Script connectée à une base Supabase.
 
 Elle doit permettre :
 
@@ -206,7 +206,7 @@ Les dates sont normalisées avant d'être affichées dans le navigateur afin de 
 
 ## 7. Données manipulées
 
-L'application manipule trois ensembles de données principaux :
+L'application manipule trois tables Supabase principales :
 
 - les judokas ;
 - les compétitions ;
@@ -217,6 +217,18 @@ Les judokas servent à identifier l'utilisateur connecté, à déterminer son r�
 Les compétitions représentent les événements suivis par l'application. Elles sont rattachées à un judoka propriétaire.
 
 Les combats représentent les résultats associés à une compétition et à un judoka.
+
+Le schéma Supabase conserve les identifiants métier actuels sous forme de texte afin de faciliter la migration depuis les anciennes données Google Sheets :
+
+- `judokas.id_judoka` ;
+- `competitions.id_competition` ;
+- `combats.id_combat`.
+
+Les compétitions référencent leur judoka propriétaire via `competitions.id_judoka`.
+
+Les combats référencent à la fois leur judoka via `combats.id_judoka` et leur compétition via `combats.id_competition`.
+
+La relation entre `combats` et `competitions` applique une suppression en cascade : supprimer une compétition supprime automatiquement ses combats associés.
 
 ## 8. Cas particuliers et confirmations
 
