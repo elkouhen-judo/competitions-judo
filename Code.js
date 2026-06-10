@@ -152,36 +152,70 @@ function getCurrentUserContext() {
     throw new Error("Accès refusé pour : " + email);
   }
 
-  const judokas = isAdmin(user) ? getJudokasCached() : [];
+  let judokas = [];
+  let managedJudokaIds = [];
 
-  return {
-    user,
-    judokas
-  };
+  if (isAdmin(user)) {
+    judokas = getJudokasCached();
+  } else if (isParent(user)) {
+    judokas = getParentManagedJudokas(user.id_judoka);
+    managedJudokaIds = judokas.map(j => String(j.id_judoka));
+  }
+
+  return { user, judokas, managedJudokaIds };
 }
 
 function isAdmin(user) {
   return String(user.role || "").toUpperCase().trim() === "ADMIN";
 }
 
-function canManageCompetition(user, competition) {
-  if (isAdmin(user)) {
-    return true;
-  }
+function isParent(user) {
+  return String(user.role || "").toUpperCase().trim() === "PARENT";
+}
 
+function getParentManagedJudokas(idParent) {
+  const cache = CacheService.getUserCache();
+  const cacheKey = "parentJudokas";
+  const cached = cache.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const rows = supabaseSelect("parent_judokas", `select=id_judoka&${eqFilter("id_parent", idParent)}`);
+  if (!rows.length) return [];
+
+  const ids = rows.map(r => r.id_judoka).join(",");
+  const judokas = supabaseSelect("judokas", `select=*&id_judoka=in.(${ids})&order=nom.asc,prenom.asc`);
+  cache.put(cacheKey, JSON.stringify(judokas), 300);
+  return judokas;
+}
+
+function canAccessCompetition(user, competition, managedJudokaIds) {
+  if (isAdmin(user)) return true;
+  if (isParent(user)) return (managedJudokaIds || []).includes(String(competition.id_judoka));
   return String(competition.id_judoka) === String(user.id_judoka);
 }
 
-function resolveCompetitionOwnerId(user, competition) {
-  const ownerJudokaId = isAdmin(user)
-    ? competition.id_judoka
-    : user.id_judoka;
+function canManageCombatFor(user, idJudoka, managedJudokaIds) {
+  if (isAdmin(user)) return true;
+  if (isParent(user)) return (managedJudokaIds || []).includes(String(idJudoka));
+  return String(user.id_judoka) === String(idJudoka);
+}
 
-  if (!ownerJudokaId) {
-    throw new Error("Judoka participant obligatoire.");
+function canManageCompetition(user, competition, managedJudokaIds) {
+  if (isAdmin(user)) return true;
+  if (isParent(user)) return (managedJudokaIds || []).includes(String(competition.id_judoka));
+  return String(competition.id_judoka) === String(user.id_judoka);
+}
+
+function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
+  if (isAdmin(user) || isParent(user)) {
+    const ownerJudokaId = competition.id_judoka;
+    if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
+    if (isParent(user) && !(managedJudokaIds || []).includes(String(ownerJudokaId))) {
+      throw new Error("Ce judoka n'est pas dans votre liste.");
+    }
+    return ownerJudokaId;
   }
-
-  return ownerJudokaId;
+  return user.id_judoka;
 }
 
 function getInitialData() {
@@ -191,12 +225,14 @@ function getInitialData() {
     const userContext = getCurrentUserContext();
     const user = userContext.user;
     const admin = isAdmin(user);
+    const parent = isParent(user);
 
     const result = {
       user: user,
       isAdmin: admin,
-      competitions: getCompetitionsForUser(user),
-      judokas: admin ? userContext.judokas : []
+      isParent: parent,
+      competitions: getCompetitionsForUser(user, userContext.managedJudokaIds),
+      judokas: (admin || parent) ? userContext.judokas : []
     };
 
     return result;
@@ -239,9 +275,14 @@ function getCompetitions() {
   return supabaseSelect("competitions", "select=*&order=date.desc");
 }
 
-function getCompetitionsForUser(user) {
+function getCompetitionsForUser(user, managedJudokaIds) {
   if (isAdmin(user)) {
     return getCompetitions();
+  }
+
+  if (isParent(user)) {
+    if (!managedJudokaIds || !managedJudokaIds.length) return [];
+    return supabaseSelect("competitions", `select=*&id_judoka=in.(${managedJudokaIds.join(",")})&order=date.desc`);
   }
 
   return supabaseSelect("competitions", `select=*&${eqFilter("id_judoka", user.id_judoka)}&order=date.desc`);
@@ -259,30 +300,31 @@ function getCompetitionDetail(id_competition) {
   const userContext = getCurrentUserContext();
   const user = userContext.user;
   const admin = isAdmin(user);
+  const parent = isParent(user);
+  const managedJudokaIds = userContext.managedJudokaIds || [];
   const competition = getCompetitionById(id_competition);
 
   if (!competition) {
     throw new Error("Compétition introuvable.");
   }
 
-  if (!canManageCompetition(user, competition)) {
+  if (!canManageCompetition(user, competition, managedJudokaIds)) {
     throw new Error("Accès refusé à cette compétition.");
   }
 
   let query = `select=*&${eqFilter("id_competition", id_competition)}`;
-  if (!admin) {
+  if (!admin && !parent) {
     query += `&${eqFilter("id_judoka", user.id_judoka)}`;
+  } else if (parent && managedJudokaIds.length) {
+    query += `&id_judoka=in.(${managedJudokaIds.join(",")})`;
   }
-  let filtered = supabaseSelect("combats", query);
+  const filtered = supabaseSelect("combats", query);
 
-  const judokas = admin ? userContext.judokas : [];
-  const judokasById = admin
-    ? new Map(judokas.map(j => [String(j.id_judoka), j]))
-    : new Map();
+  const judokas = (admin || parent) ? userContext.judokas : [];
+  const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
 
   const enriched = filtered.map(c => {
     const judoka = judokasById.get(String(c.id_judoka));
-
     return {
       ...c,
       judoka_nom: judoka ? `${judoka.prenom} ${judoka.nom}` : c.id_judoka
@@ -293,14 +335,19 @@ function getCompetitionDetail(id_competition) {
     competition,
     combats: enriched,
     isAdmin: admin,
-    canManageCompetition: canManageCompetition(user, competition),
-    judokas: admin ? judokas : []
+    isParent: parent,
+    canManageCompetition: canManageCompetition(user, competition, managedJudokaIds),
+    canEditCompetition: canManageCompetition(user, competition, managedJudokaIds),
+    judokas
   };
 }
 
 function saveCompetition(competition) {
-  const user = getCurrentUser();
-  const ownerJudokaId = resolveCompetitionOwnerId(user, competition);
+  const userContext = getCurrentUserContext();
+  const user = userContext.user;
+  const managedJudokaIds = userContext.managedJudokaIds || [];
+
+  const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaIds);
 
   if (!competition.nom || !competition.date) {
     throw new Error("Nom et date obligatoires.");
@@ -323,7 +370,7 @@ function saveCompetition(competition) {
       throw new Error("Compétition introuvable.");
     }
 
-    if (!canManageCompetition(user, existingCompetition)) {
+    if (!canManageCompetition(user, existingCompetition, managedJudokaIds)) {
       throw new Error("Modification de cette compétition non autorisée.");
     }
 
@@ -359,23 +406,17 @@ function saveCompetition(competition) {
 function ajouterCombat(combat) {
   const user = getCurrentUserCached();
 
-  if (!user) {
-    throw new Error("Utilisateur non identifié.");
+  if (!user) throw new Error("Utilisateur non identifié.");
+  if (!combat.id_competition) throw new Error("Compétition obligatoire.");
+  if (!combat.resultat) throw new Error("Résultat obligatoire.");
+  if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
+
+  let managedJudokaIds = [];
+  if (isParent(user)) {
+    managedJudokaIds = getParentManagedJudokas(user.id_judoka).map(j => String(j.id_judoka));
   }
 
-  if (!combat.id_competition) {
-    throw new Error("Compétition obligatoire.");
-  }
-
-  if (!combat.resultat) {
-    throw new Error("Résultat obligatoire.");
-  }
-
-  if (!combat.id_judoka) {
-    throw new Error("Judoka obligatoire.");
-  }
-
-  if (!isAdmin(user) && String(combat.id_judoka) !== String(user.id_judoka)) {
+  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
     throw new Error("Ajout de ce combat non autorisé.");
   }
 
@@ -391,32 +432,23 @@ function ajouterCombat(combat) {
     deroule: combat.deroule || ""
   });
 
-  return {
-    success: true,
-    message: "Combat ajouté."
-  };
+  return { success: true, message: "Combat ajouté." };
 }
 
 function updateCombat(combat) {
   const user = getCurrentUserCached();
 
-  if (!user) {
-    throw new Error("Utilisateur non identifié.");
+  if (!user) throw new Error("Utilisateur non identifié.");
+  if (!combat.id_combat) throw new Error("Combat obligatoire.");
+  if (!combat.resultat) throw new Error("Résultat obligatoire.");
+  if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
+
+  let managedJudokaIds = [];
+  if (isParent(user)) {
+    managedJudokaIds = getParentManagedJudokas(user.id_judoka).map(j => String(j.id_judoka));
   }
 
-  if (!combat.id_combat) {
-    throw new Error("Combat obligatoire.");
-  }
-
-  if (!combat.resultat) {
-    throw new Error("Résultat obligatoire.");
-  }
-
-  if (!combat.id_judoka) {
-    throw new Error("Judoka obligatoire.");
-  }
-
-  if (!isAdmin(user) && String(combat.id_judoka) !== String(user.id_judoka)) {
+  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
     throw new Error("Modification de ce combat non autorisée.");
   }
 
@@ -429,14 +461,13 @@ function updateCombat(combat) {
     deroule: combat.deroule || ""
   });
 
-  return {
-    success: true,
-    message: "Combat modifié."
-  };
+  return { success: true, message: "Combat modifié." };
 }
 
 function deleteCompetition(id_competition) {
-  const user = getCurrentUser();
+  const userContext = getCurrentUserContext();
+  const user = userContext.user;
+  const managedJudokaIds = userContext.managedJudokaIds || [];
 
   if (!id_competition) {
     throw new Error("Compétition obligatoire.");
@@ -448,7 +479,7 @@ function deleteCompetition(id_competition) {
     throw new Error("Compétition introuvable.");
   }
 
-  if (!canManageCompetition(user, competition)) {
+  if (!canManageCompetition(user, competition, managedJudokaIds)) {
     throw new Error("Suppression de cette compétition non autorisée.");
   }
 
@@ -462,27 +493,23 @@ function deleteCompetition(id_competition) {
 }
 
 function deleteCombat(id_combat) {
-  const user = getCurrentUser();
-  const admin = isAdmin(user);
-
-  if (!id_combat) {
-    throw new Error("Combat obligatoire.");
-  }
+  const user = getCurrentUserCached();
+  if (!user) throw new Error("Utilisateur non identifié.");
+  if (!id_combat) throw new Error("Combat obligatoire.");
 
   const combat = getCombatById(id_combat);
+  if (!combat) throw new Error("Combat introuvable.");
 
-  if (!combat) {
-    throw new Error("Combat introuvable.");
+  let managedJudokaIds = [];
+  if (isParent(user)) {
+    managedJudokaIds = getParentManagedJudokas(user.id_judoka).map(j => String(j.id_judoka));
   }
 
-  if (!admin && String(combat.id_judoka) !== String(user.id_judoka)) {
+  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
     throw new Error("Suppression de ce combat non autorisée.");
   }
 
   supabaseDelete("combats", eqFilter("id_combat", id_combat));
 
-  return {
-    success: true,
-    message: "Combat supprimé."
-  };
+  return { success: true, message: "Combat supprimé." };
 }
