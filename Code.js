@@ -133,14 +133,13 @@ function getCurrentUserContext() {
     throw new Error("Utilisateur non identifié.");
   }
 
-  const judokas = getJudokas();
-  const user = judokas.find(j =>
-    String(j.email || "").toLowerCase().trim() === String(email).toLowerCase().trim()
-  );
+  const user = supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(email.trim())}`);
 
   if (!user) {
     throw new Error("Accès refusé pour : " + email);
   }
+
+  const judokas = isAdmin(user) ? getJudokasCached() : [];
 
   return {
     user,
@@ -206,18 +205,32 @@ function getJudokas() {
   return supabaseSelect("judokas", "select=*&order=nom.asc,prenom.asc");
 }
 
+function getJudokasCached() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("judokas");
+  
+  if (cached) {
+    return JSON.parse(cached);
+  }
+  
+  const judokas = getJudokas();
+  if (judokas && judokas.length) {
+    // Mise en cache pour 5 minutes (300 secondes)
+    cache.put("judokas", JSON.stringify(judokas), 300);
+  }
+  return judokas;
+}
+
 function getCompetitions() {
   return supabaseSelect("competitions", "select=*&order=date.desc");
 }
 
 function getCompetitionsForUser(user) {
-  const competitions = getCompetitions();
-
   if (isAdmin(user)) {
-    return competitions;
+    return getCompetitions();
   }
 
-  return competitions.filter(c => canManageCompetition(user, c));
+  return supabaseSelect("competitions", `select=*&${eqFilter("id_judoka", user.id_judoka)}&order=date.desc`);
 }
 
 function getCompetitionById(idCompetition) {
@@ -242,13 +255,11 @@ function getCompetitionDetail(id_competition) {
     throw new Error("Accès refusé à cette compétition.");
   }
 
-  let filtered = supabaseSelect("combats", `select=*&${eqFilter("id_competition", id_competition)}`);
-
+  let query = `select=*&${eqFilter("id_competition", id_competition)}`;
   if (!admin) {
-    filtered = filtered.filter(c =>
-      String(c.id_judoka) === String(user.id_judoka)
-    );
+    query += `&${eqFilter("id_judoka", user.id_judoka)}`;
   }
+  let filtered = supabaseSelect("combats", query);
 
   const judokas = admin ? userContext.judokas : [];
   const judokasById = admin
