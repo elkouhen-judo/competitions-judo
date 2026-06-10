@@ -702,9 +702,15 @@
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p id="loginText">Vous devez être connecté avec votre compte Google pour accéder à l'application.</p>
-        <a id="googleLoginButton" href="#" class="button" style="text-decoration:none; display:inline-flex;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0; color:white; margin-right:8px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+        <p id="loginText">Connectez-vous avec l'email associé à votre fiche judoka.</p>
+        <form id="supabaseLoginForm" class="login-form hidden">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" autocomplete="email" required>
+          <label for="loginPassword">Mot de passe</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required>
+          <button type="submit">Se connecter</button>
+        </form>
+        <a id="googleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
           Se connecter avec Google
         </a>
       </div>
@@ -965,7 +971,7 @@
 
         success && success(payload.result);
       } catch (error) {
-        if (String(error.message || "").includes("Session Google invalide") || String(error.message || "").includes("Utilisateur non identifié")) {
+        if (String(error.message || "").includes("Session Supabase invalide") || String(error.message || "").includes("Utilisateur non identifié")) {
           clearVercelSession();
           showVercelLogin();
         }
@@ -1045,23 +1051,85 @@
       return session;
     }
 
-    function startGoogleLogin() {
-      const redirectTo = encodeURIComponent(window.location.origin);
-      window.location.href = `${runtimeConfig.supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`;
+    async function authenticateWithPassword(email, password) {
+      const loginResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+          "apikey": runtimeConfig.supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (loginResponse.ok) {
+        return loginResponse.json();
+      }
+
+      const loginError = await readSupabaseAuthError(loginResponse);
+      const shouldRegister = /invalid login credentials|signup|not found|user not found/i.test(loginError);
+      if (!shouldRegister) {
+        throw new Error(loginError || "Connexion impossible.");
+      }
+
+      const signupResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/signup`, {
+        method: "POST",
+        headers: {
+          "apikey": runtimeConfig.supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!signupResponse.ok) {
+        throw new Error(await readSupabaseAuthError(signupResponse) || "Inscription impossible.");
+      }
+
+      return signupResponse.json();
+    }
+
+    async function readSupabaseAuthError(response) {
+      try {
+        const payload = await response.json();
+        return payload.msg || payload.message || payload.error_description || payload.error || "";
+      } catch (_error) {
+        return response.text();
+      }
     }
 
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google associé à votre fiche judoka.";
-      const button = document.getElementById("googleLoginButton");
-      button.classList.remove("hidden");
-      button.href = "#";
-      button.onclick = event => {
-        event.preventDefault();
-        startGoogleLogin();
-      };
+      document.getElementById("loginText").innerText = "Connectez-vous avec l'email associé à votre fiche judoka. Un compte Supabase est créé automatiquement si nécessaire.";
+      document.getElementById("googleLoginButton").classList.add("hidden");
+      document.getElementById("supabaseLoginForm").classList.remove("hidden");
       showView("loginView");
     }
+
+    document.getElementById("supabaseLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      clearMessage();
+
+      try {
+        const session = await authenticateWithPassword(
+          document.getElementById("loginEmail").value.trim(),
+          document.getElementById("loginPassword").value
+        );
+
+        if (!session.access_token) {
+          showSuccess("Compte créé. Vérifiez votre email si Supabase demande une confirmation, puis reconnectez-vous.");
+          return;
+        }
+
+        saveVercelSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || "",
+          expires_at: Math.floor(Date.now() / 1000) + Number(session.expires_in || 3600)
+        });
+        document.querySelector("header").classList.remove("hidden");
+        init();
+      } catch (error) {
+        showError(error);
+      }
+    });
 
     function init() {
       parseVercelAuthHash();
@@ -1081,7 +1149,10 @@
 
           if (data.error === "Utilisateur non identifié.") {
             const loginUrl = "https://accounts.google.com/AccountChooser?continue=" + encodeURIComponent(data.scriptUrl);
-            document.getElementById("googleLoginButton").href = loginUrl;
+            const loginButton = document.getElementById("googleLoginButton");
+            loginButton.href = loginUrl;
+            loginButton.classList.remove("hidden");
+            document.getElementById("supabaseLoginForm").classList.add("hidden");
             document.querySelector("header").classList.add("hidden");
             showView("loginView");
             return;

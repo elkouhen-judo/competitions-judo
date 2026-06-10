@@ -28,11 +28,13 @@ test("vercel runtime injects a compatible google.script.run adapter", () => {
   assert.match(html, /"Authorization": "Bearer " \+ session\.access_token/);
 });
 
-test("vercel runtime starts google oauth and stores the supabase session", () => {
-  assert.match(html, /provider=google/);
-  assert.match(html, /parseVercelAuthHash/);
+test("vercel runtime uses supabase password auth with auto registration", () => {
+  assert.match(html, /auth\/v1\/token\?grant_type=password/);
+  assert.match(html, /auth\/v1\/signup/);
+  assert.match(html, /authenticateWithPassword/);
   assert.match(html, /kiroku_supabase_session/);
   assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
+  assert.doesNotMatch(html, /provider=google/);
 });
 
 test("successful initial load leaves the login view", () => {
