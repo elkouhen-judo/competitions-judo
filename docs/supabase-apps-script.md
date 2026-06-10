@@ -17,7 +17,7 @@ Pour le projet actuel :
 SUPABASE_URL=https://dqtdbfmehwdexikkblwg.supabase.co
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` doit être récupérée dans Supabase, puis ajoutée dans les propriétés du script Apps Script.
+`SUPABASE_SERVICE_ROLE_KEY` doit être récupérée dans Supabase, puis ajoutée dans les propriétés du script Apps Script. Cette variable peut contenir soit l'ancienne clé JWT `service_role`, soit une nouvelle clé secrète `sb_secret_...`.
 
 ## Configuration manuelle
 
@@ -45,11 +45,13 @@ Cette fonction ne doit pas être commitée avec une vraie clé.
 
 ## Sécurité
 
-La clé `service_role` contourne Row Level Security. Elle reste acceptable ici uniquement parce que :
+La clé serveur contourne Row Level Security. Elle reste acceptable ici uniquement parce que :
 
 - elle est stockée côté serveur dans Apps Script ;
 - elle n'est jamais envoyée à `Index.html` ;
 - les règles métier sont vérifiées dans `Code.js` avant chaque opération.
+
+Avec une clé moderne `sb_secret_...`, l'application doit l'envoyer uniquement dans l'en-tête `apikey`. L'en-tête `Authorization: Bearer ...` reste réservé aux JWT Supabase, par exemple les sessions utilisateur ou les anciennes clés JWT `service_role`.
 
 ## Import des données
 

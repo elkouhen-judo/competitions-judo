@@ -90,6 +90,9 @@ test("vercel runtime exposes logout and clears local session", () => {
 
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(core, /function isJwtLikeToken\(value\)/);
+  assert.match(core, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
+  assert.match(core, /authorizationToken: isJwtLikeToken\(config\.serviceRoleKey\) \? config\.serviceRoleKey : ""/);
   assert.match(core, /\/auth\/v1\/admin\/users/);
   assert.match(core, /email_confirm: true/);
   assert.match(authSignup, /createConfirmedAuthUser\(body\.email, body\.password\)/);
