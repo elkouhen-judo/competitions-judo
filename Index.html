@@ -696,8 +696,7 @@
         <input type="hidden" id="competition_id">
 
         <div id="competitionOwnerBlock" class="hidden full-row">
-          <label for="competition_owner_search">Judoka participant</label>
-          <input type="text" id="competition_owner_search" placeholder="Rechercher par nom ou prénom" oninput="filterCompetitionOwners()">
+          <label for="competition_id_judoka">Judoka participant</label>
           <select id="competition_id_judoka"></select>
         </div>
 
@@ -1156,22 +1155,17 @@
       return `${j.prenom || ""} ${j.nom || ""}`.trim();
     }
 
-    function fillCompetitionOwnersSelect(selectedId, searchValue) {
+    function fillCompetitionOwnersSelect(selectedId) {
       const select = document.getElementById("competition_id_judoka");
-      const query = String(searchValue || "").toLowerCase().trim();
-      const filtered = judokas.filter(j => {
-        const displayName = getJudokaDisplayName(j).toLowerCase();
-        return !query || displayName.includes(query);
-      });
-
+      
       select.innerHTML = `<option value="">Choisir un judoka</option>`;
 
-      if (!filtered.length) {
+      if (!judokas.length) {
         select.innerHTML += `<option value="" disabled>Aucun judoka trouvé</option>`;
         return;
       }
 
-      filtered.forEach(j => {
+      judokas.forEach(j => {
         select.innerHTML += `
           <option value="${escapeAttribute(j.id_judoka)}">
             ${escapeHtml(getJudokaDisplayName(j))}
@@ -1182,32 +1176,16 @@
       select.value = selectedId || "";
     }
 
-    function filterCompetitionOwners() {
-      const searchValue = document.getElementById("competition_owner_search").value;
-      const selectedId = document.getElementById("competition_id_judoka").value;
-      fillCompetitionOwnersSelect(selectedId, searchValue);
-    }
-
     function setCompetitionOwnerField(idJudoka) {
       const block = document.getElementById("competitionOwnerBlock");
-      const search = document.getElementById("competition_owner_search");
 
       if (!isAdmin) {
         block.classList.add("hidden");
-        search.value = "";
         return;
       }
 
       block.classList.remove("hidden");
-      const owner = judokas.find(j => String(j.id_judoka) === String(idJudoka));
-      if (owner) {
-        document.getElementById("competition_owner_search").value = getJudokaDisplayName(owner);
-      } else {
-        document.getElementById("competition_owner_search").value = "";
-      }
-
-      const searchValue = document.getElementById("competition_owner_search").value;
-      fillCompetitionOwnersSelect(idJudoka, searchValue);
+      fillCompetitionOwnersSelect(idJudoka);
     }
 
     function resetCombatForm() {
