@@ -323,7 +323,7 @@ Sur Vercel :
 - l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
 - les appels navigateur vers Supabase Auth qui utilisent la clé anonyme doivent envoyer `apikey` et `Authorization: Bearer <SUPABASE_ANON_KEY>` ;
 - la connexion standard ne doit pas envoyer d'email ;
-- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la clé `SUPABASE_SERVICE_ROLE_KEY` ;
+- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la variable `SUPABASE_SERVICE_ROLE_KEY`, qui peut contenir soit une ancienne clé JWT `service_role`, soit une nouvelle clé secrète `sb_secret_...` ;
 - le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
 - si Supabase Auth répond `invalid_credentials` au premier essai, l'application retente l'inscription automatique avant de renvoyer une erreur ;
 - l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
@@ -345,6 +345,7 @@ Sur Vercel :
 - le bouton de déconnexion est affiché sur la même ligne que l'identité de l'utilisateur et utilise une icône explicite ;
 - sur Vercel, la déconnexion appelle Supabase Auth, supprime la session locale et revient à l'écran de connexion ;
 - les requêtes métier vers Supabase restent effectuées côté serveur avec la clé API stockée dans les variables d'environnement Vercel ;
+- si `SUPABASE_SERVICE_ROLE_KEY` contient une clé secrète moderne `sb_secret_...`, elle doit être envoyée uniquement dans l'en-tête `apikey` et jamais dans `Authorization: Bearer ...` ;
 - la clé `SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être envoyée au navigateur.
 
 Variables d'environnement obligatoires :
@@ -353,4 +354,4 @@ Variables d'environnement obligatoires :
 - `SUPABASE_ANON_KEY` ;
 - `SUPABASE_SERVICE_ROLE_KEY`.
 
-La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire sans email de validation, vérifier la session côté API, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."
+La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire sans email de validation, vérifier la session côté API, puis appliquer les droits métier en recherchant l'email dans la table `judokas`, tout en restant compatible avec les anciennes clés `service_role` et les nouvelles clés `sb_secret_...` de Supabase."

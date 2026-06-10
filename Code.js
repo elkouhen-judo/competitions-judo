@@ -30,19 +30,39 @@ function getSupabaseConfig() {
   };
 }
 
+function isJwtLikeToken(value) {
+  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(value || ""));
+}
+
+function createSupabaseHeaders(apiKey, options) {
+  const headers = {
+    "apikey": apiKey
+  };
+  const settings = options || {};
+
+  if (settings.authorizationToken) {
+    headers["Authorization"] = "Bearer " + settings.authorizationToken;
+  }
+
+  if (settings.contentType !== false) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (settings.prefer) {
+    headers["Prefer"] = settings.prefer;
+  }
+
+  return headers;
+}
+
 function supabaseRequest(table, query, options) {
   const config = getSupabaseConfig();
   const method = options && options.method ? options.method : "get";
   const requestUrl = `${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`;
-  const headers = {
-    "apikey": config.serviceRoleKey,
-    "Authorization": "Bearer " + config.serviceRoleKey,
-    "Content-Type": "application/json"
-  };
-
-  if (options && options.prefer) {
-    headers["Prefer"] = options.prefer;
-  }
+  const headers = createSupabaseHeaders(config.serviceRoleKey, {
+    authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : "",
+    prefer: options && options.prefer
+  });
 
   const params = {
     method,
