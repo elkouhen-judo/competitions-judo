@@ -62,6 +62,14 @@ function eqFilter(column, value) {
   return `${column}=eq.${encodeURIComponent(String(value))}`;
 }
 
+function makeBusinessId(prefix) {
+  return `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
 async function supabaseSelect(table, query) {
   return normalizeRows((await supabaseRequest(table, query || "select=*", { method: "get" })) || []);
 }
@@ -231,6 +239,68 @@ async function getInitialData(email) {
     isParent: parent,
     competitions: await getCompetitionsForUser(user, userContext.managedJudokaIds),
     judokas: (admin || parent) ? userContext.judokas : []
+  };
+}
+
+async function registerProfile(email, profile) {
+  const existingUser = await getCurrentUser(email);
+  if (existingUser) {
+    throw new Error("Un profil existe déjà pour cet email.");
+  }
+
+  const type = cleanText(profile && profile.type).toUpperCase();
+  const prenom = cleanText(profile && profile.prenom);
+  const nom = cleanText(profile && profile.nom);
+
+  if (!["JUDOKA", "PARENT"].includes(type)) {
+    throw new Error("Type de profil obligatoire.");
+  }
+  if (!prenom || !nom) {
+    throw new Error("Prénom et nom obligatoires.");
+  }
+
+  const children = Array.isArray(profile && profile.children) ? profile.children : [];
+  const validChildren = children
+    .map(child => ({
+      prenom: cleanText(child && child.prenom),
+      nom: cleanText(child && child.nom)
+    }))
+    .filter(child => child.prenom && child.nom);
+
+  if (type === "PARENT" && !validChildren.length) {
+    throw new Error("Au moins un enfant est obligatoire pour un profil parent.");
+  }
+
+  const idJudoka = makeBusinessId("JUDO");
+  const user = await supabaseInsert("judokas", {
+    id_judoka: idJudoka,
+    email: cleanText(email).toLowerCase(),
+    prenom,
+    nom,
+    role: type
+  });
+
+  if (type === "PARENT") {
+    for (const child of validChildren) {
+      const childId = makeBusinessId("JUDO");
+      await supabaseInsert("judokas", {
+        id_judoka: childId,
+        email: `child.${childId.toLowerCase()}@kiroku.local`,
+        prenom: child.prenom,
+        nom: child.nom,
+        role: "JUDOKA"
+      });
+      await supabaseInsert("parent_judokas", {
+        id_parent: idJudoka,
+        id_judoka: childId
+      });
+    }
+  }
+
+  return {
+    success: true,
+    user,
+    message: type === "PARENT" ? "Profil parent créé." : "Profil judoka créé."
   };
 }
 
@@ -419,6 +489,7 @@ async function deleteCombat(email, idCombat) {
 
 const methods = {
   getInitialData,
+  registerProfile,
   getCompetitionDetail,
   saveCompetition,
   ajouterCombat,
