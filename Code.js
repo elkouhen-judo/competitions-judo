@@ -7,6 +7,14 @@ function doGet() {
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 
+function authorizeAppsScriptScopes() {
+  UrlFetchApp.fetch("https://www.google.com/generate_204", {
+    muteHttpExceptions: true
+  });
+  PropertiesService.getScriptProperties();
+  Session.getActiveUser().getEmail();
+}
+
 function getSupabaseConfig() {
   const props = PropertiesService.getScriptProperties();
   const url = props.getProperty(SUPABASE_URL_PROPERTY);

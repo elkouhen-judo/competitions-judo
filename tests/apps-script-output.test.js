@@ -16,3 +16,10 @@ test("manifest declares scopes required by Supabase access", () => {
   assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/script.storage"));
   assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/userinfo.email"));
 });
+
+test("apps script exposes an authorization helper for new scopes", () => {
+  assert.match(code, /function authorizeAppsScriptScopes\(\)/);
+  assert.match(code, /UrlFetchApp\.fetch\("https:\/\/www\.google\.com\/generate_204"/);
+  assert.match(code, /PropertiesService\.getScriptProperties\(\)/);
+  assert.match(code, /Session\.getActiveUser\(\)\.getEmail\(\)/);
+});
