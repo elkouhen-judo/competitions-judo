@@ -971,13 +971,6 @@
           judokas = Array.isArray(data.judokas) ? data.judokas : [];
           canManageCurrentCompetition = Boolean(data.canManageCompetition);
 
-          if (data.isAdmin) {
-            document.getElementById("adminJudokaBlock").classList.remove("hidden");
-            fillJudokasSelect();
-          } else {
-            document.getElementById("adminJudokaBlock").classList.add("hidden");
-          }
-
           renderCompetitionDetail();
           renderCombats();
         })
