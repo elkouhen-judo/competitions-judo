@@ -30,7 +30,8 @@ test("vercel runtime injects a compatible google.script.run adapter", () => {
 
 test("vercel runtime uses supabase auth for login and session refresh", () => {
   assert.match(html, /\/auth\/v1\/otp/);
-  assert.match(html, /create_user: false/);
+  assert.match(html, /redirect_to=/);
+  assert.match(html, /create_user: true/);
   assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
 });
 
