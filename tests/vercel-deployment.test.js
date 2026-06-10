@@ -8,6 +8,10 @@ const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
+const profileRegistrationMigration = fs.readFileSync(
+  path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
+  "utf8"
+);
 
 test("vercel config routes the app shell and rpc endpoint", () => {
   assert.equal(vercel.version, 2);
@@ -54,9 +58,12 @@ test("vercel login can register judoka and parent profiles", () => {
   assert.match(html, /function addRegistrationChild\(\)/);
   assert.match(html, /\.registerProfile\(profile\)/);
   assert.match(core, /async function registerProfile\(email,\s*profile\)/);
-  assert.match(core, /supabaseInsert\("judokas"/);
-  assert.match(core, /supabaseInsert\("parent_judokas"/);
-  assert.match(core, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
+  assert.match(core, /supabaseRpc\("register_profile"/);
+  assert.doesNotMatch(core, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
+  assert.match(profileRegistrationMigration, /alter column email drop not null/i);
+  assert.match(profileRegistrationMigration, /create or replace function public\.register_profile/i);
+  assert.match(profileRegistrationMigration, /insert into public\.parent_judokas/i);
+  assert.match(profileRegistrationMigration, /values \(\s*v_child_id,\s*null,/i);
 });
 
 test("successful initial load leaves the login view", () => {
