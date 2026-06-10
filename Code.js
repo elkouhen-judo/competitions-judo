@@ -191,7 +191,8 @@ function getInitialData() {
   } catch(e) {
 
     return {
-      error: e.message
+      error: e.message,
+      scriptUrl: ScriptApp.getService().getUrl()
     };
   }
 }
