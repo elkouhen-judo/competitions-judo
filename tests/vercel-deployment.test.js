@@ -38,6 +38,12 @@ test("vercel runtime uses supabase password auth with auto registration", () => 
   assert.doesNotMatch(html, /provider=google/);
 });
 
+test("vercel login supports password reset", () => {
+  assert.match(html, /Mot de passe oublié/);
+  assert.match(html, /function requestPasswordReset\(\)/);
+  assert.match(html, /auth\/v1\/recover\?redirect_to=/);
+});
+
 test("successful initial load leaves the login view", () => {
   assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
 });
