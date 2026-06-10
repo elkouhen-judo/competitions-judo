@@ -59,20 +59,19 @@ test("vercel login supports password reset", () => {
   assert.match(html, /auth\/v1\/recover\?redirect_to=/);
 });
 
-test("vercel login can register judoka and parent profiles", () => {
+test("vercel login creates only the initial judoka profile", () => {
   assert.match(html, /id="profileRegistrationForm"/);
-  assert.match(html, /id="registrationType"/);
-  assert.match(html, /value="JUDOKA"/);
-  assert.match(html, /value="PARENT"/);
-  assert.match(html, /function addRegistrationChild\(\)/);
   assert.match(html, /\.registerProfile\(profile\)/);
+  assert.match(html, /profil judoka/);
+  assert.doesNotMatch(html, /id="registrationType"/);
+  assert.doesNotMatch(html, /registrationChildren/);
   assert.match(core, /async function registerProfile\(email,\s*profile\)/);
   assert.match(core, /supabaseRpc\("register_profile"/);
+  assert.match(core, /p_type: "JUDOKA"/);
+  assert.match(core, /p_children: \[\]/);
   assert.doesNotMatch(core, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
   assert.match(profileRegistrationMigration, /alter column email drop not null/i);
   assert.match(profileRegistrationMigration, /create or replace function public\.register_profile/i);
-  assert.match(profileRegistrationMigration, /insert into public\.parent_judokas/i);
-  assert.match(profileRegistrationMigration, /values \(\s*v_child_id,\s*null,/i);
 });
 
 test("successful initial load leaves the login view", () => {
