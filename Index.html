@@ -211,10 +211,14 @@
       top: calc(100% - 10px);
     }
     .autocomplete-option {
-      padding: 12px 14px;
+      padding: 14px;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 16px;
       border-bottom: 1px solid var(--line);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
     .autocomplete-option:hover { background: var(--soft); }
@@ -1333,6 +1337,15 @@
       const input = document.getElementById(inputId);
       const dropdown = document.getElementById(dropdownId);
       const hidden = document.getElementById(hiddenId);
+      let isSelecting = false;
+
+      function select(value, label) {
+        input.value = label;
+        hidden.value = value;
+        dropdown.style.display = "none";
+        isSelecting = false;
+        onChange && onChange(value ? getItems().find(j => String(j.id_judoka) === String(value)) : null);
+      }
 
       function renderOptions(items) {
         dropdown.innerHTML = "";
@@ -1341,13 +1354,7 @@
           const opt = document.createElement("div");
           opt.className = "autocomplete-option";
           opt.textContent = "— Tous —";
-          opt.addEventListener("mousedown", e => {
-            e.preventDefault();
-            input.value = "";
-            hidden.value = "";
-            dropdown.style.display = "none";
-            onChange && onChange(null);
-          });
+          opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select("", ""); });
           dropdown.appendChild(opt);
         }
 
@@ -1362,13 +1369,7 @@
             const opt = document.createElement("div");
             opt.className = "autocomplete-option";
             opt.textContent = name;
-            opt.addEventListener("mousedown", e => {
-              e.preventDefault();
-              input.value = name;
-              hidden.value = j.id_judoka;
-              dropdown.style.display = "none";
-              onChange && onChange(j);
-            });
+            opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select(j.id_judoka, name); });
             dropdown.appendChild(opt);
           });
         }
@@ -1388,7 +1389,9 @@
       });
 
       input.addEventListener("blur", () => {
-        setTimeout(() => { dropdown.style.display = "none"; }, 150);
+        if (!isSelecting) {
+          dropdown.style.display = "none";
+        }
       });
     }
 
