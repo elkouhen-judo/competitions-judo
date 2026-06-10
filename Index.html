@@ -128,7 +128,7 @@
       gap: 8px;
     }
 
-    input, select, textarea, button {
+    input, select, textarea, button, .button {
       width: 100%;
       border-radius: 7px;
       font: inherit;
@@ -155,7 +155,7 @@
       font-weight: bold;
     }
 
-    button {
+    button, .button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -168,9 +168,10 @@
       cursor: pointer;
       font-weight: bold;
       border-radius: 8px; /* Slightly softer look */
+      text-decoration: none;
     }
 
-    button:hover {
+    button:hover, .button:hover {
       background: var(--primary-hover);
     }
 
@@ -583,7 +584,8 @@
       .competition-header-actions button,
       .competition-management-actions button,
       .form-actions button,
-      .admin-actions button {
+      .admin-actions button,
+      .login-form .button {
         width: auto;
         min-width: 140px;
       }
@@ -670,6 +672,17 @@
       color: var(--muted);
       margin-bottom: 24px;
     }
+    .login-form {
+      width: min(100%, 360px);
+      display: grid;
+      gap: 10px;
+    }
+    .login-form input {
+      margin: 0;
+    }
+    .login-form .button {
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -689,11 +702,16 @@
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p>Vous devez être connecté avec votre compte Google pour accéder à l'application.</p>
+        <p id="loginText">Vous devez être connecté avec votre compte Google pour accéder à l'application.</p>
         <a id="googleLoginButton" href="#" class="button" style="text-decoration:none; display:inline-flex;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0; color:white; margin-right:8px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
           Se connecter avec Google
         </a>
+        <form id="vercelLoginForm" class="login-form hidden">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" autocomplete="email" required>
+          <button type="submit">Recevoir le lien de connexion</button>
+        </form>
       </div>
     </section>
 
@@ -905,8 +923,180 @@
     let canManageCurrentCompetition = false;
     let canEditCurrentCompetition = false;
     let previousView = "homeView";
+    const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
+    const isVercelRuntime = runtimeConfig.runtime === "vercel";
+    const sessionStorageKey = "kiroku_supabase_session";
+
+    if (isVercelRuntime && !(window.google && window.google.script && window.google.script.run)) {
+      window.google = { script: { run: createVercelRunner() } };
+    }
+
+    function createVercelRunner() {
+      const callable = state => new Proxy({}, {
+        get(_target, prop) {
+          if (prop === "withSuccessHandler") {
+            return handler => callable({ ...state, success: handler });
+          }
+          if (prop === "withFailureHandler") {
+            return handler => callable({ ...state, failure: handler });
+          }
+          return (...args) => callVercelRpc(String(prop), args, state.success, state.failure);
+        }
+      });
+      return callable({});
+    }
+
+    async function callVercelRpc(method, args, success, failure) {
+      try {
+        const session = await getValidVercelSession();
+        if (!session) {
+          showVercelLogin();
+          return;
+        }
+
+        const response = await fetch("/api/rpc", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + session.access_token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ method, args })
+        });
+        const payload = await response.json();
+
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || "Erreur serveur.");
+        }
+
+        success && success(payload.result);
+      } catch (error) {
+        if (String(error.message || "").toLowerCase().includes("session")) {
+          clearVercelSession();
+          showVercelLogin();
+        }
+        failure ? failure(error) : showError(error);
+      }
+    }
+
+    function readVercelSession() {
+      try {
+        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function saveVercelSession(session) {
+      localStorage.setItem(sessionStorageKey, JSON.stringify(session));
+    }
+
+    function clearVercelSession() {
+      localStorage.removeItem(sessionStorageKey);
+    }
+
+    function parseAuthHash() {
+      if (!isVercelRuntime || !window.location.hash) return;
+
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      const expiresIn = Number(params.get("expires_in") || "3600");
+
+      if (accessToken && refreshToken) {
+        saveVercelSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: Math.floor(Date.now() / 1000) + expiresIn
+        });
+        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      }
+    }
+
+    async function getValidVercelSession() {
+      let session = readVercelSession();
+      if (!session) return null;
+
+      const expiresAt = Number(session.expires_at || 0);
+      if (expiresAt && expiresAt > Math.floor(Date.now() / 1000) + 60) {
+        return session;
+      }
+
+      if (!session.refresh_token) {
+        clearVercelSession();
+        return null;
+      }
+
+      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: {
+          "apikey": runtimeConfig.supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ refresh_token: session.refresh_token })
+      });
+
+      if (!response.ok) {
+        clearVercelSession();
+        return null;
+      }
+
+      const refreshed = await response.json();
+      session = {
+        access_token: refreshed.access_token,
+        refresh_token: refreshed.refresh_token || session.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
+      };
+      saveVercelSession(session);
+      return session;
+    }
+
+    function showVercelLogin() {
+      document.querySelector("header").classList.add("hidden");
+      document.getElementById("loginText").innerText = "Saisissez votre email pour recevoir un lien de connexion sécurisé.";
+      document.getElementById("googleLoginButton").classList.add("hidden");
+      document.getElementById("vercelLoginForm").classList.remove("hidden");
+      showView("loginView");
+    }
+
+    async function requestVercelLogin(email) {
+      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/otp`, {
+        method: "POST",
+        headers: {
+          "apikey": runtimeConfig.supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          create_user: false,
+          email_redirect_to: window.location.origin
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Impossible d'envoyer le lien de connexion.");
+      }
+    }
+
+    document.getElementById("vercelLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      clearMessage();
+      try {
+        await requestVercelLogin(document.getElementById("loginEmail").value);
+        showSuccess("Lien de connexion envoyé. Vérifiez votre boîte mail.");
+      } catch (error) {
+        showError(error);
+      }
+    });
 
     function init() {
+      parseAuthHash();
+
+      if (isVercelRuntime && (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey)) {
+        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
+        showVercelLogin();
+        return;
+      }
+
       google.script.run
         .withSuccessHandler(data => {
           if (!data) {
@@ -932,6 +1122,7 @@
           isParent = data.isParent || false;
           competitions = Array.isArray(data.competitions) ? data.competitions : [];
           judokas = Array.isArray(data.judokas) ? data.judokas : [];
+          document.querySelector("header").classList.remove("hidden");
 
           const roleLabel = isAdmin ? "ADMIN" : isParent ? "PARENT" : "JUDOKA";
           document.getElementById("userInfo").innerHTML =
@@ -1472,7 +1663,7 @@
     }
 
     function showView(id) {
-      ["homeView", "competitionView", "competitionFormView", "combatFormView"].forEach(viewId => {
+      ["loginView", "homeView", "competitionView", "competitionFormView", "combatFormView"].forEach(viewId => {
         document.getElementById(viewId).classList.add("hidden");
       });
 
