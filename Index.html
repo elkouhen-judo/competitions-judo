@@ -1196,19 +1196,13 @@
     }
 
     function getCombatFormValue() {
-      const combat = {
+      return {
         id_competition: currentCompetition.id_competition,
         adversaire: document.getElementById("combat_adversaire").value,
         resultat: document.getElementById("combat_resultat").value,
         type_victoire: document.getElementById("combat_type_victoire").value,
         deroule: document.getElementById("combat_deroule").value
       };
-
-      if (isAdmin) {
-        combat.id_judoka = document.getElementById("combat_id_judoka").value;
-      }
-
-      return combat;
     }
 
     function deleteCurrentCompetition() {
