@@ -352,10 +352,8 @@ Sur Vercel :
 - l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
 - si l'email authentifié n'existe pas encore dans la table `judokas`, l'utilisateur doit compléter un formulaire de création de profil applicatif ;
 - pour un profil judoka, le formulaire crée une ligne dans `judokas` avec le rôle `JUDOKA` ;
-- pour un profil parent, le formulaire crée une ligne parent dans `judokas` avec le rôle `PARENT`, crée les enfants renseignés dans `judokas`, puis crée les liens correspondants dans `parent_judokas` ;
-- la création parent/enfants/liens doit être transactionnelle afin d'éviter un parent partiellement créé ;
-- l'email d'un enfant créé sous un parent peut être nul afin de ne pas bloquer une future création de compte autonome ;
-- aucun email ne doit être envoyé pour les enfants créés par un parent ;
+- le formulaire initial de création de profil ne gère plus les enfants et crée toujours un profil `JUDOKA` ;
+- la gestion des enfants et le passage au rôle `PARENT` se font uniquement après connexion depuis l'écran dédié de gestion des enfants ;
 - le lien de confirmation Supabase doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;
 - l'écran de connexion propose une action "mot de passe oublié" qui envoie un email de réinitialisation Supabase ;
 - le lien de réinitialisation du mot de passe doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;

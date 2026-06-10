@@ -376,10 +376,10 @@ async function getInitialData(email) {
 async function registerProfile(email, profile) {
   return supabaseRpc("register_profile", {
     p_email: cleanText(email).toLowerCase(),
-    p_type: profile && profile.type,
+    p_type: "JUDOKA",
     p_prenom: profile && profile.prenom,
     p_nom: profile && profile.nom,
-    p_children: Array.isArray(profile && profile.children) ? profile.children : []
+    p_children: []
   });
 }
 

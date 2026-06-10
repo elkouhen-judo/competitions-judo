@@ -687,14 +687,6 @@
     .login-form .button {
       width: 100%;
     }
-    .child-row {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .child-row input {
-      margin: 0;
-    }
     .user-actions {
       display: flex;
       align-items: center;
@@ -743,20 +735,10 @@
           <button type="button" class="button-secondary" onclick="requestPasswordReset()">Mot de passe oublié</button>
         </form>
         <form id="profileRegistrationForm" class="login-form hidden">
-          <label for="registrationType">Type de profil</label>
-          <select id="registrationType" onchange="toggleRegistrationChildren()">
-            <option value="JUDOKA">Judoka</option>
-            <option value="PARENT">Parent</option>
-          </select>
           <label for="registrationPrenom">Prénom</label>
           <input id="registrationPrenom" type="text" autocomplete="given-name">
           <label for="registrationNom">Nom</label>
           <input id="registrationNom" type="text" autocomplete="family-name">
-          <div id="registrationChildrenBlock" class="hidden">
-            <label>Enfants</label>
-            <div id="registrationChildren"></div>
-            <button type="button" class="button-secondary" onclick="addRegistrationChild()">Ajouter un enfant</button>
-          </div>
           <button type="submit">Créer mon profil</button>
         </form>
         <a id="googleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
@@ -1304,38 +1286,11 @@
     function showProfileRegistration() {
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil dans l'application.";
+      document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil judoka dans l'application.";
       document.getElementById("googleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.add("hidden");
       document.getElementById("profileRegistrationForm").classList.remove("hidden");
-      if (!document.querySelector("#registrationChildren .child-row")) {
-        addRegistrationChild();
-      }
-      toggleRegistrationChildren();
       showView("loginView");
-    }
-
-    function toggleRegistrationChildren() {
-      const isParentProfile = document.getElementById("registrationType").value === "PARENT";
-      document.getElementById("registrationChildrenBlock").classList.toggle("hidden", !isParentProfile);
-    }
-
-    function addRegistrationChild() {
-      const target = document.getElementById("registrationChildren");
-      const row = document.createElement("div");
-      row.className = "child-row";
-      row.innerHTML = `
-        <input type="text" class="child-prenom" placeholder="Prénom de l'enfant">
-        <input type="text" class="child-nom" placeholder="Nom de l'enfant">
-      `;
-      target.appendChild(row);
-    }
-
-    function getRegistrationChildren() {
-      return Array.from(document.querySelectorAll("#registrationChildren .child-row")).map(row => ({
-        prenom: row.querySelector(".child-prenom").value,
-        nom: row.querySelector(".child-nom").value
-      }));
     }
 
     document.getElementById("profileRegistrationForm").addEventListener("submit", event => {
@@ -1343,10 +1298,8 @@
       clearMessage();
 
       const profile = {
-        type: document.getElementById("registrationType").value,
         prenom: document.getElementById("registrationPrenom").value,
-        nom: document.getElementById("registrationNom").value,
-        children: getRegistrationChildren()
+        nom: document.getElementById("registrationNom").value
       };
 
       google.script.run
