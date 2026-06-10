@@ -162,6 +162,8 @@ Les droits sont ensuite appliqués selon deux principes :
 
 Le rôle administrateur est attribué lorsque le rôle du judoka vaut `ADMIN`.
 
+Les appels à Supabase sont effectués côté serveur par Google Apps Script. Les secrets Supabase ne sont jamais stockés dans le code source ni envoyés au navigateur. L'URL Supabase et la clé serveur sont lues depuis les Script Properties Apps Script.
+
 ## 6. Règles métier
 
 ### 6.1 Visibilité des compétitions
@@ -229,6 +231,8 @@ Les compétitions référencent leur judoka propriétaire via `competitions.id_j
 Les combats référencent à la fois leur judoka via `combats.id_judoka` et leur compétition via `combats.id_competition`.
 
 La relation entre `combats` et `competitions` applique une suppression en cascade : supprimer une compétition supprime automatiquement ses combats associés.
+
+L'application accède à ces tables via l'API REST Supabase depuis `Code.js`. Les fonctions exposées à l'interface restent stables afin de conserver le comportement de `Index.html`.
 
 ## 8. Cas particuliers et confirmations
 
