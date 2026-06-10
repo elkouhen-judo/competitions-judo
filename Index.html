@@ -1071,7 +1071,8 @@
         throw new Error(loginError || "Connexion impossible.");
       }
 
-      const signupResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/signup`, {
+      const redirectTo = encodeURIComponent(window.location.origin);
+      const signupResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/signup?redirect_to=${redirectTo}`, {
         method: "POST",
         headers: {
           "apikey": runtimeConfig.supabaseAnonKey,
