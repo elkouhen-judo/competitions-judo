@@ -2,6 +2,11 @@
   "timeZone": "Europe/Paris",
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/script.storage",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
   "runtimeVersion": "V8",
   "webapp": {
     "executeAs": "USER_DEPLOYING",
