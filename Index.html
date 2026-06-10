@@ -1115,10 +1115,7 @@
 
       const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
         method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
+        headers: getSupabaseAnonymousAuthHeaders(),
         body: JSON.stringify({ refresh_token: session.refresh_token })
       });
 
@@ -1137,13 +1134,18 @@
       return session;
     }
 
+    function getSupabaseAnonymousAuthHeaders() {
+      return {
+        "apikey": runtimeConfig.supabaseAnonKey,
+        "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
+        "Content-Type": "application/json"
+      };
+    }
+
     async function requestPasswordSession(email, password) {
       const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=password`, {
         method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
+        headers: getSupabaseAnonymousAuthHeaders(),
         body: JSON.stringify({ email, password })
       });
 
@@ -1204,10 +1206,7 @@
       const redirectTo = encodeURIComponent(window.location.origin);
       const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/recover?redirect_to=${redirectTo}`, {
         method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
+        headers: getSupabaseAnonymousAuthHeaders(),
         body: JSON.stringify({ email })
       });
 

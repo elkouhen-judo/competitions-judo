@@ -321,6 +321,7 @@ Sur Vercel :
 - les appels `google.script.run` sont remplacés dans le navigateur par un adaptateur HTTP compatible ;
 - les fonctions métier sont exposées via une API serverless Vercel ;
 - l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
+- les appels navigateur vers Supabase Auth qui utilisent la clé anonyme doivent envoyer `apikey` et `Authorization: Bearer <SUPABASE_ANON_KEY>` ;
 - la connexion standard ne doit pas envoyer d'email ;
 - si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la clé `SUPABASE_SERVICE_ROLE_KEY` ;
 - le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
