@@ -20,7 +20,7 @@ Le champ de recherche est un champ texte tactile, place au-dessus de la liste de
 
 Lorsqu'une competition existante est editee, la recherche affiche le nom du proprietaire actuel et la liste selectionne son `id_judoka`.
 
-Si aucun judoka ne correspond a la recherche, la liste affiche une option indiquant qu'aucun resultat n'est disponible.
+La liste des judokas est affichee dans un menu deroulant simple.
 
 ## Tests
 
