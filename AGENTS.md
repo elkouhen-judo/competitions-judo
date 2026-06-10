@@ -1,13 +1,25 @@
 # AGENTS.md
 
-## Règles de développement
+## Principes généraux
 
-- À la fin de chaque développement, déployer la nouvelle version de l'application et afficher l'URL déployée dans la réponse finale. Si le déploiement est impossible, indiquer clairement la commande tentée, la raison du blocage et l'action nécessaire pour finaliser le déploiement.
+- Les écrans doivent être conçus mobile first.
+- À chaque consigne fonctionnelle, proposer une mise à jour de `spec.md` et aider à formuler correctement la demande.
 
-- Ne garder que les 3 dernières versions déployées
+## Fin de développement
 
-- À la fin de chaque développement, committer les modifications dans git avec un commentaire explicite.
+À la fin de chaque développement :
 
-- Les écrans doivent être mobile first.
+- Exécuter les vérifications pertinentes.
+- Committer les modifications dans Git avec un message explicite.
+- Déployer la nouvelle version de l'application.
+- Afficher l'URL déployée dans la réponse finale.
 
-- A chaque fois que je te donnes une consigne fonctionnelle, propose une mise à jour de la spec et aide moi à formuler correctement ma demande.
+Si le déploiement est impossible, indiquer clairement :
+
+- la commande tentée ;
+- la raison du blocage ;
+- l'action nécessaire pour finaliser le déploiement.
+
+## Déploiements
+
+- Ne garder que les 3 dernières versions déployées.
