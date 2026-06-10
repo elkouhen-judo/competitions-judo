@@ -165,7 +165,7 @@ function resolveCompetitionOwnerId(user, competition) {
     : user.id_judoka;
 
   if (!ownerJudokaId) {
-    throw new Error("Judoka propriétaire obligatoire.");
+    throw new Error("Judoka participant obligatoire.");
   }
 
   return ownerJudokaId;
