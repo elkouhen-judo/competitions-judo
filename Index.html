@@ -717,6 +717,14 @@
             <span class="meta-label">Lieu</span>
             <span id="competitionLieu" class="meta-value"></span>
           </div>
+          <div class="meta-row" id="row_competitionAgePoids">
+            <span class="meta-label">Catégorie</span>
+            <span id="competitionAgePoids" class="meta-value"></span>
+          </div>
+          <div class="meta-row" id="row_competitionPesee">
+            <span class="meta-label">Pesée</span>
+            <span id="competitionPesee" class="meta-value"></span>
+          </div>
         </div>
         <div class="section">
           <div class="section-heading">
@@ -757,6 +765,30 @@
         <label for="competition_lieu">Lieu</label>
         <input type="text" id="competition_lieu">
 
+        <div class="form-grid">
+          <div>
+            <label for="competition_categorie_age">Catégorie d'âge</label>
+            <select id="competition_categorie_age">
+              <option value="">Non spécifié</option>
+              <option value="Poussin(e)">Poussin(e)</option>
+              <option value="Benjamin(e)">Benjamin(e)</option>
+              <option value="Minime">Minime</option>
+              <option value="Cadet(te)">Cadet(te)</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
+              <option value="Vétéran">Vétéran</option>
+            </select>
+          </div>
+          <div>
+            <label for="competition_categorie_poids">Catégorie de poids</label>
+            <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg">
+          </div>
+          <div class="full-row">
+            <label for="competition_poids_pesee">Poids à la pesée (kg)</label>
+            <input type="number" id="competition_poids_pesee" step="0.1" placeholder="ex: 72.4">
+          </div>
+        </div>
+
         <div class="form-actions mobile-action-bar">
           <button class="button-secondary" onclick="cancelCompetitionForm()">Annuler</button>
           <button onclick="saveCompetition()">
@@ -795,6 +827,18 @@
               <option value="V">Victoire</option>
               <option value="D">Défaite</option>
               <option value="E">Égalité</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="combat_type_victoire">Type de décision</label>
+            <select id="combat_type_victoire">
+              <option value="">Non spécifié</option>
+              <option value="Ippon">Ippon</option>
+              <option value="Waza-ari">Waza-ari</option>
+              <option value="Kinsa / Décision">Kinsa / Décision</option>
+              <option value="Pénalité (Hansoku-make / Shido)">Pénalité (Hansoku-make / Shido)</option>
+              <option value="Forfait / Abandon">Forfait / Abandon</option>
             </select>
           </div>
 
@@ -951,6 +995,22 @@
       document.getElementById("competitionSubtitle").innerText = "Détail de la compétition";
       document.getElementById("competitionDate").innerText = formatDate(currentCompetition.date);
       document.getElementById("competitionLieu").innerText = currentCompetition.lieu || "";
+      
+      const agePoids = [currentCompetition.categorie_age, currentCompetition.categorie_poids].filter(Boolean).join(" ");
+      if (agePoids) {
+        document.getElementById("row_competitionAgePoids").classList.remove("hidden");
+        document.getElementById("competitionAgePoids").innerText = agePoids;
+      } else {
+        document.getElementById("row_competitionAgePoids").classList.add("hidden");
+      }
+
+      if (currentCompetition.poids_pesee) {
+        document.getElementById("row_competitionPesee").classList.remove("hidden");
+        document.getElementById("competitionPesee").innerText = currentCompetition.poids_pesee + " kg";
+      } else {
+        document.getElementById("row_competitionPesee").classList.add("hidden");
+      }
+
       document.getElementById("competitionAdminActions").classList.toggle("hidden", !canManageCurrentCompetition);
     }
 
@@ -978,7 +1038,10 @@
           <article class="card combat-card">
             <div class="combat-header">
               <p class="card-title">${escapeHtml(c.adversaire || "Adversaire non renseigné")}</p>
-              <span class="result-badge result-${escapeAttribute(String(c.resultat || "").toLowerCase())}">${formatResultat(c.resultat)}</span>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                <span class="result-badge result-${escapeAttribute(String(c.resultat || "").toLowerCase())}">${formatResultat(c.resultat)}</span>
+                ${c.type_victoire ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.type_victoire)}</span>` : ""}
+              </div>
             </div>
             ${isAdmin ? `
               <div class="meta-row">
@@ -1021,6 +1084,9 @@
         document.getElementById("competition_nom").value = c.nom || "";
         document.getElementById("competition_date").value = toInputDate(c.date);
         document.getElementById("competition_lieu").value = c.lieu || "";
+        document.getElementById("competition_categorie_age").value = c.categorie_age || "";
+        document.getElementById("competition_categorie_poids").value = c.categorie_poids || "";
+        document.getElementById("competition_poids_pesee").value = c.poids_pesee || "";
       } else {
         previousView = "homeView";
         document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
@@ -1029,6 +1095,9 @@
         document.getElementById("competition_nom").value = "";
         document.getElementById("competition_date").value = "";
         document.getElementById("competition_lieu").value = "";
+        document.getElementById("competition_categorie_age").value = "";
+        document.getElementById("competition_categorie_poids").value = "";
+        document.getElementById("competition_poids_pesee").value = "";
       }
 
       showView("competitionFormView");
@@ -1043,7 +1112,10 @@
         id_competition: document.getElementById("competition_id").value,
         nom: document.getElementById("competition_nom").value,
         date: document.getElementById("competition_date").value,
-        lieu: document.getElementById("competition_lieu").value
+        lieu: document.getElementById("competition_lieu").value,
+        categorie_age: document.getElementById("competition_categorie_age").value,
+        categorie_poids: document.getElementById("competition_categorie_poids").value,
+        poids_pesee: document.getElementById("competition_poids_pesee").value
       };
 
       if (isAdmin) {
@@ -1077,6 +1149,7 @@
         document.getElementById("combat_id").value = combat.id_combat || "";
         document.getElementById("combat_adversaire").value = combat.adversaire || "";
         document.getElementById("combat_resultat").value = combat.resultat || "";
+        document.getElementById("combat_type_victoire").value = combat.type_victoire || "";
         document.getElementById("combat_deroule").value = combat.deroule || "";
 
         if (isAdmin) {
@@ -1143,6 +1216,7 @@
         id_competition: currentCompetition.id_competition,
         adversaire: document.getElementById("combat_adversaire").value,
         resultat: document.getElementById("combat_resultat").value,
+        type_victoire: document.getElementById("combat_type_victoire").value,
         deroule: document.getElementById("combat_deroule").value
       };
 
@@ -1256,6 +1330,7 @@
       document.getElementById("combat_id").value = "";
       document.getElementById("combat_adversaire").value = "";
       document.getElementById("combat_resultat").value = "";
+      document.getElementById("combat_type_victoire").value = "";
       document.getElementById("combat_deroule").value = "";
       document.getElementById("saveCombatButtonText").innerText = "Ajouter le combat";
 
