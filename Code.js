@@ -1,8 +1,5 @@
-const SPREADSHEET_ID = "1oip8-lGjsg7iQO1SLHI-Z65fMicvUkyL_Iwg-6FjV7Q";
-
-const SHEET_JUDOKAS = "Judokas";
-const SHEET_COMPETITIONS = "Competitions";
-const SHEET_COMBATS = "Combats";
+const SUPABASE_URL_PROPERTY = "SUPABASE_URL";
+const SUPABASE_SERVICE_ROLE_KEY_PROPERTY = "SUPABASE_SERVICE_ROLE_KEY";
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile("Index")
@@ -10,8 +7,111 @@ function doGet() {
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 
-function getSpreadsheet() {
-  return SpreadsheetApp.openById(SPREADSHEET_ID);
+function getSupabaseConfig() {
+  const props = PropertiesService.getScriptProperties();
+  const url = props.getProperty(SUPABASE_URL_PROPERTY);
+  const serviceRoleKey = props.getProperty(SUPABASE_SERVICE_ROLE_KEY_PROPERTY);
+
+  if (!url || !serviceRoleKey) {
+    throw new Error("Configuration Supabase manquante : SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont obligatoires.");
+  }
+
+  return {
+    url: url.replace(/\/$/, ""),
+    serviceRoleKey
+  };
+}
+
+function supabaseRequest(table, query, options) {
+  const config = getSupabaseConfig();
+  const method = options && options.method ? options.method : "get";
+  const requestUrl = `${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`;
+  const headers = {
+    "apikey": config.serviceRoleKey,
+    "Authorization": "Bearer " + config.serviceRoleKey,
+    "Content-Type": "application/json"
+  };
+
+  if (options && options.prefer) {
+    headers["Prefer"] = options.prefer;
+  }
+
+  const params = {
+    method,
+    headers,
+    muteHttpExceptions: true
+  };
+
+  if (options && Object.prototype.hasOwnProperty.call(options, "payload")) {
+    params.payload = JSON.stringify(options.payload);
+  }
+
+  const response = UrlFetchApp.fetch(requestUrl, params);
+  const status = response.getResponseCode();
+  const body = response.getContentText();
+
+  if (status < 200 || status >= 300) {
+    throw new Error(`Erreur Supabase ${status} sur ${table} : ${body}`);
+  }
+
+  if (!body) {
+    return null;
+  }
+
+  return JSON.parse(body);
+}
+
+function supabaseSelect(table, query) {
+  return normalizeRows(supabaseRequest(table, query || "select=*", { method: "get" }) || []);
+}
+
+function supabaseSelectOne(table, query) {
+  const separator = query ? "&" : "";
+  const rows = supabaseSelect(table, `${query || "select=*"}${separator}limit=1`);
+  return rows.length ? rows[0] : null;
+}
+
+function supabaseInsert(table, payload) {
+  const rows = supabaseRequest(table, "select=*", {
+    method: "post",
+    payload,
+    prefer: "return=representation"
+  });
+
+  return normalizeRows(rows || [])[0] || null;
+}
+
+function supabasePatch(table, query, payload) {
+  const rows = supabaseRequest(table, `${query}&select=*`, {
+    method: "patch",
+    payload,
+    prefer: "return=representation"
+  });
+
+  return normalizeRows(rows || [])[0] || null;
+}
+
+function supabaseDelete(table, query) {
+  supabaseRequest(table, query, {
+    method: "delete",
+    prefer: "return=minimal"
+  });
+}
+
+function normalizeRows(rows) {
+  return rows.map(row => {
+    const normalized = {};
+
+    Object.keys(row).forEach(key => {
+      normalized[key] = row[key] === null || row[key] === undefined ? "" : row[key];
+    });
+
+    return normalized;
+  });
+}
+
+function eqFilter(column, value) {
+  return `${column}=eq.${encodeURIComponent(String(value))}`;
 }
 
 function getCurrentUser() {
@@ -25,8 +125,7 @@ function getCurrentUserContext() {
     throw new Error("Utilisateur non identifié.");
   }
 
-  const judokas = getRowsAsObjects(SHEET_JUDOKAS);
-
+  const judokas = getJudokas();
   const user = judokas.find(j =>
     String(j.email || "").toLowerCase().trim() === String(email).toLowerCase().trim()
   );
@@ -95,11 +194,12 @@ function testInitialData() {
   console.log(JSON.stringify(data, null, 2));
 }
 
-function getCompetitions() {
-  const competitions = getRowsAsObjects(SHEET_COMPETITIONS)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+function getJudokas() {
+  return supabaseSelect("judokas", "select=*&order=nom.asc,prenom.asc");
+}
 
-  return competitions;
+function getCompetitions() {
+  return supabaseSelect("competitions", "select=*&order=date.desc");
 }
 
 function getCompetitionsForUser(user) {
@@ -112,15 +212,19 @@ function getCompetitionsForUser(user) {
   return competitions.filter(c => canManageCompetition(user, c));
 }
 
+function getCompetitionById(idCompetition) {
+  return supabaseSelectOne("competitions", `select=*&${eqFilter("id_competition", idCompetition)}`);
+}
+
+function getCombatById(idCombat) {
+  return supabaseSelectOne("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
+}
+
 function getCompetitionDetail(id_competition) {
   const userContext = getCurrentUserContext();
   const user = userContext.user;
   const admin = isAdmin(user);
-
-  const competitions = getRowsAsObjects(SHEET_COMPETITIONS);
-  const competition = competitions.find(c =>
-    String(c.id_competition) === String(id_competition)
-  );
+  const competition = getCompetitionById(id_competition);
 
   if (!competition) {
     throw new Error("Compétition introuvable.");
@@ -130,17 +234,12 @@ function getCompetitionDetail(id_competition) {
     throw new Error("Accès refusé à cette compétition.");
   }
 
-  const combats = getRowsAsObjects(SHEET_COMBATS);
-
-  let filtered = combats.filter(c =>
-    String(c.id_competition) === String(id_competition)
-  );
+  let filtered = supabaseSelect("combats", `select=*&${eqFilter("id_competition", id_competition)}`);
 
   if (!admin) {
     filtered = filtered.filter(c =>
       String(c.id_judoka) === String(user.id_judoka)
     );
-
   }
 
   const judokas = admin ? userContext.judokas : [];
@@ -174,60 +273,42 @@ function saveCompetition(competition) {
     throw new Error("Nom et date obligatoires.");
   }
 
-  const sheet = getSpreadsheet().getSheetByName(SHEET_COMPETITIONS);
-
-  if (!sheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMPETITIONS);
-  }
-
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0].map(h => String(h).trim());
-
-  const idIndex = headers.indexOf("id_competition");
-  const judokaIdIndex = headers.indexOf("id_judoka");
-  const nomIndex = headers.indexOf("nom");
-  const dateIndex = headers.indexOf("date");
-  const lieuIndex = headers.indexOf("lieu");
-
-  if (idIndex === -1 || judokaIdIndex === -1 || nomIndex === -1 || dateIndex === -1 || lieuIndex === -1) {
-    throw new Error("Colonnes attendues dans Competitions : id_competition, id_judoka, nom, date, lieu");
-  }
+  const payload = {
+    id_judoka: ownerJudokaId,
+    nom: competition.nom,
+    date: competition.date,
+    lieu: competition.lieu || ""
+  };
 
   if (competition.id_competition) {
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idIndex]) === String(competition.id_competition)) {
-        const existingCompetition = {};
-        headers.forEach((header, index) => {
-          existingCompetition[header] = serializeCellValue(data[i][index]);
-        });
+    const existingCompetition = getCompetitionById(competition.id_competition);
 
-        if (!canManageCompetition(user, existingCompetition)) {
-          throw new Error("Modification de cette compétition non autorisée.");
-        }
-
-        sheet.getRange(i + 1, judokaIdIndex + 1).setValue(ownerJudokaId);
-        sheet.getRange(i + 1, nomIndex + 1).setValue(competition.nom);
-        sheet.getRange(i + 1, dateIndex + 1).setValue(competition.date);
-        sheet.getRange(i + 1, lieuIndex + 1).setValue(competition.lieu || "");
-
-        return {
-          success: true,
-          id_competition: competition.id_competition,
-          message: "Compétition modifiée."
-        };
-      }
+    if (!existingCompetition) {
+      throw new Error("Compétition introuvable.");
     }
+
+    if (!canManageCompetition(user, existingCompetition)) {
+      throw new Error("Modification de cette compétition non autorisée.");
+    }
+
+    supabasePatch("competitions", eqFilter("id_competition", competition.id_competition), payload);
+
+    return {
+      success: true,
+      id_competition: competition.id_competition,
+      message: "Compétition modifiée."
+    };
   }
 
   const idCompetition = "COMP" + new Date().getTime();
 
-  sheet.appendRow([
-    idCompetition,
-    ownerJudokaId,
-    competition.nom,
-    competition.date,
-    competition.lieu || ""
-  ]);
+  supabaseInsert("competitions", {
+    id_competition: idCompetition,
+    id_judoka: ownerJudokaId,
+    nom: competition.nom,
+    date: competition.date,
+    lieu: competition.lieu || ""
+  });
 
   return {
     success: true,
@@ -256,22 +337,16 @@ function ajouterCombat(combat) {
     throw new Error("Judoka obligatoire.");
   }
 
-  const sheet = getSpreadsheet().getSheetByName(SHEET_COMBATS);
-
-  if (!sheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMBATS);
-  }
-
   const idCombat = "CB" + new Date().getTime();
 
-  sheet.appendRow([
-    idCombat,
-    idJudoka,
-    combat.id_competition,
-    combat.adversaire || "",
-    combat.resultat,
-    combat.commentaire || ""
-  ]);
+  supabaseInsert("combats", {
+    id_combat: idCombat,
+    id_judoka: idJudoka,
+    id_competition: combat.id_competition,
+    adversaire: combat.adversaire || "",
+    resultat: combat.resultat,
+    commentaire: combat.commentaire || ""
+  });
 
   return {
     success: true,
@@ -291,61 +366,36 @@ function updateCombat(combat) {
     throw new Error("Résultat obligatoire.");
   }
 
-  const sheet = getSpreadsheet().getSheetByName(SHEET_COMBATS);
+  const existingCombat = getCombatById(combat.id_combat);
 
-  if (!sheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMBATS);
+  if (!existingCombat) {
+    throw new Error("Combat introuvable.");
   }
 
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0].map(h => String(h).trim());
-
-  const combatIdIndex = headers.indexOf("id_combat");
-  const judokaIdIndex = headers.indexOf("id_judoka");
-  const competitionIdIndex = headers.indexOf("id_competition");
-  const adversaireIndex = headers.indexOf("adversaire");
-  const resultatIndex = headers.indexOf("resultat");
-  const commentaireIndex = headers.indexOf("commentaire");
-
-  if (
-    combatIdIndex === -1 ||
-    judokaIdIndex === -1 ||
-    competitionIdIndex === -1 ||
-    adversaireIndex === -1 ||
-    resultatIndex === -1 ||
-    commentaireIndex === -1
-  ) {
-    throw new Error("Colonnes attendues dans Combats : id_combat, id_judoka, id_competition, adversaire, resultat, commentaire");
+  if (!admin && String(existingCombat.id_judoka) !== String(user.id_judoka)) {
+    throw new Error("Modification de ce combat non autorisée.");
   }
 
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][combatIdIndex]) === String(combat.id_combat)) {
-      if (!admin && String(data[i][judokaIdIndex]) !== String(user.id_judoka)) {
-        throw new Error("Modification de ce combat non autorisée.");
-      }
+  const idJudoka = admin && combat.id_judoka
+    ? combat.id_judoka
+    : existingCombat.id_judoka;
 
-      const idJudoka = admin && combat.id_judoka
-        ? combat.id_judoka
-        : data[i][judokaIdIndex];
-
-      if (!idJudoka) {
-        throw new Error("Judoka obligatoire.");
-      }
-
-      sheet.getRange(i + 1, judokaIdIndex + 1).setValue(idJudoka);
-      sheet.getRange(i + 1, competitionIdIndex + 1).setValue(combat.id_competition || data[i][competitionIdIndex]);
-      sheet.getRange(i + 1, adversaireIndex + 1).setValue(combat.adversaire || "");
-      sheet.getRange(i + 1, resultatIndex + 1).setValue(combat.resultat);
-      sheet.getRange(i + 1, commentaireIndex + 1).setValue(combat.commentaire || "");
-
-      return {
-        success: true,
-        message: "Combat modifié."
-      };
-    }
+  if (!idJudoka) {
+    throw new Error("Judoka obligatoire.");
   }
 
-  throw new Error("Combat introuvable.");
+  supabasePatch("combats", eqFilter("id_combat", combat.id_combat), {
+    id_judoka: idJudoka,
+    id_competition: combat.id_competition || existingCombat.id_competition,
+    adversaire: combat.adversaire || "",
+    resultat: combat.resultat,
+    commentaire: combat.commentaire || ""
+  });
+
+  return {
+    success: true,
+    message: "Combat modifié."
+  };
 }
 
 function deleteCompetition(id_competition) {
@@ -355,41 +405,9 @@ function deleteCompetition(id_competition) {
     throw new Error("Compétition obligatoire.");
   }
 
-  const ss = getSpreadsheet();
-  const competitionSheet = ss.getSheetByName(SHEET_COMPETITIONS);
-  const combatSheet = ss.getSheetByName(SHEET_COMBATS);
+  const competition = getCompetitionById(id_competition);
 
-  if (!competitionSheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMPETITIONS);
-  }
-
-  if (!combatSheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMBATS);
-  }
-
-  const competitionData = competitionSheet.getDataRange().getValues();
-  const competitionHeaders = competitionData[0].map(h => String(h).trim());
-  const competitionIdIndex = competitionHeaders.indexOf("id_competition");
-
-  if (competitionIdIndex === -1) {
-    throw new Error("Colonne attendue dans Competitions : id_competition");
-  }
-
-  let competitionRow = -1;
-  let competition = null;
-
-  for (let i = 1; i < competitionData.length; i++) {
-    if (String(competitionData[i][competitionIdIndex]) === String(id_competition)) {
-      competitionRow = i + 1;
-      competition = {};
-      competitionHeaders.forEach((header, index) => {
-        competition[header] = serializeCellValue(competitionData[i][index]);
-      });
-      break;
-    }
-  }
-
-  if (competitionRow === -1) {
+  if (!competition) {
     throw new Error("Compétition introuvable.");
   }
 
@@ -397,30 +415,12 @@ function deleteCompetition(id_competition) {
     throw new Error("Suppression de cette compétition non autorisée.");
   }
 
-  const combatData = combatSheet.getDataRange().getValues();
-  const combatHeaders = combatData[0].map(h => String(h).trim());
-  const combatCompetitionIndex = combatHeaders.indexOf("id_competition");
-
-  if (combatCompetitionIndex === -1) {
-    throw new Error("Colonne attendue dans Combats : id_competition");
-  }
-
-  let deletedCombats = 0;
-
-  for (let i = combatData.length - 1; i >= 1; i--) {
-    if (String(combatData[i][combatCompetitionIndex]) === String(id_competition)) {
-      combatSheet.deleteRow(i + 1);
-      deletedCombats++;
-    }
-  }
-
-  competitionSheet.deleteRow(competitionRow);
+  // La suppression en cascade des combats est gérée par Supabase.
+  supabaseDelete("competitions", eqFilter("id_competition", id_competition));
 
   return {
     success: true,
-    message: deletedCombats
-      ? `Compétition supprimée avec ${deletedCombats} combat(s).`
-      : "Compétition supprimée."
+    message: "Compétition supprimée."
   };
 }
 
@@ -432,75 +432,20 @@ function deleteCombat(id_combat) {
     throw new Error("Combat obligatoire.");
   }
 
-  const sheet = getSpreadsheet().getSheetByName(SHEET_COMBATS);
+  const combat = getCombatById(id_combat);
 
-  if (!sheet) {
-    throw new Error("Onglet introuvable : " + SHEET_COMBATS);
+  if (!combat) {
+    throw new Error("Combat introuvable.");
   }
 
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0].map(h => String(h).trim());
-  const combatIdIndex = headers.indexOf("id_combat");
-  const judokaIdIndex = headers.indexOf("id_judoka");
-
-  if (combatIdIndex === -1 || judokaIdIndex === -1) {
-    throw new Error("Colonnes attendues dans Combats : id_combat, id_judoka");
+  if (!admin && String(combat.id_judoka) !== String(user.id_judoka)) {
+    throw new Error("Suppression de ce combat non autorisée.");
   }
 
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][combatIdIndex]) === String(id_combat)) {
-      if (!admin && String(data[i][judokaIdIndex]) !== String(user.id_judoka)) {
-        throw new Error("Suppression de ce combat non autorisée.");
-      }
+  supabaseDelete("combats", eqFilter("id_combat", id_combat));
 
-      sheet.deleteRow(i + 1);
-
-      return {
-        success: true,
-        message: "Combat supprimé."
-      };
-    }
-  }
-
-  throw new Error("Combat introuvable.");
-}
-
-function getRowsAsObjects(sheetName) {
-  const ss = getSpreadsheet();
-  const sheet = ss.getSheetByName(sheetName);
-
-  if (!sheet) {
-    const names = ss.getSheets().map(s => s.getName()).join(", ");
-    throw new Error("Onglet introuvable : " + sheetName + ". Onglets disponibles : " + names);
-  }
-
-  const values = sheet.getDataRange().getValues();
-
-  if (values.length < 2) {
-    return [];
-  }
-
-  const headers = values[0].map(h => String(h).trim());
-
-  return values.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = serializeCellValue(row[index]);
-    });
-    return obj;
-  }).filter(row => {
-    return Object.values(row).some(value => String(value || "").trim() !== "");
-  });
-}
-
-function serializeCellValue(value) {
-  if (value instanceof Date) {
-    return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
-  }
-
-  if (value === null || value === undefined) {
-    return "";
-  }
-
-  return value;
+  return {
+    success: true,
+    message: "Combat supprimé."
+  };
 }

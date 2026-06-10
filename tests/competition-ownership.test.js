@@ -15,14 +15,16 @@ test("competitions are filtered by explicit owner for non-admin users", () => {
 test("saving a competition is allowed for owners and writes id_judoka", () => {
   assert.doesNotMatch(code, /Création et modification de compétition réservées aux admins/);
   assert.match(code, /const ownerJudokaId = resolveCompetitionOwnerId\(user,\s*competition\)/);
-  assert.match(code, /sheet\.getRange\(i \+ 1,\s*judokaIdIndex \+ 1\)\.setValue\(ownerJudokaId\)/);
-  assert.match(code, /sheet\.appendRow\(\[\s*idCompetition,\s*ownerJudokaId,/);
+  assert.match(code, /supabasePatch\("competitions",/);
+  assert.match(code, /supabaseInsert\("competitions",\s*\{/);
+  assert.match(code, /id_judoka: ownerJudokaId/);
 });
 
 test("deleting a competition requires admin or owner and keeps cascade delete", () => {
   assert.match(code, /if \(!canManageCompetition\(user,\s*competition\)\)/);
   assert.match(code, /Suppression de cette compétition non autorisée/);
-  assert.match(code, /combatSheet\.deleteRow\(i \+ 1\)/);
+  assert.match(code, /supabaseDelete\("competitions",/);
+  assert.match(code, /La suppression en cascade des combats est gérée par Supabase/);
 });
 
 test("client shows competition management based on canManageCompetition", () => {
