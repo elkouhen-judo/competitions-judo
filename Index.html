@@ -924,6 +924,8 @@
         return;
       }
 
+      const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
+
       let html = `<div class="table-container" style="overflow-x: auto;">
         <table class="data-table">
           <thead>
@@ -931,17 +933,21 @@
               <th>Nom</th>
               <th>Date</th>
               <th>Lieu</th>
+              ${isAdmin ? "<th>Judoka</th>" : ""}
               <th></th>
             </tr>
           </thead>
           <tbody>`;
 
       filteredComps.forEach(c => {
+        const judoka = judokasById.get(String(c.id_judoka));
+        const judokaNom = judoka ? `${judoka.prenom} ${judoka.nom}` : "";
         html += `
           <tr>
             <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')"><strong>${escapeHtml(c.nom || "")}</strong></td>
             <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${formatDate(c.date)}</td>
             <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${escapeHtml(c.lieu || "")}</td>
+            ${isAdmin ? `<td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${escapeHtml(judokaNom)}</td>` : ""}
             <td class="table-actions">
               <button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)" title="Supprimer">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
