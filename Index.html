@@ -810,11 +810,6 @@
         <input type="hidden" id="combat_id">
 
         <div class="form-grid">
-          <div id="adminJudokaBlock" class="hidden full-row">
-            <label for="combat_id_judoka">Judoka</label>
-            <select id="combat_id_judoka"></select>
-          </div>
-
           <div>
             <label for="combat_adversaire">Adversaire</label>
             <input type="text" id="combat_adversaire">
@@ -1151,10 +1146,6 @@
         document.getElementById("combat_resultat").value = combat.resultat || "";
         document.getElementById("combat_type_victoire").value = combat.type_victoire || "";
         document.getElementById("combat_deroule").value = combat.deroule || "";
-
-        if (isAdmin) {
-          document.getElementById("combat_id_judoka").value = combat.id_judoka || "";
-        }
       } else {
         document.getElementById("combatFormTitle").innerText = "Ajouter un combat";
         document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
@@ -1276,19 +1267,6 @@
         .deleteCombat(id);
     }
 
-    function fillJudokasSelect() {
-      const select = document.getElementById("combat_id_judoka");
-      select.innerHTML = `<option value="">Choisir un judoka</option>`;
-
-      judokas.forEach(j => {
-        select.innerHTML += `
-          <option value="${escapeAttribute(j.id_judoka)}">
-            ${escapeHtml(j.prenom || "")} ${escapeHtml(j.nom || "")}
-          </option>
-        `;
-      });
-    }
-
     function getJudokaDisplayName(j) {
       return `${j.prenom || ""} ${j.nom || ""}`.trim();
     }
@@ -1333,10 +1311,6 @@
       document.getElementById("combat_type_victoire").value = "";
       document.getElementById("combat_deroule").value = "";
       document.getElementById("saveCombatButtonText").innerText = "Ajouter le combat";
-
-      if (isAdmin) {
-        document.getElementById("combat_id_judoka").value = "";
-      }
     }
 
     function reloadInitialData(openCompetitionId) {
