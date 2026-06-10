@@ -3,7 +3,7 @@ const SUPABASE_SERVICE_ROLE_KEY_PROPERTY = "SUPABASE_SERVICE_ROLE_KEY";
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile("Index")
-    .setTitle("Suivi compétitions judo")
+    .setTitle("Kiroku - Suivi Judo")
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 
