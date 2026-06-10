@@ -43,7 +43,7 @@ test("vercel runtime uses supabase password auth with auto registration", () => 
   assert.match(html, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
   assert.match(html, /invalid_credentials/);
   assert.match(html, /première connexion/);
-  assert.match(html, /sans email de validation/);
+  assert.match(html, /confirmation email peut être demandée/);
   assert.match(html, /Se connecter ou créer le compte/);
   assert.match(html, /fetch\("\/api\/auth-signup"/);
   assert.match(html, /authenticateWithPassword/);
@@ -90,12 +90,16 @@ test("vercel runtime exposes logout and clears local session", () => {
 
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(core, /SUPABASE_AUTH_ADMIN_JWT/);
   assert.match(core, /function isJwtLikeToken\(value\)/);
   assert.match(core, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
-  assert.match(core, /authorizationToken: isJwtLikeToken\(config\.serviceRoleKey\) \? config\.serviceRoleKey : ""/);
+  assert.match(core, /const authAdminToken = isJwtLikeToken\(config\.authAdminJwt\)/);
+  assert.match(core, /auth\/v1\/signup/);
+  assert.match(core, /requiresEmailConfirmation: true/);
   assert.match(core, /\/auth\/v1\/admin\/users/);
   assert.match(core, /email_confirm: true/);
   assert.match(authSignup, /createConfirmedAuthUser\(body\.email, body\.password\)/);
+  assert.match(authSignup, /requiresEmailConfirmation/);
   assert.match(core, /\/auth\/v1\/user/);
   assert.match(rpc, /verifySupabaseUser\(accessToken\)/);
   assert.match(rpc, /methods\[body\.method\]/);
