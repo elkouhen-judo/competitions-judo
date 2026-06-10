@@ -194,6 +194,48 @@
       background: #fef3f2;
     }
 
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .data-table th, .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .data-table th {
+      background: var(--soft);
+      color: var(--muted);
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .data-table tr:hover td {
+      background: #f8fafc;
+    }
+    .data-table td {
+      cursor: pointer;
+    }
+    .table-actions {
+      text-align: right;
+      width: 1%;
+      white-space: nowrap;
+    }
+    .table-actions button {
+      min-height: 36px;
+      padding: 8px;
+    }
+    
+    .filter-bar {
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .filter-bar select {
+      flex: 1;
+      max-width: 300px;
+    }
+
     .list {
       display: grid;
       gap: 12px;
@@ -632,6 +674,12 @@
         </div>
       </div>
       <div class="panel-body">
+        <div id="homeFilters" class="filter-bar hidden">
+          <label for="filterJudoka">Filtrer par judoka :</label>
+          <select id="filterJudoka" onchange="renderCompetitions()">
+            <option value="">Tous les judokas</option>
+          </select>
+        </div>
         <div id="competitionsList"></div>
       </div>
     </section>
@@ -807,6 +855,16 @@
             `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${isAdmin ? "ADMIN" : "JUDOKA"}`;
 
           document.getElementById("homeAdminActions").classList.remove("hidden");
+          
+          if (isAdmin && judokas.length > 0) {
+            document.getElementById("homeFilters").classList.remove("hidden");
+            const filterSelect = document.getElementById("filterJudoka");
+            filterSelect.innerHTML = `<option value="">Tous les judokas</option>`;
+            judokas.forEach(j => {
+              filterSelect.innerHTML += `<option value="${escapeAttribute(j.id_judoka)}">${escapeHtml(j.prenom || "")} ${escapeHtml(j.nom || "")}</option>`;
+            });
+          }
+
           renderCompetitions();
         })
         .withFailureHandler(showError)
@@ -815,40 +873,46 @@
 
     function renderCompetitions() {
       const target = document.getElementById("competitionsList");
+      const filterValue = document.getElementById("filterJudoka").value;
 
-      if (!competitions.length) {
-        target.innerHTML = `<div class="empty-state">Aucune compétition enregistrée.</div>`;
+      let filteredComps = competitions;
+      if (filterValue) {
+        filteredComps = competitions.filter(c => String(c.id_judoka) === String(filterValue));
+      }
+
+      if (!filteredComps.length) {
+        target.innerHTML = `<div class="empty-state">Aucune compétition trouvée.</div>`;
         return;
       }
 
-      let html = `<div class="list">`;
+      let html = `<div class="table-container" style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Date</th>
+              <th>Lieu</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>`;
 
-      competitions.forEach(c => {
+      filteredComps.forEach(c => {
         html += `
-          <article class="card competition-card">
-            <button class="card-button competition-open-button" data-id="${escapeAttribute(c.id_competition)}" onclick="openCompetition(this.dataset.id)">
-              <p class="card-title">${escapeHtml(c.nom || "")}</p>
-              <div class="card-meta">
-                <div class="meta-row">
-                  <span class="meta-label">Date</span>
-                  <span class="meta-value">${formatDate(c.date)}</span>
-                </div>
-                <div class="meta-row">
-                  <span class="meta-label">Lieu</span>
-                  <span class="meta-value">${escapeHtml(c.lieu || "")}</span>
-                </div>
-              </div>
-            </button>
-            <div class="card-actions">
+          <tr>
+            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')"><strong>${escapeHtml(c.nom || "")}</strong></td>
+            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${formatDate(c.date)}</td>
+            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${escapeHtml(c.lieu || "")}</td>
+            <td class="table-actions">
               <button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)" title="Supprimer">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
               </button>
-            </div>
-          </article>
+            </td>
+          </tr>
         `;
       });
 
-      html += `</div>`;
+      html += `</tbody></table></div>`;
       target.innerHTML = html;
     }
 
