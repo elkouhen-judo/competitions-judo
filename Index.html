@@ -694,8 +694,8 @@
           </div>
 
           <div class="full-row">
-            <label for="combat_commentaire">Commentaire</label>
-            <textarea id="combat_commentaire" rows="3"></textarea>
+            <label for="combat_deroule">Déroulé du combat</label>
+            <textarea id="combat_deroule" rows="3" placeholder="Racontez le déroulé du combat (prises, temps forts...)"></textarea>
           </div>
         </div>
 
@@ -852,7 +852,7 @@
                 <span class="meta-value">${escapeHtml(c.judoka_nom || "")}</span>
               </div>
             ` : ""}
-            <p class="combat-comment">${escapeHtml(c.commentaire || "Aucun commentaire")}</p>
+            <p class="combat-comment">${escapeHtml(c.deroule || "Aucun déroulé renseigné")}</p>
             <div class="card-actions">
               <button class="button-secondary" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)">Éditer</button>
               <button class="button-danger" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)">Supprimer</button>
@@ -939,7 +939,7 @@
         document.getElementById("combat_id").value = combat.id_combat || "";
         document.getElementById("combat_adversaire").value = combat.adversaire || "";
         document.getElementById("combat_resultat").value = combat.resultat || "";
-        document.getElementById("combat_commentaire").value = combat.commentaire || "";
+        document.getElementById("combat_deroule").value = combat.deroule || "";
 
         if (isAdmin) {
           document.getElementById("combat_id_judoka").value = combat.id_judoka || "";
@@ -1005,7 +1005,7 @@
         id_competition: currentCompetition.id_competition,
         adversaire: document.getElementById("combat_adversaire").value,
         resultat: document.getElementById("combat_resultat").value,
-        commentaire: document.getElementById("combat_commentaire").value
+        deroule: document.getElementById("combat_deroule").value
       };
 
       if (isAdmin) {
@@ -1139,7 +1139,7 @@
       document.getElementById("combat_id").value = "";
       document.getElementById("combat_adversaire").value = "";
       document.getElementById("combat_resultat").value = "";
-      document.getElementById("combat_commentaire").value = "";
+      document.getElementById("combat_deroule").value = "";
       document.getElementById("saveCombatButton").innerText = "Ajouter le combat";
 
       if (isAdmin) {
