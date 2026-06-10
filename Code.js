@@ -126,6 +126,19 @@ function getCurrentUser() {
   return getCurrentUserContext().user;
 }
 
+function getCurrentUserCached() {
+  const cache = CacheService.getUserCache();
+  const cached = cache.get("currentUser");
+  if (cached) {
+    return JSON.parse(cached);
+  }
+  const user = supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(Session.getActiveUser().getEmail().trim())}`);
+  if (user) {
+    cache.put("currentUser", JSON.stringify(user), 300);
+  }
+  return user;
+}
+
 function getCurrentUserContext() {
   const email = Session.getActiveUser().getEmail();
 
@@ -133,7 +146,7 @@ function getCurrentUserContext() {
     throw new Error("Utilisateur non identifié.");
   }
 
-  const user = supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(email.trim())}`);
+  const user = getCurrentUserCached();
 
   if (!user) {
     throw new Error("Accès refusé pour : " + email);
@@ -344,8 +357,11 @@ function saveCompetition(competition) {
 }
 
 function ajouterCombat(combat) {
-  const user = getCurrentUser();
-  const admin = isAdmin(user);
+  const user = getCurrentUserCached();
+
+  if (!user) {
+    throw new Error("Utilisateur non identifié.");
+  }
 
   if (!combat.id_competition) {
     throw new Error("Compétition obligatoire.");
@@ -355,19 +371,19 @@ function ajouterCombat(combat) {
     throw new Error("Résultat obligatoire.");
   }
 
-  const idJudoka = admin && combat.id_judoka
-    ? combat.id_judoka
-    : user.id_judoka;
-
-  if (!idJudoka) {
+  if (!combat.id_judoka) {
     throw new Error("Judoka obligatoire.");
+  }
+
+  if (!isAdmin(user) && String(combat.id_judoka) !== String(user.id_judoka)) {
+    throw new Error("Ajout de ce combat non autorisé.");
   }
 
   const idCombat = "CB" + new Date().getTime();
 
   supabaseInsert("combats", {
     id_combat: idCombat,
-    id_judoka: idJudoka,
+    id_judoka: combat.id_judoka,
     id_competition: combat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
@@ -382,8 +398,11 @@ function ajouterCombat(combat) {
 }
 
 function updateCombat(combat) {
-  const user = getCurrentUser();
-  const admin = isAdmin(user);
+  const user = getCurrentUserCached();
+
+  if (!user) {
+    throw new Error("Utilisateur non identifié.");
+  }
 
   if (!combat.id_combat) {
     throw new Error("Combat obligatoire.");
@@ -393,27 +412,17 @@ function updateCombat(combat) {
     throw new Error("Résultat obligatoire.");
   }
 
-  const existingCombat = getCombatById(combat.id_combat);
-
-  if (!existingCombat) {
-    throw new Error("Combat introuvable.");
-  }
-
-  if (!admin && String(existingCombat.id_judoka) !== String(user.id_judoka)) {
-    throw new Error("Modification de ce combat non autorisée.");
-  }
-
-  const idJudoka = admin && combat.id_judoka
-    ? combat.id_judoka
-    : existingCombat.id_judoka;
-
-  if (!idJudoka) {
+  if (!combat.id_judoka) {
     throw new Error("Judoka obligatoire.");
   }
 
+  if (!isAdmin(user) && String(combat.id_judoka) !== String(user.id_judoka)) {
+    throw new Error("Modification de ce combat non autorisée.");
+  }
+
   supabasePatch("combats", eqFilter("id_combat", combat.id_combat), {
-    id_judoka: idJudoka,
-    id_competition: combat.id_competition || existingCombat.id_competition,
+    id_judoka: combat.id_judoka,
+    id_competition: combat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
     type_victoire: combat.type_victoire || "",

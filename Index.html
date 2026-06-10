@@ -1180,8 +1180,21 @@
       google.script.run
         .withSuccessHandler(response => {
           showSuccess(response.message);
+          // Mise à jour locale : pas besoin de recharger depuis le serveur
+          const newCombat = {
+            id_combat: "CB" + Date.now(),
+            id_judoka: combat.id_judoka,
+            id_competition: combat.id_competition,
+            adversaire: combat.adversaire || "",
+            resultat: combat.resultat,
+            type_victoire: combat.type_victoire || "",
+            deroule: combat.deroule || "",
+            judoka_nom: currentUser ? `${currentUser.prenom} ${currentUser.nom}` : ""
+          };
+          currentCombats.push(newCombat);
           resetCombatForm();
-          openCompetition(currentCompetition.id_competition, true);
+          showView("competitionView");
+          renderCombats();
         })
         .withFailureHandler(showError)
         .ajouterCombat(combat);
@@ -1194,8 +1207,20 @@
       google.script.run
         .withSuccessHandler(response => {
           showSuccess(response.message);
+          // Mise à jour locale du combat modifié
+          const idx = currentCombats.findIndex(c => String(c.id_combat) === String(idCombat));
+          if (idx !== -1) {
+            currentCombats[idx] = {
+              ...currentCombats[idx],
+              adversaire: combat.adversaire || "",
+              resultat: combat.resultat,
+              type_victoire: combat.type_victoire || "",
+              deroule: combat.deroule || ""
+            };
+          }
           resetCombatForm();
-          openCompetition(currentCompetition.id_competition, true);
+          showView("competitionView");
+          renderCombats();
         })
         .withFailureHandler(showError)
         .updateCombat(combat);
@@ -1204,6 +1229,7 @@
     function getCombatFormValue() {
       return {
         id_competition: currentCompetition.id_competition,
+        id_judoka: currentCompetition.id_judoka,
         adversaire: document.getElementById("combat_adversaire").value,
         resultat: document.getElementById("combat_resultat").value,
         type_victoire: document.getElementById("combat_type_victoire").value,
