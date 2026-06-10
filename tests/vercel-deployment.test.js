@@ -46,6 +46,19 @@ test("vercel login supports password reset", () => {
   assert.match(html, /auth\/v1\/recover\?redirect_to=/);
 });
 
+test("vercel login can register judoka and parent profiles", () => {
+  assert.match(html, /id="profileRegistrationForm"/);
+  assert.match(html, /id="registrationType"/);
+  assert.match(html, /value="JUDOKA"/);
+  assert.match(html, /value="PARENT"/);
+  assert.match(html, /function addRegistrationChild\(\)/);
+  assert.match(html, /\.registerProfile\(profile\)/);
+  assert.match(core, /async function registerProfile\(email,\s*profile\)/);
+  assert.match(core, /supabaseInsert\("judokas"/);
+  assert.match(core, /supabaseInsert\("parent_judokas"/);
+  assert.match(core, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
+});
+
 test("successful initial load leaves the login view", () => {
   assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
 });
