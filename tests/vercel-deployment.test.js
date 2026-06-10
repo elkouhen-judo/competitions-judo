@@ -25,14 +25,14 @@ test("vercel runtime injects a compatible google.script.run adapter", () => {
   assert.match(html, /KIROKU_RUNTIME_CONFIG/);
   assert.match(html, /function createVercelRunner\(\)/);
   assert.match(html, /fetch\("\/api\/rpc"/);
-  assert.match(html, /"X-Kiroku-User-Email": email/);
+  assert.match(html, /"Authorization": "Bearer " \+ session\.access_token/);
 });
 
-test("vercel runtime identifies the user by email without calling supabase auth", () => {
-  assert.match(html, /kiroku_user_email/);
-  assert.match(html, /saveVercelUserEmail/);
-  assert.doesNotMatch(html, /\/auth\/v1\/otp/);
-  assert.doesNotMatch(html, /\/auth\/v1\/token/);
+test("vercel runtime starts google oauth and stores the supabase session", () => {
+  assert.match(html, /provider=google/);
+  assert.match(html, /parseVercelAuthHash/);
+  assert.match(html, /kiroku_supabase_session/);
+  assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
 });
 
 test("successful initial load leaves the login view", () => {
@@ -41,7 +41,7 @@ test("successful initial load leaves the login view", () => {
 
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
-  assert.doesNotMatch(core, /\/auth\/v1\/user/);
-  assert.match(rpc, /x-kiroku-user-email/);
+  assert.match(core, /\/auth\/v1\/user/);
+  assert.match(rpc, /verifySupabaseUser\(accessToken\)/);
   assert.match(rpc, /methods\[body\.method\]/);
 });

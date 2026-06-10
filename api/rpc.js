@@ -1,4 +1,4 @@
-const { methods } = require("./_core");
+const { methods, verifySupabaseUser } = require("./_core");
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -23,11 +23,9 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const email = String(req.headers["x-kiroku-user-email"] || "").trim();
-    if (!email) {
-      throw new Error("Utilisateur non identifié.");
-    }
-
+    const authorization = req.headers.authorization || "";
+    const accessToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+    const email = await verifySupabaseUser(accessToken);
     const body = await readBody(req);
     const method = methods[body.method];
 
