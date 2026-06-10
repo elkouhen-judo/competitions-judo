@@ -26,7 +26,7 @@ test("supabase schema protects relationships and cascade delete", () => {
 
 test("supabase schema includes role and result constraints", () => {
   assert.match(schema, /judokas_role_check[\s\S]*role in \('ADMIN', 'JUDOKA'\)/i);
-  assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('V', 'D'\)/i);
+  assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('V', 'D', 'E'\)/i);
 });
 
 test("supabase schema enables row level security for app tables", () => {

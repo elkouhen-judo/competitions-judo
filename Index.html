@@ -365,6 +365,12 @@
       color: var(--danger);
     }
 
+    .result-e {
+      border-color: #fec84b;
+      background: #fffaeb;
+      color: #b54708;
+    }
+
     .combat-comment {
       margin-bottom: 0;
       color: var(--muted);
@@ -741,6 +747,7 @@
               <option value="">Choisir</option>
               <option value="V">Victoire</option>
               <option value="D">Défaite</option>
+              <option value="E">Égalité</option>
             </select>
           </div>
 
@@ -1267,6 +1274,7 @@
     function formatResultat(value) {
       if (value === "V") return "Victoire";
       if (value === "D") return "Défaite";
+      if (value === "E") return "Égalité";
       return value || "";
     }
 

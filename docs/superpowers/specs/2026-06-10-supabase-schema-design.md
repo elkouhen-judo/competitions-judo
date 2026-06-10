@@ -26,7 +26,7 @@ Les identifiants actuels sont conserves en `text` afin de permettre un import di
 
 Le role d'un judoka est limite a `ADMIN` ou `JUDOKA`.
 
-Le resultat d'un combat est limite a `V` ou `D`, comme l'interface actuelle.
+Le resultat d'un combat est limite a `V`, `D`, ou `E`.
 
 Les dates de competition sont stockees en type `date`.
 
