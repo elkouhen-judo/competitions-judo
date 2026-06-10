@@ -10,9 +10,7 @@ module.exports = function handler(req, res) {
   const html = fs.readFileSync(htmlPath, "utf8");
   const configScript = `<script>
     window.KIROKU_RUNTIME_CONFIG = {
-      runtime: "vercel",
-      supabaseUrl: ${JSON.stringify(escapeScriptString(process.env.SUPABASE_URL))},
-      supabaseAnonKey: ${JSON.stringify(escapeScriptString(process.env.SUPABASE_ANON_KEY))}
+      runtime: "vercel"
     };
   </script>`;
 

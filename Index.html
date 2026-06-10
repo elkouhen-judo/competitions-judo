@@ -710,7 +710,7 @@
         <form id="vercelLoginForm" class="login-form hidden">
           <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" autocomplete="email" required>
-          <button type="submit">Recevoir le lien de connexion</button>
+          <button type="submit">Accéder à l'application</button>
         </form>
       </div>
     </section>
@@ -925,7 +925,7 @@
     let previousView = "homeView";
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const isVercelRuntime = runtimeConfig.runtime === "vercel";
-    const sessionStorageKey = "kiroku_supabase_session";
+    const userEmailStorageKey = "kiroku_user_email";
 
     if (isVercelRuntime && !(window.google && window.google.script && window.google.script.run)) {
       window.google = { script: { run: createVercelRunner() } };
@@ -948,8 +948,8 @@
 
     async function callVercelRpc(method, args, success, failure) {
       try {
-        const session = await getValidVercelSession();
-        if (!session) {
+        const email = readVercelUserEmail();
+        if (!email) {
           showVercelLogin();
           return;
         }
@@ -957,7 +957,7 @@
         const response = await fetch("/api/rpc", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer " + session.access_token,
+            "X-Kiroku-User-Email": email,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ method, args })
@@ -970,141 +970,43 @@
 
         success && success(payload.result);
       } catch (error) {
-        if (String(error.message || "").toLowerCase().includes("session")) {
-          clearVercelSession();
+        if (String(error.message || "").includes("Utilisateur non identifié")) {
+          clearVercelUserEmail();
           showVercelLogin();
         }
         failure ? failure(error) : showError(error);
       }
     }
 
-    function readVercelSession() {
-      try {
-        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
-      } catch (_error) {
-        return null;
-      }
+    function readVercelUserEmail() {
+      return localStorage.getItem(userEmailStorageKey) || "";
     }
 
-    function saveVercelSession(session) {
-      localStorage.setItem(sessionStorageKey, JSON.stringify(session));
+    function saveVercelUserEmail(email) {
+      localStorage.setItem(userEmailStorageKey, email.trim());
     }
 
-    function clearVercelSession() {
-      localStorage.removeItem(sessionStorageKey);
-    }
-
-    function parseAuthHash() {
-      if (!isVercelRuntime || !window.location.hash) return;
-
-      const params = new URLSearchParams(window.location.hash.slice(1));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      const expiresIn = Number(params.get("expires_in") || "3600");
-
-      if (accessToken && refreshToken) {
-        saveVercelSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_at: Math.floor(Date.now() / 1000) + expiresIn
-        });
-        history.replaceState(null, document.title, window.location.pathname + window.location.search);
-      }
-    }
-
-    async function getValidVercelSession() {
-      let session = readVercelSession();
-      if (!session) return null;
-
-      const expiresAt = Number(session.expires_at || 0);
-      if (expiresAt && expiresAt > Math.floor(Date.now() / 1000) + 60) {
-        return session;
-      }
-
-      if (!session.refresh_token) {
-        clearVercelSession();
-        return null;
-      }
-
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ refresh_token: session.refresh_token })
-      });
-
-      if (!response.ok) {
-        clearVercelSession();
-        return null;
-      }
-
-      const refreshed = await response.json();
-      session = {
-        access_token: refreshed.access_token,
-        refresh_token: refreshed.refresh_token || session.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
-      };
-      saveVercelSession(session);
-      return session;
+    function clearVercelUserEmail() {
+      localStorage.removeItem(userEmailStorageKey);
     }
 
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Saisissez votre email pour recevoir un lien de connexion sécurisé.";
+      document.getElementById("loginText").innerText = "Saisissez l'email connu dans la liste des judokas.";
       document.getElementById("googleLoginButton").classList.add("hidden");
       document.getElementById("vercelLoginForm").classList.remove("hidden");
       showView("loginView");
     }
 
-    async function requestVercelLogin(email) {
-      const redirectTo = encodeURIComponent(window.location.origin);
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/otp?redirect_to=${redirectTo}`, {
-        method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          create_user: true
-        })
-      });
-
-      if (!response.ok) {
-        let details = "";
-        try {
-          const payload = await response.json();
-          details = payload.msg || payload.message || payload.error_description || payload.error || "";
-        } catch (_error) {
-          details = await response.text();
-        }
-        throw new Error(details ? `Impossible d'envoyer le lien de connexion : ${details}` : "Impossible d'envoyer le lien de connexion.");
-      }
-    }
-
     document.getElementById("vercelLoginForm").addEventListener("submit", async event => {
       event.preventDefault();
       clearMessage();
-      try {
-        await requestVercelLogin(document.getElementById("loginEmail").value);
-        showSuccess("Lien de connexion envoyé. Vérifiez votre boîte mail.");
-      } catch (error) {
-        showError(error);
-      }
+      saveVercelUserEmail(document.getElementById("loginEmail").value);
+      document.querySelector("header").classList.remove("hidden");
+      init();
     });
 
     function init() {
-      parseAuthHash();
-
-      if (isVercelRuntime && (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey)) {
-        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
-        showVercelLogin();
-        return;
-      }
-
       google.script.run
         .withSuccessHandler(data => {
           if (!data) {
