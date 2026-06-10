@@ -1,6 +1,5 @@
 const SUPABASE_URL_ENV = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_KEY_ENV = "SUPABASE_SERVICE_ROLE_KEY";
-const SUPABASE_ANON_KEY_ENV = "SUPABASE_ANON_KEY";
 
 function getRequiredEnv(name) {
   const value = process.env[name];
@@ -13,8 +12,7 @@ function getRequiredEnv(name) {
 function getSupabaseConfig() {
   return {
     url: getRequiredEnv(SUPABASE_URL_ENV).replace(/\/$/, ""),
-    serviceRoleKey: getRequiredEnv(SUPABASE_SERVICE_ROLE_KEY_ENV),
-    anonKey: getRequiredEnv(SUPABASE_ANON_KEY_ENV)
+    serviceRoleKey: getRequiredEnv(SUPABASE_SERVICE_ROLE_KEY_ENV)
   };
 }
 
@@ -95,31 +93,6 @@ async function supabaseDelete(table, query) {
     method: "delete",
     prefer: "return=minimal"
   });
-}
-
-async function verifySupabaseUser(accessToken) {
-  if (!accessToken) {
-    throw new Error("Utilisateur non identifié.");
-  }
-
-  const config = getSupabaseConfig();
-  const response = await fetch(`${config.url}/auth/v1/user`, {
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error("Session expirée ou invalide.");
-  }
-
-  const authUser = await response.json();
-  if (!authUser.email) {
-    throw new Error("Utilisateur non identifié.");
-  }
-
-  return authUser.email;
 }
 
 function isAdmin(user) {
@@ -428,6 +401,5 @@ const methods = {
 
 module.exports = {
   getSupabaseConfig,
-  methods,
-  verifySupabaseUser
+  methods
 };
