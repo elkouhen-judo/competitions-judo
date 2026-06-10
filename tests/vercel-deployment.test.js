@@ -31,6 +31,7 @@ test("vercel runtime injects a compatible google.script.run adapter", () => {
 test("vercel runtime uses supabase password auth with auto registration", () => {
   assert.match(html, /auth\/v1\/token\?grant_type=password/);
   assert.match(html, /auth\/v1\/signup/);
+  assert.match(html, /signup\?redirect_to=/);
   assert.match(html, /authenticateWithPassword/);
   assert.match(html, /kiroku_supabase_session/);
   assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
