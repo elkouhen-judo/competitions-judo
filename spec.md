@@ -1,21 +1,242 @@
 # Spécification fonctionnelle
 
-L'application permet de suivre les compétitions de judo d'un club depuis une interface web Google Apps Script connectée à un classeur Google Sheets. Elle est conçue en priorité pour un usage mobile : les écrans sont organisés en cartes tactiles, les boutons sont larges, les formulaires sont séparés des listes, et le parcours évite les tableaux complexes sur petit écran.
+## 1. Objectif de l'application
 
-L'accès repose sur l'utilisateur Google connecté. L'application récupère son email de session puis recherche le judoka correspondant dans l'onglet `Judokas`. Cette vérification sert uniquement à identifier l'utilisateur. Les opérations métier utilisent ensuite `id_judoka`, notamment pour rattacher, filtrer, modifier ou supprimer des combats. Le rôle administrateur est déterminé par la colonne `role` de l'onglet `Judokas` : un utilisateur est admin si cette valeur vaut `ADMIN`.
+L'application permet à un club de judo de suivre les compétitions et les combats de ses judokas depuis une interface web Google Apps Script connectée à un classeur Google Sheets.
 
-L'écran d'accueil liste les compétitions visibles par l'utilisateur. Un judoka standard ne voit que les compétitions dont la colonne `id_judoka` de l'onglet `Competitions` correspond à son `id_judoka`. Un admin voit toutes les compétitions du classeur. Chaque compétition est affichée sous forme de carte avec son nom, sa date et son lieu. Une action dédiée ouvre le détail de la compétition. Les compétitions sont triées par date décroissante afin de faire remonter les événements les plus récents.
+Elle doit permettre :
 
-Un utilisateur peut créer une compétition en renseignant un nom, une date et un lieu. Une compétition créée par un judoka standard est automatiquement rattachée à son `id_judoka`. Un admin peut choisir le judoka propriétaire de la compétition. Une compétition existante peut également être modifiée depuis son écran de détail si l'utilisateur peut la gérer : un judoka standard peut gérer ses propres compétitions, tandis qu'un admin peut toutes les gérer. Après création ou modification, l'application recharge les données et ouvre la compétition concernée.
+- à un judoka de consulter et gérer ses propres compétitions ;
+- à un judoka de suivre les combats associés à ses compétitions ;
+- à un administrateur de consulter et gérer l'ensemble des compétitions et combats du club ;
+- d'éviter les données orphelines lors des suppressions.
 
-Dans la vue liste des compétitions, chaque carte de compétition affiche une action de suppression directe si l'utilisateur peut gérer cette compétition. La suppression demande confirmation, puis supprime la compétition et tous les combats rattachés afin d'éviter des lignes orphelines dans l'onglet `Combats`. Un judoka standard ne peut supprimer que ses propres compétitions ; un admin peut supprimer n'importe quelle compétition.
+L'application est conçue en priorité pour un usage mobile. Les parcours doivent rester simples, lisibles et utilisables sur petit écran.
 
-Le détail d'une compétition affiche un résumé de ses informations principales, puis la liste de ses combats. Pour un admin, tous les combats de la compétition sont visibles. Pour un judoka non-admin, seuls les combats associés à son `id_judoka` sont affichés. Lorsqu'un admin consulte les combats, l'application enrichit chaque ligne avec le nom du judoka en utilisant l'onglet `Judokas`.
+## 2. Utilisateurs et rôles
 
-Une compétition peut contenir plusieurs combats. Depuis l'écran de détail, l'utilisateur peut ouvrir un formulaire dédié pour ajouter un combat. Le formulaire permet de renseigner l'adversaire, le résultat et un commentaire. Si l'utilisateur est admin, il peut sélectionner le judoka concerné dans une liste. Sinon, le combat est automatiquement rattaché au judoka connecté.
+### 2.1 Judoka standard
 
-Les combats existants peuvent être édités. Le formulaire de combat est réutilisé en mode modification : il se préremplit avec les données du combat sélectionné, puis enregistre les changements dans la ligne correspondante de l'onglet `Combats`. Un admin peut modifier n'importe quel combat. Un judoka standard ne peut modifier que ses propres combats.
+Un judoka standard est un utilisateur connecté qui existe dans la liste des judokas du club et qui ne possède pas le rôle administrateur.
 
-Les combats peuvent aussi être supprimés après confirmation. Là encore, l'admin peut supprimer n'importe quel combat, tandis qu'un judoka ne peut supprimer que les combats rattachés à son `id_judoka`.
+Il peut :
 
-Les données sont stockées dans trois onglets principaux : `Judokas`, `Competitions` et `Combats`. Les dates sont normalisées avant d'être renvoyées au navigateur afin de garantir un affichage stable dans l'interface.
+- consulter uniquement ses compétitions ;
+- créer une compétition qui lui est automatiquement rattachée ;
+- modifier ou supprimer ses propres compétitions ;
+- consulter uniquement ses combats ;
+- ajouter, modifier ou supprimer ses propres combats.
+
+### 2.2 Administrateur
+
+Un administrateur est un utilisateur connecté dont le rôle vaut `ADMIN`.
+
+Il peut :
+
+- consulter toutes les compétitions du club ;
+- créer une compétition pour lui-même ou pour un autre judoka ;
+- modifier ou supprimer n'importe quelle compétition ;
+- consulter tous les combats d'une compétition ;
+- ajouter, modifier ou supprimer n'importe quel combat ;
+- choisir le judoka concerné lors de la création ou modification d'une compétition ou d'un combat.
+
+## 3. Principes d'interface
+
+L'interface est mobile first.
+
+Les écrans doivent respecter les principes suivants :
+
+- les listes sont affichées sous forme de cartes plutôt que sous forme de tableaux complexes ;
+- les actions principales sont accessibles par des boutons larges et tactiles ;
+- les formulaires sont séparés des listes pour limiter la charge visuelle ;
+- les informations importantes sont visibles sans mise en page dense ;
+- les confirmations sont utilisées avant les suppressions ;
+- après une création ou une modification, l'application recharge les données utiles et affiche l'élément concerné.
+
+## 4. Écrans de l'application
+
+### 4.1 Accueil - liste des compétitions
+
+L'écran d'accueil affiche les compétitions visibles par l'utilisateur connecté.
+
+Pour chaque compétition, l'utilisateur voit :
+
+- le nom de la compétition ;
+- la date ;
+- le lieu ;
+- une action pour ouvrir le détail ;
+- une action de suppression si l'utilisateur a le droit de gérer cette compétition.
+
+Les compétitions sont triées par date décroissante afin de faire remonter les événements les plus récents.
+
+Un judoka standard ne voit que ses propres compétitions. Un administrateur voit toutes les compétitions.
+
+### 4.2 Création d'une compétition
+
+L'utilisateur peut créer une compétition en renseignant :
+
+- un nom ;
+- une date ;
+- un lieu.
+
+Pour un judoka standard, la compétition est automatiquement rattachée à son profil.
+
+Pour un administrateur, l'écran permet de choisir le judoka propriétaire de la compétition.
+
+Après création, l'application recharge les données et ouvre la compétition créée.
+
+### 4.3 Détail d'une compétition
+
+Le détail d'une compétition affiche :
+
+- les informations principales de la compétition ;
+- la liste des combats visibles par l'utilisateur ;
+- les actions disponibles selon les droits de l'utilisateur.
+
+Un judoka standard ne voit que les combats rattachés à son profil. Un administrateur voit tous les combats de la compétition.
+
+Lorsqu'un administrateur consulte les combats, chaque combat affiche également le nom du judoka concerné afin de faciliter la lecture.
+
+### 4.4 Modification d'une compétition
+
+Une compétition peut être modifiée depuis son écran de détail si l'utilisateur a le droit de la gérer.
+
+Un judoka standard peut modifier uniquement ses propres compétitions.
+
+Un administrateur peut modifier n'importe quelle compétition et, si nécessaire, ajuster le judoka propriétaire.
+
+Après modification, l'application recharge les données et affiche la compétition mise à jour.
+
+### 4.5 Suppression d'une compétition
+
+Une compétition peut être supprimée depuis la liste des compétitions si l'utilisateur a le droit de la gérer.
+
+La suppression demande une confirmation explicite.
+
+Lorsqu'une compétition est supprimée, tous les combats rattachés à cette compétition sont également supprimés afin d'éviter des lignes orphelines.
+
+### 4.6 Création d'un combat
+
+Depuis le détail d'une compétition, l'utilisateur peut ouvrir un formulaire pour ajouter un combat.
+
+Le formulaire permet de renseigner :
+
+- l'adversaire ;
+- le résultat ;
+- un commentaire.
+
+Pour un judoka standard, le combat est automatiquement rattaché à son profil.
+
+Pour un administrateur, l'écran permet de choisir le judoka concerné.
+
+### 4.7 Modification d'un combat
+
+Un combat existant peut être modifié depuis la liste des combats.
+
+Le formulaire de combat est réutilisé en mode modification. Il est prérempli avec les données du combat sélectionné, puis enregistre les changements sur ce combat.
+
+Un judoka standard peut modifier uniquement ses propres combats.
+
+Un administrateur peut modifier n'importe quel combat.
+
+### 4.8 Suppression d'un combat
+
+Un combat peut être supprimé depuis la liste des combats si l'utilisateur a le droit de le gérer.
+
+La suppression demande une confirmation explicite.
+
+Un judoka standard peut supprimer uniquement ses propres combats.
+
+Un administrateur peut supprimer n'importe quel combat.
+
+## 5. Gestion des droits
+
+L'accès repose sur l'utilisateur Google connecté.
+
+L'application récupère l'email de session, puis recherche le judoka correspondant dans la liste des judokas. Cette vérification sert à identifier l'utilisateur et à connaître son rôle.
+
+Les droits sont ensuite appliqués selon deux principes :
+
+- un utilisateur standard agit uniquement sur les données rattachées à son profil ;
+- un administrateur agit sur toutes les données du club.
+
+Le rôle administrateur est attribué lorsque le rôle du judoka vaut `ADMIN`.
+
+## 6. Règles métier
+
+### 6.1 Visibilité des compétitions
+
+Un judoka standard voit uniquement les compétitions qui lui sont rattachées.
+
+Un administrateur voit toutes les compétitions du classeur.
+
+### 6.2 Gestion des compétitions
+
+Un judoka standard peut créer, modifier et supprimer uniquement ses propres compétitions.
+
+Un administrateur peut créer, modifier et supprimer toutes les compétitions.
+
+Lorsqu'un administrateur crée ou modifie une compétition, il peut choisir le judoka propriétaire.
+
+### 6.3 Visibilité des combats
+
+Un judoka standard voit uniquement ses propres combats dans une compétition.
+
+Un administrateur voit tous les combats de la compétition consultée.
+
+### 6.4 Gestion des combats
+
+Un judoka standard peut créer, modifier et supprimer uniquement ses propres combats.
+
+Un administrateur peut créer, modifier et supprimer tous les combats.
+
+Lorsqu'un administrateur crée ou modifie un combat, il peut choisir le judoka concerné.
+
+### 6.5 Suppressions
+
+Toute suppression déclenche une demande de confirmation.
+
+La suppression d'une compétition supprime aussi tous les combats rattachés à cette compétition.
+
+La suppression d'un combat ne supprime pas la compétition associée.
+
+### 6.6 Dates
+
+Les dates sont normalisées avant d'être affichées dans le navigateur afin de garantir un affichage stable dans l'interface.
+
+## 7. Données manipulées
+
+L'application manipule trois ensembles de données principaux :
+
+- les judokas ;
+- les compétitions ;
+- les combats.
+
+Les judokas servent à identifier l'utilisateur connecté, à déterminer son rôle et à afficher les noms lorsque l'administrateur consulte des combats.
+
+Les compétitions représentent les événements suivis par l'application. Elles sont rattachées à un judoka propriétaire.
+
+Les combats représentent les résultats associés à une compétition et à un judoka.
+
+## 8. Cas particuliers et confirmations
+
+Si un utilisateur connecté ne correspond à aucun judoka connu, l'application ne doit pas lui donner accès aux données métier.
+
+Si une liste est vide, l'écran doit afficher un état vide compréhensible plutôt qu'une zone blanche.
+
+Les suppressions doivent toujours être confirmées avant exécution.
+
+Après une action réussie, l'application doit revenir à un état cohérent et afficher les données à jour.
+
+## 9. Critères d'acceptation
+
+- Un judoka standard ne voit jamais les compétitions d'un autre judoka.
+- Un judoka standard ne voit jamais les combats d'un autre judoka.
+- Un judoka standard ne peut modifier ou supprimer que ses propres compétitions et combats.
+- Un administrateur voit toutes les compétitions.
+- Un administrateur voit tous les combats d'une compétition.
+- Un administrateur peut choisir le judoka concerné lors de la création ou modification.
+- Une compétition supprimée ne laisse aucun combat orphelin.
+- Les compétitions sont affichées de la plus récente à la plus ancienne.
+- Les écrans restent utilisables sur mobile.
+- Les suppressions demandent confirmation avant exécution.
