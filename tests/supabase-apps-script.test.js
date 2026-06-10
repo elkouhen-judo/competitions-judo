@@ -24,6 +24,11 @@ test("apps script uses supabase rest helpers instead of spreadsheet access", () 
 
 test("business operations target supabase tables", () => {
   assert.match(code, /supabaseSelect\("judokas"/);
+  assert.match(code, /function getChildrenManagement\(\)/);
+  assert.match(code, /function saveManagedChild\(child\)/);
+  assert.match(code, /function deleteManagedChild\(idJudoka\)/);
+  assert.match(code, /supabaseInsert\("parent_judokas"/);
+  assert.match(code, /CacheService\.getUserCache\(\)\.remove\("currentUser"\)/);
   assert.match(code, /supabaseSelect\("competitions"/);
   assert.match(code, /supabaseSelect\("combats"/);
   assert.match(code, /supabaseInsert\("combats"/);

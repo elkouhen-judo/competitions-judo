@@ -1,3 +1,5 @@
+const { randomUUID } = require("node:crypto");
+
 const SUPABASE_URL_ENV = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_KEY_ENV = "SUPABASE_SERVICE_ROLE_KEY";
 const SUPABASE_ANON_KEY_ENV = "SUPABASE_ANON_KEY";
@@ -85,6 +87,10 @@ function eqFilter(column, value) {
 
 function cleanText(value) {
   return String(value || "").trim();
+}
+
+function buildJudokaId() {
+  return `JUDO${randomUUID().replace(/-/g, "")}`;
 }
 
 async function supabaseRpc(functionName, payload) {
@@ -248,12 +254,35 @@ async function getCurrentUser(email) {
   return supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(email.trim())}`);
 }
 
+async function getJudokaById(idJudoka) {
+  return supabaseSelectOne("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
+}
+
 async function getParentManagedJudokas(idParent) {
   const rows = await supabaseSelect("parent_judokas", `select=id_judoka&${eqFilter("id_parent", idParent)}`);
   if (!rows.length) return [];
 
   const ids = rows.map(row => row.id_judoka).join(",");
   return supabaseSelect("judokas", `select=*&id_judoka=in.(${ids})&order=nom.asc,prenom.asc`);
+}
+
+async function getManagedChild(idParent, idJudoka) {
+  const link = await supabaseSelectOne(
+    "parent_judokas",
+    `select=id_parent,id_judoka&${eqFilter("id_parent", idParent)}&${eqFilter("id_judoka", idJudoka)}`
+  );
+  if (!link) return null;
+  return getJudokaById(idJudoka);
+}
+
+function canManageChildrenProfile(user) {
+  return !isAdmin(user);
+}
+
+function assertCanManageChildrenProfile(user) {
+  if (!canManageChildrenProfile(user)) {
+    throw new Error("Gestion des enfants non disponible pour ce profil.");
+  }
 }
 
 async function getCurrentUserContext(email) {
@@ -338,6 +367,7 @@ async function getInitialData(email) {
     user,
     isAdmin: admin,
     isParent: parent,
+    canManageChildren: canManageChildrenProfile(user),
     competitions: await getCompetitionsForUser(user, userContext.managedJudokaIds),
     judokas: (admin || parent) ? userContext.judokas : []
   };
@@ -351,6 +381,125 @@ async function registerProfile(email, profile) {
     p_nom: profile && profile.nom,
     p_children: Array.isArray(profile && profile.children) ? profile.children : []
   });
+}
+
+async function getChildrenManagement(email) {
+  const user = await getCurrentUser(email);
+  if (!user) {
+    throw new Error(`Accès refusé pour : ${email}`);
+  }
+  assertCanManageChildrenProfile(user);
+
+  return {
+    user,
+    isParent: isParent(user),
+    children: await getParentManagedJudokas(user.id_judoka)
+  };
+}
+
+async function saveManagedChild(email, child) {
+  const user = await getCurrentUser(email);
+  if (!user) {
+    throw new Error(`Accès refusé pour : ${email}`);
+  }
+  assertCanManageChildrenProfile(user);
+
+  const prenom = cleanText(child && child.prenom);
+  const nom = cleanText(child && child.nom);
+  if (!prenom || !nom) {
+    throw new Error("Prénom et nom de l'enfant obligatoires.");
+  }
+
+  if (child && child.id_judoka) {
+    const existingChild = await getManagedChild(user.id_judoka, child.id_judoka);
+    if (!existingChild) {
+      throw new Error("Enfant introuvable.");
+    }
+
+    await supabasePatch("judokas", eqFilter("id_judoka", child.id_judoka), {
+      prenom,
+      nom
+    });
+
+    return {
+      success: true,
+      id_judoka: child.id_judoka,
+      message: "Enfant modifié."
+    };
+  }
+
+  const idJudoka = buildJudokaId();
+  await supabaseInsert("judokas", {
+    id_judoka: idJudoka,
+    email: null,
+    prenom,
+    nom,
+    role: "JUDOKA"
+  });
+  await supabaseInsert("parent_judokas", {
+    id_parent: user.id_judoka,
+    id_judoka: idJudoka
+  });
+
+  if (!isParent(user)) {
+    await supabasePatch("judokas", eqFilter("id_judoka", user.id_judoka), {
+      role: "PARENT"
+    });
+  }
+
+  return {
+    success: true,
+    id_judoka: idJudoka,
+    message: "Enfant ajouté."
+  };
+}
+
+async function deleteManagedChild(email, idJudoka) {
+  const user = await getCurrentUser(email);
+  if (!user) {
+    throw new Error(`Accès refusé pour : ${email}`);
+  }
+  assertCanManageChildrenProfile(user);
+
+  if (!idJudoka) {
+    throw new Error("Enfant obligatoire.");
+  }
+
+  const child = await getManagedChild(user.id_judoka, idJudoka);
+  if (!child) {
+    throw new Error("Enfant introuvable.");
+  }
+
+  const competition = await supabaseSelectOne("competitions", `select=id_competition&${eqFilter("id_judoka", idJudoka)}`);
+  if (competition) {
+    throw new Error("Impossible de supprimer cet enfant tant qu'il possède des compétitions.");
+  }
+
+  const combat = await supabaseSelectOne("combats", `select=id_combat&${eqFilter("id_judoka", idJudoka)}`);
+  if (combat) {
+    throw new Error("Impossible de supprimer cet enfant tant qu'il possède des combats.");
+  }
+
+  await supabaseDelete("parent_judokas", `${eqFilter("id_parent", user.id_judoka)}&${eqFilter("id_judoka", idJudoka)}`);
+
+  const otherParentLink = await supabaseSelectOne("parent_judokas", `select=id_parent&${eqFilter("id_judoka", idJudoka)}`);
+  let message = "Enfant retiré.";
+  if (!otherParentLink && !cleanText(child.email)) {
+    await supabaseDelete("judokas", eqFilter("id_judoka", idJudoka));
+    message = "Enfant supprimé.";
+  }
+
+  const remainingChildren = await getParentManagedJudokas(user.id_judoka);
+  if (!remainingChildren.length && isParent(user)) {
+    await supabasePatch("judokas", eqFilter("id_judoka", user.id_judoka), {
+      role: "JUDOKA"
+    });
+  }
+
+  return {
+    success: true,
+    message
+  };
 }
 
 async function getCompetitionDetail(email, idCompetition) {
@@ -538,10 +687,13 @@ async function deleteCombat(email, idCombat) {
 
 const methods = {
   getInitialData,
+  getChildrenManagement,
   registerProfile,
+  saveManagedChild,
   getCompetitionDetail,
   saveCompetition,
   ajouterCombat,
+  deleteManagedChild,
   updateCombat,
   deleteCompetition,
   deleteCombat

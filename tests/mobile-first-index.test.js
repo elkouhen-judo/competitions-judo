@@ -35,6 +35,15 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(html, /\.hidden\s*\{\s*display: none !important;/);
 });
 
+test("child management screen is available in the mobile action flow", () => {
+  assert.match(html, /id="manageChildrenButton"/);
+  assert.match(html, /id="childrenView" class="panel hidden"/);
+  assert.match(html, /id="childrenList"/);
+  assert.match(html, /id="child_prenom"/);
+  assert.match(html, /id="child_nom"/);
+  assert.match(html, /id="saveChildButton"/);
+});
+
 test("competition header actions share one aligned action row", () => {
   assert.match(html, /class="competition-header-actions"/);
   assert.doesNotMatch(html, /<div class="toolbar">\s*<button class="button-secondary" onclick="showHome\(\)">Retour<\/button>\s*<div id="competitionAdminActions" class="toolbar admin-actions hidden">/);
