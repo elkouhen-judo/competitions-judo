@@ -297,7 +297,10 @@ function saveCompetition(competition) {
     id_judoka: ownerJudokaId,
     nom: competition.nom,
     date: competition.date,
-    lieu: competition.lieu || ""
+    lieu: competition.lieu || "",
+    categorie_age: competition.categorie_age || "",
+    categorie_poids: competition.categorie_poids || "",
+    poids_pesee: competition.poids_pesee || ""
   };
 
   if (competition.id_competition) {
@@ -327,7 +330,10 @@ function saveCompetition(competition) {
     id_judoka: ownerJudokaId,
     nom: competition.nom,
     date: competition.date,
-    lieu: competition.lieu || ""
+    lieu: competition.lieu || "",
+    categorie_age: competition.categorie_age || "",
+    categorie_poids: competition.categorie_poids || "",
+    poids_pesee: competition.poids_pesee || ""
   });
 
   return {
@@ -365,6 +371,7 @@ function ajouterCombat(combat) {
     id_competition: combat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
+    type_victoire: combat.type_victoire || "",
     deroule: combat.deroule || ""
   });
 
@@ -409,6 +416,7 @@ function updateCombat(combat) {
     id_competition: combat.id_competition || existingCombat.id_competition,
     adversaire: combat.adversaire || "",
     resultat: combat.resultat,
+    type_victoire: combat.type_victoire || "",
     deroule: combat.deroule || ""
   });
 
