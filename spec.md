@@ -26,7 +26,9 @@ Il peut :
 - créer une compétition qui lui est automatiquement rattachée ;
 - modifier ou supprimer ses propres compétitions ;
 - consulter uniquement ses combats ;
-- ajouter, modifier ou supprimer ses propres combats.
+- ajouter, modifier ou supprimer ses propres combats ;
+- ouvrir un écran de gestion des enfants pour ajouter, modifier ou supprimer les judokas mineurs dont il a la charge ;
+- devenir parent à partir de cet écran tout en conservant ses droits de judoka sur ses propres données.
 
 ### 2.2 Parent
 
@@ -42,6 +44,7 @@ Il peut :
 - sélectionner le judoka concerné parmi la liste restreinte des judokas qu'il peut gérer.
 
 La liste des judokas gérés par un parent est définie par la table de liaison `parent_judokas`. Le parent est également inclus dans sa propre liste de gestion afin de conserver ses droits de judoka.
+Un judoka qui ajoute au moins un enfant via l'écran dédié passe au rôle `PARENT`. Si tous ses enfants sont retirés, il redevient `JUDOKA`.
 
 ### 2.3 Administrateur
 
@@ -181,6 +184,21 @@ Un parent peut supprimer uniquement les combats rattachés à lui-même ou aux j
 
 Un administrateur peut supprimer n'importe quel combat.
 
+### 4.9 Gestion des enfants
+
+Un utilisateur connecté non administrateur dispose d'un écran dédié pour gérer les enfants dont il a la charge.
+
+Cet écran permet :
+
+- d'afficher la liste actuelle des enfants liés au compte connecté ;
+- d'ajouter un enfant en saisissant son prénom et son nom ;
+- de modifier le prénom ou le nom d'un enfant existant ;
+- de supprimer un enfant si cet enfant ne possède ni compétition ni combat.
+
+Lors de l'ajout du premier enfant, le compte connecté devient parent et récupère les droits associés. Lorsque le dernier enfant est retiré, le compte redevient judoka standard.
+
+Si un enfant supprimé n'a pas d'email, n'est rattaché à aucun autre parent et ne porte aucune donnée sportive, sa fiche judoka est supprimée. Sinon, seul le lien parent-enfant est retiré.
+
 ## 5. Gestion des droits
 
 L'accès repose sur l'utilisateur Google connecté.
@@ -196,6 +214,7 @@ Les droits sont ensuite appliqués selon trois principes :
 Le rôle administrateur est attribué lorsque le rôle du judoka vaut `ADMIN`.
 
 Le rôle parent est attribué lorsque le rôle du judoka vaut `PARENT`. Les judokas qu'il peut gérer sont ceux liés à son `id_judoka` dans `parent_judokas`.
+L'écran de gestion des enfants n'est pas disponible pour les administrateurs.
 
 Les appels à Supabase sont effectués côté serveur par Google Apps Script. Les secrets Supabase ne sont jamais stockés dans le code source ni envoyés au navigateur. L'URL Supabase et la clé serveur sont lues depuis les Script Properties Apps Script.
 
@@ -244,6 +263,8 @@ Toute suppression déclenche une demande de confirmation.
 La suppression d'une compétition supprime aussi tous les combats rattachés à cette compétition.
 
 La suppression d'un combat ne supprime pas la compétition associée.
+
+La suppression d'un enfant est refusée tant que cet enfant possède des compétitions ou des combats.
 
 ### 6.6 Dates
 
@@ -361,3 +382,5 @@ Variable d'environnement optionnelle :
 - `SUPABASE_AUTH_ADMIN_JWT` pour conserver une création de compte auto-confirmée sans email lorsque `SUPABASE_SERVICE_ROLE_KEY` contient une clé `sb_secret_...`.
 
 La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire, privilégier une création auto-confirmée sans email quand un JWT admin legacy est disponible, sinon basculer proprement sur une confirmation email explicite, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."
+
+La demande fonctionnelle peut être formulée ainsi : "Permettre à un judoka connecté de devenir aussi parent depuis l'application grâce à un écran mobile first de gestion des enfants. Depuis cet écran, il doit pouvoir ajouter, modifier et supprimer ses enfants, être promu au rôle `PARENT` dès le premier enfant, puis retrouver le rôle `JUDOKA` si tous les enfants sont retirés, tout en conservant ses propres droits de judoka."
