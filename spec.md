@@ -8,6 +8,7 @@ Elle doit permettre :
 
 - à un judoka de consulter et gérer ses propres compétitions ;
 - à un judoka de suivre les combats associés à ses compétitions ;
+- à un parent de consulter et gérer les compétitions et combats des judokas dont il a la charge ;
 - à un administrateur de consulter et gérer l'ensemble des compétitions et combats du club ;
 - d'éviter les données orphelines lors des suppressions.
 
@@ -27,7 +28,22 @@ Il peut :
 - consulter uniquement ses combats ;
 - ajouter, modifier ou supprimer ses propres combats.
 
-### 2.2 Administrateur
+### 2.2 Parent
+
+Un parent est un utilisateur connecté dont le rôle vaut `PARENT`.
+
+Il peut :
+
+- consulter les compétitions rattachées à son propre profil et aux judokas dont il a la charge ;
+- créer une compétition pour lui-même ou pour un judoka dont il a la charge ;
+- modifier ou supprimer les compétitions rattachées à lui-même ou aux judokas dont il a la charge ;
+- consulter les combats rattachés à lui-même ou aux judokas dont il a la charge ;
+- ajouter, modifier ou supprimer les combats rattachés à lui-même ou aux judokas dont il a la charge ;
+- sélectionner le judoka concerné parmi la liste restreinte des judokas qu'il peut gérer.
+
+La liste des judokas gérés par un parent est définie par la table de liaison `parent_judokas`. Le parent est également inclus dans sa propre liste de gestion afin de conserver ses droits de judoka.
+
+### 2.3 Administrateur
 
 Un administrateur est un utilisateur connecté dont le rôle vaut `ADMIN`.
 
@@ -46,7 +62,9 @@ L'interface est mobile first.
 
 Les écrans doivent respecter les principes suivants :
 
-- les listes sont affichées sous forme de cartes plutôt que sous forme de tableaux complexes ;
+- la liste des compétitions est affichée de manière compacte, proche d'un tableau, pour permettre une lecture rapide ;
+- sur mobile, l'affichage compact doit rester lisible et utilisable sans imposer un tableau large difficile à parcourir ;
+- sur mobile, la liste compacte doit éviter le scroll horizontal lorsque c'est possible en regroupant ou simplifiant les informations secondaires ;
 - les actions principales sont accessibles par des boutons larges et tactiles ;
 - les formulaires sont séparés des listes pour limiter la charge visuelle ;
 - les informations importantes sont visibles sans mise en page dense ;
@@ -59,6 +77,10 @@ Les écrans doivent respecter les principes suivants :
 
 L'écran d'accueil affiche les compétitions visibles par l'utilisateur connecté.
 
+La liste est présentée sous une forme compacte similaire à un tableau. Chaque ligne correspond à une compétition et regroupe les informations essentielles avec les actions associées.
+
+Sur mobile, les informations secondaires peuvent être regroupées dans une cellule principale ou affichées sur une ligne de détail compacte afin d'éviter un tableau horizontal trop large. Les actions d'ouverture et de suppression doivent rester accessibles via des éléments interactifs explicites et tactiles.
+
 Pour chaque compétition, l'utilisateur voit :
 
 - le nom de la compétition ;
@@ -69,7 +91,7 @@ Pour chaque compétition, l'utilisateur voit :
 
 Les compétitions sont triées par date décroissante afin de faire remonter les événements les plus récents.
 
-Un judoka standard ne voit que ses propres compétitions. Un administrateur voit toutes les compétitions.
+Un judoka standard ne voit que ses propres compétitions. Un parent voit ses propres compétitions et celles des judokas dont il a la charge. Un administrateur voit toutes les compétitions.
 
 ### 4.2 Création d'une compétition
 
@@ -80,6 +102,8 @@ L'utilisateur peut créer une compétition en renseignant :
 - un lieu.
 
 Pour un judoka standard, la compétition est automatiquement rattachée à son profil.
+
+Pour un parent, l'écran permet de choisir le judoka propriétaire parmi lui-même et les judokas dont il a la charge.
 
 Pour un administrateur, l'écran permet de saisir le nom ou le prénom du judoka propriétaire, de filtrer la liste des judokas disponibles, puis de sélectionner l'identité correspondante. La compétition est enregistrée avec l'`id_judoka` du judoka sélectionné.
 
@@ -93,15 +117,17 @@ Le détail d'une compétition affiche :
 - la liste des combats visibles par l'utilisateur ;
 - les actions disponibles selon les droits de l'utilisateur.
 
-Un judoka standard ne voit que les combats rattachés à son profil. Un administrateur voit tous les combats de la compétition.
+Un judoka standard ne voit que les combats rattachés à son profil. Un parent voit les combats rattachés à lui-même et aux judokas dont il a la charge. Un administrateur voit tous les combats de la compétition.
 
-Lorsqu'un administrateur consulte les combats, chaque combat affiche également le nom du judoka concerné afin de faciliter la lecture.
+Lorsqu'un parent ou un administrateur consulte les combats, chaque combat affiche également le nom du judoka concerné afin de faciliter la lecture.
 
 ### 4.4 Modification d'une compétition
 
 Une compétition peut être modifiée depuis son écran de détail si l'utilisateur a le droit de la gérer.
 
 Un judoka standard peut modifier uniquement ses propres compétitions.
+
+Un parent peut modifier les compétitions rattachées à lui-même ou aux judokas dont il a la charge, et ajuster le judoka propriétaire uniquement dans cette liste restreinte.
 
 Un administrateur peut modifier n'importe quelle compétition et, si nécessaire, ajuster le judoka propriétaire via la même recherche par nom ou prénom.
 
@@ -127,6 +153,8 @@ Le formulaire permet de renseigner :
 
 Pour un judoka standard, le combat est automatiquement rattaché à son profil.
 
+Pour un parent, l'écran permet de choisir le judoka concerné parmi lui-même et les judokas dont il a la charge.
+
 Pour un administrateur, l'écran permet de choisir le judoka concerné.
 
 ### 4.7 Modification d'un combat
@@ -136,6 +164,8 @@ Un combat existant peut être modifié depuis la liste des combats.
 Le formulaire de combat est réutilisé en mode modification. Il est prérempli avec les données du combat sélectionné, puis enregistre les changements sur ce combat.
 
 Un judoka standard peut modifier uniquement ses propres combats.
+
+Un parent peut modifier uniquement les combats rattachés à lui-même ou aux judokas dont il a la charge.
 
 Un administrateur peut modifier n'importe quel combat.
 
@@ -147,6 +177,8 @@ La suppression demande une confirmation explicite.
 
 Un judoka standard peut supprimer uniquement ses propres combats.
 
+Un parent peut supprimer uniquement les combats rattachés à lui-même ou aux judokas dont il a la charge.
+
 Un administrateur peut supprimer n'importe quel combat.
 
 ## 5. Gestion des droits
@@ -155,12 +187,15 @@ L'accès repose sur l'utilisateur Google connecté.
 
 L'application récupère l'email de session, puis recherche le judoka correspondant dans la liste des judokas. Cette vérification sert à identifier l'utilisateur et à connaître son rôle.
 
-Les droits sont ensuite appliqués selon deux principes :
+Les droits sont ensuite appliqués selon trois principes :
 
 - un utilisateur standard agit uniquement sur les données rattachées à son profil ;
+- un parent agit uniquement sur les données rattachées à son profil et aux judokas dont il a la charge ;
 - un administrateur agit sur toutes les données du club.
 
 Le rôle administrateur est attribué lorsque le rôle du judoka vaut `ADMIN`.
+
+Le rôle parent est attribué lorsque le rôle du judoka vaut `PARENT`. Les judokas qu'il peut gérer sont ceux liés à son `id_judoka` dans `parent_judokas`.
 
 Les appels à Supabase sont effectués côté serveur par Google Apps Script. Les secrets Supabase ne sont jamais stockés dans le code source ni envoyés au navigateur. L'URL Supabase et la clé serveur sont lues depuis les Script Properties Apps Script.
 
@@ -170,11 +205,15 @@ Les appels à Supabase sont effectués côté serveur par Google Apps Script. Le
 
 Un judoka standard voit uniquement les compétitions qui lui sont rattachées.
 
+Un parent voit uniquement les compétitions qui lui sont rattachées ou qui sont rattachées aux judokas dont il a la charge.
+
 Un administrateur voit toutes les compétitions du classeur.
 
 ### 6.2 Gestion des compétitions
 
 Un judoka standard peut créer, modifier et supprimer uniquement ses propres compétitions.
+
+Un parent peut créer, modifier et supprimer les compétitions rattachées à lui-même ou aux judokas dont il a la charge. Une sauvegarde parent pour un judoka hors de cette liste est refusée.
 
 Un administrateur peut créer, modifier et supprimer toutes les compétitions.
 
@@ -184,11 +223,15 @@ Lorsqu'un administrateur crée ou modifie une compétition, il doit choisir le j
 
 Un judoka standard voit uniquement ses propres combats dans une compétition.
 
+Un parent voit uniquement ses propres combats et ceux des judokas dont il a la charge dans une compétition accessible.
+
 Un administrateur voit tous les combats de la compétition consultée.
 
 ### 6.4 Gestion des combats
 
 Un judoka standard peut créer, modifier et supprimer uniquement ses propres combats.
+
+Un parent peut créer, modifier et supprimer uniquement les combats rattachés à lui-même ou aux judokas dont il a la charge.
 
 Un administrateur peut créer, modifier et supprimer tous les combats.
 
@@ -208,13 +251,16 @@ Les dates sont normalisées avant d'être affichées dans le navigateur afin de 
 
 ## 7. Données manipulées
 
-L'application manipule trois tables Supabase principales :
+L'application manipule quatre tables Supabase principales :
 
 - les judokas ;
+- les liens entre parents et judokas ;
 - les compétitions ;
 - les combats.
 
-Les judokas servent à identifier l'utilisateur connecté, à déterminer son rôle et à afficher les noms lorsque l'administrateur consulte des combats.
+Les judokas servent à identifier l'utilisateur connecté, à déterminer son rôle et à afficher les noms lorsque le parent ou l'administrateur consulte des combats.
+
+Les liens entre parents et judokas sont stockés dans `parent_judokas`. Chaque ligne associe un `id_parent` à un `id_judoka` que ce parent peut gérer.
 
 Les compétitions représentent les événements suivis par l'application. Elles sont rattachées à un judoka propriétaire.
 
@@ -223,12 +269,16 @@ Les combats représentent les résultats associés à une compétition et à un 
 Le schéma Supabase conserve les identifiants métier actuels sous forme de texte afin de faciliter la migration depuis les anciennes données Google Sheets :
 
 - `judokas.id_judoka` ;
+- `parent_judokas.id_parent` ;
+- `parent_judokas.id_judoka` ;
 - `competitions.id_competition` ;
 - `combats.id_combat`.
 
 Les compétitions référencent leur judoka propriétaire via `competitions.id_judoka`.
 
 Les combats référencent à la fois leur judoka via `combats.id_judoka` et leur compétition via `combats.id_competition`.
+
+La table `parent_judokas` référence deux lignes de `judokas` : le parent via `id_parent` et le judoka géré via `id_judoka`.
 
 La relation entre `combats` et `competitions` applique une suppression en cascade : supprimer une compétition supprime automatiquement ses combats associés.
 
@@ -249,10 +299,56 @@ Après une action réussie, l'application doit revenir à un état cohérent et 
 - Un judoka standard ne voit jamais les compétitions d'un autre judoka.
 - Un judoka standard ne voit jamais les combats d'un autre judoka.
 - Un judoka standard ne peut modifier ou supprimer que ses propres compétitions et combats.
+- Un parent voit les compétitions et combats de son propre profil et des judokas dont il a la charge.
+- Un parent ne voit jamais les compétitions et combats d'un judoka hors de sa liste de gestion.
+- Un parent ne peut créer, modifier ou supprimer une compétition ou un combat que pour lui-même ou pour un judoka dont il a la charge.
 - Un administrateur voit toutes les compétitions.
 - Un administrateur voit tous les combats d'une compétition.
 - Un administrateur peut choisir le judoka concerné lors de la création ou modification.
 - Une compétition supprimée ne laisse aucun combat orphelin.
 - Les compétitions sont affichées de la plus récente à la plus ancienne.
+- La liste des compétitions est affichée de manière compacte, proche d'un tableau, sans imposer de scroll horizontal difficile à utiliser sur mobile.
 - Les écrans restent utilisables sur mobile.
 - Les suppressions demandent confirmation avant exécution.
+
+## 10. Déploiement Vercel
+
+L'application doit pouvoir être déployée sur Vercel en plus du déploiement Google Apps Script historique.
+
+Sur Vercel :
+
+- `Index.html` reste l'interface principale ;
+- les appels `google.script.run` sont remplacés dans le navigateur par un adaptateur HTTP compatible ;
+- les fonctions métier sont exposées via une API serverless Vercel ;
+- l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
+- la connexion standard ne doit pas envoyer d'email ;
+- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la clé `SUPABASE_SERVICE_ROLE_KEY` ;
+- le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
+- l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
+- si l'email authentifié n'existe pas encore dans la table `judokas`, l'utilisateur doit compléter un formulaire de création de profil applicatif ;
+- pour un profil judoka, le formulaire crée une ligne dans `judokas` avec le rôle `JUDOKA` ;
+- pour un profil parent, le formulaire crée une ligne parent dans `judokas` avec le rôle `PARENT`, crée les enfants renseignés dans `judokas`, puis crée les liens correspondants dans `parent_judokas` ;
+- la création parent/enfants/liens doit être transactionnelle afin d'éviter un parent partiellement créé ;
+- l'email d'un enfant créé sous un parent peut être nul afin de ne pas bloquer une future création de compte autonome ;
+- aucun email ne doit être envoyé pour les enfants créés par un parent ;
+- le lien de confirmation Supabase doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;
+- l'écran de connexion propose une action "mot de passe oublié" qui envoie un email de réinitialisation Supabase ;
+- le lien de réinitialisation du mot de passe doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;
+- les emails d'authentification doivent être réservés aux actions explicitement nécessaires, comme la réinitialisation du mot de passe ;
+- les magic links ne sont pas utilisés pour l'authentification standard ;
+- l'API serverless vérifie la session Supabase Auth et récupère l'email vérifié ;
+- l'API rapproche cet email de la table `judokas` pour appliquer les droits métier ;
+- après une connexion réussie, l'écran de connexion doit disparaître et l'utilisateur doit arriver sur la liste des compétitions ;
+- un utilisateur connecté peut se déconnecter depuis l'en-tête de l'application ;
+- le bouton de déconnexion est affiché sur la même ligne que l'identité de l'utilisateur et utilise une icône explicite ;
+- sur Vercel, la déconnexion appelle Supabase Auth, supprime la session locale et revient à l'écran de connexion ;
+- les requêtes métier vers Supabase restent effectuées côté serveur avec la clé API stockée dans les variables d'environnement Vercel ;
+- la clé `SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être envoyée au navigateur.
+
+Variables d'environnement obligatoires :
+
+- `SUPABASE_URL` ;
+- `SUPABASE_ANON_KEY` ;
+- `SUPABASE_SERVICE_ROLE_KEY`.
+
+La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire sans email de validation, vérifier la session côté API, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."

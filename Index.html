@@ -733,7 +733,7 @@
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p id="loginText">Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe.</p>
+        <p id="loginText">Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe, sans email de validation.</p>
         <form id="supabaseLoginForm" class="login-form hidden">
           <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" autocomplete="email" required>
@@ -1137,8 +1137,8 @@
       return session;
     }
 
-    async function authenticateWithPassword(email, password) {
-      const loginResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=password`, {
+    async function requestPasswordSession(email, password) {
+      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=password`, {
         method: "POST",
         headers: {
           "apikey": runtimeConfig.supabaseAnonKey,
@@ -1146,6 +1146,26 @@
         },
         body: JSON.stringify({ email, password })
       });
+
+      return response;
+    }
+
+    async function createAuthAccount(email, password) {
+      const response = await fetch("/api/auth-signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error(await readSupabaseAuthError(response) || "Création du compte impossible.");
+      }
+    }
+
+    async function authenticateWithPassword(email, password) {
+      let loginResponse = await requestPasswordSession(email, password);
 
       if (loginResponse.ok) {
         return loginResponse.json();
@@ -1157,21 +1177,13 @@
         throw new Error(loginError || "Connexion impossible.");
       }
 
-      const redirectTo = encodeURIComponent(window.location.origin);
-      const signupResponse = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/signup?redirect_to=${redirectTo}`, {
-        method: "POST",
-        headers: {
-          "apikey": runtimeConfig.supabaseAnonKey,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!signupResponse.ok) {
-        throw new Error(await readSupabaseAuthError(signupResponse) || "Inscription impossible.");
+      await createAuthAccount(email, password);
+      loginResponse = await requestPasswordSession(email, password);
+      if (!loginResponse.ok) {
+        throw new Error(await readSupabaseAuthError(loginResponse) || "Compte créé, mais connexion impossible.");
       }
 
-      return signupResponse.json();
+      return loginResponse.json();
     }
 
     async function requestPasswordReset() {
@@ -1219,7 +1231,7 @@
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe.";
+      document.getElementById("loginText").innerText = "Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe, sans email de validation.";
       document.getElementById("googleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.remove("hidden");
       document.getElementById("profileRegistrationForm").classList.add("hidden");
@@ -1294,7 +1306,7 @@
         );
 
         if (!session.access_token) {
-          showSuccess("Compte créé. Vérifiez votre email si Supabase demande une confirmation, puis reconnectez-vous.");
+          showSuccess("Compte créé. Reconnectez-vous avec votre email et votre mot de passe.");
           return;
         }
 
