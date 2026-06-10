@@ -732,6 +732,7 @@
           <label for="loginPassword">Mot de passe</label>
           <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required>
           <button type="submit">Se connecter</button>
+          <button type="button" class="button-secondary" onclick="requestPasswordReset()">Mot de passe oublié</button>
         </form>
         <a id="googleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
           Se connecter avec Google
@@ -1143,6 +1144,39 @@
       }
 
       return signupResponse.json();
+    }
+
+    async function requestPasswordReset() {
+      clearMessage();
+
+      if (!isVercelRuntime) {
+        showError({ message: "La réinitialisation du mot de passe est disponible sur la version Vercel." });
+        return;
+      }
+
+      const email = document.getElementById("loginEmail").value.trim();
+      if (!email) {
+        showError({ message: "Renseignez votre email avant de demander la réinitialisation." });
+        document.getElementById("loginEmail").focus();
+        return;
+      }
+
+      const redirectTo = encodeURIComponent(window.location.origin);
+      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/recover?redirect_to=${redirectTo}`, {
+        method: "POST",
+        headers: {
+          "apikey": runtimeConfig.supabaseAnonKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) {
+        showError({ message: await readSupabaseAuthError(response) || "Impossible d'envoyer l'email de réinitialisation." });
+        return;
+      }
+
+      showSuccess("Email de réinitialisation envoyé. Vérifiez votre boîte mail.");
     }
 
     async function readSupabaseAuthError(response) {
