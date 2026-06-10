@@ -41,6 +41,7 @@ test("vercel runtime uses supabase password auth with auto registration", () => 
   assert.match(html, /auth\/v1\/token\?grant_type=password/);
   assert.match(html, /function getSupabaseAnonymousAuthHeaders\(\)/);
   assert.match(html, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
+  assert.match(html, /invalid_credentials/);
   assert.match(html, /première connexion/);
   assert.match(html, /sans email de validation/);
   assert.match(html, /Se connecter ou créer le compte/);

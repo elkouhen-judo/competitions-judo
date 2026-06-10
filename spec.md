@@ -325,6 +325,7 @@ Sur Vercel :
 - la connexion standard ne doit pas envoyer d'email ;
 - si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur via la clé `SUPABASE_SERVICE_ROLE_KEY` ;
 - le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
+- si Supabase Auth répond `invalid_credentials` au premier essai, l'application retente l'inscription automatique avant de renvoyer une erreur ;
 - l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
 - si l'email authentifié n'existe pas encore dans la table `judokas`, l'utilisateur doit compléter un formulaire de création de profil applicatif ;
 - pour un profil judoka, le formulaire crée une ligne dans `judokas` avec le rôle `JUDOKA` ;

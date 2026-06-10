@@ -1174,7 +1174,7 @@
       }
 
       const loginError = await readSupabaseAuthError(loginResponse);
-      const shouldRegister = /invalid login credentials|signup|not found|user not found/i.test(loginError);
+      const shouldRegister = /invalid login credentials|invalid_credentials|signup|not found|user not found/i.test(loginError);
       if (!shouldRegister) {
         throw new Error(loginError || "Connexion impossible.");
       }
