@@ -617,6 +617,11 @@
       <div class="panel-body">
         <input type="hidden" id="competition_id">
 
+        <div id="competitionOwnerBlock" class="hidden full-row">
+          <label for="competition_id_judoka">Judoka propriétaire</label>
+          <select id="competition_id_judoka"></select>
+        </div>
+
         <label for="competition_nom">Nom</label>
         <input type="text" id="competition_nom">
 
@@ -684,6 +689,7 @@
     let currentCompetition = null;
     let judokas = [];
     let currentCombats = [];
+    let canManageCurrentCompetition = false;
     let previousView = "homeView";
 
     function init() {
@@ -702,11 +708,12 @@
           currentUser = data.user;
           isAdmin = data.isAdmin;
           competitions = Array.isArray(data.competitions) ? data.competitions : [];
+          judokas = Array.isArray(data.judokas) ? data.judokas : [];
 
           document.getElementById("userInfo").innerHTML =
             `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${isAdmin ? "ADMIN" : "JUDOKA"}`;
 
-          document.getElementById("homeAdminActions").classList.toggle("hidden", !isAdmin);
+          document.getElementById("homeAdminActions").classList.remove("hidden");
           renderCompetitions();
         })
         .withFailureHandler(showError)
@@ -759,6 +766,7 @@
           currentCompetition = data.competition;
           currentCombats = Array.isArray(data.combats) ? data.combats : [];
           judokas = Array.isArray(data.judokas) ? data.judokas : [];
+          canManageCurrentCompetition = Boolean(data.canManageCompetition);
 
           if (data.isAdmin) {
             document.getElementById("adminJudokaBlock").classList.remove("hidden");
@@ -779,7 +787,7 @@
       document.getElementById("competitionSubtitle").innerText = "Détail de la compétition";
       document.getElementById("competitionDate").innerText = formatDate(currentCompetition.date);
       document.getElementById("competitionLieu").innerText = currentCompetition.lieu || "";
-      document.getElementById("competitionAdminActions").classList.toggle("hidden", !isAdmin);
+      document.getElementById("competitionAdminActions").classList.toggle("hidden", !canManageCurrentCompetition);
     }
 
     function editCurrentCompetition() {
@@ -841,6 +849,7 @@
 
         document.getElementById("competitionFormTitle").innerText = "Modifier la compétition";
         document.getElementById("competition_id").value = c.id_competition;
+        setCompetitionOwnerField(c.id_judoka || "");
         document.getElementById("competition_nom").value = c.nom || "";
         document.getElementById("competition_date").value = toInputDate(c.date);
         document.getElementById("competition_lieu").value = c.lieu || "";
@@ -848,6 +857,7 @@
         previousView = "homeView";
         document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
         document.getElementById("competition_id").value = "";
+        setCompetitionOwnerField("");
         document.getElementById("competition_nom").value = "";
         document.getElementById("competition_date").value = "";
         document.getElementById("competition_lieu").value = "";
@@ -867,6 +877,10 @@
         date: document.getElementById("competition_date").value,
         lieu: document.getElementById("competition_lieu").value
       };
+
+      if (isAdmin) {
+        competition.id_judoka = document.getElementById("competition_id_judoka").value;
+      }
 
       google.script.run
         .withSuccessHandler(response => {
@@ -1017,6 +1031,32 @@
       });
     }
 
+    function fillCompetitionOwnersSelect() {
+      const select = document.getElementById("competition_id_judoka");
+      select.innerHTML = `<option value="">Choisir un judoka</option>`;
+
+      judokas.forEach(j => {
+        select.innerHTML += `
+          <option value="${escapeAttribute(j.id_judoka)}">
+            ${escapeHtml(j.prenom || "")} ${escapeHtml(j.nom || "")}
+          </option>
+        `;
+      });
+    }
+
+    function setCompetitionOwnerField(idJudoka) {
+      const block = document.getElementById("competitionOwnerBlock");
+
+      if (!isAdmin) {
+        block.classList.add("hidden");
+        return;
+      }
+
+      block.classList.remove("hidden");
+      fillCompetitionOwnersSelect();
+      document.getElementById("competition_id_judoka").value = idJudoka || "";
+    }
+
     function resetCombatForm() {
       document.getElementById("combat_id").value = "";
       document.getElementById("combat_adversaire").value = "";
@@ -1038,6 +1078,7 @@
           }
 
           competitions = Array.isArray(data.competitions) ? data.competitions : [];
+          judokas = Array.isArray(data.judokas) ? data.judokas : [];
           renderCompetitions();
 
           if (openCompetitionId) {
@@ -1053,6 +1094,7 @@
     function showHome() {
       currentCompetition = null;
       currentCombats = [];
+      canManageCurrentCompetition = false;
       showView("homeView");
     }
 

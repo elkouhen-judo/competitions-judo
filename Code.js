@@ -45,16 +45,39 @@ function isAdmin(user) {
   return String(user.role || "").toUpperCase().trim() === "ADMIN";
 }
 
+function canManageCompetition(user, competition) {
+  if (isAdmin(user)) {
+    return true;
+  }
+
+  return String(competition.id_judoka) === String(user.id_judoka);
+}
+
+function resolveCompetitionOwnerId(user, competition) {
+  const ownerJudokaId = isAdmin(user)
+    ? competition.id_judoka
+    : user.id_judoka;
+
+  if (!ownerJudokaId) {
+    throw new Error("Judoka propriétaire obligatoire.");
+  }
+
+  return ownerJudokaId;
+}
+
 function getInitialData() {
 
   try {
 
-    const user = getCurrentUser();
+    const userContext = getCurrentUserContext();
+    const user = userContext.user;
+    const admin = isAdmin(user);
 
     const result = {
       user: user,
-      isAdmin: isAdmin(user),
-      competitions: getCompetitionsForUser(user)
+      isAdmin: admin,
+      competitions: getCompetitionsForUser(user),
+      judokas: admin ? userContext.judokas : []
     };
 
     return result;
@@ -86,16 +109,7 @@ function getCompetitionsForUser(user) {
     return competitions;
   }
 
-  const combats = getRowsAsObjects(SHEET_COMBATS);
-  const visibleCompetitionIds = new Set(
-    combats
-      .filter(c => String(c.id_judoka) === String(user.id_judoka))
-      .map(c => String(c.id_competition))
-  );
-
-  return competitions.filter(c =>
-    visibleCompetitionIds.has(String(c.id_competition))
-  );
+  return competitions.filter(c => canManageCompetition(user, c));
 }
 
 function getCompetitionDetail(id_competition) {
@@ -112,6 +126,10 @@ function getCompetitionDetail(id_competition) {
     throw new Error("Compétition introuvable.");
   }
 
+  if (!canManageCompetition(user, competition)) {
+    throw new Error("Accès refusé à cette compétition.");
+  }
+
   const combats = getRowsAsObjects(SHEET_COMBATS);
 
   let filtered = combats.filter(c =>
@@ -123,9 +141,6 @@ function getCompetitionDetail(id_competition) {
       String(c.id_judoka) === String(user.id_judoka)
     );
 
-    if (!filtered.length) {
-      throw new Error("Accès refusé à cette compétition.");
-    }
   }
 
   const judokas = admin ? userContext.judokas : [];
@@ -146,16 +161,14 @@ function getCompetitionDetail(id_competition) {
     competition,
     combats: enriched,
     isAdmin: admin,
+    canManageCompetition: canManageCompetition(user, competition),
     judokas: admin ? judokas : []
   };
 }
 
 function saveCompetition(competition) {
   const user = getCurrentUser();
-
-  if (!isAdmin(user)) {
-    throw new Error("Création et modification de compétition réservées aux admins.");
-  }
+  const ownerJudokaId = resolveCompetitionOwnerId(user, competition);
 
   if (!competition.nom || !competition.date) {
     throw new Error("Nom et date obligatoires.");
@@ -171,17 +184,28 @@ function saveCompetition(competition) {
   const headers = data[0].map(h => String(h).trim());
 
   const idIndex = headers.indexOf("id_competition");
+  const judokaIdIndex = headers.indexOf("id_judoka");
   const nomIndex = headers.indexOf("nom");
   const dateIndex = headers.indexOf("date");
   const lieuIndex = headers.indexOf("lieu");
 
-  if (idIndex === -1 || nomIndex === -1 || dateIndex === -1 || lieuIndex === -1) {
-    throw new Error("Colonnes attendues dans Competitions : id_competition, nom, date, lieu");
+  if (idIndex === -1 || judokaIdIndex === -1 || nomIndex === -1 || dateIndex === -1 || lieuIndex === -1) {
+    throw new Error("Colonnes attendues dans Competitions : id_competition, id_judoka, nom, date, lieu");
   }
 
   if (competition.id_competition) {
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][idIndex]) === String(competition.id_competition)) {
+        const existingCompetition = {};
+        headers.forEach((header, index) => {
+          existingCompetition[header] = serializeCellValue(data[i][index]);
+        });
+
+        if (!canManageCompetition(user, existingCompetition)) {
+          throw new Error("Modification de cette compétition non autorisée.");
+        }
+
+        sheet.getRange(i + 1, judokaIdIndex + 1).setValue(ownerJudokaId);
         sheet.getRange(i + 1, nomIndex + 1).setValue(competition.nom);
         sheet.getRange(i + 1, dateIndex + 1).setValue(competition.date);
         sheet.getRange(i + 1, lieuIndex + 1).setValue(competition.lieu || "");
@@ -199,6 +223,7 @@ function saveCompetition(competition) {
 
   sheet.appendRow([
     idCompetition,
+    ownerJudokaId,
     competition.nom,
     competition.date,
     competition.lieu || ""
@@ -326,10 +351,6 @@ function updateCombat(combat) {
 function deleteCompetition(id_competition) {
   const user = getCurrentUser();
 
-  if (!isAdmin(user)) {
-    throw new Error("Suppression de compétition réservée aux admins.");
-  }
-
   if (!id_competition) {
     throw new Error("Compétition obligatoire.");
   }
@@ -355,16 +376,25 @@ function deleteCompetition(id_competition) {
   }
 
   let competitionRow = -1;
+  let competition = null;
 
   for (let i = 1; i < competitionData.length; i++) {
     if (String(competitionData[i][competitionIdIndex]) === String(id_competition)) {
       competitionRow = i + 1;
+      competition = {};
+      competitionHeaders.forEach((header, index) => {
+        competition[header] = serializeCellValue(competitionData[i][index]);
+      });
       break;
     }
   }
 
   if (competitionRow === -1) {
     throw new Error("Compétition introuvable.");
+  }
+
+  if (!canManageCompetition(user, competition)) {
+    throw new Error("Suppression de cette compétition non autorisée.");
   }
 
   const combatData = combatSheet.getDataRange().getValues();
