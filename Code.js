@@ -158,7 +158,10 @@ function getCurrentUserContext() {
   if (isAdmin(user)) {
     judokas = getJudokasCached();
   } else if (isParent(user)) {
-    judokas = getParentManagedJudokas(user.id_judoka);
+    const children = getParentManagedJudokas(user.id_judoka);
+    // Le parent est aussi judoka : s'inclure s'il n'est pas déjà dans la liste
+    const alreadyIncluded = children.some(j => String(j.id_judoka) === String(user.id_judoka));
+    judokas = alreadyIncluded ? children : [user, ...children];
     managedJudokaIds = judokas.map(j => String(j.id_judoka));
   }
 
