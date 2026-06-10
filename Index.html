@@ -683,6 +683,14 @@
     .login-form .button {
       width: 100%;
     }
+    .user-actions {
+      display: grid;
+      gap: 8px;
+    }
+    .user-actions button {
+      min-height: 44px;
+      padding: 10px 12px;
+    }
   </style>
 </head>
 
@@ -693,7 +701,10 @@
         <h1>Kiroku</h1>
         <p class="subtitle">Suivi de compétitions</p>
       </div>
-      <div id="userInfo" class="user-pill">Chargement...</div>
+      <div class="user-actions">
+        <div id="userInfo" class="user-pill">Chargement...</div>
+        <button id="logoutButton" class="button-secondary hidden" onclick="logoutUser()">Déconnexion</button>
+      </div>
     </header>
 
     <div id="message" class="message"></div>
@@ -995,6 +1006,40 @@
       localStorage.removeItem(sessionStorageKey);
     }
 
+    async function logoutUser() {
+      clearMessage();
+
+      if (isVercelRuntime) {
+        const session = readVercelSession();
+        if (session && session.access_token && runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey) {
+          try {
+            await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/logout`, {
+              method: "POST",
+              headers: {
+                "apikey": runtimeConfig.supabaseAnonKey,
+                "Authorization": "Bearer " + session.access_token
+              }
+            });
+          } catch (_error) {
+            // La session locale doit être supprimée même si Supabase ne répond pas.
+          }
+        }
+
+        clearVercelSession();
+        currentUser = null;
+        competitions = [];
+        currentCompetition = null;
+        currentCombats = [];
+        judokas = [];
+        document.getElementById("logoutButton").classList.add("hidden");
+        document.getElementById("userInfo").innerText = "Déconnecté";
+        showVercelLogin();
+        return;
+      }
+
+      window.location.href = "https://accounts.google.com/Logout?continue=" + encodeURIComponent(window.location.href);
+    }
+
     function parseVercelAuthHash() {
       if (!isVercelRuntime || !window.location.hash) return;
 
@@ -1099,6 +1144,7 @@
 
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
+      document.getElementById("logoutButton").classList.add("hidden");
       document.getElementById("loginText").innerText = "Connectez-vous avec l'email associé à votre fiche judoka. Un compte Supabase est créé automatiquement si nécessaire.";
       document.getElementById("googleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.remove("hidden");
@@ -1155,6 +1201,7 @@
             loginButton.classList.remove("hidden");
             document.getElementById("supabaseLoginForm").classList.add("hidden");
             document.querySelector("header").classList.add("hidden");
+            document.getElementById("logoutButton").classList.add("hidden");
             showView("loginView");
             return;
           }
@@ -1174,6 +1221,7 @@
           const roleLabel = isAdmin ? "ADMIN" : isParent ? "PARENT" : "JUDOKA";
           document.getElementById("userInfo").innerHTML =
             `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${roleLabel}`;
+          document.getElementById("logoutButton").classList.remove("hidden");
 
           // Cacher "Ajouter une compétition" seulement pour les JUDOKA normaux
           if (!isAdmin && !isParent) {
