@@ -79,6 +79,12 @@ test("successful initial load leaves the login view", () => {
   assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
 });
 
+test("judoka home keeps competition creation available", () => {
+  assert.match(html, /id="addCompetitionButton" onclick="showCompetitionForm\(\)"/);
+  assert.match(html, /document\.getElementById\("homeAdminActions"\)\.classList\.remove\("hidden"\);/);
+  assert.doesNotMatch(html, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
+});
+
 test("vercel runtime exposes logout and clears local session", () => {
   assert.match(html, /id="logoutButton"/);
   assert.match(html, /id="logoutButton"[\s\S]*?<svg/);

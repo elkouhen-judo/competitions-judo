@@ -1377,12 +1377,7 @@
             `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${roleLabel}`;
           document.getElementById("logoutButton").classList.remove("hidden");
 
-          // Cacher "Ajouter une compétition" seulement pour les JUDOKA normaux
-          if (!isAdmin && !isParent) {
-            document.getElementById("homeAdminActions").classList.add("hidden");
-          } else {
-            document.getElementById("homeAdminActions").classList.remove("hidden");
-          }
+          document.getElementById("homeAdminActions").classList.remove("hidden");
 
           if ((isAdmin || isParent) && judokas.length > 0) {
             document.getElementById("homeFilters").classList.remove("hidden");
