@@ -29,8 +29,23 @@ test("small-screen layout is the base and desktop is progressive", () => {
 
 test("admin competition management stays visible on mobile", () => {
   assert.match(html, /id="homeAdminActions" class="toolbar admin-actions hidden"/);
-  assert.match(html, /id="competitionAdminActions" class="toolbar admin-actions hidden"/);
+  assert.match(html, /id="competitionAdminActions" class="competition-management-actions hidden"/);
   assert.match(html, /id="editCompetitionButton"/);
   assert.match(html, /id="deleteCompetitionButton"/);
   assert.match(html, /\.hidden\s*\{\s*display: none !important;/);
+});
+
+test("competition header actions share one aligned action row", () => {
+  assert.match(html, /class="competition-header-actions"/);
+  assert.doesNotMatch(html, /<div class="toolbar">\s*<button class="button-secondary" onclick="showHome\(\)">Retour<\/button>\s*<div id="competitionAdminActions" class="toolbar admin-actions hidden">/);
+  assert.match(html, /\.competition-header-actions\s*\{/);
+  assert.match(html, /\.competition-management-actions\s*\{/);
+});
+
+test("competition list exposes direct delete actions without nesting buttons", () => {
+  assert.match(html, /class="card competition-card"/);
+  assert.match(html, /class="card-button competition-open-button"/);
+  assert.match(html, /onclick="deleteCompetitionFromList\(this\.dataset\.id,\s*this\.dataset\.name\)"/);
+  assert.match(html, /function deleteCompetitionFromList\(id,\s*name\)/);
+  assert.doesNotMatch(html, /<button class="card card-button"[\s\S]*?<button/);
 });

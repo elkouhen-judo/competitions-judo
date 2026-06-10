@@ -113,6 +113,16 @@
       gap: 8px;
     }
 
+    .competition-header-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .competition-management-actions {
+      display: grid;
+      gap: 8px;
+    }
+
     .inline-actions {
       display: flex;
       gap: 8px;
@@ -191,12 +201,22 @@
       padding: 15px;
     }
 
+    .competition-card {
+      display: grid;
+      gap: 12px;
+    }
+
     .card-button {
       border-color: var(--line);
       background: #fff;
       color: var(--text);
       padding: 16px;
       text-align: left;
+    }
+
+    .competition-open-button {
+      border: 0;
+      padding: 0;
     }
 
     .card-button:hover {
@@ -461,6 +481,8 @@
       }
 
       .toolbar,
+      .competition-header-actions,
+      .competition-management-actions,
       .form-actions,
       .admin-actions {
         display: flex;
@@ -469,6 +491,8 @@
       }
 
       .toolbar button,
+      .competition-header-actions button,
+      .competition-management-actions button,
       .form-actions button,
       .admin-actions button {
         width: auto;
@@ -573,9 +597,9 @@
           <h2 id="competitionTitle">Compétition</h2>
           <p id="competitionSubtitle" class="subtitle"></p>
         </div>
-        <div class="toolbar">
+        <div class="competition-header-actions">
           <button class="button-secondary" onclick="showHome()">Retour</button>
-          <div id="competitionAdminActions" class="toolbar admin-actions hidden">
+          <div id="competitionAdminActions" class="competition-management-actions hidden">
             <button id="editCompetitionButton" class="button-secondary" onclick="editCurrentCompetition()">Modifier la compétition</button>
             <button id="deleteCompetitionButton" class="button-danger" onclick="deleteCurrentCompetition()">Supprimer la compétition</button>
           </div>
@@ -732,19 +756,24 @@
 
       competitions.forEach(c => {
         html += `
-          <button class="card card-button" data-id="${escapeAttribute(c.id_competition)}" onclick="openCompetition(this.dataset.id)">
-            <p class="card-title">${escapeHtml(c.nom || "")}</p>
-            <div class="card-meta">
-              <div class="meta-row">
-                <span class="meta-label">Date</span>
-                <span class="meta-value">${formatDate(c.date)}</span>
+          <article class="card competition-card">
+            <button class="card-button competition-open-button" data-id="${escapeAttribute(c.id_competition)}" onclick="openCompetition(this.dataset.id)">
+              <p class="card-title">${escapeHtml(c.nom || "")}</p>
+              <div class="card-meta">
+                <div class="meta-row">
+                  <span class="meta-label">Date</span>
+                  <span class="meta-value">${formatDate(c.date)}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Lieu</span>
+                  <span class="meta-value">${escapeHtml(c.lieu || "")}</span>
+                </div>
               </div>
-              <div class="meta-row">
-                <span class="meta-label">Lieu</span>
-                <span class="meta-value">${escapeHtml(c.lieu || "")}</span>
-              </div>
+            </button>
+            <div class="card-actions">
+              <button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">Supprimer</button>
             </div>
-          </button>
+          </article>
         `;
       });
 
@@ -1002,6 +1031,22 @@
         })
         .withFailureHandler(showError)
         .deleteCompetition(currentCompetition.id_competition);
+    }
+
+    function deleteCompetitionFromList(id, name) {
+      const label = name ? ` "${name}"` : "";
+
+      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(response => {
+          showSuccess(response.message);
+          reloadInitialData();
+        })
+        .withFailureHandler(showError)
+        .deleteCompetition(id);
     }
 
     function deleteCombat(id) {
