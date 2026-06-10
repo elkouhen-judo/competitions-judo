@@ -31,3 +31,13 @@ test("client shows competition management based on canManageCompetition", () => 
   assert.match(html, /classList\.toggle\("hidden",\s*!canManageCurrentCompetition\)/);
   assert.match(html, /id="competitionOwnerBlock" class="hidden full-row"/);
 });
+
+test("admin competition owner field supports name search and list selection", () => {
+  assert.match(html, /id="competition_owner_search"/);
+  assert.match(html, /oninput="filterCompetitionOwners\(\)"/);
+  assert.match(html, /function filterCompetitionOwners\(\)/);
+  assert.match(html, /function getJudokaDisplayName\(j\)/);
+  assert.match(html, /fillCompetitionOwnersSelect\(idJudoka,\s*searchValue\)/);
+  assert.match(html, /document\.getElementById\("competition_owner_search"\)\.value = getJudokaDisplayName\(owner\);/);
+  assert.match(html, /competition\.id_judoka = document\.getElementById\("competition_id_judoka"\)\.value;/);
+});
