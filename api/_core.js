@@ -18,19 +18,38 @@ function getSupabaseConfig() {
   };
 }
 
-async function supabaseRequest(table, query, options = {}) {
-  const config = getSupabaseConfig();
-  const method = options.method || "get";
-  const requestUrl = `${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`;
+function isJwtLikeToken(value) {
+  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(value || ""));
+}
+
+function createSupabaseHeaders(apiKey, options = {}) {
   const headers = {
-    apikey: config.serviceRoleKey,
-    Authorization: `Bearer ${config.serviceRoleKey}`,
-    "Content-Type": "application/json"
+    apikey: apiKey
   };
+
+  if (options.authorizationToken) {
+    headers.Authorization = `Bearer ${options.authorizationToken}`;
+  }
+
+  if (options.contentType !== false) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (options.prefer) {
     headers.Prefer = options.prefer;
   }
+
+  return headers;
+}
+
+async function supabaseRequest(table, query, options = {}) {
+  const config = getSupabaseConfig();
+  const method = options.method || "get";
+  const requestUrl = `${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`;
+  const headers = createSupabaseHeaders(config.serviceRoleKey, {
+    authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : "",
+    prefer: options.prefer
+  });
 
   const response = await fetch(requestUrl, {
     method: method.toUpperCase(),
@@ -70,11 +89,9 @@ async function supabaseRpc(functionName, payload) {
   const config = getSupabaseConfig();
   const response = await fetch(`${config.url}/rest/v1/rpc/${functionName}`, {
     method: "POST",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json"
-    },
+    headers: createSupabaseHeaders(config.serviceRoleKey, {
+      authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : ""
+    }),
     body: JSON.stringify(payload || {})
   });
   const body = await response.text();
@@ -159,11 +176,9 @@ async function createConfirmedAuthUser(email, password) {
   const config = getSupabaseConfig();
   const response = await fetch(`${config.url}/auth/v1/admin/users`, {
     method: "POST",
-    headers: {
-      apikey: config.serviceRoleKey,
-      Authorization: `Bearer ${config.serviceRoleKey}`,
-      "Content-Type": "application/json"
-    },
+    headers: createSupabaseHeaders(config.serviceRoleKey, {
+      authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : ""
+    }),
     body: JSON.stringify({
       email: cleanEmail,
       password,

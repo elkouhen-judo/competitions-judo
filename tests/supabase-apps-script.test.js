@@ -14,8 +14,10 @@ test("apps script reads supabase credentials from script properties", () => {
 
 test("apps script uses supabase rest helpers instead of spreadsheet access", () => {
   assert.match(code, /function supabaseRequest\(table,\s*query,\s*options\)/);
+  assert.match(code, /function isJwtLikeToken\(value\)/);
+  assert.match(code, /function createSupabaseHeaders\(apiKey,\s*options\)/);
   assert.match(code, /UrlFetchApp\.fetch/);
-  assert.match(code, /Authorization": "Bearer " \+ config\.serviceRoleKey/);
+  assert.match(code, /authorizationToken: isJwtLikeToken\(config\.serviceRoleKey\) \? config\.serviceRoleKey : ""/);
   assert.doesNotMatch(code, /SpreadsheetApp/);
   assert.doesNotMatch(code, /getRowsAsObjects/);
 });
