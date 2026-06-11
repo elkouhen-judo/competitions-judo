@@ -1,13 +1,14 @@
--- Script pour autoriser toutes les opérations CRUD via la Service Role Key ou l'accès anonyme géré par Apps Script.
+-- Les tables métier ne doivent pas être accessibles directement depuis les rôles client.
+-- L'API Vercel applique les règles métier puis utilise la clé service_role côté serveur.
 
--- Autoriser TOUTES les opérations sur la table judokas
-CREATE POLICY "Allow all operations on judokas" 
-ON public.judokas FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all operations on judokas" ON public.judokas;
+DROP POLICY IF EXISTS "Allow all operations on competitions" ON public.competitions;
+DROP POLICY IF EXISTS "Allow all operations on combats" ON public.combats;
 
--- Autoriser TOUTES les opérations sur la table competitions
-CREATE POLICY "Allow all operations on competitions" 
-ON public.competitions FOR ALL USING (true) WITH CHECK (true);
+REVOKE ALL ON TABLE public.judokas FROM anon, authenticated;
+REVOKE ALL ON TABLE public.competitions FROM anon, authenticated;
+REVOKE ALL ON TABLE public.combats FROM anon, authenticated;
 
--- Autoriser TOUTES les opérations sur la table combats
-CREATE POLICY "Allow all operations on combats" 
-ON public.combats FOR ALL USING (true) WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.judokas TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.competitions TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.combats TO service_role;

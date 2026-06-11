@@ -747,9 +747,6 @@
           <input id="registrationNom" type="text" autocomplete="family-name">
           <button type="submit">Créer mon profil</button>
         </form>
-        <a id="appsScriptGoogleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
-          Se connecter avec Google
-        </a>
       </div>
     </section>
 
@@ -1016,29 +1013,9 @@
     let canEditCurrentCompetition = false;
     let previousView = "homeView";
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-    const isVercelRuntime = runtimeConfig.runtime === "vercel";
     const sessionStorageKey = "kiroku_supabase_session";
 
-    if (isVercelRuntime && !(window.google && window.google.script && window.google.script.run)) {
-      window.google = { script: { run: createVercelRunner() } };
-    }
-
-    function createVercelRunner() {
-      const callable = state => new Proxy({}, {
-        get(_target, prop) {
-          if (prop === "withSuccessHandler") {
-            return handler => callable({ ...state, success: handler });
-          }
-          if (prop === "withFailureHandler") {
-            return handler => callable({ ...state, failure: handler });
-          }
-          return (...args) => callVercelRpc(String(prop), args, state.success, state.failure);
-        }
-      });
-      return callable({});
-    }
-
-    async function callVercelRpc(method, args, success, failure) {
+    async function runServer(method, args, success, failure) {
       try {
         const session = await getValidVercelSession();
         if (!session) {
@@ -1065,7 +1042,7 @@
         if (String(error.message || "").includes("Session Supabase invalide") || String(error.message || "").includes("Utilisateur non identifié")) {
           clearVercelSession();
           showVercelLogin();
-        } else if (isVercelRuntime && method === "getInitialData" && String(error.message || "").includes("Accès refusé pour")) {
+        } else if (method === "getInitialData" && String(error.message || "").includes("Accès refusé pour")) {
           showProfileRegistration();
           return;
         }
@@ -1096,11 +1073,6 @@
     function startGoogleLogin() {
       clearMessage();
 
-      if (!isVercelRuntime) {
-        showError({ message: "La connexion Google via Supabase est disponible sur la version Vercel." });
-        return;
-      }
-
       if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
         showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
         return;
@@ -1113,8 +1085,6 @@
     }
 
     function parseVercelAuthCallback() {
-      if (!isVercelRuntime) return;
-
       const hashParams = window.location.hash
         ? new URLSearchParams(window.location.hash.slice(1))
         : new URLSearchParams();
@@ -1202,7 +1172,6 @@
       document.querySelector("header").classList.add("hidden");
       document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google associé à votre fiche judoka. Les droits sont ensuite appliqués à partir du profil judoka correspondant.";
       document.getElementById("oauthLoginOptions").classList.remove("hidden");
-      document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
       document.getElementById("profileRegistrationForm").classList.add("hidden");
       showView("loginView");
     }
@@ -1211,7 +1180,6 @@
       document.querySelector("header").classList.add("hidden");
       document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil judoka dans l'application.";
       document.getElementById("oauthLoginOptions").classList.add("hidden");
-      document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
       document.getElementById("profileRegistrationForm").classList.remove("hidden");
       showView("loginView");
     }
@@ -1225,40 +1193,32 @@
         nom: document.getElementById("registrationNom").value
       };
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "registerProfile",
+        [profile],
+        response => {
           showSuccess(response.message);
           init();
-        })
-        .withFailureHandler(showError)
-        .registerProfile(profile);
+        },
+        showError
+      );
     });
 
     function init() {
       parseVercelAuthCallback();
 
-      if (isVercelRuntime && (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey)) {
+      if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
         showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
         showVercelLogin();
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(data => {
+      runServer(
+        "getInitialData",
+        [],
+        data => {
           if (!data) {
             showError({ message: "getInitialData() a renvoyé null." });
-            return;
-          }
-
-          if (data.error === "Utilisateur non identifié.") {
-            const loginUrl = "https://accounts.google.com/AccountChooser?continue=" + encodeURIComponent(data.scriptUrl);
-            const loginButton = document.getElementById("appsScriptGoogleLoginButton");
-            loginButton.href = loginUrl;
-            loginButton.classList.remove("hidden");
-            document.getElementById("profileRegistrationForm").classList.add("hidden");
-            document.getElementById("oauthLoginOptions").classList.add("hidden");
-            document.querySelector("header").classList.add("hidden");
-            showView("loginView");
             return;
           }
 
@@ -1269,9 +1229,9 @@
 
           applyInitialData(data);
           showHome();
-        })
-        .withFailureHandler(showError)
-        .getInitialData();
+        },
+        showError
+      );
     }
 
     function applyInitialData(data) {
@@ -1379,8 +1339,10 @@
       document.getElementById("combatsList").innerHTML = `<div class="empty-state">Chargement des combats...</div>`;
       showView("competitionView");
 
-      google.script.run
-        .withSuccessHandler(data => {
+      runServer(
+        "getCompetitionDetail",
+        [id],
+        data => {
           currentCompetition = data.competition;
           currentCombats = Array.isArray(data.combats) ? data.combats : [];
           judokas = Array.isArray(data.judokas) ? data.judokas : [];
@@ -1389,9 +1351,9 @@
 
           renderCompetitionDetail();
           renderCombats();
-        })
-        .withFailureHandler(showError)
-        .getCompetitionDetail(id);
+        },
+        showError
+      );
     }
 
     function renderCompetitionDetail() {
@@ -1526,13 +1488,15 @@
         competition.id_judoka = document.getElementById("competition_id_judoka").value;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "saveCompetition",
+        [competition],
+        response => {
           showSuccess(response.message);
           reloadInitialData(response.id_competition);
-        })
-        .withFailureHandler(showError)
-        .saveCompetition(competition);
+        },
+        showError
+      );
     }
 
     function showCombatForm(id) {
@@ -1587,8 +1551,10 @@
 
       const combat = getCombatFormValue();
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "ajouterCombat",
+        [combat],
+        response => {
           showSuccess(response.message);
           // Mise à jour locale : pas besoin de recharger depuis le serveur
           const newCombat = {
@@ -1605,17 +1571,19 @@
           resetCombatForm();
           showView("competitionView");
           renderCombats();
-        })
-        .withFailureHandler(showError)
-        .ajouterCombat(combat);
+        },
+        showError
+      );
     }
 
     function updateCombat(idCombat) {
       const combat = getCombatFormValue();
       combat.id_combat = idCombat;
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "updateCombat",
+        [combat],
+        response => {
           showSuccess(response.message);
           // Mise à jour locale du combat modifié
           const idx = currentCombats.findIndex(c => String(c.id_combat) === String(idCombat));
@@ -1631,9 +1599,9 @@
           resetCombatForm();
           showView("competitionView");
           renderCombats();
-        })
-        .withFailureHandler(showError)
-        .updateCombat(combat);
+        },
+        showError
+      );
     }
 
     function getCombatFormValue() {
@@ -1656,14 +1624,16 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "deleteCompetition",
+        [currentCompetition.id_competition],
+        response => {
           showSuccess(response.message);
           currentCompetition = null;
           reloadInitialData();
-        })
-        .withFailureHandler(showError)
-        .deleteCompetition(currentCompetition.id_competition);
+        },
+        showError
+      );
     }
 
     function deleteCompetitionFromList(id, name) {
@@ -1673,13 +1643,15 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "deleteCompetition",
+        [id],
+        response => {
           showSuccess(response.message);
           reloadInitialData();
-        })
-        .withFailureHandler(showError)
-        .deleteCompetition(id);
+        },
+        showError
+      );
     }
 
     function deleteCombat(id) {
@@ -1687,13 +1659,15 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "deleteCombat",
+        [id],
+        response => {
           showSuccess(response.message);
           openCompetition(currentCompetition.id_competition, true);
-        })
-        .withFailureHandler(showError)
-        .deleteCombat(id);
+        },
+        showError
+      );
     }
 
     function getJudokaDisplayName(j) {
@@ -1803,15 +1777,17 @@
         clearMessage();
       }
 
-      google.script.run
-        .withSuccessHandler(data => {
+      runServer(
+        "getChildrenManagement",
+        [],
+        data => {
           managedChildren = Array.isArray(data.children) ? data.children : [];
           renderManagedChildren();
           resetChildForm();
           showView("childrenView");
-        })
-        .withFailureHandler(showError)
-        .getChildrenManagement();
+        },
+        showError
+      );
     }
 
     function renderManagedChildren() {
@@ -1879,13 +1855,15 @@
         nom: document.getElementById("child_nom").value
       };
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "saveManagedChild",
+        [child],
+        response => {
           showSuccess(response.message);
           reloadInitialDataAndShowChildren();
-        })
-        .withFailureHandler(showError)
-        .saveManagedChild(child);
+        },
+        showError
+      );
     }
 
     function deleteManagedChild(idJudoka, name) {
@@ -1894,18 +1872,22 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(response => {
+      runServer(
+        "deleteManagedChild",
+        [idJudoka],
+        response => {
           showSuccess(response.message);
           reloadInitialDataAndShowChildren();
-        })
-        .withFailureHandler(showError)
-        .deleteManagedChild(idJudoka);
+        },
+        showError
+      );
     }
 
     function reloadInitialData(openCompetitionId) {
-      google.script.run
-        .withSuccessHandler(data => {
+      runServer(
+        "getInitialData",
+        [],
+        data => {
           if (data.error) {
             showError({ message: data.error });
             return;
@@ -1918,14 +1900,16 @@
           } else {
             showHome();
           }
-        })
-        .withFailureHandler(showError)
-        .getInitialData();
+        },
+        showError
+      );
     }
 
     function reloadInitialDataAndShowChildren() {
-      google.script.run
-        .withSuccessHandler(data => {
+      runServer(
+        "getInitialData",
+        [],
+        data => {
           if (data.error) {
             showError({ message: data.error });
             return;
@@ -1933,9 +1917,9 @@
 
           applyInitialData(data);
           showChildrenManagement(true);
-        })
-        .withFailureHandler(showError)
-        .getInitialData();
+        },
+        showError
+      );
     }
 
     function showHome() {

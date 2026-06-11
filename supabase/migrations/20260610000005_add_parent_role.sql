@@ -17,5 +17,6 @@ CREATE TABLE IF NOT EXISTS public.parent_judokas (
 
 ALTER TABLE public.parent_judokas ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all operations on parent_judokas"
-ON public.parent_judokas FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all operations on parent_judokas" ON public.parent_judokas;
+REVOKE ALL ON TABLE public.parent_judokas FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.parent_judokas TO service_role;
