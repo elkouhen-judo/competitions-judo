@@ -3,8 +3,8 @@ const assert = require("node:assert/strict");
 
 const permissions = require("../core/domain/access/permission-policy");
 const { createJudoka, createManagedChild, decideManagedChildRemoval } = require("../core/domain/access/judoka");
-const { assertCompetitionCanContainCombat } = require("../core/domain/competitions/competition");
-const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
+const { createPersistedCompetition } = require("../core/domain/competitions/competition");
+const { updateCombat } = require("../core/domain/competitions/combat");
 const createChildrenService = require("../core/services/children.service");
 const createCombatsService = require("../core/services/combats.service");
 
@@ -64,9 +64,8 @@ test("combats service rejects a combat attached to another judoka competition", 
         managedJudokaIds: []
       })
     },
-    assertCompetitionCanContainCombat,
     canManageCombatFor: permissions.canManageCombatFor,
-    createCombat,
+    createPersistedCompetition,
     updateCombat,
     buildCombatId: () => "CB1"
   });
