@@ -1,99 +1,199 @@
-# Spécification fonctionnelle
+---
+title: Kiroku Functional Specification
+version: 1.0
+date_created: 2026-06-11
+last_updated: 2026-06-11
+owner: competitions-judo
+tags:
+  - design
+  - app
+  - mobile-first
+  - functional-spec
+---
 
-## 1. Contexte
+# Introduction
 
-Kiroku est une application mobile first de suivi des compétitions et combats d'un club de judo.
+This specification defines the functional behavior of Kiroku, a mobile-first application used to manage judo competitions and combats for a club.
 
-Objectifs :
+## 1. Purpose & Scope
 
-- suivre les compétitions et combats des judokas ;
-- appliquer des droits par rôle ;
-- éviter les données orphelines ;
-- garder une interface lisible sur mobile.
+Kiroku allows a club to:
 
-## 2. Rôles
+- manage judoka participation in competitions;
+- record combats for each competition;
+- let parents manage linked child judokas;
+- enforce role-based visibility and actions;
+- keep the experience clear and usable on mobile devices.
 
-- `JUDOKA` : accède uniquement à ses propres compétitions et combats.
-- `PARENT` : accède à ses données et aux judokas liés dans `parent_judokas`.
-- `ADMIN` : accède à toutes les données du club.
+This specification covers:
 
-Un judoka devient `PARENT` dès qu'il ajoute un enfant. Il redevient `JUDOKA` quand son dernier enfant est retiré.
+- roles and permissions;
+- competition rules;
+- combat rules;
+- child management rules;
+- judoka season statistics rules;
+- user-facing authentication behavior;
+- UI and UX expectations;
+- acceptance criteria and business edge cases.
 
-## 3. Écrans
+This specification does not define:
 
-- **Accueil** : liste compacte des compétitions visibles, triées par date décroissante.
-- **Compétition** : détail d'une compétition, liste des combats, actions autorisées.
-- **Formulaire compétition** : création ou modification d'une compétition.
-- **Formulaire combat** : création ou modification d'un combat.
-- **Gestion des enfants** : ajout, modification et suppression des enfants pour les non-admins.
-- **Connexion Vercel** : connexion Google via Supabase Auth uniquement.
+- deployment architecture;
+- API contracts;
+- database schema details;
+- infrastructure configuration;
+- server-side integration details.
 
-## 4. Règles métier
+## 2. Definitions
 
-### Compétitions
+| Term | Definition |
+|---|---|
+| Kiroku | The application described by this specification. |
+| Judoka | A club member profile that owns competitions and combats. |
+| Parent | A user profile allowed to manage linked child judokas. |
+| Admin | A user profile with full access to club data. |
+| Competition | An event linked to one judoka and containing zero or more combats. |
+| Combat | A single match linked to one competition and one judoka. |
+| Mobile first | Design approach where the small-screen layout is the base layout. |
 
-- **COMP-VIS-1** - Un `JUDOKA` voit uniquement ses compétitions.
-- **COMP-VIS-2** - Un `PARENT` voit ses compétitions et celles des judokas qu'il gère.
-- **COMP-VIS-3** - Un `ADMIN` voit toutes les compétitions.
-- **COMP-GEST-1** - Un `JUDOKA` crée, modifie et supprime uniquement ses compétitions.
-- **COMP-GEST-2** - Un `PARENT` crée, modifie et supprime uniquement ses compétitions et celles des judokas qu'il gère.
-- **COMP-GEST-3** - Une sauvegarde parent pour un judoka hors périmètre est refusée.
-- **COMP-GEST-4** - Un `ADMIN` crée, modifie et supprime toutes les compétitions.
-- **COMP-GEST-5** - Un `ADMIN` choisit le judoka propriétaire par recherche nom/prénom avant sauvegarde.
-- **COMP-GEST-6** - Une sauvegarde admin sans propriétaire sélectionné est refusée.
-- **COMP-UI-1** - Les compétitions sont affichées de la plus récente à la plus ancienne.
-- **COMP-UI-2** - La liste reste compacte et utilisable sur mobile.
+## 3. Functional Requirements, Constraints & Guidelines
 
-### Combats
+### 3.1 Product goals
 
-- **COMBAT-VIS-1** - Un `JUDOKA` voit uniquement ses combats dans une compétition.
-- **COMBAT-VIS-2** - Un `PARENT` voit ses combats et ceux des judokas qu'il gère dans une compétition accessible.
-- **COMBAT-VIS-3** - Un `ADMIN` voit tous les combats de la compétition.
-- **COMBAT-GEST-1** - Un `JUDOKA` crée, modifie et supprime uniquement ses combats.
-- **COMBAT-GEST-2** - Un `PARENT` crée, modifie et supprime uniquement ses combats et ceux des judokas qu'il gère.
-- **COMBAT-GEST-3** - Un `ADMIN` crée, modifie et supprime tous les combats.
-- **COMBAT-GEST-4** - Un `ADMIN` peut choisir le judoka concerné.
+- **REQ-001**: The system shall allow tracking competitions and combats for judokas.
+- **REQ-002**: The system shall enforce access rules based on the connected user's role.
+- **REQ-003**: The system shall avoid orphaned functional data after deletions.
+- **GUD-001**: The interface should remain compact, tactile, and readable on mobile devices.
 
-### Enfants
+### 3.2 Roles and access model
 
-- **ENFANT-GEST-1** - Un utilisateur non-admin peut gérer ses enfants.
-- **ENFANT-GEST-2** - Ajouter un premier enfant promeut le compte en `PARENT`.
-- **ENFANT-GEST-3** - Retirer le dernier enfant repasse le compte en `JUDOKA`.
-- **ENFANT-SUPPR-1** - Un enfant avec compétition ou combat ne peut pas être supprimé.
-- **ENFANT-SUPPR-2** - Si l'enfant n'a pas d'email, aucun autre parent et aucune donnée sportive, sa fiche `judokas` est supprimée ; sinon seul le lien parent-enfant est retiré.
+- **ROL-001**: A `JUDOKA` can access only their own competitions and combats.
+- **ROL-002**: A `PARENT` can access their own data and the data of judokas linked to them.
+- **ROL-003**: An `ADMIN` can access all data.
+- **ROL-004**: A user becomes `PARENT` when they add a first child.
+- **ROL-005**: A `PARENT` becomes `JUDOKA` again when the last child link is removed.
 
-### Suppressions et dates
+### 3.3 Competition rules
 
-- **SUPPR-1** - Toute suppression demande confirmation.
-- **SUPPR-2** - Supprimer une compétition supprime ses combats.
-- **SUPPR-3** - Supprimer un combat ne supprime pas sa compétition.
-- **DATE-1** - Les dates sont normalisées avant affichage navigateur.
+- **COMP-001**: A `JUDOKA` can create, update, and delete only their own competitions.
+- **COMP-002**: A `PARENT` can create, update, and delete only competitions belonging to themselves or managed judokas.
+- **COMP-003**: An `ADMIN` can create, update, and delete any competition.
+- **COMP-004**: Competition lists shall be sorted by date descending.
+- **COMP-005**: A competition must include a name and a date.
+- **COMP-006**: A competition shall expose an age category and a weight category.
+- **COMP-007**: A competition shall not use a location field.
+- **COMP-008**: A competition shall not use an actual weigh-in field.
+- **COMP-009**: A competition may store a final ranking or result used for season statistics.
+- **COMP-010**: For `ADMIN`, the owner judoka must be selected explicitly before save.
+- **COMP-011**: For `PARENT`, saving a competition for a judoka outside the managed scope must be rejected.
+- **COMP-012**: Deleting a competition shall remove all linked combats from the user's perspective.
 
-### Authentification
+### 3.4 Combat rules
 
-- **AUTH-1** - L'utilisateur se connecte avec Google via Supabase Auth.
-- **AUTH-2** - L'application conserve la session Supabase retournée par le callback OAuth.
-- **AUTH-3** - L'API vérifie la session Supabase et récupère l'email vérifié.
-- **AUTH-4** - Les droits applicatifs viennent du rôle stocké dans `judokas`, pas du compte Google.
-- **AUTH-5** - L'écran de connexion ne propose ni mot de passe, ni magic link.
-- **AUTH-6** - L'en-tête affiche l'identité connectée sans bouton de déconnexion.
-- **AUTH-7** - Le secret OAuth Google reste dans Supabase et n'est jamais envoyé au navigateur.
+- **CBT-001**: A `JUDOKA` can create, update, and delete only their own combats.
+- **CBT-002**: A `PARENT` can create, update, and delete only combats belonging to themselves or managed judokas.
+- **CBT-003**: An `ADMIN` can create, update, and delete any combat.
+- **CBT-004**: A combat must include a parent competition, a judoka, and a result.
+- **CBT-005**: A combat may include an opponent name, a decision type, and match notes.
+- **CBT-006**: Deleting a combat shall not delete its parent competition.
 
-## 5. Interface
+### 3.5 Child management rules
 
-- Mobile first.
-- Formulaires séparés des listes.
-- Actions principales visibles, tactiles et explicites.
-- États vide, erreur, chargement et succès compréhensibles.
-- Confirmation obligatoire avant suppression.
-- Après création ou modification, recharger les données utiles et afficher l'élément concerné.
+- **CHD-001**: Non-admin users can manage children from a dedicated screen.
+- **CHD-002**: `ADMIN` must not use the child management flow.
+- **CHD-003**: Creating a child requires both first name and last name.
+- **CHD-004**: A child with at least one competition cannot be deleted.
+- **CHD-005**: A child with at least one combat cannot be deleted.
+- **CHD-006**: If a removed child has no direct account, no other parent link, and no sports data, the child profile shall be fully removed.
+- **CHD-007**: Otherwise only the parent-child link shall be removed.
+- **CHD-008**: Non-admin users may assign or update an optional child email to let that child log in with Google and access only their own judoka data.
 
-## 6. Critères d'acceptation
+### 3.6 Judoka season statistics rules
 
-- Un utilisateur ne voit jamais de données hors de son rôle.
-- Un parent ne peut jamais gérer un judoka hors de `parent_judokas`.
-- Un admin peut gérer toutes les compétitions et tous les combats.
-- Une compétition supprimée ne laisse aucun combat orphelin.
-- Les suppressions demandent confirmation.
-- L'application reste utilisable sur mobile.
-- La version Vercel connecte uniquement avec Google.
+- **STA-001**: The application shall provide a dedicated judoka profile view.
+- **STA-002**: The judoka profile shall display the judoka category derived from the latest combat.
+- **STA-003**: The judoka profile shall display the three best competition results of the current season.
+- **STA-004**: The season shall run from September 1st to August 31st.
+- **STA-005**: The judoka profile shall display the number of season competitions.
+- **STA-006**: The judoka profile shall display the number of season combats.
+- **STA-007**: The judoka profile shall display the season victory/loss distribution.
+- **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
+- **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
+- **STA-010**: An `ADMIN` shall be able to open the judoka profile of any judoka.
+
+### 3.7 Authentication behavior
+
+- **AUTH-001**: The application shall provide Google login.
+- **AUTH-002**: The application shall keep the connected session after the OAuth callback.
+- **AUTH-003**: Application permissions shall come from the Kiroku user role, not from the Google account itself.
+- **AUTH-004**: The login UI shall not expose password login.
+- **AUTH-005**: The login UI shall not expose magic-link login or signup.
+- **AUTH-006**: The connected header shall show user identity without a logout button.
+- **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data.
+- **AUTH-008**: A user without an existing judoka profile or an active admin invitation shall not be allowed to create an account in the application.
+- **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
+
+### 3.8 UI and UX rules
+
+- **UIX-001**: The application shall be mobile first.
+- **UIX-002**: Lists and forms shall remain separated.
+- **UIX-003**: Main actions shall be visible, tactile, and explicit.
+- **UIX-004**: The UI shall provide loading, empty, error, and success states.
+- **UIX-005**: Deletions shall require explicit confirmation.
+- **UIX-006**: After create or update operations, the application shall refresh relevant data and display the affected item.
+- **UIX-007**: Action labels shall stay textual and explicit on mobile, not icon-only.
+- **UIX-008**: Desktop-specific layout shall be a progressive enhancement over the small-screen baseline.
+- **UIX-009**: The judoka profile view shall remain readable and actionable on mobile.
+- **UIX-010**: For `PARENT` and `ADMIN`, the home screen shall be organized around an active judoka context.
+- **UIX-011**: Home actions for opening a profile or adding a competition shall target the active judoka rather than a generic role-based menu.
+- **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
+- **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
+- **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
+
+## 4. Acceptance Criteria
+
+- **AC-001**: Given a connected `JUDOKA`, when initial data is loaded, then only that user's competitions are visible.
+- **AC-002**: Given a connected `PARENT`, when initial data is loaded, then competitions for the parent and linked children are visible, and no unrelated data is visible.
+- **AC-003**: Given a connected `ADMIN`, when initial data is loaded, then all competitions are visible.
+- **AC-004**: Given an admin saving a competition without selecting an owner judoka, when the request is processed, then the save is rejected.
+- **AC-005**: Given a parent attempting to save a competition for an unmanaged judoka, when the request is processed, then the save is rejected.
+- **AC-006**: Given a competition save request missing name or date, when the request is processed, then the save is rejected.
+- **AC-007**: Given a combat create request missing competition, judoka, or result, when the request is processed, then the save is rejected.
+- **AC-008**: Given a competition deletion, when the operation succeeds, then no linked combat remains accessible.
+- **AC-009**: Given a combat deletion, when the operation succeeds, then the parent competition still exists.
+- **AC-010**: Given a non-admin user opening child management, when the screen loads, then the user can create, update, or remove managed children.
+- **AC-011**: Given a child with competitions or combats, when deletion is attempted, then the operation is rejected with an explicit error.
+- **AC-012**: Given a first child creation by a `JUDOKA`, when the operation succeeds, then the user's role becomes `PARENT`.
+- **AC-013**: Given removal of the last linked child from a `PARENT`, when the operation succeeds, then the user's role becomes `JUDOKA`.
+- **AC-014**: Given a user reaching the login screen, when authentication options are displayed, then only Google login is available.
+- **AC-015**: Given a connected session, when the app header is rendered, then user identity is displayed and no logout button is shown.
+- **AC-016**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
+- **AC-017**: Given a parent sets an email on a child profile, when that child logs in with the same Google account, then only that child's profile, competitions, and combats are visible.
+- **AC-018**: Given a Google account without judoka profile and without active invitation, when initial access is checked, then profile creation is rejected with an explicit invitation-required message.
+- **AC-019**: Given an admin creates an invitation for a new email, when that invited user logs in, then profile creation is allowed exactly for that invited email.
+- **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
+
+## 5. Examples & Edge Cases
+
+### Example: admin creates a competition
+
+- the admin selects a judoka owner;
+- the admin enters a competition name and date;
+- the created competition appears in descending date order after refresh.
+
+### Edge case: parent tries to save for an unmanaged judoka
+
+- the selected owner is outside the parent's managed scope;
+- the request is rejected explicitly;
+- no competition is created or modified.
+
+### Edge case: child deletion
+
+- if the child has at least one competition, deletion is rejected;
+- if the child has at least one combat, deletion is rejected;
+- if the child has no direct account, no other parent, and no sports data, the child profile is fully removed;
+- otherwise only the parent-child link is removed.
+
+## 6. Related Specifications / Further Reading
+
+- `SPEC-TECH.md` - technical constraints, architecture, interfaces, and validation rules
