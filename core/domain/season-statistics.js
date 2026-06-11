@@ -12,11 +12,10 @@ function buildJudokaProfileSnapshot({
     String(b.competitionDate || "").localeCompare(String(a.competitionDate || ""))
   ));
   const lastCompetition = sortedCompetitions[0] || null;
-  const hasCurrentSeasonCompetition = sortedCompetitions.some(c => isDateWithinSeason(c.competitionDate, currentBounds));
   const referenceDate = lastCompetition ? new Date(lastCompetition.competitionDate) : null;
-  const bounds = hasCurrentSeasonCompetition || !referenceDate || Number.isNaN(referenceDate.getTime())
-    ? currentBounds
-    : getCurrentSeasonBounds(referenceDate);
+  const bounds = referenceDate && !Number.isNaN(referenceDate.getTime())
+    ? getCurrentSeasonBounds(referenceDate)
+    : currentBounds;
   const seasonCompetitions = sortedCompetitions.filter(c => isDateWithinSeason(c.competitionDate, bounds));
   const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.competitionId)));
   const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.competitionId)));
