@@ -352,6 +352,51 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.bestSeasonResults[2].seasonResult, "Non classé");
 });
 
+test("season statistics use the latest competition season for all profile aggregates", () => {
+  const snapshot = buildJudokaProfileSnapshot({
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
+    competitions: [
+      {
+        competitionId: "CURRENT",
+        name: "Tournoi saison courante",
+        competitionDate: "2026-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        seasonResult: "1er"
+      },
+      {
+        competitionId: "LATEST",
+        name: "Tournoi nouvelle saison",
+        competitionDate: "2026-09-15",
+        ageCategory: "Junior",
+        weightCategory: "-57 kg",
+        seasonResult: "3e"
+      }
+    ],
+    combats: [
+      { combatId: "CB1", competitionId: "CURRENT", result: "V" },
+      { combatId: "CB2", competitionId: "LATEST", result: "D" }
+    ],
+    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCompetitionResultRank,
+    getCurrentSeasonBounds: referenceDate => {
+      if (referenceDate && referenceDate.getFullYear() === 2026 && referenceDate.getMonth() >= 8) {
+        return { start: "2026-09-01", end: "2027-08-31", label: "2026-2027" };
+      }
+      return { start: "2025-09-01", end: "2026-08-31", label: "2025-2026" };
+    },
+    isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
+  });
+
+  assert.equal(snapshot.lastCompetition.competitionId, "LATEST");
+  assert.equal(snapshot.season.label, "2026-2027");
+  assert.equal(snapshot.seasonCompetitionCount, 1);
+  assert.equal(snapshot.seasonCombatCount, 1);
+  assert.equal(snapshot.seasonWins, 0);
+  assert.equal(snapshot.seasonLosses, 1);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["LATEST"]);
+});
+
 test("season statistics fall back to the latest season with competition data", () => {
   const snapshot = buildJudokaProfileSnapshot({
     judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
