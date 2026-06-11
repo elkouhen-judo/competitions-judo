@@ -14,8 +14,8 @@ module.exports = function createRegistrationService(deps) {
     return supabaseRpc("register_profile", {
       p_email: createEmail(email),
       p_type: invitation.invited_profile_type || "JUDOKA",
-      p_prenom: profile && profile.prenom,
-      p_nom: profile && profile.nom,
+      p_prenom: profile && profile.firstName,
+      p_nom: profile && profile.lastName,
       p_children: []
     });
   }

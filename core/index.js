@@ -35,7 +35,7 @@ const {
 } = require("./domain/competitions/competition");
 const { updateCombat } = require("./domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
-const { toDomainJudoka } = require("./services/domain-adapters");
+const { toDomainJudoka, toJudokaReadModel } = require("./services/domain-adapters");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
@@ -146,12 +146,12 @@ async function getInitialData(email) {
   const parent = permissions.isParent(domainUser);
 
   return {
-    user,
+    user: toJudokaReadModel(user),
     isAdmin: admin,
     isParent: parent,
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
     competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaScope),
-    judokas: (admin || parent) ? userContext.judokas : []
+    judokas: (admin || parent) ? userContext.judokas.map(toJudokaReadModel) : []
   };
 }
 
