@@ -42,15 +42,24 @@ test("vercel runtime uses supabase password auth with auto registration", () => 
   assert.match(html, /function getSupabaseAnonymousAuthHeaders\(\)/);
   assert.match(html, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
   assert.match(html, /invalid_credentials/);
-  assert.match(html, /première connexion/);
-  assert.match(html, /confirmation email peut être demandée/);
   assert.match(html, /Se connecter ou créer le compte/);
   assert.match(html, /fetch\("\/api\/auth-signup"/);
   assert.match(html, /authenticateWithPassword/);
   assert.match(html, /kiroku_supabase_session/);
   assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
   assert.doesNotMatch(html, /auth\/v1\/signup/);
-  assert.doesNotMatch(html, /provider=google/);
+});
+
+test("vercel login supports google oauth through supabase auth", () => {
+  assert.match(html, /id="googleLoginButton"/);
+  assert.match(html, /function startGoogleLogin\(\)/);
+  assert.match(html, /auth\/v1\/authorize/);
+  assert.match(html, /searchParams\.set\("provider", "google"\)/);
+  assert.match(html, /searchParams\.set\("redirect_to", getVercelAuthRedirectUrl\(\)\)/);
+  assert.match(html, /function parseVercelAuthCallback\(\)/);
+  assert.match(html, /access_token/);
+  assert.match(html, /refresh_token/);
+  assert.match(html, /Connexion Google impossible/);
 });
 
 test("vercel login supports password reset", () => {

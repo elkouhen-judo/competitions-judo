@@ -276,6 +276,18 @@ Les règles métier sont formulées avec un identifiant stable afin de pouvoir l
 
 - **Règle DATE-1** - Avant d'afficher une date dans le navigateur, l'application la normalise afin de garantir un affichage stable dans l'interface.
 
+### 6.7 Authentification Google
+
+- **Règle AUTH-GOOGLE-1** - Sur Vercel, l'application permet à un utilisateur de se connecter avec son compte Google via Supabase Auth.
+
+- **Règle AUTH-GOOGLE-2** - Après une connexion Google réussie, l'application conserve la session Supabase retournée par le callback OAuth.
+
+- **Règle AUTH-GOOGLE-3** - Après une connexion Google réussie, l'API utilise l'email vérifié de la session Supabase pour rechercher le profil correspondant dans `judokas`.
+
+- **Règle AUTH-GOOGLE-4** - Les droits applicatifs restent déterminés par le rôle stocké dans `judokas`, et non directement par le compte Google.
+
+- **Règle AUTH-GOOGLE-5** - Le secret OAuth Google est stocké uniquement dans Supabase et n'est jamais envoyé au navigateur.
+
 ## 7. Données manipulées
 
 L'application manipule quatre tables Supabase principales :
@@ -348,6 +360,9 @@ Sur Vercel :
 - les appels `google.script.run` sont remplacés dans le navigateur par un adaptateur HTTP compatible ;
 - les fonctions métier sont exposées via une API serverless Vercel ;
 - l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
+- l'utilisateur peut aussi se connecter avec Google via le provider Google de Supabase Auth ;
+- le navigateur lance la connexion Google en redirigeant vers `auth/v1/authorize?provider=google` avec une URL de retour publique de l'application ;
+- après le callback OAuth Google, le navigateur conserve la session Supabase retournée et l'utilise pour les appels API ;
 - les appels navigateur vers Supabase Auth qui utilisent la clé anonyme doivent envoyer `apikey` et `Authorization: Bearer <SUPABASE_ANON_KEY>` ;
 - la connexion standard ne doit pas envoyer d'email ;
 - si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur ;
@@ -385,6 +400,15 @@ Variable d'environnement optionnelle :
 
 - `SUPABASE_AUTH_ADMIN_JWT` pour conserver une création de compte auto-confirmée sans email lorsque `SUPABASE_SERVICE_ROLE_KEY` contient une clé `sb_secret_...`.
 
+Configuration externe obligatoire pour Google Auth :
+
+- le provider Google doit être activé dans Supabase Auth ;
+- le `Client ID` et le `Client Secret` Google doivent être configurés dans Supabase Auth ;
+- l'URI de redirection autorisée du client OAuth Google doit pointer vers le callback Supabase `https://<project-ref>.supabase.co/auth/v1/callback` ;
+- l'URL publique Vercel de l'application doit être autorisée dans les redirect URLs Supabase.
+
 La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire, privilégier une création auto-confirmée sans email quand un JWT admin legacy est disponible, sinon basculer proprement sur une confirmation email explicite, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."
 
 La demande fonctionnelle peut être formulée ainsi : "Permettre à un judoka connecté de devenir aussi parent depuis l'application grâce à un écran mobile first de gestion des enfants. Depuis cet écran, il doit pouvoir ajouter, modifier et supprimer ses enfants, être promu au rôle `PARENT` dès le premier enfant, puis retrouver le rôle `JUDOKA` si tous les enfants sont retirés, tout en conservant ses propres droits de judoka."
+
+La demande fonctionnelle peut être formulée ainsi : "Permettre à un utilisateur de se connecter à la version Vercel avec son compte Google via Supabase Auth. Après le callback OAuth, l'application doit conserver la session Supabase, vérifier cette session côté API, retrouver le profil applicatif par email dans `judokas`, puis appliquer les droits métier existants."
