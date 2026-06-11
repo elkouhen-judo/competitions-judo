@@ -241,6 +241,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(profileService, /combats: combats\.map\(toDomainCombat\),/);
   assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
   assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const sortedCompetitions = \[\.\.\.competitions\]\.sort/);
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
   assert.match(seasonStatisticsDomain, /seasonWins/);
