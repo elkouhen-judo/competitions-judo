@@ -88,7 +88,7 @@ module.exports = function createUserContextService(deps) {
       throw new Error("Judoka introuvable.");
     }
 
-    assertCanAccessJudokaProfile(toDomainJudoka(user), targetId, userContext.managedJudokaScope || userContext.managedJudokaIds || []);
+    assertCanAccessJudokaProfile(toDomainJudoka(user), targetId, userContext.managedJudokaScope);
     return { user, target };
   }
 

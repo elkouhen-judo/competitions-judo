@@ -15,7 +15,7 @@ module.exports = function createCombatsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
+    const managedJudokaScope = userContext.managedJudokaScope;
     const domainCombat = toDomainCombat(combat);
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
@@ -38,7 +38,7 @@ module.exports = function createCombatsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
+    const managedJudokaScope = userContext.managedJudokaScope;
     const domainCombat = toDomainCombat(combat);
     const combatId = domainCombat.combatId;
     const judokaId = domainCombat.judokaId;
@@ -67,7 +67,7 @@ module.exports = function createCombatsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
+    const managedJudokaScope = userContext.managedJudokaScope;
 
     if (!idCombat) throw new Error("Combat obligatoire.");
 

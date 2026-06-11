@@ -27,47 +27,42 @@ function getCompetitionOwnerJudokaId(competition) {
   return competition && competition.ownerJudokaId;
 }
 
-function canManageCombatFor(user, idJudoka, managedJudokaIds) {
+function isInManagedScope(managedJudokaScope, idJudoka) {
+  return Boolean(managedJudokaScope && managedJudokaScope.includes(idJudoka));
+}
+
+function canManageCombatFor(user, idJudoka, managedJudokaScope) {
   if (isAdmin(user)) return true;
   if (isParent(user)) {
-    if (managedJudokaIds && typeof managedJudokaIds.includes === "function") {
-      return managedJudokaIds.includes(idJudoka);
-    }
-    return (managedJudokaIds || []).includes(String(idJudoka));
+    return isInManagedScope(managedJudokaScope, idJudoka);
   }
   return String(getUserJudokaId(user)) === String(idJudoka);
 }
 
-function canManageCompetition(user, competition, managedJudokaIds) {
+function canManageCompetition(user, competition, managedJudokaScope) {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
   if (isAdmin(user)) return true;
   if (isParent(user)) {
-    if (managedJudokaIds && typeof managedJudokaIds.includes === "function") {
-      return managedJudokaIds.includes(ownerJudokaId);
-    }
-    return (managedJudokaIds || []).includes(String(ownerJudokaId));
+    return isInManagedScope(managedJudokaScope, ownerJudokaId);
   }
   return String(getUserJudokaId(user)) === String(ownerJudokaId);
 }
 
-function canAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
+function canAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
   if (isAdmin(user)) return true;
   if (isParent(user)) {
-    if (managedJudokaIds && typeof managedJudokaIds.includes === "function") {
-      return managedJudokaIds.includes(idJudoka);
-    }
-    return (managedJudokaIds || []).includes(String(idJudoka));
+    return isInManagedScope(managedJudokaScope, idJudoka);
   }
   return String(getUserJudokaId(user)) === String(idJudoka);
 }
 
-function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
-  if (!canAccessJudokaProfile(user, idJudoka, managedJudokaIds)) {
+function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
+  if (!canAccessJudokaProfile(user, idJudoka, managedJudokaScope)) {
     throw new Error("Accès refusé à cette fiche judoka.");
   }
 }
 
-function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
+function resolveCompetitionOwnerId(user, competition, managedJudokaScope) {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
 
   if (isAdmin(user)) {
@@ -77,10 +72,7 @@ function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
 
   if (isParent(user)) {
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
-    const inScope = managedJudokaIds && typeof managedJudokaIds.includes === "function"
-      ? managedJudokaIds.includes(ownerJudokaId)
-      : (managedJudokaIds || []).includes(String(ownerJudokaId));
-    if (!inScope) {
+    if (!isInManagedScope(managedJudokaScope, ownerJudokaId)) {
       throw new Error("Ce judoka n'est pas dans votre liste.");
     }
     return ownerJudokaId;

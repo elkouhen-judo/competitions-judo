@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const permissions = require("../core/domain/access/permission-policy");
 const { createJudoka, createManagedChild, decideManagedChildRemoval } = require("../core/domain/access/judoka");
+const { createManagedJudokaScope } = require("../core/domain/access/managed-judoka-scope");
 const { createPersistedCompetition } = require("../core/domain/competitions/competition");
 const { updateCombat } = require("../core/domain/competitions/combat");
 const createChildrenService = require("../core/services/children.service");
@@ -61,7 +62,7 @@ test("combats service rejects a combat attached to another judoka competition", 
     userContextService: {
       getCurrentUserContext: async () => ({
         user: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
-        managedJudokaIds: []
+        managedJudokaScope: createManagedJudokaScope([])
       })
     },
     canManageCombatFor: permissions.canManageCombatFor,

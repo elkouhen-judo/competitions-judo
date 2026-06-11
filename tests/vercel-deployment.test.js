@@ -223,8 +223,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
   assert.match(userContextService, /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/);
-  assert.match(userContextService, /assertCanAccessJudokaProfile\(toDomainJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope \|\| userContext\.managedJudokaIds \|\| \[\]\);/);
-  assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaIds\)/);
+  assert.match(userContextService, /assertCanAccessJudokaProfile\(toDomainJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/);
+  assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaScope\)/);
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
   assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
@@ -242,8 +242,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
 
 test("admin owner selection is not restricted by parent-managed scope", () => {
   assert.match(permissions, /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && competition\.ownerJudokaId;\s*\}/);
-  assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/);
-  assert.match(permissions, /const inScope = managedJudokaIds && typeof managedJudokaIds\.includes === "function"[\s\S]*managedJudokaIds\.includes\(ownerJudokaId\)[\s\S]*\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\);/);
+  assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaScope\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/);
+  assert.match(permissions, /function isInManagedScope\(managedJudokaScope,\s*idJudoka\) \{\s*return Boolean\(managedJudokaScope && managedJudokaScope\.includes\(idJudoka\)\);/);
 });
 
 test("judoka lookup uses an exact normalized email match", () => {
