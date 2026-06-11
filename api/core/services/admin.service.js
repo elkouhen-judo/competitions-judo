@@ -4,6 +4,7 @@ module.exports = function createAdminService(deps) {
     judokasRepository,
     userContextService,
     cleanText,
+    createAccessInvitationRecord,
     normalizeEmail,
     isAdmin,
     isValidEmail
@@ -73,15 +74,11 @@ module.exports = function createAdminService(deps) {
   async function saveAccessInvitation(email, targetEmail, targetProfileType) {
     const user = await requireAdminUser(email);
     const normalizedEmail = normalizeEmail(targetEmail);
-    const normalizedProfileType = String(targetProfileType || "").toUpperCase().trim() || "JUDOKA";
     if (!normalizedEmail) {
       throw new Error("Email d'invitation obligatoire.");
     }
     if (!isValidEmail(normalizedEmail)) {
       throw new Error("Email d'invitation invalide.");
-    }
-    if (!["JUDOKA", "PARENT"].includes(normalizedProfileType)) {
-      throw new Error("Type de profil invalide.");
     }
 
     const existingUser = await userContextService.getCurrentUser(normalizedEmail);
@@ -94,16 +91,18 @@ module.exports = function createAdminService(deps) {
       throw new Error("Cette adresse est déjà invitée.");
     }
 
-    await invitationsRepository.insert({
+    const invitationRecord = createAccessInvitationRecord({
       email: normalizedEmail,
-      invited_profile_type: normalizedProfileType,
+      invited_profile_type: targetProfileType,
       invited_by: user.id_judoka
     });
 
+    await invitationsRepository.insert(invitationRecord);
+
     return {
       success: true,
-      email: normalizedEmail,
-      invited_profile_type: normalizedProfileType,
+      email: invitationRecord.email,
+      invited_profile_type: invitationRecord.invited_profile_type,
       message: "Invitation d'accès enregistrée."
     };
   }

@@ -20,6 +20,10 @@ const createProfileService = require("./services/profile.service");
 const createRegistrationService = require("./services/registration.service");
 const { getCompetitionCategoryLabel, getCompetitionResultRank } = require("./domain/competition-results");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season");
+const { createManagedChildRecord, updateManagedChildRecord } = require("./domain/access/judoka");
+const { createAccessInvitationRecord } = require("./domain/access/access-invitation");
+const { toCompetitionRecord } = require("./domain/competitions/competition");
+const { createCombatRecord, updateCombatRecord } = require("./domain/competitions/combat");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
@@ -49,6 +53,7 @@ const adminService = createAdminService({
   judokasRepository,
   userContextService,
   cleanText: text.cleanText,
+  createAccessInvitationRecord,
   normalizeEmail: text.normalizeEmail,
   isAdmin: permissions.isAdmin,
   isValidEmail: text.isValidEmail
@@ -63,14 +68,17 @@ const competitionsService = createCompetitionsService({
   isAdmin: permissions.isAdmin,
   isParent: permissions.isParent,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
-  buildCompetitionId: ids.buildCompetitionId
+  buildCompetitionId: ids.buildCompetitionId,
+  toCompetitionRecord
 });
 
 const combatsService = createCombatsService({
   combatsRepository,
   userContextService,
   canManageCombatFor: permissions.canManageCombatFor,
-  buildCombatId: ids.buildCombatId
+  buildCombatId: ids.buildCombatId,
+  createCombatRecord,
+  updateCombatRecord
 });
 
 const childrenService = createChildrenService({
@@ -82,9 +90,11 @@ const childrenService = createChildrenService({
   assertCanManageChildrenProfile: permissions.assertCanManageChildrenProfile,
   buildJudokaId: ids.buildJudokaId,
   cleanText: text.cleanText,
+  createManagedChildRecord,
   isParent: permissions.isParent,
   isValidEmail: text.isValidEmail,
-  normalizeEmail: text.normalizeEmail
+  normalizeEmail: text.normalizeEmail,
+  updateManagedChildRecord
 });
 
 const profileService = createProfileService({

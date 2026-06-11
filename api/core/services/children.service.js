@@ -8,9 +8,11 @@ module.exports = function createChildrenService(deps) {
     assertCanManageChildrenProfile,
     buildJudokaId,
     cleanText,
+    createManagedChildRecord,
     isParent,
     isValidEmail,
-    normalizeEmail
+    normalizeEmail,
+    updateManagedChildRecord
   } = deps;
 
   async function getChildrenManagement(email) {
@@ -51,11 +53,14 @@ module.exports = function createChildrenService(deps) {
         throw new Error("Enfant introuvable.");
       }
 
-      await judokasRepository.update(child.id_judoka, {
-        prenom,
-        nom,
-        email: childEmail || null
-      });
+      await judokasRepository.update(
+        child.id_judoka,
+        updateManagedChildRecord({
+          prenom,
+          nom,
+          email: childEmail
+        })
+      );
 
       return {
         success: true,
@@ -65,14 +70,12 @@ module.exports = function createChildrenService(deps) {
     }
 
     const idJudoka = buildJudokaId();
-    await judokasRepository.insert({
+    await judokasRepository.insert(createManagedChildRecord({
       id_judoka: idJudoka,
-      email: childEmail || null,
+      email: childEmail,
       prenom,
-      nom,
-      profile_type: "JUDOKA",
-      role: "NORMAL"
-    });
+      nom
+    }));
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,
       id_judoka: idJudoka

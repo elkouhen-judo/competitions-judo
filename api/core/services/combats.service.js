@@ -3,7 +3,9 @@ module.exports = function createCombatsService(deps) {
     combatsRepository,
     userContextService,
     canManageCombatFor,
-    buildCombatId
+    buildCombatId,
+    createCombatRecord,
+    updateCombatRecord
   } = deps;
 
   async function ajouterCombat(email, combat) {
@@ -11,23 +13,11 @@ module.exports = function createCombatsService(deps) {
     const user = userContext.user;
     const managedJudokaIds = userContext.managedJudokaIds || [];
 
-    if (!combat.id_competition) throw new Error("Compétition obligatoire.");
-    if (!combat.resultat) throw new Error("Résultat obligatoire.");
-    if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
-
     if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
       throw new Error("Ajout de ce combat non autorisé.");
     }
 
-    await combatsRepository.insert({
-      id_combat: buildCombatId(),
-      id_judoka: combat.id_judoka,
-      id_competition: combat.id_competition,
-      adversaire: combat.adversaire || "",
-      resultat: combat.resultat,
-      type_victoire: combat.type_victoire || "",
-      deroule: combat.deroule || ""
-    });
+    await combatsRepository.insert(createCombatRecord(combat, buildCombatId));
 
     return { success: true, message: "Combat ajouté." };
   }
@@ -36,10 +26,6 @@ module.exports = function createCombatsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const managedJudokaIds = userContext.managedJudokaIds || [];
-
-    if (!combat.id_combat) throw new Error("Combat obligatoire.");
-    if (!combat.resultat) throw new Error("Résultat obligatoire.");
-    if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
 
     const existingCombat = await combatsRepository.getById(combat.id_combat);
     if (!existingCombat) throw new Error("Combat introuvable.");
@@ -50,14 +36,7 @@ module.exports = function createCombatsService(deps) {
       throw new Error("Modification de ce combat non autorisée.");
     }
 
-    await combatsRepository.update(combat.id_combat, {
-      id_judoka: combat.id_judoka,
-      id_competition: combat.id_competition,
-      adversaire: combat.adversaire || "",
-      resultat: combat.resultat,
-      type_victoire: combat.type_victoire || "",
-      deroule: combat.deroule || ""
-    });
+    await combatsRepository.update(combat.id_combat, updateCombatRecord(combat));
 
     return { success: true, message: "Combat modifié." };
   }

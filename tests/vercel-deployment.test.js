@@ -19,7 +19,13 @@ const competitionsService = fs.readFileSync(path.join(root, "api", "core", "serv
 const profileService = fs.readFileSync(path.join(root, "api", "core", "services", "profile.service.js"), "utf8");
 const registrationService = fs.readFileSync(path.join(root, "api", "core", "services", "registration.service.js"), "utf8");
 const userContextService = fs.readFileSync(path.join(root, "api", "core", "services", "user-context.service.js"), "utf8");
-const permissions = fs.readFileSync(path.join(root, "api", "core", "auth", "permissions.js"), "utf8");
+const permissions = fs.readFileSync(path.join(root, "api", "core", "domain", "access", "permission-policy.js"), "utf8");
+const judokaDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "access", "judoka.js"), "utf8");
+const accessInvitationDomain = fs.readFileSync(
+  path.join(root, "api", "core", "domain", "access", "access-invitation.js"),
+  "utf8"
+);
+const competitionDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "competitions", "competition.js"), "utf8");
 const seasonDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "season.js"), "utf8");
 const judokasRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "judokas.repository.js"), "utf8");
 const invitationsRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "invitations.repository.js"), "utf8");
@@ -128,10 +134,11 @@ test("judoka home keeps competition creation available", () => {
 });
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
-  assert.match(competitionsService, /categorie_age:\s*competition\.categorie_age \|\| ""/);
-  assert.match(competitionsService, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
-  assert.doesNotMatch(competitionsService, /lieu:\s*""/);
-  assert.doesNotMatch(competitionsService, /poids_pesee:\s*""/);
+  assert.match(competitionsService, /const payload = toCompetitionRecord\(competition,\s*ownerJudokaId\);/);
+  assert.match(competitionDomain, /categorie_age:\s*competition\.categorie_age \|\| ""/);
+  assert.match(competitionDomain, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
+  assert.doesNotMatch(competitionDomain, /lieu:\s*""/);
+  assert.doesNotMatch(competitionDomain, /poids_pesee:\s*""/);
 });
 
 test("connected parent can manage children from a dedicated screen", () => {
@@ -147,11 +154,12 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
   assert.match(childrenService, /const childEmail = normalizeEmail\(child && child\.email\)/);
   assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(childEmail,\s*child && child\.id_judoka\)/);
-  assert.match(childrenService, /profile_type: "JUDOKA"/);
-  assert.match(childrenService, /email: childEmail \|\| null/);
+  assert.match(childrenService, /createManagedChildRecord\(\{/);
+  assert.match(judokaDomain, /profile_type: createProfileType\("JUDOKA"\)/);
+  assert.match(judokaDomain, /email: email \|\| null/);
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
   assert.match(childrenService, /isParent: isParent\(user\)/);
-  assert.match(childrenService, /role: "NORMAL"/);
+  assert.match(judokaDomain, /role: createRole\("NORMAL"\)/);
 });
 
 test("admin can manage admins from a dedicated screen", () => {
@@ -169,7 +177,8 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(adminService, /async function getAdminsManagement\(email\)/);
   assert.match(adminService, /accessInvitations: await getAccessInvitations\(\)/);
   assert.match(adminService, /async function saveAccessInvitation\(email,\s*targetEmail,\s*targetProfileType\)/);
-  assert.match(adminService, /invited_profile_type: normalizedProfileType/);
+  assert.match(adminService, /const invitationRecord = createAccessInvitationRecord\(\{/);
+  assert.match(accessInvitationDomain, /invited_profile_type: createProfileType\(invited_profile_type\)/);
   assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
   assert.match(adminService, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
   assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
