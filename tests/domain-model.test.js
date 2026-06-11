@@ -54,10 +54,14 @@ test("judoka domain creates and updates managed child records with invariants", 
 
   assert.equal(child.hasDirectAccount(), true);
 
-  assert.equal(child.id_judoka, "JUDO123");
-  assert.equal(child.email, "child@example.com");
-  assert.equal(child.profile_type, "JUDOKA");
-  assert.equal(child.role, "NORMAL");
+  assert.equal(child.judokaId, "JUDO123");
+  assert.equal(child.accountEmail, "child@example.com");
+  assert.equal(child.profileType, "JUDOKA");
+  assert.equal(child.accessRole, "NORMAL");
+  assert.equal("id_judoka" in child, false);
+  assert.equal("email" in child, false);
+  assert.equal("profile_type" in child, false);
+  assert.equal("role" in child, false);
 
   const updatedChild = updateManagedChild({
     email: "",
@@ -65,12 +69,12 @@ test("judoka domain creates and updates managed child records with invariants", 
     nom: "Martin"
   });
 
-  assert.equal(updatedChild.email, null);
   assert.equal(updatedChild.accountEmail, null);
   assert.equal(updatedChild.name.firstName, "Aya");
   assert.equal(updatedChild.name.lastName, "Martin");
-  assert.equal(updatedChild.prenom, "Aya");
-  assert.equal(updatedChild.nom, "Martin");
+  assert.equal("email" in updatedChild, false);
+  assert.equal("prenom" in updatedChild, false);
+  assert.equal("nom" in updatedChild, false);
 
   assert.throws(() => createManagedChild({ prenom: "", nom: "Martin" }), /Prénom et nom/);
 });
@@ -89,8 +93,8 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
     role: "NORMAL"
   });
 
-  assert.deepEqual(normalUser.grantAdminRole(), { role: "ADMIN" });
-  assert.deepEqual(admin.revokeAdminRole("JUDOOTHER"), { role: "NORMAL" });
+  assert.deepEqual(normalUser.grantAdminRole(), { accessRole: "ADMIN" });
+  assert.deepEqual(admin.revokeAdminRole("JUDOOTHER"), { accessRole: "NORMAL" });
   assert.throws(() => admin.revokeAdminRole("JUDOADMIN"), /retirer vos propres droits/);
   assert.throws(() => admin.grantAdminRole(), /déjà admin/);
 
@@ -156,21 +160,27 @@ test("competition domain builds a normalized entity", () => {
     "JUDO123"
   );
 
-  assert.equal(competition.id_judoka, "JUDO123");
+  assert.equal(competition.competitionId, null);
   assert.equal(competition.ownerJudokaId, "JUDO123");
-  assert.equal(competition.nom, "Tournoi regional");
-  assert.equal(competition.date, "2026-06-11");
+  assert.equal(competition.name, "Tournoi regional");
+  assert.equal(competition.competitionDate, "2026-06-11");
   assert.equal(competition.draft.name, "Tournoi regional");
   assert.equal(competition.draft.competitionDate, "2026-06-11");
-  assert.equal(competition.categorie_age, "Cadet");
-  assert.equal(competition.categorie_poids, "-55 kg");
-  assert.equal(competition.classement, "3e");
+  assert.equal(competition.ageCategory, "Cadet");
+  assert.equal(competition.weightCategory, "-55 kg");
+  assert.equal(competition.seasonResult, "3e");
+  assert.equal("id_judoka" in competition, false);
+  assert.equal("nom" in competition, false);
+  assert.equal("date" in competition, false);
+  assert.equal("categorie_age" in competition, false);
+  assert.equal("categorie_poids" in competition, false);
+  assert.equal("classement" in competition, false);
   assert.equal(typeof competition.assertCanContainCombat, "function");
 
   const defaultCompetition = createCompetition({ nom: "Tournoi regional", date: "2026-06-11" }, "JUDO123");
-  assert.equal(defaultCompetition.categorie_age, "");
-  assert.equal(defaultCompetition.categorie_poids, "");
-  assert.equal(defaultCompetition.classement, "");
+  assert.equal(defaultCompetition.ageCategory, "");
+  assert.equal(defaultCompetition.weightCategory, "");
+  assert.equal(defaultCompetition.seasonResult, "");
 
   assert.throws(() => createCompetition({ nom: "", date: "" }, "JUDO123"), /Nom et date obligatoires/);
 });
@@ -208,13 +218,17 @@ test("combat domain enforces allowed results and required identifiers", () => {
 
   assert.equal(combat.judokaId, "JUDO123");
   assert.equal(combat.competitionId, "COMP123");
-  assert.equal(combat.id_judoka, "JUDO123");
-  assert.equal(combat.id_competition, "COMP123");
-  assert.equal(combat.adversaire, "Lee");
-  assert.equal(combat.resultat, "V");
+  assert.equal(combat.opponent, "Lee");
+  assert.equal(combat.result, "V");
   assert.equal(combat.draft.result, "V");
-  assert.equal(combat.type_victoire, "Ippon");
-  assert.equal(combat.deroule, "Bon rythme");
+  assert.equal(combat.victoryType, "Ippon");
+  assert.equal(combat.notes, "Bon rythme");
+  assert.equal("id_judoka" in combat, false);
+  assert.equal("id_competition" in combat, false);
+  assert.equal("adversaire" in combat, false);
+  assert.equal("resultat" in combat, false);
+  assert.equal("type_victoire" in combat, false);
+  assert.equal("deroule" in combat, false);
 
   const updatedCombat = updateCombat({
     id_combat: "CB123",
@@ -223,12 +237,12 @@ test("combat domain enforces allowed results and required identifiers", () => {
     resultat: "D"
   });
   assert.equal(updatedCombat.combatId, "CB123");
-  assert.equal(updatedCombat.id_judoka, "JUDO123");
-  assert.equal(updatedCombat.id_competition, "COMP123");
-  assert.equal(updatedCombat.adversaire, "");
-  assert.equal(updatedCombat.resultat, "D");
-  assert.equal(updatedCombat.type_victoire, "");
-  assert.equal(updatedCombat.deroule, "");
+  assert.equal(updatedCombat.judokaId, "JUDO123");
+  assert.equal(updatedCombat.competitionId, "COMP123");
+  assert.equal(updatedCombat.opponent, "");
+  assert.equal(updatedCombat.result, "D");
+  assert.equal(updatedCombat.victoryType, "");
+  assert.equal(updatedCombat.notes, "");
 
   assert.throws(
     () => createCombat({ id_judoka: "JUDO123", id_competition: "COMP123", resultat: "X" }),

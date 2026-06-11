@@ -14,11 +14,14 @@ module.exports = function createCombatsService(deps) {
     const user = userContext.user;
     const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
 
-    if (!canManageCombatFor(user, combat.id_judoka, managedJudokaScope)) {
+    const judokaId = combat.judokaId || combat.id_judoka;
+    const competitionId = combat.competitionId || combat.id_competition;
+
+    if (!canManageCombatFor(user, judokaId, managedJudokaScope)) {
       throw new Error("Ajout de ce combat non autorisé.");
     }
 
-    const competitionRecord = await competitionsRepository.getById(combat.id_competition);
+    const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
     const competition = createPersistedCompetition(competitionRecord);
     const combatDraft = competition.recordCombat(combat);
@@ -33,22 +36,25 @@ module.exports = function createCombatsService(deps) {
     const user = userContext.user;
     const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
 
-    const existingCombat = await combatsRepository.getById(combat.id_combat);
+    const combatId = combat.combatId || combat.id_combat;
+    const judokaId = combat.judokaId || combat.id_judoka;
+    const competitionId = combat.competitionId || combat.id_competition;
+    const existingCombat = await combatsRepository.getById(combatId);
     if (!existingCombat) throw new Error("Combat introuvable.");
     if (!canManageCombatFor(user, existingCombat.id_judoka, managedJudokaScope)) {
       throw new Error("Modification de ce combat non autorisée.");
     }
-    if (!canManageCombatFor(user, combat.id_judoka, managedJudokaScope)) {
+    if (!canManageCombatFor(user, judokaId, managedJudokaScope)) {
       throw new Error("Modification de ce combat non autorisée.");
     }
 
     createCombatUpdate(combat);
-    const competitionRecord = await competitionsRepository.getById(combat.id_competition);
+    const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
     const competition = createPersistedCompetition(competitionRecord);
     const combatDraft = competition.recordCombat(combat);
 
-    await combatsRepository.update(combat.id_combat, combatDraft);
+    await combatsRepository.update(combatId, combatDraft);
 
     return { success: true, message: "Combat modifié." };
   }
