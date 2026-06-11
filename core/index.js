@@ -20,10 +20,18 @@ const createProfileService = require("./services/profile.service");
 const createRegistrationService = require("./services/registration.service");
 const { getCompetitionCategoryLabel, getCompetitionResultRank } = require("./domain/competition-results");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season");
-const { createManagedChildRecord, updateManagedChildRecord } = require("./domain/access/judoka");
-const { createAccessInvitationRecord } = require("./domain/access/access-invitation");
-const { toCompetitionRecord } = require("./domain/competitions/competition");
-const { createCombatRecord, updateCombatRecord } = require("./domain/competitions/combat");
+const {
+  createJudoka,
+  createManagedChild,
+  createManagedChildRecord,
+  decideManagedChildRemoval,
+  updateManagedChild,
+  updateManagedChildRecord
+} = require("./domain/access/judoka");
+const { createAccessInvitation, createAccessInvitationRecord } = require("./domain/access/access-invitation");
+const { createCompetition, createCompetitionRecord, toCompetitionRecord } = require("./domain/competitions/competition");
+const { createCombat, createCombatRecord, updateCombatRecord } = require("./domain/competitions/combat");
+const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
@@ -53,9 +61,9 @@ const adminService = createAdminService({
   judokasRepository,
   userContextService,
   cleanText: text.cleanText,
-  createAccessInvitationRecord,
+  createAccessInvitation,
+  createJudoka,
   normalizeEmail: text.normalizeEmail,
-  isAdmin: permissions.isAdmin,
   isValidEmail: text.isValidEmail
 });
 
@@ -69,6 +77,8 @@ const competitionsService = createCompetitionsService({
   isParent: permissions.isParent,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
   buildCompetitionId: ids.buildCompetitionId,
+  createCompetition,
+  createCompetitionRecord,
   toCompetitionRecord
 });
 
@@ -76,6 +86,7 @@ const combatsService = createCombatsService({
   combatsRepository,
   userContextService,
   canManageCombatFor: permissions.canManageCombatFor,
+  createCombat,
   buildCombatId: ids.buildCombatId,
   createCombatRecord,
   updateCombatRecord
@@ -90,16 +101,21 @@ const childrenService = createChildrenService({
   assertCanManageChildrenProfile: permissions.assertCanManageChildrenProfile,
   buildJudokaId: ids.buildJudokaId,
   cleanText: text.cleanText,
+  createJudoka,
+  createManagedChild,
   createManagedChildRecord,
+  decideManagedChildRemoval,
   isParent: permissions.isParent,
   isValidEmail: text.isValidEmail,
   normalizeEmail: text.normalizeEmail,
+  updateManagedChild,
   updateManagedChildRecord
 });
 
 const profileService = createProfileService({
   combatsRepository,
   competitionsRepository,
+  buildJudokaProfileSnapshot,
   userContextService,
   getCompetitionCategoryLabel,
   getCompetitionResultRank,

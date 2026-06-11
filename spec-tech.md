@@ -132,7 +132,7 @@ This specification does not redefine product behavior already described in `SPEC
 | `/api/app` | Vercel serverless endpoint | Returns HTML and injects runtime config |
 | `/api/rpc` | Vercel serverless endpoint | Executes authenticated business methods |
 | `api/_core.js` | Shared backend core | Shared auth, Supabase helpers, and method composition |
-| `core/domain/*` | Backend domain model | Entities, value objects, and business policies |
+| `core/domain/*` | Backend domain model | Entities, value objects, business policies, and domain services |
 | `core/services/*` | Backend application services | Use-case orchestration over the domain |
 | `core/repositories/*` | Backend persistence adapters | Data access for business aggregates |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |

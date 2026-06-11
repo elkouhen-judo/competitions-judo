@@ -9,7 +9,8 @@ module.exports = function createCompetitionsService(deps) {
     isParent,
     resolveCompetitionOwnerId,
     buildCompetitionId,
-    toCompetitionRecord
+    createCompetition,
+    createCompetitionRecord
   } = deps;
 
   async function getCompetitionsForUser(user, managedJudokaIds) {
@@ -76,8 +77,9 @@ module.exports = function createCompetitionsService(deps) {
     const user = userContext.user;
     const managedJudokaIds = userContext.managedJudokaIds || [];
     const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaIds);
+    const competitionDraft = createCompetition(competition, ownerJudokaId);
 
-    const payload = toCompetitionRecord(competition, ownerJudokaId);
+    const payload = competitionDraft.toRecord();
 
     if (competition.id_competition) {
       const existingCompetition = await competitionsRepository.getById(competition.id_competition);
@@ -94,15 +96,12 @@ module.exports = function createCompetitionsService(deps) {
       };
     }
 
-    const idCompetition = buildCompetitionId();
-    await competitionsRepository.insert({
-      id_competition: idCompetition,
-      ...payload
-    });
+    const newCompetition = createCompetitionRecord(competition, ownerJudokaId, buildCompetitionId);
+    await competitionsRepository.insert(newCompetition);
 
     return {
       success: true,
-      id_competition: idCompetition,
+      id_competition: newCompetition.id_competition,
       message: "Compétition créée."
     };
   }
