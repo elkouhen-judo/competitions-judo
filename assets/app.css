@@ -471,6 +471,10 @@
       padding-bottom: 11px;
     }
 
+    #homeAdminActions button {
+      min-height: 64px;
+    }
+
     .list {
       display: grid;
       gap: 12px;
