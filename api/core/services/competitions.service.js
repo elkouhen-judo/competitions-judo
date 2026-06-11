@@ -8,7 +8,8 @@ module.exports = function createCompetitionsService(deps) {
     isAdmin,
     isParent,
     resolveCompetitionOwnerId,
-    buildCompetitionId
+    buildCompetitionId,
+    toCompetitionRecord
   } = deps;
 
   async function getCompetitionsForUser(user, managedJudokaIds) {
@@ -76,18 +77,7 @@ module.exports = function createCompetitionsService(deps) {
     const managedJudokaIds = userContext.managedJudokaIds || [];
     const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaIds);
 
-    if (!competition.nom || !competition.date) {
-      throw new Error("Nom et date obligatoires.");
-    }
-
-    const payload = {
-      id_judoka: ownerJudokaId,
-      nom: competition.nom,
-      date: competition.date,
-      categorie_age: competition.categorie_age || "",
-      categorie_poids: competition.categorie_poids || "",
-      classement: competition.classement || ""
-    };
+    const payload = toCompetitionRecord(competition, ownerJudokaId);
 
     if (competition.id_competition) {
       const existingCompetition = await competitionsRepository.getById(competition.id_competition);

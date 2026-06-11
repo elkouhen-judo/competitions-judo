@@ -49,7 +49,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
 - **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
-- **ARC-005**: Backend RPC code shall keep shared auth/data helpers in `api/_core.js`, competition/combat logic in `api/_core-business.js`, and admin/invitation logic in `api/_core-admin.js`.
+- **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `api/core/domain/*`, application orchestration in `api/core/services/*`, and persistence adapters in `api/core/repositories/*`.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -132,6 +132,9 @@ This specification does not redefine product behavior already described in `SPEC
 | `/api/app` | Vercel serverless endpoint | Returns HTML and injects runtime config |
 | `/api/rpc` | Vercel serverless endpoint | Executes authenticated business methods |
 | `api/_core.js` | Shared backend core | Shared auth, Supabase helpers, and method composition |
+| `api/core/domain/*` | Backend domain model | Entities, value objects, and business policies |
+| `api/core/services/*` | Backend application services | Use-case orchestration over the domain |
+| `api/core/repositories/*` | Backend persistence adapters | Data access for business aggregates |
 | `api/_core-business.js` | Backend domain module | Competition and combat logic |
 | `api/_core-admin.js` | Backend admin module | Admin rights and invitation logic |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
