@@ -223,7 +223,9 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
   assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
   assert.match(profileService, /return buildJudokaProfileSnapshot\(\{/);
-  assert.match(seasonStatisticsDomain, /const lastCompetitionForCategory = lastCombatCompetition \? lastCombatCompetition\.competition : lastCompetition;/);
+  assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.resultat \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.resultat \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
+  assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
   assert.match(seasonStatisticsDomain, /seasonWins/);
   assert.match(seasonStatisticsDomain, /seasonLosses/);
