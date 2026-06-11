@@ -8,11 +8,13 @@ module.exports = function createChildrenService(deps) {
     assertCanManageChildrenProfile,
     buildJudokaId,
     cleanText,
-    createManagedChildRecord,
+    createManagedChild,
+    createJudoka,
+    decideManagedChildRemoval,
     isParent,
     isValidEmail,
     normalizeEmail,
-    updateManagedChildRecord
+    updateManagedChild
   } = deps;
 
   async function getChildrenManagement(email) {
@@ -55,11 +57,11 @@ module.exports = function createChildrenService(deps) {
 
       await judokasRepository.update(
         child.id_judoka,
-        updateManagedChildRecord({
+        updateManagedChild({
           prenom,
           nom,
           email: childEmail
-        })
+        }).toRecord()
       );
 
       return {
@@ -70,12 +72,13 @@ module.exports = function createChildrenService(deps) {
     }
 
     const idJudoka = buildJudokaId();
-    await judokasRepository.insert(createManagedChildRecord({
+    const managedChild = createManagedChild({
       id_judoka: idJudoka,
       email: childEmail,
       prenom,
       nom
-    }));
+    });
+    await judokasRepository.insert(managedChild.toRecord());
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,
       id_judoka: idJudoka
@@ -105,26 +108,23 @@ module.exports = function createChildrenService(deps) {
     }
 
     const competition = await competitionsRepository.existsForJudoka(idJudoka);
-    if (competition) {
-      throw new Error("Impossible de supprimer cet enfant tant qu'il possède des compétitions.");
-    }
-
     const combat = await combatsRepository.existsForJudoka(idJudoka);
-    if (combat) {
-      throw new Error("Impossible de supprimer cet enfant tant qu'il possède des combats.");
-    }
+    const otherParentLink = await parentLinksRepository.getAnyByJudoka(idJudoka);
+    const deletionDecision = decideManagedChildRemoval({
+      child: createJudoka(child),
+      hasCompetitions: Boolean(competition),
+      hasCombats: Boolean(combat),
+      hasOtherParentLink: Boolean(otherParentLink)
+    });
 
     await parentLinksRepository.remove(user.id_judoka, idJudoka);
 
-    const otherParentLink = await parentLinksRepository.getAnyByJudoka(idJudoka);
-    let message = "Enfant retiré.";
-    if (!otherParentLink && !cleanText(child.email)) {
+    if (deletionDecision.removeJudoka) {
       await judokasRepository.remove(idJudoka);
-      message = "Enfant supprimé.";
     }
     return {
       success: true,
-      message
+      message: deletionDecision.message
     };
   }
 

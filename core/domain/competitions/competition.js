@@ -1,4 +1,4 @@
-function toCompetitionRecord(competition, ownerJudokaId) {
+function createCompetition(competition, ownerJudokaId) {
   if (!ownerJudokaId) {
     throw new Error("Judoka participant obligatoire.");
   }
@@ -6,7 +6,7 @@ function toCompetitionRecord(competition, ownerJudokaId) {
     throw new Error("Nom et date obligatoires.");
   }
 
-  return {
+  const record = {
     id_judoka: ownerJudokaId,
     nom: competition.nom,
     date: competition.date,
@@ -14,8 +14,31 @@ function toCompetitionRecord(competition, ownerJudokaId) {
     categorie_poids: competition.categorie_poids || "",
     classement: competition.classement || ""
   };
+
+  return {
+    ...record,
+    toRecord() {
+      return { ...record };
+    },
+    toNewRecord(buildCompetitionId) {
+      return {
+        id_competition: buildCompetitionId(),
+        ...record
+      };
+    }
+  };
+}
+
+function toCompetitionRecord(competition, ownerJudokaId) {
+  return createCompetition(competition, ownerJudokaId).toRecord();
+}
+
+function createCompetitionRecord(competition, ownerJudokaId, buildCompetitionId) {
+  return createCompetition(competition, ownerJudokaId).toNewRecord(buildCompetitionId);
 }
 
 module.exports = {
+  createCompetition,
+  createCompetitionRecord,
   toCompetitionRecord
 };

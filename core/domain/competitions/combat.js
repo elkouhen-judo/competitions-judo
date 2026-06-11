@@ -1,6 +1,6 @@
 const { createCombatResult } = require("./combat-result");
 
-function toCombatRecord(combat) {
+function createCombat(combat) {
   if (!combat || !combat.id_competition) {
     throw new Error("Compétition obligatoire.");
   }
@@ -8,7 +8,7 @@ function toCombatRecord(combat) {
     throw new Error("Judoka obligatoire.");
   }
 
-  return {
+  const record = {
     id_judoka: combat.id_judoka,
     id_competition: combat.id_competition,
     adversaire: combat.adversaire || "",
@@ -16,13 +16,27 @@ function toCombatRecord(combat) {
     type_victoire: combat.type_victoire || "",
     deroule: combat.deroule || ""
   };
+
+  return {
+    ...record,
+    toRecord() {
+      return { ...record };
+    },
+    toNewRecord(buildCombatId) {
+      return {
+        id_combat: buildCombatId(),
+        ...record
+      };
+    }
+  };
+}
+
+function toCombatRecord(combat) {
+  return createCombat(combat).toRecord();
 }
 
 function createCombatRecord(combat, buildCombatId) {
-  return {
-    id_combat: buildCombatId(),
-    ...toCombatRecord(combat)
-  };
+  return createCombat(combat).toNewRecord(buildCombatId);
 }
 
 function updateCombatRecord(combat) {
@@ -34,6 +48,7 @@ function updateCombatRecord(combat) {
 }
 
 module.exports = {
+  createCombat,
   createCombatRecord,
   toCombatRecord,
   updateCombatRecord
