@@ -218,12 +218,18 @@
           <div class="section-heading">
             <div>
               <h3>Inviter un utilisateur</h3>
-              <p class="subtitle">Ajoutez l'email Google autorisé à créer un premier profil judoka.</p>
+              <p class="subtitle">Ajoutez l'email Google autorisé et définissez le type de profil à créer dès la première connexion. Les droits admin se gèrent séparément.</p>
             </div>
           </div>
 
           <label for="invite_email">Email invité</label>
           <input type="email" id="invite_email" autocomplete="email" placeholder="prenom.nom@club.fr">
+
+          <label for="invite_profile_type">Type de profil</label>
+          <select id="invite_profile_type">
+            <option value="JUDOKA">Judoka</option>
+            <option value="PARENT">Parent</option>
+          </select>
 
           <div class="form-actions mobile-action-bar">
             <button class="button-secondary" onclick="resetAccessInvitationForm()">
