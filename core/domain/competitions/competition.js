@@ -1,8 +1,31 @@
 const { createCompetitionId, createJudokaId, createOptionalCompetitionId } = require("../shared/identity");
 const { createCombat } = require("./combat");
 
+function cleanCompetitionText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function createCompetitionDate(value) {
+  const competitionDate = cleanCompetitionText(value);
+  if (!competitionDate) {
+    return "";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(competitionDate)) {
+    throw new Error("Date de compétition invalide.");
+  }
+
+  const parsedDate = new Date(`${competitionDate}T00:00:00Z`);
+  if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== competitionDate) {
+    throw new Error("Date de compétition invalide.");
+  }
+
+  return competitionDate;
+}
+
 function createCompetitionDraft(competition = {}) {
-  const { name, competitionDate } = competition;
+  const name = cleanCompetitionText(competition.name);
+  const competitionDate = createCompetitionDate(competition.competitionDate);
 
   if (!name || !competitionDate) {
     throw new Error("Nom et date obligatoires.");
@@ -11,9 +34,9 @@ function createCompetitionDraft(competition = {}) {
   return {
     name,
     competitionDate,
-    ageCategory: competition.ageCategory || "",
-    weightCategory: competition.weightCategory || "",
-    seasonResult: competition.seasonResult || ""
+    ageCategory: cleanCompetitionText(competition.ageCategory),
+    weightCategory: cleanCompetitionText(competition.weightCategory),
+    seasonResult: cleanCompetitionText(competition.seasonResult)
   };
 }
 
