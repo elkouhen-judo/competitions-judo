@@ -102,7 +102,6 @@ This specification does not define:
 ### 3.5 Child management rules
 
 - **CHD-001**: Only `PARENT` users can manage children from a dedicated screen.
-- **CHD-002**: `ADMIN` must not use the child management flow.
 - **CHD-003**: Creating a child requires both first name and last name.
 - **CHD-004**: A child with at least one competition cannot be deleted.
 - **CHD-005**: A child with at least one combat cannot be deleted.
@@ -131,7 +130,7 @@ This specification does not define:
 - **AUTH-003**: Application permissions shall come from the Kiroku user role, not from the Google account itself.
 - **AUTH-004**: The login UI shall not expose password login.
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
-- **AUTH-006**: The connected header shall show user identity without a logout button.
+- **AUTH-006**: The connected header shall show user identity and provide an explicit logout action.
 - **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data.
 - **AUTH-008**: A user without an existing judoka profile or an active invitation shall not be allowed to create an account in the application.
 - **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
@@ -173,7 +172,7 @@ This specification does not define:
 - **AC-012**: Given a `PARENT` creates a first child, when the operation succeeds, then the user's profile type remains `PARENT`.
 - **AC-013**: Given a `PARENT` removes the last linked child, when the operation succeeds, then the user's profile type remains `PARENT`.
 - **AC-014**: Given a user reaching the login screen, when authentication options are displayed, then only Google login is available.
-- **AC-015**: Given a connected session, when the app header is rendered, then user identity is displayed and no logout button is shown.
+- **AC-015**: Given a connected session, when the app header is rendered, then user identity is displayed and a logout button is available.
 - **AC-016**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
 - **AC-017**: Given a parent sets an email on a child profile, when that child logs in with the same Google account, then only that child's profile, competitions, and combats are visible.
 - **AC-018**: Given a Google account without judoka profile and without active invitation, when initial access is checked, then profile creation is rejected with an explicit invitation-required message.

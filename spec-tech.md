@@ -101,6 +101,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **AUTH-015**: Child management permissions shall be restricted to users whose immutable `profile_type` is `PARENT`.
 - **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither already linked to `judokas.email` nor present in `access_invitations`.
 - **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
+- **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
 
 ### 3.5 Security and secrets
 
