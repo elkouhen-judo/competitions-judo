@@ -687,6 +687,35 @@
     .login-form .button {
       width: 100%;
     }
+    .login-options {
+      width: min(100%, 360px);
+      display: grid;
+      gap: 10px;
+    }
+    .login-separator {
+      width: min(100%, 360px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      margin: 4px 0;
+    }
+    .login-separator::before,
+    .login-separator::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+    .button-google {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+    .button-google:hover {
+      background: #f2f4f7;
+    }
     .user-actions {
       display: flex;
       align-items: center;
@@ -726,6 +755,18 @@
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
         <p id="loginText">Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe, sans email de validation.</p>
+        <div id="oauthLoginOptions" class="login-options hidden">
+          <button id="googleLoginButton" type="button" class="button-google" onclick="startGoogleLogin()">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"></path>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.7H.94v2.33A9 9 0 0 0 9 18z"></path>
+              <path fill="#FBBC05" d="M3.96 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.94A9 9 0 0 0 0 9c0 1.45.34 2.82.94 4.05l3.02-2.33z"></path>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .94 4.95l3.02 2.33C4.67 5.16 6.66 3.58 9 3.58z"></path>
+            </svg>
+            Se connecter avec Google
+          </button>
+        </div>
+        <div id="loginSeparator" class="login-separator hidden">ou</div>
         <form id="supabaseLoginForm" class="login-form hidden">
           <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" autocomplete="email" required>
@@ -741,7 +782,7 @@
           <input id="registrationNom" type="text" autocomplete="family-name">
           <button type="submit">Créer mon profil</button>
         </form>
-        <a id="googleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
+        <a id="appsScriptGoogleLoginButton" href="#" class="button hidden" style="text-decoration:none; display:inline-flex;">
           Se connecter avec Google
         </a>
       </div>
@@ -1083,6 +1124,29 @@
       localStorage.removeItem(sessionStorageKey);
     }
 
+    function getVercelAuthRedirectUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    function startGoogleLogin() {
+      clearMessage();
+
+      if (!isVercelRuntime) {
+        showError({ message: "La connexion Google via Supabase est disponible sur la version Vercel." });
+        return;
+      }
+
+      if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
+        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
+        return;
+      }
+
+      const authorizeUrl = new URL(`${runtimeConfig.supabaseUrl}/auth/v1/authorize`);
+      authorizeUrl.searchParams.set("provider", "google");
+      authorizeUrl.searchParams.set("redirect_to", getVercelAuthRedirectUrl());
+      window.location.href = authorizeUrl.toString();
+    }
+
     async function logoutUser() {
       clearMessage();
 
@@ -1117,10 +1181,26 @@
       window.location.href = "https://accounts.google.com/Logout?continue=" + encodeURIComponent(window.location.href);
     }
 
-    function parseVercelAuthHash() {
-      if (!isVercelRuntime || !window.location.hash) return;
+    function parseVercelAuthCallback() {
+      if (!isVercelRuntime) return;
 
-      const params = new URLSearchParams(window.location.hash.slice(1));
+      const hashParams = window.location.hash
+        ? new URLSearchParams(window.location.hash.slice(1))
+        : new URLSearchParams();
+      const queryParams = window.location.search
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams();
+      const error = hashParams.get("error_description")
+        || hashParams.get("error")
+        || queryParams.get("error_description")
+        || queryParams.get("error");
+      if (error) {
+        history.replaceState(null, document.title, window.location.pathname);
+        showError({ message: "Connexion Google impossible : " + error });
+        return;
+      }
+
+      const params = hashParams;
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
       const expiresIn = Number(params.get("expires_in") || "3600");
@@ -1131,7 +1211,7 @@
           refresh_token: refreshToken || "",
           expires_at: Math.floor(Date.now() / 1000) + expiresIn
         });
-        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        history.replaceState(null, document.title, window.location.pathname);
       }
     }
 
@@ -1276,8 +1356,10 @@
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe. Selon la configuration Supabase, une confirmation email peut être demandée avant la première connexion.";
-      document.getElementById("googleLoginButton").classList.add("hidden");
+      document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google ou l'email associé à votre fiche judoka. Les droits sont ensuite appliqués à partir du profil judoka correspondant.";
+      document.getElementById("oauthLoginOptions").classList.remove("hidden");
+      document.getElementById("loginSeparator").classList.remove("hidden");
+      document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.remove("hidden");
       document.getElementById("profileRegistrationForm").classList.add("hidden");
       showView("loginView");
@@ -1287,7 +1369,9 @@
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
       document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil judoka dans l'application.";
-      document.getElementById("googleLoginButton").classList.add("hidden");
+      document.getElementById("oauthLoginOptions").classList.add("hidden");
+      document.getElementById("loginSeparator").classList.add("hidden");
+      document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
       document.getElementById("supabaseLoginForm").classList.add("hidden");
       document.getElementById("profileRegistrationForm").classList.remove("hidden");
       showView("loginView");
@@ -1339,7 +1423,7 @@
     });
 
     function init() {
-      parseVercelAuthHash();
+      parseVercelAuthCallback();
 
       if (isVercelRuntime && (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey)) {
         showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
@@ -1356,11 +1440,13 @@
 
           if (data.error === "Utilisateur non identifié.") {
             const loginUrl = "https://accounts.google.com/AccountChooser?continue=" + encodeURIComponent(data.scriptUrl);
-            const loginButton = document.getElementById("googleLoginButton");
+            const loginButton = document.getElementById("appsScriptGoogleLoginButton");
             loginButton.href = loginUrl;
             loginButton.classList.remove("hidden");
             document.getElementById("supabaseLoginForm").classList.add("hidden");
             document.getElementById("profileRegistrationForm").classList.add("hidden");
+            document.getElementById("oauthLoginOptions").classList.add("hidden");
+            document.getElementById("loginSeparator").classList.add("hidden");
             document.querySelector("header").classList.add("hidden");
             document.getElementById("logoutButton").classList.add("hidden");
             showView("loginView");
