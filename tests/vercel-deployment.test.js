@@ -91,12 +91,12 @@ test("connected judoka can manage children from a dedicated screen", () => {
   assert.match(core, /role: "PARENT"/);
 });
 
-test("vercel runtime exposes logout and clears local session", () => {
-  assert.match(html, /id="logoutButton"/);
-  assert.match(html, /id="logoutButton"[\s\S]*?<svg/);
+test("vercel runtime shows the connected user without a logout button", () => {
   assert.match(html, /\.user-actions\s*\{[\s\S]*?display: flex;/);
-  assert.match(html, /function logoutUser\(\)/);
-  assert.match(html, /auth\/v1\/logout/);
+  assert.match(html, /id="userInfo"/);
+  assert.doesNotMatch(html, /id="logoutButton"/);
+  assert.doesNotMatch(html, /function logoutUser\(\)/);
+  assert.doesNotMatch(html, /auth\/v1\/logout/);
   assert.match(html, /clearVercelSession\(\)/);
 });
 

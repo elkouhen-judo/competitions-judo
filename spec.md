@@ -374,9 +374,7 @@ Sur Vercel :
 - l'API serverless vérifie la session Supabase Auth et récupère l'email vérifié ;
 - l'API rapproche cet email de la table `judokas` pour appliquer les droits métier ;
 - après une connexion réussie, l'écran de connexion doit disparaître et l'utilisateur doit arriver sur la liste des compétitions ;
-- un utilisateur connecté peut se déconnecter depuis l'en-tête de l'application ;
-- le bouton de déconnexion est affiché sur la même ligne que l'identité de l'utilisateur et utilise une icône explicite ;
-- sur Vercel, la déconnexion appelle Supabase Auth, supprime la session locale et revient à l'écran de connexion ;
+- l'en-tête affiche l'identité de l'utilisateur connecté sans bouton de déconnexion ;
 - les requêtes métier vers Supabase restent effectuées côté serveur avec la clé API stockée dans les variables d'environnement Vercel ;
 - si `SUPABASE_SERVICE_ROLE_KEY` contient une clé secrète moderne `sb_secret_...`, elle doit être envoyée uniquement dans l'en-tête `apikey` et jamais dans `Authorization: Bearer ...` ;
 - la clé `SUPABASE_SERVICE_ROLE_KEY` ne doit jamais être envoyée au navigateur.
