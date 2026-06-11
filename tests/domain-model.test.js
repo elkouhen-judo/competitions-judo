@@ -11,7 +11,12 @@ const {
   updateManagedChildRecord
 } = require("../core/domain/access/judoka");
 const { createAccessInvitation, createAccessInvitationRecord } = require("../core/domain/access/access-invitation");
-const { createCompetition, createCompetitionRecord, toCompetitionRecord } = require("../core/domain/competitions/competition");
+const {
+  assertCompetitionCanContainCombat,
+  createCompetition,
+  createCompetitionRecord,
+  toCompetitionRecord
+} = require("../core/domain/competitions/competition");
 const { createCombat, createCombatRecord, updateCombatRecord } = require("../core/domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
@@ -206,6 +211,27 @@ test("competition domain builds a normalized record", () => {
   );
 
   assert.throws(() => toCompetitionRecord({ nom: "", date: "" }, "JUDO123"), /Nom et date obligatoires/);
+});
+
+test("competition domain enforces combat ownership", () => {
+  const competition = {
+    id_competition: "COMP123",
+    id_judoka: "JUDO123",
+    nom: "Tournoi regional",
+    date: "2026-06-11"
+  };
+
+  assert.doesNotThrow(() => assertCompetitionCanContainCombat(competition, {
+    id_competition: "COMP123",
+    id_judoka: "JUDO123",
+    resultat: "V"
+  }));
+
+  assert.throws(() => assertCompetitionCanContainCombat(competition, {
+    id_competition: "COMP123",
+    id_judoka: "JUDO999",
+    resultat: "V"
+  }), /judoka de la compétition/);
 });
 
 test("combat domain enforces allowed results and required identifiers", () => {

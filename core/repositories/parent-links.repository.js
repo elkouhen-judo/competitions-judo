@@ -18,8 +18,9 @@ module.exports = function createParentLinksRepository(deps) {
     );
   }
 
-  async function getAnyByJudoka(idJudoka) {
-    return supabaseSelectOne("parent_judokas", `select=id_parent&${eqFilter("id_judoka", idJudoka)}`);
+  async function getOtherByJudoka(idJudoka, excludedParentId) {
+    const links = await supabaseSelect("parent_judokas", `select=id_parent&${eqFilter("id_judoka", idJudoka)}`);
+    return links.find(link => String(link.id_parent) !== String(excludedParentId)) || null;
   }
 
   async function insert(payload) {
@@ -31,7 +32,7 @@ module.exports = function createParentLinksRepository(deps) {
   }
 
   return {
-    getAnyByJudoka,
+    getOtherByJudoka,
     getLink,
     insert,
     listByParent,

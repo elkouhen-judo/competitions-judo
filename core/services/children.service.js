@@ -109,7 +109,7 @@ module.exports = function createChildrenService(deps) {
 
     const competition = await competitionsRepository.existsForJudoka(idJudoka);
     const combat = await combatsRepository.existsForJudoka(idJudoka);
-    const otherParentLink = await parentLinksRepository.getAnyByJudoka(idJudoka);
+    const otherParentLink = await parentLinksRepository.getOtherByJudoka(idJudoka, user.id_judoka);
     const deletionDecision = decideManagedChildRemoval({
       child: createJudoka(child),
       hasCompetitions: Boolean(competition),

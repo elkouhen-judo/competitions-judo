@@ -17,6 +17,14 @@ function createCompetition(competition, ownerJudokaId) {
 
   return {
     ...record,
+    assertCanContainCombat(combat) {
+      if (!combat || String(combat.id_competition) !== String(competition.id_competition || "")) {
+        throw new Error("Ce combat n'appartient pas à cette compétition.");
+      }
+      if (String(combat.id_judoka) !== String(record.id_judoka)) {
+        throw new Error("Le combat doit concerner le judoka de la compétition.");
+      }
+    },
     toRecord() {
       return { ...record };
     },
@@ -29,6 +37,22 @@ function createCompetition(competition, ownerJudokaId) {
   };
 }
 
+function createPersistedCompetition(competition) {
+  if (!competition || !competition.id_competition) {
+    throw new Error("Compétition obligatoire.");
+  }
+
+  const persistedCompetition = createCompetition(competition, competition.id_judoka);
+  return {
+    ...persistedCompetition,
+    id_competition: competition.id_competition
+  };
+}
+
+function assertCompetitionCanContainCombat(competition, combat) {
+  createPersistedCompetition(competition).assertCanContainCombat(combat);
+}
+
 function toCompetitionRecord(competition, ownerJudokaId) {
   return createCompetition(competition, ownerJudokaId).toRecord();
 }
@@ -38,7 +62,9 @@ function createCompetitionRecord(competition, ownerJudokaId, buildCompetitionId)
 }
 
 module.exports = {
+  assertCompetitionCanContainCombat,
   createCompetition,
   createCompetitionRecord,
+  createPersistedCompetition,
   toCompetitionRecord
 };
