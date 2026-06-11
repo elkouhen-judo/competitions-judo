@@ -1,4 +1,6 @@
 const { randomUUID } = require("node:crypto");
+const createAdminModule = require("./_core-admin");
+const createBusinessModule = require("./_core-business");
 
 const SUPABASE_URL_ENV = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_KEY_ENV = "SUPABASE_SERVICE_ROLE_KEY";
@@ -187,7 +189,7 @@ function isAdmin(user) {
 }
 
 function isParent(user) {
-  return String(user.role || "").toUpperCase().trim() === "PARENT";
+  return String(user.profile_type || "").toUpperCase().trim() === "PARENT";
 }
 
 async function getJudokas() {
@@ -195,7 +197,12 @@ async function getJudokas() {
 }
 
 async function getCurrentUser(email) {
-  return supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(email.trim())}`);
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  return supabaseSelectOne("judokas", `select=*&${eqFilter("email", normalizedEmail)}`);
 }
 
 async function assertJudokaEmailAvailable(email, currentIdJudoka) {
@@ -231,7 +238,7 @@ async function getManagedChild(idParent, idJudoka) {
 }
 
 function canManageChildrenProfile(user) {
-  return !isAdmin(user);
+  return isParent(user);
 }
 
 function assertCanManageChildrenProfile(user) {
@@ -262,45 +269,8 @@ async function getCurrentUserContext(email) {
   return { user, judokas, managedJudokaIds };
 }
 
-async function requireAdminUser(email) {
-  const user = await getCurrentUser(email);
-  if (!user) {
-    throw new Error(`Accès refusé pour : ${email}`);
-  }
-  if (!isAdmin(user)) {
-    throw new Error("Gestion des admins réservée aux admins.");
-  }
-  return user;
-}
-
-async function getAdmins() {
-  return supabaseSelect("judokas", "select=*&role=eq.ADMIN&order=nom.asc,prenom.asc");
-}
-
-async function getAccessInvitation(email) {
-  const normalizedEmail = normalizeEmail(email);
-  if (!normalizedEmail) {
-    return null;
-  }
-
-  return supabaseSelectOne("access_invitations", `select=*&${eqFilter("email", normalizedEmail)}`);
-}
-
-async function getAccessInvitations() {
-  return supabaseSelect("access_invitations", "select=*&order=created_at.desc,email.asc");
-}
-
 async function getCombatsForJudoka(idJudoka) {
   return supabaseSelect("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
-}
-
-async function hasManagedChildren(idParent) {
-  const child = await supabaseSelectOne("parent_judokas", `select=id_judoka&${eqFilter("id_parent", idParent)}`);
-  return Boolean(child);
-}
-
-async function getRoleAfterAdminRevocation(idJudoka) {
-  return (await hasManagedChildren(idJudoka)) ? "PARENT" : "JUDOKA";
 }
 
 function getCurrentSeasonBounds(referenceDate = new Date()) {
@@ -376,33 +346,22 @@ function canManageCompetition(user, competition, managedJudokaIds) {
 }
 
 function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
-  if (isAdmin(user) || isParent(user)) {
+  if (isAdmin(user)) {
     const ownerJudokaId = competition.id_judoka;
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
-    if (isParent(user) && !(managedJudokaIds || []).includes(String(ownerJudokaId))) {
+    return ownerJudokaId;
+  }
+
+  if (isParent(user)) {
+    const ownerJudokaId = competition.id_judoka;
+    if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
+    if (!(managedJudokaIds || []).includes(String(ownerJudokaId))) {
       throw new Error("Ce judoka n'est pas dans votre liste.");
     }
     return ownerJudokaId;
   }
 
   return user.id_judoka;
-}
-
-async function getCompetitions() {
-  return supabaseSelect("competitions", "select=*&order=date.desc");
-}
-
-async function getCompetitionsForUser(user, managedJudokaIds) {
-  if (isAdmin(user)) {
-    return getCompetitions();
-  }
-
-  if (isParent(user)) {
-    if (!managedJudokaIds || !managedJudokaIds.length) return [];
-    return supabaseSelect("competitions", `select=*&id_judoka=in.(${managedJudokaIds.join(",")})&order=date.desc`);
-  }
-
-  return supabaseSelect("competitions", `select=*&${eqFilter("id_judoka", user.id_judoka)}&order=date.desc`);
 }
 
 async function getCompetitionById(idCompetition) {
@@ -413,15 +372,47 @@ async function getCombatById(idCombat) {
   return supabaseSelectOne("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
 }
 
+const adminModule = createAdminModule({
+  supabaseSelect,
+  supabaseSelectOne,
+  supabaseInsert,
+  supabasePatch,
+  supabaseDelete,
+  eqFilter,
+  cleanText,
+  normalizeEmail,
+  isValidEmail,
+  isAdmin,
+  getCurrentUser,
+  getJudokaById
+});
+
+const businessModule = createBusinessModule({
+  supabaseSelect,
+  supabaseInsert,
+  supabasePatch,
+  supabaseDelete,
+  eqFilter,
+  isAdmin,
+  isParent,
+  normalizeLastName,
+  getCurrentUserContext,
+  canManageCompetition,
+  canManageCombatFor,
+  resolveCompetitionOwnerId,
+  getCompetitionById,
+  getCombatById
+});
+
 async function getInitialData(email) {
   const currentUser = await getCurrentUser(email);
   if (!currentUser) {
-    const invitation = await getAccessInvitation(email);
+    const invitation = await adminModule.getAccessInvitation(email);
     if (invitation) {
       throw new Error("Invitation trouvée. Finalisez votre profil.");
     }
 
-    throw new Error("Accès non autorisé. Une invitation admin est requise.");
+    throw new Error("Accès non autorisé. Une invitation est requise.");
   }
 
   const userContext = await getCurrentUserContext(email);
@@ -434,20 +425,20 @@ async function getInitialData(email) {
     isAdmin: admin,
     isParent: parent,
     canManageChildren: canManageChildrenProfile(user),
-    competitions: await getCompetitionsForUser(user, userContext.managedJudokaIds),
+    competitions: await businessModule.getCompetitionsForUser(user, userContext.managedJudokaIds),
     judokas: (admin || parent) ? userContext.judokas : []
   };
 }
 
 async function registerProfile(email, profile) {
-  const invitation = await getAccessInvitation(email);
+  const invitation = await adminModule.getAccessInvitation(email);
   if (!invitation) {
-    throw new Error("Accès non autorisé. Une invitation admin est requise.");
+    throw new Error("Accès non autorisé. Une invitation est requise.");
   }
 
   return supabaseRpc("register_profile", {
     p_email: cleanText(email).toLowerCase(),
-    p_type: "JUDOKA",
+    p_type: invitation.invited_profile_type || "JUDOKA",
     p_prenom: profile && profile.prenom,
     p_nom: profile && profile.nom,
     p_children: []
@@ -465,15 +456,6 @@ async function getChildrenManagement(email) {
     user,
     isParent: isParent(user),
     children: await getParentManagedJudokas(user.id_judoka)
-  };
-}
-
-async function getAdminsManagement(email) {
-  const user = await requireAdminUser(email);
-  return {
-    user,
-    admins: await getAdmins(),
-    accessInvitations: await getAccessInvitations()
   };
 }
 
@@ -537,64 +519,6 @@ async function getJudokaProfile(email, idJudoka) {
   };
 }
 
-async function grantAdminRole(email, targetEmail) {
-  await requireAdminUser(email);
-  const normalizedEmail = cleanText(targetEmail).toLowerCase();
-  if (!normalizedEmail) {
-    throw new Error("Email obligatoire.");
-  }
-
-  const target = await getCurrentUser(normalizedEmail);
-  if (!target) {
-    throw new Error("Aucun judoka trouvé avec cet email.");
-  }
-  if (isAdmin(target)) {
-    throw new Error("Cet utilisateur est déjà admin.");
-  }
-
-  await supabasePatch("judokas", eqFilter("id_judoka", target.id_judoka), {
-    role: "ADMIN"
-  });
-
-  return {
-    success: true,
-    id_judoka: target.id_judoka,
-    message: "Droits admin accordés."
-  };
-}
-
-async function saveAccessInvitation(email, targetEmail) {
-  const user = await requireAdminUser(email);
-  const normalizedEmail = normalizeEmail(targetEmail);
-  if (!normalizedEmail) {
-    throw new Error("Email d'invitation obligatoire.");
-  }
-  if (!isValidEmail(normalizedEmail)) {
-    throw new Error("Email d'invitation invalide.");
-  }
-
-  const existingUser = await getCurrentUser(normalizedEmail);
-  if (existingUser) {
-    throw new Error("Ce compte dispose déjà d'un accès.");
-  }
-
-  const existingInvitation = await getAccessInvitation(normalizedEmail);
-  if (existingInvitation) {
-    throw new Error("Cette adresse est déjà invitée.");
-  }
-
-  await supabaseInsert("access_invitations", {
-    email: normalizedEmail,
-    invited_by: user.id_judoka
-  });
-
-  return {
-    success: true,
-    email: normalizedEmail,
-    message: "Invitation d'accès enregistrée."
-  };
-}
-
 async function saveManagedChild(email, child) {
   const user = await getCurrentUser(email);
   if (!user) {
@@ -638,18 +562,13 @@ async function saveManagedChild(email, child) {
     email: childEmail || null,
     prenom,
     nom,
-    role: "JUDOKA"
+    profile_type: "JUDOKA",
+    role: "NORMAL"
   });
   await supabaseInsert("parent_judokas", {
     id_parent: user.id_judoka,
     id_judoka: idJudoka
   });
-
-  if (!isParent(user)) {
-    await supabasePatch("judokas", eqFilter("id_judoka", user.id_judoka), {
-      role: "PARENT"
-    });
-  }
 
   return {
     success: true,
@@ -692,257 +611,20 @@ async function deleteManagedChild(email, idJudoka) {
     await supabaseDelete("judokas", eqFilter("id_judoka", idJudoka));
     message = "Enfant supprimé.";
   }
-
-  const remainingChildren = await getParentManagedJudokas(user.id_judoka);
-  if (!remainingChildren.length && isParent(user)) {
-    await supabasePatch("judokas", eqFilter("id_judoka", user.id_judoka), {
-      role: "JUDOKA"
-    });
-  }
-
   return {
     success: true,
     message
   };
 }
-
-async function revokeAdminRole(email, idJudoka) {
-  const user = await requireAdminUser(email);
-  if (!idJudoka) {
-    throw new Error("Admin obligatoire.");
-  }
-  if (String(user.id_judoka) === String(idJudoka)) {
-    throw new Error("Vous ne pouvez pas retirer vos propres droits admin.");
-  }
-
-  const target = await getJudokaById(idJudoka);
-  if (!target || !isAdmin(target)) {
-    throw new Error("Admin introuvable.");
-  }
-
-  await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
-    role: await getRoleAfterAdminRevocation(idJudoka)
-  });
-
-  return { success: true, message: "Droits admin retirés." };
-}
-
-async function deleteAccessInvitation(email, invitedEmail) {
-  await requireAdminUser(email);
-  const normalizedEmail = normalizeEmail(invitedEmail);
-  if (!normalizedEmail) {
-    throw new Error("Invitation obligatoire.");
-  }
-
-  const invitation = await getAccessInvitation(normalizedEmail);
-  if (!invitation) {
-    throw new Error("Invitation introuvable.");
-  }
-
-  await supabaseDelete("access_invitations", eqFilter("email", normalizedEmail));
-  return { success: true, message: "Invitation supprimée." };
-}
-
-async function getCompetitionDetail(email, idCompetition) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const admin = isAdmin(user);
-  const parent = isParent(user);
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-  const competition = await getCompetitionById(idCompetition);
-
-  if (!competition) {
-    throw new Error("Compétition introuvable.");
-  }
-
-  if (!canManageCompetition(user, competition, managedJudokaIds)) {
-    throw new Error("Accès refusé à cette compétition.");
-  }
-
-  let query = `select=*&${eqFilter("id_competition", idCompetition)}`;
-  if (!admin && !parent) {
-    query += `&${eqFilter("id_judoka", user.id_judoka)}`;
-  } else if (parent && managedJudokaIds.length) {
-    query += `&id_judoka=in.(${managedJudokaIds.join(",")})`;
-  }
-
-  const filtered = await supabaseSelect("combats", query);
-  const judokas = (admin || parent) ? userContext.judokas : [];
-  const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
-  const enriched = filtered.map(combat => {
-    const judoka = judokasById.get(String(combat.id_judoka));
-    return {
-      ...combat,
-      judoka_nom: judoka ? `${judoka.prenom} ${normalizeLastName(judoka.nom)}` : combat.id_judoka
-    };
-  });
-
-  return {
-    competition,
-    combats: enriched,
-    isAdmin: admin,
-    isParent: parent,
-    canManageCompetition: canManageCompetition(user, competition, managedJudokaIds),
-    canEditCompetition: canManageCompetition(user, competition, managedJudokaIds),
-    judokas
-  };
-}
-
-async function saveCompetition(email, competition) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-  const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaIds);
-
-  if (!competition.nom || !competition.date) {
-    throw new Error("Nom et date obligatoires.");
-  }
-
-  const payload = {
-    id_judoka: ownerJudokaId,
-    nom: competition.nom,
-    date: competition.date,
-    categorie_age: competition.categorie_age || "",
-    categorie_poids: competition.categorie_poids || "",
-    classement: competition.classement || ""
-  };
-
-  if (competition.id_competition) {
-    const existingCompetition = await getCompetitionById(competition.id_competition);
-    if (!existingCompetition) throw new Error("Compétition introuvable.");
-    if (!canManageCompetition(user, existingCompetition, managedJudokaIds)) {
-      throw new Error("Modification de cette compétition non autorisée.");
-    }
-
-    await supabasePatch("competitions", eqFilter("id_competition", competition.id_competition), payload);
-    return {
-      success: true,
-      id_competition: competition.id_competition,
-      message: "Compétition modifiée."
-    };
-  }
-
-  const idCompetition = `COMP${Date.now()}`;
-  await supabaseInsert("competitions", {
-    id_competition: idCompetition,
-    ...payload
-  });
-
-  return {
-    success: true,
-    id_competition: idCompetition,
-    message: "Compétition créée."
-  };
-}
-
-async function ajouterCombat(email, combat) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-
-  if (!combat.id_competition) throw new Error("Compétition obligatoire.");
-  if (!combat.resultat) throw new Error("Résultat obligatoire.");
-  if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
-
-  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
-    throw new Error("Ajout de ce combat non autorisé.");
-  }
-
-  await supabaseInsert("combats", {
-    id_combat: `CB${Date.now()}`,
-    id_judoka: combat.id_judoka,
-    id_competition: combat.id_competition,
-    adversaire: combat.adversaire || "",
-    resultat: combat.resultat,
-    type_victoire: combat.type_victoire || "",
-    deroule: combat.deroule || ""
-  });
-
-  return { success: true, message: "Combat ajouté." };
-}
-
-async function updateCombat(email, combat) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-
-  if (!combat.id_combat) throw new Error("Combat obligatoire.");
-  if (!combat.resultat) throw new Error("Résultat obligatoire.");
-  if (!combat.id_judoka) throw new Error("Judoka obligatoire.");
-
-  const existingCombat = await getCombatById(combat.id_combat);
-  if (!existingCombat) throw new Error("Combat introuvable.");
-  if (!canManageCombatFor(user, existingCombat.id_judoka, managedJudokaIds)) {
-    throw new Error("Modification de ce combat non autorisée.");
-  }
-  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
-    throw new Error("Modification de ce combat non autorisée.");
-  }
-
-  await supabasePatch("combats", eqFilter("id_combat", combat.id_combat), {
-    id_judoka: combat.id_judoka,
-    id_competition: combat.id_competition,
-    adversaire: combat.adversaire || "",
-    resultat: combat.resultat,
-    type_victoire: combat.type_victoire || "",
-    deroule: combat.deroule || ""
-  });
-
-  return { success: true, message: "Combat modifié." };
-}
-
-async function deleteCompetition(email, idCompetition) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-
-  if (!idCompetition) throw new Error("Compétition obligatoire.");
-
-  const competition = await getCompetitionById(idCompetition);
-  if (!competition) throw new Error("Compétition introuvable.");
-  if (!canManageCompetition(user, competition, managedJudokaIds)) {
-    throw new Error("Suppression de cette compétition non autorisée.");
-  }
-
-  await supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
-  return { success: true, message: "Compétition supprimée." };
-}
-
-async function deleteCombat(email, idCombat) {
-  const userContext = await getCurrentUserContext(email);
-  const user = userContext.user;
-  const managedJudokaIds = userContext.managedJudokaIds || [];
-
-  if (!idCombat) throw new Error("Combat obligatoire.");
-
-  const combat = await getCombatById(idCombat);
-  if (!combat) throw new Error("Combat introuvable.");
-  if (!canManageCombatFor(user, combat.id_judoka, managedJudokaIds)) {
-    throw new Error("Suppression de ce combat non autorisée.");
-  }
-
-  await supabaseDelete("combats", eqFilter("id_combat", idCombat));
-  return { success: true, message: "Combat supprimé." };
-}
-
 const methods = {
   getInitialData,
   getChildrenManagement,
-  getAdminsManagement,
   getJudokaProfile,
   registerProfile,
   saveManagedChild,
-  grantAdminRole,
-   saveAccessInvitation,
-  getCompetitionDetail,
-  saveCompetition,
-  ajouterCombat,
   deleteManagedChild,
-  revokeAdminRole,
-   deleteAccessInvitation,
-  updateCombat,
-  deleteCompetition,
-  deleteCombat
+  ...adminModule.methods,
+  ...businessModule.methods
 };
 
 module.exports = {

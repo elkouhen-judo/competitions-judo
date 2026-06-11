@@ -49,6 +49,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
 - **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
+- **ARC-005**: Backend RPC code shall keep shared auth/data helpers in `api/_core.js`, competition/combat logic in `api/_core-business.js`, and admin/invitation logic in `api/_core-admin.js`.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -60,7 +61,7 @@ This specification does not redefine product behavior already described in `SPEC
 ### 3.3 Data model constraints
 
 - **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `competitions`, and `combats`.
-- **DAT-001a**: `access_invitations` shall store admin-managed pending access invitations for first-time users.
+- **DAT-001a**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
 - **DAT-002**: Business identifiers shall remain text fields.
 - **DAT-003**: `judokas.id_judoka` is the judoka business identifier.
 - **DAT-004**: `parent_judokas.id_parent` and `parent_judokas.id_judoka` define the parent-child link.
@@ -70,12 +71,13 @@ This specification does not redefine product behavior already described in `SPEC
 - **DAT-008**: `combats.id_judoka` references the concerned judoka.
 - **DAT-009**: `combats.id_competition` references the parent competition.
 - **DAT-010**: Competition deletion shall cascade to combats.
-- **DAT-011**: If an admin role is revoked, `judokas.role` shall resolve back to `PARENT` when parent links still exist, otherwise to `JUDOKA`.
-- **DAT-012**: Role values in `judokas` shall remain constrained to `ADMIN`, `JUDOKA`, or `PARENT`.
-- **DAT-013**: Result values in `combats` shall remain constrained to `V`, `D`, or `E`.
-- **DAT-014**: Unused competition fields for location and actual weigh-in shall remain absent.
-- **DAT-015**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
-- **DAT-016**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
+- **DAT-011**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
+- **DAT-012**: `judokas.role` shall store the access level among `NORMAL` and `ADMIN`.
+- **DAT-013**: If admin rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
+- **DAT-014**: Result values in `combats` shall remain constrained to `V`, `D`, or `E`.
+- **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
+- **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
+- **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 
 ### 3.4 Authentication and authorization
 
@@ -85,12 +87,17 @@ This specification does not redefine product behavior already described in `SPEC
 - **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
 - **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
 - **AUTH-006**: The backend shall resolve the verified email from Supabase before applying business permissions.
-- **AUTH-007**: Effective application permissions shall be derived from `judokas.role`.
+- **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`.
 - **AUTH-008**: Password-based login shall remain unsupported.
 - **AUTH-009**: Magic-link login shall remain unsupported.
-- **AUTH-010**: Backend profile registration shall create only the initial judoka profile.
+- **AUTH-010**: Backend profile registration shall create only the initial invited profile.
 - **AUTH-011**: A child profile may store a verified email to support direct Google login without changing the child role to `PARENT` or `ADMIN`.
 - **AUTH-012**: Backend profile registration shall reject any email that is neither already linked to a judoka profile nor present in `access_invitations`.
+- **AUTH-013**: Backend profile registration shall create the initial profile type from `access_invitations.invited_profile_type`.
+- **AUTH-014**: Backend profile registration shall always create the initial access role as `NORMAL`.
+- **AUTH-015**: Child management permissions shall be restricted to users whose immutable `profile_type` is `PARENT`.
+- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither already linked to `judokas.email` nor present in `access_invitations`.
+- **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
 
 ### 3.5 Security and secrets
 
@@ -110,6 +117,8 @@ This specification does not redefine product behavior already described in `SPEC
 - **CFG-004**: Google Auth provider must be enabled in Supabase Auth.
 - **CFG-005**: Google OAuth callback `https://<project-ref>.supabase.co/auth/v1/callback` must be allowed in Google configuration.
 - **CFG-006**: The public Vercel URL must be allowed in Supabase redirect URLs.
+- **CFG-007**: Supabase Auth must configure the `before-user-created` hook to call `public.hook_check_invited_signup`.
+- **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
 
 ## 4. Interfaces & Data Contracts
 
@@ -120,6 +129,9 @@ This specification does not redefine product behavior already described in `SPEC
 | `Index.html` | Frontend app shell | Browser UI |
 | `/api/app` | Vercel serverless endpoint | Returns HTML and injects runtime config |
 | `/api/rpc` | Vercel serverless endpoint | Executes authenticated business methods |
+| `api/_core.js` | Shared backend core | Shared auth, Supabase helpers, and method composition |
+| `api/_core-business.js` | Backend domain module | Competition and combat logic |
+| `api/_core-admin.js` | Backend admin module | Admin rights and invitation logic |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
 
 ### 4.2 Vercel routing contract
@@ -137,6 +149,7 @@ The endpoint returns HTML with runtime configuration injected into the page:
 <script>
   window.KIROKU_RUNTIME_CONFIG = {
     runtime: "vercel",
+    appUrl: "<public-app-url>",
     supabaseUrl: "<public-supabase-url>",
     supabaseAnonKey: "<public-anon-key>"
   };
@@ -145,7 +158,8 @@ The endpoint returns HTML with runtime configuration injected into the page:
 
 Constraints:
 
-- `supabaseUrl` and `supabaseAnonKey` are public runtime values;
+- `appUrl`, `supabaseUrl`, and `supabaseAnonKey` are public runtime values;
+- `appUrl` shall resolve to the canonical public application origin so OAuth redirects do not land on protected deployment URLs;
 - the service role key is never injected.
 
 ### 4.4 `/api/rpc` request contract
@@ -202,9 +216,9 @@ Error response:
 | Method | Purpose | Main result shape |
 |---|---|---|
 | `getInitialData` | Load current user context and visible competitions | `{ user, isAdmin, isParent, canManageChildren, competitions, judokas }` |
-| `registerProfile` | Create the initial judoka profile after login | RPC-backed profile creation result |
+| `registerProfile` | Create the initial invited profile after login | RPC-backed profile creation result |
 | `getChildrenManagement` | Load child management context | `{ user, isParent, children }` |
-| `saveAccessInvitation` | Create one pending access invitation | `{ success, email, message }` |
+| `saveAccessInvitation` | Create one pending access invitation | `{ success, email, invited_profile_type, message }` |
 | `deleteAccessInvitation` | Remove one pending access invitation | `{ success, message }` |
 | `saveManagedChild` | Create or update a managed child | `{ success, id_judoka, message }` |
 | `deleteManagedChild` | Remove or delete a managed child | `{ success, message }` |
@@ -225,7 +239,8 @@ Error response:
 | `email` | string or null | No | Can be null for child-only profiles, or set to enable direct child login |
 | `prenom` | string | Yes | Displayed in UI |
 | `nom` | string | Yes | Displayed in UI |
-| `role` | string | Yes | `ADMIN`, `JUDOKA`, or `PARENT` |
+| `role` | string | Yes | `NORMAL` or `ADMIN` |
+| `profile_type` | string | Yes | Immutable `JUDOKA` or `PARENT` profile type |
 
 #### Competition
 

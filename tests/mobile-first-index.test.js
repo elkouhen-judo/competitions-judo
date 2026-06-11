@@ -67,6 +67,7 @@ test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="adminsList"/);
   assert.match(bundle, /id="accessInvitationsList"/);
   assert.match(bundle, /id="invite_email"/);
+  assert.match(bundle, /id="invite_profile_type"/);
   assert.match(bundle, /id="saveInvitationButton"/);
   assert.match(bundle, /id="admin_email"/);
   assert.match(bundle, /id="saveAdminButton"/);
