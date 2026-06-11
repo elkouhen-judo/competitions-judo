@@ -114,11 +114,12 @@ This specification does not define:
 
 - **STA-001**: The application shall provide a dedicated judoka profile view.
 - **STA-002**: The judoka profile shall display the judoka category derived from the latest combat.
-- **STA-003**: The judoka profile shall display the three best competition results of the current season.
+- **STA-003**: The judoka profile shall display the three best competition results of the displayed season.
 - **STA-004**: The season shall run from September 1st to August 31st.
-- **STA-005**: The judoka profile shall display the number of season competitions.
-- **STA-006**: The judoka profile shall display the number of season combats.
-- **STA-007**: The judoka profile shall display the season victory/loss distribution.
+- **STA-005**: The judoka profile shall display the number of competitions for the displayed season.
+- **STA-006**: The judoka profile shall display the number of combats for the displayed season.
+- **STA-007**: The judoka profile shall display the victory/loss distribution for the displayed season.
+- **STA-007a**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
 - **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
 - **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
 - **STA-010**: An `ADMIN` shall be able to open the judoka profile of any judoka.

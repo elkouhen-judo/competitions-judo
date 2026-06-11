@@ -7,7 +7,13 @@ function buildJudokaProfileSnapshot({
   getCurrentSeasonBounds,
   isDateWithinSeason
 }) {
-  const bounds = getCurrentSeasonBounds();
+  const currentBounds = getCurrentSeasonBounds();
+  const lastCompetition = competitions[0] || null;
+  const hasCurrentSeasonCompetition = competitions.some(c => isDateWithinSeason(c.date, currentBounds));
+  const referenceDate = lastCompetition ? new Date(lastCompetition.date) : null;
+  const bounds = hasCurrentSeasonCompetition || !referenceDate || Number.isNaN(referenceDate.getTime())
+    ? currentBounds
+    : getCurrentSeasonBounds(referenceDate);
   const seasonCompetitions = competitions.filter(c => isDateWithinSeason(c.date, bounds));
   const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.id_competition)));
   const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.id_competition)));
@@ -28,7 +34,6 @@ function buildJudokaProfileSnapshot({
       date: c.date,
       classement: c.classement
     }));
-  const lastCompetition = competitions[0] || null;
 
   return {
     judoka,
