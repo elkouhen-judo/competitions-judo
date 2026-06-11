@@ -135,8 +135,6 @@ This specification does not redefine product behavior already described in `SPEC
 | `core/domain/*` | Backend domain model | Entities, value objects, and business policies |
 | `core/services/*` | Backend application services | Use-case orchestration over the domain |
 | `core/repositories/*` | Backend persistence adapters | Data access for business aggregates |
-| `api/_core-business.js` | Backend domain module | Competition and combat logic |
-| `api/_core-admin.js` | Backend admin module | Admin rights and invitation logic |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
 
 ### 4.2 Vercel routing contract

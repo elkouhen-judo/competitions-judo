@@ -10,8 +10,6 @@ const client = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
-const adminCore = fs.readFileSync(path.join(root, "api", "_core-admin.js"), "utf8");
-const businessCore = fs.readFileSync(path.join(root, "api", "_core-business.js"), "utf8");
 const coreIndex = fs.readFileSync(path.join(root, "core", "index.js"), "utf8");
 const adminService = fs.readFileSync(path.join(root, "core", "services", "admin.service.js"), "utf8");
 const childrenService = fs.readFileSync(path.join(root, "core", "services", "children.service.js"), "utf8");
@@ -253,9 +251,6 @@ test("vercel runtime shows the connected user without a logout button", () => {
 
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /module\.exports = require\("\.\.\/core"\);/);
-  assert.match(adminCore, /module\.exports = require\("\.\.\/core\/services\/admin\.service"\);/);
-  assert.match(businessCore, /createCompetitionsService/);
-  assert.match(businessCore, /createCombatsService/);
   assert.match(coreIndex, /createAdminService/);
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
