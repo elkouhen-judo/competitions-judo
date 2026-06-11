@@ -78,8 +78,8 @@ const competitionsService = createCompetitionsService({
   userContextService,
   normalizeLastName: text.normalizeLastName,
   canManageCompetition: permissions.canManageCompetition,
-  isAdmin: permissions.isAdmin,
-  isParent: permissions.isParent,
+  assertCanManageCompetition: permissions.assertCanManageCompetition,
+  resolveJudokaDataAccess: permissions.resolveJudokaDataAccess,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
   buildCompetitionId: ids.buildCompetitionId,
   createCompetition
@@ -89,7 +89,7 @@ const combatsService = createCombatsService({
   combatsRepository,
   competitionsRepository,
   userContextService,
-  canManageCombatFor: permissions.canManageCombatFor,
+  assertCanManageCombatFor: permissions.assertCanManageCombatFor,
   createCombatUpdate: updateCombat,
   createPersistedCompetition,
   buildCombatId: ids.buildCombatId
@@ -150,7 +150,7 @@ async function getInitialData(email) {
     isAdmin: admin,
     isParent: parent,
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
-    competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaIds),
+    competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaScope),
     judokas: (admin || parent) ? userContext.judokas : []
   };
 }
