@@ -1,10 +1,11 @@
 module.exports = function createCombatsService(deps) {
   const {
     combatsRepository,
+    competitionsRepository,
     userContextService,
+    assertCompetitionCanContainCombat,
     canManageCombatFor,
     createCombat,
-    createCombatRecord,
     updateCombatRecord,
     buildCombatId
   } = deps;
@@ -19,6 +20,10 @@ module.exports = function createCombatsService(deps) {
     }
 
     const combatDraft = createCombat(combat);
+    const competition = await competitionsRepository.getById(combatDraft.id_competition);
+    if (!competition) throw new Error("Compétition introuvable.");
+    assertCompetitionCanContainCombat(competition, combatDraft);
+
     await combatsRepository.insert(combatDraft.toNewRecord(buildCombatId));
 
     return { success: true, message: "Combat ajouté." };
@@ -38,7 +43,15 @@ module.exports = function createCombatsService(deps) {
       throw new Error("Modification de ce combat non autorisée.");
     }
 
-    await combatsRepository.update(combat.id_combat, updateCombatRecord(combat));
+    const combatDraft = updateCombatRecord(combat);
+    const competition = await competitionsRepository.getById(combatDraft.id_competition);
+    if (!competition) throw new Error("Compétition introuvable.");
+    assertCompetitionCanContainCombat(competition, {
+      id_combat: combat.id_combat,
+      ...combatDraft
+    });
+
+    await combatsRepository.update(combat.id_combat, combatDraft);
 
     return { success: true, message: "Combat modifié." };
   }
