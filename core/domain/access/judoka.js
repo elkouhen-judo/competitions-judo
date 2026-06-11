@@ -14,70 +14,55 @@ function createJudoka(user = {}) {
   const accountEmail = normalizeOptionalEmail(user.accountEmail || user.email);
   const profileType = createProfileType(user.profileType || user.profile_type || "JUDOKA");
   const accessRole = createRole(user.accessRole || user.role || "NORMAL");
-  const record = {
-    judokaId,
-    accountEmail,
-    name,
-    profileType,
-    accessRole,
-    id_judoka: judokaId,
-    email: accountEmail,
-    prenom: name.firstName,
-    nom: name.lastName,
-    profile_type: profileType,
-    role: accessRole
-  };
+  const record = { judokaId, accountEmail, name, profileType, accessRole };
 
   return {
     ...record,
     hasDirectAccount() {
-      return Boolean(record.email);
+      return Boolean(record.accountEmail);
     },
     isAdmin() {
-      return record.role === "ADMIN";
+      return record.accessRole === "ADMIN";
     },
     grantAdminRole() {
       if (this.isAdmin()) {
         throw new Error("Cet utilisateur est déjà admin.");
       }
 
-      return { role: createRole("ADMIN") };
+      return { accessRole: createRole("ADMIN") };
     },
     revokeAdminRole(actorIdJudoka) {
       if (!this.isAdmin()) {
         throw new Error("Admin introuvable.");
       }
-      if (String(actorIdJudoka) === String(record.id_judoka)) {
+      if (String(actorIdJudoka) === String(record.judokaId)) {
         throw new Error("Vous ne pouvez pas retirer vos propres droits admin.");
       }
 
-      return { role: createRole("NORMAL") };
+      return { accessRole: createRole("NORMAL") };
     }
   };
 }
 
-function createManagedChild({ id_judoka, email, prenom, nom }) {
-  const name = createPersonName({ prenom, nom });
+function createManagedChild({ judokaId, id_judoka, accountEmail, email, name, firstName, lastName, prenom, nom }) {
+  const childName = name || createPersonName({ firstName, lastName, prenom, nom });
 
   return createJudoka({
-    id_judoka: createJudokaId(id_judoka),
-    email,
-    name,
-    profile_type: "JUDOKA",
-    role: "NORMAL"
+    judokaId: createJudokaId(judokaId || id_judoka),
+    accountEmail: accountEmail !== undefined ? accountEmail : email,
+    name: childName,
+    profileType: "JUDOKA",
+    accessRole: "NORMAL"
   });
 }
 
-function updateManagedChild({ email, prenom, nom }) {
-  const name = createPersonName({ prenom, nom });
-  const accountEmail = normalizeOptionalEmail(email);
+function updateManagedChild({ accountEmail, email, name, firstName, lastName, prenom, nom }) {
+  const childName = name || createPersonName({ firstName, lastName, prenom, nom });
+  const normalizedAccountEmail = normalizeOptionalEmail(accountEmail !== undefined ? accountEmail : email);
 
   return {
-    email: accountEmail,
-    accountEmail,
-    name,
-    prenom: name.firstName,
-    nom: name.lastName
+    accountEmail: normalizedAccountEmail,
+    name: childName
   };
 }
 

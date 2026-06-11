@@ -80,17 +80,19 @@ module.exports = function createCompetitionsService(deps) {
     const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaScope);
     const competitionDraft = createCompetition(competition, ownerJudokaId);
 
-    if (competition.id_competition) {
-      const existingCompetition = await competitionsRepository.getById(competition.id_competition);
+    const competitionId = competition.competitionId || competition.id_competition;
+
+    if (competitionId) {
+      const existingCompetition = await competitionsRepository.getById(competitionId);
       if (!existingCompetition) throw new Error("Compétition introuvable.");
       if (!canManageCompetition(user, existingCompetition, managedJudokaScope)) {
         throw new Error("Modification de cette compétition non autorisée.");
       }
 
-      await competitionsRepository.update(competition.id_competition, competitionDraft);
+      await competitionsRepository.update(competitionId, competitionDraft);
       return {
         success: true,
-        id_competition: competition.id_competition,
+        id_competition: competitionId,
         message: "Compétition modifiée."
       };
     }

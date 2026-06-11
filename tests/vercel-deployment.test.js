@@ -135,11 +135,15 @@ test("judoka home keeps competition creation available", () => {
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
   assert.match(competitionsService, /const competitionDraft = createCompetition\(competition,\s*ownerJudokaId\);/);
-  assert.match(competitionsService, /await competitionsRepository\.update\(competition\.id_competition,\s*competitionDraft\);/);
+  assert.match(competitionsService, /const competitionId = competition\.competitionId \|\| competition\.id_competition;/);
+  assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
   assert.match(competitionDomain, /function createCompetitionDraft\(competition = \{\}\)/);
   assert.match(competitionDomain, /ageCategory: competition\.ageCategory \|\| competition\.categorie_age \|\| ""/);
   assert.match(competitionDomain, /weightCategory: competition\.weightCategory \|\| competition\.categorie_poids \|\| ""/);
+  assert.doesNotMatch(competitionDomain, /nom:\s*name/);
+  assert.doesNotMatch(competitionDomain, /categorie_age:/);
+  assert.doesNotMatch(competitionDomain, /categorie_poids:/);
   assert.doesNotMatch(competitionDomain, /lieu:\s*""/);
   assert.doesNotMatch(competitionDomain, /poids_pesee:\s*""/);
 });
@@ -156,18 +160,19 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /async function getChildrenManagement\(email\)/);
   assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
   assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
-  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(updatedChild\.email,\s*child\.id_judoka\)/);
-  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(managedChild\.email,\s*idJudoka\)/);
+  assert.match(childrenService, /const childJudokaId = child\.judokaId \|\| child\.id_judoka;/);
+  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(updatedChild\.accountEmail,\s*childJudokaId\)/);
+  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(managedChild\.accountEmail,\s*idJudoka\)/);
   assert.match(childrenService, /const managedChild = createManagedChild\(\{/);
   assert.match(childrenService, /const deletionDecision = decideManagedChildRemoval\(\{/);
-  assert.match(judokaDomain, /function createManagedChild\(\{ id_judoka,\s*email,\s*prenom,\s*nom \}\)/);
-  assert.match(judokaDomain, /const accountEmail = normalizeOptionalEmail\(email\);/);
-  assert.match(judokaDomain, /email: accountEmail/);
+  assert.match(judokaDomain, /function createManagedChild\(\{ judokaId,\s*id_judoka,\s*accountEmail,\s*email,\s*name,\s*firstName,\s*lastName,\s*prenom,\s*nom \}\)/);
+  assert.match(judokaDomain, /accountEmail: accountEmail !== undefined \? accountEmail : email/);
+  assert.match(judokaDomain, /function updateManagedChild\(\{ accountEmail,\s*email,\s*name,\s*firstName,\s*lastName,\s*prenom,\s*nom \}\)/);
   assert.match(emailDomain, /function createOptionalEmail\(value,\s*message = "Email invalide\."\)/);
   assert.match(judokaDomain, /function decideManagedChildRemoval\(\{ child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink \}\)/);
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
   assert.match(childrenService, /isParent: isParent\(user\)/);
-  assert.match(judokaDomain, /role: createRole\("NORMAL"\)/);
+  assert.match(judokaDomain, /accessRole: "NORMAL"/);
 });
 
 test("admin can manage admins from a dedicated screen", () => {
@@ -192,8 +197,8 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
   assert.match(adminService, /createJudoka\(target\)\.grantAdminRole\(\)/);
   assert.match(adminService, /createJudoka\(target\)\.revokeAdminRole\(user\.id_judoka\)/);
-  assert.match(judokaDomain, /return \{ role: createRole\("ADMIN"\) \};/);
-  assert.match(judokaDomain, /return \{ role: createRole\("NORMAL"\) \};/);
+  assert.match(judokaDomain, /return \{ accessRole: createRole\("ADMIN"\) \};/);
+  assert.match(judokaDomain, /return \{ accessRole: createRole\("NORMAL"\) \};/);
   assert.match(adminService, /async function revokeAdminRole\(email,\s*idJudoka\)/);
   assert.match(adminService, /Vous ne pouvez pas retirer vos propres droits admin/);
 });
@@ -233,7 +238,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
 });
 
 test("admin owner selection is not restricted by parent-managed scope", () => {
-  assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*if \(isAdmin\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*return ownerJudokaId;\s*\}\s*if \(isParent\(user\)\) \{/);
+  assert.match(permissions, /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && \(competition\.ownerJudokaId \|\| competition\.id_judoka\);\s*\}/);
+  assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/);
   assert.match(permissions, /const inScope = managedJudokaIds && typeof managedJudokaIds\.includes === "function"[\s\S]*managedJudokaIds\.includes\(ownerJudokaId\)[\s\S]*\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\);/);
 });
 

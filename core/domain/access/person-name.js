@@ -13,8 +13,6 @@ function createPersonName({ firstName, lastName, prenom, nom } = {}) {
   return {
     firstName: normalizedFirstName,
     lastName: normalizedLastName,
-    prenom: normalizedFirstName,
-    nom: normalizedLastName,
     displayName() {
       return [normalizedFirstName, normalizedLastName].filter(Boolean).join(" ");
     }
@@ -28,8 +26,6 @@ function createOptionalPersonName({ firstName, lastName, prenom, nom } = {}) {
   return {
     firstName: normalizedFirstName,
     lastName: normalizedLastName,
-    prenom: normalizedFirstName,
-    nom: normalizedLastName,
     displayName() {
       return [normalizedFirstName, normalizedLastName].filter(Boolean).join(" ");
     }

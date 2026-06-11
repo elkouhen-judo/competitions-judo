@@ -19,6 +19,28 @@ module.exports = function createJudokasRepository(deps) {
     };
   }
 
+  function toJudokaChangesRecord(changes) {
+    const record = {};
+
+    if (changes.accountEmail !== undefined || changes.email !== undefined) {
+      record.email = changes.accountEmail !== undefined ? changes.accountEmail : changes.email;
+    }
+    if (changes.name || changes.prenom !== undefined) {
+      record.prenom = changes.name ? changes.name.firstName : changes.prenom;
+    }
+    if (changes.name || changes.nom !== undefined) {
+      record.nom = changes.name ? changes.name.lastName : changes.nom;
+    }
+    if (changes.profileType !== undefined || changes.profile_type !== undefined) {
+      record.profile_type = changes.profileType !== undefined ? changes.profileType : changes.profile_type;
+    }
+    if (changes.accessRole !== undefined || changes.role !== undefined) {
+      record.role = changes.accessRole !== undefined ? changes.accessRole : changes.role;
+    }
+
+    return record;
+  }
+
   function toManagedChildUpdateRecord(child) {
     return {
       email: child.accountEmail !== undefined ? child.accountEmail : child.email,
@@ -55,7 +77,7 @@ module.exports = function createJudokasRepository(deps) {
   }
 
   async function update(idJudoka, judokaChanges) {
-    return supabasePatch("judokas", eqFilter("id_judoka", idJudoka), judokaChanges);
+    return supabasePatch("judokas", eqFilter("id_judoka", idJudoka), toJudokaChangesRecord(judokaChanges));
   }
 
   async function updateManagedChild(idJudoka, child) {
