@@ -9,30 +9,30 @@ function buildJudokaProfileSnapshot({
 }) {
   const currentBounds = getCurrentSeasonBounds();
   const lastCompetition = competitions[0] || null;
-  const hasCurrentSeasonCompetition = competitions.some(c => isDateWithinSeason(c.date, currentBounds));
-  const referenceDate = lastCompetition ? new Date(lastCompetition.date) : null;
+  const hasCurrentSeasonCompetition = competitions.some(c => isDateWithinSeason(c.competitionDate, currentBounds));
+  const referenceDate = lastCompetition ? new Date(lastCompetition.competitionDate) : null;
   const bounds = hasCurrentSeasonCompetition || !referenceDate || Number.isNaN(referenceDate.getTime())
     ? currentBounds
     : getCurrentSeasonBounds(referenceDate);
-  const seasonCompetitions = competitions.filter(c => isDateWithinSeason(c.date, bounds));
-  const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.id_competition)));
-  const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.id_competition)));
-  const seasonWins = seasonCombats.filter(c => String(c.resultat || "").toUpperCase() === "V").length;
-  const seasonLosses = seasonCombats.filter(c => String(c.resultat || "").toUpperCase() === "D").length;
+  const seasonCompetitions = competitions.filter(c => isDateWithinSeason(c.competitionDate, bounds));
+  const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.competitionId)));
+  const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.competitionId)));
+  const seasonWins = seasonCombats.filter(c => String(c.result || "").toUpperCase() === "V").length;
+  const seasonLosses = seasonCombats.filter(c => String(c.result || "").toUpperCase() === "D").length;
 
   const bestSeasonResults = seasonCompetitions
-    .filter(c => c.classement && Number.isFinite(getCompetitionResultRank(c.classement)))
+    .filter(c => c.seasonResult && Number.isFinite(getCompetitionResultRank(c.seasonResult)))
     .sort((a, b) => {
-      const rankDiff = getCompetitionResultRank(a.classement) - getCompetitionResultRank(b.classement);
+      const rankDiff = getCompetitionResultRank(a.seasonResult) - getCompetitionResultRank(b.seasonResult);
       if (rankDiff !== 0) return rankDiff;
-      return String(b.date || "").localeCompare(String(a.date || ""));
+      return String(b.competitionDate || "").localeCompare(String(a.competitionDate || ""));
     })
     .slice(0, 3)
     .map(c => ({
-      id_competition: c.id_competition,
-      nom: c.nom,
-      date: c.date,
-      classement: c.classement
+      competitionId: c.competitionId,
+      name: c.name,
+      competitionDate: c.competitionDate,
+      seasonResult: c.seasonResult
     }));
 
   return {
@@ -40,11 +40,11 @@ function buildJudokaProfileSnapshot({
     season: bounds,
     lastCompetition: lastCompetition
       ? {
-          id_competition: lastCompetition.id_competition,
-          nom: lastCompetition.nom,
-          date: lastCompetition.date,
+          competitionId: lastCompetition.competitionId,
+          name: lastCompetition.name,
+          competitionDate: lastCompetition.competitionDate,
           category: getCompetitionCategoryLabel(lastCompetition),
-          weightCategory: lastCompetition.categorie_poids || ""
+          weightCategory: lastCompetition.weightCategory || ""
         }
       : null,
     bestSeasonResults,

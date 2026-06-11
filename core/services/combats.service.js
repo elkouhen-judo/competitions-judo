@@ -1,3 +1,5 @@
+const { toDomainCombat, toDomainCompetition, toDomainJudoka } = require("./domain-adapters");
+
 module.exports = function createCombatsService(deps) {
   const {
     combatsRepository,
@@ -12,19 +14,20 @@ module.exports = function createCombatsService(deps) {
   async function ajouterCombat(email, combat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
+    const domainUser = toDomainJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
+    const domainCombat = toDomainCombat(combat);
+    const judokaId = domainCombat.judokaId;
+    const competitionId = domainCombat.competitionId;
 
-    const judokaId = combat.judokaId || combat.id_judoka;
-    const competitionId = combat.competitionId || combat.id_competition;
-
-    if (!canManageCombatFor(user, judokaId, managedJudokaScope)) {
+    if (!canManageCombatFor(domainUser, judokaId, managedJudokaScope)) {
       throw new Error("Ajout de ce combat non autorisé.");
     }
 
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
-    const competition = createPersistedCompetition(competitionRecord);
-    const combatDraft = competition.recordCombat(combat);
+    const competition = createPersistedCompetition(toDomainCompetition(competitionRecord));
+    const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.insert(combatDraft, buildCombatId());
 
@@ -34,25 +37,26 @@ module.exports = function createCombatsService(deps) {
   async function updateCombat(email, combat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
+    const domainUser = toDomainJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
-
-    const combatId = combat.combatId || combat.id_combat;
-    const judokaId = combat.judokaId || combat.id_judoka;
-    const competitionId = combat.competitionId || combat.id_competition;
+    const domainCombat = toDomainCombat(combat);
+    const combatId = domainCombat.combatId;
+    const judokaId = domainCombat.judokaId;
+    const competitionId = domainCombat.competitionId;
     const existingCombat = await combatsRepository.getById(combatId);
     if (!existingCombat) throw new Error("Combat introuvable.");
-    if (!canManageCombatFor(user, existingCombat.id_judoka, managedJudokaScope)) {
+    if (!canManageCombatFor(domainUser, toDomainCombat(existingCombat).judokaId, managedJudokaScope)) {
       throw new Error("Modification de ce combat non autorisée.");
     }
-    if (!canManageCombatFor(user, judokaId, managedJudokaScope)) {
+    if (!canManageCombatFor(domainUser, judokaId, managedJudokaScope)) {
       throw new Error("Modification de ce combat non autorisée.");
     }
 
-    createCombatUpdate(combat);
+    createCombatUpdate(domainCombat);
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
-    const competition = createPersistedCompetition(competitionRecord);
-    const combatDraft = competition.recordCombat(combat);
+    const competition = createPersistedCompetition(toDomainCompetition(competitionRecord));
+    const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.update(combatId, combatDraft);
 
@@ -62,13 +66,14 @@ module.exports = function createCombatsService(deps) {
   async function deleteCombat(email, idCombat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
+    const domainUser = toDomainJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope || userContext.managedJudokaIds || [];
 
     if (!idCombat) throw new Error("Combat obligatoire.");
 
     const combat = await combatsRepository.getById(idCombat);
     if (!combat) throw new Error("Combat introuvable.");
-    if (!canManageCombatFor(user, combat.id_judoka, managedJudokaScope)) {
+    if (!canManageCombatFor(domainUser, toDomainCombat(combat).judokaId, managedJudokaScope)) {
       throw new Error("Suppression de ce combat non autorisée.");
     }
 
