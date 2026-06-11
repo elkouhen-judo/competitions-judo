@@ -300,7 +300,8 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
   assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
-  assert.match(competitionsService, /judokaDisplayName: judoka \? `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}` : combat\.id_judoka/);
+  assert.match(competitionsService, /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/);
+  assert.match(competitionsService, /formatJudokaDisplayName: judoka => `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}`/);
   assert.match(client, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
   assert.doesNotMatch(client, /competition\.id_judoka = resolveCompetitionOwnerSelection\(\);/);
   assert.doesNotMatch(coreIndex, /auth\/v1\/signup/);
