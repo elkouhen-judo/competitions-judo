@@ -1,3 +1,4 @@
+const { createOptionalEmail } = require("./email");
 const { createProfileType } = require("./profile-type");
 const { createRole } = require("./role");
 
@@ -8,7 +9,7 @@ function assertManagedChildName(prenom, nom) {
 }
 
 function normalizeOptionalEmail(email) {
-  return email || null;
+  return createOptionalEmail(email, "Email de l'enfant invalide.");
 }
 
 function createJudoka(user = {}) {

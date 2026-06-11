@@ -26,6 +26,7 @@ const competitionDomain = fs.readFileSync(path.join(root, "core", "domain", "com
 const seasonDomain = fs.readFileSync(path.join(root, "core", "domain", "season.js"), "utf8");
 const seasonStatisticsDomain = fs.readFileSync(path.join(root, "core", "domain", "season-statistics.js"), "utf8");
 const judokaDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "judoka.js"), "utf8");
+const emailDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "email.js"), "utf8");
 const judokasRepository = fs.readFileSync(path.join(root, "core", "repositories", "judokas.repository.js"), "utf8");
 const invitationsRepository = fs.readFileSync(path.join(root, "core", "repositories", "invitations.repository.js"), "utf8");
 const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabase-client.js"), "utf8");
@@ -152,11 +153,14 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(uiBundle, /function deleteManagedChild\(idJudoka,\s*name\)/);
   assert.match(childrenService, /async function getChildrenManagement\(email\)/);
   assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
-  assert.match(childrenService, /const childEmail = normalizeEmail\(child && child\.email\)/);
-  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(childEmail,\s*child && child\.id_judoka\)/);
+  assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
+  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(updatedChild\.email,\s*child\.id_judoka\)/);
+  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(managedChild\.email,\s*idJudoka\)/);
   assert.match(childrenService, /const managedChild = createManagedChild\(\{/);
   assert.match(childrenService, /const deletionDecision = decideManagedChildRemoval\(\{/);
   assert.match(judokaDomain, /function createManagedChild\(\{ id_judoka,\s*email,\s*prenom,\s*nom \}\)/);
+  assert.match(judokaDomain, /email: normalizeOptionalEmail\(email\)/);
+  assert.match(emailDomain, /function createOptionalEmail\(value,\s*message = "Email invalide\."\)/);
   assert.match(judokaDomain, /function decideManagedChildRemoval\(\{ child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink \}\)/);
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
   assert.match(childrenService, /isParent: isParent\(user\)/);
@@ -209,9 +213,9 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
-  assert.match(userContextService, /if \(isAdmin\(user\)\) \{\s*return \{ user, target \};\s*\}/);
-  assert.match(userContextService, /if \(isParent\(user\)\) \{\s*if \(!\(userContext\.managedJudokaIds \|\| \[\]\)\.includes\(String\(targetId\)\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
-  assert.match(userContextService, /if \(String\(user\.id_judoka\) !== String\(targetId\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
+  assert.match(userContextService, /assertCanAccessJudokaProfile\(user,\s*targetId,\s*userContext\.managedJudokaIds \|\| \[\]\);/);
+  assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaIds\)/);
+  assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
   assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
   assert.match(profileService, /return buildJudokaProfileSnapshot\(\{/);

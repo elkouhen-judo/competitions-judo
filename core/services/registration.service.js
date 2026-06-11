@@ -1,7 +1,7 @@
 module.exports = function createRegistrationService(deps) {
   const {
     adminService,
-    cleanText,
+    createEmail,
     supabaseRpc
   } = deps;
 
@@ -12,7 +12,7 @@ module.exports = function createRegistrationService(deps) {
     }
 
     return supabaseRpc("register_profile", {
-      p_email: cleanText(email).toLowerCase(),
+      p_email: createEmail(email),
       p_type: invitation.invited_profile_type || "JUDOKA",
       p_prenom: profile && profile.prenom,
       p_nom: profile && profile.nom,

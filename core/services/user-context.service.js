@@ -3,6 +3,7 @@ module.exports = function createUserContextService(deps) {
     judokasRepository,
     parentLinksRepository,
     normalizeEmail,
+    assertCanAccessJudokaProfile,
     isAdmin,
     isParent
   } = deps;
@@ -81,21 +82,7 @@ module.exports = function createUserContextService(deps) {
       throw new Error("Judoka introuvable.");
     }
 
-    if (isAdmin(user)) {
-      return { user, target };
-    }
-
-    if (isParent(user)) {
-      if (!(userContext.managedJudokaIds || []).includes(String(targetId))) {
-        throw new Error("Accès refusé à cette fiche judoka.");
-      }
-      return { user, target };
-    }
-
-    if (String(user.id_judoka) !== String(targetId)) {
-      throw new Error("Accès refusé à cette fiche judoka.");
-    }
-
+    assertCanAccessJudokaProfile(user, targetId, userContext.managedJudokaIds || []);
     return { user, target };
   }
 

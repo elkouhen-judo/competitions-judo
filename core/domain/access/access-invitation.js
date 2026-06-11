@@ -1,12 +1,9 @@
+const { createEmail } = require("./email");
 const { createProfileType } = require("./profile-type");
 
 function createAccessInvitation({ email, invited_profile_type, invited_by }) {
-  if (!email) {
-    throw new Error("Email d'invitation obligatoire.");
-  }
-
   const record = {
-    email,
+    email: createEmail(email, "Email d'invitation invalide.", "Email d'invitation obligatoire."),
     invited_profile_type: createProfileType(invited_profile_type),
     invited_by
   };
