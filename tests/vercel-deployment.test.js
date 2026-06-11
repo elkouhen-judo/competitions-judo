@@ -81,9 +81,12 @@ test("vercel runtime uses google auth without password login", () => {
   assert.match(uiBundle, /auth\/v1\/authorize/);
   assert.match(uiBundle, /searchParams\.set\("provider", "google"\)/);
   assert.match(uiBundle, /searchParams\.set\("redirect_to", getVercelAuthRedirectUrl\(\)\)/);
-  assert.match(uiBundle, /function parseVercelAuthCallback\(\)/);
+  assert.match(uiBundle, /searchParams\.set\("response_type", "token"\)/);
+  assert.match(uiBundle, /async function parseVercelAuthCallback\(\)/);
   assert.match(uiBundle, /access_token/);
   assert.match(uiBundle, /refresh_token/);
+  assert.match(uiBundle, /async function exchangeVercelAuthCode\(authCode\)/);
+  assert.match(uiBundle, /grant_type=authorization_code/);
   assert.match(uiBundle, /Connexion Google impossible/);
   assert.match(uiBundle, /function showInvitationRequired\(\)/);
   assert.match(uiBundle, /normalizedError\.includes\("invitation"\) \|\| normalizedError\.includes\("non autorisé"\)/);

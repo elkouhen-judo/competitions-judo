@@ -89,10 +89,11 @@
       const authorizeUrl = new URL(`${runtimeConfig.supabaseUrl}/auth/v1/authorize`);
       authorizeUrl.searchParams.set("provider", "google");
       authorizeUrl.searchParams.set("redirect_to", getVercelAuthRedirectUrl());
+      authorizeUrl.searchParams.set("response_type", "token");
       window.location.href = authorizeUrl.toString();
     }
 
-    function parseVercelAuthCallback() {
+    async function parseVercelAuthCallback() {
       const hashParams = window.location.hash
         ? new URLSearchParams(window.location.hash.slice(1))
         : new URLSearchParams();
@@ -119,6 +120,7 @@
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
       const expiresIn = Number(params.get("expires_in") || "3600");
+      const authCode = queryParams.get("code");
 
       if (accessToken) {
         saveVercelSession({
@@ -127,7 +129,33 @@
           expires_at: Math.floor(Date.now() / 1000) + expiresIn
         });
         history.replaceState(null, document.title, window.location.pathname);
+      } else if (authCode) {
+        await exchangeVercelAuthCode(authCode);
+        history.replaceState(null, document.title, window.location.pathname);
       }
+    }
+
+    async function exchangeVercelAuthCode(authCode) {
+      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
+        method: "POST",
+        headers: getSupabaseAnonymousAuthHeaders(),
+        body: JSON.stringify({
+          auth_code: authCode,
+          redirect_to: getVercelAuthRedirectUrl()
+        })
+      });
+
+      if (!response.ok) {
+        const authError = await readSupabaseAuthError(response);
+        throw new Error("Connexion Google impossible : " + (authError || "code OAuth invalide."));
+      }
+
+      const session = await response.json();
+      saveVercelSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token || "",
+        expires_at: Math.floor(Date.now() / 1000) + Number(session.expires_in || 3600)
+      });
     }
 
     async function getValidVercelSession() {
@@ -231,12 +259,19 @@
       );
     });
 
-    function init() {
-      parseVercelAuthCallback();
-
+    async function init() {
       if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
         showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
         showVercelLogin();
+        return;
+      }
+
+      try {
+        await parseVercelAuthCallback();
+      } catch (error) {
+        clearVercelSession();
+        showVercelLogin();
+        showError(error);
         return;
       }
 
