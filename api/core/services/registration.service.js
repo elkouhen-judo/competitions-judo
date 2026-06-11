@@ -1,0 +1,28 @@
+module.exports = function createRegistrationService(deps) {
+  const {
+    adminService,
+    cleanText,
+    supabaseRpc
+  } = deps;
+
+  async function registerProfile(email, profile) {
+    const invitation = await adminService.getAccessInvitation(email);
+    if (!invitation) {
+      throw new Error("Accès non autorisé. Une invitation est requise.");
+    }
+
+    return supabaseRpc("register_profile", {
+      p_email: cleanText(email).toLowerCase(),
+      p_type: invitation.invited_profile_type || "JUDOKA",
+      p_prenom: profile && profile.prenom,
+      p_nom: profile && profile.nom,
+      p_children: []
+    });
+  }
+
+  return {
+    methods: {
+      registerProfile
+    }
+  };
+};
