@@ -11,20 +11,8 @@ function buildJudokaProfileSnapshot({
   const seasonCompetitions = competitions.filter(c => isDateWithinSeason(c.date, bounds));
   const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.id_competition)));
   const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.id_competition)));
-  const seasonWins = seasonCombats.filter(c => c.resultat === "V").length;
-  const seasonLosses = seasonCombats.filter(c => c.resultat === "D").length;
-  const competitionsById = new Map(competitions.map(c => [String(c.id_competition), c]));
-  const lastCombatCompetition = combats
-    .map(combat => ({
-      combat,
-      competition: competitionsById.get(String(combat.id_competition))
-    }))
-    .filter(entry => entry.competition)
-    .sort((a, b) => {
-      const dateDiff = String(b.competition.date || "").localeCompare(String(a.competition.date || ""));
-      if (dateDiff !== 0) return dateDiff;
-      return String(b.combat.id_combat || "").localeCompare(String(a.combat.id_combat || ""));
-    })[0] || null;
+  const seasonWins = seasonCombats.filter(c => String(c.resultat || "").toUpperCase() === "V").length;
+  const seasonLosses = seasonCombats.filter(c => String(c.resultat || "").toUpperCase() === "D").length;
 
   const bestSeasonResults = seasonCompetitions
     .filter(c => c.classement && Number.isFinite(getCompetitionResultRank(c.classement)))
@@ -40,9 +28,7 @@ function buildJudokaProfileSnapshot({
       date: c.date,
       classement: c.classement
     }));
-
   const lastCompetition = competitions[0] || null;
-  const lastCompetitionForCategory = lastCombatCompetition ? lastCombatCompetition.competition : lastCompetition;
 
   return {
     judoka,
@@ -52,8 +38,8 @@ function buildJudokaProfileSnapshot({
           id_competition: lastCompetition.id_competition,
           nom: lastCompetition.nom,
           date: lastCompetition.date,
-          category: lastCompetitionForCategory ? getCompetitionCategoryLabel(lastCompetitionForCategory) : "",
-          weightCategory: lastCompetitionForCategory ? (lastCompetitionForCategory.categorie_poids || "") : ""
+          category: getCompetitionCategoryLabel(lastCompetition),
+          weightCategory: lastCompetition.categorie_poids || ""
         }
       : null,
     bestSeasonResults,
