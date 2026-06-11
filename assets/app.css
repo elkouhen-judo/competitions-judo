@@ -115,14 +115,20 @@
       padding: 8px 10px;
       color: var(--muted);
       font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       min-width: 0;
     }
 
     .logout-button {
-      flex: 0 0 auto;
-      padding: 8px 10px;
-      font-size: 14px;
-      white-space: nowrap;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
     }
 
     .message {
@@ -970,6 +976,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      width: 100%;
       min-width: 0;
     }
 
