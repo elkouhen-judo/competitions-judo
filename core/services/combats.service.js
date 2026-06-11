@@ -3,9 +3,10 @@ module.exports = function createCombatsService(deps) {
     combatsRepository,
     userContextService,
     canManageCombatFor,
-    buildCombatId,
+    createCombat,
     createCombatRecord,
-    updateCombatRecord
+    updateCombatRecord,
+    buildCombatId
   } = deps;
 
   async function ajouterCombat(email, combat) {
@@ -17,7 +18,8 @@ module.exports = function createCombatsService(deps) {
       throw new Error("Ajout de ce combat non autorisé.");
     }
 
-    await combatsRepository.insert(createCombatRecord(combat, buildCombatId));
+    const combatDraft = createCombat(combat);
+    await combatsRepository.insert(combatDraft.toNewRecord(buildCombatId));
 
     return { success: true, message: "Combat ajouté." };
   }

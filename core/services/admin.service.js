@@ -4,9 +4,9 @@ module.exports = function createAdminService(deps) {
     judokasRepository,
     userContextService,
     cleanText,
-    createAccessInvitationRecord,
+    createAccessInvitation,
+    createJudoka,
     normalizeEmail,
-    isAdmin,
     isValidEmail
   } = deps;
 
@@ -15,7 +15,7 @@ module.exports = function createAdminService(deps) {
     if (!user) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    if (!isAdmin(user)) {
+    if (!createJudoka(user).isAdmin()) {
       throw new Error("Gestion des admins réservée aux admins.");
     }
     return user;
@@ -58,11 +58,8 @@ module.exports = function createAdminService(deps) {
     if (!target) {
       throw new Error("Aucun judoka trouvé avec cet email.");
     }
-    if (isAdmin(target)) {
-      throw new Error("Cet utilisateur est déjà admin.");
-    }
 
-    await judokasRepository.update(target.id_judoka, { role: "ADMIN" });
+    await judokasRepository.update(target.id_judoka, createJudoka(target).grantAdminRole());
 
     return {
       success: true,
@@ -91,18 +88,18 @@ module.exports = function createAdminService(deps) {
       throw new Error("Cette adresse est déjà invitée.");
     }
 
-    const invitationRecord = createAccessInvitationRecord({
+    const invitation = createAccessInvitation({
       email: normalizedEmail,
       invited_profile_type: targetProfileType,
       invited_by: user.id_judoka
     });
 
-    await invitationsRepository.insert(invitationRecord);
+    await invitationsRepository.insert(invitation.toRecord());
 
     return {
       success: true,
-      email: invitationRecord.email,
-      invited_profile_type: invitationRecord.invited_profile_type,
+      email: invitation.email,
+      invited_profile_type: invitation.invited_profile_type,
       message: "Invitation d'accès enregistrée."
     };
   }
@@ -117,11 +114,11 @@ module.exports = function createAdminService(deps) {
     }
 
     const target = await userContextService.getJudokaById(idJudoka);
-    if (!target || !isAdmin(target)) {
+    if (!target) {
       throw new Error("Admin introuvable.");
     }
 
-    await judokasRepository.update(idJudoka, { role: "NORMAL" });
+    await judokasRepository.update(idJudoka, createJudoka(target).revokeAdminRole(user.id_judoka));
 
     return { success: true, message: "Droits admin retirés." };
   }
