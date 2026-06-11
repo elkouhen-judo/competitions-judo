@@ -57,6 +57,21 @@ function toCombatReadModel(combat = {}, extra = {}) {
   };
 }
 
+function toCombatReadModelsWithJudokas(combats = [], judokas = [], options = {}) {
+  const formatJudokaDisplayName = options.formatJudokaDisplayName || (judoka => {
+    return [judoka.firstName, judoka.lastName].filter(Boolean).join(" ");
+  });
+  const judokasById = new Map(judokas.map(judoka => [String(judoka.judokaId), judoka]));
+
+  return combats.map(combat => {
+    const domainCombat = toDomainCombat(combat);
+    const judoka = judokasById.get(String(domainCombat.judokaId));
+    return toCombatReadModel(domainCombat, {
+      judokaDisplayName: judoka ? formatJudokaDisplayName(judoka) : domainCombat.judokaId
+    });
+  });
+}
+
 function toInvitationReadModel(invitation = {}) {
   return {
     email: invitation.email,
@@ -75,6 +90,7 @@ module.exports = {
   toDomainJudoka,
   toDomainManagedChild,
   toCombatReadModel,
+  toCombatReadModelsWithJudokas,
   toCompetitionReadModel,
   toInvitationReadModel,
   toJudokaReadModel
