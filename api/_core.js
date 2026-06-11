@@ -3,7 +3,6 @@ const { randomUUID } = require("node:crypto");
 const SUPABASE_URL_ENV = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_KEY_ENV = "SUPABASE_SERVICE_ROLE_KEY";
 const SUPABASE_ANON_KEY_ENV = "SUPABASE_ANON_KEY";
-const SUPABASE_AUTH_ADMIN_JWT_ENV = "SUPABASE_AUTH_ADMIN_JWT";
 
 function getRequiredEnv(name) {
   const value = process.env[name];
@@ -17,8 +16,7 @@ function getSupabaseConfig() {
   return {
     url: getRequiredEnv(SUPABASE_URL_ENV).replace(/\/$/, ""),
     serviceRoleKey: getRequiredEnv(SUPABASE_SERVICE_ROLE_KEY_ENV),
-    anonKey: getRequiredEnv(SUPABASE_ANON_KEY_ENV),
-    authAdminJwt: process.env[SUPABASE_AUTH_ADMIN_JWT_ENV] || ""
+    anonKey: getRequiredEnv(SUPABASE_ANON_KEY_ENV)
   };
 }
 
@@ -170,72 +168,6 @@ async function verifySupabaseUser(accessToken) {
   }
 
   return authUser.email;
-}
-
-async function createConfirmedAuthUser(email, password) {
-  const cleanEmail = cleanText(email).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-    throw new Error("Email invalide.");
-  }
-  if (String(password || "").length < 6) {
-    throw new Error("Le mot de passe doit contenir au moins 6 caractères.");
-  }
-
-  const config = getSupabaseConfig();
-  const authAdminToken = isJwtLikeToken(config.authAdminJwt)
-    ? config.authAdminJwt
-    : (isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : "");
-
-  if (!authAdminToken) {
-    const signupResponse = await fetch(`${config.url}/auth/v1/signup`, {
-      method: "POST",
-      headers: createSupabaseHeaders(config.anonKey, {
-        authorizationToken: config.anonKey
-      }),
-      body: JSON.stringify({
-        email: cleanEmail,
-        password
-      })
-    });
-    const signupBody = await signupResponse.text();
-
-    if (!signupResponse.ok) {
-      if (/already|registered|exists|duplicate|unique/i.test(signupBody)) {
-        throw new Error("Ce compte existe déjà. Vérifiez le mot de passe saisi ou utilisez mot de passe oublié.");
-      }
-      throw new Error(signupBody || "Création du compte d'authentification impossible.");
-    }
-
-    return {
-      requiresEmailConfirmation: true,
-      user: signupBody ? JSON.parse(signupBody) : {}
-    };
-  }
-
-  const response = await fetch(`${config.url}/auth/v1/admin/users`, {
-    method: "POST",
-    headers: createSupabaseHeaders(config.serviceRoleKey, {
-      authorizationToken: authAdminToken
-    }),
-    body: JSON.stringify({
-      email: cleanEmail,
-      password,
-      email_confirm: true
-    })
-  });
-  const body = await response.text();
-
-  if (!response.ok) {
-    if (/already|registered|exists|duplicate|unique/i.test(body)) {
-      throw new Error("Ce compte existe déjà. Vérifiez le mot de passe saisi ou utilisez mot de passe oublié.");
-    }
-    throw new Error(body || "Création du compte d'authentification impossible.");
-  }
-
-  return {
-    requiresEmailConfirmation: false,
-    user: body ? JSON.parse(body) : {}
-  };
 }
 
 function isAdmin(user) {
@@ -701,7 +633,6 @@ const methods = {
 
 module.exports = {
   getSupabaseConfig,
-  createConfirmedAuthUser,
   methods,
   verifySupabaseUser
 };
