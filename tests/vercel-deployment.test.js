@@ -134,13 +134,14 @@ test("judoka home keeps competition creation available", () => {
 });
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
-  assert.match(competitionsService, /const competitionDraft = createCompetition\(competition,\s*ownerJudokaId\);/);
+  assert.match(competitionsService, /const domainCompetitionInput = toDomainCompetition\(competition\);/);
+  assert.match(competitionsService, /const competitionDraft = createCompetition\(domainCompetitionInput,\s*ownerJudokaId\);/);
   assert.match(competitionsService, /const competitionId = competition\.competitionId \|\| competition\.id_competition;/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
   assert.match(competitionDomain, /function createCompetitionDraft\(competition = \{\}\)/);
-  assert.match(competitionDomain, /ageCategory: competition\.ageCategory \|\| competition\.categorie_age \|\| ""/);
-  assert.match(competitionDomain, /weightCategory: competition\.weightCategory \|\| competition\.categorie_poids \|\| ""/);
+  assert.match(competitionDomain, /ageCategory: competition\.ageCategory \|\| ""/);
+  assert.match(competitionDomain, /weightCategory: competition\.weightCategory \|\| ""/);
   assert.doesNotMatch(competitionDomain, /nom:\s*name/);
   assert.doesNotMatch(competitionDomain, /categorie_age:/);
   assert.doesNotMatch(competitionDomain, /categorie_poids:/);
@@ -165,13 +166,13 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(managedChild\.accountEmail,\s*idJudoka\)/);
   assert.match(childrenService, /const managedChild = createManagedChild\(\{/);
   assert.match(childrenService, /const deletionDecision = decideManagedChildRemoval\(\{/);
-  assert.match(judokaDomain, /function createManagedChild\(\{ judokaId,\s*id_judoka,\s*accountEmail,\s*email,\s*name,\s*firstName,\s*lastName,\s*prenom,\s*nom \}\)/);
-  assert.match(judokaDomain, /accountEmail: accountEmail !== undefined \? accountEmail : email/);
-  assert.match(judokaDomain, /function updateManagedChild\(\{ accountEmail,\s*email,\s*name,\s*firstName,\s*lastName,\s*prenom,\s*nom \}\)/);
+  assert.match(judokaDomain, /function createManagedChild\(\{ judokaId,\s*accountEmail,\s*name,\s*firstName,\s*lastName \}\)/);
+  assert.match(judokaDomain, /judokaId: createJudokaId\(judokaId\)/);
+  assert.match(judokaDomain, /function updateManagedChild\(\{ accountEmail,\s*name,\s*firstName,\s*lastName \}\)/);
   assert.match(emailDomain, /function createOptionalEmail\(value,\s*message = "Email invalide\."\)/);
   assert.match(judokaDomain, /function decideManagedChildRemoval\(\{ child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink \}\)/);
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
-  assert.match(childrenService, /isParent: isParent\(user\)/);
+  assert.match(childrenService, /isParent: isParent\(domainUser\)/);
   assert.match(judokaDomain, /accessRole: "NORMAL"/);
 });
 
@@ -195,8 +196,8 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
   assert.match(adminService, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
   assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
-  assert.match(adminService, /createJudoka\(target\)\.grantAdminRole\(\)/);
-  assert.match(adminService, /createJudoka\(target\)\.revokeAdminRole\(user\.id_judoka\)/);
+  assert.match(adminService, /createJudoka\(toDomainJudoka\(target\)\)\.grantAdminRole\(\)/);
+  assert.match(adminService, /createJudoka\(toDomainJudoka\(target\)\)\.revokeAdminRole\(user\.id_judoka\)/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("ADMIN"\) \};/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("NORMAL"\) \};/);
   assert.match(adminService, /async function revokeAdminRole\(email,\s*idJudoka\)/);
@@ -222,14 +223,16 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
   assert.match(userContextService, /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/);
-  assert.match(userContextService, /assertCanAccessJudokaProfile\(user,\s*targetId,\s*userContext\.managedJudokaScope \|\| userContext\.managedJudokaIds \|\| \[\]\);/);
+  assert.match(userContextService, /assertCanAccessJudokaProfile\(toDomainJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope \|\| userContext\.managedJudokaIds \|\| \[\]\);/);
   assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaIds\)/);
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
   assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
-  assert.match(profileService, /return buildJudokaProfileSnapshot\(\{/);
-  assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.resultat \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
-  assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.resultat \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
+  assert.match(profileService, /const snapshot = buildJudokaProfileSnapshot\(\{/);
+  assert.match(profileService, /competitions: competitions\.map\(toDomainCompetition\),/);
+  assert.match(profileService, /combats: combats\.map\(toDomainCombat\),/);
+  assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
   assert.match(seasonStatisticsDomain, /seasonWins/);
@@ -238,7 +241,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
 });
 
 test("admin owner selection is not restricted by parent-managed scope", () => {
-  assert.match(permissions, /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && \(competition\.ownerJudokaId \|\| competition\.id_judoka\);\s*\}/);
+  assert.match(permissions, /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && competition\.ownerJudokaId;\s*\}/);
   assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/);
   assert.match(permissions, /const inScope = managedJudokaIds && typeof managedJudokaIds\.includes === "function"[\s\S]*managedJudokaIds\.includes\(ownerJudokaId\)[\s\S]*\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\);/);
 });
@@ -285,7 +288,8 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(textHelpers, /function normalizeLastName\(value\)/);
   assert.match(adminService, /async function getAccessInvitation\(email\)/);
   assert.match(adminService, /async function getAccessInvitations\(\)/);
-  assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(user\)/);
+  assert.match(coreIndex, /const domainUser = toDomainJudoka\(user\);/);
+  assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
   assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
   assert.match(competitionsService, /judoka_nom: judoka \? `\$\{judoka\.prenom\} \$\{normalizeLastName\(judoka\.nom\)\}` : combat\.id_judoka/);
