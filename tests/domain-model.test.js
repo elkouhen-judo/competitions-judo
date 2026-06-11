@@ -323,3 +323,46 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
   assert.deepEqual(snapshot.bestSeasonResults.map(result => result.id_competition), ["COMP2", "COMP1"]);
 });
+
+test("season statistics fall back to the latest season with competition data", () => {
+  const snapshot = buildJudokaProfileSnapshot({
+    judoka: { id_judoka: "JUDO123", prenom: "Aya", nom: "Martin" },
+    competitions: [
+      {
+        id_competition: "COMP2",
+        nom: "Tournoi B",
+        date: "2025-02-01",
+        categorie_age: "Cadet",
+        categorie_poids: "-55 kg",
+        classement: "1er"
+      },
+      {
+        id_competition: "COMP1",
+        nom: "Tournoi A",
+        date: "2024-10-01",
+        categorie_age: "Cadet",
+        categorie_poids: "-52 kg",
+        classement: "3e"
+      }
+    ],
+    combats: [
+      { id_combat: "CB2", id_competition: "COMP2", resultat: "V" },
+      { id_combat: "CB1", id_competition: "COMP1", resultat: "D" }
+    ],
+    getCompetitionCategoryLabel: competition => [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - "),
+    getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[value] || Number.POSITIVE_INFINITY),
+    getCurrentSeasonBounds: referenceDate => (
+      referenceDate
+        ? { start: "2024-09-01", end: "2025-08-31", label: "2024-2025" }
+        : { start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }
+    ),
+    isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
+  });
+
+  assert.equal(snapshot.season.label, "2024-2025");
+  assert.equal(snapshot.seasonCompetitionCount, 2);
+  assert.equal(snapshot.seasonCombatCount, 2);
+  assert.equal(snapshot.seasonWins, 1);
+  assert.equal(snapshot.seasonLosses, 1);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.id_competition), ["COMP2", "COMP1"]);
+});
