@@ -155,11 +155,11 @@ test("access invitation domain normalizes invited profile type", () => {
 test("competition domain builds a normalized entity", () => {
   const competition = createCompetition(
     {
-      name: "Tournoi regional",
-      competitionDate: "2026-06-11",
-      ageCategory: "Cadet",
-      weightCategory: "-55 kg",
-      seasonResult: "3e"
+      name: " Tournoi regional ",
+      competitionDate: " 2026-06-11 ",
+      ageCategory: " Cadet ",
+      weightCategory: " -55 kg ",
+      seasonResult: " 3e "
     },
     "JUDO123"
   );
@@ -187,6 +187,14 @@ test("competition domain builds a normalized entity", () => {
   assert.equal(defaultCompetition.seasonResult, "");
 
   assert.throws(() => createCompetition({ name: "", competitionDate: "" }, "JUDO123"), /Nom et date obligatoires/);
+  assert.throws(
+    () => createCompetition({ name: "   ", competitionDate: "2026-06-11" }, "JUDO123"),
+    /Nom et date obligatoires/
+  );
+  assert.throws(
+    () => createCompetition({ name: "Tournoi", competitionDate: "2026-02-31" }, "JUDO123"),
+    /Date de compétition invalide/
+  );
 });
 
 test("competition domain enforces combat ownership", () => {
