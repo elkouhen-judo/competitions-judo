@@ -118,6 +118,13 @@
       min-width: 0;
     }
 
+    .logout-button {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
     .message {
       padding: 0 10px;
       margin-bottom: 10px;

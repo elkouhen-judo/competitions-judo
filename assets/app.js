@@ -73,6 +73,48 @@
       localStorage.removeItem(sessionStorageKey);
     }
 
+    function resetApplicationState() {
+      currentUser = null;
+      isAdmin = false;
+      isParent = false;
+      canManageChildren = false;
+      competitions = [];
+      currentCompetition = null;
+      judokas = [];
+      currentCombats = [];
+      currentJudokaProfile = null;
+      managedAdmins = [];
+      managedAccessInvitations = [];
+      managedChildren = [];
+      canManageCurrentCompetition = false;
+      canEditCurrentCompetition = false;
+      previousView = "homeView";
+    }
+
+    async function logoutUser() {
+      clearMessage();
+      const session = readVercelSession();
+
+      if (session && session.access_token && runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey) {
+        try {
+          await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/logout`, {
+            method: "POST",
+            headers: {
+              ...getSupabaseAnonymousAuthHeaders(),
+              "Authorization": "Bearer " + session.access_token
+            }
+          });
+        } catch (_error) {
+          // Local logout must still happen if the remote session is already invalid.
+        }
+      }
+
+      clearVercelSession();
+      resetApplicationState();
+      showVercelLogin();
+      showSuccess("Vous êtes déconnecté.");
+    }
+
     function getVercelAuthRedirectUrl() {
       const baseUrl = runtimeConfig.appUrl || window.location.origin;
       return new URL(window.location.pathname || "/", baseUrl).toString();
