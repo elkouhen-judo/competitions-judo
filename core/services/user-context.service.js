@@ -1,3 +1,5 @@
+const { toDomainJudoka } = require("./domain-adapters");
+
 module.exports = function createUserContextService(deps) {
   const {
     judokasRepository,
@@ -61,10 +63,11 @@ module.exports = function createUserContextService(deps) {
     let judokas = [];
     let managedJudokaIds = [];
     let managedJudokaScope = createManagedJudokaScope([]);
+    const domainUser = toDomainJudoka(user);
 
-    if (isAdmin(user)) {
+    if (isAdmin(domainUser)) {
       judokas = await getJudokas();
-    } else if (isParent(user)) {
+    } else if (isParent(domainUser)) {
       const children = await getParentManagedJudokas(user.id_judoka);
       const alreadyIncluded = children.some(j => String(j.id_judoka) === String(user.id_judoka));
       judokas = alreadyIncluded ? children : [user, ...children];
@@ -85,7 +88,7 @@ module.exports = function createUserContextService(deps) {
       throw new Error("Judoka introuvable.");
     }
 
-    assertCanAccessJudokaProfile(user, targetId, userContext.managedJudokaScope || userContext.managedJudokaIds || []);
+    assertCanAccessJudokaProfile(toDomainJudoka(user), targetId, userContext.managedJudokaScope || userContext.managedJudokaIds || []);
     return { user, target };
   }
 

@@ -2,8 +2,7 @@ const { createCompetitionId, createJudokaId, createOptionalCompetitionId } = req
 const { createCombat } = require("./combat");
 
 function createCompetitionDraft(competition = {}) {
-  const name = competition.name || competition.nom;
-  const competitionDate = competition.competitionDate || competition.date;
+  const { name, competitionDate } = competition;
 
   if (!name || !competitionDate) {
     throw new Error("Nom et date obligatoires.");
@@ -12,16 +11,16 @@ function createCompetitionDraft(competition = {}) {
   return {
     name,
     competitionDate,
-    ageCategory: competition.ageCategory || competition.categorie_age || "",
-    weightCategory: competition.weightCategory || competition.categorie_poids || "",
-    seasonResult: competition.seasonResult || competition.classement || ""
+    ageCategory: competition.ageCategory || "",
+    weightCategory: competition.weightCategory || "",
+    seasonResult: competition.seasonResult || ""
   };
 }
 
 function createCompetition(competition, ownerJudokaId) {
   const draft = createCompetitionDraft(competition);
   const resolvedOwnerJudokaId = createJudokaId(ownerJudokaId, "Judoka participant obligatoire.");
-  const competitionId = createOptionalCompetitionId(competition && (competition.competitionId || competition.id_competition));
+  const competitionId = createOptionalCompetitionId(competition && competition.competitionId);
 
   const record = {
     competitionId,
@@ -40,8 +39,8 @@ function createCompetition(competition, ownerJudokaId) {
       return String(record.ownerJudokaId) === String(judokaId);
     },
     assertCanContainCombat(combat) {
-      const combatCompetitionId = combat && (combat.competitionId || combat.id_competition);
-      const combatJudokaId = combat && (combat.judokaId || combat.id_judoka);
+      const combatCompetitionId = combat && combat.competitionId;
+      const combatJudokaId = combat && combat.judokaId;
 
       if (!combat || String(combatCompetitionId) !== String(record.competitionId || "")) {
         throw new Error("Ce combat n'appartient pas à cette compétition.");
@@ -54,7 +53,7 @@ function createCompetition(competition, ownerJudokaId) {
       const combat = createCombat({
         ...combatDraft,
         competitionId: record.competitionId,
-        judokaId: combatDraft.judokaId || combatDraft.id_judoka || record.ownerJudokaId
+        judokaId: combatDraft.judokaId || record.ownerJudokaId
       });
       this.assertCanContainCombat(combat);
       return combat;
@@ -63,8 +62,8 @@ function createCompetition(competition, ownerJudokaId) {
 }
 
 function createPersistedCompetition(competition) {
-  createCompetitionId(competition && (competition.competitionId || competition.id_competition));
-  return createCompetition(competition, competition.ownerJudokaId || competition.id_judoka);
+  createCompetitionId(competition && competition.competitionId);
+  return createCompetition(competition, competition.ownerJudokaId);
 }
 
 function assertCompetitionCanContainCombat(competition, combat) {

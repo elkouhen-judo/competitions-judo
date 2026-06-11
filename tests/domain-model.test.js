@@ -20,17 +20,17 @@ const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics
 
 test("permission policy derives access from immutable profile type and role", () => {
   const scope = createManagedJudokaScope(["PARENT1", "CHILD1"]);
-  assert.equal(permissions.isParent({ profile_type: "PARENT", role: "NORMAL" }), true);
-  assert.equal(permissions.isAdmin({ profile_type: "JUDOKA", role: "ADMIN" }), true);
-  assert.equal(permissions.canManageChildrenProfile({ profile_type: "JUDOKA", role: "ADMIN" }), false);
+  assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
+  assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
+  assert.equal(permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }), false);
   assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
-    { id_judoka: "PARENT1", profile_type: "PARENT", role: "NORMAL" },
+    { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     "CHILD1",
     scope
   ));
   assert.deepEqual(scope.toIds(), ["PARENT1", "CHILD1"]);
   assert.throws(() => permissions.assertCanAccessJudokaProfile(
-    { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
+    { judokaId: "JUDO1", profileType: "JUDOKA", accessRole: "NORMAL" },
     "OTHER",
     []
   ), /Accès refusé/);
@@ -46,10 +46,10 @@ test("email value object normalizes and validates addresses", () => {
 
 test("judoka domain creates and updates managed child records with invariants", () => {
   const child = createManagedChild({
-    id_judoka: "JUDO123",
-    email: "child@example.com",
-    prenom: "Aya",
-    nom: "Martin"
+    judokaId: "JUDO123",
+    accountEmail: "child@example.com",
+    firstName: "Aya",
+    lastName: "Martin"
   });
 
   assert.equal(child.hasDirectAccount(), true);
@@ -64,9 +64,9 @@ test("judoka domain creates and updates managed child records with invariants", 
   assert.equal("role" in child, false);
 
   const updatedChild = updateManagedChild({
-    email: "",
-    prenom: "Aya",
-    nom: "Martin"
+    accountEmail: "",
+    firstName: "Aya",
+    lastName: "Martin"
   });
 
   assert.equal(updatedChild.accountEmail, null);
@@ -76,21 +76,21 @@ test("judoka domain creates and updates managed child records with invariants", 
   assert.equal("prenom" in updatedChild, false);
   assert.equal("nom" in updatedChild, false);
 
-  assert.throws(() => createManagedChild({ prenom: "", nom: "Martin" }), /Prénom et nom/);
+  assert.throws(() => createManagedChild({ firstName: "", lastName: "Martin" }), /Prénom et nom/);
 });
 
 test("judoka domain handles admin role lifecycle and child removal decisions", () => {
   const admin = createJudoka({
-    id_judoka: "JUDOADMIN",
-    email: "admin@example.com",
-    profile_type: "PARENT",
-    role: "ADMIN"
+    judokaId: "JUDOADMIN",
+    accountEmail: "admin@example.com",
+    profileType: "PARENT",
+    accessRole: "ADMIN"
   });
   const normalUser = createJudoka({
-    id_judoka: "JUDO123",
-    email: "user@example.com",
-    profile_type: "JUDOKA",
-    role: "NORMAL"
+    judokaId: "JUDO123",
+    accountEmail: "user@example.com",
+    profileType: "JUDOKA",
+    accessRole: "NORMAL"
   });
 
   assert.deepEqual(normalUser.grantAdminRole(), { accessRole: "ADMIN" });
@@ -100,7 +100,7 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
 
   assert.deepEqual(
     decideManagedChildRemoval({
-      child: { id_judoka: "JUDO123", email: null, profile_type: "JUDOKA", role: "NORMAL" },
+      child: { judokaId: "JUDO123", accountEmail: null, profileType: "JUDOKA", accessRole: "NORMAL" },
       hasCompetitions: false,
       hasCombats: false,
       hasOtherParentLink: false
@@ -113,7 +113,7 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
 
   assert.deepEqual(
     decideManagedChildRemoval({
-      child: { id_judoka: "JUDO123", email: "child@example.com", profile_type: "JUDOKA", role: "NORMAL" },
+      child: { judokaId: "JUDO123", accountEmail: "child@example.com", profileType: "JUDOKA", accessRole: "NORMAL" },
       hasCompetitions: false,
       hasCombats: false,
       hasOtherParentLink: false
@@ -151,11 +151,11 @@ test("access invitation domain normalizes invited profile type", () => {
 test("competition domain builds a normalized entity", () => {
   const competition = createCompetition(
     {
-      nom: "Tournoi regional",
-      date: "2026-06-11",
-      categorie_age: "Cadet",
-      categorie_poids: "-55 kg",
-      classement: "3e"
+      name: "Tournoi regional",
+      competitionDate: "2026-06-11",
+      ageCategory: "Cadet",
+      weightCategory: "-55 kg",
+      seasonResult: "3e"
     },
     "JUDO123"
   );
@@ -177,43 +177,43 @@ test("competition domain builds a normalized entity", () => {
   assert.equal("classement" in competition, false);
   assert.equal(typeof competition.assertCanContainCombat, "function");
 
-  const defaultCompetition = createCompetition({ nom: "Tournoi regional", date: "2026-06-11" }, "JUDO123");
+  const defaultCompetition = createCompetition({ name: "Tournoi regional", competitionDate: "2026-06-11" }, "JUDO123");
   assert.equal(defaultCompetition.ageCategory, "");
   assert.equal(defaultCompetition.weightCategory, "");
   assert.equal(defaultCompetition.seasonResult, "");
 
-  assert.throws(() => createCompetition({ nom: "", date: "" }, "JUDO123"), /Nom et date obligatoires/);
+  assert.throws(() => createCompetition({ name: "", competitionDate: "" }, "JUDO123"), /Nom et date obligatoires/);
 });
 
 test("competition domain enforces combat ownership", () => {
   const competition = {
-    id_competition: "COMP123",
-    id_judoka: "JUDO123",
-    nom: "Tournoi regional",
-    date: "2026-06-11"
+    competitionId: "COMP123",
+    ownerJudokaId: "JUDO123",
+    name: "Tournoi regional",
+    competitionDate: "2026-06-11"
   };
 
   assert.doesNotThrow(() => assertCompetitionCanContainCombat(competition, {
-    id_competition: "COMP123",
-    id_judoka: "JUDO123",
-    resultat: "V"
+    competitionId: "COMP123",
+    judokaId: "JUDO123",
+    result: "V"
   }));
 
   assert.throws(() => assertCompetitionCanContainCombat(competition, {
-    id_competition: "COMP123",
-    id_judoka: "JUDO999",
-    resultat: "V"
+    competitionId: "COMP123",
+    judokaId: "JUDO999",
+    result: "V"
   }), /judoka de la compétition/);
 });
 
 test("combat domain enforces allowed results and required identifiers", () => {
   const combat = createCombat({
-    id_judoka: "JUDO123",
-    id_competition: "COMP123",
-    adversaire: "Lee",
-    resultat: "v",
-    type_victoire: "Ippon",
-    deroule: "Bon rythme"
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    opponent: "Lee",
+    result: "v",
+    victoryType: "Ippon",
+    notes: "Bon rythme"
   });
 
   assert.equal(combat.judokaId, "JUDO123");
@@ -231,10 +231,10 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal("deroule" in combat, false);
 
   const updatedCombat = updateCombat({
-    id_combat: "CB123",
-    id_judoka: "JUDO123",
-    id_competition: "COMP123",
-    resultat: "D"
+    combatId: "CB123",
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "D"
   });
   assert.equal(updatedCombat.combatId, "CB123");
   assert.equal(updatedCombat.judokaId, "JUDO123");
@@ -245,37 +245,37 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.notes, "");
 
   assert.throws(
-    () => createCombat({ id_judoka: "JUDO123", id_competition: "COMP123", resultat: "X" }),
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "X" }),
     /Résultat invalide/
   );
 });
 
 test("season statistics domain computes current season snapshot", () => {
   const snapshot = buildJudokaProfileSnapshot({
-    judoka: { id_judoka: "JUDO123", prenom: "Aya", nom: "Martin" },
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
       {
-        id_competition: "COMP2",
-        nom: "Tournoi B",
-        date: "2026-02-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-55 kg",
-        classement: "1er"
+        competitionId: "COMP2",
+        name: "Tournoi B",
+        competitionDate: "2026-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        seasonResult: "1er"
       },
       {
-        id_competition: "COMP1",
-        nom: "Tournoi A",
-        date: "2025-10-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-52 kg",
-        classement: "3e"
+        competitionId: "COMP1",
+        name: "Tournoi A",
+        competitionDate: "2025-10-01",
+        ageCategory: "Cadet",
+        weightCategory: "-52 kg",
+        seasonResult: "3e"
       }
     ],
     combats: [
-      { id_combat: "CB2", id_competition: "COMP2", resultat: "V" },
-      { id_combat: "CB1", id_competition: "COMP1", resultat: "D" }
+      { combatId: "CB2", competitionId: "COMP2", result: "V" },
+      { combatId: "CB1", competitionId: "COMP1", result: "D" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - "),
+    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
     getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[value] || Number.POSITIVE_INFINITY),
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
@@ -285,44 +285,44 @@ test("season statistics domain computes current season snapshot", () => {
   assert.equal(snapshot.seasonCombatCount, 2);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
-  assert.equal(snapshot.bestSeasonResults[0].id_competition, "COMP2");
+  assert.equal(snapshot.bestSeasonResults[0].competitionId, "COMP2");
   assert.equal(snapshot.lastCompetition.weightCategory, "-55 kg");
 });
 
 test("season statistics keep latest competition details and normalize combat results", () => {
   const snapshot = buildJudokaProfileSnapshot({
-    judoka: { id_judoka: "JUDO123", prenom: "Aya", nom: "Martin" },
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
       {
-        id_competition: "COMP3",
-        nom: "Tournoi C",
-        date: "2026-03-10",
-        categorie_age: "Junior",
-        categorie_poids: "-57 kg",
-        classement: "Non classé"
+        competitionId: "COMP3",
+        name: "Tournoi C",
+        competitionDate: "2026-03-10",
+        ageCategory: "Junior",
+        weightCategory: "-57 kg",
+        seasonResult: "Non classé"
       },
       {
-        id_competition: "COMP2",
-        nom: "Tournoi B",
-        date: "2026-02-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-55 kg",
-        classement: "1er"
+        competitionId: "COMP2",
+        name: "Tournoi B",
+        competitionDate: "2026-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        seasonResult: "1er"
       },
       {
-        id_competition: "COMP1",
-        nom: "Tournoi A",
-        date: "2025-10-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-52 kg",
-        classement: "3e"
+        competitionId: "COMP1",
+        name: "Tournoi A",
+        competitionDate: "2025-10-01",
+        ageCategory: "Cadet",
+        weightCategory: "-52 kg",
+        seasonResult: "3e"
       }
     ],
     combats: [
-      { id_combat: "CB2", id_competition: "COMP2", resultat: "v" },
-      { id_combat: "CB1", id_competition: "COMP1", resultat: "d" }
+      { combatId: "CB2", competitionId: "COMP2", result: "v" },
+      { combatId: "CB1", competitionId: "COMP1", result: "d" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - "),
+    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
     getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY),
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
@@ -332,38 +332,38 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.seasonCombatCount, 2);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
-  assert.equal(snapshot.lastCompetition.id_competition, "COMP3");
+  assert.equal(snapshot.lastCompetition.competitionId, "COMP3");
   assert.equal(snapshot.lastCompetition.category, "Junior - -57 kg");
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.id_competition), ["COMP2", "COMP1"]);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
 });
 
 test("season statistics fall back to the latest season with competition data", () => {
   const snapshot = buildJudokaProfileSnapshot({
-    judoka: { id_judoka: "JUDO123", prenom: "Aya", nom: "Martin" },
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
       {
-        id_competition: "COMP2",
-        nom: "Tournoi B",
-        date: "2025-02-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-55 kg",
-        classement: "1er"
+        competitionId: "COMP2",
+        name: "Tournoi B",
+        competitionDate: "2025-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        seasonResult: "1er"
       },
       {
-        id_competition: "COMP1",
-        nom: "Tournoi A",
-        date: "2024-10-01",
-        categorie_age: "Cadet",
-        categorie_poids: "-52 kg",
-        classement: "3e"
+        competitionId: "COMP1",
+        name: "Tournoi A",
+        competitionDate: "2024-10-01",
+        ageCategory: "Cadet",
+        weightCategory: "-52 kg",
+        seasonResult: "3e"
       }
     ],
     combats: [
-      { id_combat: "CB2", id_competition: "COMP2", resultat: "V" },
-      { id_combat: "CB1", id_competition: "COMP1", resultat: "D" }
+      { combatId: "CB2", competitionId: "COMP2", result: "V" },
+      { combatId: "CB1", competitionId: "COMP1", result: "D" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - "),
+    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
     getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[value] || Number.POSITIVE_INFINITY),
     getCurrentSeasonBounds: referenceDate => (
       referenceDate
@@ -378,5 +378,5 @@ test("season statistics fall back to the latest season with competition data", (
   assert.equal(snapshot.seasonCombatCount, 2);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.id_competition), ["COMP2", "COMP1"]);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
 });

@@ -10,10 +10,10 @@ function normalizeOptionalEmail(email) {
 
 function createJudoka(user = {}) {
   const name = user.name || createOptionalPersonName(user);
-  const judokaId = user.judokaId || user.id_judoka;
-  const accountEmail = normalizeOptionalEmail(user.accountEmail || user.email);
-  const profileType = createProfileType(user.profileType || user.profile_type || "JUDOKA");
-  const accessRole = createRole(user.accessRole || user.role || "NORMAL");
+  const judokaId = user.judokaId;
+  const accountEmail = normalizeOptionalEmail(user.accountEmail);
+  const profileType = createProfileType(user.profileType || "JUDOKA");
+  const accessRole = createRole(user.accessRole || "NORMAL");
   const record = { judokaId, accountEmail, name, profileType, accessRole };
 
   return {
@@ -44,21 +44,21 @@ function createJudoka(user = {}) {
   };
 }
 
-function createManagedChild({ judokaId, id_judoka, accountEmail, email, name, firstName, lastName, prenom, nom }) {
-  const childName = name || createPersonName({ firstName, lastName, prenom, nom });
+function createManagedChild({ judokaId, accountEmail, name, firstName, lastName }) {
+  const childName = name || createPersonName({ firstName, lastName });
 
   return createJudoka({
-    judokaId: createJudokaId(judokaId || id_judoka),
-    accountEmail: accountEmail !== undefined ? accountEmail : email,
+    judokaId: createJudokaId(judokaId),
+    accountEmail,
     name: childName,
     profileType: "JUDOKA",
     accessRole: "NORMAL"
   });
 }
 
-function updateManagedChild({ accountEmail, email, name, firstName, lastName, prenom, nom }) {
-  const childName = name || createPersonName({ firstName, lastName, prenom, nom });
-  const normalizedAccountEmail = normalizeOptionalEmail(accountEmail !== undefined ? accountEmail : email);
+function updateManagedChild({ accountEmail, name, firstName, lastName }) {
+  const childName = name || createPersonName({ firstName, lastName });
+  const normalizedAccountEmail = normalizeOptionalEmail(accountEmail);
 
   return {
     accountEmail: normalizedAccountEmail,

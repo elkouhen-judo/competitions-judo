@@ -2,9 +2,9 @@ function cleanNamePart(value) {
   return String(value || "").trim();
 }
 
-function createPersonName({ firstName, lastName, prenom, nom } = {}) {
-  const normalizedFirstName = cleanNamePart(firstName || prenom);
-  const normalizedLastName = cleanNamePart(lastName || nom);
+function createPersonName({ firstName, lastName } = {}) {
+  const normalizedFirstName = cleanNamePart(firstName);
+  const normalizedLastName = cleanNamePart(lastName);
 
   if (!normalizedFirstName || !normalizedLastName) {
     throw new Error("Prénom et nom de l'enfant obligatoires.");
@@ -19,9 +19,9 @@ function createPersonName({ firstName, lastName, prenom, nom } = {}) {
   };
 }
 
-function createOptionalPersonName({ firstName, lastName, prenom, nom } = {}) {
-  const normalizedFirstName = cleanNamePart(firstName || prenom);
-  const normalizedLastName = cleanNamePart(lastName || nom);
+function createOptionalPersonName({ firstName, lastName } = {}) {
+  const normalizedFirstName = cleanNamePart(firstName);
+  const normalizedLastName = cleanNamePart(lastName);
 
   return {
     firstName: normalizedFirstName,

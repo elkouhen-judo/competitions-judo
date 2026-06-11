@@ -10,7 +10,7 @@ function getCompetitionResultRank(value) {
 }
 
 function getCompetitionCategoryLabel(competition) {
-  return [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - ");
+  return [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - ");
 }
 
 module.exports = {

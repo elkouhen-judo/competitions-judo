@@ -2,11 +2,11 @@ const { isParentProfileType } = require("./profile-type");
 const { isAdminRole } = require("./role");
 
 function isAdmin(user) {
-  return isAdminRole(user && user.role);
+  return isAdminRole(user && user.accessRole);
 }
 
 function isParent(user) {
-  return isParentProfileType(user && user.profile_type);
+  return isParentProfileType(user && user.profileType);
 }
 
 function canManageChildrenProfile(user) {
@@ -20,11 +20,11 @@ function assertCanManageChildrenProfile(user) {
 }
 
 function getUserJudokaId(user) {
-  return user && (user.judokaId || user.id_judoka);
+  return user && user.judokaId;
 }
 
 function getCompetitionOwnerJudokaId(competition) {
-  return competition && (competition.ownerJudokaId || competition.id_judoka);
+  return competition && competition.ownerJudokaId;
 }
 
 function canManageCombatFor(user, idJudoka, managedJudokaIds) {

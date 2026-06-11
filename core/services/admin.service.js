@@ -1,3 +1,5 @@
+const { toDomainJudoka } = require("./domain-adapters");
+
 module.exports = function createAdminService(deps) {
   const {
     invitationsRepository,
@@ -14,7 +16,7 @@ module.exports = function createAdminService(deps) {
     if (!user) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    if (!createJudoka(user).isAdmin()) {
+    if (!createJudoka(toDomainJudoka(user)).isAdmin()) {
       throw new Error("Gestion des admins réservée aux admins.");
     }
     return user;
@@ -55,7 +57,7 @@ module.exports = function createAdminService(deps) {
       throw new Error("Aucun judoka trouvé avec cet email.");
     }
 
-    await judokasRepository.update(target.id_judoka, createJudoka(target).grantAdminRole());
+    await judokasRepository.update(target.id_judoka, createJudoka(toDomainJudoka(target)).grantAdminRole());
 
     return {
       success: true,
@@ -106,7 +108,7 @@ module.exports = function createAdminService(deps) {
       throw new Error("Admin introuvable.");
     }
 
-    await judokasRepository.update(idJudoka, createJudoka(target).revokeAdminRole(user.id_judoka));
+    await judokasRepository.update(idJudoka, createJudoka(toDomainJudoka(target)).revokeAdminRole(user.id_judoka));
 
     return { success: true, message: "Droits admin retirés." };
   }
