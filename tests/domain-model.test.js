@@ -306,6 +306,14 @@ test("season statistics keep latest competition details and normalize combat res
     judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
       {
+        competitionId: "COMP1",
+        name: "Tournoi A",
+        competitionDate: "2025-10-01",
+        ageCategory: "Cadet",
+        weightCategory: "-52 kg",
+        seasonResult: "3e"
+      },
+      {
         competitionId: "COMP3",
         name: "Tournoi C",
         competitionDate: "2026-03-10",
@@ -320,14 +328,6 @@ test("season statistics keep latest competition details and normalize combat res
         ageCategory: "Cadet",
         weightCategory: "-55 kg",
         seasonResult: "1er"
-      },
-      {
-        competitionId: "COMP1",
-        name: "Tournoi A",
-        competitionDate: "2025-10-01",
-        ageCategory: "Cadet",
-        weightCategory: "-52 kg",
-        seasonResult: "3e"
       }
     ],
     combats: [
@@ -355,20 +355,20 @@ test("season statistics fall back to the latest season with competition data", (
     judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
       {
-        competitionId: "COMP2",
-        name: "Tournoi B",
-        competitionDate: "2025-02-01",
-        ageCategory: "Cadet",
-        weightCategory: "-55 kg",
-        seasonResult: "1er"
-      },
-      {
         competitionId: "COMP1",
         name: "Tournoi A",
         competitionDate: "2024-10-01",
         ageCategory: "Cadet",
         weightCategory: "-52 kg",
         seasonResult: "3e"
+      },
+      {
+        competitionId: "COMP2",
+        name: "Tournoi B",
+        competitionDate: "2025-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        seasonResult: "1er"
       }
     ],
     combats: [
