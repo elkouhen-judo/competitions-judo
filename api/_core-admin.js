@@ -1,1 +1,1 @@
-module.exports = require("./core/services/admin.service");
+module.exports = require("../core/services/admin.service");

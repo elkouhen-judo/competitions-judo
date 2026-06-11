@@ -1,11 +1,11 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const permissions = require("../api/core/domain/access/permission-policy");
-const { createManagedChildRecord, updateManagedChildRecord } = require("../api/core/domain/access/judoka");
-const { createAccessInvitationRecord } = require("../api/core/domain/access/access-invitation");
-const { toCompetitionRecord } = require("../api/core/domain/competitions/competition");
-const { createCombatRecord, updateCombatRecord } = require("../api/core/domain/competitions/combat");
+const permissions = require("../core/domain/access/permission-policy");
+const { createManagedChildRecord, updateManagedChildRecord } = require("../core/domain/access/judoka");
+const { createAccessInvitationRecord } = require("../core/domain/access/access-invitation");
+const { toCompetitionRecord } = require("../core/domain/competitions/competition");
+const { createCombatRecord, updateCombatRecord } = require("../core/domain/competitions/combat");
 
 test("permission policy derives access from immutable profile type and role", () => {
   assert.equal(permissions.isParent({ profile_type: "PARENT", role: "NORMAL" }), true);
