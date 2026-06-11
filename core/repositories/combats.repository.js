@@ -9,13 +9,14 @@ module.exports = function createCombatsRepository(deps) {
   } = deps;
 
   function toCombatRecord(combat) {
+    const draft = combat.draft || combat;
     return {
-      id_judoka: combat.id_judoka,
-      id_competition: combat.id_competition,
-      adversaire: combat.adversaire,
-      resultat: combat.resultat,
-      type_victoire: combat.type_victoire,
-      deroule: combat.deroule
+      id_judoka: combat.judokaId || combat.id_judoka,
+      id_competition: combat.competitionId || combat.id_competition,
+      adversaire: draft.opponent !== undefined ? draft.opponent : draft.adversaire,
+      resultat: draft.result || draft.resultat,
+      type_victoire: draft.victoryType !== undefined ? draft.victoryType : draft.type_victoire,
+      deroule: draft.notes !== undefined ? draft.notes : draft.deroule
     };
   }
 

@@ -1,24 +1,41 @@
 const { createCombatResult } = require("./combat-result");
+const { createCombatId, createCompetitionId, createJudokaId } = require("../shared/identity");
 
-function createCombat(combat) {
-  if (!combat || !combat.id_competition) {
-    throw new Error("Compétition obligatoire.");
-  }
-  if (!combat.id_judoka) {
-    throw new Error("Judoka obligatoire.");
-  }
-
-  const record = {
-    id_judoka: combat.id_judoka,
-    id_competition: combat.id_competition,
-    adversaire: combat.adversaire || "",
-    resultat: createCombatResult(combat.resultat),
-    type_victoire: combat.type_victoire || "",
-    deroule: combat.deroule || ""
-  };
+function createCombatDraft(combat = {}) {
+  const result = createCombatResult(combat.result || combat.resultat);
 
   return {
-    ...record
+    opponent: combat.opponent || combat.adversaire || "",
+    result,
+    victoryType: combat.victoryType || combat.type_victoire || "",
+    notes: combat.notes || combat.deroule || "",
+    adversaire: combat.opponent || combat.adversaire || "",
+    resultat: result,
+    type_victoire: combat.victoryType || combat.type_victoire || "",
+    deroule: combat.notes || combat.deroule || ""
+  };
+}
+
+function createCombat(combat) {
+  const competitionId = createCompetitionId(combat && (combat.competitionId || combat.id_competition));
+  const judokaId = createJudokaId(combat && (combat.judokaId || combat.id_judoka));
+  const combatId = combat && (combat.combatId || combat.id_combat)
+    ? createCombatId(combat.combatId || combat.id_combat)
+    : null;
+  const draft = createCombatDraft(combat);
+
+  return {
+    combatId,
+    competitionId,
+    judokaId,
+    draft,
+    id_combat: combatId,
+    id_judoka: judokaId,
+    id_competition: competitionId,
+    adversaire: draft.opponent,
+    resultat: draft.result,
+    type_victoire: draft.victoryType,
+    deroule: draft.notes
   };
 }
 
@@ -32,5 +49,6 @@ function updateCombat(combat) {
 
 module.exports = {
   createCombat,
+  createCombatDraft,
   updateCombat
 };

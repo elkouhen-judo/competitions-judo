@@ -9,6 +9,7 @@ const {
   updateManagedChild
 } = require("../core/domain/access/judoka");
 const { createEmail, createOptionalEmail } = require("../core/domain/access/email");
+const { createManagedJudokaScope } = require("../core/domain/access/managed-judoka-scope");
 const { createAccessInvitation } = require("../core/domain/access/access-invitation");
 const {
   assertCompetitionCanContainCombat,
@@ -18,14 +19,16 @@ const { createCombat, updateCombat } = require("../core/domain/competitions/comb
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
 test("permission policy derives access from immutable profile type and role", () => {
+  const scope = createManagedJudokaScope(["PARENT1", "CHILD1"]);
   assert.equal(permissions.isParent({ profile_type: "PARENT", role: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profile_type: "JUDOKA", role: "ADMIN" }), true);
   assert.equal(permissions.canManageChildrenProfile({ profile_type: "JUDOKA", role: "ADMIN" }), false);
   assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
     { id_judoka: "PARENT1", profile_type: "PARENT", role: "NORMAL" },
     "CHILD1",
-    ["PARENT1", "CHILD1"]
+    scope
   ));
+  assert.deepEqual(scope.toIds(), ["PARENT1", "CHILD1"]);
   assert.throws(() => permissions.assertCanAccessJudokaProfile(
     { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
     "OTHER",
@@ -62,11 +65,12 @@ test("judoka domain creates and updates managed child records with invariants", 
     nom: "Martin"
   });
 
-  assert.deepEqual(updatedChild, {
-    email: null,
-    prenom: "Aya",
-    nom: "Martin"
-  });
+  assert.equal(updatedChild.email, null);
+  assert.equal(updatedChild.accountEmail, null);
+  assert.equal(updatedChild.name.firstName, "Aya");
+  assert.equal(updatedChild.name.lastName, "Martin");
+  assert.equal(updatedChild.prenom, "Aya");
+  assert.equal(updatedChild.nom, "Martin");
 
   assert.throws(() => createManagedChild({ prenom: "", nom: "Martin" }), /Prénom et nom/);
 });
@@ -153,8 +157,11 @@ test("competition domain builds a normalized entity", () => {
   );
 
   assert.equal(competition.id_judoka, "JUDO123");
+  assert.equal(competition.ownerJudokaId, "JUDO123");
   assert.equal(competition.nom, "Tournoi regional");
   assert.equal(competition.date, "2026-06-11");
+  assert.equal(competition.draft.name, "Tournoi regional");
+  assert.equal(competition.draft.competitionDate, "2026-06-11");
   assert.equal(competition.categorie_age, "Cadet");
   assert.equal(competition.categorie_poids, "-55 kg");
   assert.equal(competition.classement, "3e");
@@ -199,31 +206,29 @@ test("combat domain enforces allowed results and required identifiers", () => {
     deroule: "Bon rythme"
   });
 
-  assert.deepEqual(combat, {
+  assert.equal(combat.judokaId, "JUDO123");
+  assert.equal(combat.competitionId, "COMP123");
+  assert.equal(combat.id_judoka, "JUDO123");
+  assert.equal(combat.id_competition, "COMP123");
+  assert.equal(combat.adversaire, "Lee");
+  assert.equal(combat.resultat, "V");
+  assert.equal(combat.draft.result, "V");
+  assert.equal(combat.type_victoire, "Ippon");
+  assert.equal(combat.deroule, "Bon rythme");
+
+  const updatedCombat = updateCombat({
+    id_combat: "CB123",
     id_judoka: "JUDO123",
     id_competition: "COMP123",
-    adversaire: "Lee",
-    resultat: "V",
-    type_victoire: "Ippon",
-    deroule: "Bon rythme"
+    resultat: "D"
   });
-
-  assert.deepEqual(
-    updateCombat({
-      id_combat: "CB123",
-      id_judoka: "JUDO123",
-      id_competition: "COMP123",
-      resultat: "D"
-    }),
-    {
-      id_judoka: "JUDO123",
-      id_competition: "COMP123",
-      adversaire: "",
-      resultat: "D",
-      type_victoire: "",
-      deroule: ""
-    }
-  );
+  assert.equal(updatedCombat.combatId, "CB123");
+  assert.equal(updatedCombat.id_judoka, "JUDO123");
+  assert.equal(updatedCombat.id_competition, "COMP123");
+  assert.equal(updatedCombat.adversaire, "");
+  assert.equal(updatedCombat.resultat, "D");
+  assert.equal(updatedCombat.type_victoire, "");
+  assert.equal(updatedCombat.deroule, "");
 
   assert.throws(
     () => createCombat({ id_judoka: "JUDO123", id_competition: "COMP123", resultat: "X" }),

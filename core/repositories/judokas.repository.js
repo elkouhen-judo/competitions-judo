@@ -10,20 +10,20 @@ module.exports = function createJudokasRepository(deps) {
 
   function toJudokaRecord(judoka) {
     return {
-      id_judoka: judoka.id_judoka,
-      email: judoka.email,
-      prenom: judoka.prenom,
-      nom: judoka.nom,
-      profile_type: judoka.profile_type,
-      role: judoka.role
+      id_judoka: judoka.judokaId || judoka.id_judoka,
+      email: judoka.accountEmail !== undefined ? judoka.accountEmail : judoka.email,
+      prenom: judoka.name ? judoka.name.firstName : judoka.prenom,
+      nom: judoka.name ? judoka.name.lastName : judoka.nom,
+      profile_type: judoka.profileType || judoka.profile_type,
+      role: judoka.accessRole || judoka.role
     };
   }
 
   function toManagedChildUpdateRecord(child) {
     return {
-      email: child.email,
-      prenom: child.prenom,
-      nom: child.nom
+      email: child.accountEmail !== undefined ? child.accountEmail : child.email,
+      prenom: child.name ? child.name.firstName : child.prenom,
+      nom: child.name ? child.name.lastName : child.nom
     };
   }
 
