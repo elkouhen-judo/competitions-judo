@@ -4,7 +4,8 @@ function getCompetitionResultRank(value) {
     "2e": 2,
     "3e": 3,
     "5e": 5,
-    "7e": 7
+    "7e": 7,
+    "non classé": 99
   };
   return ranking[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY;
 }

@@ -16,6 +16,7 @@ const {
   createCompetition
 } = require("../core/domain/competitions/competition");
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
+const { getCompetitionResultRank } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
 test("permission policy derives access from immutable profile type and role", () => {
@@ -335,7 +336,7 @@ test("season statistics keep latest competition details and normalize combat res
       { combatId: "CB1", competitionId: "COMP1", result: "d" }
     ],
     getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY),
+    getCompetitionResultRank,
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
@@ -347,7 +348,8 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.lastCompetition.competitionId, "COMP3");
   assert.equal(snapshot.lastCompetition.category, "Junior - -57 kg");
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1", "COMP3"]);
+  assert.equal(snapshot.bestSeasonResults[2].seasonResult, "Non classé");
 });
 
 test("season statistics fall back to the latest season with competition data", () => {
