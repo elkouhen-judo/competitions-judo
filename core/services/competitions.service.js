@@ -1,5 +1,5 @@
 const {
-  toCombatReadModel,
+  toCombatReadModelsWithJudokas,
   toCompetitionReadModel,
   toDomainCompetition,
   toDomainJudoka,
@@ -64,12 +64,8 @@ module.exports = function createCompetitionsService(deps) {
     }
 
     const judokas = access.kind === "OWN" ? [] : userContext.judokas.map(toJudokaReadModel);
-    const judokasById = new Map(judokas.map(j => [String(j.judokaId), j]));
-    const enriched = filtered.map(combat => {
-      const judoka = judokasById.get(String(combat.id_judoka));
-      return toCombatReadModel(combat, {
-        judokaDisplayName: judoka ? `${judoka.firstName} ${normalizeLastName(judoka.lastName)}` : combat.id_judoka
-      });
+    const enriched = toCombatReadModelsWithJudokas(filtered, judokas, {
+      formatJudokaDisplayName: judoka => `${judoka.firstName} ${normalizeLastName(judoka.lastName)}`
     });
 
     return {
