@@ -10,13 +10,8 @@ function normalizeEmail(value) {
   return cleanText(value).toLowerCase();
 }
 
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
-}
-
 module.exports = {
   cleanText,
-  isValidEmail,
   normalizeEmail,
   normalizeLastName
 };

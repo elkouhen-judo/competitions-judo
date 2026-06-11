@@ -23,12 +23,11 @@ const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season"
 const {
   createJudoka,
   createManagedChild,
-  createManagedChildRecord,
   decideManagedChildRemoval,
-  updateManagedChild,
-  updateManagedChildRecord
+  updateManagedChild
 } = require("./domain/access/judoka");
-const { createAccessInvitation, createAccessInvitationRecord } = require("./domain/access/access-invitation");
+const { createEmail } = require("./domain/access/email");
+const { createAccessInvitation } = require("./domain/access/access-invitation");
 const {
   assertCompetitionCanContainCombat,
   createCompetition,
@@ -57,6 +56,7 @@ const userContextService = createUserContextService({
   judokasRepository,
   parentLinksRepository,
   normalizeEmail: text.normalizeEmail,
+  assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
   isAdmin: permissions.isAdmin,
   isParent: permissions.isParent
 });
@@ -65,11 +65,10 @@ const adminService = createAdminService({
   invitationsRepository,
   judokasRepository,
   userContextService,
-  cleanText: text.cleanText,
   createAccessInvitation,
+  createEmail,
   createJudoka,
-  normalizeEmail: text.normalizeEmail,
-  isValidEmail: text.isValidEmail
+  normalizeEmail: text.normalizeEmail
 });
 
 const competitionsService = createCompetitionsService({
@@ -109,13 +108,9 @@ const childrenService = createChildrenService({
   cleanText: text.cleanText,
   createJudoka,
   createManagedChild,
-  createManagedChildRecord,
   decideManagedChildRemoval,
   isParent: permissions.isParent,
-  isValidEmail: text.isValidEmail,
-  normalizeEmail: text.normalizeEmail,
-  updateManagedChild,
-  updateManagedChildRecord
+  updateManagedChild
 });
 
 const profileService = createProfileService({
@@ -131,7 +126,7 @@ const profileService = createProfileService({
 
 const registrationService = createRegistrationService({
   adminService,
-  cleanText: text.cleanText,
+  createEmail,
   supabaseRpc: supabaseClient.supabaseRpc
 });
 

@@ -10,6 +10,7 @@ const {
   updateManagedChild,
   updateManagedChildRecord
 } = require("../core/domain/access/judoka");
+const { createEmail, createOptionalEmail } = require("../core/domain/access/email");
 const { createAccessInvitation, createAccessInvitationRecord } = require("../core/domain/access/access-invitation");
 const {
   assertCompetitionCanContainCombat,
@@ -24,6 +25,24 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(permissions.isParent({ profile_type: "PARENT", role: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profile_type: "JUDOKA", role: "ADMIN" }), true);
   assert.equal(permissions.canManageChildrenProfile({ profile_type: "JUDOKA", role: "ADMIN" }), false);
+  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
+    { id_judoka: "PARENT1", profile_type: "PARENT", role: "NORMAL" },
+    "CHILD1",
+    ["PARENT1", "CHILD1"]
+  ));
+  assert.throws(() => permissions.assertCanAccessJudokaProfile(
+    { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
+    "OTHER",
+    []
+  ), /Accès refusé/);
+});
+
+test("email value object normalizes and validates addresses", () => {
+  assert.equal(createEmail(" User@Example.COM "), "user@example.com");
+  assert.equal(createOptionalEmail(""), null);
+  assert.throws(() => createEmail("not-an-email"), /Email invalide/);
+  assert.throws(() => createEmail("", "Email invalide.", "Email obligatoire."), /Email obligatoire/);
+  assert.throws(() => createOptionalEmail("child@", "Email de l'enfant invalide."), /Email de l'enfant invalide/);
 });
 
 test("judoka domain creates and updates managed child records with invariants", () => {
@@ -141,6 +160,10 @@ test("access invitation domain normalizes invited profile type", () => {
   assert.throws(
     () => createAccessInvitationRecord({ email: "x@example.com", invited_profile_type: "coach" }),
     /Type de profil invalide/
+  );
+  assert.throws(
+    () => createAccessInvitationRecord({ email: "", invited_profile_type: "parent" }),
+    /Email d'invitation obligatoire/
   );
 });
 
