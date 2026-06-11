@@ -36,7 +36,7 @@ module.exports = function createCompetitionsService(deps) {
     const admin = isAdmin(domainUser);
     const parent = isParent(domainUser);
     const managedJudokaIds = userContext.managedJudokaIds || [];
-    const managedJudokaScope = userContext.managedJudokaScope || managedJudokaIds;
+    const managedJudokaScope = userContext.managedJudokaScope;
     const competitionRecord = await competitionsRepository.getById(idCompetition);
 
     if (!competitionRecord) {
@@ -82,8 +82,7 @@ module.exports = function createCompetitionsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const managedJudokaIds = userContext.managedJudokaIds || [];
-    const managedJudokaScope = userContext.managedJudokaScope || managedJudokaIds;
+    const managedJudokaScope = userContext.managedJudokaScope;
     const domainCompetitionInput = toDomainCompetition(competition);
     const ownerJudokaId = resolveCompetitionOwnerId(domainUser, domainCompetitionInput, managedJudokaScope);
     const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
@@ -119,8 +118,7 @@ module.exports = function createCompetitionsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const managedJudokaIds = userContext.managedJudokaIds || [];
-    const managedJudokaScope = userContext.managedJudokaScope || managedJudokaIds;
+    const managedJudokaScope = userContext.managedJudokaScope;
 
     if (!idCompetition) throw new Error("Compétition obligatoire.");
 
