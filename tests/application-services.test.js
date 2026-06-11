@@ -65,7 +65,7 @@ test("combats service rejects a combat attached to another judoka competition", 
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
-    canManageCombatFor: permissions.canManageCombatFor,
+    assertCanManageCombatFor: permissions.assertCanManageCombatFor,
     createPersistedCompetition,
     updateCombat,
     buildCombatId: () => "CB1"

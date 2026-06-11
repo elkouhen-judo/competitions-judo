@@ -244,6 +244,8 @@ test("admin owner selection is not restricted by parent-managed scope", () => {
   assert.match(permissions, /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && competition\.ownerJudokaId;\s*\}/);
   assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaScope\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/);
   assert.match(permissions, /function isInManagedScope\(managedJudokaScope,\s*idJudoka\) \{\s*return Boolean\(managedJudokaScope && managedJudokaScope\.includes\(idJudoka\)\);/);
+  assert.match(permissions, /function resolveJudokaDataAccess\(user,\s*managedJudokaScope\)/);
+  assert.match(competitionsService, /const access = resolveJudokaDataAccess\(domainUser,\s*managedJudokaScope\);/);
 });
 
 test("judoka lookup uses an exact normalized email match", () => {

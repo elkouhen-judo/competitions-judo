@@ -5,7 +5,7 @@ module.exports = function createCombatsService(deps) {
     combatsRepository,
     competitionsRepository,
     userContextService,
-    canManageCombatFor,
+    assertCanManageCombatFor,
     createCombatUpdate,
     createPersistedCompetition,
     buildCombatId
@@ -20,9 +20,7 @@ module.exports = function createCombatsService(deps) {
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
 
-    if (!canManageCombatFor(domainUser, judokaId, managedJudokaScope)) {
-      throw new Error("Ajout de ce combat non autorisé.");
-    }
+    assertCanManageCombatFor(domainUser, judokaId, managedJudokaScope, "Ajout de ce combat non autorisé.");
 
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
@@ -45,12 +43,13 @@ module.exports = function createCombatsService(deps) {
     const competitionId = domainCombat.competitionId;
     const existingCombat = await combatsRepository.getById(combatId);
     if (!existingCombat) throw new Error("Combat introuvable.");
-    if (!canManageCombatFor(domainUser, toDomainCombat(existingCombat).judokaId, managedJudokaScope)) {
-      throw new Error("Modification de ce combat non autorisée.");
-    }
-    if (!canManageCombatFor(domainUser, judokaId, managedJudokaScope)) {
-      throw new Error("Modification de ce combat non autorisée.");
-    }
+    assertCanManageCombatFor(
+      domainUser,
+      toDomainCombat(existingCombat).judokaId,
+      managedJudokaScope,
+      "Modification de ce combat non autorisée."
+    );
+    assertCanManageCombatFor(domainUser, judokaId, managedJudokaScope, "Modification de ce combat non autorisée.");
 
     createCombatUpdate(domainCombat);
     const competitionRecord = await competitionsRepository.getById(competitionId);
@@ -73,9 +72,12 @@ module.exports = function createCombatsService(deps) {
 
     const combat = await combatsRepository.getById(idCombat);
     if (!combat) throw new Error("Combat introuvable.");
-    if (!canManageCombatFor(domainUser, toDomainCombat(combat).judokaId, managedJudokaScope)) {
-      throw new Error("Suppression de ce combat non autorisée.");
-    }
+    assertCanManageCombatFor(
+      domainUser,
+      toDomainCombat(combat).judokaId,
+      managedJudokaScope,
+      "Suppression de ce combat non autorisée."
+    );
 
     await combatsRepository.remove(idCombat);
     return { success: true, message: "Combat supprimé." };
