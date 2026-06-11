@@ -3,11 +3,10 @@ module.exports = function createAdminService(deps) {
     invitationsRepository,
     judokasRepository,
     userContextService,
-    cleanText,
     createAccessInvitation,
+    createEmail,
     createJudoka,
-    normalizeEmail,
-    isValidEmail
+    normalizeEmail
   } = deps;
 
   async function requireAdminUser(email) {
@@ -49,10 +48,7 @@ module.exports = function createAdminService(deps) {
 
   async function grantAdminRole(email, targetEmail) {
     await requireAdminUser(email);
-    const normalizedEmail = cleanText(targetEmail).toLowerCase();
-    if (!normalizedEmail) {
-      throw new Error("Email obligatoire.");
-    }
+    const normalizedEmail = createEmail(targetEmail);
 
     const target = await userContextService.getCurrentUser(normalizedEmail);
     if (!target) {
@@ -70,29 +66,21 @@ module.exports = function createAdminService(deps) {
 
   async function saveAccessInvitation(email, targetEmail, targetProfileType) {
     const user = await requireAdminUser(email);
-    const normalizedEmail = normalizeEmail(targetEmail);
-    if (!normalizedEmail) {
-      throw new Error("Email d'invitation obligatoire.");
-    }
-    if (!isValidEmail(normalizedEmail)) {
-      throw new Error("Email d'invitation invalide.");
-    }
+    const invitation = createAccessInvitation({
+      email: targetEmail,
+      invited_profile_type: targetProfileType,
+      invited_by: user.id_judoka
+    });
 
-    const existingUser = await userContextService.getCurrentUser(normalizedEmail);
+    const existingUser = await userContextService.getCurrentUser(invitation.email);
     if (existingUser) {
       throw new Error("Ce compte dispose déjà d'un accès.");
     }
 
-    const existingInvitation = await getAccessInvitation(normalizedEmail);
+    const existingInvitation = await getAccessInvitation(invitation.email);
     if (existingInvitation) {
       throw new Error("Cette adresse est déjà invitée.");
     }
-
-    const invitation = createAccessInvitation({
-      email: normalizedEmail,
-      invited_profile_type: targetProfileType,
-      invited_by: user.id_judoka
-    });
 
     await invitationsRepository.insert(invitation.toRecord());
 

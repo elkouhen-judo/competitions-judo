@@ -31,6 +31,18 @@ function canManageCompetition(user, competition, managedJudokaIds) {
   return String(user.id_judoka) === String(competition.id_judoka);
 }
 
+function canAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
+  if (isAdmin(user)) return true;
+  if (isParent(user)) return (managedJudokaIds || []).includes(String(idJudoka));
+  return String(user.id_judoka) === String(idJudoka);
+}
+
+function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
+  if (!canAccessJudokaProfile(user, idJudoka, managedJudokaIds)) {
+    throw new Error("Accès refusé à cette fiche judoka.");
+  }
+}
+
 function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
   if (isAdmin(user)) {
     const ownerJudokaId = competition.id_judoka;
@@ -51,7 +63,9 @@ function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
 }
 
 module.exports = {
+  assertCanAccessJudokaProfile,
   assertCanManageChildrenProfile,
+  canAccessJudokaProfile,
   canManageChildrenProfile,
   canManageCombatFor,
   canManageCompetition,

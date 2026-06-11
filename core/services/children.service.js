@@ -12,8 +12,6 @@ module.exports = function createChildrenService(deps) {
     createJudoka,
     decideManagedChildRemoval,
     isParent,
-    isValidEmail,
-    normalizeEmail,
     updateManagedChild
   } = deps;
 
@@ -40,14 +38,6 @@ module.exports = function createChildrenService(deps) {
 
     const prenom = cleanText(child && child.prenom);
     const nom = cleanText(child && child.nom);
-    const childEmail = normalizeEmail(child && child.email);
-    if (!prenom || !nom) {
-      throw new Error("Prénom et nom de l'enfant obligatoires.");
-    }
-    if (childEmail && !isValidEmail(childEmail)) {
-      throw new Error("Email de l'enfant invalide.");
-    }
-    await userContextService.assertJudokaEmailAvailable(childEmail, child && child.id_judoka);
 
     if (child && child.id_judoka) {
       const existingChild = await userContextService.getManagedChild(user.id_judoka, child.id_judoka);
@@ -55,14 +45,13 @@ module.exports = function createChildrenService(deps) {
         throw new Error("Enfant introuvable.");
       }
 
-      await judokasRepository.update(
-        child.id_judoka,
-        updateManagedChild({
-          prenom,
-          nom,
-          email: childEmail
-        }).toRecord()
-      );
+      const updatedChild = updateManagedChild({
+        prenom,
+        nom,
+        email: child.email
+      });
+      await userContextService.assertJudokaEmailAvailable(updatedChild.email, child.id_judoka);
+      await judokasRepository.update(child.id_judoka, updatedChild.toRecord());
 
       return {
         success: true,
@@ -74,10 +63,11 @@ module.exports = function createChildrenService(deps) {
     const idJudoka = buildJudokaId();
     const managedChild = createManagedChild({
       id_judoka: idJudoka,
-      email: childEmail,
+      email: child && child.email,
       prenom,
       nom
     });
+    await userContextService.assertJudokaEmailAvailable(managedChild.email, idJudoka);
     await judokasRepository.insert(managedChild.toRecord());
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,
