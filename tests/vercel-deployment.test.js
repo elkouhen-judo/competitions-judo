@@ -230,7 +230,9 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.firstName\), normalizeLastName\(j && j\.lastName\)\]\.filter\(Boolean\)\.join\(" "\);/);
+  assert.match(userContextService, /const managedJudokaIds = judokas\.map\(j => String\(j\.id_judoka\)\);/);
   assert.match(userContextService, /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/);
+  assert.match(userContextService, /return \{ user, judokas, managedJudokaScope \};/);
   assert.match(userContextService, /assertCanAccessJudokaProfile\(toDomainJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/);
   assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaScope\)/);
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);

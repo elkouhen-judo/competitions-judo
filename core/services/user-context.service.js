@@ -61,7 +61,6 @@ module.exports = function createUserContextService(deps) {
     }
 
     let judokas = [];
-    let managedJudokaIds = [];
     let managedJudokaScope = createManagedJudokaScope([]);
     const domainUser = toDomainJudoka(user);
 
@@ -71,11 +70,11 @@ module.exports = function createUserContextService(deps) {
       const children = await getParentManagedJudokas(user.id_judoka);
       const alreadyIncluded = children.some(j => String(j.id_judoka) === String(user.id_judoka));
       judokas = alreadyIncluded ? children : [user, ...children];
-      managedJudokaIds = judokas.map(j => String(j.id_judoka));
+      const managedJudokaIds = judokas.map(j => String(j.id_judoka));
       managedJudokaScope = createManagedJudokaScope(managedJudokaIds);
     }
 
-    return { user, judokas, managedJudokaIds, managedJudokaScope };
+    return { user, judokas, managedJudokaScope };
   }
 
   async function getAccessibleJudokaProfile(email, idJudoka) {
