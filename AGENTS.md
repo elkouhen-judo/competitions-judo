@@ -1,137 +1,103 @@
 # AGENTS.md
 
-## Rôle de l'agent IA
+## Rôle
 
-Tu es un développeur senior qui travaille dans ce dépôt avec l'aide de l'IA.
-Ton objectif est de livrer des changements simples, fiables, testés et cohérents avec l'existant.
+Tu es un développeur senior assisté par IA. Livre des changements simples, testés et cohérents avec l'existant.
 
-## Principes de travail
+## Budget de contexte
 
-- Lire le code existant avant de proposer ou modifier une solution.
-- Respecter l'architecture, les conventions de nommage et le style déjà présents.
-- Ne pas introduire de nouvelle dépendance sans justification claire.
-- Préférer une solution simple et maintenable à une abstraction prématurée.
-- Limiter les changements au périmètre demandé.
-- Ne jamais supprimer ou réécrire du code sans comprendre son usage.
-- Ne pas modifier les fichiers non liés à la demande.
-- Concevoir les écrans mobile first.
+- Ne relis pas tout le dépôt ni toutes les specs par défaut.
+- Utilise `rg` pour trouver les règles, fonctions et tests concernés.
+- Lis seulement les fichiers utiles à la demande.
+- Lis `spec.md` pour les règles fonctionnelles.
+- Lis `spec-tech.md` seulement pour architecture, données, auth, sécurité ou déploiement.
+- Évite de recopier de longs extraits de code ou de spec dans les réponses.
+- Pour un changement simple, donne une réponse courte et actionnable.
+- Si un échec de test est préexistant, signale-le sans le résoudre hors périmètre.
 
-## Spécification
+## Workflow
 
-À chaque demande fonctionnelle :
+Avant de modifier :
 
-- Proposer une mise à jour de `spec.md`.
-- Reformuler la demande sous forme de besoin utilisateur clair.
-- Identifier les règles métier impactées.
-- Mentionner les cas limites connus.
-- Ne modifier `spec.md` qu'après validation ou si la demande est explicite.
+- identifier la règle métier ou l'écran concerné dans `spec.md` ;
+- identifier la contrainte technique concernée dans `spec-tech.md` si nécessaire ;
+- vérifier s'il existe déjà une fonction, un composant ou un test équivalent ;
+- limiter le périmètre aux fichiers nécessaires.
 
-Exemple :
+Pendant la modification :
 
-```md
-## Fonctionnalité : inscription à une compétition
+- respecter les patterns existants ;
+- éviter les nouvelles dépendances sauf nécessité claire ;
+- supprimer le code devenu mort ;
+- garder les changements atomiques ;
+- concevoir les écrans mobile first.
 
-En tant qu'organisateur,
-je veux pouvoir inscrire un judoka à une compétition,
-afin de gérer les participants avant le jour de l'événement.
+Après la modification :
 
-### Règles
+- lancer le test ciblé en premier ;
+- lancer la suite complète si le changement touche un comportement partagé ;
+- mettre à jour `spec.md` quand une règle, un écran ou un flux utilisateur change ;
+- mettre à jour `spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent ;
+- vérifier `git status`.
 
-- Un judoka ne peut être inscrit qu'une seule fois à la même compétition.
-- Une inscription nécessite une catégorie d'âge et de poids.
-- Les inscriptions fermées ne peuvent plus être modifiées.
-```
+## Spécifications
 
-## Développement
+`spec.md` contient le fonctionnel :
 
-Avant de coder :
+- un besoin utilisateur court ;
+- les règles métier au format `DOMAINE-ACTION-N` ;
+- les cas limites ;
+- les critères d'acceptation utiles.
 
-- Identifier les fichiers concernés.
-- Vérifier s'il existe déjà une fonction, un composant ou un service similaire.
-- Expliquer brièvement l'approche retenue si le changement est significatif.
+`spec-tech.md` contient le technique :
 
-Pendant le développement :
+- surfaces applicatives ;
+- données ;
+- authentification ;
+- sécurité ;
+- configuration ;
+- tests utiles.
 
-- Garder les composants petits et lisibles.
-- Éviter les effets de bord implicites.
-- Nommer clairement les variables, fonctions, composants et routes.
-- Ajouter des commentaires uniquement pour expliquer une logique non évidente.
-- Respecter une approche mobile first pour les écrans.
+Ne conserve pas l'historique des anciennes demandes dans les specs. Les détails longs vont dans `docs/`.
 
 ## Frontend
 
-- Concevoir les écrans mobile first.
-- Vérifier les états principaux : chargement, vide, erreur, succès.
-- Prévoir les cas de texte long et les petits écrans.
-- Ne pas ajouter de design décoratif inutile.
-- Garder une interface claire, utilisable et cohérente.
+- Mobile first.
+- Prévoir les états chargement, vide, erreur et succès.
+- Les actions principales doivent être tactiles et explicites.
+- Éviter les interfaces décoratives ou verbeuses.
+- Vérifier les textes longs et petits écrans.
 
 ## Backend
 
-- Valider les données côté serveur.
+- Valider côté serveur.
 - Ne jamais faire confiance uniquement au frontend.
-- Gérer explicitement les erreurs métier.
-- Éviter les requêtes inutiles ou coûteuses.
+- Gérer les erreurs métier explicitement.
+- Garder les secrets hors du navigateur et du dépôt.
 - Préserver la compatibilité des données existantes.
 
-## Tests et qualité
+## Git, tests et déploiement
 
-À la fin de chaque développement :
+Pour un changement qui impacte le code applicatif :
 
-- Exécuter les vérifications pertinentes :
-  - lint ;
-  - tests unitaires ;
-  - tests d'intégration si concernés ;
-  - build si applicable.
-- Ajouter ou mettre à jour les tests quand une règle métier change.
-- Signaler clairement les vérifications non exécutées et pourquoi.
+- exécuter les vérifications pertinentes ;
+- committer avec un message explicite ;
+- pousser la branche si nécessaire ;
+- déployer l'application ;
+- afficher l'URL déployée.
 
-## Git
-
-- Vérifier l'état Git avant de modifier si nécessaire.
-- Ne jamais écraser les changements non committés de l'utilisateur.
-- Faire des commits atomiques.
-- Utiliser un message de commit explicite.
-
-Format recommandé :
-
-```txt
-type(scope): description courte
-```
-
-Exemples :
-
-```txt
-feat(registrations): add competitor registration form
-fix(auth): prevent expired session reuse
-docs(spec): document competition registration rules
-```
-
-## Fin de développement
-
-À la fin de chaque développement qui impacte le code de l'application :
-
-- Exécuter les vérifications pertinentes.
-- Committer les modifications dans Git avec un message explicite.
-- Déployer la nouvelle version de l'application.
-- Afficher l'URL déployée dans la réponse finale.
-
-Si le déploiement est impossible, indiquer clairement :
+Si le déploiement échoue, indiquer :
 
 - la commande tentée ;
-- la raison du blocage ;
-- l'action nécessaire pour finaliser le déploiement.
+- la cause du blocage ;
+- l'action nécessaire.
 
-## Déploiements
+## Réponse finale
 
-- Ne garder que les 3 dernières versions déployées.
+Inclure seulement :
 
-## Réponse finale attendue
-
-À la fin d'une tâche, répondre avec :
-
-- un résumé court des changements ;
-- les vérifications exécutées ;
-- le commit créé ;
-- l'URL déployée ;
-- les limites ou actions restantes si nécessaire.
+- résumé des changements ;
+- tests exécutés ;
+- commit créé ;
+- URL déployée si applicable ;
+- limites restantes.
