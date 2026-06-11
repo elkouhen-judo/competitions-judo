@@ -89,7 +89,6 @@
       const authorizeUrl = new URL(`${runtimeConfig.supabaseUrl}/auth/v1/authorize`);
       authorizeUrl.searchParams.set("provider", "google");
       authorizeUrl.searchParams.set("redirect_to", getVercelAuthRedirectUrl());
-      authorizeUrl.searchParams.set("response_type", "token");
       window.location.href = authorizeUrl.toString();
     }
 
