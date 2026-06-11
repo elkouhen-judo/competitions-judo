@@ -137,8 +137,9 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /const competitionDraft = createCompetition\(competition,\s*ownerJudokaId\);/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competition\.id_competition,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
-  assert.match(competitionDomain, /categorie_age:\s*competition\.categorie_age \|\| ""/);
-  assert.match(competitionDomain, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
+  assert.match(competitionDomain, /function createCompetitionDraft\(competition = \{\}\)/);
+  assert.match(competitionDomain, /ageCategory: competition\.ageCategory \|\| competition\.categorie_age \|\| ""/);
+  assert.match(competitionDomain, /weightCategory: competition\.weightCategory \|\| competition\.categorie_poids \|\| ""/);
   assert.doesNotMatch(competitionDomain, /lieu:\s*""/);
   assert.doesNotMatch(competitionDomain, /poids_pesee:\s*""/);
 });
@@ -160,7 +161,8 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /const managedChild = createManagedChild\(\{/);
   assert.match(childrenService, /const deletionDecision = decideManagedChildRemoval\(\{/);
   assert.match(judokaDomain, /function createManagedChild\(\{ id_judoka,\s*email,\s*prenom,\s*nom \}\)/);
-  assert.match(judokaDomain, /email: normalizeOptionalEmail\(email\)/);
+  assert.match(judokaDomain, /const accountEmail = normalizeOptionalEmail\(email\);/);
+  assert.match(judokaDomain, /email: accountEmail/);
   assert.match(emailDomain, /function createOptionalEmail\(value,\s*message = "Email invalide\."\)/);
   assert.match(judokaDomain, /function decideManagedChildRemoval\(\{ child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink \}\)/);
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
@@ -214,7 +216,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
-  assert.match(userContextService, /assertCanAccessJudokaProfile\(user,\s*targetId,\s*userContext\.managedJudokaIds \|\| \[\]\);/);
+  assert.match(userContextService, /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/);
+  assert.match(userContextService, /assertCanAccessJudokaProfile\(user,\s*targetId,\s*userContext\.managedJudokaScope \|\| userContext\.managedJudokaIds \|\| \[\]\);/);
   assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaIds\)/);
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
@@ -229,7 +232,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
 
 test("admin owner selection is not restricted by parent-managed scope", () => {
   assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*if \(isAdmin\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*return ownerJudokaId;\s*\}\s*if \(isParent\(user\)\) \{/);
-  assert.match(permissions, /if \(isParent\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*if \(!\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\)\) \{\s*throw new Error\("Ce judoka n'est pas dans votre liste\."\);/);
+  assert.match(permissions, /const inScope = managedJudokaIds && typeof managedJudokaIds\.includes === "function"[\s\S]*managedJudokaIds\.includes\(ownerJudokaId\)[\s\S]*\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\);/);
 });
 
 test("judoka lookup uses an exact normalized email match", () => {

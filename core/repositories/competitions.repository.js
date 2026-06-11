@@ -9,13 +9,14 @@ module.exports = function createCompetitionsRepository(deps) {
   } = deps;
 
   function toCompetitionRecord(competition) {
+    const draft = competition.draft || competition;
     return {
-      id_judoka: competition.id_judoka,
-      nom: competition.nom,
-      date: competition.date,
-      categorie_age: competition.categorie_age,
-      categorie_poids: competition.categorie_poids,
-      classement: competition.classement
+      id_judoka: competition.ownerJudokaId || competition.id_judoka,
+      nom: draft.name || draft.nom,
+      date: draft.competitionDate || draft.date,
+      categorie_age: draft.ageCategory !== undefined ? draft.ageCategory : draft.categorie_age,
+      categorie_poids: draft.weightCategory !== undefined ? draft.weightCategory : draft.categorie_poids,
+      classement: draft.seasonResult !== undefined ? draft.seasonResult : draft.classement
     };
   }
 

@@ -1,25 +1,31 @@
 const { createOptionalEmail } = require("./email");
+const { createOptionalPersonName, createPersonName } = require("./person-name");
 const { createProfileType } = require("./profile-type");
 const { createRole } = require("./role");
-
-function assertManagedChildName(prenom, nom) {
-  if (!prenom || !nom) {
-    throw new Error("Prénom et nom de l'enfant obligatoires.");
-  }
-}
+const { createJudokaId } = require("../shared/identity");
 
 function normalizeOptionalEmail(email) {
   return createOptionalEmail(email, "Email de l'enfant invalide.");
 }
 
 function createJudoka(user = {}) {
+  const name = user.name || createOptionalPersonName(user);
+  const judokaId = user.judokaId || user.id_judoka;
+  const accountEmail = normalizeOptionalEmail(user.accountEmail || user.email);
+  const profileType = createProfileType(user.profileType || user.profile_type || "JUDOKA");
+  const accessRole = createRole(user.accessRole || user.role || "NORMAL");
   const record = {
-    id_judoka: user.id_judoka,
-    email: normalizeOptionalEmail(user.email),
-    prenom: user.prenom,
-    nom: user.nom,
-    profile_type: createProfileType(user.profile_type || "JUDOKA"),
-    role: createRole(user.role || "NORMAL")
+    judokaId,
+    accountEmail,
+    name,
+    profileType,
+    accessRole,
+    id_judoka: judokaId,
+    email: accountEmail,
+    prenom: name.firstName,
+    nom: name.lastName,
+    profile_type: profileType,
+    role: accessRole
   };
 
   return {
@@ -51,25 +57,27 @@ function createJudoka(user = {}) {
 }
 
 function createManagedChild({ id_judoka, email, prenom, nom }) {
-  assertManagedChildName(prenom, nom);
+  const name = createPersonName({ prenom, nom });
 
   return createJudoka({
-    id_judoka,
+    id_judoka: createJudokaId(id_judoka),
     email,
-    prenom,
-    nom,
+    name,
     profile_type: "JUDOKA",
     role: "NORMAL"
   });
 }
 
 function updateManagedChild({ email, prenom, nom }) {
-  assertManagedChildName(prenom, nom);
+  const name = createPersonName({ prenom, nom });
+  const accountEmail = normalizeOptionalEmail(email);
 
   return {
-    email: normalizeOptionalEmail(email),
-    prenom,
-    nom
+    email: accountEmail,
+    accountEmail,
+    name,
+    prenom: name.firstName,
+    nom: name.lastName
   };
 }
 

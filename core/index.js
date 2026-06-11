@@ -27,12 +27,13 @@ const {
   updateManagedChild
 } = require("./domain/access/judoka");
 const { createEmail } = require("./domain/access/email");
+const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope");
 const { createAccessInvitation } = require("./domain/access/access-invitation");
 const {
-  assertCompetitionCanContainCombat,
-  createCompetition
+  createCompetition,
+  createPersistedCompetition
 } = require("./domain/competitions/competition");
-const { createCombat, updateCombat } = require("./domain/competitions/combat");
+const { updateCombat } = require("./domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
@@ -55,6 +56,7 @@ const userContextService = createUserContextService({
   parentLinksRepository,
   normalizeEmail: text.normalizeEmail,
   assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
+  createManagedJudokaScope,
   isAdmin: permissions.isAdmin,
   isParent: permissions.isParent
 });
@@ -86,10 +88,9 @@ const combatsService = createCombatsService({
   combatsRepository,
   competitionsRepository,
   userContextService,
-  assertCompetitionCanContainCombat,
   canManageCombatFor: permissions.canManageCombatFor,
-  createCombat,
   createCombatUpdate: updateCombat,
+  createPersistedCompetition,
   buildCombatId: ids.buildCombatId
 });
 

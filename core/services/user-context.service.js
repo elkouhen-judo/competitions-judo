@@ -4,6 +4,7 @@ module.exports = function createUserContextService(deps) {
     parentLinksRepository,
     normalizeEmail,
     assertCanAccessJudokaProfile,
+    createManagedJudokaScope,
     isAdmin,
     isParent
   } = deps;
@@ -59,6 +60,7 @@ module.exports = function createUserContextService(deps) {
 
     let judokas = [];
     let managedJudokaIds = [];
+    let managedJudokaScope = createManagedJudokaScope([]);
 
     if (isAdmin(user)) {
       judokas = await getJudokas();
@@ -67,9 +69,10 @@ module.exports = function createUserContextService(deps) {
       const alreadyIncluded = children.some(j => String(j.id_judoka) === String(user.id_judoka));
       judokas = alreadyIncluded ? children : [user, ...children];
       managedJudokaIds = judokas.map(j => String(j.id_judoka));
+      managedJudokaScope = createManagedJudokaScope(managedJudokaIds);
     }
 
-    return { user, judokas, managedJudokaIds };
+    return { user, judokas, managedJudokaIds, managedJudokaScope };
   }
 
   async function getAccessibleJudokaProfile(email, idJudoka) {
@@ -82,7 +85,7 @@ module.exports = function createUserContextService(deps) {
       throw new Error("Judoka introuvable.");
     }
 
-    assertCanAccessJudokaProfile(user, targetId, userContext.managedJudokaIds || []);
+    assertCanAccessJudokaProfile(user, targetId, userContext.managedJudokaScope || userContext.managedJudokaIds || []);
     return { user, target };
   }
 
