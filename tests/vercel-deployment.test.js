@@ -275,6 +275,7 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
   assert.match(uiBundle, /id="userInfo"/);
   assert.match(uiBundle, /id="logoutButton"/);
+  assert.match(uiBundle, /aria-label="Déconnexion"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
   assert.match(uiBundle, /getJudokaDisplayName\(currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
