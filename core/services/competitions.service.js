@@ -1,4 +1,10 @@
-const { toDomainCompetition, toDomainJudoka } = require("./domain-adapters");
+const {
+  toCombatReadModel,
+  toCompetitionReadModel,
+  toDomainCompetition,
+  toDomainJudoka,
+  toJudokaReadModel
+} = require("./domain-adapters");
 
 module.exports = function createCompetitionsService(deps) {
   const {
@@ -17,18 +23,19 @@ module.exports = function createCompetitionsService(deps) {
   async function getCompetitionsForUser(user, managedJudokaScope) {
     const domainUser = toDomainJudoka(user);
     const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
+    let records = [];
 
     if (access.kind === "ALL") {
-      return competitionsRepository.listAll();
-    }
-
-    if (access.kind === "MANAGED") {
+      records = await competitionsRepository.listAll();
+    } else if (access.kind === "MANAGED") {
       const managedJudokaIds = access.managedJudokaScope.toIds();
       if (!managedJudokaIds.length) return [];
-      return competitionsRepository.listByJudokaIds(managedJudokaIds);
+      records = await competitionsRepository.listByJudokaIds(managedJudokaIds);
+    } else {
+      records = await competitionsRepository.listByJudoka(access.judokaId);
     }
 
-    return competitionsRepository.listByJudoka(access.judokaId);
+    return records.map(toCompetitionReadModel);
   }
 
   async function getCompetitionDetail(email, idCompetition) {
@@ -56,18 +63,17 @@ module.exports = function createCompetitionsService(deps) {
       filtered = await combatsRepository.listByCompetition(idCompetition);
     }
 
-    const judokas = access.kind === "OWN" ? [] : userContext.judokas;
-    const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
+    const judokas = access.kind === "OWN" ? [] : userContext.judokas.map(toJudokaReadModel);
+    const judokasById = new Map(judokas.map(j => [String(j.judokaId), j]));
     const enriched = filtered.map(combat => {
       const judoka = judokasById.get(String(combat.id_judoka));
-      return {
-        ...combat,
-        judoka_nom: judoka ? `${judoka.prenom} ${normalizeLastName(judoka.nom)}` : combat.id_judoka
-      };
+      return toCombatReadModel(combat, {
+        judokaDisplayName: judoka ? `${judoka.firstName} ${normalizeLastName(judoka.lastName)}` : combat.id_judoka
+      });
     });
 
     return {
-      competition: competitionRecord,
+      competition: toCompetitionReadModel(competitionRecord),
       combats: enriched,
       isAdmin: access.kind === "ALL",
       isParent: access.kind === "MANAGED",
@@ -86,7 +92,7 @@ module.exports = function createCompetitionsService(deps) {
     const ownerJudokaId = resolveCompetitionOwnerId(domainUser, domainCompetitionInput, managedJudokaScope);
     const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
 
-    const competitionId = competition.competitionId || competition.id_competition;
+    const competitionId = domainCompetitionInput.competitionId;
 
     if (competitionId) {
       const existingCompetition = await competitionsRepository.getById(competitionId);
@@ -101,7 +107,7 @@ module.exports = function createCompetitionsService(deps) {
       await competitionsRepository.update(competitionId, competitionDraft);
       return {
         success: true,
-        id_competition: competitionId,
+        competitionId,
         message: "Compétition modifiée."
       };
     }
@@ -111,7 +117,7 @@ module.exports = function createCompetitionsService(deps) {
 
     return {
       success: true,
-      id_competition: idCompetition,
+      competitionId: idCompetition,
       message: "Compétition créée."
     };
   }

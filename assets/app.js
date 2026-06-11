@@ -243,8 +243,8 @@
       clearMessage();
 
       const profile = {
-        prenom: document.getElementById("registrationPrenom").value,
-        nom: document.getElementById("registrationNom").value
+        firstName: document.getElementById("registrationPrenom").value,
+        lastName: document.getElementById("registrationNom").value
       };
 
       runServer(
@@ -376,7 +376,7 @@
       if (isAdmin) {
         return "";
       }
-      return String(currentUser.id_judoka || "");
+      return String(currentUser.judokaId || "");
     }
 
     function ensureHomeActiveJudokaSelection() {
@@ -391,14 +391,14 @@
         return;
       }
 
-      if (currentValue && accessibleJudokas.some(j => String(j.id_judoka) === String(currentValue))) {
+      if (currentValue && accessibleJudokas.some(j => String(j.judokaId) === String(currentValue))) {
         return;
       }
 
       const defaultId = getDefaultHomeJudokaId();
-      const defaultJudoka = accessibleJudokas.find(j => String(j.id_judoka) === String(defaultId));
+      const defaultJudoka = accessibleJudokas.find(j => String(j.judokaId) === String(defaultId));
       input.value = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
-      hidden.value = defaultJudoka ? String(defaultJudoka.id_judoka) : "";
+      hidden.value = defaultJudoka ? String(defaultJudoka.judokaId) : "";
     }
 
     function getHomeActiveJudokaId() {
@@ -408,12 +408,12 @@
       if (isAdmin || isParent) {
         return document.getElementById("filterJudoka").value || "";
       }
-      return String(currentUser.id_judoka || "");
+      return String(currentUser.judokaId || "");
     }
 
     function getHomeActiveJudoka() {
       const targetId = getHomeActiveJudokaId();
-      return getAccessibleHomeJudokas().find(j => String(j.id_judoka) === String(targetId)) || null;
+      return getAccessibleHomeJudokas().find(j => String(j.judokaId) === String(targetId)) || null;
     }
 
     function syncHomeContext() {
@@ -507,7 +507,7 @@
 
       let filteredComps = competitions;
       if (activeJudokaId) {
-        filteredComps = competitions.filter(c => String(c.id_judoka) === String(activeJudokaId));
+        filteredComps = competitions.filter(c => String(c.ownerJudokaId) === String(activeJudokaId));
       }
 
       if (!filteredComps.length) {
@@ -515,22 +515,22 @@
         return;
       }
 
-      const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
+      const judokasById = new Map(judokas.map(j => [String(j.judokaId), j]));
 
       let html = `<div class="list">`;
 
       filteredComps.forEach(c => {
-        const judoka = judokasById.get(String(c.id_judoka));
+        const judoka = judokasById.get(String(c.ownerJudokaId));
         const judokaNom = judoka ? getJudokaDisplayName(judoka) : "";
         html += `
           <article class="card competition-card">
-            <button class="card-button competition-open-button" type="button" onclick="openCompetition('${escapeAttribute(c.id_competition)}')">
+            <button class="card-button competition-open-button" type="button" onclick="openCompetition('${escapeAttribute(c.competitionId)}')">
               <span class="competition-card-button-copy">
-                <span class="card-title">${escapeHtml(c.nom || "Compétition")}</span>
+                <span class="card-title">${escapeHtml(c.name || "Compétition")}</span>
                 <span class="card-meta">
                   <span class="meta-row">
                     <span class="meta-label">Date</span>
-                    <span class="meta-value">${formatDate(c.date)}</span>
+                    <span class="meta-value">${formatDate(c.competitionDate)}</span>
                   </span>
                   ${(isAdmin || isParent) ? `<span class="meta-row">
                     <span class="meta-label">Judoka</span>
@@ -541,7 +541,7 @@
               </span>
             </button>
             ${isAdmin ? `<div class="card-actions">
-              <button class="button-danger" type="button" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">
+              <button class="button-danger" type="button" data-id="${escapeAttribute(c.competitionId)}" data-name="${escapeAttribute(c.name || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 Supprimer
               </button>
@@ -598,11 +598,11 @@
     }
 
     function renderCompetitionDetail() {
-      document.getElementById("competitionTitle").innerText = currentCompetition.nom || "Compétition";
+      document.getElementById("competitionTitle").innerText = currentCompetition.name || "Compétition";
       document.getElementById("competitionSubtitle").innerText = "Détail de la compétition";
-      document.getElementById("competitionDate").innerText = formatDate(currentCompetition.date);
+      document.getElementById("competitionDate").innerText = formatDate(currentCompetition.competitionDate);
 
-      const agePoids = [currentCompetition.categorie_age, currentCompetition.categorie_poids].filter(Boolean).join(" - ");
+      const agePoids = [currentCompetition.ageCategory, currentCompetition.weightCategory].filter(Boolean).join(" - ");
       if (agePoids) {
         document.getElementById("row_competitionAgePoids").classList.remove("hidden");
         document.getElementById("competitionAgePoids").innerText = agePoids;
@@ -610,9 +610,9 @@
         document.getElementById("row_competitionAgePoids").classList.add("hidden");
       }
 
-      if (currentCompetition.classement) {
+      if (currentCompetition.seasonResult) {
         document.getElementById("row_competitionClassement").classList.remove("hidden");
-        document.getElementById("competitionClassement").innerText = currentCompetition.classement;
+        document.getElementById("competitionClassement").innerText = currentCompetition.seasonResult;
       } else {
         document.getElementById("row_competitionClassement").classList.add("hidden");
       }
@@ -638,7 +638,7 @@
         return;
       }
 
-      if (!targetJudokaId || !accessibleJudokas.some(j => String(j.id_judoka) === String(targetJudokaId))) {
+      if (!targetJudokaId || !accessibleJudokas.some(j => String(j.judokaId) === String(targetJudokaId))) {
         showError({ message: "Sélectionnez d'abord un judoka." });
         return;
       }
@@ -694,7 +694,7 @@
       } = currentJudokaProfile;
 
       document.getElementById("judokaProfileTitle").innerText = getJudokaDisplayName(judoka) || "Fiche judoka";
-      document.getElementById("judokaProfileSubtitle").innerText = judoka.email || "";
+      document.getElementById("judokaProfileSubtitle").innerText = judoka.accountEmail || "";
       document.getElementById("judokaSeasonLabel").innerText = `Saison ${season.label}`;
       document.getElementById("judokaSeasonCompetitionCount").innerText = String(seasonCompetitionCount || 0);
       document.getElementById("judokaSeasonCombatCount").innerText = String(seasonCombatCount || 0);
@@ -715,11 +715,11 @@
         lastCompetitionTarget.innerHTML = `
           <div class="meta-row">
             <span class="meta-label">Compétition</span>
-            <span class="meta-value">${escapeHtml(lastCompetition.nom || "")}</span>
+            <span class="meta-value">${escapeHtml(lastCompetition.name || "")}</span>
           </div>
           <div class="meta-row">
             <span class="meta-label">Date</span>
-            <span class="meta-value">${escapeHtml(formatDate(lastCompetition.date))}</span>
+            <span class="meta-value">${escapeHtml(formatDate(lastCompetition.competitionDate))}</span>
           </div>
           <div class="meta-row">
             <span class="meta-label">Catégorie judoka</span>
@@ -740,15 +740,15 @@
         bestSeasonResults.forEach(result => {
           html += `
             <article class="card">
-              <p class="card-title">${escapeHtml(result.nom || "Compétition")}</p>
+              <p class="card-title">${escapeHtml(result.name || "Compétition")}</p>
               <div class="card-meta">
                 <div class="meta-row">
                   <span class="meta-label">Date</span>
-                  <span class="meta-value">${escapeHtml(formatDate(result.date))}</span>
+                  <span class="meta-value">${escapeHtml(formatDate(result.competitionDate))}</span>
                 </div>
                 <div class="meta-row">
                   <span class="meta-label">Résultat</span>
-                  <span class="meta-value"><span class="result-badge classement-badge ${escapeAttribute(getClassementBadgeClass(result.classement))}">${escapeHtml(result.classement)}</span></span>
+                  <span class="meta-value"><span class="result-badge classement-badge ${escapeAttribute(getClassementBadgeClass(result.seasonResult))}">${escapeHtml(result.seasonResult)}</span></span>
                 </div>
               </div>
             </article>
@@ -765,7 +765,7 @@
         return;
       }
 
-      showCompetitionForm(currentCompetition.id_competition);
+      showCompetitionForm(currentCompetition.competitionId);
     }
 
     function renderCombats() {
@@ -782,25 +782,25 @@
         html += `
           <article class="card combat-card">
             <div class="combat-header">
-              <p class="card-title">${escapeHtml(c.adversaire || "Adversaire non renseigné")}</p>
+              <p class="card-title">${escapeHtml(c.opponent || "Adversaire non renseigné")}</p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <span class="result-badge result-${escapeAttribute(String(c.resultat || "").toLowerCase())}">${formatResultat(c.resultat)}</span>
-                ${c.type_victoire ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.type_victoire)}</span>` : ""}
+                <span class="result-badge result-${escapeAttribute(String(c.result || "").toLowerCase())}">${formatResultat(c.result)}</span>
+                ${c.victoryType ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.victoryType)}</span>` : ""}
               </div>
             </div>
             ${isAdmin ? `
               <div class="meta-row">
                 <span class="meta-label">Judoka</span>
-                <span class="meta-value">${escapeHtml(normalizeDisplayName(c.judoka_nom || ""))}</span>
+                <span class="meta-value">${escapeHtml(normalizeDisplayName(c.judokaDisplayName || ""))}</span>
               </div>
             ` : ""}
-            <p class="combat-comment">${escapeHtml(c.deroule || "Aucun déroulé renseigné")}</p>
+            <p class="combat-comment">${escapeHtml(c.notes || "Aucun déroulé renseigné")}</p>
             <div class="card-actions">
-              <button class="button-secondary" type="button" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)">
+              <button class="button-secondary" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="showCombatForm(this.dataset.id)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 Modifier
               </button>
-              <button class="button-danger" type="button" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)">
+              <button class="button-danger" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="deleteCombat(this.dataset.id)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 Supprimer
               </button>
@@ -828,11 +828,11 @@
             <div class="card-meta">
               <div class="meta-row">
                 <span class="meta-label">Profil</span>
-                <span class="meta-value">${escapeHtml(invitation.invited_profile_type || "JUDOKA")}</span>
+                <span class="meta-value">${escapeHtml(invitation.invitedProfileType || "JUDOKA")}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">Créée le</span>
-                <span class="meta-value">${escapeHtml(formatDateTime(invitation.created_at))}</span>
+                <span class="meta-value">${escapeHtml(formatDateTime(invitation.createdAt))}</span>
               </div>
             </div>
             <div class="card-actions">
@@ -853,7 +853,7 @@
       previousView = currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
-        const c = competitions.find(x => String(x.id_competition) === String(id)) || currentCompetition;
+        const c = competitions.find(x => String(x.competitionId) === String(id)) || currentCompetition;
 
         if (!c) {
           showError({ message: "Compétition introuvable." });
@@ -861,13 +861,13 @@
         }
 
         document.getElementById("competitionFormTitle").innerText = "Modifier la compétition";
-        document.getElementById("competition_id").value = c.id_competition;
-        setCompetitionOwnerField(c.id_judoka || "");
-        document.getElementById("competition_nom").value = c.nom || "";
-        document.getElementById("competition_date").value = toInputDate(c.date);
-        document.getElementById("competition_categorie_age").value = c.categorie_age || "";
-        document.getElementById("competition_categorie_poids").value = c.categorie_poids || "";
-        document.getElementById("competition_classement").value = c.classement || "";
+        document.getElementById("competition_id").value = c.competitionId;
+        setCompetitionOwnerField(c.ownerJudokaId || "");
+        document.getElementById("competition_nom").value = c.name || "";
+        document.getElementById("competition_date").value = toInputDate(c.competitionDate);
+        document.getElementById("competition_categorie_age").value = c.ageCategory || "";
+        document.getElementById("competition_categorie_poids").value = c.weightCategory || "";
+        document.getElementById("competition_classement").value = c.seasonResult || "";
       } else {
         previousView = "homeView";
         document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
@@ -895,17 +895,17 @@
 
     function saveCompetition() {
       const competition = {
-        id_competition: document.getElementById("competition_id").value,
-        nom: document.getElementById("competition_nom").value,
-        date: document.getElementById("competition_date").value,
-        categorie_age: document.getElementById("competition_categorie_age").value,
-        categorie_poids: document.getElementById("competition_categorie_poids").value,
-        classement: document.getElementById("competition_classement").value
+        competitionId: document.getElementById("competition_id").value,
+        name: document.getElementById("competition_nom").value,
+        competitionDate: document.getElementById("competition_date").value,
+        ageCategory: document.getElementById("competition_categorie_age").value,
+        weightCategory: document.getElementById("competition_categorie_poids").value,
+        seasonResult: document.getElementById("competition_classement").value
       };
 
       if (isAdmin || isParent) {
-        competition.id_judoka = resolveCompetitionOwnerSelection();
-        if (!competition.id_judoka) {
+        competition.ownerJudokaId = resolveCompetitionOwnerSelection();
+        if (!competition.ownerJudokaId) {
           showError({ message: getCompetitionOwnerRequiredMessage() });
           return;
         }
@@ -916,7 +916,7 @@
         [competition],
         response => {
           showSuccess(response.message);
-          reloadInitialData(response.id_competition);
+          reloadInitialData(response.competitionId);
         },
         showError
       );
@@ -927,7 +927,7 @@
       resetCombatForm();
 
       if (id) {
-        const combat = currentCombats.find(c => String(c.id_combat) === String(id));
+        const combat = currentCombats.find(c => String(c.combatId) === String(id));
 
         if (!combat) {
           showError({ message: "Combat introuvable." });
@@ -935,17 +935,17 @@
         }
 
         document.getElementById("combatFormTitle").innerText = "Modifier le combat";
-        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
+        document.getElementById("combatFormSubtitle").innerText = currentCompetition.name || "";
         document.getElementById("saveCombatButtonText").innerText = "Enregistrer le combat";
-        document.getElementById("combat_id").value = combat.id_combat || "";
-        document.getElementById("combat_adversaire").value = combat.adversaire || "";
-        document.getElementById("combat_resultat").value = combat.resultat || "";
-        document.getElementById("combat_type_victoire").value = combat.type_victoire || "";
-        document.getElementById("combat_deroule").value = combat.deroule || "";
+        document.getElementById("combat_id").value = combat.combatId || "";
+        document.getElementById("combat_adversaire").value = combat.opponent || "";
+        document.getElementById("combat_resultat").value = combat.result || "";
+        document.getElementById("combat_type_victoire").value = combat.victoryType || "";
+        document.getElementById("combat_deroule").value = combat.notes || "";
         syncCombatDecisionVisibility(false);
       } else {
         document.getElementById("combatFormTitle").innerText = "Ajouter un combat";
-        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
+        document.getElementById("combatFormSubtitle").innerText = currentCompetition.name || "";
         syncCombatDecisionVisibility(true);
       }
 
@@ -982,7 +982,7 @@
         response => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(currentCompetition.id_competition, true);
+          openCompetition(currentCompetition.competitionId, true);
         },
         showError
       );
@@ -990,7 +990,7 @@
 
     function updateCombat(idCombat) {
       const combat = getCombatFormValue();
-      combat.id_combat = idCombat;
+      combat.combatId = idCombat;
 
       runServer(
         "updateCombat",
@@ -998,7 +998,7 @@
         response => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(currentCompetition.id_competition, true);
+          openCompetition(currentCompetition.competitionId, true);
         },
         showError
       );
@@ -1006,19 +1006,19 @@
 
     function getCombatFormValue() {
       return {
-        id_competition: currentCompetition.id_competition,
-        id_judoka: currentCompetition.id_judoka,
-        adversaire: document.getElementById("combat_adversaire").value,
-        resultat: document.getElementById("combat_resultat").value,
-        type_victoire: document.getElementById("combat_type_victoire").value,
-        deroule: document.getElementById("combat_deroule").value
+        competitionId: currentCompetition.competitionId,
+        judokaId: currentCompetition.ownerJudokaId,
+        opponent: document.getElementById("combat_adversaire").value,
+        result: document.getElementById("combat_resultat").value,
+        victoryType: document.getElementById("combat_type_victoire").value,
+        notes: document.getElementById("combat_deroule").value
       };
     }
 
     function deleteCurrentCompetition() {
       if (!currentCompetition) return;
 
-      const label = currentCompetition.nom ? ` "${currentCompetition.nom}"` : "";
+      const label = currentCompetition.name ? ` "${currentCompetition.name}"` : "";
 
       if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
         return;
@@ -1026,7 +1026,7 @@
 
       runServer(
         "deleteCompetition",
-        [currentCompetition.id_competition],
+        [currentCompetition.competitionId],
         response => {
           showSuccess(response.message);
           currentCompetition = null;
@@ -1064,7 +1064,7 @@
         [id],
         response => {
           showSuccess(response.message);
-          openCompetition(currentCompetition.id_competition, true);
+          openCompetition(currentCompetition.competitionId, true);
         },
         showError
       );
@@ -1086,19 +1086,19 @@
     }
 
     function getJudokaDisplayName(j) {
-      return [normalizeDisplayName(j && j.prenom), normalizeLastName(j && j.nom)].filter(Boolean).join(" ");
+      return [normalizeDisplayName(j && j.firstName), normalizeLastName(j && j.lastName)].filter(Boolean).join(" ");
     }
 
     function getCompactJudokaLabel(j) {
-      const prenom = normalizeDisplayName(j && j.prenom);
-      const nom = normalizeLastName(j && j.nom);
-      if (!prenom && !nom) {
+      const firstName = normalizeDisplayName(j && j.firstName);
+      const lastName = normalizeLastName(j && j.lastName);
+      if (!firstName && !lastName) {
         return "";
       }
-      if (!nom) {
-        return prenom;
+      if (!lastName) {
+        return firstName;
       }
-      return `${prenom} ${nom.charAt(0)}.`;
+      return `${firstName} ${lastName.charAt(0)}.`;
     }
 
     function normalizeJudokaSelectionKey(value) {
@@ -1113,14 +1113,14 @@
       const input = document.getElementById("competition_judoka_text");
       const hiddenValue = String(hidden.value || "").trim();
 
-      if (hiddenValue && judokas.some(j => String(j.id_judoka) === hiddenValue)) {
+      if (hiddenValue && judokas.some(j => String(j.judokaId) === hiddenValue)) {
         return hiddenValue;
       }
 
       const typedValue = normalizeJudokaSelectionKey(input.value);
       if (!typedValue) {
         const activeJudokaId = String(getHomeActiveJudokaId() || "").trim();
-        if (activeJudokaId && judokas.some(j => String(j.id_judoka) === activeJudokaId)) {
+        if (activeJudokaId && judokas.some(j => String(j.judokaId) === activeJudokaId)) {
           hidden.value = activeJudokaId;
           return activeJudokaId;
         }
@@ -1131,12 +1131,12 @@
         return [
           getJudokaDisplayName(j),
           getCompactJudokaLabel(j),
-          j && j.id_judoka
+          j && j.judokaId
         ].some(label => normalizeJudokaSelectionKey(label) === typedValue);
       });
 
       if (matches.length === 1) {
-        const resolvedId = String(matches[0].id_judoka || "");
+        const resolvedId = String(matches[0].judokaId || "");
         hidden.value = resolvedId;
         input.value = getJudokaDisplayName(matches[0]);
         return resolvedId;
@@ -1156,7 +1156,7 @@
         hidden.value = value;
         dropdown.style.display = "none";
         isSelecting = false;
-        onChange && onChange(value ? getItems().find(j => String(j.id_judoka) === String(value)) : null);
+        onChange && onChange(value ? getItems().find(j => String(j.judokaId) === String(value)) : null);
       }
 
       function renderOptions(items) {
@@ -1182,7 +1182,7 @@
             const opt = document.createElement("div");
             opt.className = "autocomplete-option";
             opt.innerHTML = `<div class="autocomplete-option-copy"><strong>${escapeHtml(name)}</strong><span class="autocomplete-option-meta">${escapeHtml(secondary)}</span></div>`;
-            opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select(j.id_judoka, name); });
+            opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select(j.judokaId, name); });
             dropdown.appendChild(opt);
           });
         }
@@ -1230,17 +1230,17 @@
         input.dataset.bound = "1";
       }
 
-      const owner = judokas.find(j => String(j.id_judoka) === String(idJudoka));
+      const owner = judokas.find(j => String(j.judokaId) === String(idJudoka));
       input.value = owner ? getJudokaDisplayName(owner) : "";
       document.getElementById("competition_id_judoka").value = idJudoka || "";
     }
 
     function getJudokaSecondaryText(judoka) {
-      if (cleanText(judoka.email)) {
-        return judoka.email;
+      if (cleanText(judoka.accountEmail)) {
+        return judoka.accountEmail;
       }
 
-      return `ID ${String(judoka.id_judoka || "").slice(-6)}`;
+      return `ID ${String(judoka.judokaId || "").slice(-6)}`;
     }
 
     function getJudokaSearchText(judoka) {
@@ -1320,21 +1320,21 @@
 
       let html = `<div class="list">`;
       managedAdmins.forEach(admin => {
-        const fullName = getJudokaDisplayName(admin) || admin.email || "Admin";
-        const isCurrentAdmin = currentUser && String(currentUser.id_judoka) === String(admin.id_judoka);
+        const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
+        const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
         html += `
           <article class="card admin-card">
             <p class="card-title">${escapeHtml(fullName)}</p>
             <div class="card-meta">
               <div class="meta-row">
                 <span class="meta-label">Email</span>
-                <span class="meta-value">${escapeHtml(admin.email || "Non renseigné")}</span>
+                <span class="meta-value">${escapeHtml(admin.accountEmail || "Non renseigné")}</span>
               </div>
             </div>
             <div class="card-actions">
               ${isCurrentAdmin
                 ? `<span class="current-admin-note">Vous</span>`
-              : `<button class="button-danger" type="button" data-id="${escapeAttribute(admin.id_judoka)}" data-name="${escapeAttribute(fullName)}" onclick="revokeAdminRole(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M9 9l6 6"></path><path d="M15 9l-6 6"></path></svg>Révoquer</button>`}
+              : `<button class="button-danger" type="button" data-id="${escapeAttribute(admin.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="revokeAdminRole(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M9 9l6 6"></path><path d="M15 9l-6 6"></path></svg>Révoquer</button>`}
             </div>
           </article>
         `;
@@ -1353,22 +1353,22 @@
       let html = `<div class="list">`;
       managedChildren.forEach(child => {
         const fullName = getJudokaDisplayName(child) || "Enfant";
-        const directAccessState = child.email ? "Activée" : "Non activée";
+        const directAccessState = child.accountEmail ? "Activée" : "Non activée";
         html += `
           <article class="card child-card">
             <p class="card-title">${escapeHtml(fullName)}</p>
             <div class="card-meta">
               <div class="meta-row">
                 <span class="meta-label">Prénom</span>
-                <span class="meta-value">${escapeHtml(normalizeDisplayName(child.prenom || ""))}</span>
+                <span class="meta-value">${escapeHtml(normalizeDisplayName(child.firstName || ""))}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">Nom</span>
-                <span class="meta-value">${escapeHtml(normalizeLastName(child.nom || ""))}</span>
+                <span class="meta-value">${escapeHtml(normalizeLastName(child.lastName || ""))}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">Email</span>
-                <span class="meta-value">${escapeHtml(child.email || "Non renseigné")}</span>
+                <span class="meta-value">${escapeHtml(child.accountEmail || "Non renseigné")}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-label">Connexion autonome</span>
@@ -1376,8 +1376,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(child.id_judoka)}" onclick="editManagedChild(this.dataset.id)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Modifier</button>
-              <button class="button-danger" data-id="${escapeAttribute(child.id_judoka)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>Supprimer</button>
+              <button class="button-secondary" data-id="${escapeAttribute(child.judokaId)}" onclick="editManagedChild(this.dataset.id)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Modifier</button>
+              <button class="button-danger" data-id="${escapeAttribute(child.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>Supprimer</button>
             </div>
           </article>
         `;
@@ -1405,16 +1405,16 @@
     }
 
     function editManagedChild(idJudoka) {
-      const child = managedChildren.find(item => String(item.id_judoka) === String(idJudoka));
+      const child = managedChildren.find(item => String(item.judokaId) === String(idJudoka));
       if (!child) {
         showError({ message: "Enfant introuvable." });
         return;
       }
 
-      document.getElementById("child_id").value = child.id_judoka || "";
-      document.getElementById("child_prenom").value = child.prenom || "";
-      document.getElementById("child_nom").value = child.nom || "";
-      document.getElementById("child_email").value = child.email || "";
+      document.getElementById("child_id").value = child.judokaId || "";
+      document.getElementById("child_prenom").value = child.firstName || "";
+      document.getElementById("child_nom").value = child.lastName || "";
+      document.getElementById("child_email").value = child.accountEmail || "";
       document.getElementById("childFormTitle").innerText = "Modifier l'enfant";
       document.getElementById("saveChildButtonText").innerText = "Enregistrer l'enfant";
       showView("childrenView");
@@ -1423,10 +1423,10 @@
 
     function saveManagedChild() {
       const child = {
-        id_judoka: document.getElementById("child_id").value,
-        prenom: document.getElementById("child_prenom").value,
-        nom: document.getElementById("child_nom").value,
-        email: document.getElementById("child_email").value
+        judokaId: document.getElementById("child_id").value,
+        firstName: document.getElementById("child_prenom").value,
+        lastName: document.getElementById("child_nom").value,
+        accountEmail: document.getElementById("child_email").value
       };
 
       runServer(
@@ -1600,9 +1600,9 @@
     }
 
     function getJudokaInitials(judoka) {
-      const prenom = normalizeDisplayName(judoka && judoka.prenom);
-      const nom = normalizeLastName(judoka && judoka.nom);
-      return `${prenom.charAt(0) || ""}${nom.charAt(0) || ""}`.trim() || "J";
+      const firstName = normalizeDisplayName(judoka && judoka.firstName);
+      const lastName = normalizeLastName(judoka && judoka.lastName);
+      return `${firstName.charAt(0) || ""}${lastName.charAt(0) || ""}`.trim() || "J";
     }
 
     function formatDateTime(value) {
