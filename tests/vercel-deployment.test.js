@@ -5,13 +5,17 @@ const path = require("node:path");
 
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
+const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
+const client = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
 const profileRegistrationMigration = fs.readFileSync(
   path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
   "utf8"
 );
+const uiBundle = `${html}\n${css}\n${client}`;
 
 test("vercel config routes the app shell and rpc endpoint", () => {
   assert.equal(vercel.version, 2);
@@ -26,42 +30,50 @@ test("vercel config routes the app shell and rpc endpoint", () => {
 });
 
 test("vercel runtime calls the rpc endpoint directly", () => {
-  assert.match(html, /KIROKU_RUNTIME_CONFIG/);
-  assert.match(html, /async function runServer\(method,\s*args,\s*success,\s*failure\)/);
-  assert.match(html, /fetch\("\/api\/rpc"/);
-  assert.match(html, /"Authorization": "Bearer " \+ session\.access_token/);
-  assert.doesNotMatch(html, /google\.script/);
+  assert.match(appShell, /KIROKU_RUNTIME_CONFIG/);
+  assert.match(appShell, /html\.replace\("<\/head>",/);
+  assert.match(html, /href="\/api\/styles"/);
+  assert.match(html, /src="\/api\/client" defer/);
+  assert.match(uiBundle, /class="brand"/);
+  assert.match(uiBundle, /async function runServer\(method,\s*args,\s*success,\s*failure\)/);
+  assert.match(uiBundle, /fetch\("\/api\/rpc"/);
+  assert.match(uiBundle, /"Authorization": "Bearer " \+ session\.access_token/);
+  assert.doesNotMatch(uiBundle, /google\.script/);
 });
 
 test("vercel runtime uses google auth without password login", () => {
-  assert.match(html, /function getSupabaseAnonymousAuthHeaders\(\)/);
-  assert.match(html, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
-  assert.match(html, /kiroku_supabase_session/);
-  assert.match(html, /\/auth\/v1\/token\?grant_type=refresh_token/);
-  assert.doesNotMatch(html, /auth\/v1\/token\?grant_type=password/);
-  assert.doesNotMatch(html, /auth\/v1\/signup/);
-  assert.match(html, /id="googleLoginButton"/);
-  assert.match(html, /function startGoogleLogin\(\)/);
-  assert.match(html, /auth\/v1\/authorize/);
-  assert.match(html, /searchParams\.set\("provider", "google"\)/);
-  assert.match(html, /searchParams\.set\("redirect_to", getVercelAuthRedirectUrl\(\)\)/);
-  assert.match(html, /function parseVercelAuthCallback\(\)/);
-  assert.match(html, /access_token/);
-  assert.match(html, /refresh_token/);
-  assert.match(html, /Connexion Google impossible/);
-  assert.doesNotMatch(html, /id="supabaseLoginForm"/);
-  assert.doesNotMatch(html, /loginPassword/);
-  assert.doesNotMatch(html, /Mot de passe oublié/);
+  assert.match(uiBundle, /function getSupabaseAnonymousAuthHeaders\(\)/);
+  assert.match(uiBundle, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
+  assert.match(uiBundle, /kiroku_supabase_session/);
+  assert.match(uiBundle, /\/auth\/v1\/token\?grant_type=refresh_token/);
+  assert.doesNotMatch(uiBundle, /auth\/v1\/token\?grant_type=password/);
+  assert.doesNotMatch(uiBundle, /auth\/v1\/signup/);
+  assert.match(uiBundle, /id="googleLoginButton"/);
+  assert.match(uiBundle, /function startGoogleLogin\(\)/);
+  assert.match(uiBundle, /auth\/v1\/authorize/);
+  assert.match(uiBundle, /searchParams\.set\("provider", "google"\)/);
+  assert.match(uiBundle, /searchParams\.set\("redirect_to", getVercelAuthRedirectUrl\(\)\)/);
+  assert.match(uiBundle, /function parseVercelAuthCallback\(\)/);
+  assert.match(uiBundle, /access_token/);
+  assert.match(uiBundle, /refresh_token/);
+  assert.match(uiBundle, /Connexion Google impossible/);
+  assert.match(uiBundle, /function showInvitationRequired\(\)/);
+  assert.match(uiBundle, /Accès non autorisé\./);
+  assert.doesNotMatch(uiBundle, /id="supabaseLoginForm"/);
+  assert.doesNotMatch(uiBundle, /loginPassword/);
+  assert.doesNotMatch(uiBundle, /Mot de passe oublié/);
   assert.doesNotMatch(vercel.rewrites.map(rewrite => rewrite.source).join("\n"), /auth-signup/);
 });
 
 test("vercel login creates only the initial judoka profile", () => {
-  assert.match(html, /id="profileRegistrationForm"/);
-  assert.match(html, /"registerProfile",\s*\[\s*profile\s*\]/);
-  assert.match(html, /profil judoka/);
-  assert.doesNotMatch(html, /id="registrationType"/);
-  assert.doesNotMatch(html, /registrationChildren/);
+  assert.match(uiBundle, /id="profileRegistrationForm"/);
+  assert.match(uiBundle, /"registerProfile",\s*\[\s*profile\s*\]/);
+  assert.match(uiBundle, /Votre invitation est validée/);
+  assert.doesNotMatch(uiBundle, /id="registrationType"/);
+  assert.doesNotMatch(uiBundle, /registrationChildren/);
   assert.match(core, /async function registerProfile\(email,\s*profile\)/);
+  assert.match(core, /const invitation = await getAccessInvitation\(email\)/);
+  assert.match(core, /Accès non autorisé\. Une invitation admin est requise\./);
   assert.match(core, /supabaseRpc\("register_profile"/);
   assert.match(core, /p_type: "JUDOKA"/);
   assert.match(core, /p_children: \[\]/);
@@ -71,42 +83,122 @@ test("vercel login creates only the initial judoka profile", () => {
 });
 
 test("successful initial load leaves the login view", () => {
-  assert.match(html, /renderCompetitions\(\);\s*showView\("homeView"\);/);
+  assert.match(uiBundle, /renderCompetitions\(\);\s*showView\("homeView"\);/);
 });
 
 test("judoka home keeps competition creation available", () => {
-  assert.match(html, /id="addCompetitionButton" onclick="showCompetitionForm\(\)"/);
-  assert.match(html, /document\.getElementById\("homeAdminActions"\)\.classList\.remove\("hidden"\);/);
-  assert.doesNotMatch(html, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
+  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" onclick="showHomeCompetitionForm\(\)"/);
+  assert.match(uiBundle, /id="addCompetitionButtonText"/);
+  assert.match(uiBundle, /id="addCompetitionButtonMeta"/);
+  assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
+  assert.match(uiBundle, /function syncHomeContext\(\)/);
+  assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
+  assert.match(uiBundle, /document\.getElementById\("homeAdminActions"\)\.classList\.remove\("hidden"\);/);
+  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">/);
+  assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
+});
+
+test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
+  assert.match(core, /categorie_age:\s*competition\.categorie_age \|\| ""/);
+  assert.match(core, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
+  assert.doesNotMatch(core, /lieu:\s*""/);
+  assert.doesNotMatch(core, /poids_pesee:\s*""/);
 });
 
 test("connected judoka can manage children from a dedicated screen", () => {
-  assert.match(html, /id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement\(\)"/);
-  assert.match(html, /id="childrenView" class="panel hidden"/);
-  assert.match(html, /function showChildrenManagement\(keepMessage\)/);
-  assert.match(html, /function saveManagedChild\(\)/);
-  assert.match(html, /function deleteManagedChild\(idJudoka,\s*name\)/);
+  assert.match(uiBundle, /id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement\(\)"/);
+  assert.match(uiBundle, /id="childrenView" class="panel hidden"/);
+  assert.match(uiBundle, /function showChildrenManagement\(keepMessage\)/);
+  assert.match(uiBundle, /function saveManagedChild\(\)/);
+  assert.match(uiBundle, /id="child_email"/);
+  assert.match(uiBundle, /se connecter seuls si un email est renseigné/);
+  assert.match(uiBundle, /function normalizeLastName\(value\)/);
+  assert.match(uiBundle, /function deleteManagedChild\(idJudoka,\s*name\)/);
   assert.match(core, /async function getChildrenManagement\(email\)/);
   assert.match(core, /async function saveManagedChild\(email,\s*child\)/);
+  assert.match(core, /const childEmail = normalizeEmail\(child && child\.email\)/);
+  assert.match(core, /await assertJudokaEmailAvailable\(childEmail,\s*child && child\.id_judoka\)/);
+  assert.match(core, /email: childEmail \|\| null/);
   assert.match(core, /async function deleteManagedChild\(email,\s*idJudoka\)/);
   assert.match(core, /role: "PARENT"/);
 });
 
+test("admin can manage admins from a dedicated screen", () => {
+  assert.match(uiBundle, /id="manageAdminsButton" class="button-secondary hidden" onclick="showAdminsManagement\(\)"/);
+  assert.match(uiBundle, /id="adminsView" class="panel hidden"/);
+  assert.match(uiBundle, /function showAdminsManagement\(keepMessage\)/);
+  assert.match(uiBundle, /id="accessInvitationsList"/);
+  assert.match(uiBundle, /id="invite_email"/);
+  assert.match(uiBundle, /id="saveInvitationButton" onclick="saveAccessInvitation\(\)"/);
+  assert.match(uiBundle, /function saveAccessInvitation\(\)/);
+  assert.match(uiBundle, /function deleteAccessInvitation\(email\)/);
+  assert.match(uiBundle, /function saveAdminRole\(\)/);
+  assert.match(uiBundle, /function revokeAdminRole\(idJudoka,\s*name\)/);
+  assert.match(core, /async function getAdminsManagement\(email\)/);
+  assert.match(core, /accessInvitations: await getAccessInvitations\(\)/);
+  assert.match(core, /async function saveAccessInvitation\(email,\s*targetEmail\)/);
+  assert.match(core, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
+  assert.match(core, /async function grantAdminRole\(email,\s*targetEmail\)/);
+  assert.match(core, /async function revokeAdminRole\(email,\s*idJudoka\)/);
+  assert.match(core, /Vous ne pouvez pas retirer vos propres droits admin/);
+});
+
+test("judoka profile exposes season statistics through a dedicated screen", () => {
+  assert.match(uiBundle, /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" onclick="openHomeJudokaProfile\(\)"/);
+  assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
+  assert.match(uiBundle, /id="judokaView" class="panel hidden"/);
+  assert.match(uiBundle, /id="judokaHeroAvatar"/);
+  assert.match(uiBundle, /id="judokaHeroSummary"/);
+  assert.match(uiBundle, /function openHomeJudokaProfile\(\)/);
+  assert.match(uiBundle, /Sélectionnez un judoka actif pour ouvrir sa fiche/);
+  assert.match(uiBundle, /Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche/);
+  assert.match(uiBundle, /Sélectionnez un judoka pour afficher son parcours/);
+  assert.match(uiBundle, /Catégorie judoka/);
+  assert.match(uiBundle, /Poids/);
+  assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
+  assert.match(uiBundle, /id="judokaSeasonWins"/);
+  assert.match(uiBundle, /id="judokaSeasonLosses"/);
+  assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
+  assert.match(uiBundle, /function renderJudokaProfile\(\)/);
+  assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
+  assert.match(core, /if \(isAdmin\(user\)\) \{\s*return \{ user, target \};\s*\}/);
+  assert.match(core, /if \(isParent\(user\)\) \{\s*if \(!\(userContext\.managedJudokaIds \|\| \[\]\)\.includes\(String\(targetId\)\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
+  assert.match(core, /if \(String\(user\.id_judoka\) !== String\(targetId\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
+  assert.match(core, /async function getJudokaProfile\(email,\s*idJudoka\)/);
+  assert.match(core, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
+  assert.match(core, /const lastCompetitionForCategory = lastCombatCompetition \? lastCombatCompetition\.competition : lastCompetition;/);
+  assert.match(core, /weightCategory:/);
+  assert.match(core, /seasonWins/);
+  assert.match(core, /seasonLosses/);
+  assert.match(core, /bestSeasonResults/);
+});
+
 test("vercel runtime shows the connected user without a logout button", () => {
-  assert.match(html, /\.user-actions\s*\{[\s\S]*?display: flex;/);
-  assert.match(html, /id="userInfo"/);
-  assert.doesNotMatch(html, /id="logoutButton"/);
-  assert.doesNotMatch(html, /function logoutUser\(\)/);
-  assert.doesNotMatch(html, /auth\/v1\/logout/);
-  assert.match(html, /clearVercelSession\(\)/);
+  assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
+  assert.match(uiBundle, /id="userInfo"/);
+  assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
+  assert.match(uiBundle, /getJudokaDisplayName\(currentUser\)/);
+  assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
+  assert.match(uiBundle, /<p class="\$\{toneClass\}"><svg/);
+  assert.match(uiBundle, /function clearToasts\(\)/);
+  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
+  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
+  assert.doesNotMatch(uiBundle, /id="logoutButton"/);
+  assert.doesNotMatch(uiBundle, /function logoutUser\(\)/);
+  assert.doesNotMatch(uiBundle, /auth\/v1\/logout/);
+  assert.match(uiBundle, /clearVercelSession\(\)/);
 });
 
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(core, /function isJwtLikeToken\(value\)/);
   assert.match(core, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
+  assert.match(core, /function normalizeLastName\(value\)/);
+  assert.match(core, /async function getAccessInvitation\(email\)/);
+  assert.match(core, /async function getAccessInvitations\(\)/);
   assert.match(core, /canManageChildren: canManageChildrenProfile\(user\)/);
   assert.match(core, /\/auth\/v1\/user/);
+  assert.match(core, /judoka_nom: judoka \? `\$\{judoka\.prenom\} \$\{normalizeLastName\(judoka\.nom\)\}` : combat\.id_judoka/);
   assert.doesNotMatch(core, /auth\/v1\/signup/);
   assert.doesNotMatch(core, /auth\/v1\/admin\/users/);
   assert.match(rpc, /verifySupabaseUser\(accessToken\)/);

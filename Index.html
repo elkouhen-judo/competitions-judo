@@ -4,718 +4,25 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    :root {
-      --bg: #f6f7f9;
-      --panel: #fff;
-      --text: #172033;
-      --muted: #667085;
-      --line: #d9dee8;
-      --primary: #174ea6;
-      --primary-hover: #123f86;
-      --danger: #b42318;
-      --success: #027a48;
-      --soft: #f8fafc;
-      --shadow: 0 10px 26px rgba(23, 32, 51, 0.08);
-    }
+  <link rel="stylesheet" href="/api/styles">
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.45;
-    }
-
-    .app-shell {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 0 0 calc(96px + env(safe-area-inset-bottom));
-    }
-
-    .topbar {
-      display: grid;
-      gap: 8px;
-      padding: 12px 12px 8px;
-      margin-bottom: 0;
-      background: var(--bg);
-    }
-
-    h1, h2, h3, p {
-      margin-top: 0;
-      letter-spacing: 0;
-    }
-
-    h1 {
-      margin-bottom: 4px;
-      font-size: 24px;
-      line-height: 1.15;
-    }
-
-    h2 {
-      margin-bottom: 0;
-      font-size: 22px;
-    }
-
-    h3 {
-      margin-bottom: 4px;
-      font-size: 20px;
-    }
-
-    .subtitle {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .user-pill {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 8px 10px;
-      color: var(--muted);
-      font-size: 14px;
-      min-width: 0;
-    }
-
-    .message {
-      padding: 0 10px;
-      margin-bottom: 10px;
-    }
-
-    .panel {
-      border: 0;
-      border-top: 1px solid var(--line);
-      border-radius: 0;
-      background: var(--panel);
-      box-shadow: none;
-      overflow: hidden;
-    }
-
-    .panel-header {
-      display: grid;
-      gap: 12px;
-      padding: 18px 14px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .panel-body {
-      padding: 14px;
-    }
-
-    .toolbar {
-      display: grid;
-      gap: 8px;
-    }
-
-    .competition-header-actions {
-      display: grid;
-      gap: 8px;
-    }
-
-    .competition-management-actions {
-      display: grid;
-      gap: 8px;
-    }
-
-    .inline-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    input, select, textarea, button, .button {
-      width: 100%;
-      border-radius: 7px;
-      font: inherit;
-    }
-
-    input, select, textarea {
-      min-height: 52px;
-      margin: 7px 0 18px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--text);
-      padding: 13px 14px;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-      outline: 3px solid rgba(23, 78, 166, 0.14);
-    }
-
-    label {
-      display: block;
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: bold;
-    }
-
-    button, .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      min-height: 52px;
-      border: 1px solid transparent;
-      background: var(--primary);
-      color: #fff;
-      padding: 13px 15px;
-      cursor: pointer;
-      font-weight: bold;
-      border-radius: 8px; /* Slightly softer look */
-      text-decoration: none;
-    }
-
-    button:hover, .button:hover {
-      background: var(--primary-hover);
-    }
-
-    .button-secondary {
-      border-color: var(--line);
-      background: #fff;
-      color: var(--text);
-    }
-
-    .button-secondary:hover {
-      background: #f2f4f7;
-    }
-
-    .button-danger {
-      border-color: #fecdca;
-      background: #fff;
-      color: var(--danger);
-    }
-
-    .button-danger:hover {
-      background: #fef3f2;
-    }
-
-    .autocomplete-wrapper {
-      position: relative;
-    }
-    .autocomplete-dropdown {
-      position: absolute;
-      z-index: 200;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      max-height: 220px;
-      overflow-y: auto;
-      width: 100%;
-      display: none;
-      box-shadow: var(--shadow);
-      top: calc(100% - 10px);
-    }
-    .autocomplete-option {
-      padding: 14px;
-      cursor: pointer;
-      font-size: 16px;
-      border-bottom: 1px solid var(--line);
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      touch-action: manipulation;
-    }
-    .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: var(--soft); }
-    .autocomplete-empty {
-      padding: 12px 14px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-    .data-table th, .data-table td {
-      padding: 12px;
-      border-bottom: 1px solid var(--line);
-    }
-    .data-table th {
-      background: var(--soft);
-      color: var(--muted);
-      font-weight: bold;
-      font-size: 14px;
-    }
-    .data-table tr:hover td {
-      background: #f8fafc;
-    }
-    .data-table td {
-      cursor: pointer;
-    }
-    .table-actions {
-      text-align: right;
-      width: 1%;
-      white-space: nowrap;
-    }
-    .table-actions button {
-      min-height: 36px;
-      padding: 8px;
-    }
-    
-    .filter-bar {
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .filter-bar select {
-      flex: 1;
-      max-width: 300px;
-    }
-
-    .list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 15px;
-    }
-
-    .competition-card {
-      display: grid;
-      gap: 12px;
-    }
-
-    .card-button {
-      display: block;
-      width: 100%;
-      border-color: var(--line);
-      background: #fff;
-      color: var(--text);
-      padding: 16px;
-      text-align: left;
-    }
-
-    .competition-open-button {
-      border: 0;
-      padding: 0;
-    }
-
-    .card-button:hover {
-      background: #fff;
-      border-color: var(--primary);
-    }
-
-    .card-title {
-      margin-bottom: 10px;
-      font-size: 20px;
-      font-weight: bold;
-      line-height: 1.25;
-    }
-
-    .card-meta {
-      display: grid;
-      gap: 8px;
-    }
-
-    .meta-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-      border-top: 1px solid #eef1f5;
-      padding: 10px 0;
-    }
-
-    .meta-row:first-of-type {
-      border-top: 0;
-      padding-top: 0;
-    }
-
-    .meta-label {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    .meta-value {
-      font-size: 16px;
-      text-align: right;
-      overflow-wrap: anywhere;
-    }
-
-    .card-actions {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .card-actions button {
-      min-width: 0;
-    }
-
-    .summary {
-      display: grid;
-      gap: 4px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--soft);
-      padding: 12px;
-    }
-
-    .form-grid {
-      display: grid;
-      gap: 0;
-    }
-
-    .form-actions {
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 9px;
-      margin-top: 10px;
-    }
-
-    .mobile-action-bar {
-      position: sticky;
-      bottom: env(safe-area-inset-bottom);
-      z-index: 5;
-      margin: 14px -6px 0;
-      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-      border-top: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.97);
-      box-shadow: 0 -8px 20px rgba(23, 32, 51, 0.12);
-    }
-
-    .admin-actions {
-      display: grid;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .primary-action {
-      margin-top: 16px;
-    }
-
-    .combat-card {
-      display: grid;
-      gap: 12px;
-    }
-
-    .combat-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .combat-header .card-title {
-      margin-bottom: 0;
-      min-width: 0;
-    }
-
-    .result-badge {
-      flex: 0 0 auto;
-      min-width: 78px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--soft);
-      color: var(--text);
-      padding: 6px 10px;
-      font-size: 13px;
-      font-weight: bold;
-      line-height: 1;
-      text-align: center;
-    }
-
-    .result-v {
-      border-color: #abefc6;
-      background: #ecfdf3;
-      color: var(--success);
-    }
-
-    .result-d {
-      border-color: #fecdca;
-      background: #fef3f2;
-      color: var(--danger);
-    }
-
-    .result-e {
-      border-color: #fec84b;
-      background: #fffaeb;
-      color: #b54708;
-    }
-
-    .combat-comment {
-      margin-bottom: 0;
-      color: var(--muted);
-      overflow-wrap: anywhere;
-    }
-
-    .danger-zone {
-      border-top: 1px solid #fecdca;
-      margin-top: 22px;
-      padding-top: 16px;
-    }
-
-    .section {
-      border-top: 1px solid var(--line);
-      margin-top: 20px;
-      padding-top: 20px;
-    }
-
-    .section-heading {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .empty-state {
-      border: 1px dashed var(--line);
-      border-radius: 8px;
-      color: var(--muted);
-      padding: 24px;
-      text-align: center;
-    }
-
-    .success,
-    .error {
-      margin: 0;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      background: #fff;
-    }
-
-    .success {
-      border-color: #abefc6;
-      background: #ecfdf3;
-      color: var(--success);
-    }
-
-    .error {
-      border-color: #fecdca;
-      background: #fef3f2;
-      color: var(--danger);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (min-width: 721px) {
-      .app-shell {
-        padding: 30px 20px 44px;
-      }
-
-      .topbar,
-      .panel-header,
-      .section-heading {
-        align-items: center;
-        grid-template-columns: 1fr auto;
-      }
-
-      .user-pill {
-        text-align: right;
-      }
-
-      .user-actions {
-        justify-content: flex-end;
-      }
-
-      .message {
-        padding: 0;
-      }
-
-      .panel {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        box-shadow: var(--shadow);
-      }
-
-      .panel-header {
-        padding: 18px 20px;
-      }
-
-      .panel-body {
-        padding: 20px;
-      }
-
-      h1 {
-        font-size: 30px;
-      }
-
-      h2 {
-        font-size: 21px;
-      }
-
-      h3 {
-        font-size: 18px;
-      }
-
-      .subtitle,
-      .user-pill,
-      .meta-value {
-        font-size: 14px;
-      }
-
-      label {
-        font-size: 13px;
-      }
-
-      .card-title {
-        font-size: 16px;
-      }
-
-      .meta-label {
-        font-size: 12px;
-      }
-
-      .toolbar,
-      .competition-header-actions,
-      .competition-management-actions,
-      .form-actions,
-      .admin-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-
-      .toolbar button,
-      .competition-header-actions button,
-      .competition-management-actions button,
-      .form-actions button,
-      .admin-actions button,
-      .login-form .button {
-        width: auto;
-        min-width: 140px;
-      }
-
-      .card-actions {
-        display: flex;
-      }
-
-      .mobile-action-bar {
-        position: static;
-        margin: 14px 0 0;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-
-      .form-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 14px;
-      }
-
-      .full-row {
-        grid-column: 1 / -1;
-      }
-
-      .list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 360px) {
-      .app-shell {
-        padding-left: 8px;
-        padding-right: 8px;
-      }
-
-      .panel-header,
-      .panel-body {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-
-      .meta-row {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .meta-value {
-        text-align: left;
-      }
-    }
-
-    @media (pointer: coarse) {
-      button,
-      input,
-      select,
-      textarea {
-        font-size: 16px;
-      }
-
-      button {
-        min-height: 48px;
-      }
-    }
-    .login-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      text-align: center;
-      padding: 20px;
-    }
-    .login-container svg {
-      margin-bottom: 20px;
-      color: var(--primary);
-    }
-    .login-container h2 {
-      margin-bottom: 12px;
-    }
-    .login-container p {
-      color: var(--muted);
-      margin-bottom: 24px;
-    }
-    .login-form {
-      width: min(100%, 360px);
-      display: grid;
-      gap: 10px;
-    }
-    .login-form input {
-      margin: 0;
-    }
-    .login-form .button {
-      width: 100%;
-    }
-    .login-options {
-      width: min(100%, 360px);
-      display: grid;
-      gap: 10px;
-    }
-    .button-google {
-      border-color: var(--line);
-      background: #fff;
-      color: var(--text);
-    }
-    .button-google:hover {
-      background: #f2f4f7;
-    }
-    .user-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      min-width: 0;
-    }
-  </style>
 </head>
 
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <div>
-        <h1>Kiroku</h1>
-        <p class="subtitle">Suivi de compétitions</p>
+      <div class="brand">
+        <div class="brand-logo">
+          <img
+            class="brand-logo-image"
+            src="https://s1.qwant.com/thumbr/474x474/9/e/fa3015ea6c561c107f0cf721991fdb75be4e334e5c30201ed296d964509cf4/OIP.2L4yJnGwNyAZkgiTuUu-NAHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.2L4yJnGwNyAZkgiTuUu-NAHaHa%3Fpid%3DApi&amp;q=0&amp;b=1&amp;p=0&amp;a=0"
+            alt="Kiroku"
+          >
+        </div>
+        <div class="brand-copy">
+          <h1>Kiroku - 記録</h1>
+          <p class="subtitle">Suivi de compétitions</p>
+        </div>
       </div>
       <div class="user-actions">
         <div id="userInfo" class="user-pill">Chargement...</div>
@@ -723,12 +30,13 @@
     </header>
 
     <div id="message" class="message"></div>
+    <div id="toastLayer" class="toast-layer" aria-live="assertive" aria-relevant="additions text"></div>
 
     <section id="loginView" class="panel hidden">
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p id="loginText">Connectez-vous avec le compte Google associé à votre fiche judoka.</p>
+        <p id="loginText">Connectez-vous avec le compte Google associé à votre fiche judoka ou enfant.</p>
         <div id="oauthLoginOptions" class="login-options hidden">
           <button id="googleLoginButton" type="button" class="button-google" onclick="startGoogleLogin()">
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -740,37 +48,227 @@
             Se connecter avec Google
           </button>
         </div>
+        <p id="loginHint" class="subtitle hidden"></p>
         <form id="profileRegistrationForm" class="login-form hidden">
           <label for="registrationPrenom">Prénom</label>
           <input id="registrationPrenom" type="text" autocomplete="given-name">
           <label for="registrationNom">Nom</label>
           <input id="registrationNom" type="text" autocomplete="family-name">
-          <button type="submit">Créer mon profil</button>
+          <button type="submit">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M16 11h6"></path></svg>
+            Créer mon profil
+          </button>
         </form>
       </div>
     </section>
 
     <section id="homeView" class="panel">
       <div class="panel-header">
-        <div>
-          <h2>Compétitions</h2>
-          <p class="subtitle">Touchez une compétition pour ouvrir ses combats</p>
-        </div>
-        <div id="homeAdminActions" class="toolbar admin-actions hidden">
-          <button id="addCompetitionButton" onclick="showCompetitionForm()">Ajouter une compétition</button>
-          <button id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement()">Gérer les enfants</button>
+        <div class="home-header-copy">
+          <h2 id="homeTitle">Mon espace judoka</h2>
+          <p id="homeSubtitle" class="subtitle">Retrouvez votre fiche et vos compétitions.</p>
         </div>
       </div>
       <div class="panel-body">
         <div id="homeFilters" class="filter-bar hidden">
-          <label>Filtrer par judoka :</label>
-          <div class="autocomplete-wrapper" style="flex:1; max-width: 300px;">
+          <label id="homeFilterLabel" for="filterJudokaText">Judoka actif</label>
+          <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" placeholder="Tous les judokas..." autocomplete="off">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown"></div>
           </div>
           <input type="hidden" id="filterJudoka">
         </div>
-        <div id="competitionsList"></div>
+        <div id="homeActiveJudokaSummary" class="summary home-context-card"></div>
+        <div id="homeAdminActions" class="toolbar admin-actions hidden">
+          <button id="addCompetitionButton" class="home-context-action" onclick="showHomeCompetitionForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
+            <span class="button-copy">
+              <span id="addCompetitionButtonText">Ajouter une compétition</span>
+              <span id="addCompetitionButtonMeta" class="button-meta"></span>
+            </span>
+          </button>
+          <button id="openHomeJudokaProfileButton" class="button-secondary home-context-action" onclick="openHomeJudokaProfile()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span class="button-copy">
+              <span id="openHomeJudokaProfileButtonText">Ma fiche judoka</span>
+              <span id="openHomeJudokaProfileButtonMeta" class="button-meta"></span>
+            </span>
+          </button>
+          <button id="manageAdminsButton" class="button-secondary hidden" onclick="showAdminsManagement()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M12 10v4"></path><path d="M10 12h4"></path></svg>
+            Invitations et admins
+          </button>
+          <button id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M17 11h6"></path></svg>
+            Gérer les enfants
+          </button>
+        </div>
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3 id="homeCompetitionsTitle">Mes compétitions</h3>
+              <p id="homeCompetitionsSubtitle" class="subtitle">Touchez une carte pour ouvrir ses combats.</p>
+            </div>
+          </div>
+          <div id="competitionsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="judokaView" class="panel hidden">
+      <div class="panel-header">
+        <div>
+          <h2 id="judokaProfileTitle">Fiche judoka</h2>
+          <p id="judokaProfileSubtitle" class="subtitle"></p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" onclick="showHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="judokaHero" class="judoka-hero">
+          <div id="judokaHeroAvatar" class="hero-avatar">JJ</div>
+          <div class="hero-copy">
+            <span class="hero-kicker">Fiche performance</span>
+            <h3 id="judokaHeroName" class="hero-title">Judoka</h3>
+            <p id="judokaHeroSummary" class="hero-highlight"></p>
+            <div class="hero-badges">
+              <span id="judokaHeroCategory" class="result-badge"></span>
+              <span id="judokaHeroRecord" class="result-badge"></span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Dernière compétition</h3>
+              <p class="subtitle">Dernière compétition enregistrée et catégorie issue du dernier combat.</p>
+            </div>
+          </div>
+          <div id="judokaLastCompetition" class="summary"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Saison</h3>
+              <p id="judokaSeasonLabel" class="subtitle"></p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Competitions</span>
+              <span id="judokaSeasonCompetitionCount" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Combats</span>
+              <span id="judokaSeasonCombatCount" class="stat-value">0</span>
+            </div>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires</span>
+              <span id="judokaSeasonWins" class="stat-value">0</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites</span>
+              <span id="judokaSeasonLosses" class="stat-value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>3 meilleurs resultats</h3>
+              <p class="subtitle">Meilleurs classements de la saison courante.</p>
+            </div>
+          </div>
+          <div id="judokaBestResults"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminsView" class="panel hidden">
+      <div class="panel-header">
+        <div>
+          <h2>Invitations et admins</h2>
+          <p class="subtitle">Invitez d'abord les nouveaux accès, puis gérez les admins déjà inscrits.</p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" onclick="showHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Invitations d'accès</h3>
+              <p class="subtitle">Les nouveaux comptes Google doivent être invités ici avant de pouvoir créer leur profil.</p>
+            </div>
+          </div>
+          <div id="accessInvitationsList"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Inviter un utilisateur</h3>
+              <p class="subtitle">Ajoutez l'email Google autorisé à créer un premier profil judoka.</p>
+            </div>
+          </div>
+
+          <label for="invite_email">Email invité</label>
+          <input type="email" id="invite_email" autocomplete="email" placeholder="prenom.nom@club.fr">
+
+          <div class="form-actions mobile-action-bar">
+            <button class="button-secondary" onclick="resetAccessInvitationForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
+              Réinitialiser
+            </button>
+            <button id="saveInvitationButton" onclick="saveAccessInvitation()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+              Enregistrer l'invitation
+            </button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Admins</h3>
+              <p class="subtitle">Consultez les admins actuels et retirez leurs droits si nécessaire.</p>
+            </div>
+          </div>
+          <div id="adminsList"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Ajouter un admin</h3>
+              <p class="subtitle">Saisissez l'email exact d'un judoka déjà autorisé et déjà inscrit.</p>
+            </div>
+          </div>
+
+          <label for="admin_email">Email</label>
+          <input type="email" id="admin_email" autocomplete="email" placeholder="prenom.nom@club.fr">
+
+          <div class="form-actions mobile-action-bar">
+            <button class="button-secondary" onclick="resetAdminForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
+              Réinitialiser
+            </button>
+            <button id="saveAdminButton" onclick="saveAdminRole()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+              Ajouter l'admin
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -778,7 +276,7 @@
       <div class="panel-header">
         <div>
           <h2>Enfants</h2>
-          <p class="subtitle">Ajoutez ou modifiez les judokas dont vous avez la charge.</p>
+          <p class="subtitle">Ajoutez ou modifiez les judokas dont vous avez la charge, et activez leur accès autonome si besoin.</p>
         </div>
         <div class="competition-header-actions">
           <button class="button-secondary" onclick="showHome()">
@@ -792,7 +290,7 @@
           <div class="section-heading">
             <div>
               <h3>Liste des enfants</h3>
-              <p class="subtitle">Les enfants ajoutés pourront être sélectionnés dans vos compétitions et combats.</p>
+              <p class="subtitle">Les enfants ajoutés pourront être sélectionnés dans vos compétitions et combats, et se connecter seuls si un email est renseigné.</p>
             </div>
           </div>
           <div id="childrenList"></div>
@@ -802,7 +300,7 @@
           <div class="section-heading">
             <div>
               <h3 id="childFormTitle">Ajouter un enfant</h3>
-              <p class="subtitle">Renseignez le prénom et le nom du judoka.</p>
+              <p class="subtitle">Renseignez le prénom, le nom et, si besoin, l'email Google qui lui permettra de se connecter seul.</p>
             </div>
           </div>
 
@@ -814,8 +312,14 @@
           <label for="child_nom">Nom</label>
           <input type="text" id="child_nom" autocomplete="family-name">
 
+          <label for="child_email">Email de connexion (optionnel)</label>
+          <input type="email" id="child_email" autocomplete="email" placeholder="prenom.nom@club.fr">
+
           <div class="form-actions mobile-action-bar">
-            <button class="button-secondary" onclick="resetChildForm()">Réinitialiser</button>
+            <button class="button-secondary" onclick="resetChildForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
+              Réinitialiser
+            </button>
             <button id="saveChildButton" onclick="saveManagedChild()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               <span id="saveChildButtonText">Ajouter l'enfant</span>
@@ -854,17 +358,13 @@
             <span class="meta-label">Date</span>
             <span id="competitionDate" class="meta-value"></span>
           </div>
-          <div class="meta-row">
-            <span class="meta-label">Lieu</span>
-            <span id="competitionLieu" class="meta-value"></span>
-          </div>
           <div class="meta-row" id="row_competitionAgePoids">
-            <span class="meta-label">Catégorie</span>
+            <span class="meta-label">Catégories</span>
             <span id="competitionAgePoids" class="meta-value"></span>
           </div>
-          <div class="meta-row" id="row_competitionPesee">
-            <span class="meta-label">Pesée</span>
-            <span id="competitionPesee" class="meta-value"></span>
+          <div class="meta-row" id="row_competitionClassement">
+            <span class="meta-label">Classement</span>
+            <span id="competitionClassement" class="meta-value"></span>
           </div>
         </div>
         <div class="section">
@@ -876,7 +376,10 @@
           </div>
           <div id="combatsList"></div>
           <div class="mobile-action-bar primary-action">
-            <button onclick="showCombatForm()">Ajouter un combat</button>
+            <button onclick="showCombatForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+              Ajouter un combat
+            </button>
           </div>
         </div>
       </div>
@@ -886,7 +389,7 @@
       <div class="panel-header">
         <div>
           <h2 id="competitionFormTitle">Compétition</h2>
-          <p class="subtitle">Nom, date et lieu</p>
+          <p class="subtitle">Nom, date et catégories</p>
         </div>
       </div>
       <div class="panel-body">
@@ -907,9 +410,6 @@
         <label for="competition_date">Date</label>
         <input type="date" id="competition_date">
 
-        <label for="competition_lieu">Lieu</label>
-        <input type="text" id="competition_lieu">
-
         <div class="form-grid">
           <div>
             <label for="competition_categorie_age">Catégorie d'âge</label>
@@ -929,13 +429,24 @@
             <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg">
           </div>
           <div class="full-row">
-            <label for="competition_poids_pesee">Poids à la pesée (kg)</label>
-            <input type="number" id="competition_poids_pesee" step="0.1" placeholder="ex: 72.4">
+            <label for="competition_classement">Classement / résultat</label>
+            <select id="competition_classement">
+              <option value="">Non renseigné</option>
+              <option value="1er">1er</option>
+              <option value="2e">2e</option>
+              <option value="3e">3e</option>
+              <option value="5e">5e</option>
+              <option value="7e">7e</option>
+              <option value="Non classé">Non classé</option>
+            </select>
           </div>
         </div>
 
         <div class="form-actions mobile-action-bar">
-          <button class="button-secondary" onclick="cancelCompetitionForm()">Annuler</button>
+          <button class="button-secondary" onclick="cancelCompetitionForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+            Annuler
+          </button>
           <button onclick="saveCompetition()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
             Enregistrer
@@ -970,7 +481,7 @@
             </select>
           </div>
 
-          <div>
+          <div id="combatDecisionBlock" class="hidden">
             <label for="combat_type_victoire">Type de décision</label>
             <select id="combat_type_victoire">
               <option value="">Non spécifié</option>
@@ -989,7 +500,10 @@
         </div>
 
         <div class="form-actions mobile-action-bar">
-          <button class="button-secondary" onclick="cancelCombatForm()">Annuler</button>
+          <button class="button-secondary" onclick="cancelCombatForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+            Annuler
+          </button>
           <button id="saveCombatButton" onclick="saveCombat()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
             <span id="saveCombatButtonText">Ajouter le combat</span>
@@ -999,991 +513,7 @@
     </section>
   </main>
 
-  <script>
-    let currentUser = null;
-    let isAdmin = false;
-    let isParent = false;
-    let canManageChildren = false;
-    let competitions = [];
-    let currentCompetition = null;
-    let judokas = [];
-    let currentCombats = [];
-    let managedChildren = [];
-    let canManageCurrentCompetition = false;
-    let canEditCurrentCompetition = false;
-    let previousView = "homeView";
-    const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-    const sessionStorageKey = "kiroku_supabase_session";
+  <script src="/api/client" defer></script>
 
-    async function runServer(method, args, success, failure) {
-      try {
-        const session = await getValidVercelSession();
-        if (!session) {
-          showVercelLogin();
-          return;
-        }
-
-        const response = await fetch("/api/rpc", {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + session.access_token,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ method, args })
-        });
-        const payload = await response.json();
-
-        if (!response.ok || payload.error) {
-          throw new Error(payload.error || "Erreur serveur.");
-        }
-
-        success && success(payload.result);
-      } catch (error) {
-        if (String(error.message || "").includes("Session Supabase invalide") || String(error.message || "").includes("Utilisateur non identifié")) {
-          clearVercelSession();
-          showVercelLogin();
-        } else if (method === "getInitialData" && String(error.message || "").includes("Accès refusé pour")) {
-          showProfileRegistration();
-          return;
-        }
-        failure ? failure(error) : showError(error);
-      }
-    }
-
-    function readVercelSession() {
-      try {
-        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
-      } catch (_error) {
-        return null;
-      }
-    }
-
-    function saveVercelSession(session) {
-      localStorage.setItem(sessionStorageKey, JSON.stringify(session));
-    }
-
-    function clearVercelSession() {
-      localStorage.removeItem(sessionStorageKey);
-    }
-
-    function getVercelAuthRedirectUrl() {
-      return window.location.origin + window.location.pathname;
-    }
-
-    function startGoogleLogin() {
-      clearMessage();
-
-      if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
-        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
-        return;
-      }
-
-      const authorizeUrl = new URL(`${runtimeConfig.supabaseUrl}/auth/v1/authorize`);
-      authorizeUrl.searchParams.set("provider", "google");
-      authorizeUrl.searchParams.set("redirect_to", getVercelAuthRedirectUrl());
-      window.location.href = authorizeUrl.toString();
-    }
-
-    function parseVercelAuthCallback() {
-      const hashParams = window.location.hash
-        ? new URLSearchParams(window.location.hash.slice(1))
-        : new URLSearchParams();
-      const queryParams = window.location.search
-        ? new URLSearchParams(window.location.search)
-        : new URLSearchParams();
-      const error = hashParams.get("error_description")
-        || hashParams.get("error")
-        || queryParams.get("error_description")
-        || queryParams.get("error");
-      if (error) {
-        history.replaceState(null, document.title, window.location.pathname);
-        showError({ message: "Connexion Google impossible : " + error });
-        return;
-      }
-
-      const params = hashParams;
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      const expiresIn = Number(params.get("expires_in") || "3600");
-
-      if (accessToken) {
-        saveVercelSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || "",
-          expires_at: Math.floor(Date.now() / 1000) + expiresIn
-        });
-        history.replaceState(null, document.title, window.location.pathname);
-      }
-    }
-
-    async function getValidVercelSession() {
-      let session = readVercelSession();
-      if (!session) return null;
-
-      const expiresAt = Number(session.expires_at || 0);
-      if (expiresAt && expiresAt > Math.floor(Date.now() / 1000) + 60) {
-        return session;
-      }
-
-      if (!session.refresh_token) {
-        clearVercelSession();
-        return null;
-      }
-
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({ refresh_token: session.refresh_token })
-      });
-
-      if (!response.ok) {
-        clearVercelSession();
-        return null;
-      }
-
-      const refreshed = await response.json();
-      session = {
-        access_token: refreshed.access_token,
-        refresh_token: refreshed.refresh_token || session.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
-      };
-      saveVercelSession(session);
-      return session;
-    }
-
-    function getSupabaseAnonymousAuthHeaders() {
-      return {
-        "apikey": runtimeConfig.supabaseAnonKey,
-        "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
-        "Content-Type": "application/json"
-      };
-    }
-
-    async function readSupabaseAuthError(response) {
-      try {
-        const payload = await response.json();
-        return payload.msg || payload.message || payload.error_description || payload.error || "";
-      } catch (_error) {
-        return response.text();
-      }
-    }
-
-    function showVercelLogin() {
-      document.querySelector("header").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google associé à votre fiche judoka. Les droits sont ensuite appliqués à partir du profil judoka correspondant.";
-      document.getElementById("oauthLoginOptions").classList.remove("hidden");
-      document.getElementById("profileRegistrationForm").classList.add("hidden");
-      showView("loginView");
-    }
-
-    function showProfileRegistration() {
-      document.querySelector("header").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil judoka dans l'application.";
-      document.getElementById("oauthLoginOptions").classList.add("hidden");
-      document.getElementById("profileRegistrationForm").classList.remove("hidden");
-      showView("loginView");
-    }
-
-    document.getElementById("profileRegistrationForm").addEventListener("submit", event => {
-      event.preventDefault();
-      clearMessage();
-
-      const profile = {
-        prenom: document.getElementById("registrationPrenom").value,
-        nom: document.getElementById("registrationNom").value
-      };
-
-      runServer(
-        "registerProfile",
-        [profile],
-        response => {
-          showSuccess(response.message);
-          init();
-        },
-        showError
-      );
-    });
-
-    function init() {
-      parseVercelAuthCallback();
-
-      if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
-        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
-        showVercelLogin();
-        return;
-      }
-
-      runServer(
-        "getInitialData",
-        [],
-        data => {
-          if (!data) {
-            showError({ message: "getInitialData() a renvoyé null." });
-            return;
-          }
-
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
-          applyInitialData(data);
-          showHome();
-        },
-        showError
-      );
-    }
-
-    function applyInitialData(data) {
-      currentUser = data.user;
-      isAdmin = Boolean(data.isAdmin);
-      isParent = Boolean(data.isParent);
-      canManageChildren = Boolean(data.canManageChildren);
-      competitions = Array.isArray(data.competitions) ? data.competitions : [];
-      judokas = Array.isArray(data.judokas) ? data.judokas : [];
-      document.querySelector("header").classList.remove("hidden");
-
-      const roleLabel = isAdmin ? "ADMIN" : isParent ? "PARENT" : "JUDOKA";
-      document.getElementById("userInfo").innerHTML =
-        `<strong>${escapeHtml(currentUser.prenom || "")} ${escapeHtml(currentUser.nom || "")}</strong> - ${roleLabel}`;
-      document.getElementById("homeAdminActions").classList.remove("hidden");
-      document.getElementById("manageChildrenButton").classList.toggle("hidden", !canManageChildren);
-
-      const homeFilters = document.getElementById("homeFilters");
-      const filterInput = document.getElementById("filterJudokaText");
-      const filterHidden = document.getElementById("filterJudoka");
-      const canFilterByJudoka = (isAdmin || isParent) && judokas.length > 0;
-      homeFilters.classList.toggle("hidden", !canFilterByJudoka);
-      if (!canFilterByJudoka) {
-        filterInput.value = "";
-        filterHidden.value = "";
-      }
-
-      ensureHomeFilterAutocomplete();
-    }
-
-    function ensureHomeFilterAutocomplete() {
-      const input = document.getElementById("filterJudokaText");
-      if (input.dataset.bound) {
-        return;
-      }
-
-      bindAutocomplete({
-        inputId: "filterJudokaText",
-        dropdownId: "filterJudokaDropdown",
-        hiddenId: "filterJudoka",
-        getItems: () => judokas,
-        allowBlank: true,
-        onChange: () => renderCompetitions()
-      });
-      input.dataset.bound = "1";
-    }
-
-    function renderCompetitions() {
-      const target = document.getElementById("competitionsList");
-      const filterValue = document.getElementById("filterJudoka").value;
-
-      let filteredComps = competitions;
-      if (filterValue) {
-        filteredComps = competitions.filter(c => String(c.id_judoka) === String(filterValue));
-      }
-
-      if (!filteredComps.length) {
-        target.innerHTML = `<div class="empty-state">Aucune compétition trouvée.</div>`;
-        return;
-      }
-
-      const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
-
-      let html = `<div class="table-container" style="overflow-x: auto;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Date</th>
-              <th>Lieu</th>
-              ${(isAdmin || isParent) ? "<th>Judoka</th>" : ""}
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      filteredComps.forEach(c => {
-        const judoka = judokasById.get(String(c.id_judoka));
-        const judokaNom = judoka ? `${judoka.prenom} ${judoka.nom}` : "";
-        html += `
-          <tr>
-            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')"><strong>${escapeHtml(c.nom || "")}</strong></td>
-            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${formatDate(c.date)}</td>
-            <td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${escapeHtml(c.lieu || "")}</td>
-            ${(isAdmin || isParent) ? `<td onclick="openCompetition('${escapeAttribute(c.id_competition)}')">${escapeHtml(judokaNom)}</td>` : ""}
-            <td class="table-actions">
-              ${isAdmin ? `<button class="button-danger" data-id="${escapeAttribute(c.id_competition)}" data-name="${escapeAttribute(c.nom || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)" title="Supprimer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              </button>` : ""}
-            </td>
-          </tr>
-        `;
-      });
-
-      html += `</tbody></table></div>`;
-      target.innerHTML = html;
-    }
-
-    function openCompetition(id, keepMessage) {
-      if (!keepMessage) {
-        clearMessage();
-      }
-      document.getElementById("competitionTitle").innerText = "Chargement...";
-      document.getElementById("competitionSubtitle").innerText = "";
-      document.getElementById("combatsList").innerHTML = `<div class="empty-state">Chargement des combats...</div>`;
-      showView("competitionView");
-
-      runServer(
-        "getCompetitionDetail",
-        [id],
-        data => {
-          currentCompetition = data.competition;
-          currentCombats = Array.isArray(data.combats) ? data.combats : [];
-          judokas = Array.isArray(data.judokas) ? data.judokas : [];
-          canManageCurrentCompetition = Boolean(data.canManageCompetition);
-          canEditCurrentCompetition = Boolean(data.canEditCompetition);
-
-          renderCompetitionDetail();
-          renderCombats();
-        },
-        showError
-      );
-    }
-
-    function renderCompetitionDetail() {
-      document.getElementById("competitionTitle").innerText = currentCompetition.nom || "Compétition";
-      document.getElementById("competitionSubtitle").innerText = "Détail de la compétition";
-      document.getElementById("competitionDate").innerText = formatDate(currentCompetition.date);
-      document.getElementById("competitionLieu").innerText = currentCompetition.lieu || "";
-      
-      const agePoids = [currentCompetition.categorie_age, currentCompetition.categorie_poids].filter(Boolean).join(" ");
-      if (agePoids) {
-        document.getElementById("row_competitionAgePoids").classList.remove("hidden");
-        document.getElementById("competitionAgePoids").innerText = agePoids;
-      } else {
-        document.getElementById("row_competitionAgePoids").classList.add("hidden");
-      }
-
-      if (currentCompetition.poids_pesee) {
-        document.getElementById("row_competitionPesee").classList.remove("hidden");
-        document.getElementById("competitionPesee").innerText = currentCompetition.poids_pesee + " kg";
-      } else {
-        document.getElementById("row_competitionPesee").classList.add("hidden");
-      }
-
-      document.getElementById("competitionAdminActions").classList.toggle("hidden", !canEditCurrentCompetition);
-    }
-
-    function editCurrentCompetition() {
-      if (!currentCompetition) {
-        showError({ message: "Compétition introuvable." });
-        return;
-      }
-
-      showCompetitionForm(currentCompetition.id_competition);
-    }
-
-    function renderCombats() {
-      const target = document.getElementById("combatsList");
-
-      if (!currentCombats.length) {
-        target.innerHTML = `<div class="empty-state">Aucun combat pour cette compétition.</div>`;
-        return;
-      }
-
-      let html = `<div class="list">`;
-
-      currentCombats.forEach(c => {
-        html += `
-          <article class="card combat-card">
-            <div class="combat-header">
-              <p class="card-title">${escapeHtml(c.adversaire || "Adversaire non renseigné")}</p>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <span class="result-badge result-${escapeAttribute(String(c.resultat || "").toLowerCase())}">${formatResultat(c.resultat)}</span>
-                ${c.type_victoire ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.type_victoire)}</span>` : ""}
-              </div>
-            </div>
-            ${isAdmin ? `
-              <div class="meta-row">
-                <span class="meta-label">Judoka</span>
-                <span class="meta-value">${escapeHtml(c.judoka_nom || "")}</span>
-              </div>
-            ` : ""}
-            <p class="combat-comment">${escapeHtml(c.deroule || "Aucun déroulé renseigné")}</p>
-            <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(c.id_combat)}" onclick="showCombatForm(this.dataset.id)" title="Éditer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              </button>
-              <button class="button-danger" data-id="${escapeAttribute(c.id_combat)}" onclick="deleteCombat(this.dataset.id)" title="Supprimer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              </button>
-            </div>
-          </article>
-        `;
-      });
-
-      html += `</div>`;
-      target.innerHTML = html;
-    }
-
-    function showCompetitionForm(id) {
-      clearMessage();
-      previousView = currentCompetition ? "competitionView" : "homeView";
-
-      if (id) {
-        const c = competitions.find(x => String(x.id_competition) === String(id)) || currentCompetition;
-
-        if (!c) {
-          showError({ message: "Compétition introuvable." });
-          return;
-        }
-
-        document.getElementById("competitionFormTitle").innerText = "Modifier la compétition";
-        document.getElementById("competition_id").value = c.id_competition;
-        setCompetitionOwnerField(c.id_judoka || "");
-        document.getElementById("competition_nom").value = c.nom || "";
-        document.getElementById("competition_date").value = toInputDate(c.date);
-        document.getElementById("competition_lieu").value = c.lieu || "";
-        document.getElementById("competition_categorie_age").value = c.categorie_age || "";
-        document.getElementById("competition_categorie_poids").value = c.categorie_poids || "";
-        document.getElementById("competition_poids_pesee").value = c.poids_pesee || "";
-      } else {
-        previousView = "homeView";
-        document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
-        document.getElementById("competition_id").value = "";
-        setCompetitionOwnerField("");
-        document.getElementById("competition_nom").value = "";
-        document.getElementById("competition_date").value = "";
-        document.getElementById("competition_lieu").value = "";
-        document.getElementById("competition_categorie_age").value = "";
-        document.getElementById("competition_categorie_poids").value = "";
-        document.getElementById("competition_poids_pesee").value = "";
-      }
-
-      showView("competitionFormView");
-    }
-
-    function cancelCompetitionForm() {
-      showView(previousView || "homeView");
-    }
-
-    function saveCompetition() {
-      const competition = {
-        id_competition: document.getElementById("competition_id").value,
-        nom: document.getElementById("competition_nom").value,
-        date: document.getElementById("competition_date").value,
-        lieu: document.getElementById("competition_lieu").value,
-        categorie_age: document.getElementById("competition_categorie_age").value,
-        categorie_poids: document.getElementById("competition_categorie_poids").value,
-        poids_pesee: document.getElementById("competition_poids_pesee").value
-      };
-
-      if (isAdmin || isParent) {
-        competition.id_judoka = document.getElementById("competition_id_judoka").value;
-      }
-
-      runServer(
-        "saveCompetition",
-        [competition],
-        response => {
-          showSuccess(response.message);
-          reloadInitialData(response.id_competition);
-        },
-        showError
-      );
-    }
-
-    function showCombatForm(id) {
-      clearMessage();
-      resetCombatForm();
-
-      if (id) {
-        const combat = currentCombats.find(c => String(c.id_combat) === String(id));
-
-        if (!combat) {
-          showError({ message: "Combat introuvable." });
-          return;
-        }
-
-        document.getElementById("combatFormTitle").innerText = "Modifier le combat";
-        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
-        document.getElementById("saveCombatButtonText").innerText = "Enregistrer le combat";
-        document.getElementById("combat_id").value = combat.id_combat || "";
-        document.getElementById("combat_adversaire").value = combat.adversaire || "";
-        document.getElementById("combat_resultat").value = combat.resultat || "";
-        document.getElementById("combat_type_victoire").value = combat.type_victoire || "";
-        document.getElementById("combat_deroule").value = combat.deroule || "";
-      } else {
-        document.getElementById("combatFormTitle").innerText = "Ajouter un combat";
-        document.getElementById("combatFormSubtitle").innerText = currentCompetition.nom || "";
-      }
-
-      showView("combatFormView");
-      document.getElementById("combat_adversaire").focus();
-    }
-
-    function cancelCombatForm() {
-      resetCombatForm();
-      showView("competitionView");
-    }
-
-    function saveCombat() {
-      const idCombat = document.getElementById("combat_id").value;
-
-      if (idCombat) {
-        updateCombat(idCombat);
-      } else {
-        addCombat();
-      }
-    }
-
-    function addCombat() {
-      if (!currentCompetition) {
-        showError({ message: "Ouvre une compétition avant d'ajouter un combat." });
-        return;
-      }
-
-      const combat = getCombatFormValue();
-
-      runServer(
-        "ajouterCombat",
-        [combat],
-        response => {
-          showSuccess(response.message);
-          // Mise à jour locale : pas besoin de recharger depuis le serveur
-          const newCombat = {
-            id_combat: "CB" + Date.now(),
-            id_judoka: combat.id_judoka,
-            id_competition: combat.id_competition,
-            adversaire: combat.adversaire || "",
-            resultat: combat.resultat,
-            type_victoire: combat.type_victoire || "",
-            deroule: combat.deroule || "",
-            judoka_nom: currentUser ? `${currentUser.prenom} ${currentUser.nom}` : ""
-          };
-          currentCombats.push(newCombat);
-          resetCombatForm();
-          showView("competitionView");
-          renderCombats();
-        },
-        showError
-      );
-    }
-
-    function updateCombat(idCombat) {
-      const combat = getCombatFormValue();
-      combat.id_combat = idCombat;
-
-      runServer(
-        "updateCombat",
-        [combat],
-        response => {
-          showSuccess(response.message);
-          // Mise à jour locale du combat modifié
-          const idx = currentCombats.findIndex(c => String(c.id_combat) === String(idCombat));
-          if (idx !== -1) {
-            currentCombats[idx] = {
-              ...currentCombats[idx],
-              adversaire: combat.adversaire || "",
-              resultat: combat.resultat,
-              type_victoire: combat.type_victoire || "",
-              deroule: combat.deroule || ""
-            };
-          }
-          resetCombatForm();
-          showView("competitionView");
-          renderCombats();
-        },
-        showError
-      );
-    }
-
-    function getCombatFormValue() {
-      return {
-        id_competition: currentCompetition.id_competition,
-        id_judoka: currentCompetition.id_judoka,
-        adversaire: document.getElementById("combat_adversaire").value,
-        resultat: document.getElementById("combat_resultat").value,
-        type_victoire: document.getElementById("combat_type_victoire").value,
-        deroule: document.getElementById("combat_deroule").value
-      };
-    }
-
-    function deleteCurrentCompetition() {
-      if (!currentCompetition) return;
-
-      const label = currentCompetition.nom ? ` "${currentCompetition.nom}"` : "";
-
-      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteCompetition",
-        [currentCompetition.id_competition],
-        response => {
-          showSuccess(response.message);
-          currentCompetition = null;
-          reloadInitialData();
-        },
-        showError
-      );
-    }
-
-    function deleteCompetitionFromList(id, name) {
-      const label = name ? ` "${name}"` : "";
-
-      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteCompetition",
-        [id],
-        response => {
-          showSuccess(response.message);
-          reloadInitialData();
-        },
-        showError
-      );
-    }
-
-    function deleteCombat(id) {
-      if (!window.confirm("Supprimer ce combat ?")) {
-        return;
-      }
-
-      runServer(
-        "deleteCombat",
-        [id],
-        response => {
-          showSuccess(response.message);
-          openCompetition(currentCompetition.id_competition, true);
-        },
-        showError
-      );
-    }
-
-    function getJudokaDisplayName(j) {
-      return `${j.prenom || ""} ${j.nom || ""}`.trim();
-    }
-
-    function bindAutocomplete({ inputId, dropdownId, hiddenId, getItems, allowBlank, onChange }) {
-      const input = document.getElementById(inputId);
-      const dropdown = document.getElementById(dropdownId);
-      const hidden = document.getElementById(hiddenId);
-      let isSelecting = false;
-
-      function select(value, label) {
-        input.value = label;
-        hidden.value = value;
-        dropdown.style.display = "none";
-        isSelecting = false;
-        onChange && onChange(value ? getItems().find(j => String(j.id_judoka) === String(value)) : null);
-      }
-
-      function renderOptions(items) {
-        dropdown.innerHTML = "";
-
-        if (allowBlank) {
-          const opt = document.createElement("div");
-          opt.className = "autocomplete-option";
-          opt.textContent = "— Tous —";
-          opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select("", ""); });
-          dropdown.appendChild(opt);
-        }
-
-        if (!items.length) {
-          const empty = document.createElement("div");
-          empty.className = "autocomplete-empty";
-          empty.textContent = "Aucun résultat";
-          dropdown.appendChild(empty);
-        } else {
-          items.forEach(j => {
-            const name = getJudokaDisplayName(j);
-            const opt = document.createElement("div");
-            opt.className = "autocomplete-option";
-            opt.textContent = name;
-            opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select(j.id_judoka, name); });
-            dropdown.appendChild(opt);
-          });
-        }
-
-        dropdown.style.display = "block";
-      }
-
-      input.addEventListener("focus", () => {
-        const q = input.value.toLowerCase().trim();
-        renderOptions(getItems().filter(j => !q || getJudokaDisplayName(j).toLowerCase().includes(q)));
-      });
-
-      input.addEventListener("input", () => {
-        const q = input.value.toLowerCase().trim();
-        hidden.value = "";
-        renderOptions(getItems().filter(j => !q || getJudokaDisplayName(j).toLowerCase().includes(q)));
-      });
-
-      input.addEventListener("blur", () => {
-        if (!isSelecting) {
-          dropdown.style.display = "none";
-        }
-      });
-    }
-
-    function setCompetitionOwnerField(idJudoka) {
-      const block = document.getElementById("competitionOwnerBlock");
-
-      if (!isAdmin && !isParent) {
-        block.classList.add("hidden");
-        return;
-      }
-
-      block.classList.remove("hidden");
-
-      // Branche l'autocomplete la première fois (évite les doublons de listeners)
-      const input = document.getElementById("competition_judoka_text");
-      if (!input.dataset.bound) {
-        bindAutocomplete({
-          inputId: "competition_judoka_text",
-          dropdownId: "competition_judoka_dropdown",
-          hiddenId: "competition_id_judoka",
-          getItems: () => judokas
-        });
-        input.dataset.bound = "1";
-      }
-
-      const owner = judokas.find(j => String(j.id_judoka) === String(idJudoka));
-      input.value = owner ? getJudokaDisplayName(owner) : "";
-      document.getElementById("competition_id_judoka").value = idJudoka || "";
-    }
-
-    function resetCombatForm() {
-      document.getElementById("combat_id").value = "";
-      document.getElementById("combat_adversaire").value = "";
-      document.getElementById("combat_resultat").value = "";
-      document.getElementById("combat_type_victoire").value = "";
-      document.getElementById("combat_deroule").value = "";
-      document.getElementById("saveCombatButtonText").innerText = "Ajouter le combat";
-    }
-
-    function showChildrenManagement(keepMessage) {
-      if (!keepMessage) {
-        clearMessage();
-      }
-
-      runServer(
-        "getChildrenManagement",
-        [],
-        data => {
-          managedChildren = Array.isArray(data.children) ? data.children : [];
-          renderManagedChildren();
-          resetChildForm();
-          showView("childrenView");
-        },
-        showError
-      );
-    }
-
-    function renderManagedChildren() {
-      const target = document.getElementById("childrenList");
-      if (!managedChildren.length) {
-        target.innerHTML = `<div class="empty-state">Aucun enfant enregistré pour le moment.</div>`;
-        return;
-      }
-
-      let html = `<div class="list">`;
-      managedChildren.forEach(child => {
-        const fullName = getJudokaDisplayName(child) || "Enfant";
-        html += `
-          <article class="card child-card">
-            <p class="card-title">${escapeHtml(fullName)}</p>
-            <div class="card-meta">
-              <div class="meta-row">
-                <span class="meta-label">Prénom</span>
-                <span class="meta-value">${escapeHtml(child.prenom || "")}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Nom</span>
-                <span class="meta-value">${escapeHtml(child.nom || "")}</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(child.id_judoka)}" onclick="editManagedChild(this.dataset.id)">Modifier</button>
-              <button class="button-danger" data-id="${escapeAttribute(child.id_judoka)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)">Supprimer</button>
-            </div>
-          </article>
-        `;
-      });
-      html += `</div>`;
-      target.innerHTML = html;
-    }
-
-    function resetChildForm() {
-      document.getElementById("child_id").value = "";
-      document.getElementById("child_prenom").value = "";
-      document.getElementById("child_nom").value = "";
-      document.getElementById("childFormTitle").innerText = "Ajouter un enfant";
-      document.getElementById("saveChildButtonText").innerText = "Ajouter l'enfant";
-    }
-
-    function editManagedChild(idJudoka) {
-      const child = managedChildren.find(item => String(item.id_judoka) === String(idJudoka));
-      if (!child) {
-        showError({ message: "Enfant introuvable." });
-        return;
-      }
-
-      document.getElementById("child_id").value = child.id_judoka || "";
-      document.getElementById("child_prenom").value = child.prenom || "";
-      document.getElementById("child_nom").value = child.nom || "";
-      document.getElementById("childFormTitle").innerText = "Modifier l'enfant";
-      document.getElementById("saveChildButtonText").innerText = "Enregistrer l'enfant";
-      showView("childrenView");
-      document.getElementById("child_prenom").focus();
-    }
-
-    function saveManagedChild() {
-      const child = {
-        id_judoka: document.getElementById("child_id").value,
-        prenom: document.getElementById("child_prenom").value,
-        nom: document.getElementById("child_nom").value
-      };
-
-      runServer(
-        "saveManagedChild",
-        [child],
-        response => {
-          showSuccess(response.message);
-          reloadInitialDataAndShowChildren();
-        },
-        showError
-      );
-    }
-
-    function deleteManagedChild(idJudoka, name) {
-      const label = name ? ` "${name}"` : "";
-      if (!window.confirm(`Supprimer l'enfant${label} ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteManagedChild",
-        [idJudoka],
-        response => {
-          showSuccess(response.message);
-          reloadInitialDataAndShowChildren();
-        },
-        showError
-      );
-    }
-
-    function reloadInitialData(openCompetitionId) {
-      runServer(
-        "getInitialData",
-        [],
-        data => {
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
-          applyInitialData(data);
-
-          if (openCompetitionId) {
-            openCompetition(openCompetitionId, true);
-          } else {
-            showHome();
-          }
-        },
-        showError
-      );
-    }
-
-    function reloadInitialDataAndShowChildren() {
-      runServer(
-        "getInitialData",
-        [],
-        data => {
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
-          applyInitialData(data);
-          showChildrenManagement(true);
-        },
-        showError
-      );
-    }
-
-    function showHome() {
-      currentCompetition = null;
-      currentCombats = [];
-      canManageCurrentCompetition = false;
-      canEditCurrentCompetition = false;
-      renderCompetitions();
-      showView("homeView");
-    }
-
-    function showView(id) {
-      ["loginView", "homeView", "childrenView", "competitionView", "competitionFormView", "combatFormView"].forEach(viewId => {
-        document.getElementById(viewId).classList.add("hidden");
-      });
-
-      document.getElementById(id).classList.remove("hidden");
-    }
-
-    function formatDate(value) {
-      if (!value) return "";
-      const d = new Date(value);
-      return isNaN(d.getTime()) ? value : d.toLocaleDateString("fr-FR");
-    }
-
-    function toInputDate(value) {
-      if (!value) return "";
-      const d = new Date(value);
-      return isNaN(d.getTime()) ? value : d.toISOString().slice(0, 10);
-    }
-
-    function formatResultat(value) {
-      if (value === "V") return "Victoire";
-      if (value === "D") return "Défaite";
-      if (value === "E") return "Égalité";
-      return value || "";
-    }
-
-    function showSuccess(message) {
-      document.getElementById("message").innerHTML = `<p class="success">${escapeHtml(message)}</p>`;
-    }
-
-    function showError(error) {
-      document.getElementById("message").innerHTML = `<p class="error">${escapeHtml(error.message || error)}</p>`;
-    }
-
-    function clearMessage() {
-      document.getElementById("message").innerHTML = "";
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function escapeAttribute(value) {
-      return escapeHtml(value).replaceAll("`", "&#096;");
-    }
-
-    init();
-  </script>
 </body>
 </html>
