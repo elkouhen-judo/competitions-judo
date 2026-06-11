@@ -359,26 +359,17 @@ Sur Vercel :
 - `Index.html` reste l'interface principale ;
 - les appels `google.script.run` sont remplacés dans le navigateur par un adaptateur HTTP compatible ;
 - les fonctions métier sont exposées via une API serverless Vercel ;
-- l'utilisateur se connecte avec l'authentification Supabase email/mot de passe ;
-- l'utilisateur peut aussi se connecter avec Google via le provider Google de Supabase Auth ;
+- l'utilisateur se connecte avec Google via le provider Google de Supabase Auth ;
 - le navigateur lance la connexion Google en redirigeant vers `auth/v1/authorize?provider=google` avec une URL de retour publique de l'application ;
 - après le callback OAuth Google, le navigateur conserve la session Supabase retournée et l'utilise pour les appels API ;
 - les appels navigateur vers Supabase Auth qui utilisent la clé anonyme doivent envoyer `apikey` et `Authorization: Bearer <SUPABASE_ANON_KEY>` ;
-- la connexion standard ne doit pas envoyer d'email ;
-- si aucun compte Supabase Auth n'existe pour cet email, l'application tente une inscription automatique côté serveur ;
-- si l'environnement expose `SUPABASE_AUTH_ADMIN_JWT` ou si `SUPABASE_SERVICE_ROLE_KEY` contient encore une ancienne clé JWT `service_role`, le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
-- si seul un `sb_secret_...` moderne est disponible côté serveur, l'application bascule sur `auth/v1/signup`, crée le compte puis indique clairement à l'utilisateur qu'une confirmation email est requise avant la première connexion ;
-- le compte Supabase Auth créé automatiquement est marqué comme confirmé afin d'éviter l'envoi d'un email de validation ;
-- si Supabase Auth répond `invalid_credentials` au premier essai, l'application retente l'inscription automatique avant de renvoyer une erreur ;
-- l'écran de connexion explique clairement que le même formulaire permet soit de se connecter, soit de créer automatiquement son compte lors de la première utilisation ;
+- l'écran de connexion ne propose pas d'authentification par mot de passe ;
 - si l'email authentifié n'existe pas encore dans la table `judokas`, l'utilisateur doit compléter un formulaire de création de profil applicatif ;
 - pour un profil judoka, le formulaire crée une ligne dans `judokas` avec le rôle `JUDOKA` ;
 - le formulaire initial de création de profil ne gère plus les enfants et crée toujours un profil `JUDOKA` ;
 - la gestion des enfants et le passage au rôle `PARENT` se font uniquement après connexion depuis l'écran dédié de gestion des enfants ;
 - le lien de confirmation Supabase doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;
-- l'écran de connexion propose une action "mot de passe oublié" qui envoie un email de réinitialisation Supabase ;
-- le lien de réinitialisation du mot de passe doit rediriger vers l'URL publique de l'application Vercel, et jamais vers localhost ;
-- les emails d'authentification doivent être réservés aux actions explicitement nécessaires, comme la réinitialisation du mot de passe ;
+- les emails d'authentification par mot de passe ne sont pas utilisés par l'application ;
 - les magic links ne sont pas utilisés pour l'authentification standard ;
 - l'API serverless vérifie la session Supabase Auth et récupère l'email vérifié ;
 - l'API rapproche cet email de la table `judokas` pour appliquer les droits métier ;
@@ -396,10 +387,6 @@ Variables d'environnement obligatoires :
 - `SUPABASE_ANON_KEY` ;
 - `SUPABASE_SERVICE_ROLE_KEY`.
 
-Variable d'environnement optionnelle :
-
-- `SUPABASE_AUTH_ADMIN_JWT` pour conserver une création de compte auto-confirmée sans email lorsque `SUPABASE_SERVICE_ROLE_KEY` contient une clé `sb_secret_...`.
-
 Configuration externe obligatoire pour Google Auth :
 
 - le provider Google doit être activé dans Supabase Auth ;
@@ -407,7 +394,7 @@ Configuration externe obligatoire pour Google Auth :
 - l'URI de redirection autorisée du client OAuth Google doit pointer vers le callback Supabase `https://<project-ref>.supabase.co/auth/v1/callback` ;
 - l'URL publique Vercel de l'application doit être autorisée dans les redirect URLs Supabase.
 
-La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Supabase Auth email/mot de passe, créer automatiquement et côté serveur le compte Auth si nécessaire, privilégier une création auto-confirmée sans email quand un JWT admin legacy est disponible, sinon basculer proprement sur une confirmation email explicite, puis appliquer les droits métier en recherchant l'email dans la table `judokas`."
+La demande fonctionnelle peut être formulée ainsi : "Rendre l'application déployable sur Vercel tout en conservant le fonctionnement Apps Script existant. Sur Vercel, connecter l'utilisateur avec Google via Supabase Auth, conserver la session Supabase retournée par le callback OAuth, puis appliquer les droits métier en recherchant l'email vérifié dans la table `judokas`."
 
 La demande fonctionnelle peut être formulée ainsi : "Permettre à un judoka connecté de devenir aussi parent depuis l'application grâce à un écran mobile first de gestion des enfants. Depuis cet écran, il doit pouvoir ajouter, modifier et supprimer ses enfants, être promu au rôle `PARENT` dès le premier enfant, puis retrouver le rôle `JUDOKA` si tous les enfants sont retirés, tout en conservant ses propres droits de judoka."
 

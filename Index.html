@@ -692,22 +692,6 @@
       display: grid;
       gap: 10px;
     }
-    .login-separator {
-      width: min(100%, 360px);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 14px;
-      margin: 4px 0;
-    }
-    .login-separator::before,
-    .login-separator::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: var(--line);
-    }
     .button-google {
       border-color: var(--line);
       background: #fff;
@@ -754,7 +738,7 @@
       <div class="login-container">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         <h2>Connexion requise</h2>
-        <p id="loginText">Utilisez l'email associé à votre fiche judoka. Si vous avez déjà un compte, vous serez connecté. Si c'est votre première connexion, le compte sera créé automatiquement avec ce mot de passe, sans email de validation.</p>
+        <p id="loginText">Connectez-vous avec le compte Google associé à votre fiche judoka.</p>
         <div id="oauthLoginOptions" class="login-options hidden">
           <button id="googleLoginButton" type="button" class="button-google" onclick="startGoogleLogin()">
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -766,15 +750,6 @@
             Se connecter avec Google
           </button>
         </div>
-        <div id="loginSeparator" class="login-separator hidden">ou</div>
-        <form id="supabaseLoginForm" class="login-form hidden">
-          <label for="loginEmail">Email</label>
-          <input id="loginEmail" type="email" autocomplete="email" required>
-          <label for="loginPassword">Mot de passe</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required>
-          <button type="submit">Se connecter ou créer le compte</button>
-          <button type="button" class="button-secondary" onclick="requestPasswordReset()">Mot de passe oublié</button>
-        </form>
         <form id="profileRegistrationForm" class="login-form hidden">
           <label for="registrationPrenom">Prénom</label>
           <input id="registrationPrenom" type="text" autocomplete="given-name">
@@ -1258,92 +1233,6 @@
       };
     }
 
-    async function requestPasswordSession(email, password) {
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=password`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({ email, password })
-      });
-
-      return response;
-    }
-
-    async function createAuthAccount(email, password) {
-      const response = await fetch("/api/auth-signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!response.ok) {
-        throw new Error(await readSupabaseAuthError(response) || "Création du compte impossible.");
-      }
-
-      return response.json();
-    }
-
-    async function authenticateWithPassword(email, password) {
-      let loginResponse = await requestPasswordSession(email, password);
-
-      if (loginResponse.ok) {
-        return loginResponse.json();
-      }
-
-      const loginError = await readSupabaseAuthError(loginResponse);
-      const shouldRegister = /invalid login credentials|invalid_credentials|signup|not found|user not found/i.test(loginError);
-      if (!shouldRegister) {
-        throw new Error(loginError || "Connexion impossible.");
-      }
-
-      const signupResult = await createAuthAccount(email, password);
-      if (signupResult && signupResult.requiresEmailConfirmation) {
-        throw new Error("Compte créé. Confirmez l'email reçu puis reconnectez-vous.");
-      }
-
-      loginResponse = await requestPasswordSession(email, password);
-      if (!loginResponse.ok) {
-        const secondLoginError = await readSupabaseAuthError(loginResponse);
-        if (/email not confirmed|email_not_confirmed/i.test(secondLoginError)) {
-          throw new Error("Compte créé. Confirmez l'email reçu puis reconnectez-vous.");
-        }
-        throw new Error(secondLoginError || "Compte créé, mais connexion impossible.");
-      }
-
-      return loginResponse.json();
-    }
-
-    async function requestPasswordReset() {
-      clearMessage();
-
-      if (!isVercelRuntime) {
-        showError({ message: "La réinitialisation du mot de passe est disponible sur la version Vercel." });
-        return;
-      }
-
-      const email = document.getElementById("loginEmail").value.trim();
-      if (!email) {
-        showError({ message: "Renseignez votre email avant de demander la réinitialisation." });
-        document.getElementById("loginEmail").focus();
-        return;
-      }
-
-      const redirectTo = encodeURIComponent(window.location.origin);
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/recover?redirect_to=${redirectTo}`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({ email })
-      });
-
-      if (!response.ok) {
-        showError({ message: await readSupabaseAuthError(response) || "Impossible d'envoyer l'email de réinitialisation." });
-        return;
-      }
-
-      showSuccess("Email de réinitialisation envoyé. Vérifiez votre boîte mail.");
-    }
-
     async function readSupabaseAuthError(response) {
       try {
         const payload = await response.json();
@@ -1356,11 +1245,9 @@
     function showVercelLogin() {
       document.querySelector("header").classList.add("hidden");
       document.getElementById("logoutButton").classList.add("hidden");
-      document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google ou l'email associé à votre fiche judoka. Les droits sont ensuite appliqués à partir du profil judoka correspondant.";
+      document.getElementById("loginText").innerText = "Connectez-vous avec le compte Google associé à votre fiche judoka. Les droits sont ensuite appliqués à partir du profil judoka correspondant.";
       document.getElementById("oauthLoginOptions").classList.remove("hidden");
-      document.getElementById("loginSeparator").classList.remove("hidden");
       document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
-      document.getElementById("supabaseLoginForm").classList.remove("hidden");
       document.getElementById("profileRegistrationForm").classList.add("hidden");
       showView("loginView");
     }
@@ -1370,9 +1257,7 @@
       document.getElementById("logoutButton").classList.add("hidden");
       document.getElementById("loginText").innerText = "Votre compte d'authentification est prêt. Complétez maintenant votre profil judoka dans l'application.";
       document.getElementById("oauthLoginOptions").classList.add("hidden");
-      document.getElementById("loginSeparator").classList.add("hidden");
       document.getElementById("appsScriptGoogleLoginButton").classList.add("hidden");
-      document.getElementById("supabaseLoginForm").classList.add("hidden");
       document.getElementById("profileRegistrationForm").classList.remove("hidden");
       showView("loginView");
     }
@@ -1393,33 +1278,6 @@
         })
         .withFailureHandler(showError)
         .registerProfile(profile);
-    });
-
-    document.getElementById("supabaseLoginForm").addEventListener("submit", async event => {
-      event.preventDefault();
-      clearMessage();
-
-      try {
-        const session = await authenticateWithPassword(
-          document.getElementById("loginEmail").value.trim(),
-          document.getElementById("loginPassword").value
-        );
-
-        if (!session.access_token) {
-          showSuccess("Compte créé. Reconnectez-vous avec votre email et votre mot de passe.");
-          return;
-        }
-
-        saveVercelSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token || "",
-          expires_at: Math.floor(Date.now() / 1000) + Number(session.expires_in || 3600)
-        });
-        document.querySelector("header").classList.remove("hidden");
-        init();
-      } catch (error) {
-        showError(error);
-      }
     });
 
     function init() {
@@ -1443,10 +1301,8 @@
             const loginButton = document.getElementById("appsScriptGoogleLoginButton");
             loginButton.href = loginUrl;
             loginButton.classList.remove("hidden");
-            document.getElementById("supabaseLoginForm").classList.add("hidden");
             document.getElementById("profileRegistrationForm").classList.add("hidden");
             document.getElementById("oauthLoginOptions").classList.add("hidden");
-            document.getElementById("loginSeparator").classList.add("hidden");
             document.querySelector("header").classList.add("hidden");
             document.getElementById("logoutButton").classList.add("hidden");
             showView("loginView");
