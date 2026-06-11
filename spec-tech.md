@@ -50,6 +50,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
 - **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `core/domain/*`, application orchestration in `core/services/*`, and persistence adapters in `core/repositories/*`.
+- **ARC-006**: Domain objects shall not expose Supabase record serialization methods; repositories shall translate domain objects to persistence records.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -134,7 +135,7 @@ This specification does not redefine product behavior already described in `SPEC
 | `api/_core.js` | Shared backend core | Shared auth, Supabase helpers, and method composition |
 | `core/domain/*` | Backend domain model | Entities, value objects, business policies, and domain services |
 | `core/services/*` | Backend application services | Use-case orchestration over the domain |
-| `core/repositories/*` | Backend persistence adapters | Data access for business aggregates |
+| `core/repositories/*` | Backend persistence adapters | Data access for business aggregates and mapping from domain objects to Supabase records |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
 
 ### 4.2 Vercel routing contract

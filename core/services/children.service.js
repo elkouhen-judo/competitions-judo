@@ -51,7 +51,7 @@ module.exports = function createChildrenService(deps) {
         email: child.email
       });
       await userContextService.assertJudokaEmailAvailable(updatedChild.email, child.id_judoka);
-      await judokasRepository.update(child.id_judoka, updatedChild.toRecord());
+      await judokasRepository.updateManagedChild(child.id_judoka, updatedChild);
 
       return {
         success: true,
@@ -68,7 +68,7 @@ module.exports = function createChildrenService(deps) {
       nom
     });
     await userContextService.assertJudokaEmailAvailable(managedChild.email, idJudoka);
-    await judokasRepository.insert(managedChild.toRecord());
+    await judokasRepository.insert(managedChild);
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,
       id_judoka: idJudoka

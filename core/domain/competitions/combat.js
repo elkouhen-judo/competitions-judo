@@ -18,38 +18,19 @@ function createCombat(combat) {
   };
 
   return {
-    ...record,
-    toRecord() {
-      return { ...record };
-    },
-    toNewRecord(buildCombatId) {
-      return {
-        id_combat: buildCombatId(),
-        ...record
-      };
-    }
+    ...record
   };
 }
 
-function toCombatRecord(combat) {
-  return createCombat(combat).toRecord();
-}
-
-function createCombatRecord(combat, buildCombatId) {
-  return createCombat(combat).toNewRecord(buildCombatId);
-}
-
-function updateCombatRecord(combat) {
+function updateCombat(combat) {
   if (!combat || !combat.id_combat) {
     throw new Error("Combat obligatoire.");
   }
 
-  return toCombatRecord(combat);
+  return createCombat(combat);
 }
 
 module.exports = {
   createCombat,
-  createCombatRecord,
-  toCombatRecord,
-  updateCombatRecord
+  updateCombat
 };

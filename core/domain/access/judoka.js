@@ -53,7 +53,7 @@ function createJudoka(user = {}) {
 function createManagedChild({ id_judoka, email, prenom, nom }) {
   assertManagedChildName(prenom, nom);
 
-  const child = createJudoka({
+  return createJudoka({
     id_judoka,
     email,
     prenom,
@@ -61,24 +61,6 @@ function createManagedChild({ id_judoka, email, prenom, nom }) {
     profile_type: "JUDOKA",
     role: "NORMAL"
   });
-
-  return {
-    ...child,
-    toRecord() {
-      return {
-        id_judoka: child.id_judoka,
-        email: child.email,
-        prenom: child.prenom,
-        nom: child.nom,
-        profile_type: child.profile_type,
-        role: child.role
-      };
-    }
-  };
-}
-
-function createManagedChildRecord({ id_judoka, email, prenom, nom }) {
-  return createManagedChild({ id_judoka, email, prenom, nom }).toRecord();
 }
 
 function updateManagedChild({ email, prenom, nom }) {
@@ -87,19 +69,8 @@ function updateManagedChild({ email, prenom, nom }) {
   return {
     email: normalizeOptionalEmail(email),
     prenom,
-    nom,
-    toRecord() {
-      return {
-        email: normalizeOptionalEmail(email),
-        prenom,
-        nom
-      };
-    }
+    nom
   };
-}
-
-function updateManagedChildRecord({ email, prenom, nom }) {
-  return updateManagedChild({ email, prenom, nom }).toRecord();
 }
 
 function decideManagedChildRemoval({ child, hasCompetitions, hasCombats, hasOtherParentLink }) {
@@ -122,8 +93,6 @@ function decideManagedChildRemoval({ child, hasCompetitions, hasCombats, hasOthe
 module.exports = {
   createJudoka,
   createManagedChild,
-  createManagedChildRecord,
   decideManagedChildRemoval,
-  updateManagedChild,
-  updateManagedChildRecord
+  updateManagedChild
 };

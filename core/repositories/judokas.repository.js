@@ -8,6 +8,25 @@ module.exports = function createJudokasRepository(deps) {
     eqFilter
   } = deps;
 
+  function toJudokaRecord(judoka) {
+    return {
+      id_judoka: judoka.id_judoka,
+      email: judoka.email,
+      prenom: judoka.prenom,
+      nom: judoka.nom,
+      profile_type: judoka.profile_type,
+      role: judoka.role
+    };
+  }
+
+  function toManagedChildUpdateRecord(child) {
+    return {
+      email: child.email,
+      prenom: child.prenom,
+      nom: child.nom
+    };
+  }
+
   async function listAll() {
     return supabaseSelect("judokas", "select=*&order=nom.asc,prenom.asc");
   }
@@ -31,12 +50,16 @@ module.exports = function createJudokasRepository(deps) {
     return supabaseSelectOne("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(payload) {
-    return supabaseInsert("judokas", payload);
+  async function insert(judoka) {
+    return supabaseInsert("judokas", toJudokaRecord(judoka));
   }
 
-  async function update(idJudoka, payload) {
-    return supabasePatch("judokas", eqFilter("id_judoka", idJudoka), payload);
+  async function update(idJudoka, judokaChanges) {
+    return supabasePatch("judokas", eqFilter("id_judoka", idJudoka), judokaChanges);
+  }
+
+  async function updateManagedChild(idJudoka, child) {
+    return update(idJudoka, toManagedChildUpdateRecord(child));
   }
 
   async function remove(idJudoka) {
@@ -51,6 +74,7 @@ module.exports = function createJudokasRepository(deps) {
     listAll,
     listByIds,
     remove,
-    update
+    update,
+    updateManagedChild
   };
 };

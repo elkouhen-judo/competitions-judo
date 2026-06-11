@@ -7,6 +7,14 @@ module.exports = function createInvitationsRepository(deps) {
     eqFilter
   } = deps;
 
+  function toAccessInvitationRecord(invitation) {
+    return {
+      email: invitation.email,
+      invited_profile_type: invitation.invited_profile_type,
+      invited_by: invitation.invited_by
+    };
+  }
+
   async function getByEmail(email) {
     return supabaseSelectOne("access_invitations", `select=*&${eqFilter("email", email)}`);
   }
@@ -15,8 +23,8 @@ module.exports = function createInvitationsRepository(deps) {
     return supabaseSelect("access_invitations", "select=*&order=created_at.desc,email.asc");
   }
 
-  async function insert(payload) {
-    return supabaseInsert("access_invitations", payload);
+  async function insert(invitation) {
+    return supabaseInsert("access_invitations", toAccessInvitationRecord(invitation));
   }
 
   async function removeByEmail(email) {

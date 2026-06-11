@@ -135,7 +135,8 @@ test("judoka home keeps competition creation available", () => {
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
   assert.match(competitionsService, /const competitionDraft = createCompetition\(competition,\s*ownerJudokaId\);/);
-  assert.match(competitionsService, /const payload = competitionDraft\.toRecord\(\);/);
+  assert.match(competitionsService, /await competitionsRepository\.update\(competition\.id_competition,\s*competitionDraft\);/);
+  assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
   assert.match(competitionDomain, /categorie_age:\s*competition\.categorie_age \|\| ""/);
   assert.match(competitionDomain, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
   assert.doesNotMatch(competitionDomain, /lieu:\s*""/);

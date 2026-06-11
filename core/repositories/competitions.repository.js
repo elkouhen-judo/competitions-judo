@@ -8,6 +8,24 @@ module.exports = function createCompetitionsRepository(deps) {
     eqFilter
   } = deps;
 
+  function toCompetitionRecord(competition) {
+    return {
+      id_judoka: competition.id_judoka,
+      nom: competition.nom,
+      date: competition.date,
+      categorie_age: competition.categorie_age,
+      categorie_poids: competition.categorie_poids,
+      classement: competition.classement
+    };
+  }
+
+  function toNewCompetitionRecord(competition, idCompetition) {
+    return {
+      id_competition: idCompetition,
+      ...toCompetitionRecord(competition)
+    };
+  }
+
   async function listAll() {
     return supabaseSelect("competitions", "select=*&order=date.desc");
   }
@@ -31,12 +49,12 @@ module.exports = function createCompetitionsRepository(deps) {
     return supabaseSelectOne("competitions", `select=id_competition&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(payload) {
-    return supabaseInsert("competitions", payload);
+  async function insert(competition, idCompetition) {
+    return supabaseInsert("competitions", toNewCompetitionRecord(competition, idCompetition));
   }
 
-  async function update(idCompetition, payload) {
-    return supabasePatch("competitions", eqFilter("id_competition", idCompetition), payload);
+  async function update(idCompetition, competition) {
+    return supabasePatch("competitions", eqFilter("id_competition", idCompetition), toCompetitionRecord(competition));
   }
 
   async function remove(idCompetition) {

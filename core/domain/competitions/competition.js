@@ -24,15 +24,6 @@ function createCompetition(competition, ownerJudokaId) {
       if (String(combat.id_judoka) !== String(record.id_judoka)) {
         throw new Error("Le combat doit concerner le judoka de la compétition.");
       }
-    },
-    toRecord() {
-      return { ...record };
-    },
-    toNewRecord(buildCompetitionId) {
-      return {
-        id_competition: buildCompetitionId(),
-        ...record
-      };
     }
   };
 }
@@ -53,18 +44,8 @@ function assertCompetitionCanContainCombat(competition, combat) {
   createPersistedCompetition(competition).assertCanContainCombat(combat);
 }
 
-function toCompetitionRecord(competition, ownerJudokaId) {
-  return createCompetition(competition, ownerJudokaId).toRecord();
-}
-
-function createCompetitionRecord(competition, ownerJudokaId, buildCompetitionId) {
-  return createCompetition(competition, ownerJudokaId).toNewRecord(buildCompetitionId);
-}
-
 module.exports = {
   assertCompetitionCanContainCombat,
   createCompetition,
-  createCompetitionRecord,
-  createPersistedCompetition,
-  toCompetitionRecord
+  createPersistedCompetition
 };

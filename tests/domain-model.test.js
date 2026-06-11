@@ -5,20 +5,16 @@ const permissions = require("../core/domain/access/permission-policy");
 const {
   createJudoka,
   createManagedChild,
-  createManagedChildRecord,
   decideManagedChildRemoval,
-  updateManagedChild,
-  updateManagedChildRecord
+  updateManagedChild
 } = require("../core/domain/access/judoka");
 const { createEmail, createOptionalEmail } = require("../core/domain/access/email");
-const { createAccessInvitation, createAccessInvitationRecord } = require("../core/domain/access/access-invitation");
+const { createAccessInvitation } = require("../core/domain/access/access-invitation");
 const {
   assertCompetitionCanContainCombat,
-  createCompetition,
-  createCompetitionRecord,
-  toCompetitionRecord
+  createCompetition
 } = require("../core/domain/competitions/competition");
-const { createCombat, createCombatRecord, updateCombatRecord } = require("../core/domain/competitions/combat");
+const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
 test("permission policy derives access from immutable profile type and role", () => {
@@ -55,17 +51,10 @@ test("judoka domain creates and updates managed child records with invariants", 
 
   assert.equal(child.hasDirectAccount(), true);
 
-  assert.deepEqual(
-    child.toRecord(),
-    {
-      id_judoka: "JUDO123",
-      email: "child@example.com",
-      prenom: "Aya",
-      nom: "Martin",
-      profile_type: "JUDOKA",
-      role: "NORMAL"
-    }
-  );
+  assert.equal(child.id_judoka, "JUDO123");
+  assert.equal(child.email, "child@example.com");
+  assert.equal(child.profile_type, "JUDOKA");
+  assert.equal(child.role, "NORMAL");
 
   const updatedChild = updateManagedChild({
     email: "",
@@ -73,16 +62,13 @@ test("judoka domain creates and updates managed child records with invariants", 
     nom: "Martin"
   });
 
-  assert.deepEqual(
-    updatedChild.toRecord(),
-    {
-      email: null,
-      prenom: "Aya",
-      nom: "Martin"
-    }
-  );
+  assert.deepEqual(updatedChild, {
+    email: null,
+    prenom: "Aya",
+    nom: "Martin"
+  });
 
-  assert.throws(() => createManagedChildRecord({ prenom: "", nom: "Martin" }), /Prénom et nom/);
+  assert.throws(() => createManagedChild({ prenom: "", nom: "Martin" }), /Prénom et nom/);
 });
 
 test("judoka domain handles admin role lifecycle and child removal decisions", () => {
@@ -138,36 +124,23 @@ test("access invitation domain normalizes invited profile type", () => {
     invited_by: "JUDOADMIN"
   });
 
-  assert.deepEqual(invitation.toRecord(), {
+  assert.deepEqual(invitation, {
     email: "parent@example.com",
     invited_profile_type: "PARENT",
     invited_by: "JUDOADMIN"
   });
 
-  assert.deepEqual(
-    createAccessInvitationRecord({
-      email: "parent@example.com",
-      invited_profile_type: "parent",
-      invited_by: "JUDOADMIN"
-    }),
-    {
-      email: "parent@example.com",
-      invited_profile_type: "PARENT",
-      invited_by: "JUDOADMIN"
-    }
-  );
-
   assert.throws(
-    () => createAccessInvitationRecord({ email: "x@example.com", invited_profile_type: "coach" }),
+    () => createAccessInvitation({ email: "x@example.com", invited_profile_type: "coach" }),
     /Type de profil invalide/
   );
   assert.throws(
-    () => createAccessInvitationRecord({ email: "", invited_profile_type: "parent" }),
+    () => createAccessInvitation({ email: "", invited_profile_type: "parent" }),
     /Email d'invitation obligatoire/
   );
 });
 
-test("competition domain builds a normalized record", () => {
+test("competition domain builds a normalized entity", () => {
   const competition = createCompetition(
     {
       nom: "Tournoi regional",
@@ -179,61 +152,20 @@ test("competition domain builds a normalized record", () => {
     "JUDO123"
   );
 
-  assert.deepEqual(
-    competition.toNewRecord(() => "COMP123"),
-    {
-      id_competition: "COMP123",
-      id_judoka: "JUDO123",
-      nom: "Tournoi regional",
-      date: "2026-06-11",
-      categorie_age: "Cadet",
-      categorie_poids: "-55 kg",
-      classement: "3e"
-    }
-  );
+  assert.equal(competition.id_judoka, "JUDO123");
+  assert.equal(competition.nom, "Tournoi regional");
+  assert.equal(competition.date, "2026-06-11");
+  assert.equal(competition.categorie_age, "Cadet");
+  assert.equal(competition.categorie_poids, "-55 kg");
+  assert.equal(competition.classement, "3e");
+  assert.equal(typeof competition.assertCanContainCombat, "function");
 
-  assert.deepEqual(
-    toCompetitionRecord(
-      {
-        nom: "Tournoi regional",
-        date: "2026-06-11",
-        categorie_age: "Cadet",
-        categorie_poids: "-55 kg",
-        classement: "3e"
-      },
-      "JUDO123"
-    ),
-    {
-      id_judoka: "JUDO123",
-      nom: "Tournoi regional",
-      date: "2026-06-11",
-      categorie_age: "Cadet",
-      categorie_poids: "-55 kg",
-      classement: "3e"
-    }
-  );
+  const defaultCompetition = createCompetition({ nom: "Tournoi regional", date: "2026-06-11" }, "JUDO123");
+  assert.equal(defaultCompetition.categorie_age, "");
+  assert.equal(defaultCompetition.categorie_poids, "");
+  assert.equal(defaultCompetition.classement, "");
 
-  assert.deepEqual(
-    createCompetitionRecord(
-      {
-        nom: "Tournoi regional",
-        date: "2026-06-11"
-      },
-      "JUDO123",
-      () => "COMP456"
-    ),
-    {
-      id_competition: "COMP456",
-      id_judoka: "JUDO123",
-      nom: "Tournoi regional",
-      date: "2026-06-11",
-      categorie_age: "",
-      categorie_poids: "",
-      classement: ""
-    }
-  );
-
-  assert.throws(() => toCompetitionRecord({ nom: "", date: "" }, "JUDO123"), /Nom et date obligatoires/);
+  assert.throws(() => createCompetition({ nom: "", date: "" }, "JUDO123"), /Nom et date obligatoires/);
 });
 
 test("competition domain enforces combat ownership", () => {
@@ -267,7 +199,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
     deroule: "Bon rythme"
   });
 
-  assert.deepEqual(combat.toRecord(), {
+  assert.deepEqual(combat, {
     id_judoka: "JUDO123",
     id_competition: "COMP123",
     adversaire: "Lee",
@@ -277,30 +209,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
   });
 
   assert.deepEqual(
-    createCombatRecord(
-      {
-        id_judoka: "JUDO123",
-        id_competition: "COMP123",
-        adversaire: "Lee",
-        resultat: "v",
-        type_victoire: "Ippon",
-        deroule: "Bon rythme"
-      },
-      () => "CB123"
-    ),
-    {
-      id_combat: "CB123",
-      id_judoka: "JUDO123",
-      id_competition: "COMP123",
-      adversaire: "Lee",
-      resultat: "V",
-      type_victoire: "Ippon",
-      deroule: "Bon rythme"
-    }
-  );
-
-  assert.deepEqual(
-    updateCombatRecord({
+    updateCombat({
       id_combat: "CB123",
       id_judoka: "JUDO123",
       id_competition: "COMP123",
@@ -317,7 +226,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
   );
 
   assert.throws(
-    () => createCombatRecord({ id_judoka: "JUDO123", id_competition: "COMP123", resultat: "X" }, () => "CBX"),
+    () => createCombat({ id_judoka: "JUDO123", id_competition: "COMP123", resultat: "X" }),
     /Résultat invalide/
   );
 });

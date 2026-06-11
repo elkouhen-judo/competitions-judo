@@ -8,6 +8,24 @@ module.exports = function createCombatsRepository(deps) {
     eqFilter
   } = deps;
 
+  function toCombatRecord(combat) {
+    return {
+      id_judoka: combat.id_judoka,
+      id_competition: combat.id_competition,
+      adversaire: combat.adversaire,
+      resultat: combat.resultat,
+      type_victoire: combat.type_victoire,
+      deroule: combat.deroule
+    };
+  }
+
+  function toNewCombatRecord(combat, idCombat) {
+    return {
+      id_combat: idCombat,
+      ...toCombatRecord(combat)
+    };
+  }
+
   async function listByJudoka(idJudoka) {
     return supabaseSelect("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
@@ -38,12 +56,12 @@ module.exports = function createCombatsRepository(deps) {
     return supabaseSelectOne("combats", `select=id_combat&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(payload) {
-    return supabaseInsert("combats", payload);
+  async function insert(combat, idCombat) {
+    return supabaseInsert("combats", toNewCombatRecord(combat, idCombat));
   }
 
-  async function update(idCombat, payload) {
-    return supabasePatch("combats", eqFilter("id_combat", idCombat), payload);
+  async function update(idCombat, combat) {
+    return supabasePatch("combats", eqFilter("id_combat", idCombat), toCombatRecord(combat));
   }
 
   async function remove(idCombat) {
