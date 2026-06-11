@@ -23,6 +23,10 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
   assert.equal(permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }), false);
+  assert.deepEqual(permissions.resolveJudokaDataAccess(
+    { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
+    scope
+  ), { kind: "MANAGED", managedJudokaScope: scope });
   assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     "CHILD1",

@@ -7,36 +7,36 @@ module.exports = function createCompetitionsService(deps) {
     userContextService,
     normalizeLastName,
     canManageCompetition,
-    isAdmin,
-    isParent,
+    assertCanManageCompetition,
+    resolveJudokaDataAccess,
     resolveCompetitionOwnerId,
     buildCompetitionId,
     createCompetition
   } = deps;
 
-  async function getCompetitionsForUser(user, managedJudokaIds) {
+  async function getCompetitionsForUser(user, managedJudokaScope) {
     const domainUser = toDomainJudoka(user);
+    const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
 
-    if (isAdmin(domainUser)) {
+    if (access.kind === "ALL") {
       return competitionsRepository.listAll();
     }
 
-    if (isParent(domainUser)) {
-      if (!managedJudokaIds || !managedJudokaIds.length) return [];
+    if (access.kind === "MANAGED") {
+      const managedJudokaIds = access.managedJudokaScope.toIds();
+      if (!managedJudokaIds.length) return [];
       return competitionsRepository.listByJudokaIds(managedJudokaIds);
     }
 
-    return competitionsRepository.listByJudoka(user.id_judoka);
+    return competitionsRepository.listByJudoka(access.judokaId);
   }
 
   async function getCompetitionDetail(email, idCompetition) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toDomainJudoka(user);
-    const admin = isAdmin(domainUser);
-    const parent = isParent(domainUser);
-    const managedJudokaIds = userContext.managedJudokaIds || [];
     const managedJudokaScope = userContext.managedJudokaScope;
+    const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
     const competitionRecord = await competitionsRepository.getById(idCompetition);
 
     if (!competitionRecord) {
@@ -44,20 +44,19 @@ module.exports = function createCompetitionsService(deps) {
     }
     const domainCompetition = toDomainCompetition(competitionRecord);
 
-    if (!canManageCompetition(domainUser, domainCompetition, managedJudokaScope)) {
-      throw new Error("Accès refusé à cette compétition.");
-    }
+    assertCanManageCompetition(domainUser, domainCompetition, managedJudokaScope, "Accès refusé à cette compétition.");
 
     let filtered = [];
-    if (!admin && !parent) {
-      filtered = await combatsRepository.listByCompetitionAndJudoka(idCompetition, user.id_judoka);
-    } else if (parent) {
+    if (access.kind === "OWN") {
+      filtered = await combatsRepository.listByCompetitionAndJudoka(idCompetition, access.judokaId);
+    } else if (access.kind === "MANAGED") {
+      const managedJudokaIds = access.managedJudokaScope.toIds();
       filtered = await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, managedJudokaIds);
     } else {
       filtered = await combatsRepository.listByCompetition(idCompetition);
     }
 
-    const judokas = (admin || parent) ? userContext.judokas : [];
+    const judokas = access.kind === "OWN" ? [] : userContext.judokas;
     const judokasById = new Map(judokas.map(j => [String(j.id_judoka), j]));
     const enriched = filtered.map(combat => {
       const judoka = judokasById.get(String(combat.id_judoka));
@@ -70,8 +69,8 @@ module.exports = function createCompetitionsService(deps) {
     return {
       competition: competitionRecord,
       combats: enriched,
-      isAdmin: admin,
-      isParent: parent,
+      isAdmin: access.kind === "ALL",
+      isParent: access.kind === "MANAGED",
       canManageCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
       canEditCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
       judokas
@@ -92,9 +91,12 @@ module.exports = function createCompetitionsService(deps) {
     if (competitionId) {
       const existingCompetition = await competitionsRepository.getById(competitionId);
       if (!existingCompetition) throw new Error("Compétition introuvable.");
-      if (!canManageCompetition(domainUser, toDomainCompetition(existingCompetition), managedJudokaScope)) {
-        throw new Error("Modification de cette compétition non autorisée.");
-      }
+      assertCanManageCompetition(
+        domainUser,
+        toDomainCompetition(existingCompetition),
+        managedJudokaScope,
+        "Modification de cette compétition non autorisée."
+      );
 
       await competitionsRepository.update(competitionId, competitionDraft);
       return {
@@ -124,9 +126,12 @@ module.exports = function createCompetitionsService(deps) {
 
     const competition = await competitionsRepository.getById(idCompetition);
     if (!competition) throw new Error("Compétition introuvable.");
-    if (!canManageCompetition(domainUser, toDomainCompetition(competition), managedJudokaScope)) {
-      throw new Error("Suppression de cette compétition non autorisée.");
-    }
+    assertCanManageCompetition(
+      domainUser,
+      toDomainCompetition(competition),
+      managedJudokaScope,
+      "Suppression de cette compétition non autorisée."
+    );
 
     await competitionsRepository.remove(idCompetition);
     return { success: true, message: "Compétition supprimée." };

@@ -31,12 +31,30 @@ function isInManagedScope(managedJudokaScope, idJudoka) {
   return Boolean(managedJudokaScope && managedJudokaScope.includes(idJudoka));
 }
 
+function resolveJudokaDataAccess(user, managedJudokaScope) {
+  if (isAdmin(user)) {
+    return { kind: "ALL" };
+  }
+
+  if (isParent(user)) {
+    return { kind: "MANAGED", managedJudokaScope };
+  }
+
+  return { kind: "OWN", judokaId: getUserJudokaId(user) };
+}
+
 function canManageCombatFor(user, idJudoka, managedJudokaScope) {
   if (isAdmin(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
   }
   return String(getUserJudokaId(user)) === String(idJudoka);
+}
+
+function assertCanManageCombatFor(user, idJudoka, managedJudokaScope, message) {
+  if (!canManageCombatFor(user, idJudoka, managedJudokaScope)) {
+    throw new Error(message);
+  }
 }
 
 function canManageCompetition(user, competition, managedJudokaScope) {
@@ -46,6 +64,12 @@ function canManageCompetition(user, competition, managedJudokaScope) {
     return isInManagedScope(managedJudokaScope, ownerJudokaId);
   }
   return String(getUserJudokaId(user)) === String(ownerJudokaId);
+}
+
+function assertCanManageCompetition(user, competition, managedJudokaScope, message) {
+  if (!canManageCompetition(user, competition, managedJudokaScope)) {
+    throw new Error(message);
+  }
 }
 
 function canAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
@@ -84,11 +108,14 @@ function resolveCompetitionOwnerId(user, competition, managedJudokaScope) {
 module.exports = {
   assertCanAccessJudokaProfile,
   assertCanManageChildrenProfile,
+  assertCanManageCombatFor,
+  assertCanManageCompetition,
   canAccessJudokaProfile,
   canManageChildrenProfile,
   canManageCombatFor,
   canManageCompetition,
   isAdmin,
   isParent,
+  resolveJudokaDataAccess,
   resolveCompetitionOwnerId
 };
