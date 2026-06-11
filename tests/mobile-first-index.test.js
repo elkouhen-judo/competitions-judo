@@ -91,6 +91,10 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="competition_classement"/);
 });
 
+test("home action buttons share one stable height", () => {
+  assert.match(bundle, /#homeAdminActions button\s*\{[\s\S]*?min-height:\s*64px;/);
+});
+
 test("competition header actions share one aligned action row", () => {
   assert.match(bundle, /class="competition-header-actions"/);
   assert.doesNotMatch(bundle, /<div class="toolbar">\s*<button class="button-secondary" onclick="showHome\(\)">Retour<\/button>\s*<div id="competitionAdminActions" class="toolbar admin-actions hidden">/);
