@@ -4,26 +4,21 @@ TODOs for later
    - Keep `id_judoka`, `id_competition`, `id_combat`, `prenom`, `nom`, `resultat` only as persistence-compatible adapter fields.
    - Prefer domain names such as `judokaId`, `competitionId`, `combatId`, `PersonName`, `CompetitionDraft`, `CombatDraft`.
 
-2. Finish replacing primitive access scope handling with `ManagedJudokaScope`.
-   - Keep arrays only where repository filters need them.
-   - Make permission checks consume the scope object directly everywhere else.
-
-3. Split read concerns from write concerns more explicitly.
+2. Split read concerns from write concerns more explicitly.
    - Introduce dedicated read models for profile, competition detail, and competition lists.
    - Keep aggregates focused on write-side invariants and behavior.
 
-4. Enrich the remaining value objects.
+3. Enrich the remaining value objects.
    - Add richer types for competition date, age category, weight category, ranking, and combat result if the next refactor needs stronger guarantees.
    - Keep email and name normalization in domain objects, not services.
 
-5. Move any remaining orchestration-only rules out of services when they become stable.
+4. Move any remaining orchestration-only rules out of services when they become stable.
    - Examples: access resolution, competition ownership checks, child removal decisions.
    - Services should mostly load data, call the domain, and persist the result.
 
-6. Revisit the UI and structure tests once the legacy aliases disappear.
+5. Revisit the UI and structure tests once the legacy aliases disappear.
    - Update assertions to target the richer domain language instead of compatibility fields.
    - Remove tests that only lock old implementation details.
 
-7. Decide whether `Competition` and `Combat` should become explicit aggregate roots or stay as lightweight behavior-rich entities.
+6. Decide whether `Competition` and `Combat` should become explicit aggregate roots or stay as lightweight behavior-rich entities.
    - If the domain keeps growing, prefer methods like `recordCombat`, `changeDetails`, and `changeResult` over service-side branching.
-

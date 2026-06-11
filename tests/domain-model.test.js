@@ -32,7 +32,7 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.throws(() => permissions.assertCanAccessJudokaProfile(
     { judokaId: "JUDO1", profileType: "JUDOKA", accessRole: "NORMAL" },
     "OTHER",
-    []
+    createManagedJudokaScope([])
   ), /Accès refusé/);
 });
 
