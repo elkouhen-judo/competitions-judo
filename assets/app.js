@@ -48,7 +48,7 @@
         } else if (method === "getInitialData" && String(error.message || "").includes("Invitation trouvée")) {
           showProfileRegistration();
           return;
-        } else if (method === "getInitialData" && String(error.message || "").includes("invitation admin est requise")) {
+        } else if (method === "getInitialData" && String(error.message || "").includes("invitation est requise")) {
           clearVercelSession();
           showInvitationRequired();
           return;
@@ -74,7 +74,8 @@
     }
 
     function getVercelAuthRedirectUrl() {
-      return window.location.origin + window.location.pathname;
+      const baseUrl = runtimeConfig.appUrl || window.location.origin;
+      return new URL(window.location.pathname || "/", baseUrl).toString();
     }
 
     function startGoogleLogin() {
@@ -103,7 +104,13 @@
         || queryParams.get("error_description")
         || queryParams.get("error");
       if (error) {
+        const normalizedError = String(error || "").toLowerCase();
         history.replaceState(null, document.title, window.location.pathname);
+        clearVercelSession();
+        if (normalizedError.includes("invitation") || normalizedError.includes("non autorisé")) {
+          showInvitationRequired();
+          return;
+        }
         showError({ message: "Connexion Google impossible : " + error });
         return;
       }
@@ -256,10 +263,11 @@
 
     function saveAccessInvitation() {
       const email = document.getElementById("invite_email").value;
+      const profileType = document.getElementById("invite_profile_type").value;
 
       runServer(
         "saveAccessInvitation",
-        [email],
+        [email, profileType],
         response => {
           showSuccess(response.message);
           reloadInitialDataAndShowAdmins();
@@ -277,7 +285,8 @@
       judokas = Array.isArray(data.judokas) ? data.judokas : [];
       document.querySelector("header").classList.remove("hidden");
 
-      const roleLabel = isAdmin ? "ADMIN" : isParent ? "PARENT" : "JUDOKA";
+      const profileTypeLabel = isParent ? "PARENT" : "JUDOKA";
+      const roleLabel = isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
       document.getElementById("userInfo").innerHTML =
         `<strong>${escapeHtml(getJudokaDisplayName(currentUser) || "")}</strong> - ${roleLabel}`;
       document.getElementById("homeAdminActions").classList.remove("hidden");
@@ -384,6 +393,8 @@
       const profileButtonMeta = document.getElementById("openHomeJudokaProfileButtonMeta");
       const addCompetitionButtonText = document.getElementById("addCompetitionButtonText");
       const addCompetitionButtonMeta = document.getElementById("addCompetitionButtonMeta");
+      const addCompetitionButton = document.getElementById("addCompetitionButton");
+      const profileButton = document.getElementById("openHomeJudokaProfileButton");
       const filterInput = document.getElementById("filterJudokaText");
 
       if (isAdmin) {
@@ -430,21 +441,24 @@
             <span class="home-context-meta">Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions.</span>
           </div>
         `;
-        return;
+      } else {
+        const summaryMeta = isAdmin
+          ? "Vous consultez actuellement le parcours de ce judoka."
+          : isParent
+            ? "Toutes les actions d'accueil concernent ce profil."
+            : "Toutes vos actions principales sont regroupées ici.";
+        summary.innerHTML = `
+          <div class="home-context-copy">
+            <span class="home-context-label">Judoka actif</span>
+            <span class="home-context-value">${escapeHtml(getJudokaDisplayName(activeJudoka) || "Judoka")}</span>
+            <span class="home-context-meta">${escapeHtml(summaryMeta)}</span>
+          </div>
+        `;
       }
 
-      const summaryMeta = isAdmin
-        ? "Vous consultez actuellement le parcours de ce judoka."
-        : isParent
-          ? "Toutes les actions d'accueil concernent ce profil."
-          : "Toutes vos actions principales sont regroupées ici.";
-      summary.innerHTML = `
-        <div class="home-context-copy">
-          <span class="home-context-label">Judoka actif</span>
-          <span class="home-context-value">${escapeHtml(getJudokaDisplayName(activeJudoka) || "Judoka")}</span>
-          <span class="home-context-meta">${escapeHtml(summaryMeta)}</span>
-        </div>
-      `;
+      const actionDisabled = Boolean((isAdmin || isParent) && !activeJudoka);
+      addCompetitionButton.disabled = actionDisabled;
+      profileButton.disabled = actionDisabled;
     }
 
     function renderCompetitions() {
@@ -779,6 +793,10 @@
             <p class="card-title">${escapeHtml(invitation.email || "Invitation")}</p>
             <div class="card-meta">
               <div class="meta-row">
+                <span class="meta-label">Profil</span>
+                <span class="meta-value">${escapeHtml(invitation.invited_profile_type || "JUDOKA")}</span>
+              </div>
+              <div class="meta-row">
                 <span class="meta-label">Créée le</span>
                 <span class="meta-value">${escapeHtml(formatDateTime(invitation.created_at))}</span>
               </div>
@@ -835,6 +853,12 @@
       showView(previousView || "homeView");
     }
 
+    function getCompetitionOwnerRequiredMessage() {
+      return isAdmin
+        ? "Sélectionnez un judoka avant d'enregistrer la compétition."
+        : "Sélectionnez votre profil ou l'un de vos enfants avant d'enregistrer la compétition.";
+    }
+
     function saveCompetition() {
       const competition = {
         id_competition: document.getElementById("competition_id").value,
@@ -846,7 +870,11 @@
       };
 
       if (isAdmin || isParent) {
-        competition.id_judoka = document.getElementById("competition_id_judoka").value;
+        competition.id_judoka = resolveCompetitionOwnerSelection();
+        if (!competition.id_judoka) {
+          showError({ message: getCompetitionOwnerRequiredMessage() });
+          return;
+        }
       }
 
       runServer(
@@ -919,21 +947,8 @@
         [combat],
         response => {
           showSuccess(response.message);
-          // Mise à jour locale : pas besoin de recharger depuis le serveur
-          const newCombat = {
-            id_combat: "CB" + Date.now(),
-            id_judoka: combat.id_judoka,
-            id_competition: combat.id_competition,
-            adversaire: combat.adversaire || "",
-            resultat: combat.resultat,
-            type_victoire: combat.type_victoire || "",
-            deroule: combat.deroule || "",
-            judoka_nom: currentUser ? getJudokaDisplayName(currentUser) : ""
-          };
-          currentCombats.push(newCombat);
           resetCombatForm();
-          showView("competitionView");
-          renderCombats();
+          openCompetition(currentCompetition.id_competition, true);
         },
         showError
       );
@@ -948,20 +963,8 @@
         [combat],
         response => {
           showSuccess(response.message);
-          // Mise à jour locale du combat modifié
-          const idx = currentCombats.findIndex(c => String(c.id_combat) === String(idCombat));
-          if (idx !== -1) {
-            currentCombats[idx] = {
-              ...currentCombats[idx],
-              adversaire: combat.adversaire || "",
-              resultat: combat.resultat,
-              type_victoire: combat.type_victoire || "",
-              deroule: combat.deroule || ""
-            };
-          }
           resetCombatForm();
-          showView("competitionView");
-          renderCombats();
+          openCompetition(currentCompetition.id_competition, true);
         },
         showError
       );
@@ -1062,6 +1065,50 @@
         return prenom;
       }
       return `${prenom} ${nom.charAt(0)}.`;
+    }
+
+    function normalizeJudokaSelectionKey(value) {
+      return String(value || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLocaleLowerCase("fr-FR");
+    }
+
+    function resolveCompetitionOwnerSelection() {
+      const hidden = document.getElementById("competition_id_judoka");
+      const input = document.getElementById("competition_judoka_text");
+      const hiddenValue = String(hidden.value || "").trim();
+
+      if (hiddenValue && judokas.some(j => String(j.id_judoka) === hiddenValue)) {
+        return hiddenValue;
+      }
+
+      const typedValue = normalizeJudokaSelectionKey(input.value);
+      if (!typedValue) {
+        const activeJudokaId = String(getHomeActiveJudokaId() || "").trim();
+        if (activeJudokaId && judokas.some(j => String(j.id_judoka) === activeJudokaId)) {
+          hidden.value = activeJudokaId;
+          return activeJudokaId;
+        }
+        return "";
+      }
+
+      const matches = judokas.filter(j => {
+        return [
+          getJudokaDisplayName(j),
+          getCompactJudokaLabel(j),
+          j && j.id_judoka
+        ].some(label => normalizeJudokaSelectionKey(label) === typedValue);
+      });
+
+      if (matches.length === 1) {
+        const resolvedId = String(matches[0].id_judoka || "");
+        hidden.value = resolvedId;
+        input.value = getJudokaDisplayName(matches[0]);
+        return resolvedId;
+      }
+
+      return "";
     }
 
     function bindAutocomplete({ inputId, dropdownId, hiddenId, getItems, allowBlank, onChange }) {
@@ -1320,6 +1367,7 @@
 
     function resetAccessInvitationForm() {
       document.getElementById("invite_email").value = "";
+      document.getElementById("invite_profile_type").value = "JUDOKA";
     }
 
     function editManagedChild(idJudoka) {

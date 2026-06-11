@@ -67,11 +67,12 @@ This specification does not define:
 
 ### 3.2 Roles and access model
 
-- **ROL-001**: A `JUDOKA` can access only their own competitions and combats.
-- **ROL-002**: A `PARENT` can access their own data and the data of judokas linked to them.
-- **ROL-003**: An `ADMIN` can access all data.
-- **ROL-004**: A user becomes `PARENT` when they add a first child.
-- **ROL-005**: A `PARENT` becomes `JUDOKA` again when the last child link is removed.
+- **ROL-001**: A `JUDOKA` profile can access only its own competitions and combats unless admin rights are granted.
+- **ROL-002**: A `PARENT` profile can access its own data and the data of linked child judokas unless broader admin rights are granted.
+- **ROL-003**: An `ADMIN` right grants access to all data independently of the underlying `JUDOKA` or `PARENT` profile type.
+- **ROL-004**: A user invited as `PARENT` keeps that profile type after registration.
+- **ROL-005**: A user invited as `JUDOKA` keeps that profile type after registration.
+- **ROL-006**: Admin rights may still be granted or revoked later without changing the underlying `JUDOKA` or `PARENT` profile type.
 
 ### 3.3 Competition rules
 
@@ -99,7 +100,7 @@ This specification does not define:
 
 ### 3.5 Child management rules
 
-- **CHD-001**: Non-admin users can manage children from a dedicated screen.
+- **CHD-001**: Only `PARENT` users can manage children from a dedicated screen.
 - **CHD-002**: `ADMIN` must not use the child management flow.
 - **CHD-003**: Creating a child requires both first name and last name.
 - **CHD-004**: A child with at least one competition cannot be deleted.
@@ -130,8 +131,12 @@ This specification does not define:
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
 - **AUTH-006**: The connected header shall show user identity without a logout button.
 - **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data.
-- **AUTH-008**: A user without an existing judoka profile or an active admin invitation shall not be allowed to create an account in the application.
+- **AUTH-008**: A user without an existing judoka profile or an active invitation shall not be allowed to create an account in the application.
 - **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
+- **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
+- **AUTH-011**: The initial profile created after invitation shall use the invited profile type.
+- **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
+- **AUTH-013**: Admin elevation shall be managed separately from the invitation flow.
 
 ### 3.8 UI and UX rules
 
@@ -161,16 +166,17 @@ This specification does not define:
 - **AC-007**: Given a combat create request missing competition, judoka, or result, when the request is processed, then the save is rejected.
 - **AC-008**: Given a competition deletion, when the operation succeeds, then no linked combat remains accessible.
 - **AC-009**: Given a combat deletion, when the operation succeeds, then the parent competition still exists.
-- **AC-010**: Given a non-admin user opening child management, when the screen loads, then the user can create, update, or remove managed children.
+- **AC-010**: Given a connected `PARENT` opening child management, when the screen loads, then the user can create, update, or remove managed children.
 - **AC-011**: Given a child with competitions or combats, when deletion is attempted, then the operation is rejected with an explicit error.
-- **AC-012**: Given a first child creation by a `JUDOKA`, when the operation succeeds, then the user's role becomes `PARENT`.
-- **AC-013**: Given removal of the last linked child from a `PARENT`, when the operation succeeds, then the user's role becomes `JUDOKA`.
+- **AC-012**: Given a `PARENT` creates a first child, when the operation succeeds, then the user's profile type remains `PARENT`.
+- **AC-013**: Given a `PARENT` removes the last linked child, when the operation succeeds, then the user's profile type remains `PARENT`.
 - **AC-014**: Given a user reaching the login screen, when authentication options are displayed, then only Google login is available.
 - **AC-015**: Given a connected session, when the app header is rendered, then user identity is displayed and no logout button is shown.
 - **AC-016**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
 - **AC-017**: Given a parent sets an email on a child profile, when that child logs in with the same Google account, then only that child's profile, competitions, and combats are visible.
 - **AC-018**: Given a Google account without judoka profile and without active invitation, when initial access is checked, then profile creation is rejected with an explicit invitation-required message.
-- **AC-019**: Given an admin creates an invitation for a new email, when that invited user logs in, then profile creation is allowed exactly for that invited email.
+- **AC-019**: Given an admin creates an invitation for a new email and a target profile type, when that invited user logs in, then profile creation is allowed exactly for that invited email and invited type.
+- **AC-021**: Given an admin grants or revokes admin rights, when the request succeeds, then the user's `JUDOKA` or `PARENT` profile type remains unchanged.
 - **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
 
 ## 5. Examples & Edge Cases

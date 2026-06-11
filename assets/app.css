@@ -281,6 +281,17 @@
       background: var(--primary-hover);
     }
 
+    button:disabled, .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      transform: none;
+      box-shadow: none;
+    }
+
+    button:disabled:hover, .button:disabled:hover {
+      background: var(--primary);
+    }
+
     .button-secondary {
       border-color: var(--line);
       background: #fff;
@@ -289,6 +300,11 @@
 
     .button-secondary:hover {
       background: #f2f4f7;
+    }
+
+    .button-secondary:disabled:hover,
+    .button-danger:disabled:hover {
+      background: #fff;
     }
 
     .button-danger {
