@@ -1,78 +1,318 @@
-# Spécification technique
+---
+title: Kiroku Technical Specification
+version: 1.0
+date_created: 2026-06-11
+last_updated: 2026-06-11
+owner: competitions-judo
+tags:
+  - architecture
+  - technical-spec
+  - supabase
+  - vercel
+  - security
+---
 
-## 1. Surfaces
+# Introduction
 
-- `Index.html` : interface web mobile first.
-- `api/*` : API serverless Vercel.
-- `supabase/migrations/*` : schéma et évolutions Supabase.
-- `tests/*` : tests Node.
+This specification defines the technical constraints, interfaces, data contracts, security rules, and validation criteria for Kiroku.
 
-## 2. Données Supabase
+## 1. Purpose & Scope
 
-Tables principales :
+This specification covers:
 
-- `judokas` : identité, email, rôle ;
-- `parent_judokas` : liens entre parents et judokas gérés ;
-- `competitions` : événements rattachés à `competitions.id_judoka` ;
-- `combats` : combats rattachés à `combats.id_judoka` et `combats.id_competition`.
+- runtime surfaces;
+- deployment routing behavior;
+- Supabase data model constraints;
+- authentication and session verification;
+- security and secret handling;
+- server-side API contracts;
+- test automation and validation expectations.
 
-Identifiants métier conservés en texte :
+This specification does not redefine product behavior already described in `SPEC.md`.
 
-- `judokas.id_judoka` ;
-- `parent_judokas.id_parent` ;
-- `parent_judokas.id_judoka` ;
-- `competitions.id_competition` ;
-- `combats.id_combat`.
+## 2. Definitions
 
-Relations :
+| Term | Definition |
+|---|---|
+| Supabase | Backend platform used for authentication, database access, and RPC support. |
+| Vercel | Hosting platform serving the app shell and serverless API endpoints. |
+| OAuth | Authentication flow used here for Google login through Supabase Auth. |
+| RPC | Remote procedure call exposed through `/api/rpc`. |
+| Service role | Privileged Supabase server role used by backend business operations. |
+| Anon key | Public Supabase key used by the browser for session-related auth requests. |
 
-- `competitions.id_judoka` référence le propriétaire ;
-- `combats.id_judoka` référence le judoka concerné ;
-- `combats.id_competition` référence la compétition ;
-- supprimer une compétition supprime automatiquement ses combats.
+## 3. Technical Requirements, Constraints & Guidelines
 
-## 3. Authentification
+### 3.1 Runtime surfaces
 
-Vercel :
+- **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell.
+- **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
+- **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
+- **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
 
-- connexion Google uniquement via Supabase Auth ;
-- callback OAuth Supabase côté navigateur ;
-- session Supabase stockée localement ;
-- appels métier via `/api/rpc` avec `Authorization: Bearer <access_token>` ;
-- l'API vérifie la session avec `/auth/v1/user`, récupère l'email vérifié, puis applique les droits via `judokas`.
+### 3.2 Vercel routing and runtime injection
 
-Non supporté sur Vercel :
+- **VCL-001**: Vercel shall route `/api/rpc` directly to the RPC endpoint.
+- **VCL-002**: Vercel shall route all non-API paths to `/api/app`.
+- **VCL-003**: `/api/app` shall return `Index.html` with runtime config injected into the HTML.
+- **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 
-- mot de passe ;
-- magic link ;
-- bouton de déconnexion dans l'interface.
+### 3.3 Data model constraints
 
-## 4. Secrets et configuration
+- **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `competitions`, and `combats`.
+- **DAT-001a**: `access_invitations` shall store admin-managed pending access invitations for first-time users.
+- **DAT-002**: Business identifiers shall remain text fields.
+- **DAT-003**: `judokas.id_judoka` is the judoka business identifier.
+- **DAT-004**: `parent_judokas.id_parent` and `parent_judokas.id_judoka` define the parent-child link.
+- **DAT-005**: `competitions.id_competition` is the competition business identifier.
+- **DAT-006**: `combats.id_combat` is the combat business identifier.
+- **DAT-007**: `competitions.id_judoka` references the owning judoka.
+- **DAT-008**: `combats.id_judoka` references the concerned judoka.
+- **DAT-009**: `combats.id_competition` references the parent competition.
+- **DAT-010**: Competition deletion shall cascade to combats.
+- **DAT-011**: If an admin role is revoked, `judokas.role` shall resolve back to `PARENT` when parent links still exist, otherwise to `JUDOKA`.
+- **DAT-012**: Role values in `judokas` shall remain constrained to `ADMIN`, `JUDOKA`, or `PARENT`.
+- **DAT-013**: Result values in `combats` shall remain constrained to `V`, `D`, or `E`.
+- **DAT-014**: Unused competition fields for location and actual weigh-in shall remain absent.
+- **DAT-015**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
+- **DAT-016**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 
-Variables Vercel obligatoires :
+### 3.4 Authentication and authorization
 
-- `SUPABASE_URL` ;
-- `SUPABASE_ANON_KEY` ;
-- `SUPABASE_SERVICE_ROLE_KEY`.
+- **AUTH-001**: Authentication shall use Google through Supabase Auth.
+- **AUTH-002**: The OAuth callback shall complete in the browser runtime.
+- **AUTH-003**: The browser shall persist the Supabase session locally.
+- **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
+- **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
+- **AUTH-006**: The backend shall resolve the verified email from Supabase before applying business permissions.
+- **AUTH-007**: Effective application permissions shall be derived from `judokas.role`.
+- **AUTH-008**: Password-based login shall remain unsupported.
+- **AUTH-009**: Magic-link login shall remain unsupported.
+- **AUTH-010**: Backend profile registration shall create only the initial judoka profile.
+- **AUTH-011**: A child profile may store a verified email to support direct Google login without changing the child role to `PARENT` or `ADMIN`.
+- **AUTH-012**: Backend profile registration shall reject any email that is neither already linked to a judoka profile nor present in `access_invitations`.
 
-Règles de sécurité :
+### 3.5 Security and secrets
 
-- les appels métier Supabase sont côté serveur ;
-- les rôles Supabase `anon` et `authenticated` n'ont pas d'accès direct aux tables métier ;
-- les migrations accordent l'accès métier uniquement au rôle serveur `service_role` ;
-- `SUPABASE_SERVICE_ROLE_KEY` ne va jamais au navigateur ;
-- avec une clé `sb_secret_...`, envoyer `SUPABASE_SERVICE_ROLE_KEY` seulement dans `apikey`, jamais dans `Authorization: Bearer`.
+- **SEC-001**: Business Supabase operations shall run server-side only.
+- **SEC-002**: Supabase roles `anon` and `authenticated` shall not have direct access to business tables.
+- **SEC-003**: Business table grants shall be limited to the server-side `service_role`.
+- **SEC-004**: `SUPABASE_SERVICE_ROLE_KEY` shall never be sent to the browser.
+- **SEC-005**: When the service role key is an `sb_secret_...` key, it shall be sent only in the `apikey` header and not as `Authorization: Bearer`.
+- **SEC-006**: Missing or invalid bearer tokens shall cause explicit request rejection.
 
-Configuration Google Auth :
+### 3.6 Platform and configuration
 
-- activer le provider Google dans Supabase Auth ;
-- configurer `Client ID` et `Client Secret` dans Supabase ;
-- autoriser dans Google le callback `https://<project-ref>.supabase.co/auth/v1/callback` ;
-- autoriser l'URL Vercel publique dans les redirect URLs Supabase.
+- **PLT-001**: Node.js version shall remain `>=20`.
+- **CFG-001**: `SUPABASE_URL` is required.
+- **CFG-002**: `SUPABASE_ANON_KEY` is required.
+- **CFG-003**: `SUPABASE_SERVICE_ROLE_KEY` is required.
+- **CFG-004**: Google Auth provider must be enabled in Supabase Auth.
+- **CFG-005**: Google OAuth callback `https://<project-ref>.supabase.co/auth/v1/callback` must be allowed in Google configuration.
+- **CFG-006**: The public Vercel URL must be allowed in Supabase redirect URLs.
 
-## 5. Tests utiles
+## 4. Interfaces & Data Contracts
 
-- `node --test tests/vercel-deployment.test.js` pour les changements Vercel/auth.
-- `npm test` pour la suite complète.
+### 4.1 Runtime surfaces
 
-Les échecs connus de la suite complète doivent être distingués des régressions introduites par la tâche courante.
+| Surface | Type | Purpose |
+|---|---|---|
+| `Index.html` | Frontend app shell | Browser UI |
+| `/api/app` | Vercel serverless endpoint | Returns HTML and injects runtime config |
+| `/api/rpc` | Vercel serverless endpoint | Executes authenticated business methods |
+| `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
+
+### 4.2 Vercel routing contract
+
+| Route | Destination | Behavior |
+|---|---|---|
+| `/api/rpc` | `/api/rpc` | Receives POST JSON requests for business actions |
+| `/(.*)` | `/api/app` | Serves the application shell for all other paths |
+
+### 4.3 `/api/app` response contract
+
+The endpoint returns HTML with runtime configuration injected into the page:
+
+```html
+<script>
+  window.KIROKU_RUNTIME_CONFIG = {
+    runtime: "vercel",
+    supabaseUrl: "<public-supabase-url>",
+    supabaseAnonKey: "<public-anon-key>"
+  };
+</script>
+```
+
+Constraints:
+
+- `supabaseUrl` and `supabaseAnonKey` are public runtime values;
+- the service role key is never injected.
+
+### 4.4 `/api/rpc` request contract
+
+Method:
+
+- `POST` only.
+
+Headers:
+
+- `Authorization: Bearer <Supabase access token>`
+- `Content-Type: application/json`
+
+Body example:
+
+```json
+{
+  "method": "saveCompetition",
+  "args": [
+    {
+      "id_competition": "COMP123",
+      "id_judoka": "JUDO123",
+      "nom": "Tournoi regional",
+      "date": "2026-06-11",
+      "categorie_age": "Cadet",
+      "categorie_poids": "-55 kg"
+    }
+  ]
+}
+```
+
+Success response:
+
+```json
+{
+  "result": {
+    "success": true,
+    "message": "Competition modifiee.",
+    "id_competition": "COMP123"
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "error": "Message d'erreur explicite."
+}
+```
+
+### 4.5 Exposed business methods
+
+| Method | Purpose | Main result shape |
+|---|---|---|
+| `getInitialData` | Load current user context and visible competitions | `{ user, isAdmin, isParent, canManageChildren, competitions, judokas }` |
+| `registerProfile` | Create the initial judoka profile after login | RPC-backed profile creation result |
+| `getChildrenManagement` | Load child management context | `{ user, isParent, children }` |
+| `saveAccessInvitation` | Create one pending access invitation | `{ success, email, message }` |
+| `deleteAccessInvitation` | Remove one pending access invitation | `{ success, message }` |
+| `saveManagedChild` | Create or update a managed child | `{ success, id_judoka, message }` |
+| `deleteManagedChild` | Remove or delete a managed child | `{ success, message }` |
+| `getCompetitionDetail` | Load one competition and its visible combats | `{ competition, combats, isAdmin, isParent, canManageCompetition, canEditCompetition, judokas }` |
+| `saveCompetition` | Create or update one competition | `{ success, id_competition, message }` |
+| `ajouterCombat` | Create one combat | `{ success, message }` |
+| `updateCombat` | Update one combat | `{ success, message }` |
+| `deleteCompetition` | Delete one competition | `{ success, message }` |
+| `deleteCombat` | Delete one combat | `{ success, message }` |
+
+### 4.6 Core data contracts
+
+#### Judoka
+
+| Field | Type | Required | Notes |
+|---|---|---:|---|
+| `id_judoka` | string | Yes | Business identifier |
+| `email` | string or null | No | Can be null for child-only profiles, or set to enable direct child login |
+| `prenom` | string | Yes | Displayed in UI |
+| `nom` | string | Yes | Displayed in UI |
+| `role` | string | Yes | `ADMIN`, `JUDOKA`, or `PARENT` |
+
+#### Competition
+
+| Field | Type | Required | Notes |
+|---|---|---:|---|
+| `id_competition` | string | No on create | Generated on create |
+| `id_judoka` | string | Yes | Owner judoka |
+| `nom` | string | Yes | Competition name |
+| `date` | string | Yes | Normalized date string |
+| `categorie_age` | string | No | Age category |
+| `categorie_poids` | string | No | Weight category |
+
+#### Combat
+
+| Field | Type | Required | Notes |
+|---|---|---:|---|
+| `id_combat` | string | No on create | Generated on create |
+| `id_judoka` | string | Yes | Concerned judoka |
+| `id_competition` | string | Yes | Parent competition |
+| `adversaire` | string | No | Opponent name |
+| `resultat` | string | Yes | `V`, `D`, or `E` |
+| `type_victoire` | string | No | Decision type |
+| `deroule` | string | No | Match notes |
+
+## 5. Test Automation Strategy
+
+- **TST-001**: Use the Node.js built-in test runner for automated validation.
+- **TST-002**: Run targeted tests first when changes affect deployment, auth, schema, or mobile-first structure.
+- **TST-003**: Use `node --test tests/vercel-deployment.test.js` for Vercel routing, auth, and RPC contract changes.
+- **TST-004**: Use `node --test tests/mobile-first-index.test.js` for mobile UI structure expectations.
+- **TST-005**: Use `node --test tests/supabase-schema.test.js` for schema, constraints, and privilege rules.
+- **TST-006**: Use `npm test` for the complete suite.
+- **TST-007**: Pre-existing failures must be distinguished from regressions introduced by the current change.
+
+## 6. Rationale & Context
+
+Kiroku uses a simple frontend but strict server-side authorization. The main technical risk is unauthorized access to sports data or invalid parent-child scope expansion. For that reason:
+
+- authorization comes from application data in `judokas`, not from third-party identity claims;
+- business tables are protected from direct client access;
+- the serverless API is the only entry point for business mutations;
+- deletion rules rely on constrained relationships and cascade behavior;
+- secret handling is isolated from browser code.
+
+The system also supports child profiles without email addresses, while optionally allowing a child email for direct login. It also enforces first-time access through admin-managed invitations. This affects deletion logic, registration checks, and profile lifecycle handling.
+
+## 7. Dependencies & External Integrations
+
+### External Systems
+
+- **EXT-001**: Supabase Auth - validates Google-authenticated user sessions and returns verified email identity.
+- **EXT-002**: Supabase Database - stores judokas, parent links, competitions, combats, and RPC logic.
+- **EXT-003**: Vercel - hosts the app shell and serverless API endpoints.
+
+### Third-Party Services
+
+- **SVC-001**: Google OAuth via Supabase Auth - provides end-user authentication.
+
+### Infrastructure Dependencies
+
+- **INF-001**: Environment variable `SUPABASE_URL` is required.
+- **INF-002**: Environment variable `SUPABASE_ANON_KEY` is required.
+- **INF-003**: Environment variable `SUPABASE_SERVICE_ROLE_KEY` is required.
+
+### Technology Platform Dependencies
+
+- **PLT-002**: Node.js version must be `>=20`.
+- **PLT-003**: The frontend runtime depends on browser support for `fetch`, DOM APIs, and local storage.
+
+### Compliance Dependencies
+
+- **COM-001**: Secrets must remain server-side only.
+- **COM-002**: Direct browser access to business tables must remain revoked for `anon` and `authenticated`.
+
+## 8. Validation Criteria
+
+- **VAL-001**: All role-based access paths must be enforceable server-side.
+- **VAL-002**: No business-table client privilege may be granted to Supabase `anon` or `authenticated`.
+- **VAL-003**: Competition deletion must preserve cascade delete behavior for combats.
+- **VAL-004**: The login flow must remain Google-only.
+- **VAL-005**: The runtime app shell must inject only public Supabase values.
+- **VAL-006**: The database model must keep text business identifiers.
+- **VAL-007**: Existing automated tests for deployment, schema, and mobile-first behavior must remain aligned with this specification.
+
+## 9. Related Specifications / Further Reading
+
+- `SPEC.md` - product behavior, roles, user flows, and acceptance criteria
+- `tests/vercel-deployment.test.js` - deployment, auth, and RPC behavior checks
+- `tests/mobile-first-index.test.js` - mobile-first UI behavior checks
+- `tests/supabase-schema.test.js` - schema and privilege checks

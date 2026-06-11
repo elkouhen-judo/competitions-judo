@@ -9,8 +9,8 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 - Ne relis pas tout le dépôt ni toutes les specs par défaut.
 - Utilise `rg` pour trouver les règles, fonctions et tests concernés.
 - Lis seulement les fichiers utiles à la demande.
-- Lis `spec.md` pour les règles fonctionnelles.
-- Lis `spec-tech.md` seulement pour architecture, données, auth, sécurité ou déploiement.
+- Lis `SPEC.md` pour les règles fonctionnelles.
+- Lis `SPEC-TECH.md` seulement pour architecture, données, auth, sécurité ou déploiement.
 - Évite de recopier de longs extraits de code ou de spec dans les réponses.
 - Pour un changement simple, donne une réponse courte et actionnable.
 - Si un échec de test est préexistant, signale-le sans le résoudre hors périmètre.
@@ -19,8 +19,8 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 
 Avant de modifier :
 
-- identifier la règle métier ou l'écran concerné dans `spec.md` ;
-- identifier la contrainte technique concernée dans `spec-tech.md` si nécessaire ;
+- identifier la règle métier ou l'écran concerné dans `SPEC.md` ;
+- identifier la contrainte technique concernée dans `SPEC-TECH.md` si nécessaire ;
 - vérifier s'il existe déjà une fonction, un composant ou un test équivalent ;
 - limiter le périmètre aux fichiers nécessaires.
 
@@ -36,20 +36,20 @@ Après la modification :
 
 - lancer le test ciblé en premier ;
 - lancer la suite complète si le changement touche un comportement partagé ;
-- mettre à jour `spec.md` quand une règle, un écran ou un flux utilisateur change ;
-- mettre à jour `spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent ;
+- mettre à jour `SPEC.md` quand une règle, un écran ou un flux utilisateur change ;
+- mettre à jour `SPEC-TECH.md` quand architecture, données, auth, sécurité ou déploiement changent ;
 - vérifier `git status`.
 
 ## Spécifications
 
-`spec.md` contient le fonctionnel :
+`SPEC.md` contient le fonctionnel :
 
 - un besoin utilisateur court ;
 - les règles métier au format `DOMAINE-ACTION-N` ;
 - les cas limites ;
 - les critères d'acceptation utiles.
 
-`spec-tech.md` contient le technique :
+`SPEC-TECH.md` contient le technique :
 
 - surfaces applicatives ;
 - données ;

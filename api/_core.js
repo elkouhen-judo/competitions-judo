@@ -87,6 +87,18 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function normalizeLastName(value) {
+  return cleanText(value).toLocaleUpperCase("fr-FR");
+}
+
+function normalizeEmail(value) {
+  return cleanText(value).toLowerCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ""));
+}
+
 function buildJudokaId() {
   return `JUDO${randomUUID().replace(/-/g, "")}`;
 }
@@ -186,6 +198,17 @@ async function getCurrentUser(email) {
   return supabaseSelectOne("judokas", `email=ilike.${encodeURIComponent(email.trim())}`);
 }
 
+async function assertJudokaEmailAvailable(email, currentIdJudoka) {
+  if (!email) {
+    return;
+  }
+
+  const existingUser = await getCurrentUser(email);
+  if (existingUser && String(existingUser.id_judoka) !== String(currentIdJudoka || "")) {
+    throw new Error("Un autre profil utilise déjà cet email.");
+  }
+}
+
 async function getJudokaById(idJudoka) {
   return supabaseSelectOne("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
 }
@@ -239,6 +262,107 @@ async function getCurrentUserContext(email) {
   return { user, judokas, managedJudokaIds };
 }
 
+async function requireAdminUser(email) {
+  const user = await getCurrentUser(email);
+  if (!user) {
+    throw new Error(`Accès refusé pour : ${email}`);
+  }
+  if (!isAdmin(user)) {
+    throw new Error("Gestion des admins réservée aux admins.");
+  }
+  return user;
+}
+
+async function getAdmins() {
+  return supabaseSelect("judokas", "select=*&role=eq.ADMIN&order=nom.asc,prenom.asc");
+}
+
+async function getAccessInvitation(email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  return supabaseSelectOne("access_invitations", `select=*&${eqFilter("email", normalizedEmail)}`);
+}
+
+async function getAccessInvitations() {
+  return supabaseSelect("access_invitations", "select=*&order=created_at.desc,email.asc");
+}
+
+async function getCombatsForJudoka(idJudoka) {
+  return supabaseSelect("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
+}
+
+async function hasManagedChildren(idParent) {
+  const child = await supabaseSelectOne("parent_judokas", `select=id_judoka&${eqFilter("id_parent", idParent)}`);
+  return Boolean(child);
+}
+
+async function getRoleAfterAdminRevocation(idJudoka) {
+  return (await hasManagedChildren(idJudoka)) ? "PARENT" : "JUDOKA";
+}
+
+function getCurrentSeasonBounds(referenceDate = new Date()) {
+  const month = referenceDate.getMonth();
+  const year = referenceDate.getFullYear();
+  const startYear = month >= 8 ? year : year - 1;
+  return {
+    start: `${startYear}-09-01`,
+    end: `${startYear + 1}-08-31`,
+    label: `${startYear}-${startYear + 1}`
+  };
+}
+
+function isDateWithinSeason(dateValue, bounds) {
+  const value = String(dateValue || "");
+  return value >= bounds.start && value <= bounds.end;
+}
+
+function getCompetitionResultRank(value) {
+  const ranking = {
+    "1er": 1,
+    "2e": 2,
+    "3e": 3,
+    "5e": 5,
+    "7e": 7,
+    "non classé": 999
+  };
+  return ranking[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY;
+}
+
+function getCompetitionCategoryLabel(competition) {
+  return [competition.categorie_age, competition.categorie_poids].filter(Boolean).join(" - ");
+}
+
+async function getAccessibleJudokaProfile(email, idJudoka) {
+  const userContext = await getCurrentUserContext(email);
+  const user = userContext.user;
+  const targetId = idJudoka || user.id_judoka;
+  const target = await getJudokaById(targetId);
+
+  if (!target) {
+    throw new Error("Judoka introuvable.");
+  }
+
+  if (isAdmin(user)) {
+    return { user, target };
+  }
+
+  if (isParent(user)) {
+    if (!(userContext.managedJudokaIds || []).includes(String(targetId))) {
+      throw new Error("Accès refusé à cette fiche judoka.");
+    }
+    return { user, target };
+  }
+
+  if (String(user.id_judoka) !== String(targetId)) {
+    throw new Error("Accès refusé à cette fiche judoka.");
+  }
+
+  return { user, target };
+}
+
 function canManageCombatFor(user, idJudoka, managedJudokaIds) {
   if (isAdmin(user)) return true;
   if (isParent(user)) return (managedJudokaIds || []).includes(String(idJudoka));
@@ -290,6 +414,16 @@ async function getCombatById(idCombat) {
 }
 
 async function getInitialData(email) {
+  const currentUser = await getCurrentUser(email);
+  if (!currentUser) {
+    const invitation = await getAccessInvitation(email);
+    if (invitation) {
+      throw new Error("Invitation trouvée. Finalisez votre profil.");
+    }
+
+    throw new Error("Accès non autorisé. Une invitation admin est requise.");
+  }
+
   const userContext = await getCurrentUserContext(email);
   const user = userContext.user;
   const admin = isAdmin(user);
@@ -306,6 +440,11 @@ async function getInitialData(email) {
 }
 
 async function registerProfile(email, profile) {
+  const invitation = await getAccessInvitation(email);
+  if (!invitation) {
+    throw new Error("Accès non autorisé. Une invitation admin est requise.");
+  }
+
   return supabaseRpc("register_profile", {
     p_email: cleanText(email).toLowerCase(),
     p_type: "JUDOKA",
@@ -329,6 +468,133 @@ async function getChildrenManagement(email) {
   };
 }
 
+async function getAdminsManagement(email) {
+  const user = await requireAdminUser(email);
+  return {
+    user,
+    admins: await getAdmins(),
+    accessInvitations: await getAccessInvitations()
+  };
+}
+
+async function getJudokaProfile(email, idJudoka) {
+  const { target } = await getAccessibleJudokaProfile(email, idJudoka);
+  const competitions = await supabaseSelect("competitions", `select=*&${eqFilter("id_judoka", target.id_judoka)}&order=date.desc`);
+  const combats = await getCombatsForJudoka(target.id_judoka);
+  const bounds = getCurrentSeasonBounds();
+  const seasonCompetitions = competitions.filter(c => isDateWithinSeason(c.date, bounds));
+  const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.id_competition)));
+  const seasonCombats = combats
+    .filter(c => seasonCompetitionIds.has(String(c.id_competition)));
+  const seasonWins = seasonCombats.filter(c => c.resultat === "V").length;
+  const seasonLosses = seasonCombats.filter(c => c.resultat === "D").length;
+  const competitionsById = new Map(competitions.map(c => [String(c.id_competition), c]));
+  const lastCombatCompetition = combats
+    .map(combat => ({
+      combat,
+      competition: competitionsById.get(String(combat.id_competition))
+    }))
+    .filter(entry => entry.competition)
+    .sort((a, b) => {
+      const dateDiff = String(b.competition.date || "").localeCompare(String(a.competition.date || ""));
+      if (dateDiff !== 0) return dateDiff;
+      return String(b.combat.id_combat || "").localeCompare(String(a.combat.id_combat || ""));
+    })[0] || null;
+  const bestSeasonResults = seasonCompetitions
+    .filter(c => c.classement && Number.isFinite(getCompetitionResultRank(c.classement)))
+    .sort((a, b) => {
+      const rankDiff = getCompetitionResultRank(a.classement) - getCompetitionResultRank(b.classement);
+      if (rankDiff !== 0) return rankDiff;
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    })
+    .slice(0, 3)
+    .map(c => ({
+      id_competition: c.id_competition,
+      nom: c.nom,
+      date: c.date,
+      classement: c.classement
+    }));
+  const lastCompetition = competitions[0] || null;
+  const lastCompetitionForCategory = lastCombatCompetition ? lastCombatCompetition.competition : lastCompetition;
+
+  return {
+    judoka: target,
+    season: bounds,
+    lastCompetition: lastCompetition
+      ? {
+          id_competition: lastCompetition.id_competition,
+          nom: lastCompetition.nom,
+          date: lastCompetition.date,
+          category: lastCompetitionForCategory ? getCompetitionCategoryLabel(lastCompetitionForCategory) : "",
+          weightCategory: lastCompetitionForCategory ? (lastCompetitionForCategory.categorie_poids || "") : ""
+        }
+      : null,
+    bestSeasonResults,
+    seasonCombatCount: seasonCombats.length,
+    seasonCompetitionCount: seasonCompetitions.length,
+    seasonWins,
+    seasonLosses
+  };
+}
+
+async function grantAdminRole(email, targetEmail) {
+  await requireAdminUser(email);
+  const normalizedEmail = cleanText(targetEmail).toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error("Email obligatoire.");
+  }
+
+  const target = await getCurrentUser(normalizedEmail);
+  if (!target) {
+    throw new Error("Aucun judoka trouvé avec cet email.");
+  }
+  if (isAdmin(target)) {
+    throw new Error("Cet utilisateur est déjà admin.");
+  }
+
+  await supabasePatch("judokas", eqFilter("id_judoka", target.id_judoka), {
+    role: "ADMIN"
+  });
+
+  return {
+    success: true,
+    id_judoka: target.id_judoka,
+    message: "Droits admin accordés."
+  };
+}
+
+async function saveAccessInvitation(email, targetEmail) {
+  const user = await requireAdminUser(email);
+  const normalizedEmail = normalizeEmail(targetEmail);
+  if (!normalizedEmail) {
+    throw new Error("Email d'invitation obligatoire.");
+  }
+  if (!isValidEmail(normalizedEmail)) {
+    throw new Error("Email d'invitation invalide.");
+  }
+
+  const existingUser = await getCurrentUser(normalizedEmail);
+  if (existingUser) {
+    throw new Error("Ce compte dispose déjà d'un accès.");
+  }
+
+  const existingInvitation = await getAccessInvitation(normalizedEmail);
+  if (existingInvitation) {
+    throw new Error("Cette adresse est déjà invitée.");
+  }
+
+  await supabaseInsert("access_invitations", {
+    email: normalizedEmail,
+    invited_by: user.id_judoka
+  });
+
+  return {
+    success: true,
+    email: normalizedEmail,
+    message: "Invitation d'accès enregistrée."
+  };
+}
+
 async function saveManagedChild(email, child) {
   const user = await getCurrentUser(email);
   if (!user) {
@@ -338,9 +604,14 @@ async function saveManagedChild(email, child) {
 
   const prenom = cleanText(child && child.prenom);
   const nom = cleanText(child && child.nom);
+  const childEmail = normalizeEmail(child && child.email);
   if (!prenom || !nom) {
     throw new Error("Prénom et nom de l'enfant obligatoires.");
   }
+  if (childEmail && !isValidEmail(childEmail)) {
+    throw new Error("Email de l'enfant invalide.");
+  }
+  await assertJudokaEmailAvailable(childEmail, child && child.id_judoka);
 
   if (child && child.id_judoka) {
     const existingChild = await getManagedChild(user.id_judoka, child.id_judoka);
@@ -350,7 +621,8 @@ async function saveManagedChild(email, child) {
 
     await supabasePatch("judokas", eqFilter("id_judoka", child.id_judoka), {
       prenom,
-      nom
+      nom,
+      email: childEmail || null
     });
 
     return {
@@ -363,7 +635,7 @@ async function saveManagedChild(email, child) {
   const idJudoka = buildJudokaId();
   await supabaseInsert("judokas", {
     id_judoka: idJudoka,
-    email: null,
+    email: childEmail || null,
     prenom,
     nom,
     role: "JUDOKA"
@@ -434,6 +706,43 @@ async function deleteManagedChild(email, idJudoka) {
   };
 }
 
+async function revokeAdminRole(email, idJudoka) {
+  const user = await requireAdminUser(email);
+  if (!idJudoka) {
+    throw new Error("Admin obligatoire.");
+  }
+  if (String(user.id_judoka) === String(idJudoka)) {
+    throw new Error("Vous ne pouvez pas retirer vos propres droits admin.");
+  }
+
+  const target = await getJudokaById(idJudoka);
+  if (!target || !isAdmin(target)) {
+    throw new Error("Admin introuvable.");
+  }
+
+  await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
+    role: await getRoleAfterAdminRevocation(idJudoka)
+  });
+
+  return { success: true, message: "Droits admin retirés." };
+}
+
+async function deleteAccessInvitation(email, invitedEmail) {
+  await requireAdminUser(email);
+  const normalizedEmail = normalizeEmail(invitedEmail);
+  if (!normalizedEmail) {
+    throw new Error("Invitation obligatoire.");
+  }
+
+  const invitation = await getAccessInvitation(normalizedEmail);
+  if (!invitation) {
+    throw new Error("Invitation introuvable.");
+  }
+
+  await supabaseDelete("access_invitations", eqFilter("email", normalizedEmail));
+  return { success: true, message: "Invitation supprimée." };
+}
+
 async function getCompetitionDetail(email, idCompetition) {
   const userContext = await getCurrentUserContext(email);
   const user = userContext.user;
@@ -464,7 +773,7 @@ async function getCompetitionDetail(email, idCompetition) {
     const judoka = judokasById.get(String(combat.id_judoka));
     return {
       ...combat,
-      judoka_nom: judoka ? `${judoka.prenom} ${judoka.nom}` : combat.id_judoka
+      judoka_nom: judoka ? `${judoka.prenom} ${normalizeLastName(judoka.nom)}` : combat.id_judoka
     };
   });
 
@@ -493,10 +802,9 @@ async function saveCompetition(email, competition) {
     id_judoka: ownerJudokaId,
     nom: competition.nom,
     date: competition.date,
-    lieu: competition.lieu || "",
     categorie_age: competition.categorie_age || "",
     categorie_poids: competition.categorie_poids || "",
-    poids_pesee: competition.poids_pesee || ""
+    classement: competition.classement || ""
   };
 
   if (competition.id_competition) {
@@ -620,12 +928,18 @@ async function deleteCombat(email, idCombat) {
 const methods = {
   getInitialData,
   getChildrenManagement,
+  getAdminsManagement,
+  getJudokaProfile,
   registerProfile,
   saveManagedChild,
+  grantAdminRole,
+   saveAccessInvitation,
   getCompetitionDetail,
   saveCompetition,
   ajouterCombat,
   deleteManagedChild,
+  revokeAdminRole,
+   deleteAccessInvitation,
   updateCombat,
   deleteCompetition,
   deleteCombat
