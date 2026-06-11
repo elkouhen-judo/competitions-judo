@@ -9,8 +9,7 @@ module.exports = function createCompetitionsService(deps) {
     isParent,
     resolveCompetitionOwnerId,
     buildCompetitionId,
-    createCompetition,
-    createCompetitionRecord
+    createCompetition
   } = deps;
 
   async function getCompetitionsForUser(user, managedJudokaIds) {
@@ -79,8 +78,6 @@ module.exports = function createCompetitionsService(deps) {
     const ownerJudokaId = resolveCompetitionOwnerId(user, competition, managedJudokaIds);
     const competitionDraft = createCompetition(competition, ownerJudokaId);
 
-    const payload = competitionDraft.toRecord();
-
     if (competition.id_competition) {
       const existingCompetition = await competitionsRepository.getById(competition.id_competition);
       if (!existingCompetition) throw new Error("Compétition introuvable.");
@@ -88,7 +85,7 @@ module.exports = function createCompetitionsService(deps) {
         throw new Error("Modification de cette compétition non autorisée.");
       }
 
-      await competitionsRepository.update(competition.id_competition, payload);
+      await competitionsRepository.update(competition.id_competition, competitionDraft);
       return {
         success: true,
         id_competition: competition.id_competition,
@@ -96,12 +93,12 @@ module.exports = function createCompetitionsService(deps) {
       };
     }
 
-    const newCompetition = createCompetitionRecord(competition, ownerJudokaId, buildCompetitionId);
-    await competitionsRepository.insert(newCompetition);
+    const idCompetition = buildCompetitionId();
+    await competitionsRepository.insert(competitionDraft, idCompetition);
 
     return {
       success: true,
-      id_competition: newCompetition.id_competition,
+      id_competition: idCompetition,
       message: "Compétition créée."
     };
   }

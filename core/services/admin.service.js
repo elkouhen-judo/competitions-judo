@@ -82,7 +82,7 @@ module.exports = function createAdminService(deps) {
       throw new Error("Cette adresse est déjà invitée.");
     }
 
-    await invitationsRepository.insert(invitation.toRecord());
+    await invitationsRepository.insert(invitation);
 
     return {
       success: true,

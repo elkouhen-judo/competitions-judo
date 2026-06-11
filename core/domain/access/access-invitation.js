@@ -9,18 +9,10 @@ function createAccessInvitation({ email, invited_profile_type, invited_by }) {
   };
 
   return {
-    ...record,
-    toRecord() {
-      return { ...record };
-    }
+    ...record
   };
 }
 
-function createAccessInvitationRecord({ email, invited_profile_type, invited_by }) {
-  return createAccessInvitation({ email, invited_profile_type, invited_by }).toRecord();
-}
-
 module.exports = {
-  createAccessInvitation,
-  createAccessInvitationRecord
+  createAccessInvitation
 };
