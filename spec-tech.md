@@ -57,6 +57,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **VCL-002**: Vercel shall route all non-API paths to `/api/app`.
 - **VCL-003**: `/api/app` shall return `Index.html` with runtime config injected into the HTML.
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
+- **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
 
 ### 3.3 Data model constraints
 
@@ -117,6 +118,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **CFG-004**: Google Auth provider must be enabled in Supabase Auth.
 - **CFG-005**: Google OAuth callback `https://<project-ref>.supabase.co/auth/v1/callback` must be allowed in Google configuration.
 - **CFG-006**: The public Vercel URL must be allowed in Supabase redirect URLs.
+- **CFG-006a**: The public Vercel URL is `https://competitions-judo.vercel.app/`.
 - **CFG-007**: Supabase Auth must configure the `before-user-created` hook to call `public.hook_check_invited_signup`.
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
 
