@@ -81,7 +81,7 @@ test("vercel runtime uses google auth without password login", () => {
   assert.match(uiBundle, /auth\/v1\/authorize/);
   assert.match(uiBundle, /searchParams\.set\("provider", "google"\)/);
   assert.match(uiBundle, /searchParams\.set\("redirect_to", getVercelAuthRedirectUrl\(\)\)/);
-  assert.match(uiBundle, /searchParams\.set\("response_type", "token"\)/);
+  assert.doesNotMatch(uiBundle, /searchParams\.set\("response_type"/);
   assert.match(uiBundle, /async function parseVercelAuthCallback\(\)/);
   assert.match(uiBundle, /access_token/);
   assert.match(uiBundle, /refresh_token/);
