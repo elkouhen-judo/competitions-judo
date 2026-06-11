@@ -12,26 +12,26 @@ const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const adminCore = fs.readFileSync(path.join(root, "api", "_core-admin.js"), "utf8");
 const businessCore = fs.readFileSync(path.join(root, "api", "_core-business.js"), "utf8");
-const coreIndex = fs.readFileSync(path.join(root, "api", "core", "index.js"), "utf8");
-const adminService = fs.readFileSync(path.join(root, "api", "core", "services", "admin.service.js"), "utf8");
-const childrenService = fs.readFileSync(path.join(root, "api", "core", "services", "children.service.js"), "utf8");
-const competitionsService = fs.readFileSync(path.join(root, "api", "core", "services", "competitions.service.js"), "utf8");
-const profileService = fs.readFileSync(path.join(root, "api", "core", "services", "profile.service.js"), "utf8");
-const registrationService = fs.readFileSync(path.join(root, "api", "core", "services", "registration.service.js"), "utf8");
-const userContextService = fs.readFileSync(path.join(root, "api", "core", "services", "user-context.service.js"), "utf8");
-const permissions = fs.readFileSync(path.join(root, "api", "core", "domain", "access", "permission-policy.js"), "utf8");
-const judokaDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "access", "judoka.js"), "utf8");
+const coreIndex = fs.readFileSync(path.join(root, "core", "index.js"), "utf8");
+const adminService = fs.readFileSync(path.join(root, "core", "services", "admin.service.js"), "utf8");
+const childrenService = fs.readFileSync(path.join(root, "core", "services", "children.service.js"), "utf8");
+const competitionsService = fs.readFileSync(path.join(root, "core", "services", "competitions.service.js"), "utf8");
+const profileService = fs.readFileSync(path.join(root, "core", "services", "profile.service.js"), "utf8");
+const registrationService = fs.readFileSync(path.join(root, "core", "services", "registration.service.js"), "utf8");
+const userContextService = fs.readFileSync(path.join(root, "core", "services", "user-context.service.js"), "utf8");
+const permissions = fs.readFileSync(path.join(root, "core", "domain", "access", "permission-policy.js"), "utf8");
 const accessInvitationDomain = fs.readFileSync(
-  path.join(root, "api", "core", "domain", "access", "access-invitation.js"),
+  path.join(root, "core", "domain", "access", "access-invitation.js"),
   "utf8"
 );
-const competitionDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "competitions", "competition.js"), "utf8");
-const seasonDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "season.js"), "utf8");
-const judokasRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "judokas.repository.js"), "utf8");
-const invitationsRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "invitations.repository.js"), "utf8");
-const supabaseClient = fs.readFileSync(path.join(root, "api", "core", "infra", "supabase-client.js"), "utf8");
-const textHelpers = fs.readFileSync(path.join(root, "api", "core", "shared", "text.js"), "utf8");
-const sessionAuth = fs.readFileSync(path.join(root, "api", "core", "auth", "session.js"), "utf8");
+const competitionDomain = fs.readFileSync(path.join(root, "core", "domain", "competitions", "competition.js"), "utf8");
+const seasonDomain = fs.readFileSync(path.join(root, "core", "domain", "season.js"), "utf8");
+const judokaDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "judoka.js"), "utf8");
+const judokasRepository = fs.readFileSync(path.join(root, "core", "repositories", "judokas.repository.js"), "utf8");
+const invitationsRepository = fs.readFileSync(path.join(root, "core", "repositories", "invitations.repository.js"), "utf8");
+const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabase-client.js"), "utf8");
+const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
+const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
 const profileRegistrationMigration = fs.readFileSync(
   path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
@@ -252,8 +252,8 @@ test("vercel runtime shows the connected user without a logout button", () => {
 });
 
 test("vercel api keeps supabase api key usage server side", () => {
-  assert.match(core, /module\.exports = require\("\.\/core"\);/);
-  assert.match(adminCore, /module\.exports = require\("\.\/core\/services\/admin\.service"\);/);
+  assert.match(core, /module\.exports = require\("\.\.\/core"\);/);
+  assert.match(adminCore, /module\.exports = require\("\.\.\/core\/services\/admin\.service"\);/);
   assert.match(businessCore, /createCompetitionsService/);
   assert.match(businessCore, /createCombatsService/);
   assert.match(coreIndex, /createAdminService/);
