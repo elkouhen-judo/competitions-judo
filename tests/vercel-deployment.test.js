@@ -271,9 +271,10 @@ test("combat mutations reload competition details after save", () => {
   assert.doesNotMatch(uiBundle, /judoka_nom: currentUser \? getJudokaDisplayName\(currentUser\) : ""/);
 });
 
-test("vercel runtime shows the connected user without a logout button", () => {
+test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
   assert.match(uiBundle, /id="userInfo"/);
+  assert.match(uiBundle, /id="logoutButton"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
   assert.match(uiBundle, /getJudokaDisplayName\(currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
@@ -281,10 +282,11 @@ test("vercel runtime shows the connected user without a logout button", () => {
   assert.match(uiBundle, /function clearToasts\(\)/);
   assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
   assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
-  assert.doesNotMatch(uiBundle, /id="logoutButton"/);
-  assert.doesNotMatch(uiBundle, /function logoutUser\(\)/);
-  assert.doesNotMatch(uiBundle, /auth\/v1\/logout/);
+  assert.match(uiBundle, /async function logoutUser\(\)/);
+  assert.match(uiBundle, /auth\/v1\/logout/);
   assert.match(uiBundle, /clearVercelSession\(\)/);
+  assert.match(uiBundle, /resetApplicationState\(\);/);
+  assert.match(uiBundle, /showVercelLogin\(\);/);
 });
 
 test("vercel api keeps supabase api key usage server side", () => {
