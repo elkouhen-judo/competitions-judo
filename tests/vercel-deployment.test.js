@@ -12,6 +12,20 @@ const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const adminCore = fs.readFileSync(path.join(root, "api", "_core-admin.js"), "utf8");
 const businessCore = fs.readFileSync(path.join(root, "api", "_core-business.js"), "utf8");
+const coreIndex = fs.readFileSync(path.join(root, "api", "core", "index.js"), "utf8");
+const adminService = fs.readFileSync(path.join(root, "api", "core", "services", "admin.service.js"), "utf8");
+const childrenService = fs.readFileSync(path.join(root, "api", "core", "services", "children.service.js"), "utf8");
+const competitionsService = fs.readFileSync(path.join(root, "api", "core", "services", "competitions.service.js"), "utf8");
+const profileService = fs.readFileSync(path.join(root, "api", "core", "services", "profile.service.js"), "utf8");
+const registrationService = fs.readFileSync(path.join(root, "api", "core", "services", "registration.service.js"), "utf8");
+const userContextService = fs.readFileSync(path.join(root, "api", "core", "services", "user-context.service.js"), "utf8");
+const permissions = fs.readFileSync(path.join(root, "api", "core", "auth", "permissions.js"), "utf8");
+const seasonDomain = fs.readFileSync(path.join(root, "api", "core", "domain", "season.js"), "utf8");
+const judokasRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "judokas.repository.js"), "utf8");
+const invitationsRepository = fs.readFileSync(path.join(root, "api", "core", "repositories", "invitations.repository.js"), "utf8");
+const supabaseClient = fs.readFileSync(path.join(root, "api", "core", "infra", "supabase-client.js"), "utf8");
+const textHelpers = fs.readFileSync(path.join(root, "api", "core", "shared", "text.js"), "utf8");
+const sessionAuth = fs.readFileSync(path.join(root, "api", "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
 const profileRegistrationMigration = fs.readFileSync(
   path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
@@ -80,13 +94,13 @@ test("vercel login creates only the initial judoka profile", () => {
   assert.match(uiBundle, /Votre invitation est validée/);
   assert.doesNotMatch(uiBundle, /id="registrationType"/);
   assert.doesNotMatch(uiBundle, /registrationChildren/);
-  assert.match(core, /async function registerProfile\(email,\s*profile\)/);
-  assert.match(core, /const invitation = await adminModule\.getAccessInvitation\(email\)/);
-  assert.match(core, /Accès non autorisé\. Une invitation est requise\./);
-  assert.match(core, /supabaseRpc\("register_profile"/);
-  assert.match(core, /p_type: invitation\.invited_profile_type \|\| "JUDOKA"/);
-  assert.match(core, /p_children: \[\]/);
-  assert.doesNotMatch(core, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
+  assert.match(registrationService, /async function registerProfile\(email,\s*profile\)/);
+  assert.match(registrationService, /const invitation = await adminService\.getAccessInvitation\(email\)/);
+  assert.match(registrationService, /Accès non autorisé\. Une invitation est requise\./);
+  assert.match(registrationService, /supabaseRpc\("register_profile"/);
+  assert.match(registrationService, /p_type: invitation\.invited_profile_type \|\| "JUDOKA"/);
+  assert.match(registrationService, /p_children: \[\]/);
+  assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
   assert.match(profileRegistrationMigration, /alter column email drop not null/i);
   assert.match(profileRegistrationMigration, /create or replace function public\.register_profile/i);
 });
@@ -114,10 +128,10 @@ test("judoka home keeps competition creation available", () => {
 });
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
-  assert.match(businessCore, /categorie_age:\s*competition\.categorie_age \|\| ""/);
-  assert.match(businessCore, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
-  assert.doesNotMatch(businessCore, /lieu:\s*""/);
-  assert.doesNotMatch(businessCore, /poids_pesee:\s*""/);
+  assert.match(competitionsService, /categorie_age:\s*competition\.categorie_age \|\| ""/);
+  assert.match(competitionsService, /categorie_poids:\s*competition\.categorie_poids \|\| ""/);
+  assert.doesNotMatch(competitionsService, /lieu:\s*""/);
+  assert.doesNotMatch(competitionsService, /poids_pesee:\s*""/);
 });
 
 test("connected parent can manage children from a dedicated screen", () => {
@@ -129,15 +143,15 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(uiBundle, /se connecter seuls si un email est renseigné/);
   assert.match(uiBundle, /function normalizeLastName\(value\)/);
   assert.match(uiBundle, /function deleteManagedChild\(idJudoka,\s*name\)/);
-  assert.match(core, /async function getChildrenManagement\(email\)/);
-  assert.match(core, /async function saveManagedChild\(email,\s*child\)/);
-  assert.match(core, /const childEmail = normalizeEmail\(child && child\.email\)/);
-  assert.match(core, /await assertJudokaEmailAvailable\(childEmail,\s*child && child\.id_judoka\)/);
-  assert.match(core, /profile_type: "JUDOKA"/);
-  assert.match(core, /email: childEmail \|\| null/);
-  assert.match(core, /async function deleteManagedChild\(email,\s*idJudoka\)/);
-  assert.match(core, /return isParent\(user\);/);
-  assert.match(core, /role: "NORMAL"/);
+  assert.match(childrenService, /async function getChildrenManagement\(email\)/);
+  assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
+  assert.match(childrenService, /const childEmail = normalizeEmail\(child && child\.email\)/);
+  assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(childEmail,\s*child && child\.id_judoka\)/);
+  assert.match(childrenService, /profile_type: "JUDOKA"/);
+  assert.match(childrenService, /email: childEmail \|\| null/);
+  assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
+  assert.match(childrenService, /isParent: isParent\(user\)/);
+  assert.match(childrenService, /role: "NORMAL"/);
 });
 
 test("admin can manage admins from a dedicated screen", () => {
@@ -152,17 +166,17 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /function deleteAccessInvitation\(email\)/);
   assert.match(uiBundle, /function saveAdminRole\(\)/);
   assert.match(uiBundle, /function revokeAdminRole\(idJudoka,\s*name\)/);
-  assert.match(adminCore, /async function getAdminsManagement\(email\)/);
-  assert.match(adminCore, /accessInvitations: await getAccessInvitations\(\)/);
-  assert.match(adminCore, /async function saveAccessInvitation\(email,\s*targetEmail,\s*targetProfileType\)/);
-  assert.match(adminCore, /invited_profile_type: normalizedProfileType/);
-  assert.doesNotMatch(adminCore, /"ADMIN", "JUDOKA", "PARENT"/);
-  assert.match(adminCore, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
-  assert.match(adminCore, /async function grantAdminRole\(email,\s*targetEmail\)/);
-  assert.match(adminCore, /role: "ADMIN"/);
-  assert.match(adminCore, /role: "NORMAL"/);
-  assert.match(adminCore, /async function revokeAdminRole\(email,\s*idJudoka\)/);
-  assert.match(adminCore, /Vous ne pouvez pas retirer vos propres droits admin/);
+  assert.match(adminService, /async function getAdminsManagement\(email\)/);
+  assert.match(adminService, /accessInvitations: await getAccessInvitations\(\)/);
+  assert.match(adminService, /async function saveAccessInvitation\(email,\s*targetEmail,\s*targetProfileType\)/);
+  assert.match(adminService, /invited_profile_type: normalizedProfileType/);
+  assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
+  assert.match(adminService, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
+  assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
+  assert.match(adminService, /role: "ADMIN"/);
+  assert.match(adminService, /role: "NORMAL"/);
+  assert.match(adminService, /async function revokeAdminRole\(email,\s*idJudoka\)/);
+  assert.match(adminService, /Vous ne pouvez pas retirer vos propres droits admin/);
 });
 
 test("judoka profile exposes season statistics through a dedicated screen", () => {
@@ -183,27 +197,27 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.prenom\), normalizeLastName\(j && j\.nom\)\]\.filter\(Boolean\)\.join\(" "\);/);
-  assert.match(core, /if \(isAdmin\(user\)\) \{\s*return \{ user, target \};\s*\}/);
-  assert.match(core, /if \(isParent\(user\)\) \{\s*if \(!\(userContext\.managedJudokaIds \|\| \[\]\)\.includes\(String\(targetId\)\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
-  assert.match(core, /if \(String\(user\.id_judoka\) !== String\(targetId\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
-  assert.match(core, /async function getJudokaProfile\(email,\s*idJudoka\)/);
-  assert.match(core, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
-  assert.match(core, /const lastCompetitionForCategory = lastCombatCompetition \? lastCombatCompetition\.competition : lastCompetition;/);
-  assert.match(core, /weightCategory:/);
-  assert.match(core, /seasonWins/);
-  assert.match(core, /seasonLosses/);
-  assert.match(core, /bestSeasonResults/);
+  assert.match(userContextService, /if \(isAdmin\(user\)\) \{\s*return \{ user, target \};\s*\}/);
+  assert.match(userContextService, /if \(isParent\(user\)\) \{\s*if \(!\(userContext\.managedJudokaIds \|\| \[\]\)\.includes\(String\(targetId\)\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
+  assert.match(userContextService, /if \(String\(user\.id_judoka\) !== String\(targetId\)\) \{\s*throw new Error\("Accès refusé à cette fiche judoka\."\);/);
+  assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
+  assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
+  assert.match(profileService, /const lastCompetitionForCategory = lastCombatCompetition \? lastCombatCompetition\.competition : lastCompetition;/);
+  assert.match(profileService, /weightCategory:/);
+  assert.match(profileService, /seasonWins/);
+  assert.match(profileService, /seasonLosses/);
+  assert.match(profileService, /bestSeasonResults/);
 });
 
 test("admin owner selection is not restricted by parent-managed scope", () => {
-  assert.match(core, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*if \(isAdmin\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*return ownerJudokaId;\s*\}\s*if \(isParent\(user\)\) \{/);
-  assert.match(core, /if \(isParent\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*if \(!\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\)\) \{\s*throw new Error\("Ce judoka n'est pas dans votre liste\."\);/);
+  assert.match(permissions, /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaIds\) \{\s*if \(isAdmin\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*return ownerJudokaId;\s*\}\s*if \(isParent\(user\)\) \{/);
+  assert.match(permissions, /if \(isParent\(user\)\) \{\s*const ownerJudokaId = competition\.id_judoka;\s*if \(!ownerJudokaId\) throw new Error\("Judoka participant obligatoire\."\);\s*if \(!\(managedJudokaIds \|\| \[\]\)\.includes\(String\(ownerJudokaId\)\)\) \{\s*throw new Error\("Ce judoka n'est pas dans votre liste\."\);/);
 });
 
 test("judoka lookup uses an exact normalized email match", () => {
-  assert.match(core, /const normalizedEmail = normalizeEmail\(email\);/);
-  assert.match(core, /return supabaseSelectOne\("judokas", `select=\*&\$\{eqFilter\("email", normalizedEmail\)\}`\);/);
-  assert.doesNotMatch(core, /email=ilike\./);
+  assert.match(userContextService, /const normalizedEmail = normalizeEmail\(email\);/);
+  assert.match(judokasRepository, /return supabaseSelectOne\("judokas", `select=\*&\$\{eqFilter\("email", email\)\}`\);/);
+  assert.doesNotMatch(judokasRepository, /email=ilike\./);
 });
 
 test("combat mutations reload competition details after save", () => {
@@ -229,22 +243,27 @@ test("vercel runtime shows the connected user without a logout button", () => {
 });
 
 test("vercel api keeps supabase api key usage server side", () => {
-  assert.match(core, /SUPABASE_SERVICE_ROLE_KEY/);
-  assert.match(core, /createAdminModule/);
-  assert.match(core, /createBusinessModule/);
-  assert.match(core, /\.\.\.adminModule\.methods/);
-  assert.match(core, /\.\.\.businessModule\.methods/);
-  assert.match(core, /function isJwtLikeToken\(value\)/);
-  assert.match(core, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
-  assert.match(core, /function normalizeLastName\(value\)/);
-  assert.match(adminCore, /async function getAccessInvitation\(email\)/);
-  assert.match(adminCore, /async function getAccessInvitations\(\)/);
-  assert.match(core, /canManageChildren: canManageChildrenProfile\(user\)/);
+  assert.match(core, /module\.exports = require\("\.\/core"\);/);
+  assert.match(adminCore, /module\.exports = require\("\.\/core\/services\/admin\.service"\);/);
+  assert.match(businessCore, /createCompetitionsService/);
+  assert.match(businessCore, /createCombatsService/);
+  assert.match(coreIndex, /createAdminService/);
+  assert.match(coreIndex, /createCompetitionsService/);
+  assert.match(coreIndex, /createCombatsService/);
+  assert.match(coreIndex, /\.\.\.adminService\.methods/);
+  assert.match(coreIndex, /\.\.\.competitionsService\.methods/);
+  assert.match(coreIndex, /\.\.\.combatsService\.methods/);
+  assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);
+  assert.match(supabaseClient, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
+  assert.match(textHelpers, /function normalizeLastName\(value\)/);
+  assert.match(adminService, /async function getAccessInvitation\(email\)/);
+  assert.match(adminService, /async function getAccessInvitations\(\)/);
+  assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(user\)/);
   assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
-  assert.match(core, /\/auth\/v1\/user/);
-  assert.match(businessCore, /judoka_nom: judoka \? `\$\{judoka\.prenom\} \$\{normalizeLastName\(judoka\.nom\)\}` : combat\.id_judoka/);
-  assert.doesNotMatch(core, /auth\/v1\/signup/);
-  assert.doesNotMatch(core, /auth\/v1\/admin\/users/);
+  assert.match(sessionAuth, /\/auth\/v1\/user/);
+  assert.match(competitionsService, /judoka_nom: judoka \? `\$\{judoka\.prenom\} \$\{normalizeLastName\(judoka\.nom\)\}` : combat\.id_judoka/);
+  assert.doesNotMatch(coreIndex, /auth\/v1\/signup/);
+  assert.doesNotMatch(coreIndex, /auth\/v1\/admin\/users/);
   assert.match(rpc, /verifySupabaseUser\(accessToken\)/);
   assert.match(rpc, /methods\[body\.method\]/);
 });
