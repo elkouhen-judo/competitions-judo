@@ -36,38 +36,39 @@ module.exports = function createChildrenService(deps) {
     }
     assertCanManageChildrenProfile(user);
 
-    const prenom = cleanText(child && child.prenom);
-    const nom = cleanText(child && child.nom);
+    const firstName = cleanText(child && (child.firstName || child.prenom));
+    const lastName = cleanText(child && (child.lastName || child.nom));
 
-    if (child && child.id_judoka) {
-      const existingChild = await userContextService.getManagedChild(user.id_judoka, child.id_judoka);
+    if (child && (child.judokaId || child.id_judoka)) {
+      const childJudokaId = child.judokaId || child.id_judoka;
+      const existingChild = await userContextService.getManagedChild(user.id_judoka, childJudokaId);
       if (!existingChild) {
         throw new Error("Enfant introuvable.");
       }
 
       const updatedChild = updateManagedChild({
-        prenom,
-        nom,
-        email: child.email
+        firstName,
+        lastName,
+        accountEmail: child.accountEmail !== undefined ? child.accountEmail : child.email
       });
-      await userContextService.assertJudokaEmailAvailable(updatedChild.email, child.id_judoka);
-      await judokasRepository.updateManagedChild(child.id_judoka, updatedChild);
+      await userContextService.assertJudokaEmailAvailable(updatedChild.accountEmail, childJudokaId);
+      await judokasRepository.updateManagedChild(childJudokaId, updatedChild);
 
       return {
         success: true,
-        id_judoka: child.id_judoka,
+        id_judoka: childJudokaId,
         message: "Enfant modifié."
       };
     }
 
     const idJudoka = buildJudokaId();
     const managedChild = createManagedChild({
-      id_judoka: idJudoka,
-      email: child && child.email,
-      prenom,
-      nom
+      judokaId: idJudoka,
+      accountEmail: child && (child.accountEmail !== undefined ? child.accountEmail : child.email),
+      firstName,
+      lastName
     });
-    await userContextService.assertJudokaEmailAvailable(managedChild.email, idJudoka);
+    await userContextService.assertJudokaEmailAvailable(managedChild.accountEmail, idJudoka);
     await judokasRepository.insert(managedChild);
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,

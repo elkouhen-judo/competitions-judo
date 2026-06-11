@@ -19,6 +19,14 @@ function assertCanManageChildrenProfile(user) {
   }
 }
 
+function getUserJudokaId(user) {
+  return user && (user.judokaId || user.id_judoka);
+}
+
+function getCompetitionOwnerJudokaId(competition) {
+  return competition && (competition.ownerJudokaId || competition.id_judoka);
+}
+
 function canManageCombatFor(user, idJudoka, managedJudokaIds) {
   if (isAdmin(user)) return true;
   if (isParent(user)) {
@@ -27,18 +35,19 @@ function canManageCombatFor(user, idJudoka, managedJudokaIds) {
     }
     return (managedJudokaIds || []).includes(String(idJudoka));
   }
-  return String(user.id_judoka) === String(idJudoka);
+  return String(getUserJudokaId(user)) === String(idJudoka);
 }
 
 function canManageCompetition(user, competition, managedJudokaIds) {
+  const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
   if (isAdmin(user)) return true;
   if (isParent(user)) {
     if (managedJudokaIds && typeof managedJudokaIds.includes === "function") {
-      return managedJudokaIds.includes(competition.ownerJudokaId || competition.id_judoka);
+      return managedJudokaIds.includes(ownerJudokaId);
     }
-    return (managedJudokaIds || []).includes(String(competition.ownerJudokaId || competition.id_judoka));
+    return (managedJudokaIds || []).includes(String(ownerJudokaId));
   }
-  return String(user.id_judoka) === String(competition.ownerJudokaId || competition.id_judoka);
+  return String(getUserJudokaId(user)) === String(ownerJudokaId);
 }
 
 function canAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
@@ -49,7 +58,7 @@ function canAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
     }
     return (managedJudokaIds || []).includes(String(idJudoka));
   }
-  return String(user.id_judoka) === String(idJudoka);
+  return String(getUserJudokaId(user)) === String(idJudoka);
 }
 
 function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
@@ -59,14 +68,14 @@ function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaIds) {
 }
 
 function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
+  const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
+
   if (isAdmin(user)) {
-    const ownerJudokaId = competition.id_judoka;
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
     return ownerJudokaId;
   }
 
   if (isParent(user)) {
-    const ownerJudokaId = competition.id_judoka;
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
     const inScope = managedJudokaIds && typeof managedJudokaIds.includes === "function"
       ? managedJudokaIds.includes(ownerJudokaId)
@@ -77,7 +86,7 @@ function resolveCompetitionOwnerId(user, competition, managedJudokaIds) {
     return ownerJudokaId;
   }
 
-  return user.id_judoka;
+  return getUserJudokaId(user);
 }
 
 module.exports = {

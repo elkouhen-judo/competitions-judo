@@ -8,11 +8,7 @@ function createCombatDraft(combat = {}) {
     opponent: combat.opponent || combat.adversaire || "",
     result,
     victoryType: combat.victoryType || combat.type_victoire || "",
-    notes: combat.notes || combat.deroule || "",
-    adversaire: combat.opponent || combat.adversaire || "",
-    resultat: result,
-    type_victoire: combat.victoryType || combat.type_victoire || "",
-    deroule: combat.notes || combat.deroule || ""
+    notes: combat.notes || combat.deroule || ""
   };
 }
 
@@ -29,18 +25,15 @@ function createCombat(combat) {
     competitionId,
     judokaId,
     draft,
-    id_combat: combatId,
-    id_judoka: judokaId,
-    id_competition: competitionId,
-    adversaire: draft.opponent,
-    resultat: draft.result,
-    type_victoire: draft.victoryType,
-    deroule: draft.notes
+    opponent: draft.opponent,
+    result: draft.result,
+    victoryType: draft.victoryType,
+    notes: draft.notes
   };
 }
 
 function updateCombat(combat) {
-  if (!combat || !combat.id_combat) {
+  if (!combat || !(combat.combatId || combat.id_combat)) {
     throw new Error("Combat obligatoire.");
   }
 
