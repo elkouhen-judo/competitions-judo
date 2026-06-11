@@ -185,12 +185,12 @@ Body example:
   "method": "saveCompetition",
   "args": [
     {
-      "id_competition": "COMP123",
-      "id_judoka": "JUDO123",
-      "nom": "Tournoi regional",
-      "date": "2026-06-11",
-      "categorie_age": "Cadet",
-      "categorie_poids": "-55 kg"
+      "competitionId": "COMP123",
+      "ownerJudokaId": "JUDO123",
+      "name": "Tournoi regional",
+      "competitionDate": "2026-06-11",
+      "ageCategory": "Cadet",
+      "weightCategory": "-55 kg"
     }
   ]
 }
@@ -203,7 +203,7 @@ Success response:
   "result": {
     "success": true,
     "message": "Competition modifiee.",
-    "id_competition": "COMP123"
+    "competitionId": "COMP123"
   }
 }
 ```
@@ -223,52 +223,55 @@ Error response:
 | `getInitialData` | Load current user context and visible competitions | `{ user, isAdmin, isParent, canManageChildren, competitions, judokas }` |
 | `registerProfile` | Create the initial invited profile after login | RPC-backed profile creation result |
 | `getChildrenManagement` | Load child management context | `{ user, isParent, children }` |
-| `saveAccessInvitation` | Create one pending access invitation | `{ success, email, invited_profile_type, message }` |
+| `saveAccessInvitation` | Create one pending access invitation | `{ success, email, invitedProfileType, message }` |
 | `deleteAccessInvitation` | Remove one pending access invitation | `{ success, message }` |
-| `saveManagedChild` | Create or update a managed child | `{ success, id_judoka, message }` |
+| `saveManagedChild` | Create or update a managed child | `{ success, judokaId, message }` |
 | `deleteManagedChild` | Remove or delete a managed child | `{ success, message }` |
 | `getCompetitionDetail` | Load one competition and its visible combats | `{ competition, combats, isAdmin, isParent, canManageCompetition, canEditCompetition, judokas }` |
-| `saveCompetition` | Create or update one competition | `{ success, id_competition, message }` |
+| `saveCompetition` | Create or update one competition | `{ success, competitionId, message }` |
 | `ajouterCombat` | Create one combat | `{ success, message }` |
 | `updateCombat` | Update one combat | `{ success, message }` |
 | `deleteCompetition` | Delete one competition | `{ success, message }` |
 | `deleteCombat` | Delete one combat | `{ success, message }` |
 
-### 4.6 Core data contracts
+### 4.6 Browser-facing domain contracts
+
+Business RPC responses and browser-submitted business payloads use domain names, not Supabase persistence column names. Persistence aliases such as `id_judoka`, `nom`, or `resultat` are adapter/repository concerns only.
 
 #### Judoka
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `id_judoka` | string | Yes | Business identifier |
-| `email` | string or null | No | Can be null for child-only profiles, or set to enable direct child login |
-| `prenom` | string | Yes | Displayed in UI |
-| `nom` | string | Yes | Displayed in UI |
-| `role` | string | Yes | `NORMAL` or `ADMIN` |
-| `profile_type` | string | Yes | Immutable `JUDOKA` or `PARENT` profile type |
+| `judokaId` | string | Yes | Business identifier |
+| `accountEmail` | string or null | No | Can be null for child-only profiles, or set to enable direct child login |
+| `firstName` | string | Yes | Displayed in UI |
+| `lastName` | string | Yes | Displayed in UI |
+| `accessRole` | string | Yes | `NORMAL` or `ADMIN` |
+| `profileType` | string | Yes | Immutable `JUDOKA` or `PARENT` profile type |
 
 #### Competition
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `id_competition` | string | No on create | Generated on create |
-| `id_judoka` | string | Yes | Owner judoka |
-| `nom` | string | Yes | Competition name |
-| `date` | string | Yes | Normalized date string |
-| `categorie_age` | string | No | Age category |
-| `categorie_poids` | string | No | Weight category |
+| `competitionId` | string | No on create | Generated on create |
+| `ownerJudokaId` | string | Yes for parent/admin create | Owner judoka |
+| `name` | string | Yes | Competition name |
+| `competitionDate` | string | Yes | Normalized date string |
+| `ageCategory` | string | No | Age category |
+| `weightCategory` | string | No | Weight category |
+| `seasonResult` | string | No | Final result used by season statistics |
 
 #### Combat
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `id_combat` | string | No on create | Generated on create |
-| `id_judoka` | string | Yes | Concerned judoka |
-| `id_competition` | string | Yes | Parent competition |
-| `adversaire` | string | No | Opponent name |
-| `resultat` | string | Yes | `V`, `D`, or `E` |
-| `type_victoire` | string | No | Decision type |
-| `deroule` | string | No | Match notes |
+| `combatId` | string | No on create | Generated on create |
+| `judokaId` | string | Yes | Concerned judoka |
+| `competitionId` | string | Yes | Parent competition |
+| `opponent` | string | No | Opponent name |
+| `result` | string | Yes | `V`, `D`, or `E` |
+| `victoryType` | string | No | Decision type |
+| `notes` | string | No | Match notes |
 
 ## 5. Test Automation Strategy
 

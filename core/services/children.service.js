@@ -1,4 +1,4 @@
-const { toDomainJudoka, toDomainManagedChild } = require("./domain-adapters");
+const { toDomainJudoka, toDomainManagedChild, toJudokaReadModel } = require("./domain-adapters");
 
 module.exports = function createChildrenService(deps) {
   const {
@@ -26,9 +26,9 @@ module.exports = function createChildrenService(deps) {
     assertCanManageChildrenProfile(domainUser);
 
     return {
-      user,
+      user: toJudokaReadModel(user),
       isParent: isParent(domainUser),
-      children: await userContextService.getParentManagedJudokas(user.id_judoka)
+      children: (await userContextService.getParentManagedJudokas(user.id_judoka)).map(toJudokaReadModel)
     };
   }
 
@@ -39,18 +39,19 @@ module.exports = function createChildrenService(deps) {
     }
     assertCanManageChildrenProfile(toDomainJudoka(user));
 
-    const firstName = cleanText(child && (child.firstName || child.prenom));
-    const lastName = cleanText(child && (child.lastName || child.nom));
+    const childInput = toDomainManagedChild(child);
+    const firstName = cleanText(childInput.firstName);
+    const lastName = cleanText(childInput.lastName);
 
-    if (child && (child.judokaId || child.id_judoka)) {
-      const childJudokaId = child.judokaId || child.id_judoka;
+    if (childInput.judokaId) {
+      const childJudokaId = childInput.judokaId;
       const existingChild = await userContextService.getManagedChild(user.id_judoka, childJudokaId);
       if (!existingChild) {
         throw new Error("Enfant introuvable.");
       }
 
       const updatedChild = updateManagedChild({
-        ...toDomainManagedChild(child),
+        ...childInput,
         firstName,
         lastName
       });
@@ -59,14 +60,14 @@ module.exports = function createChildrenService(deps) {
 
       return {
         success: true,
-        id_judoka: childJudokaId,
+        judokaId: childJudokaId,
         message: "Enfant modifié."
       };
     }
 
     const idJudoka = buildJudokaId();
     const managedChild = createManagedChild({
-      ...toDomainManagedChild(child),
+      ...childInput,
       judokaId: idJudoka,
       firstName,
       lastName
@@ -80,7 +81,7 @@ module.exports = function createChildrenService(deps) {
 
     return {
       success: true,
-      id_judoka: idJudoka,
+      judokaId: idJudoka,
       message: "Enfant ajouté."
     };
   }

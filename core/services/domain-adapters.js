@@ -42,9 +42,40 @@ function toDomainManagedChild(child = {}) {
   };
 }
 
+function toJudokaReadModel(user = {}) {
+  return toDomainJudoka(user);
+}
+
+function toCompetitionReadModel(competition = {}) {
+  return toDomainCompetition(competition);
+}
+
+function toCombatReadModel(combat = {}, extra = {}) {
+  return {
+    ...toDomainCombat(combat),
+    ...extra
+  };
+}
+
+function toInvitationReadModel(invitation = {}) {
+  return {
+    email: invitation.email,
+    invitedProfileType: invitation.invitedProfileType !== undefined
+      ? invitation.invitedProfileType
+      : invitation.invited_profile_type,
+    invitedBy: invitation.invitedBy !== undefined ? invitation.invitedBy : invitation.invited_by,
+    createdAt: invitation.createdAt !== undefined ? invitation.createdAt : invitation.created_at,
+    updatedAt: invitation.updatedAt !== undefined ? invitation.updatedAt : invitation.updated_at
+  };
+}
+
 module.exports = {
   toDomainCombat,
   toDomainCompetition,
   toDomainJudoka,
-  toDomainManagedChild
+  toDomainManagedChild,
+  toCombatReadModel,
+  toCompetitionReadModel,
+  toInvitationReadModel,
+  toJudokaReadModel
 };

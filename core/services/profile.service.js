@@ -1,4 +1,9 @@
-const { toDomainCombat, toDomainCompetition, toDomainJudoka } = require("./domain-adapters");
+const {
+  toDomainCombat,
+  toDomainCompetition,
+  toDomainJudoka,
+  toJudokaReadModel
+} = require("./domain-adapters");
 
 module.exports = function createProfileService(deps) {
   const {
@@ -28,22 +33,7 @@ module.exports = function createProfileService(deps) {
 
     return {
       ...snapshot,
-      judoka: target,
-      lastCompetition: snapshot.lastCompetition
-        ? {
-            id_competition: snapshot.lastCompetition.competitionId,
-            nom: snapshot.lastCompetition.name,
-            date: snapshot.lastCompetition.competitionDate,
-            category: snapshot.lastCompetition.category,
-            weightCategory: snapshot.lastCompetition.weightCategory
-          }
-        : null,
-      bestSeasonResults: snapshot.bestSeasonResults.map(result => ({
-        id_competition: result.competitionId,
-        nom: result.name,
-        date: result.competitionDate,
-        classement: result.seasonResult
-      }))
+      judoka: toJudokaReadModel(target)
     };
   }
 

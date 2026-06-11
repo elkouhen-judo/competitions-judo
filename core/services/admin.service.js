@@ -1,4 +1,4 @@
-const { toDomainJudoka } = require("./domain-adapters");
+const { toDomainJudoka, toInvitationReadModel, toJudokaReadModel } = require("./domain-adapters");
 
 module.exports = function createAdminService(deps) {
   const {
@@ -42,9 +42,9 @@ module.exports = function createAdminService(deps) {
   async function getAdminsManagement(email) {
     const user = await requireAdminUser(email);
     return {
-      user,
-      admins: await getAdmins(),
-      accessInvitations: await getAccessInvitations()
+      user: toJudokaReadModel(user),
+      admins: (await getAdmins()).map(toJudokaReadModel),
+      accessInvitations: (await getAccessInvitations()).map(toInvitationReadModel)
     };
   }
 
@@ -61,7 +61,7 @@ module.exports = function createAdminService(deps) {
 
     return {
       success: true,
-      id_judoka: target.id_judoka,
+      judokaId: target.id_judoka,
       message: "Droits admin accordés."
     };
   }
@@ -89,7 +89,7 @@ module.exports = function createAdminService(deps) {
     return {
       success: true,
       email: invitation.email,
-      invited_profile_type: invitation.invited_profile_type,
+      invitedProfileType: toInvitationReadModel(invitation).invitedProfileType,
       message: "Invitation d'accès enregistrée."
     };
   }
