@@ -25,11 +25,12 @@ test("vercel config routes the app shell and rpc endpoint", () => {
   });
 });
 
-test("vercel runtime injects a compatible google.script.run adapter", () => {
+test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(html, /KIROKU_RUNTIME_CONFIG/);
-  assert.match(html, /function createVercelRunner\(\)/);
+  assert.match(html, /async function runServer\(method,\s*args,\s*success,\s*failure\)/);
   assert.match(html, /fetch\("\/api\/rpc"/);
   assert.match(html, /"Authorization": "Bearer " \+ session\.access_token/);
+  assert.doesNotMatch(html, /google\.script/);
 });
 
 test("vercel runtime uses google auth without password login", () => {
@@ -56,7 +57,7 @@ test("vercel runtime uses google auth without password login", () => {
 
 test("vercel login creates only the initial judoka profile", () => {
   assert.match(html, /id="profileRegistrationForm"/);
-  assert.match(html, /\.registerProfile\(profile\)/);
+  assert.match(html, /"registerProfile",\s*\[\s*profile\s*\]/);
   assert.match(html, /profil judoka/);
   assert.doesNotMatch(html, /id="registrationType"/);
   assert.doesNotMatch(html, /registrationChildren/);
