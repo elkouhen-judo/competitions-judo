@@ -220,55 +220,61 @@ Les appels à Supabase sont effectués côté serveur par Google Apps Script. Le
 
 ## 6. Règles métier
 
+Les règles métier sont formulées avec un identifiant stable afin de pouvoir les relier facilement aux tests, aux critères d'acceptation et aux évolutions futures.
+
 ### 6.1 Visibilité des compétitions
 
-Un judoka standard voit uniquement les compétitions qui lui sont rattachées.
+- **Règle COMP-VIS-1** - Si l'utilisateur connecté est un judoka standard, l'application affiche uniquement les compétitions rattachées à son profil.
 
-Un parent voit uniquement les compétitions qui lui sont rattachées ou qui sont rattachées aux judokas dont il a la charge.
+- **Règle COMP-VIS-2** - Si l'utilisateur connecté est un parent, l'application affiche uniquement les compétitions rattachées à son profil ou aux judokas dont il a la charge.
 
-Un administrateur voit toutes les compétitions du classeur.
+- **Règle COMP-VIS-3** - Si l'utilisateur connecté est un administrateur, l'application affiche toutes les compétitions du club.
 
 ### 6.2 Gestion des compétitions
 
-Un judoka standard peut créer, modifier et supprimer uniquement ses propres compétitions.
+- **Règle COMP-GEST-1** - Si l'utilisateur connecté est un judoka standard, il peut créer, modifier et supprimer uniquement les compétitions rattachées à son profil.
 
-Un parent peut créer, modifier et supprimer les compétitions rattachées à lui-même ou aux judokas dont il a la charge. Une sauvegarde parent pour un judoka hors de cette liste est refusée.
+- **Règle COMP-GEST-2** - Si l'utilisateur connecté est un parent, il peut créer, modifier et supprimer uniquement les compétitions rattachées à son profil ou aux judokas dont il a la charge.
 
-Un administrateur peut créer, modifier et supprimer toutes les compétitions.
+- **Règle COMP-GEST-3** - Si un parent tente d'enregistrer une compétition pour un judoka hors de sa liste de gestion, l'application refuse la sauvegarde.
 
-Lorsqu'un administrateur crée ou modifie une compétition, il doit choisir le judoka propriétaire. Le formulaire propose une recherche par nom ou prénom, puis une sélection dans la liste filtrée des judokas. Une sauvegarde admin sans propriétaire sélectionné est refusée.
+- **Règle COMP-GEST-4** - Si l'utilisateur connecté est un administrateur, il peut créer, modifier et supprimer toutes les compétitions.
+
+- **Règle COMP-GEST-5** - Lorsqu'un administrateur crée ou modifie une compétition, il doit choisir le judoka propriétaire via une recherche par nom ou prénom puis une sélection dans la liste filtrée des judokas.
+
+- **Règle COMP-GEST-6** - Si un administrateur tente d'enregistrer une compétition sans judoka propriétaire sélectionné, l'application refuse la sauvegarde.
 
 ### 6.3 Visibilité des combats
 
-Un judoka standard voit uniquement ses propres combats dans une compétition.
+- **Règle COMBAT-VIS-1** - Si l'utilisateur connecté est un judoka standard, l'application affiche uniquement ses propres combats dans une compétition.
 
-Un parent voit uniquement ses propres combats et ceux des judokas dont il a la charge dans une compétition accessible.
+- **Règle COMBAT-VIS-2** - Si l'utilisateur connecté est un parent, l'application affiche uniquement ses propres combats et ceux des judokas dont il a la charge dans une compétition accessible.
 
-Un administrateur voit tous les combats de la compétition consultée.
+- **Règle COMBAT-VIS-3** - Si l'utilisateur connecté est un administrateur, l'application affiche tous les combats de la compétition consultée.
 
 ### 6.4 Gestion des combats
 
-Un judoka standard peut créer, modifier et supprimer uniquement ses propres combats.
+- **Règle COMBAT-GEST-1** - Si l'utilisateur connecté est un judoka standard, il peut créer, modifier et supprimer uniquement les combats rattachés à son profil.
 
-Un parent peut créer, modifier et supprimer uniquement les combats rattachés à lui-même ou aux judokas dont il a la charge.
+- **Règle COMBAT-GEST-2** - Si l'utilisateur connecté est un parent, il peut créer, modifier et supprimer uniquement les combats rattachés à son profil ou aux judokas dont il a la charge.
 
-Un administrateur peut créer, modifier et supprimer tous les combats.
+- **Règle COMBAT-GEST-3** - Si l'utilisateur connecté est un administrateur, il peut créer, modifier et supprimer tous les combats.
 
-Lorsqu'un administrateur crée ou modifie un combat, il peut choisir le judoka concerné.
+- **Règle COMBAT-GEST-4** - Lorsqu'un administrateur crée ou modifie un combat, il peut choisir le judoka concerné.
 
 ### 6.5 Suppressions
 
-Toute suppression déclenche une demande de confirmation.
+- **Règle SUPPR-1** - Lorsqu'un utilisateur demande une suppression, l'application affiche une demande de confirmation avant d'exécuter l'action.
 
-La suppression d'une compétition supprime aussi tous les combats rattachés à cette compétition.
+- **Règle SUPPR-2** - Lorsqu'une compétition est supprimée, l'application supprime aussi tous les combats rattachés à cette compétition.
 
-La suppression d'un combat ne supprime pas la compétition associée.
+- **Règle SUPPR-3** - Lorsqu'un combat est supprimé, l'application conserve la compétition associée.
 
-La suppression d'un enfant est refusée tant que cet enfant possède des compétitions ou des combats.
+- **Règle SUPPR-4** - Si un enfant possède au moins une compétition ou un combat, l'application refuse sa suppression.
 
 ### 6.6 Dates
 
-Les dates sont normalisées avant d'être affichées dans le navigateur afin de garantir un affichage stable dans l'interface.
+- **Règle DATE-1** - Avant d'afficher une date dans le navigateur, l'application la normalise afin de garantir un affichage stable dans l'interface.
 
 ## 7. Données manipulées
 
