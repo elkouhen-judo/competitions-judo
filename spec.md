@@ -88,6 +88,7 @@ This specification does not define:
 - **COMP-010**: For `ADMIN`, the owner judoka must be selected explicitly before save.
 - **COMP-011**: For `PARENT`, saving a competition for a judoka outside the managed scope must be rejected.
 - **COMP-012**: Deleting a competition shall remove all linked combats from the user's perspective.
+- **COMP-013**: When opening the competition creation form, the date field shall be initialized to the current day by default.
 
 ### 3.4 Combat rules
 
@@ -178,6 +179,7 @@ This specification does not define:
 - **AC-019**: Given an admin creates an invitation for a new email and a target profile type, when that invited user logs in, then profile creation is allowed exactly for that invited email and invited type.
 - **AC-021**: Given an admin grants or revokes admin rights, when the request succeeds, then the user's `JUDOKA` or `PARENT` profile type remains unchanged.
 - **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
+- **AC-022**: Given a user opens the competition creation form, when the form is displayed, then the competition date is prefilled with the current day.
 
 ## 5. Examples & Edge Cases
 

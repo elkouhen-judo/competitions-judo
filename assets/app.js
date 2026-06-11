@@ -840,7 +840,7 @@
         document.getElementById("competition_id").value = "";
         setCompetitionOwnerField(getHomeActiveJudokaId());
         document.getElementById("competition_nom").value = "";
-        document.getElementById("competition_date").value = "";
+        document.getElementById("competition_date").value = getCurrentLocalDate();
         document.getElementById("competition_categorie_age").value = "";
         document.getElementById("competition_categorie_poids").value = "";
         document.getElementById("competition_classement").value = "";
@@ -1539,6 +1539,14 @@
       if (!value) return "";
       const d = new Date(value);
       return isNaN(d.getTime()) ? value : d.toISOString().slice(0, 10);
+    }
+
+    function getCurrentLocalDate() {
+      const now = new Date();
+      const year = String(now.getFullYear());
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
 
     function formatResultat(value) {

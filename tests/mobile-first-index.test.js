@@ -126,6 +126,11 @@ test("competition form keeps age and weight categories without place or actual w
   assert.match(bundle, /<span id="competitionAgePoids"/);
 });
 
+test("new competition form defaults the date to today", () => {
+  assert.match(bundle, /function getCurrentLocalDate\(\)/);
+  assert.match(bundle, /document\.getElementById\("competition_date"\)\.value = getCurrentLocalDate\(\);/);
+});
+
 test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /class="autocomplete-option-copy"/);
   assert.match(bundle, /class="autocomplete-option-meta"/);
