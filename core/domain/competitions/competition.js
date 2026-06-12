@@ -1,4 +1,5 @@
 const { createCompetitionId, createJudokaId, createOptionalCompetitionId } = require("../shared/identity");
+const { createCompetitionRanking } = require("../competition-results");
 const { createCombat } = require("./combat");
 
 function cleanCompetitionText(value) {
@@ -23,7 +24,7 @@ function createCompetitionDate(value) {
   return competitionDate;
 }
 
-function createCompetitionDraft(competition = {}) {
+function createCompetitionDetailsDraft(competition = {}) {
   const name = cleanCompetitionText(competition.name);
   const competitionDate = createCompetitionDate(competition.competitionDate);
 
@@ -35,15 +36,19 @@ function createCompetitionDraft(competition = {}) {
     name,
     competitionDate,
     ageCategory: cleanCompetitionText(competition.ageCategory),
-    weightCategory: cleanCompetitionText(competition.weightCategory),
-    seasonResult: cleanCompetitionText(competition.seasonResult)
+    weightCategory: cleanCompetitionText(competition.weightCategory)
   };
 }
 
+function createCompetitionFinalResult(value) {
+  return createCompetitionRanking(value);
+}
+
 function createCompetition(competition, ownerJudokaId) {
-  const draft = createCompetitionDraft(competition);
+  const draft = createCompetitionDetailsDraft(competition);
   const resolvedOwnerJudokaId = createJudokaId(ownerJudokaId, "Judoka participant obligatoire.");
   const competitionId = createOptionalCompetitionId(competition && competition.competitionId);
+  const seasonResult = createCompetitionFinalResult(competition && competition.seasonResult);
 
   const record = {
     competitionId,
@@ -53,11 +58,25 @@ function createCompetition(competition, ownerJudokaId) {
     competitionDate: draft.competitionDate,
     ageCategory: draft.ageCategory,
     weightCategory: draft.weightCategory,
-    seasonResult: draft.seasonResult
+    seasonResult
   };
 
   return {
     ...record,
+    changeDetails(details = {}) {
+      return createCompetition({
+        ...details,
+        competitionId: record.competitionId,
+        seasonResult: record.seasonResult
+      }, record.ownerJudokaId);
+    },
+    finalize(finalResult) {
+      return {
+        competitionId: record.competitionId,
+        ownerJudokaId: record.ownerJudokaId,
+        seasonResult: createCompetitionFinalResult(finalResult)
+      };
+    },
     belongsToJudoka(judokaId) {
       return String(record.ownerJudokaId) === String(judokaId);
     },
@@ -96,6 +115,7 @@ function assertCompetitionCanContainCombat(competition, combat) {
 module.exports = {
   assertCompetitionCanContainCombat,
   createCompetition,
-  createCompetitionDraft,
+  createCompetitionDetailsDraft,
+  createCompetitionFinalResult,
   createPersistedCompetition
 };

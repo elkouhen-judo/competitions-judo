@@ -1,4 +1,4 @@
-const { toDomainJudoka, toDomainManagedChild, toJudokaReadModel } = require("./domain-adapters");
+const { toCanonicalJudoka, toCanonicalManagedChild, toJudokaReadModel } = require("./domain-adapters");
 
 module.exports = function createChildrenService(deps) {
   const {
@@ -22,7 +22,7 @@ module.exports = function createChildrenService(deps) {
     if (!user) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    const domainUser = toDomainJudoka(user);
+    const domainUser = toCanonicalJudoka(user);
     assertCanManageChildrenProfile(domainUser);
 
     return {
@@ -37,9 +37,9 @@ module.exports = function createChildrenService(deps) {
     if (!user) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    assertCanManageChildrenProfile(toDomainJudoka(user));
+    assertCanManageChildrenProfile(toCanonicalJudoka(user));
 
-    const childInput = toDomainManagedChild(child);
+    const childInput = toCanonicalManagedChild(child);
     const firstName = cleanText(childInput.firstName);
     const lastName = cleanText(childInput.lastName);
 
@@ -91,7 +91,7 @@ module.exports = function createChildrenService(deps) {
     if (!user) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    assertCanManageChildrenProfile(toDomainJudoka(user));
+    assertCanManageChildrenProfile(toCanonicalJudoka(user));
 
     if (!idJudoka) {
       throw new Error("Enfant obligatoire.");
@@ -106,7 +106,7 @@ module.exports = function createChildrenService(deps) {
     const combat = await combatsRepository.existsForJudoka(idJudoka);
     const otherParentLink = await parentLinksRepository.getOtherByJudoka(idJudoka, user.id_judoka);
     const deletionDecision = decideManagedChildRemoval({
-      child: createJudoka(toDomainJudoka(child)),
+      child: createJudoka(toCanonicalJudoka(child)),
       hasCompetitions: Boolean(competition),
       hasCombats: Boolean(combat),
       hasOtherParentLink: Boolean(otherParentLink)

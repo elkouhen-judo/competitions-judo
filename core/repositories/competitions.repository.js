@@ -9,14 +9,17 @@ module.exports = function createCompetitionsRepository(deps) {
   } = deps;
 
   function toCompetitionRecord(competition) {
-    const draft = competition.draft || competition;
+    const draft = competition && competition.draft;
+    if (!draft) {
+      throw new Error("Competition domain draft required.");
+    }
     return {
-      id_judoka: competition.ownerJudokaId || competition.id_judoka,
-      nom: draft.name || draft.nom,
-      date: draft.competitionDate || draft.date,
-      categorie_age: draft.ageCategory !== undefined ? draft.ageCategory : draft.categorie_age,
-      categorie_poids: draft.weightCategory !== undefined ? draft.weightCategory : draft.categorie_poids,
-      classement: draft.seasonResult !== undefined ? draft.seasonResult : draft.classement
+      id_judoka: competition.ownerJudokaId,
+      nom: draft.name,
+      date: draft.competitionDate,
+      categorie_age: draft.ageCategory,
+      categorie_poids: draft.weightCategory,
+      classement: competition.seasonResult || ""
     };
   }
 
@@ -58,9 +61,9 @@ module.exports = function createCompetitionsRepository(deps) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), toCompetitionRecord(competition));
   }
 
-  async function updateSeasonResult(idCompetition, seasonResult) {
+  async function updateSeasonResult(idCompetition, finalization) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), {
-      classement: seasonResult || ""
+      classement: finalization.seasonResult || ""
     });
   }
 
