@@ -47,11 +47,12 @@ This specification does not redefine product behavior already described in `SPEC
 
 - **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell.
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
-- **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
+- **ARC-003**: `supabase/migrations/*` shall contain one canonical SQL schema file for a fresh deployment.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
 - **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `core/domain/*`, application orchestration in `core/services/*`, and persistence adapters in `core/repositories/*`.
 - **ARC-006**: Domain objects shall not expose Supabase record serialization methods; repositories shall translate domain objects to persistence records.
 - **ARC-007**: Domain code should express business concepts through value objects and aggregate language such as `PersonName`, domain identifiers, competition/combat drafts, `ManagedJudokaScope`, and competition combat recording behavior.
+- **ARC-008**: Application services may normalize inbound and persistence records into canonical DTOs, but business invariants shall be enforced by domain factories, value objects, aggregate commands, and access scopes.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -81,6 +82,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
+- **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 
 ### 3.4 Authentication and authorization
 
@@ -191,7 +193,8 @@ Body example:
       "name": "Tournoi regional",
       "competitionDate": "2026-06-11",
       "ageCategory": "Cadet",
-      "weightCategory": "-55 kg"
+      "weightCategory": "-55 kg",
+      "result": "3e"
     }
   ]
 }
@@ -230,6 +233,7 @@ Error response:
 | `deleteManagedChild` | Remove or delete a managed child | `{ success, message }` |
 | `getCompetitionDetail` | Load one competition and its visible combats | `{ competition, combats, isAdmin, isParent, canManageCompetition, canEditCompetition, judokas }` |
 | `saveCompetition` | Create or update one competition | `{ success, competitionId, message }` |
+| `finalizeCompetition` | Update only the final ranking/result for one competition | `{ success, competitionId, message }` |
 | `ajouterCombat` | Create one combat | `{ success, message }` |
 | `updateCombat` | Update one combat | `{ success, message }` |
 | `deleteCompetition` | Delete one competition | `{ success, message }` |
@@ -260,7 +264,7 @@ Business RPC responses and browser-submitted business payloads use domain names,
 | `competitionDate` | string | Yes | Normalized date string |
 | `ageCategory` | string | No | Age category |
 | `weightCategory` | string | No | Weight category |
-| `seasonResult` | string | No | Final result used by season statistics |
+| `result` | string | No | Final result used by season statistics; supported values are `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé` |
 
 #### Combat
 

@@ -1,13 +1,27 @@
+const RESULT_RANKS = {
+  "1er": 1,
+  "2e": 2,
+  "3e": 3,
+  "5e": 5,
+  "7e": 7,
+  "non classé": 99
+};
+
+function createCompetitionRanking(value) {
+  const ranking = typeof value === "string" ? value.trim() : "";
+  if (!ranking) {
+    return "";
+  }
+
+  if (!Number.isFinite(getCompetitionResultRank(ranking))) {
+    throw new Error("Classement invalide.");
+  }
+
+  return ranking;
+}
+
 function getCompetitionResultRank(value) {
-  const ranking = {
-    "1er": 1,
-    "2e": 2,
-    "3e": 3,
-    "5e": 5,
-    "7e": 7,
-    "non classé": 99
-  };
-  return ranking[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY;
+  return RESULT_RANKS[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY;
 }
 
 function getCompetitionCategoryLabel(competition) {
@@ -15,6 +29,7 @@ function getCompetitionCategoryLabel(competition) {
 }
 
 module.exports = {
+  createCompetitionRanking,
   getCompetitionCategoryLabel,
   getCompetitionResultRank
 };
