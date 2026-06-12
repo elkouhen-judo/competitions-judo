@@ -17,7 +17,7 @@ function toCanonicalCompetition(competition = {}) {
     competitionDate: competition.competitionDate !== undefined ? competition.competitionDate : competition.date,
     ageCategory: competition.ageCategory !== undefined ? competition.ageCategory : competition.categorie_age,
     weightCategory: competition.weightCategory !== undefined ? competition.weightCategory : competition.categorie_poids,
-    seasonResult: competition.seasonResult !== undefined ? competition.seasonResult : competition.classement
+    result: competition.result !== undefined ? competition.result : competition.classement
   };
 }
 

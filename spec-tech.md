@@ -193,7 +193,8 @@ Body example:
       "name": "Tournoi regional",
       "competitionDate": "2026-06-11",
       "ageCategory": "Cadet",
-      "weightCategory": "-55 kg"
+      "weightCategory": "-55 kg",
+      "result": "3e"
     }
   ]
 }
@@ -263,7 +264,7 @@ Business RPC responses and browser-submitted business payloads use domain names,
 | `competitionDate` | string | Yes | Normalized date string |
 | `ageCategory` | string | No | Age category |
 | `weightCategory` | string | No | Weight category |
-| `seasonResult` | string | No | Final result used by season statistics; supported values are `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé` |
+| `result` | string | No | Final result used by season statistics; supported values are `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé` |
 
 #### Combat
 
