@@ -1,7 +1,7 @@
 const {
-  toDomainCombat,
-  toDomainCompetition,
-  toDomainJudoka,
+  toCanonicalCombat,
+  toCanonicalCompetition,
+  toCanonicalJudoka,
   toJudokaReadModel
 } = require("./domain-adapters");
 
@@ -22,9 +22,9 @@ module.exports = function createProfileService(deps) {
     const competitions = await competitionsRepository.listByJudoka(target.id_judoka);
     const combats = await combatsRepository.listByJudoka(target.id_judoka);
     const snapshot = buildJudokaProfileSnapshot({
-      judoka: toDomainJudoka(target),
-      competitions: competitions.map(toDomainCompetition),
-      combats: combats.map(toDomainCombat),
+      judoka: toCanonicalJudoka(target),
+      competitions: competitions.map(toCanonicalCompetition),
+      combats: combats.map(toCanonicalCombat),
       getCompetitionCategoryLabel,
       getCompetitionResultRank,
       getCurrentSeasonBounds,
