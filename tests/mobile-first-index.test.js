@@ -5,7 +5,9 @@ const path = require("node:path");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
-const client = fs.readFileSync(path.join(__dirname, "..", "assets", "app.js"), "utf8");
+const client = ["app-ui.js", "app.js"]
+  .map(file => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))
+  .join("\n");
 const bundle = `${html}\n${css}\n${client}`;
 
 test("competition cards avoid redundant mobile action rows", () => {
