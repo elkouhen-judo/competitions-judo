@@ -33,7 +33,7 @@ test("supabase schema includes role and result constraints", () => {
   assert.match(schema, /judokas_role_check[\s\S]*role in \('NORMAL', 'ADMIN'\)/i);
   assert.match(schema, /judokas_profile_type_check[\s\S]*profile_type in \('JUDOKA', 'PARENT'\)/i);
   assert.match(schema, /access_invitations_invited_profile_type_check[\s\S]*invited_profile_type in \('JUDOKA', 'PARENT'\)/i);
-  assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('V', 'D', 'E'\)/i);
+  assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('Victoire', 'Défaite', 'Egalité', 'Disqualification', 'V', 'D', 'E'\)/i);
 });
 
 test("supabase schema enables row level security for app tables", () => {

@@ -118,9 +118,10 @@
   }
 
   function formatResultat(value) {
-    if (value === "V") return "Victoire";
-    if (value === "D") return "Défaite";
-    if (value === "E") return "Égalité";
+    if (value === "V" || value === "Victoire") return "Victoire";
+    if (value === "D" || value === "Défaite") return "Défaite";
+    if (value === "E" || value === "Egalité") return "Egalité";
+    if (value === "Disqualification") return "Disqualification";
     return value || "";
   }
 

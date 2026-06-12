@@ -249,8 +249,8 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(combat.judokaId, "JUDO123");
   assert.equal(combat.competitionId, "COMP123");
   assert.equal(combat.opponent, "Lee");
-  assert.equal(combat.result, "V");
-  assert.equal(combat.draft.result, "V");
+  assert.equal(combat.result, "Victoire");
+  assert.equal(combat.draft.result, "Victoire");
   assert.equal(combat.victoryType, "Ippon");
   assert.equal(combat.notes, "Bon rythme");
   assert.equal("id_judoka" in combat, false);
@@ -270,13 +270,54 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.judokaId, "JUDO123");
   assert.equal(updatedCombat.competitionId, "COMP123");
   assert.equal(updatedCombat.opponent, "");
-  assert.equal(updatedCombat.result, "D");
+  assert.equal(updatedCombat.result, "Défaite");
   assert.equal(updatedCombat.victoryType, "");
   assert.equal(updatedCombat.notes, "");
+
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Disqualification",
+    victoryType: "Pénalité (Hansoku-make / Shido)"
+  }).victoryType, "Hansoku-make");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Défaite",
+    victoryType: "Décision"
+  }).victoryType, "Décision");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Victoire",
+    victoryType: "Forfait"
+  }).victoryType, "Forfait");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Egalité",
+    victoryType: "Hiki wake"
+  }).victoryType, "Hiki wake");
 
   assert.throws(
     () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "X" }),
     /Résultat invalide/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire", victoryType: "Golden score" }),
+    /Type de décision invalide/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Egalité", victoryType: "Décision" }),
+    /Type de décision incompatible/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Disqualification", victoryType: "Forfait" }),
+    /Type de décision incompatible/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire", victoryType: "Hiki wake" }),
+    /Type de décision incompatible/
   );
 });
 
@@ -369,7 +410,7 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.bestSeasonResults[2].result, "Non classé");
 });
 
-test("season statistics use the latest competition season for all profile aggregates", () => {
+test("season statistics prefer the current season when it contains competition data", () => {
   const snapshot = buildJudokaProfileSnapshot({
     judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
     competitions: [
@@ -405,13 +446,13 @@ test("season statistics use the latest competition season for all profile aggreg
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
 
-  assert.equal(snapshot.lastCompetition.competitionId, "LATEST");
-  assert.equal(snapshot.season.label, "2026-2027");
+  assert.equal(snapshot.lastCompetition.competitionId, "CURRENT");
+  assert.equal(snapshot.season.label, "2025-2026");
   assert.equal(snapshot.seasonCompetitionCount, 1);
   assert.equal(snapshot.seasonCombatCount, 1);
-  assert.equal(snapshot.seasonWins, 0);
-  assert.equal(snapshot.seasonLosses, 1);
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["LATEST"]);
+  assert.equal(snapshot.seasonWins, 1);
+  assert.equal(snapshot.seasonLosses, 0);
+  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["CURRENT"]);
 });
 
 test("season statistics fall back to the latest season with competition data", () => {

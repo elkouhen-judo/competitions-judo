@@ -101,6 +101,9 @@ This specification does not define:
 - **CBT-003**: An `ADMIN` can create, update, and delete any combat.
 - **CBT-004**: A combat must include a parent competition, a judoka, and a result.
 - **CBT-005**: A combat may include an opponent name, a decision type, and match notes.
+- **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, `Egalité`, or `Disqualification`.
+- **CBT-005b**: Combat decision type values shall be limited to `Ippon`, `Waza-ari`, `Décision`, `Hiki wake`, `Hansoku-make`, or `Forfait`.
+- **CBT-005c**: Combat decision type shall depend on the combat result: `Victoire` allows `Ippon`, `Waza-ari`, `Décision`, or `Forfait`; `Défaite` allows `Ippon`, `Waza-ari`, `Décision`, or `Forfait`; `Egalité` allows only `Hiki wake`; `Disqualification` allows only `Hansoku-make`.
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
 
 ### 3.5 Child management rules
@@ -116,7 +119,7 @@ This specification does not define:
 ### 3.6 Judoka season statistics rules
 
 - **STA-001**: The application shall provide a dedicated judoka profile view.
-- **STA-002**: The judoka profile shall display the judoka category derived from the latest combat.
+- **STA-002**: The judoka profile shall display the judoka category derived from the latest competition of the displayed season.
 - **STA-003**: The judoka profile shall display the three best competition results of the displayed season.
 - **STA-004**: The season shall run from September 1st to August 31st.
 - **STA-005**: The judoka profile shall display the number of competitions for the displayed season.
@@ -135,10 +138,10 @@ This specification does not define:
 - **AUTH-004**: The login UI shall not expose password login.
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
 - **AUTH-006**: The connected header shall show user identity and provide an explicit logout action.
-- **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data.
+- **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data once a `JUDOKA` invitation has also been created for that email.
 - **AUTH-008**: A user without an existing judoka profile or an active invitation shall not be allowed to create an account in the application.
 - **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
-- **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and should display only a compact subset by default before progressive reveal.
+- **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
 - **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
 - **AUTH-011**: The initial profile created after invitation shall use the invited profile type.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
@@ -157,6 +160,8 @@ This specification does not define:
 - **UIX-009**: The judoka profile view shall remain readable and actionable on mobile.
 - **UIX-010**: For `PARENT` and `ADMIN`, the home screen shall be organized around an active judoka context.
 - **UIX-011**: Home actions for opening a profile or adding a competition shall target the active judoka rather than a generic role-based menu.
+- **UIX-011a**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka; otherwise no active judoka shall be selected by default.
+- **UIX-011b**: When no active judoka is selected for `PARENT` or `ADMIN`, the home screen shall display an explicit empty state asking the user to choose one and shall block home actions that depend on that context.
 - **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
 - **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
 - **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.

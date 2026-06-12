@@ -61,29 +61,27 @@
         target.innerHTML = emptyState("Aucune invitation en attente.");
         return;
       }
-
       const filteredInvitations = getFilteredAccessInvitations();
-      const hasActiveFilter = Boolean(state.accessInvitationSearch);
-      const visibleInvitations = hasActiveFilter
-        ? filteredInvitations
-        : filteredInvitations.slice(0, state.accessInvitationVisibleCount);
-      const remainingInvitations = Math.max(filteredInvitations.length - visibleInvitations.length, 0);
-      const summaryLabel = hasActiveFilter
-        ? `${filteredInvitations.length} résultat(s) sur ${state.managedAccessInvitations.length} invitation(s).`
-        : `${visibleInvitations.length} invitation(s) affichée(s) sur ${state.managedAccessInvitations.length}.`;
+      const pageSize = defaultAccessInvitationVisibleCount;
+      const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
+      const currentPage = Math.min(state.accessInvitationCurrentPage, totalPages);
+      const startIndex = (currentPage - 1) * pageSize;
+      const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
+      const summaryLabel = `${filteredInvitations.length} invitation(s)${state.accessInvitationSearch ? " trouvée(s)" : ""} · page ${currentPage} / ${totalPages}.`;
 
       summary.innerHTML = `
         <div class="list-summary">
           <p class="list-summary-text">${escapeHtml(summaryLabel)}</p>
           <div class="list-summary-actions">
-            ${hasActiveFilter
+            ${state.accessInvitationSearch
               ? `<button class="button-secondary" type="button" onclick="resetAccessInvitationSearch()">Effacer le filtre</button>`
-              : remainingInvitations > 0
-                ? `<button class="button-secondary" type="button" onclick="showMoreAccessInvitations()">Voir ${Math.min(defaultAccessInvitationVisibleCount, remainingInvitations)} de plus</button>
-                   <button class="button-secondary" type="button" onclick="showAllAccessInvitations()">Tout afficher</button>`
-                : state.accessInvitationVisibleCount > defaultAccessInvitationVisibleCount && filteredInvitations.length > defaultAccessInvitationVisibleCount
-                  ? `<button class="button-secondary" type="button" onclick="collapseAccessInvitations()">Réduire la liste</button>`
-                  : ""}
+              : ""}
+            ${currentPage > 1
+              ? `<button class="button-secondary" type="button" onclick="showPreviousAccessInvitationPage()">Page précédente</button>`
+              : ""}
+            ${currentPage < totalPages
+              ? `<button class="button-secondary" type="button" onclick="showNextAccessInvitationPage()">Page suivante</button>`
+              : ""}
           </div>
         </div>
       `;
@@ -133,13 +131,13 @@
 
     function updateAccessInvitationSearch(value) {
       state.accessInvitationSearch = cleanText(value).toLowerCase();
-      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      state.accessInvitationCurrentPage = 1;
       renderManagedAccessInvitations();
     }
 
     function resetAccessInvitationSearch() {
       state.accessInvitationSearch = "";
-      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      state.accessInvitationCurrentPage = 1;
       const input = $("accessInvitationFilter");
       if (input) {
         input.value = "";
@@ -147,18 +145,13 @@
       renderManagedAccessInvitations();
     }
 
-    function showMoreAccessInvitations() {
-      state.accessInvitationVisibleCount += defaultAccessInvitationVisibleCount;
+    function showNextAccessInvitationPage() {
+      state.accessInvitationCurrentPage += 1;
       renderManagedAccessInvitations();
     }
 
-    function showAllAccessInvitations() {
-      state.accessInvitationVisibleCount = state.managedAccessInvitations.length;
-      renderManagedAccessInvitations();
-    }
-
-    function collapseAccessInvitations() {
-      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+    function showPreviousAccessInvitationPage() {
+      state.accessInvitationCurrentPage = Math.max(state.accessInvitationCurrentPage - 1, 1);
       renderManagedAccessInvitations();
     }
 
@@ -174,7 +167,7 @@
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
           state.managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
           state.accessInvitationSearch = "";
-          state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+          state.accessInvitationCurrentPage = 1;
           const invitationSearchInput = $("accessInvitationFilter");
           if (invitationSearchInput) {
             invitationSearchInput.value = "";
@@ -258,7 +251,6 @@
     }
 
     return {
-      collapseAccessInvitations,
       deleteAccessInvitation,
       renderManagedAccessInvitations,
       renderManagedAdmins,
@@ -269,8 +261,8 @@
       saveAccessInvitation,
       saveAdminRole,
       showAdminsManagement,
-      showAllAccessInvitations,
-      showMoreAccessInvitations,
+      showNextAccessInvitationPage,
+      showPreviousAccessInvitationPage,
       updateAccessInvitationSearch
     };
   }

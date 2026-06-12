@@ -525,10 +525,42 @@
       return `${getJudokaDisplayName(judoka)} ${getJudokaSecondaryText(judoka)}`.toLowerCase();
     }
 
+    function getCombatDecisionOptions(result) {
+      if (result === "Victoire" || result === "Défaite") {
+        return ["Ippon", "Waza-ari", "Décision", "Forfait"];
+      }
+      if (result === "Egalité") {
+        return ["Hiki wake"];
+      }
+      if (result === "Disqualification") {
+        return ["Hansoku-make"];
+      }
+      return [];
+    }
+
+    function renderCombatDecisionOptions(result) {
+      const select = $("combat_type_victoire");
+      const options = getCombatDecisionOptions(result);
+      const currentValue = getValue("combat_type_victoire");
+      let html = `<option value="">Non spécifié</option>`;
+
+      options.forEach(option => {
+        html += `<option value="${escapeAttribute(option)}">${escapeHtml(option)}</option>`;
+      });
+      select.innerHTML = html;
+
+      if (options.includes(currentValue)) {
+        setValue("combat_type_victoire", currentValue);
+      } else {
+        setValue("combat_type_victoire", "");
+      }
+    }
+
     function syncCombatDecisionVisibility(clearValueWhenHidden) {
       const result = getValue("combat_resultat");
       const block = $("combatDecisionBlock");
-      const shouldShow = Boolean(result);
+      const shouldShow = getCombatDecisionOptions(result).length > 0;
+      renderCombatDecisionOptions(result);
       block.classList.toggle("hidden", !shouldShow);
 
       if (!shouldShow && clearValueWhenHidden) {
@@ -567,7 +599,9 @@
       finalizeCompetition,
       getCompetitionOwnerRequiredMessage,
       getJudokaSecondaryText,
+      getCombatDecisionOptions,
       openCompetition,
+      renderCombatDecisionOptions,
       renderCombats,
       renderCompetitionDetail,
       resolveCompetitionOwnerSelection,

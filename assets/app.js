@@ -1,6 +1,6 @@
 (() => {
   const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-  const defaultAccessInvitationVisibleCount = 8;
+  const defaultAccessInvitationVisibleCount = 5;
   const state = createInitialState();
 
   function createInitialState() {
@@ -20,7 +20,7 @@
       canEditCurrentCompetition: false,
       previousView: "homeView",
       accessInvitationSearch: "",
-      accessInvitationVisibleCount: defaultAccessInvitationVisibleCount
+      accessInvitationCurrentPage: 1
     };
   }
 
@@ -215,7 +215,6 @@
     cancelCombatForm: screens.competition.cancelCombatForm,
     cancelCompetitionFinalizationForm: screens.competition.cancelCompetitionFinalizationForm,
     cancelCompetitionForm: screens.competition.cancelCompetitionForm,
-    collapseAccessInvitations: screens.admins.collapseAccessInvitations,
     deleteAccessInvitation: screens.admins.deleteAccessInvitation,
     deleteCombat: screens.competition.deleteCombat,
     deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
@@ -239,13 +238,13 @@
     saveCombat: screens.competition.saveCombat,
     saveManagedChild: screens.children.saveManagedChild,
     showAdminsManagement: screens.admins.showAdminsManagement,
-    showAllAccessInvitations: screens.admins.showAllAccessInvitations,
     showChildrenManagement: screens.children.showChildrenManagement,
     showCombatForm: screens.competition.showCombatForm,
     showCompetitionFinalizationForm: screens.competition.showCompetitionFinalizationForm,
     showHome,
     showHomeCompetitionForm: screens.home.showHomeCompetitionForm,
-    showMoreAccessInvitations: screens.admins.showMoreAccessInvitations,
+    showNextAccessInvitationPage: screens.admins.showNextAccessInvitationPage,
+    showPreviousAccessInvitationPage: screens.admins.showPreviousAccessInvitationPage,
     startGoogleLogin: loginScreen.startGoogleLogin,
     updateAccessInvitationSearch: screens.admins.updateAccessInvitationSearch
   });

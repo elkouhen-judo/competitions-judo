@@ -174,6 +174,12 @@ test("owner autocomplete provides disambiguation metadata", () => {
 
 test("combat decision type appears only after choosing a result", () => {
   assert.match(bundle, /id="combatDecisionBlock" class="hidden"/);
+  assert.match(bundle, /function getCombatDecisionOptions\(result\)/);
+  assert.match(bundle, /function renderCombatDecisionOptions\(result\)/);
   assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
+  assert.match(bundle, /if \(result === "Victoire" \|\| result === "Défaite"\)/);
+  assert.match(bundle, /if \(result === "Egalité"\)/);
+  assert.match(bundle, /if \(result === "Disqualification"\)/);
+  assert.match(bundle, /const shouldShow = getCombatDecisionOptions\(result\)\.length > 0;/);
   assert.match(bundle, /\$\("combat_resultat"\)\.addEventListener\("change",/);
 });
