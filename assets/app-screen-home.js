@@ -64,10 +64,9 @@
       if (!state.currentUser) {
         return "";
       }
-      if (state.isAdmin) {
-        return "";
-      }
-      return String(state.currentUser.judokaId || "");
+      return state.currentUser.profileType === "JUDOKA"
+        ? String(state.currentUser.judokaId || "")
+        : "";
     }
 
     function ensureHomeActiveJudokaSelection() {
@@ -174,13 +173,17 @@
       if (state.isParent) {
         return {
           homeTitle: "Suivi judoka",
-          homeSubtitle: "Choisissez votre profil ou celui d'un enfant pour travailler dans son contexte.",
+          homeSubtitle: activeJudoka
+            ? "Le parcours d'accueil est centré sur le judoka actif."
+            : "Choisissez votre profil ou celui d'un enfant pour travailler dans son contexte.",
           filterPlaceholder: "Moi ou mes enfants...",
           profileButtonText: "Voir la fiche",
           profileButtonMeta: "Moi ou un enfant",
           addCompetitionButtonMeta: "Moi ou un enfant",
           competitionsTitle: activeJudoka ? `Compétitions de ${getJudokaDisplayName(activeJudoka)}` : "Compétitions du judoka actif",
-          competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
+          competitionsSubtitle: activeJudoka
+            ? "Touchez une carte pour ouvrir ses combats."
+            : "Sélectionnez d'abord un judoka pour afficher son parcours.",
           emptyActionMeta: "Moi ou un enfant"
         };
       }

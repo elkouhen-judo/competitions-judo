@@ -57,7 +57,7 @@ create table if not exists public.combats (
     references public.competitions (id_competition)
     on update cascade
     on delete cascade,
-  constraint combats_resultat_check check (resultat in ('V', 'D', 'E'))
+  constraint combats_resultat_check check (resultat in ('Victoire', 'Défaite', 'Egalité', 'Disqualification', 'V', 'D', 'E'))
 );
 
 create table if not exists public.parent_judokas (
@@ -307,6 +307,7 @@ begin
     from public.judokas
     where email is not null
       and lower(email) = normalized_email
+      and role = 'ADMIN'
   ) then
     return '{}'::jsonb;
   end if;
