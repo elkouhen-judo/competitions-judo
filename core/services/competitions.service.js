@@ -24,7 +24,7 @@ module.exports = function createCompetitionsService(deps) {
   async function getCompetitionsForUser(user, managedJudokaScope) {
     const domainUser = toCanonicalJudoka(user);
     const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
-    let records = [];
+    let records;
 
     if (access.isAll()) {
       records = await competitionsRepository.listAll();
@@ -54,7 +54,7 @@ module.exports = function createCompetitionsService(deps) {
 
     assertCanManageCompetition(domainUser, domainCompetition, managedJudokaScope, "Accès refusé à cette compétition.");
 
-    let filtered = [];
+    let filtered;
     if (access.isAll()) {
       filtered = await combatsRepository.listByCompetition(idCompetition);
     } else {
