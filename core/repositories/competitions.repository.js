@@ -58,6 +58,12 @@ module.exports = function createCompetitionsRepository(deps) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), toCompetitionRecord(competition));
   }
 
+  async function updateSeasonResult(idCompetition, seasonResult) {
+    return supabasePatch("competitions", eqFilter("id_competition", idCompetition), {
+      classement: seasonResult || ""
+    });
+  }
+
   async function remove(idCompetition) {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
@@ -70,6 +76,7 @@ module.exports = function createCompetitionsRepository(deps) {
     listByJudoka,
     listByJudokaIds,
     remove,
-    update
+    update,
+    updateSeasonResult
   };
 };

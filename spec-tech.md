@@ -231,6 +231,7 @@ Error response:
 | `deleteManagedChild` | Remove or delete a managed child | `{ success, message }` |
 | `getCompetitionDetail` | Load one competition and its visible combats | `{ competition, combats, isAdmin, isParent, canManageCompetition, canEditCompetition, judokas }` |
 | `saveCompetition` | Create or update one competition | `{ success, competitionId, message }` |
+| `finalizeCompetition` | Update only the final ranking/result for one competition | `{ success, competitionId, message }` |
 | `ajouterCombat` | Create one combat | `{ success, message }` |
 | `updateCombat` | Update one combat | `{ success, message }` |
 | `deleteCompetition` | Delete one competition | `{ success, message }` |
