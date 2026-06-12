@@ -52,7 +52,7 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*Ajouter un combat/);
   assert.doesNotMatch(bundle, /id="competitionAdminActions" class="competition-management-actions hidden"[\s\S]*id="finalizeCompetitionButton"[\s\S]*id="deleteCompetitionButton"/);
   assert.match(bundle, /const hasResult = Boolean\(String\(currentCompetition\.result \|\| ""\)\.trim\(\)\);/);
-  assert.match(bundle, /finalizeCompetitionButton"\)\.classList\.toggle\("hidden", !canEditCurrentCompetition \|\| hasResult\);/);
+  assert.match(bundle, /setHidden\("finalizeCompetitionButton", !canEditCurrentCompetition \|\| hasResult\);/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
@@ -135,8 +135,8 @@ test("competition form keeps age and weight categories without place or actual w
   assert.match(bundle, /id="competition_categorie_poids"/);
   assert.match(bundle, /id="competitionResultBlock" class="hidden"/);
   assert.match(bundle, /id="competition_result"/);
-  assert.match(bundle, /document\.getElementById\("competitionResultBlock"\)\.classList\.remove\("hidden"\);/);
-  assert.match(bundle, /document\.getElementById\("competitionResultBlock"\)\.classList\.add\("hidden"\);/);
+  assert.match(bundle, /setHidden\("competitionResultBlock", false\);/);
+  assert.match(bundle, /setHidden\("competitionResultBlock", true\);/);
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
   assert.match(bundle, /<span id="competitionAgePoids"/);
@@ -144,7 +144,7 @@ test("competition form keeps age and weight categories without place or actual w
 
 test("new competition form defaults the date to today", () => {
   assert.match(bundle, /function getCurrentLocalDate\(\)/);
-  assert.match(bundle, /document\.getElementById\("competition_date"\)\.value = getCurrentLocalDate\(\);/);
+  assert.match(bundle, /competition_date: getCurrentLocalDate\(\),/);
 });
 
 test("owner autocomplete provides disambiguation metadata", () => {
@@ -162,5 +162,5 @@ test("owner autocomplete provides disambiguation metadata", () => {
 test("combat decision type appears only after choosing a result", () => {
   assert.match(bundle, /id="combatDecisionBlock" class="hidden"/);
   assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
-  assert.match(bundle, /document\.getElementById\("combat_resultat"\)\.addEventListener\("change",/);
+  assert.match(bundle, /\$\("combat_resultat"\)\.addEventListener\("change",/);
 });
