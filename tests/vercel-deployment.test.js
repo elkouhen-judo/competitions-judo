@@ -288,6 +288,8 @@ test("combat mutations reload competition details after save", () => {
 
 test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
+  assert.match(css, /\.user-pill\s*\{[\s\S]*?height:\s*38px;[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/);
+  assert.match(css, /\.logout-button\s*\{[\s\S]*?height:\s*38px;/);
   assert.match(uiBundle, /id="userInfo"/);
   assert.match(uiBundle, /id="logoutButton"/);
   assert.match(uiBundle, /aria-label="Déconnexion"/);
