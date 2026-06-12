@@ -114,6 +114,7 @@
       background: var(--panel);
       padding: 8px 10px;
       height: 38px;
+      min-height: 38px;
       color: var(--muted);
       font-size: 14px;
       display: flex;
@@ -127,6 +128,7 @@
     .logout-button {
       width: 38px;
       height: 38px;
+      min-height: 38px;
       flex: 0 0 38px;
       display: inline-flex;
       align-items: center;
