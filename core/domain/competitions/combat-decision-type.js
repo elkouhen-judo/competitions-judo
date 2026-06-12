@@ -5,6 +5,7 @@ const DECISION_TYPE_ALIASES = new Map([
   ["ippon", "Ippon"],
   ["waza-ari", "Waza-ari"],
   ["waza ari", "Waza-ari"],
+  ["yuko", "Yuko"],
   ["decision", "Décision"],
   ["décision", "Décision"],
   ["kinsa / decision", "Décision"],
@@ -19,8 +20,8 @@ const DECISION_TYPE_ALIASES = new Map([
 ]);
 
 const DECISION_TYPES_BY_RESULT = new Map([
-  ["Victoire", ["Ippon", "Waza-ari", "Décision", "Forfait"]],
-  ["Défaite", ["Ippon", "Waza-ari", "Décision", "Forfait"]],
+  ["Victoire", ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"]],
+  ["Défaite", ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"]],
   ["Egalité", ["Hiki wake"]],
   ["Disqualification", ["Hansoku-make"]]
 ]);
