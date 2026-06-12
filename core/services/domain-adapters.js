@@ -1,3 +1,5 @@
+const { normalizeCombatResult } = require("../domain/competitions/combat-result");
+
 function toCanonicalJudoka(user = {}) {
   return {
     judokaId: user.judokaId !== undefined ? user.judokaId : user.id_judoka,
@@ -22,12 +24,14 @@ function toCanonicalCompetition(competition = {}) {
 }
 
 function toCanonicalCombat(combat = {}) {
+  const rawResult = combat.result !== undefined ? combat.result : combat.resultat;
+  const normalizedResult = normalizeCombatResult(rawResult);
   return {
     combatId: combat.combatId !== undefined ? combat.combatId : combat.id_combat,
     judokaId: combat.judokaId !== undefined ? combat.judokaId : combat.id_judoka,
     competitionId: combat.competitionId !== undefined ? combat.competitionId : combat.id_competition,
     opponent: combat.opponent !== undefined ? combat.opponent : combat.adversaire,
-    result: combat.result !== undefined ? combat.result : combat.resultat,
+    result: normalizedResult || rawResult,
     victoryType: combat.victoryType !== undefined ? combat.victoryType : combat.type_victoire,
     notes: combat.notes !== undefined ? combat.notes : combat.deroule
   };

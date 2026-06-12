@@ -102,8 +102,8 @@ This specification does not define:
 - **CBT-004**: A combat must include a parent competition, a judoka, and a result.
 - **CBT-005**: A combat may include an opponent name, a decision type, and match notes.
 - **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, `Egalité`, or `Disqualification`.
-- **CBT-005b**: Combat decision type values shall be limited to `Ippon`, `Waza-ari`, `Décision`, `Hiki wake`, `Hansoku-make`, or `Forfait`.
-- **CBT-005c**: Combat decision type shall depend on the combat result: `Victoire` allows `Ippon`, `Waza-ari`, `Décision`, or `Forfait`; `Défaite` allows `Ippon`, `Waza-ari`, `Décision`, or `Forfait`; `Egalité` allows only `Hiki wake`; `Disqualification` allows only `Hansoku-make`.
+- **CBT-005b**: Combat decision type values shall be limited to `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hiki wake`, `Hansoku-make`, or `Forfait`.
+- **CBT-005c**: Combat decision type shall depend on the combat result: `Victoire` allows `Ippon`, `Waza-ari`, `Yuko`, `Décision`, or `Forfait`; `Défaite` allows `Ippon`, `Waza-ari`, `Yuko`, `Décision`, or `Forfait`; `Egalité` allows only `Hiki wake`; `Disqualification` allows only `Hansoku-make`.
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
 
 ### 3.5 Child management rules
