@@ -270,8 +270,9 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(profileService, /const snapshot = buildJudokaProfileSnapshot\(\{/);
   assert.match(profileService, /competitions: competitions\.map\(toCanonicalCompetition\),/);
   assert.match(profileService, /combats: combats\.map\(toCanonicalCombat\),/);
-  assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
-  assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const currentSeasonCompetitions = sortedCompetitions\.filter\(c => isDateWithinSeason\(c\.competitionDate,\s*currentBounds\)\);/);
+  assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => isVictoryCombatResult\(c\.result\)\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => isLossCombatResult\(c\.result\)\)\.length;/);
   assert.match(seasonStatisticsDomain, /const sortedCompetitions = \[\.\.\.competitions\]\.sort/);
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
