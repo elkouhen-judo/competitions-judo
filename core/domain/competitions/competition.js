@@ -6,6 +6,46 @@ function cleanCompetitionText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+const AGE_CATEGORIES = [
+  "Poussinet",
+  "Poussin",
+  "Benjamin",
+  "Minime",
+  "Cadet",
+  "Junior",
+  "Senior",
+  "Vétéran"
+];
+
+const AGE_CATEGORY_ALIASES = new Map(
+  AGE_CATEGORIES.map(category => [
+    normalizeCompetitionKey(category),
+    category
+  ])
+);
+
+function normalizeCompetitionKey(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase("fr-FR")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+function createCompetitionAgeCategory(value) {
+  const ageCategory = cleanCompetitionText(value);
+  if (!ageCategory) {
+    return "";
+  }
+
+  const normalizedAgeCategory = AGE_CATEGORY_ALIASES.get(normalizeCompetitionKey(ageCategory));
+  if (!normalizedAgeCategory) {
+    throw new Error("Catégorie d'âge invalide.");
+  }
+
+  return normalizedAgeCategory;
+}
+
 function createCompetitionDate(value) {
   const competitionDate = cleanCompetitionText(value);
   if (!competitionDate) {
@@ -35,7 +75,7 @@ function createCompetitionDetailsDraft(competition = {}) {
   return {
     name,
     competitionDate,
-    ageCategory: cleanCompetitionText(competition.ageCategory),
+    ageCategory: createCompetitionAgeCategory(competition.ageCategory),
     weightCategory: cleanCompetitionText(competition.weightCategory)
   };
 }
@@ -115,7 +155,9 @@ function assertCompetitionCanContainCombat(competition, combat) {
 module.exports = {
   assertCompetitionCanContainCombat,
   createCompetition,
+  createCompetitionAgeCategory,
   createCompetitionDetailsDraft,
   createCompetitionFinalResult,
-  createPersistedCompetition
+  createPersistedCompetition,
+  AGE_CATEGORIES
 };
