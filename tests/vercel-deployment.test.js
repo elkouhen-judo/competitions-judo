@@ -151,7 +151,7 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /const finalization = createPersistedCompetition\(toCanonicalCompetition\(competition\)\)\.finalize\(seasonResult\);/);
   assert.match(competitionsService, /await competitionsRepository\.updateSeasonResult\(idCompetition,\s*finalization\);/);
   assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
-  assert.match(uiBundle, /id="finalizeCompetitionButton" class="button-secondary" onclick="showCompetitionFinalizationForm\(\)"/);
+  assert.match(uiBundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary hidden" onclick="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/);
   assert.match(uiBundle, /function finalizeCompetition\(\)/);
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*seasonResult\s*\]/);
   assert.doesNotMatch(uiBundle, /id="competition_classement"/);
