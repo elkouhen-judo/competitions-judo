@@ -284,9 +284,9 @@ test("judoka lookup uses an exact normalized email match", () => {
 });
 
 test("combat mutations reload competition details after save", () => {
-  assert.match(uiBundle, /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(currentCompetition\.competitionId,\s*true\);/);
-  assert.match(uiBundle, /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(currentCompetition\.competitionId,\s*true\);/);
-  assert.doesNotMatch(uiBundle, /judoka_nom: currentUser \? getJudokaDisplayName\(currentUser\) : ""/);
+  assert.match(uiBundle, /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/);
+  assert.match(uiBundle, /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/);
+  assert.doesNotMatch(uiBundle, /judoka_nom: state\.currentUser \? getJudokaDisplayName\(state\.currentUser\) : ""/);
 });
 
 test("vercel runtime lets the connected user log out", () => {
@@ -297,7 +297,7 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /id="logoutButton"/);
   assert.match(uiBundle, /aria-label="Déconnexion"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
-  assert.match(uiBundle, /getJudokaDisplayName\(currentUser\)/);
+  assert.match(uiBundle, /getJudokaDisplayName\(state\.currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
   assert.match(uiBundle, /<p class="\$\{toneClass\}"><svg/);
   assert.match(uiBundle, /function clearToasts\(\)/);
@@ -326,7 +326,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(coreIndex, /const domainUser = toCanonicalJudoka\(user\);/);
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
-  assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
+  assert.match(client, /const roleLabel = state\.isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
   assert.match(competitionsService, /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/);
   assert.match(competitionsService, /formatJudokaDisplayName: judoka => `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}`/);
