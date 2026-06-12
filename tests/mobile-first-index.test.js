@@ -5,7 +5,18 @@ const path = require("node:path");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
-const client = ["app-ui.js", "app-notifications.js", "app-auth.js", "app.js"]
+const client = [
+  "app-ui.js",
+  "app-notifications.js",
+  "app-auth.js",
+  "app-screen-login.js",
+  "app-screen-home.js",
+  "app-screen-judoka.js",
+  "app-screen-competition.js",
+  "app-screen-children.js",
+  "app-screen-admins.js",
+  "app.js"
+]
   .map(file => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))
   .join("\n");
 const bundle = `${html}\n${css}\n${client}`;
