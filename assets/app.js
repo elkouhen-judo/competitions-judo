@@ -13,10 +13,13 @@
     let canManageCurrentCompetition = false;
     let canEditCurrentCompetition = false;
     let previousView = "homeView";
+    let accessInvitationSearch = "";
+    let accessInvitationVisibleCount = 8;
     let toastSequence = 0;
     const activeToastTimers = new Map();
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const sessionStorageKey = "kiroku_supabase_session";
+    const defaultAccessInvitationVisibleCount = 8;
 
     async function runServer(method, args, success, failure) {
       try {
@@ -89,6 +92,8 @@
       canManageCurrentCompetition = false;
       canEditCurrentCompetition = false;
       previousView = "homeView";
+      accessInvitationSearch = "";
+      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
     }
 
     async function logoutUser() {
@@ -859,13 +864,46 @@
 
     function renderManagedAccessInvitations() {
       const target = document.getElementById("accessInvitationsList");
+      const summary = document.getElementById("accessInvitationsSummary");
       if (!managedAccessInvitations.length) {
+        summary.innerHTML = "";
         target.innerHTML = `<div class="empty-state">Aucune invitation en attente.</div>`;
         return;
       }
 
+      const filteredInvitations = getFilteredAccessInvitations();
+      const hasActiveFilter = Boolean(accessInvitationSearch);
+      const visibleInvitations = hasActiveFilter
+        ? filteredInvitations
+        : filteredInvitations.slice(0, accessInvitationVisibleCount);
+      const remainingInvitations = Math.max(filteredInvitations.length - visibleInvitations.length, 0);
+      const summaryLabel = hasActiveFilter
+        ? `${filteredInvitations.length} résultat(s) sur ${managedAccessInvitations.length} invitation(s).`
+        : `${visibleInvitations.length} invitation(s) affichée(s) sur ${managedAccessInvitations.length}.`;
+
+      summary.innerHTML = `
+        <div class="list-summary">
+          <p class="list-summary-text">${escapeHtml(summaryLabel)}</p>
+          <div class="list-summary-actions">
+            ${hasActiveFilter
+              ? `<button class="button-secondary" type="button" onclick="resetAccessInvitationSearch()">Effacer le filtre</button>`
+              : remainingInvitations > 0
+                ? `<button class="button-secondary" type="button" onclick="showMoreAccessInvitations()">Voir ${Math.min(defaultAccessInvitationVisibleCount, remainingInvitations)} de plus</button>
+                   <button class="button-secondary" type="button" onclick="showAllAccessInvitations()">Tout afficher</button>`
+                : accessInvitationVisibleCount > defaultAccessInvitationVisibleCount && filteredInvitations.length > defaultAccessInvitationVisibleCount
+                  ? `<button class="button-secondary" type="button" onclick="collapseAccessInvitations()">Réduire la liste</button>`
+                  : ""}
+          </div>
+        </div>
+      `;
+
+      if (!filteredInvitations.length) {
+        target.innerHTML = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(accessInvitationSearch)}".</div>`;
+        return;
+      }
+
       let html = `<div class="list">`;
-      managedAccessInvitations.forEach(invitation => {
+      visibleInvitations.forEach(invitation => {
         html += `
           <article class="card admin-card">
             <p class="card-title">${escapeHtml(invitation.email || "Invitation")}</p>
@@ -890,6 +928,47 @@
       });
       html += `</div>`;
       target.innerHTML = html;
+    }
+
+    function getFilteredAccessInvitations() {
+      if (!accessInvitationSearch) {
+        return managedAccessInvitations;
+      }
+
+      return managedAccessInvitations.filter(invitation =>
+        cleanText(invitation.email).toLowerCase().includes(accessInvitationSearch)
+      );
+    }
+
+    function updateAccessInvitationSearch(value) {
+      accessInvitationSearch = cleanText(value).toLowerCase();
+      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      renderManagedAccessInvitations();
+    }
+
+    function resetAccessInvitationSearch() {
+      accessInvitationSearch = "";
+      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      const input = document.getElementById("accessInvitationFilter");
+      if (input) {
+        input.value = "";
+      }
+      renderManagedAccessInvitations();
+    }
+
+    function showMoreAccessInvitations() {
+      accessInvitationVisibleCount += defaultAccessInvitationVisibleCount;
+      renderManagedAccessInvitations();
+    }
+
+    function showAllAccessInvitations() {
+      accessInvitationVisibleCount = managedAccessInvitations.length;
+      renderManagedAccessInvitations();
+    }
+
+    function collapseAccessInvitations() {
+      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      renderManagedAccessInvitations();
     }
 
     function showCompetitionForm(id) {
@@ -1379,6 +1458,12 @@
         data => {
           managedAdmins = Array.isArray(data.admins) ? data.admins : [];
           managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
+          accessInvitationSearch = "";
+          accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+          const invitationSearchInput = document.getElementById("accessInvitationFilter");
+          if (invitationSearchInput) {
+            invitationSearchInput.value = "";
+          }
           renderManagedAdmins();
           renderManagedAccessInvitations();
           resetAccessInvitationForm();

@@ -214,16 +214,6 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Invitations d'accès</h3>
-              <p class="subtitle">Les nouveaux comptes Google doivent être invités ici avant de pouvoir créer leur profil.</p>
-            </div>
-          </div>
-          <div id="accessInvitationsList"></div>
-        </div>
-
-        <div class="section">
-          <div class="section-heading">
-            <div>
               <h3>Inviter un utilisateur</h3>
               <p class="subtitle">Ajoutez l'email Google autorisé et définissez le type de profil à créer dès la première connexion. Les droits admin se gèrent séparément.</p>
             </div>
@@ -248,6 +238,21 @@
               Enregistrer l'invitation
             </button>
           </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Invitations d'accès</h3>
+              <p class="subtitle">Les nouveaux comptes Google doivent être invités ici avant de pouvoir créer leur profil. Recherchez un email si la liste devient longue.</p>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <label for="accessInvitationFilter">Rechercher un email invité</label>
+            <input type="search" id="accessInvitationFilter" autocomplete="off" placeholder="nom@email.com" oninput="updateAccessInvitationSearch(this.value)">
+          </div>
+          <div id="accessInvitationsSummary"></div>
+          <div id="accessInvitationsList"></div>
         </div>
 
         <div class="section">
