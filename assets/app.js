@@ -1,21 +1,27 @@
-    let currentUser = null;
-    let isAdmin = false;
-    let isParent = false;
-    let canManageChildren = false;
-    let competitions = [];
-    let currentCompetition = null;
-    let judokas = [];
-    let currentCombats = [];
-    let currentJudokaProfile = null;
-    let managedAdmins = [];
-    let managedAccessInvitations = [];
-    let managedChildren = [];
-    let canEditCurrentCompetition = false;
-    let previousView = "homeView";
-    let accessInvitationSearch = "";
-    let accessInvitationVisibleCount = 8;
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const defaultAccessInvitationVisibleCount = 8;
+    const state = createInitialState();
+
+    function createInitialState() {
+      return {
+        currentUser: null,
+        isAdmin: false,
+        isParent: false,
+        canManageChildren: false,
+        competitions: [],
+        currentCompetition: null,
+        judokas: [],
+        currentCombats: [],
+        currentJudokaProfile: null,
+        managedAdmins: [],
+        managedAccessInvitations: [],
+        managedChildren: [],
+        canEditCurrentCompetition: false,
+        previousView: "homeView",
+        accessInvitationSearch: "",
+        accessInvitationVisibleCount: defaultAccessInvitationVisibleCount
+      };
+    }
     const {
       $,
       cleanText,
@@ -101,22 +107,7 @@
     }
 
     function resetApplicationState() {
-      currentUser = null;
-      isAdmin = false;
-      isParent = false;
-      canManageChildren = false;
-      competitions = [];
-      currentCompetition = null;
-      judokas = [];
-      currentCombats = [];
-      currentJudokaProfile = null;
-      managedAdmins = [];
-      managedAccessInvitations = [];
-      managedChildren = [];
-      canEditCurrentCompetition = false;
-      previousView = "homeView";
-      accessInvitationSearch = "";
-      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      Object.assign(state, createInitialState());
     }
 
     async function logoutUser() {
@@ -244,25 +235,25 @@
     }
 
     function applyInitialData(data) {
-      currentUser = data.user;
-      isAdmin = Boolean(data.isAdmin);
-      isParent = Boolean(data.isParent);
-      canManageChildren = Boolean(data.canManageChildren);
-      competitions = Array.isArray(data.competitions) ? data.competitions : [];
-      judokas = Array.isArray(data.judokas) ? data.judokas : [];
+      state.currentUser = data.user;
+      state.isAdmin = Boolean(data.isAdmin);
+      state.isParent = Boolean(data.isParent);
+      state.canManageChildren = Boolean(data.canManageChildren);
+      state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
+      state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
       document.querySelector("header").classList.remove("hidden");
 
-      const profileTypeLabel = isParent ? "PARENT" : "JUDOKA";
-      const roleLabel = isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
+      const profileTypeLabel = state.isParent ? "PARENT" : "JUDOKA";
+      const roleLabel = state.isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
       $("userInfo").innerHTML =
-        `<strong>${escapeHtml(getJudokaDisplayName(currentUser) || "")}</strong> - ${roleLabel}`;
+        `<strong>${escapeHtml(getJudokaDisplayName(state.currentUser) || "")}</strong> - ${roleLabel}`;
       setHidden("homeAdminActions", false);
-      setHidden("manageAdminsButton", !isAdmin);
-      setHidden("manageChildrenButton", !canManageChildren);
+      setHidden("manageAdminsButton", !state.isAdmin);
+      setHidden("manageChildrenButton", !state.canManageChildren);
 
       const filterInput = $("filterJudokaText");
       const filterHidden = $("filterJudoka");
-      const canFilterByJudoka = (isAdmin || isParent) && judokas.length > 0;
+      const canFilterByJudoka = (state.isAdmin || state.isParent) && state.judokas.length > 0;
       setHidden("homeFilters", !canFilterByJudoka);
       if (!canFilterByJudoka) {
         filterInput.value = "";
@@ -284,7 +275,7 @@
         inputId: "filterJudokaText",
         dropdownId: "filterJudokaDropdown",
         hiddenId: "filterJudoka",
-        getItems: () => judokas,
+        getItems: () => state.judokas,
         allowBlank: true,
         onChange: () => {
           syncHomeContext();
@@ -295,20 +286,20 @@
     }
 
     function getAccessibleHomeJudokas() {
-      if (!currentUser) {
+      if (!state.currentUser) {
         return [];
       }
-      return (isAdmin || isParent) ? judokas : [currentUser];
+      return (state.isAdmin || state.isParent) ? state.judokas : [state.currentUser];
     }
 
     function getDefaultHomeJudokaId() {
-      if (!currentUser) {
+      if (!state.currentUser) {
         return "";
       }
-      if (isAdmin) {
+      if (state.isAdmin) {
         return "";
       }
-      return String(currentUser.judokaId || "");
+      return String(state.currentUser.judokaId || "");
     }
 
     function ensureHomeActiveJudokaSelection() {
@@ -317,7 +308,7 @@
       const accessibleJudokas = getAccessibleHomeJudokas();
       const currentValue = hidden.value;
 
-      if (!(isAdmin || isParent)) {
+      if (!(state.isAdmin || state.isParent)) {
         input.value = "";
         hidden.value = "";
         return;
@@ -334,13 +325,13 @@
     }
 
     function getHomeActiveJudokaId() {
-      if (!currentUser) {
+      if (!state.currentUser) {
         return "";
       }
-      if (isAdmin || isParent) {
+      if (state.isAdmin || state.isParent) {
         return getValue("filterJudoka") || "";
       }
-      return String(currentUser.judokaId || "");
+      return String(state.currentUser.judokaId || "");
     }
 
     function getHomeActiveJudoka() {
@@ -374,9 +365,9 @@
           </div>
         `;
       } else {
-        const summaryMeta = isAdmin
+        const summaryMeta = state.isAdmin
           ? "Vous consultez actuellement le parcours de ce judoka."
-          : isParent
+          : state.isParent
             ? "Toutes les actions d'accueil concernent ce profil."
             : "Toutes vos actions principales sont regroupées ici.";
         $("homeActiveJudokaSummary").innerHTML = `
@@ -388,13 +379,13 @@
         `;
       }
 
-      const actionDisabled = Boolean((isAdmin || isParent) && !activeJudoka);
+      const actionDisabled = Boolean((state.isAdmin || state.isParent) && !activeJudoka);
       $("addCompetitionButton").disabled = actionDisabled;
       $("openHomeJudokaProfileButton").disabled = actionDisabled;
     }
 
     function getHomeContextCopy(activeJudoka) {
-      if (isAdmin) {
+      if (state.isAdmin) {
         return {
           homeTitle: "Suivi des judokas",
           homeSubtitle: activeJudoka
@@ -412,7 +403,7 @@
         };
       }
 
-      if (isParent) {
+      if (state.isParent) {
         return {
           homeTitle: "Suivi judoka",
           homeSubtitle: "Choisissez votre profil ou celui d'un enfant pour travailler dans son contexte.",
@@ -431,7 +422,7 @@
         homeSubtitle: "Retrouvez votre fiche et vos compétitions.",
         filterPlaceholder: "Tous les judokas...",
         profileButtonText: "Ma fiche",
-        profileButtonMeta: getCompactJudokaLabel(currentUser),
+        profileButtonMeta: getCompactJudokaLabel(state.currentUser),
         addCompetitionButtonMeta: "",
         competitionsTitle: "Mes compétitions",
         competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
@@ -444,14 +435,14 @@
       const activeJudoka = getHomeActiveJudoka();
       const activeJudokaId = getHomeActiveJudokaId();
 
-      if ((isAdmin || isParent) && !activeJudoka) {
+      if ((state.isAdmin || state.isParent) && !activeJudoka) {
         target.innerHTML = emptyState("Sélectionnez un judoka pour afficher son parcours.");
         return;
       }
 
-      let filteredComps = competitions;
+      let filteredComps = state.competitions;
       if (activeJudokaId) {
-        filteredComps = competitions.filter(c => String(c.ownerJudokaId) === String(activeJudokaId));
+        filteredComps = state.competitions.filter(c => String(c.ownerJudokaId) === String(activeJudokaId));
       }
 
       if (!filteredComps.length) {
@@ -459,7 +450,7 @@
         return;
       }
 
-      const judokasById = new Map(judokas.map(j => [String(j.judokaId), j]));
+      const judokasById = new Map(state.judokas.map(j => [String(j.judokaId), j]));
 
       let html = `<div class="list">`;
 
@@ -476,7 +467,7 @@
                     <span class="meta-label">Date</span>
                     <span class="meta-value">${formatDate(c.competitionDate)}</span>
                   </span>
-                  ${(isAdmin || isParent) ? `<span class="meta-row">
+                  ${(state.isAdmin || state.isParent) ? `<span class="meta-row">
                     <span class="meta-label">Judoka</span>
                     <span class="meta-value">${escapeHtml(judokaNom)}</span>
                   </span>` : ""}
@@ -484,7 +475,7 @@
                 <span class="card-open-hint">Ouvrir les combats</span>
               </span>
             </button>
-            ${isAdmin ? `<div class="card-actions">
+            ${state.isAdmin ? `<div class="card-actions">
               <button class="button-danger" type="button" data-id="${escapeAttribute(c.competitionId)}" data-name="${escapeAttribute(c.name || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">
                 ${icons.trash}
                 Supprimer
@@ -513,10 +504,10 @@
         "getCompetitionDetail",
         [id],
         data => {
-          currentCompetition = data.competition;
-          currentCombats = Array.isArray(data.combats) ? data.combats : [];
-          judokas = Array.isArray(data.judokas) ? data.judokas : [];
-          canEditCurrentCompetition = Boolean(data.canEditCompetition);
+          state.currentCompetition = data.competition;
+          state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
+          state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
+          state.canEditCurrentCompetition = Boolean(data.canEditCompetition);
 
           renderCompetitionDetail();
           renderCombats();
@@ -540,25 +531,25 @@
 
     function renderCompetitionDetail() {
       setTexts({
-        competitionTitle: currentCompetition.name || "Compétition",
+        competitionTitle: state.currentCompetition.name || "Compétition",
         competitionSubtitle: "Détail de la compétition",
-        competitionDate: formatDate(currentCompetition.competitionDate)
+        competitionDate: formatDate(state.currentCompetition.competitionDate)
       });
 
-      const agePoids = [currentCompetition.ageCategory, currentCompetition.weightCategory].filter(Boolean).join(" - ");
+      const agePoids = [state.currentCompetition.ageCategory, state.currentCompetition.weightCategory].filter(Boolean).join(" - ");
       setHidden("row_competitionAgePoids", !agePoids);
       setText("competitionAgePoids", agePoids);
 
-      const hasResult = Boolean(String(currentCompetition.result || "").trim());
+      const hasResult = Boolean(String(state.currentCompetition.result || "").trim());
       setHidden("row_competitionClassement", !hasResult);
-      setText("competitionClassement", currentCompetition.result);
+      setText("competitionClassement", state.currentCompetition.result);
 
-      setHidden("competitionAdminActions", !canEditCurrentCompetition);
-      setHidden("finalizeCompetitionButton", !canEditCurrentCompetition || hasResult);
+      setHidden("competitionAdminActions", !state.canEditCurrentCompetition);
+      setHidden("finalizeCompetitionButton", !state.canEditCurrentCompetition || hasResult);
     }
 
     function openHomeJudokaProfile() {
-      if (!currentUser) {
+      if (!state.currentUser) {
         showError({ message: "Utilisateur introuvable." });
         return;
       }
@@ -566,9 +557,9 @@
       const accessibleJudokas = getAccessibleHomeJudokas();
       const targetJudokaId = getHomeActiveJudokaId();
 
-      if ((isAdmin || isParent) && !targetJudokaId) {
+      if ((state.isAdmin || state.isParent) && !targetJudokaId) {
         showError({
-          message: isAdmin
+          message: state.isAdmin
             ? "Sélectionnez un judoka actif pour ouvrir sa fiche."
             : "Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche."
         });
@@ -585,9 +576,9 @@
 
     function showHomeCompetitionForm() {
       const activeJudokaId = getHomeActiveJudokaId();
-      if ((isAdmin || isParent) && !activeJudokaId) {
+      if ((state.isAdmin || state.isParent) && !activeJudokaId) {
         showError({
-          message: isAdmin
+          message: state.isAdmin
             ? "Sélectionnez un judoka actif avant d'ajouter une compétition."
             : "Sélectionnez votre profil ou l'un de vos enfants comme judoka actif avant d'ajouter une compétition."
         });
@@ -606,7 +597,7 @@
         "getJudokaProfile",
         [idJudoka],
         data => {
-          currentJudokaProfile = data;
+          state.currentJudokaProfile = data;
           renderJudokaProfile();
           showView("judokaView");
         },
@@ -615,7 +606,7 @@
     }
 
     function renderJudokaProfile() {
-      if (!currentJudokaProfile) {
+      if (!state.currentJudokaProfile) {
         return;
       }
 
@@ -628,7 +619,7 @@
         seasonCompetitionCount,
         seasonWins,
         seasonLosses
-      } = currentJudokaProfile;
+      } = state.currentJudokaProfile;
 
       setTexts({
         judokaProfileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
@@ -697,25 +688,25 @@
     }
 
     function editCurrentCompetition() {
-      if (!currentCompetition) {
+      if (!state.currentCompetition) {
         showError({ message: "Compétition introuvable." });
         return;
       }
 
-      showCompetitionForm(currentCompetition.competitionId);
+      showCompetitionForm(state.currentCompetition.competitionId);
     }
 
     function renderCombats() {
       const target = $("combatsList");
 
-      if (!currentCombats.length) {
+      if (!state.currentCombats.length) {
         target.innerHTML = emptyState("Aucun combat pour cette compétition.");
         return;
       }
 
       let html = `<div class="list">`;
 
-      currentCombats.forEach(c => {
+      state.currentCombats.forEach(c => {
         html += `
           <article class="card combat-card">
             <div class="combat-header">
@@ -725,7 +716,7 @@
                 ${c.victoryType ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.victoryType)}</span>` : ""}
               </div>
             </div>
-            ${isAdmin ? `
+            ${state.isAdmin ? `
               <div class="meta-row">
                 <span class="meta-label">Judoka</span>
                 <span class="meta-value">${escapeHtml(normalizeDisplayName(c.judokaDisplayName || ""))}</span>
@@ -753,21 +744,21 @@
     function renderManagedAccessInvitations() {
       const target = $("accessInvitationsList");
       const summary = $("accessInvitationsSummary");
-      if (!managedAccessInvitations.length) {
+      if (!state.managedAccessInvitations.length) {
         summary.innerHTML = "";
         target.innerHTML = emptyState("Aucune invitation en attente.");
         return;
       }
 
       const filteredInvitations = getFilteredAccessInvitations();
-      const hasActiveFilter = Boolean(accessInvitationSearch);
+      const hasActiveFilter = Boolean(state.accessInvitationSearch);
       const visibleInvitations = hasActiveFilter
         ? filteredInvitations
-        : filteredInvitations.slice(0, accessInvitationVisibleCount);
+        : filteredInvitations.slice(0, state.accessInvitationVisibleCount);
       const remainingInvitations = Math.max(filteredInvitations.length - visibleInvitations.length, 0);
       const summaryLabel = hasActiveFilter
-        ? `${filteredInvitations.length} résultat(s) sur ${managedAccessInvitations.length} invitation(s).`
-        : `${visibleInvitations.length} invitation(s) affichée(s) sur ${managedAccessInvitations.length}.`;
+        ? `${filteredInvitations.length} résultat(s) sur ${state.managedAccessInvitations.length} invitation(s).`
+        : `${visibleInvitations.length} invitation(s) affichée(s) sur ${state.managedAccessInvitations.length}.`;
 
       summary.innerHTML = `
         <div class="list-summary">
@@ -778,7 +769,7 @@
               : remainingInvitations > 0
                 ? `<button class="button-secondary" type="button" onclick="showMoreAccessInvitations()">Voir ${Math.min(defaultAccessInvitationVisibleCount, remainingInvitations)} de plus</button>
                    <button class="button-secondary" type="button" onclick="showAllAccessInvitations()">Tout afficher</button>`
-                : accessInvitationVisibleCount > defaultAccessInvitationVisibleCount && filteredInvitations.length > defaultAccessInvitationVisibleCount
+                : state.accessInvitationVisibleCount > defaultAccessInvitationVisibleCount && filteredInvitations.length > defaultAccessInvitationVisibleCount
                   ? `<button class="button-secondary" type="button" onclick="collapseAccessInvitations()">Réduire la liste</button>`
                   : ""}
           </div>
@@ -786,7 +777,7 @@
       `;
 
       if (!filteredInvitations.length) {
-        target.innerHTML = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(accessInvitationSearch)}".</div>`;
+        target.innerHTML = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(state.accessInvitationSearch)}".</div>`;
         return;
       }
 
@@ -819,24 +810,24 @@
     }
 
     function getFilteredAccessInvitations() {
-      if (!accessInvitationSearch) {
-        return managedAccessInvitations;
+      if (!state.accessInvitationSearch) {
+        return state.managedAccessInvitations;
       }
 
-      return managedAccessInvitations.filter(invitation =>
-        cleanText(invitation.email).toLowerCase().includes(accessInvitationSearch)
+      return state.managedAccessInvitations.filter(invitation =>
+        cleanText(invitation.email).toLowerCase().includes(state.accessInvitationSearch)
       );
     }
 
     function updateAccessInvitationSearch(value) {
-      accessInvitationSearch = cleanText(value).toLowerCase();
-      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      state.accessInvitationSearch = cleanText(value).toLowerCase();
+      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
       renderManagedAccessInvitations();
     }
 
     function resetAccessInvitationSearch() {
-      accessInvitationSearch = "";
-      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      state.accessInvitationSearch = "";
+      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
       const input = $("accessInvitationFilter");
       if (input) {
         input.value = "";
@@ -845,26 +836,26 @@
     }
 
     function showMoreAccessInvitations() {
-      accessInvitationVisibleCount += defaultAccessInvitationVisibleCount;
+      state.accessInvitationVisibleCount += defaultAccessInvitationVisibleCount;
       renderManagedAccessInvitations();
     }
 
     function showAllAccessInvitations() {
-      accessInvitationVisibleCount = managedAccessInvitations.length;
+      state.accessInvitationVisibleCount = state.managedAccessInvitations.length;
       renderManagedAccessInvitations();
     }
 
     function collapseAccessInvitations() {
-      accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+      state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
       renderManagedAccessInvitations();
     }
 
     function showCompetitionForm(id) {
       clearMessage();
-      previousView = currentCompetition ? "competitionView" : "homeView";
+      state.previousView = state.currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
-        const c = competitions.find(x => String(x.competitionId) === String(id)) || currentCompetition;
+        const c = state.competitions.find(x => String(x.competitionId) === String(id)) || state.currentCompetition;
 
         if (!c) {
           showError({ message: "Compétition introuvable." });
@@ -883,7 +874,7 @@
         });
         setHidden("competitionResultBlock", false);
       } else {
-        previousView = "homeView";
+        state.previousView = "homeView";
         setText("competitionFormTitle", "Ajouter une compétition");
         setCompetitionOwnerField(getHomeActiveJudokaId());
         setValues({
@@ -901,11 +892,11 @@
     }
 
     function cancelCompetitionForm() {
-      showView(previousView || "homeView");
+      showView(state.previousView || "homeView");
     }
 
     function getCompetitionOwnerRequiredMessage() {
-      return isAdmin
+      return state.isAdmin
         ? "Sélectionnez un judoka avant d'enregistrer la compétition."
         : "Sélectionnez votre profil ou l'un de vos enfants avant d'enregistrer la compétition.";
     }
@@ -920,7 +911,7 @@
         result: getValue("competition_result")
       };
 
-      if (isAdmin || isParent) {
+      if (state.isAdmin || state.isParent) {
         competition.ownerJudokaId = resolveCompetitionOwnerSelection();
         if (!competition.ownerJudokaId) {
           showError({ message: getCompetitionOwnerRequiredMessage() });
@@ -941,14 +932,14 @@
 
     function showCompetitionFinalizationForm() {
       clearMessage();
-      if (!currentCompetition) {
+      if (!state.currentCompetition) {
         showError({ message: "Compétition introuvable." });
         return;
       }
 
-      setValue("finalization_competition_id", currentCompetition.competitionId);
-      setText("competitionFinalizationSubtitle", currentCompetition.name);
-      setValue("finalization_classement", currentCompetition.result);
+      setValue("finalization_competition_id", state.currentCompetition.competitionId);
+      setText("competitionFinalizationSubtitle", state.currentCompetition.name);
+      setValue("finalization_classement", state.currentCompetition.result);
       showView("competitionFinalizationView");
     }
 
@@ -976,7 +967,7 @@
       resetCombatForm();
 
       if (id) {
-        const combat = currentCombats.find(c => String(c.combatId) === String(id));
+        const combat = state.currentCombats.find(c => String(c.combatId) === String(id));
 
         if (!combat) {
           showError({ message: "Combat introuvable." });
@@ -985,7 +976,7 @@
 
         setTexts({
           combatFormTitle: "Modifier le combat",
-          combatFormSubtitle: currentCompetition.name,
+          combatFormSubtitle: state.currentCompetition.name,
           saveCombatButtonText: "Enregistrer le combat"
         });
         setValues({
@@ -999,7 +990,7 @@
       } else {
         setTexts({
           combatFormTitle: "Ajouter un combat",
-          combatFormSubtitle: currentCompetition.name
+          combatFormSubtitle: state.currentCompetition.name
         });
         syncCombatDecisionVisibility(true);
       }
@@ -1024,7 +1015,7 @@
     }
 
     function addCombat() {
-      if (!currentCompetition) {
+      if (!state.currentCompetition) {
         showError({ message: "Ouvre une compétition avant d'ajouter un combat." });
         return;
       }
@@ -1037,7 +1028,7 @@
         response => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(currentCompetition.competitionId, true);
+          openCompetition(state.currentCompetition.competitionId, true);
         },
         showError
       );
@@ -1053,7 +1044,7 @@
         response => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(currentCompetition.competitionId, true);
+          openCompetition(state.currentCompetition.competitionId, true);
         },
         showError
       );
@@ -1061,8 +1052,8 @@
 
     function getCombatFormValue() {
       return {
-        competitionId: currentCompetition.competitionId,
-        judokaId: currentCompetition.ownerJudokaId,
+        competitionId: state.currentCompetition.competitionId,
+        judokaId: state.currentCompetition.ownerJudokaId,
         opponent: getValue("combat_adversaire"),
         result: getValue("combat_resultat"),
         victoryType: getValue("combat_type_victoire"),
@@ -1071,16 +1062,16 @@
     }
 
     function deleteCurrentCompetition() {
-      if (!currentCompetition) return;
+      if (!state.currentCompetition) return;
 
-      const label = currentCompetition.name ? ` "${currentCompetition.name}"` : "";
+      const label = state.currentCompetition.name ? ` "${state.currentCompetition.name}"` : "";
       confirmAndRun({
         message: `Supprimer la compétition${label} et tous ses combats ?`,
         method: "deleteCompetition",
-        args: [currentCompetition.competitionId],
+        args: [state.currentCompetition.competitionId],
         onSuccess: response => {
           showSuccess(response.message);
-          currentCompetition = null;
+          state.currentCompetition = null;
           reloadInitialData();
         }
       });
@@ -1106,7 +1097,7 @@
         args: [id],
         onSuccess: response => {
           showSuccess(response.message);
-          openCompetition(currentCompetition.competitionId, true);
+          openCompetition(state.currentCompetition.competitionId, true);
         }
       });
     }
@@ -1123,21 +1114,21 @@
       const input = $("competition_judoka_text");
       const hiddenValue = String(hidden.value || "").trim();
 
-      if (hiddenValue && judokas.some(j => String(j.judokaId) === hiddenValue)) {
+      if (hiddenValue && state.judokas.some(j => String(j.judokaId) === hiddenValue)) {
         return hiddenValue;
       }
 
       const typedValue = normalizeJudokaSelectionKey(input.value);
       if (!typedValue) {
         const activeJudokaId = String(getHomeActiveJudokaId() || "").trim();
-        if (activeJudokaId && judokas.some(j => String(j.judokaId) === activeJudokaId)) {
+        if (activeJudokaId && state.judokas.some(j => String(j.judokaId) === activeJudokaId)) {
           hidden.value = activeJudokaId;
           return activeJudokaId;
         }
         return "";
       }
 
-      const matches = judokas.filter(j => {
+      const matches = state.judokas.filter(j => {
         return [
           getJudokaDisplayName(j),
           getCompactJudokaLabel(j),
@@ -1221,7 +1212,7 @@
     function setCompetitionOwnerField(idJudoka) {
       const block = $("competitionOwnerBlock");
 
-      if (!isAdmin && !isParent) {
+      if (!state.isAdmin && !state.isParent) {
         block.classList.add("hidden");
         return;
       }
@@ -1235,12 +1226,12 @@
           inputId: "competition_judoka_text",
           dropdownId: "competition_judoka_dropdown",
           hiddenId: "competition_id_judoka",
-          getItems: () => judokas
+          getItems: () => state.judokas
         });
         input.dataset.bound = "1";
       }
 
-      const owner = judokas.find(j => String(j.judokaId) === String(idJudoka));
+      const owner = state.judokas.find(j => String(j.judokaId) === String(idJudoka));
       input.value = owner ? getJudokaDisplayName(owner) : "";
       setValue("competition_id_judoka", idJudoka);
     }
@@ -1289,7 +1280,7 @@
         "getChildrenManagement",
         [],
         data => {
-          managedChildren = Array.isArray(data.children) ? data.children : [];
+          state.managedChildren = Array.isArray(data.children) ? data.children : [];
           renderManagedChildren();
           resetChildForm();
           showView("childrenView");
@@ -1307,10 +1298,10 @@
         "getAdminsManagement",
         [],
         data => {
-          managedAdmins = Array.isArray(data.admins) ? data.admins : [];
-          managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
-          accessInvitationSearch = "";
-          accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
+          state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
+          state.managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
+          state.accessInvitationSearch = "";
+          state.accessInvitationVisibleCount = defaultAccessInvitationVisibleCount;
           const invitationSearchInput = $("accessInvitationFilter");
           if (invitationSearchInput) {
             invitationSearchInput.value = "";
@@ -1327,15 +1318,15 @@
 
     function renderManagedAdmins() {
       const target = $("adminsList");
-      if (!managedAdmins.length) {
+      if (!state.managedAdmins.length) {
         target.innerHTML = emptyState("Aucun admin trouvé.");
         return;
       }
 
       let html = `<div class="list">`;
-      managedAdmins.forEach(admin => {
+      state.managedAdmins.forEach(admin => {
         const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
-        const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
+        const isCurrentAdmin = state.currentUser && String(state.currentUser.judokaId) === String(admin.judokaId);
         html += `
           <article class="card admin-card">
             <p class="card-title">${escapeHtml(fullName)}</p>
@@ -1359,13 +1350,13 @@
 
     function renderManagedChildren() {
       const target = $("childrenList");
-      if (!managedChildren.length) {
+      if (!state.managedChildren.length) {
         target.innerHTML = emptyState("Aucun enfant enregistré pour le moment.");
         return;
       }
 
       let html = `<div class="list">`;
-      managedChildren.forEach(child => {
+      state.managedChildren.forEach(child => {
         const fullName = getJudokaDisplayName(child) || "Enfant";
         const directAccessState = child.accountEmail ? "Activée" : "Non activée";
         html += `
@@ -1419,7 +1410,7 @@
     }
 
     function editManagedChild(idJudoka) {
-      const child = managedChildren.find(item => String(item.judokaId) === String(idJudoka));
+      const child = state.managedChildren.find(item => String(item.judokaId) === String(idJudoka));
       if (!child) {
         showError({ message: "Enfant introuvable." });
         return;
@@ -1542,10 +1533,10 @@
     }
 
     function showHome() {
-      currentCompetition = null;
-      currentCombats = [];
-      currentJudokaProfile = null;
-      canEditCurrentCompetition = false;
+      state.currentCompetition = null;
+      state.currentCombats = [];
+      state.currentJudokaProfile = null;
+      state.canEditCurrentCompetition = false;
       syncHomeContext();
       renderCompetitions();
       showView("homeView");
