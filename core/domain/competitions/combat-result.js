@@ -6,8 +6,7 @@ const RESULT_ALIASES = new Map([
   ["défaite", "Défaite"],
   ["e", "Egalité"],
   ["egalite", "Egalité"],
-  ["égalité", "Egalité"],
-  ["disqualification", "Disqualification"]
+  ["égalité", "Egalité"]
 ]);
 
 function normalizeCombatResultKey(value) {
@@ -35,8 +34,7 @@ function isVictoryCombatResult(value) {
 }
 
 function isLossCombatResult(value) {
-  const result = normalizeCombatResult(value);
-  return result === "Défaite" || result === "Disqualification";
+  return normalizeCombatResult(value) === "Défaite";
 }
 
 module.exports = {

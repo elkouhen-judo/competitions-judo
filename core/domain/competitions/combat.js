@@ -4,11 +4,14 @@ const { createCombatId, createCompetitionId, createJudokaId } = require("../shar
 
 function createCombatDraft(combat = {}) {
   const result = createCombatResult(combat.result);
+  const victoryTypeValue = result === "Egalité"
+    ? (combat.victoryType || "Hiki wake")
+    : combat.victoryType;
 
   return {
     opponent: combat.opponent || "",
     result,
-    victoryType: createCombatDecisionType(combat.victoryType, result),
+    victoryType: createCombatDecisionType(victoryTypeValue, result),
     notes: combat.notes || ""
   };
 }

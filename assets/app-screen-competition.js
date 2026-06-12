@@ -329,12 +329,13 @@
     }
 
     function getCombatFormValue() {
+      const result = getValue("combat_resultat");
       return {
         competitionId: state.currentCompetition.competitionId,
         judokaId: state.currentCompetition.ownerJudokaId,
         opponent: getValue("combat_adversaire"),
-        result: getValue("combat_resultat"),
-        victoryType: getValue("combat_type_victoire"),
+        result,
+        victoryType: result === "Egalité" ? "Hiki wake" : getValue("combat_type_victoire"),
         notes: getValue("combat_deroule")
       };
     }
@@ -527,13 +528,10 @@
 
     function getCombatDecisionOptions(result) {
       if (result === "Victoire" || result === "Défaite") {
-        return ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"];
+        return ["Ippon", "Waza-ari", "Yuko", "Décision", "Hansoku-make", "Forfait"];
       }
       if (result === "Egalité") {
         return ["Hiki wake"];
-      }
-      if (result === "Disqualification") {
-        return ["Hansoku-make"];
       }
       return [];
     }
@@ -551,6 +549,8 @@
 
       if (options.includes(currentValue)) {
         setValue("combat_type_victoire", currentValue);
+      } else if (result === "Egalité") {
+        setValue("combat_type_victoire", "Hiki wake");
       } else {
         setValue("combat_type_victoire", "");
       }

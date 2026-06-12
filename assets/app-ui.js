@@ -121,7 +121,7 @@
     if (value === "V" || value === "Victoire") return "Victoire";
     if (value === "D" || value === "Défaite") return "Défaite";
     if (value === "E" || value === "Egalité") return "Egalité";
-    if (value === "Disqualification") return "Disqualification";
+    if (value === "Disqualification") return "Défaite";
     return value || "";
   }
 

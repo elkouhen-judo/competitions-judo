@@ -78,7 +78,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **DAT-011**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
 - **DAT-012**: `judokas.role` shall store the access level among `NORMAL` and `ADMIN`.
 - **DAT-013**: If admin rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
-- **DAT-014**: Result values in `combats` shall use the canonical labels `Victoire`, `Défaite`, `Egalité`, or `Disqualification`, while legacy values `V`, `D`, or `E` may remain readable for backward compatibility.
+- **DAT-014**: Result values in `combats` shall use the canonical labels `Victoire`, `Défaite`, or `Egalité`, while legacy values `V`, `D`, `E`, or historical `Disqualification` rows may remain readable for backward compatibility.
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
