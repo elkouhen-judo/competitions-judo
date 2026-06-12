@@ -57,7 +57,7 @@ create table if not exists public.combats (
     references public.competitions (id_competition)
     on update cascade
     on delete cascade,
-  constraint combats_resultat_check check (resultat in ('Victoire', 'Défaite', 'Egalité', 'Disqualification', 'V', 'D', 'E'))
+  constraint combats_resultat_check check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'))
 );
 
 create table if not exists public.parent_judokas (
@@ -97,7 +97,7 @@ alter table public.combats
 
 alter table public.combats
   add constraint combats_resultat_check
-  check (resultat in ('Victoire', 'Défaite', 'Egalité', 'Disqualification', 'V', 'D', 'E'));
+  check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'));
 
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
@@ -363,6 +363,24 @@ values (
   'mehdi.elkouhen@gmail.com',
   'Mehdi',
   'EL KOUHEN',
+  'ADMIN',
+  'JUDOKA'
+)
+on conflict (email) do update
+set
+  prenom = excluded.prenom,
+  nom = excluded.nom,
+  role = excluded.role,
+  profile_type = excluded.profile_type,
+  updated_at = now();
+
+
+insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
+values (
+  'JUDO_ADRIEN°HOUSSAIS',
+  'adrien.houssais.judo@gmail.com',
+  'Adrien',
+  'HOUSSAIS',
   'ADMIN',
   'JUDOKA'
 )

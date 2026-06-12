@@ -207,5 +207,5 @@ test("combat read models normalize legacy result codes", () => {
   assert.equal(toCanonicalCombat({ resultat: "V" }).result, "Victoire");
   assert.equal(toCanonicalCombat({ resultat: "D" }).result, "Défaite");
   assert.equal(toCanonicalCombat({ resultat: "E" }).result, "Egalité");
-  assert.equal(toCanonicalCombat({ resultat: "Disqualification" }).result, "Disqualification");
+  assert.equal(toCanonicalCombat({ resultat: "Disqualification" }).result, "Défaite");
 });

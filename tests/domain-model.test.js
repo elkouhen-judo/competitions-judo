@@ -277,12 +277,6 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(createCombat({
     judokaId: "JUDO123",
     competitionId: "COMP123",
-    result: "Disqualification",
-    victoryType: "Pénalité (Hansoku-make / Shido)"
-  }).victoryType, "Hansoku-make");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
     result: "Défaite",
     victoryType: "Décision"
   }).victoryType, "Décision");
@@ -301,8 +295,25 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(createCombat({
     judokaId: "JUDO123",
     competitionId: "COMP123",
+    result: "Victoire",
+    victoryType: "Pénalité (Hansoku-make / Shido)"
+  }).victoryType, "Hansoku-make");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Défaite",
+    victoryType: "Pénalité (Hansoku-make / Shido)"
+  }).victoryType, "Hansoku-make");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
     result: "Egalité",
     victoryType: "Hiki wake"
+  }).victoryType, "Hiki wake");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
+    result: "Egalité"
   }).victoryType, "Hiki wake");
 
   assert.throws(
@@ -318,8 +329,8 @@ test("combat domain enforces allowed results and required identifiers", () => {
     /Type de décision incompatible/
   );
   assert.throws(
-    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Disqualification", victoryType: "Forfait" }),
-    /Type de décision incompatible/
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Disqualification", victoryType: "Hansoku-make" }),
+    /Résultat invalide/
   );
   assert.throws(
     () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire", victoryType: "Hiki wake" }),

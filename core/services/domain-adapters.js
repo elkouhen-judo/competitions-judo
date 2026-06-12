@@ -31,7 +31,7 @@ function toCanonicalCombat(combat = {}) {
     judokaId: combat.judokaId !== undefined ? combat.judokaId : combat.id_judoka,
     competitionId: combat.competitionId !== undefined ? combat.competitionId : combat.id_competition,
     opponent: combat.opponent !== undefined ? combat.opponent : combat.adversaire,
-    result: normalizedResult || rawResult,
+    result: normalizedResult || (rawResult === "Disqualification" ? "Défaite" : rawResult),
     victoryType: combat.victoryType !== undefined ? combat.victoryType : combat.type_victoire,
     notes: combat.notes !== undefined ? combat.notes : combat.deroule
   };

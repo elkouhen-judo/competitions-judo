@@ -20,10 +20,9 @@ const DECISION_TYPE_ALIASES = new Map([
 ]);
 
 const DECISION_TYPES_BY_RESULT = new Map([
-  ["Victoire", ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"]],
-  ["Défaite", ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"]],
-  ["Egalité", ["Hiki wake"]],
-  ["Disqualification", ["Hansoku-make"]]
+  ["Victoire", ["Ippon", "Waza-ari", "Yuko", "Décision", "Hansoku-make", "Forfait"]],
+  ["Défaite", ["Ippon", "Waza-ari", "Yuko", "Décision", "Hansoku-make", "Forfait"]],
+  ["Egalité", ["Hiki wake"]]
 ]);
 
 function normalizeDecisionTypeKey(value) {
