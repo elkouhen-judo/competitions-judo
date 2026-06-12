@@ -4,6 +4,8 @@ const path = require("node:path");
 module.exports = function handler(_req, res) {
   const clientFiles = [
     "app-ui.js",
+    "app-notifications.js",
+    "app-auth.js",
     "app.js"
   ];
   const client = clientFiles
