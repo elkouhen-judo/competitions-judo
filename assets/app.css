@@ -113,8 +113,11 @@
       border-radius: 8px;
       background: var(--panel);
       padding: 8px 10px;
+      height: 38px;
       color: var(--muted);
       font-size: 14px;
+      display: flex;
+      align-items: center;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
