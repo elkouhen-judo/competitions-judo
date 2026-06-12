@@ -660,6 +660,7 @@
       }
 
       document.getElementById("competitionAdminActions").classList.toggle("hidden", !canEditCurrentCompetition);
+      document.getElementById("finalizeCompetitionButton").classList.toggle("hidden", !canEditCurrentCompetition);
     }
 
     function openHomeJudokaProfile() {
