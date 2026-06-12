@@ -125,6 +125,7 @@ module.exports = function createCompetitionsService(deps) {
   }
 
   async function finalizeCompetition(email, idCompetition, result) {
+
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toCanonicalJudoka(user);
