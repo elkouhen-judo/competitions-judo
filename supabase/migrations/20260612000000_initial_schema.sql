@@ -92,6 +92,13 @@ alter table public.competitions
   drop column if exists lieu,
   drop column if exists poids_pesee;
 
+alter table public.combats
+  drop constraint if exists combats_resultat_check;
+
+alter table public.combats
+  add constraint combats_resultat_check
+  check (resultat in ('Victoire', 'Défaite', 'Egalité', 'Disqualification', 'V', 'D', 'E'));
+
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
   where email is not null;

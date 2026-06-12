@@ -5,6 +5,7 @@ const createCombatsRepository = require("../core/repositories/combats.repository
 const createCompetitionsRepository = require("../core/repositories/competitions.repository");
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
+const { toCanonicalCombat } = require("../core/services/domain-adapters");
 
 function createRepositoryDeps(calls) {
   return {
@@ -113,4 +114,98 @@ test("repositories map domain objects to supabase records", async () => {
       invited_by: "ADMIN1"
     }]
   ]);
+});
+
+test("combats repository retries legacy result codes when the remote constraint is outdated", async () => {
+  const calls = [];
+  let insertAttempts = 0;
+  let patchAttempts = 0;
+  const combatsRepository = createCombatsRepository({
+    eqFilter: (field, value) => `${field}=eq.${value}`,
+    supabaseDelete: async () => {},
+    supabaseInsert: async (table, payload) => {
+      calls.push(["insert", table, payload]);
+      insertAttempts += 1;
+      if (insertAttempts === 1) {
+        throw new Error('Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}');
+      }
+      return payload;
+    },
+    supabasePatch: async (table, query, payload) => {
+      calls.push(["patch", table, query, payload]);
+      patchAttempts += 1;
+      if (patchAttempts === 1) {
+        throw new Error('Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}');
+      }
+      return payload;
+    },
+    supabaseSelect: async () => [],
+    supabaseSelectOne: async () => null
+  });
+
+  await combatsRepository.insert({
+    judokaId: "JUDO1",
+    competitionId: "COMP1",
+    draft: {
+      opponent: "Lee",
+      result: "Victoire",
+      victoryType: "Ippon",
+      notes: ""
+    }
+  }, "CB1");
+
+  await combatsRepository.update("CB1", {
+    judokaId: "JUDO1",
+    competitionId: "COMP1",
+    draft: {
+      opponent: "Lee",
+      result: "Défaite",
+      victoryType: "Décision",
+      notes: ""
+    }
+  });
+
+  assert.deepEqual(calls, [
+    ["insert", "combats", {
+      id_combat: "CB1",
+      id_judoka: "JUDO1",
+      id_competition: "COMP1",
+      adversaire: "Lee",
+      resultat: "Victoire",
+      type_victoire: "Ippon",
+      deroule: ""
+    }],
+    ["insert", "combats", {
+      id_combat: "CB1",
+      id_judoka: "JUDO1",
+      id_competition: "COMP1",
+      adversaire: "Lee",
+      resultat: "V",
+      type_victoire: "Ippon",
+      deroule: ""
+    }],
+    ["patch", "combats", "id_combat=eq.CB1", {
+      id_judoka: "JUDO1",
+      id_competition: "COMP1",
+      adversaire: "Lee",
+      resultat: "Défaite",
+      type_victoire: "Décision",
+      deroule: ""
+    }],
+    ["patch", "combats", "id_combat=eq.CB1", {
+      id_judoka: "JUDO1",
+      id_competition: "COMP1",
+      adversaire: "Lee",
+      resultat: "D",
+      type_victoire: "Décision",
+      deroule: ""
+    }]
+  ]);
+});
+
+test("combat read models normalize legacy result codes", () => {
+  assert.equal(toCanonicalCombat({ resultat: "V" }).result, "Victoire");
+  assert.equal(toCanonicalCombat({ resultat: "D" }).result, "Défaite");
+  assert.equal(toCanonicalCombat({ resultat: "E" }).result, "Egalité");
+  assert.equal(toCanonicalCombat({ resultat: "Disqualification" }).result, "Disqualification");
 });

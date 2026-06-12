@@ -8,6 +8,32 @@ module.exports = function createCombatsRepository(deps) {
     eqFilter
   } = deps;
 
+  const LEGACY_RESULTS_BY_CANONICAL_RESULT = {
+    Victoire: "V",
+    "Défaite": "D",
+    Egalité: "E"
+  };
+
+  function toLegacyCompatibleResult(value) {
+    return LEGACY_RESULTS_BY_CANONICAL_RESULT[value] || value || "";
+  }
+
+  function toLegacyCompatibleCombatRecord(record) {
+    return {
+      ...record,
+      resultat: toLegacyCompatibleResult(record && record.resultat)
+    };
+  }
+
+  function shouldRetryWithLegacyResult(error, record) {
+    return Boolean(
+      error
+      && record
+      && LEGACY_RESULTS_BY_CANONICAL_RESULT[record.resultat]
+      && /combats_resultat_check/.test(String(error.message || error))
+    );
+  }
+
   function toCombatRecord(combat) {
     const draft = combat && combat.draft;
     if (!draft) {
@@ -61,11 +87,27 @@ module.exports = function createCombatsRepository(deps) {
   }
 
   async function insert(combat, idCombat) {
-    return supabaseInsert("combats", toNewCombatRecord(combat, idCombat));
+    const record = toNewCombatRecord(combat, idCombat);
+    try {
+      return await supabaseInsert("combats", record);
+    } catch (error) {
+      if (!shouldRetryWithLegacyResult(error, record)) {
+        throw error;
+      }
+      return supabaseInsert("combats", toLegacyCompatibleCombatRecord(record));
+    }
   }
 
   async function update(idCombat, combat) {
-    return supabasePatch("combats", eqFilter("id_combat", idCombat), toCombatRecord(combat));
+    const record = toCombatRecord(combat);
+    try {
+      return await supabasePatch("combats", eqFilter("id_combat", idCombat), record);
+    } catch (error) {
+      if (!shouldRetryWithLegacyResult(error, record)) {
+        throw error;
+      }
+      return supabasePatch("combats", eqFilter("id_combat", idCombat), toLegacyCompatibleCombatRecord(record));
+    }
   }
 
   async function remove(idCombat) {

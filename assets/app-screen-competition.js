@@ -527,7 +527,7 @@
 
     function getCombatDecisionOptions(result) {
       if (result === "Victoire" || result === "Défaite") {
-        return ["Ippon", "Waza-ari", "Décision", "Forfait"];
+        return ["Ippon", "Waza-ari", "Yuko", "Décision", "Forfait"];
       }
       if (result === "Egalité") {
         return ["Hiki wake"];

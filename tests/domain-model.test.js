@@ -289,6 +289,12 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(createCombat({
     judokaId: "JUDO123",
     competitionId: "COMP123",
+    result: "Défaite",
+    victoryType: "Yuko"
+  }).victoryType, "Yuko");
+  assert.equal(createCombat({
+    judokaId: "JUDO123",
+    competitionId: "COMP123",
     result: "Victoire",
     victoryType: "Forfait"
   }).victoryType, "Forfait");
