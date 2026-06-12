@@ -10,7 +10,6 @@
     let managedAdmins = [];
     let managedAccessInvitations = [];
     let managedChildren = [];
-    let canManageCurrentCompetition = false;
     let canEditCurrentCompetition = false;
     let previousView = "homeView";
     let accessInvitationSearch = "";
@@ -89,7 +88,6 @@
       managedAdmins = [];
       managedAccessInvitations = [];
       managedChildren = [];
-      canManageCurrentCompetition = false;
       canEditCurrentCompetition = false;
       previousView = "homeView";
       accessInvitationSearch = "";
@@ -617,7 +615,6 @@
           currentCompetition = data.competition;
           currentCombats = Array.isArray(data.combats) ? data.combats : [];
           judokas = Array.isArray(data.judokas) ? data.judokas : [];
-          canManageCurrentCompetition = Boolean(data.canManageCompetition);
           canEditCurrentCompetition = Boolean(data.canEditCompetition);
 
           renderCompetitionDetail();
@@ -1711,7 +1708,6 @@
       currentCompetition = null;
       currentCombats = [];
       currentJudokaProfile = null;
-      canManageCurrentCompetition = false;
       canEditCurrentCompetition = false;
       syncHomeContext();
       renderCompetitions();
@@ -1859,6 +1855,45 @@
 
     document.getElementById("combat_resultat").addEventListener("change", () => {
       syncCombatDecisionVisibility(true);
+    });
+
+    Object.assign(window, {
+      cancelCombatForm,
+      cancelCompetitionFinalizationForm,
+      cancelCompetitionForm,
+      collapseAccessInvitations,
+      deleteAccessInvitation,
+      deleteCombat,
+      deleteCompetitionFromList,
+      deleteCurrentCompetition,
+      deleteManagedChild,
+      dismissToast,
+      editCurrentCompetition,
+      editManagedChild,
+      finalizeCompetition,
+      logoutUser,
+      openCompetition,
+      openHomeJudokaProfile,
+      resetAccessInvitationForm,
+      resetAccessInvitationSearch,
+      resetAdminForm,
+      resetChildForm,
+      revokeAdminRole,
+      saveAccessInvitation,
+      saveAdminRole,
+      saveCompetition,
+      saveCombat,
+      saveManagedChild,
+      showAdminsManagement,
+      showAllAccessInvitations,
+      showChildrenManagement,
+      showCombatForm,
+      showCompetitionFinalizationForm,
+      showHome,
+      showHomeCompetitionForm,
+      showMoreAccessInvitations,
+      startGoogleLogin,
+      updateAccessInvitationSearch
     });
 
     init();
