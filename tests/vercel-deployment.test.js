@@ -33,10 +33,12 @@ const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabas
 const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
 const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
-const profileRegistrationMigration = fs.readFileSync(
-  path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
-  "utf8"
-);
+const migrationFiles = fs.readdirSync(path.join(root, "supabase", "migrations"))
+  .filter(file => file.endsWith(".sql"))
+  .sort();
+const supabaseSchema = migrationFiles
+  .map(file => fs.readFileSync(path.join(root, "supabase", "migrations", file), "utf8"))
+  .join("\n");
 const uiBundle = `${html}\n${css}\n${client}`;
 
 test("vercel config routes the app shell and rpc endpoint", () => {
@@ -110,8 +112,10 @@ test("vercel login creates only the initial judoka profile", () => {
   assert.match(registrationService, /p_type: invitation\.invited_profile_type \|\| "JUDOKA"/);
   assert.match(registrationService, /p_children: \[\]/);
   assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
-  assert.match(profileRegistrationMigration, /alter column email drop not null/i);
-  assert.match(profileRegistrationMigration, /create or replace function public\.register_profile/i);
+  assert.equal(migrationFiles.length, 1);
+  assert.match(supabaseSchema, /email text unique/i);
+  assert.match(supabaseSchema, /create or replace function public\.register_profile/i);
+  assert.match(supabaseSchema, /'mehdi\.elkouhen@gmail\.com'[\s\S]*'Mehdi'[\s\S]*'EL KOUHEN'[\s\S]*'ADMIN'/i);
 });
 
 test("successful initial load leaves the login view", () => {
