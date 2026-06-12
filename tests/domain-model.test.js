@@ -16,7 +16,7 @@ const {
   createCompetition
 } = require("../core/domain/competitions/competition");
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
-const { getCompetitionResultRank } = require("../core/domain/competition-results");
+const { createCompetitionRanking, getCompetitionResultRank } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
 test("permission policy derives access from immutable profile type and role", () => {
@@ -24,10 +24,14 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
   assert.equal(permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }), false);
-  assert.deepEqual(permissions.resolveJudokaDataAccess(
+  const parentAccess = permissions.resolveJudokaDataAccess(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     scope
-  ), { kind: "MANAGED", managedJudokaScope: scope });
+  );
+  assert.equal(parentAccess.kind, "MANAGED");
+  assert.equal(parentAccess.isManaged(), true);
+  assert.equal(parentAccess.canManageJudoka("CHILD1"), true);
+  assert.deepEqual(parentAccess.visibleJudokaIds(), ["PARENT1", "CHILD1"]);
   assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     "CHILD1",
@@ -171,9 +175,16 @@ test("competition domain builds a normalized entity", () => {
   assert.equal(competition.competitionDate, "2026-06-11");
   assert.equal(competition.draft.name, "Tournoi regional");
   assert.equal(competition.draft.competitionDate, "2026-06-11");
+  assert.equal("seasonResult" in competition.draft, false);
   assert.equal(competition.ageCategory, "Cadet");
   assert.equal(competition.weightCategory, "-55 kg");
   assert.equal(competition.seasonResult, "3e");
+  assert.deepEqual(competition.finalize(" 2e "), {
+    competitionId: null,
+    ownerJudokaId: "JUDO123",
+    seasonResult: "2e"
+  });
+  assert.throws(() => competition.finalize("podium"), /Classement invalide/);
   assert.equal("id_judoka" in competition, false);
   assert.equal("nom" in competition, false);
   assert.equal("date" in competition, false);
@@ -196,6 +207,7 @@ test("competition domain builds a normalized entity", () => {
     () => createCompetition({ name: "Tournoi", competitionDate: "2026-02-31" }, "JUDO123"),
     /Date de compétition invalide/
   );
+  assert.equal(createCompetitionRanking(" Non classé "), "Non classé");
 });
 
 test("competition domain enforces combat ownership", () => {

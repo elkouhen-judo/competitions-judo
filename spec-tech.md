@@ -52,6 +52,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `core/domain/*`, application orchestration in `core/services/*`, and persistence adapters in `core/repositories/*`.
 - **ARC-006**: Domain objects shall not expose Supabase record serialization methods; repositories shall translate domain objects to persistence records.
 - **ARC-007**: Domain code should express business concepts through value objects and aggregate language such as `PersonName`, domain identifiers, competition/combat drafts, `ManagedJudokaScope`, and competition combat recording behavior.
+- **ARC-008**: Application services may normalize inbound and persistence records into canonical DTOs, but business invariants shall be enforced by domain factories, value objects, aggregate commands, and access scopes.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -262,7 +263,7 @@ Business RPC responses and browser-submitted business payloads use domain names,
 | `competitionDate` | string | Yes | Normalized date string |
 | `ageCategory` | string | No | Age category |
 | `weightCategory` | string | No | Weight category |
-| `seasonResult` | string | No | Final result used by season statistics |
+| `seasonResult` | string | No | Final result used by season statistics; supported values are `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé` |
 
 #### Combat
 
