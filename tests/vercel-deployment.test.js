@@ -147,7 +147,6 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /return records\.map\(toCompetitionReadModel\);/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
-
   assert.match(competitionsService, /async function finalizeCompetition\(email,\s*idCompetition,\s*result\)/);
   assert.match(competitionsService, /const finalization = createPersistedCompetition\(toCanonicalCompetition\(competition\)\)\.finalize\(result\);/);
   assert.match(competitionsService, /await competitionsRepository\.updateResult\(idCompetition,\s*finalization\);/);
