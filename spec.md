@@ -92,6 +92,7 @@ This specification does not define:
 - **COMP-014**: Competition creation and main editing shall not ask for the final ranking.
 - **COMP-015**: Final ranking shall be entered from a dedicated competition finalization action.
 - **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé`.
+- **COMP-017**: Competition finalization action shall be shown only when the competition has no final ranking yet.
 
 ### 3.4 Combat rules
 

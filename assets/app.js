@@ -652,7 +652,8 @@
         document.getElementById("row_competitionAgePoids").classList.add("hidden");
       }
 
-      if (currentCompetition.seasonResult) {
+      const hasSeasonResult = Boolean(String(currentCompetition.seasonResult || "").trim());
+      if (hasSeasonResult) {
         document.getElementById("row_competitionClassement").classList.remove("hidden");
         document.getElementById("competitionClassement").innerText = currentCompetition.seasonResult;
       } else {
@@ -660,7 +661,7 @@
       }
 
       document.getElementById("competitionAdminActions").classList.toggle("hidden", !canEditCurrentCompetition);
-      document.getElementById("finalizeCompetitionButton").classList.toggle("hidden", !canEditCurrentCompetition);
+      document.getElementById("finalizeCompetitionButton").classList.toggle("hidden", !canEditCurrentCompetition || hasSeasonResult);
     }
 
     function openHomeJudokaProfile() {
