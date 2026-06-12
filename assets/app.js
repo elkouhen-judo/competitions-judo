@@ -652,16 +652,16 @@
         document.getElementById("row_competitionAgePoids").classList.add("hidden");
       }
 
-      const hasSeasonResult = Boolean(String(currentCompetition.seasonResult || "").trim());
-      if (hasSeasonResult) {
+      const hasResult = Boolean(String(currentCompetition.result || "").trim());
+      if (hasResult) {
         document.getElementById("row_competitionClassement").classList.remove("hidden");
-        document.getElementById("competitionClassement").innerText = currentCompetition.seasonResult;
+        document.getElementById("competitionClassement").innerText = currentCompetition.result;
       } else {
         document.getElementById("row_competitionClassement").classList.add("hidden");
       }
 
       document.getElementById("competitionAdminActions").classList.toggle("hidden", !canEditCurrentCompetition);
-      document.getElementById("finalizeCompetitionButton").classList.toggle("hidden", !canEditCurrentCompetition || hasSeasonResult);
+      document.getElementById("finalizeCompetitionButton").classList.toggle("hidden", !canEditCurrentCompetition || hasResult);
     }
 
     function openHomeJudokaProfile() {
@@ -792,7 +792,7 @@
                 </div>
                 <div class="meta-row">
                   <span class="meta-label">Résultat</span>
-                  <span class="meta-value"><span class="result-badge classement-badge ${escapeAttribute(getClassementBadgeClass(result.seasonResult))}">${escapeHtml(result.seasonResult)}</span></span>
+                  <span class="meta-value"><span class="result-badge classement-badge ${escapeAttribute(getClassementBadgeClass(result.result))}">${escapeHtml(result.result)}</span></span>
                 </div>
               </div>
             </article>
@@ -911,6 +911,8 @@
         document.getElementById("competition_date").value = toInputDate(c.competitionDate);
         document.getElementById("competition_categorie_age").value = c.ageCategory || "";
         document.getElementById("competition_categorie_poids").value = c.weightCategory || "";
+        document.getElementById("competition_result").value = c.result || "";
+        document.getElementById("competitionResultBlock").classList.remove("hidden");
       } else {
         previousView = "homeView";
         document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
@@ -920,6 +922,8 @@
         document.getElementById("competition_date").value = getCurrentLocalDate();
         document.getElementById("competition_categorie_age").value = "";
         document.getElementById("competition_categorie_poids").value = "";
+        document.getElementById("competition_result").value = "";
+        document.getElementById("competitionResultBlock").classList.add("hidden");
       }
 
       showView("competitionFormView");
@@ -941,7 +945,8 @@
         name: document.getElementById("competition_nom").value,
         competitionDate: document.getElementById("competition_date").value,
         ageCategory: document.getElementById("competition_categorie_age").value,
-        weightCategory: document.getElementById("competition_categorie_poids").value
+        weightCategory: document.getElementById("competition_categorie_poids").value,
+        result: document.getElementById("competition_result").value
       };
 
       if (isAdmin || isParent) {
@@ -972,7 +977,7 @@
 
       document.getElementById("finalization_competition_id").value = currentCompetition.competitionId || "";
       document.getElementById("competitionFinalizationSubtitle").innerText = currentCompetition.name || "";
-      document.getElementById("finalization_classement").value = currentCompetition.seasonResult || "";
+      document.getElementById("finalization_classement").value = currentCompetition.result || "";
       showView("competitionFinalizationView");
     }
 
@@ -982,11 +987,11 @@
 
     function finalizeCompetition() {
       const competitionId = document.getElementById("finalization_competition_id").value;
-      const seasonResult = document.getElementById("finalization_classement").value;
+      const result = document.getElementById("finalization_classement").value;
 
       runServer(
         "finalizeCompetition",
-        [competitionId, seasonResult],
+        [competitionId, result],
         response => {
           showSuccess(response.message);
           openCompetition(response.competitionId || competitionId, true);

@@ -164,7 +164,7 @@ test("competition domain builds a normalized entity", () => {
       competitionDate: " 2026-06-11 ",
       ageCategory: " Cadet ",
       weightCategory: " -55 kg ",
-      seasonResult: " 3e "
+      result: " 3e "
     },
     "JUDO123"
   );
@@ -175,15 +175,20 @@ test("competition domain builds a normalized entity", () => {
   assert.equal(competition.competitionDate, "2026-06-11");
   assert.equal(competition.draft.name, "Tournoi regional");
   assert.equal(competition.draft.competitionDate, "2026-06-11");
-  assert.equal("seasonResult" in competition.draft, false);
+  assert.equal("result" in competition.draft, false);
   assert.equal(competition.ageCategory, "Cadet");
   assert.equal(competition.weightCategory, "-55 kg");
-  assert.equal(competition.seasonResult, "3e");
+  assert.equal(competition.result, "3e");
   assert.deepEqual(competition.finalize(" 2e "), {
     competitionId: null,
     ownerJudokaId: "JUDO123",
-    seasonResult: "2e"
+    result: "2e"
   });
+  assert.equal(competition.changeDetails({
+    name: "Tournoi modifie",
+    competitionDate: "2026-06-12",
+    result: "1er"
+  }).result, "1er");
   assert.throws(() => competition.finalize("podium"), /Classement invalide/);
   assert.equal("id_judoka" in competition, false);
   assert.equal("nom" in competition, false);
@@ -196,7 +201,7 @@ test("competition domain builds a normalized entity", () => {
   const defaultCompetition = createCompetition({ name: "Tournoi regional", competitionDate: "2026-06-11" }, "JUDO123");
   assert.equal(defaultCompetition.ageCategory, "");
   assert.equal(defaultCompetition.weightCategory, "");
-  assert.equal(defaultCompetition.seasonResult, "");
+  assert.equal(defaultCompetition.result, "");
 
   assert.throws(() => createCompetition({ name: "", competitionDate: "" }, "JUDO123"), /Nom et date obligatoires/);
   assert.throws(
@@ -285,7 +290,7 @@ test("season statistics domain computes current season snapshot", () => {
         competitionDate: "2026-02-01",
         ageCategory: "Cadet",
         weightCategory: "-55 kg",
-        seasonResult: "1er"
+        result: "1er"
       },
       {
         competitionId: "COMP1",
@@ -293,7 +298,7 @@ test("season statistics domain computes current season snapshot", () => {
         competitionDate: "2025-10-01",
         ageCategory: "Cadet",
         weightCategory: "-52 kg",
-        seasonResult: "3e"
+        result: "3e"
       }
     ],
     combats: [
@@ -324,7 +329,7 @@ test("season statistics keep latest competition details and normalize combat res
         competitionDate: "2025-10-01",
         ageCategory: "Cadet",
         weightCategory: "-52 kg",
-        seasonResult: "3e"
+        result: "3e"
       },
       {
         competitionId: "COMP3",
@@ -332,7 +337,7 @@ test("season statistics keep latest competition details and normalize combat res
         competitionDate: "2026-03-10",
         ageCategory: "Junior",
         weightCategory: "-57 kg",
-        seasonResult: "Non classé"
+        result: "Non classé"
       },
       {
         competitionId: "COMP2",
@@ -340,7 +345,7 @@ test("season statistics keep latest competition details and normalize combat res
         competitionDate: "2026-02-01",
         ageCategory: "Cadet",
         weightCategory: "-55 kg",
-        seasonResult: "1er"
+        result: "1er"
       }
     ],
     combats: [
@@ -361,7 +366,7 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.lastCompetition.category, "Junior - -57 kg");
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
   assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1", "COMP3"]);
-  assert.equal(snapshot.bestSeasonResults[2].seasonResult, "Non classé");
+  assert.equal(snapshot.bestSeasonResults[2].result, "Non classé");
 });
 
 test("season statistics use the latest competition season for all profile aggregates", () => {
@@ -374,7 +379,7 @@ test("season statistics use the latest competition season for all profile aggreg
         competitionDate: "2026-02-01",
         ageCategory: "Cadet",
         weightCategory: "-55 kg",
-        seasonResult: "1er"
+        result: "1er"
       },
       {
         competitionId: "LATEST",
@@ -382,7 +387,7 @@ test("season statistics use the latest competition season for all profile aggreg
         competitionDate: "2026-09-15",
         ageCategory: "Junior",
         weightCategory: "-57 kg",
-        seasonResult: "3e"
+        result: "3e"
       }
     ],
     combats: [
@@ -419,7 +424,7 @@ test("season statistics fall back to the latest season with competition data", (
         competitionDate: "2024-10-01",
         ageCategory: "Cadet",
         weightCategory: "-52 kg",
-        seasonResult: "3e"
+        result: "3e"
       },
       {
         competitionId: "COMP2",
@@ -427,7 +432,7 @@ test("season statistics fall back to the latest season with competition data", (
         competitionDate: "2025-02-01",
         ageCategory: "Cadet",
         weightCategory: "-55 kg",
-        seasonResult: "1er"
+        result: "1er"
       }
     ],
     combats: [

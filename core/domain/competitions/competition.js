@@ -48,7 +48,7 @@ function createCompetition(competition, ownerJudokaId) {
   const draft = createCompetitionDetailsDraft(competition);
   const resolvedOwnerJudokaId = createJudokaId(ownerJudokaId, "Judoka participant obligatoire.");
   const competitionId = createOptionalCompetitionId(competition && competition.competitionId);
-  const seasonResult = createCompetitionFinalResult(competition && competition.seasonResult);
+  const result = createCompetitionFinalResult(competition && competition.result);
 
   const record = {
     competitionId,
@@ -58,7 +58,7 @@ function createCompetition(competition, ownerJudokaId) {
     competitionDate: draft.competitionDate,
     ageCategory: draft.ageCategory,
     weightCategory: draft.weightCategory,
-    seasonResult
+    result
   };
 
   return {
@@ -67,14 +67,14 @@ function createCompetition(competition, ownerJudokaId) {
       return createCompetition({
         ...details,
         competitionId: record.competitionId,
-        seasonResult: record.seasonResult
+        result: details.result !== undefined ? details.result : record.result
       }, record.ownerJudokaId);
     },
     finalize(finalResult) {
       return {
         competitionId: record.competitionId,
         ownerJudokaId: record.ownerJudokaId,
-        seasonResult: createCompetitionFinalResult(finalResult)
+        result: createCompetitionFinalResult(finalResult)
       };
     },
     belongsToJudoka(judokaId) {
