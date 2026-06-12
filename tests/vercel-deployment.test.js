@@ -6,7 +6,9 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
-const client = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
+const client = ["app-ui.js", "app.js"]
+  .map(file => fs.readFileSync(path.join(root, "assets", file), "utf8"))
+  .join("\n");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
