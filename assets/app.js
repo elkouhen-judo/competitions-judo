@@ -19,6 +19,38 @@
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const sessionStorageKey = "kiroku_supabase_session";
     const defaultAccessInvitationVisibleCount = 8;
+    const viewIds = [
+      "loginView",
+      "homeView",
+      "judokaView",
+      "adminsView",
+      "childrenView",
+      "competitionView",
+      "competitionFormView",
+      "competitionFinalizationView",
+      "combatFormView"
+    ];
+    const icons = {
+      edit: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+      shieldOff: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M9 9l6 6"></path><path d="M15 9l-6 6"></path></svg>`,
+      trash: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
+    };
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function setValue(id, value) {
+      $(id).value = value || "";
+    }
+
+    function setText(id, value) {
+      $(id).innerText = value || "";
+    }
+
+    function emptyState(message) {
+      return `<div class="empty-state">${escapeHtml(message)}</div>`;
+    }
 
     async function runServer(method, args, success, failure) {
       try {
@@ -546,7 +578,7 @@
       const activeJudokaId = getHomeActiveJudokaId();
 
       if ((isAdmin || isParent) && !activeJudoka) {
-        target.innerHTML = `<div class="empty-state">Sélectionnez un judoka pour afficher son parcours.</div>`;
+        target.innerHTML = emptyState("Sélectionnez un judoka pour afficher son parcours.");
         return;
       }
 
@@ -556,7 +588,7 @@
       }
 
       if (!filteredComps.length) {
-        target.innerHTML = `<div class="empty-state">Aucune compétition enregistrée pour ce judoka.</div>`;
+        target.innerHTML = emptyState("Aucune compétition enregistrée pour ce judoka.");
         return;
       }
 
@@ -587,7 +619,7 @@
             </button>
             ${isAdmin ? `<div class="card-actions">
               <button class="button-danger" type="button" data-id="${escapeAttribute(c.competitionId)}" data-name="${escapeAttribute(c.name || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                ${icons.trash}
                 Supprimer
               </button>
             </div>` : ""}
@@ -626,19 +658,15 @@
 
     function deleteAccessInvitation(email) {
       const label = email ? ` pour "${email}"` : "";
-      if (!window.confirm(`Supprimer l'invitation${label} ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteAccessInvitation",
-        [email],
-        response => {
+      confirmAndRun({
+        message: `Supprimer l'invitation${label} ?`,
+        method: "deleteAccessInvitation",
+        args: [email],
+        onSuccess: response => {
           showSuccess(response.message);
           reloadInitialDataAndShowAdmins();
-        },
-        showError
-      );
+        }
+      });
     }
 
     function renderCompetitionDetail() {
@@ -818,7 +846,7 @@
       const target = document.getElementById("combatsList");
 
       if (!currentCombats.length) {
-        target.innerHTML = `<div class="empty-state">Aucun combat pour cette compétition.</div>`;
+        target.innerHTML = emptyState("Aucun combat pour cette compétition.");
         return;
       }
 
@@ -843,11 +871,11 @@
             <p class="combat-comment">${escapeHtml(c.notes || "Aucun déroulé renseigné")}</p>
             <div class="card-actions">
               <button class="button-secondary" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="showCombatForm(this.dataset.id)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                ${icons.edit}
                 Modifier
               </button>
               <button class="button-danger" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="deleteCombat(this.dataset.id)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                ${icons.trash}
                 Supprimer
               </button>
             </div>
@@ -864,7 +892,7 @@
       const summary = document.getElementById("accessInvitationsSummary");
       if (!managedAccessInvitations.length) {
         summary.innerHTML = "";
-        target.innerHTML = `<div class="empty-state">Aucune invitation en attente.</div>`;
+        target.innerHTML = emptyState("Aucune invitation en attente.");
         return;
       }
 
@@ -916,7 +944,7 @@
             </div>
             <div class="card-actions">
               <button class="button-danger" type="button" data-email="${escapeAttribute(invitation.email)}" onclick="deleteAccessInvitation(this.dataset.email)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                ${icons.trash}
                 Retirer l'invitation
               </button>
             </div>
@@ -1173,55 +1201,41 @@
       if (!currentCompetition) return;
 
       const label = currentCompetition.name ? ` "${currentCompetition.name}"` : "";
-
-      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteCompetition",
-        [currentCompetition.competitionId],
-        response => {
+      confirmAndRun({
+        message: `Supprimer la compétition${label} et tous ses combats ?`,
+        method: "deleteCompetition",
+        args: [currentCompetition.competitionId],
+        onSuccess: response => {
           showSuccess(response.message);
           currentCompetition = null;
           reloadInitialData();
-        },
-        showError
-      );
+        }
+      });
     }
 
     function deleteCompetitionFromList(id, name) {
       const label = name ? ` "${name}"` : "";
-
-      if (!window.confirm(`Supprimer la compétition${label} et tous ses combats ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteCompetition",
-        [id],
-        response => {
+      confirmAndRun({
+        message: `Supprimer la compétition${label} et tous ses combats ?`,
+        method: "deleteCompetition",
+        args: [id],
+        onSuccess: response => {
           showSuccess(response.message);
           reloadInitialData();
-        },
-        showError
-      );
+        }
+      });
     }
 
     function deleteCombat(id) {
-      if (!window.confirm("Supprimer ce combat ?")) {
-        return;
-      }
-
-      runServer(
-        "deleteCombat",
-        [id],
-        response => {
+      confirmAndRun({
+        message: "Supprimer ce combat ?",
+        method: "deleteCombat",
+        args: [id],
+        onSuccess: response => {
           showSuccess(response.message);
           openCompetition(currentCompetition.competitionId, true);
-        },
-        showError
-      );
+        }
+      });
     }
 
     function normalizeDisplayName(value) {
@@ -1474,7 +1488,7 @@
     function renderManagedAdmins() {
       const target = document.getElementById("adminsList");
       if (!managedAdmins.length) {
-        target.innerHTML = `<div class="empty-state">Aucun admin trouvé.</div>`;
+        target.innerHTML = emptyState("Aucun admin trouvé.");
         return;
       }
 
@@ -1494,7 +1508,7 @@
             <div class="card-actions">
               ${isCurrentAdmin
                 ? `<span class="current-admin-note">Vous</span>`
-              : `<button class="button-danger" type="button" data-id="${escapeAttribute(admin.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="revokeAdminRole(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M9 9l6 6"></path><path d="M15 9l-6 6"></path></svg>Révoquer</button>`}
+              : `<button class="button-danger" type="button" data-id="${escapeAttribute(admin.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="revokeAdminRole(this.dataset.id, this.dataset.name)">${icons.shieldOff}Révoquer</button>`}
             </div>
           </article>
         `;
@@ -1506,7 +1520,7 @@
     function renderManagedChildren() {
       const target = document.getElementById("childrenList");
       if (!managedChildren.length) {
-        target.innerHTML = `<div class="empty-state">Aucun enfant enregistré pour le moment.</div>`;
+        target.innerHTML = emptyState("Aucun enfant enregistré pour le moment.");
         return;
       }
 
@@ -1536,8 +1550,8 @@
               </div>
             </div>
             <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(child.judokaId)}" onclick="editManagedChild(this.dataset.id)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Modifier</button>
-              <button class="button-danger" data-id="${escapeAttribute(child.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>Supprimer</button>
+              <button class="button-secondary" data-id="${escapeAttribute(child.judokaId)}" onclick="editManagedChild(this.dataset.id)">${icons.edit}Modifier</button>
+              <button class="button-danger" data-id="${escapeAttribute(child.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)">${icons.trash}Supprimer</button>
             </div>
           </article>
         `;
@@ -1547,21 +1561,21 @@
     }
 
     function resetChildForm() {
-      document.getElementById("child_id").value = "";
-      document.getElementById("child_prenom").value = "";
-      document.getElementById("child_nom").value = "";
-      document.getElementById("child_email").value = "";
-      document.getElementById("childFormTitle").innerText = "Ajouter un enfant";
-      document.getElementById("saveChildButtonText").innerText = "Ajouter l'enfant";
+      setValue("child_id", "");
+      setValue("child_prenom", "");
+      setValue("child_nom", "");
+      setValue("child_email", "");
+      setText("childFormTitle", "Ajouter un enfant");
+      setText("saveChildButtonText", "Ajouter l'enfant");
     }
 
     function resetAdminForm() {
-      document.getElementById("admin_email").value = "";
+      setValue("admin_email", "");
     }
 
     function resetAccessInvitationForm() {
-      document.getElementById("invite_email").value = "";
-      document.getElementById("invite_profile_type").value = "JUDOKA";
+      setValue("invite_email", "");
+      setValue("invite_profile_type", "JUDOKA");
     }
 
     function editManagedChild(idJudoka) {
@@ -1616,39 +1630,49 @@
 
     function deleteManagedChild(idJudoka, name) {
       const label = name ? ` "${name}"` : "";
-      if (!window.confirm(`Supprimer l'enfant${label} ?`)) {
-        return;
-      }
-
-      runServer(
-        "deleteManagedChild",
-        [idJudoka],
-        response => {
+      confirmAndRun({
+        message: `Supprimer l'enfant${label} ?`,
+        method: "deleteManagedChild",
+        args: [idJudoka],
+        onSuccess: response => {
           showSuccess(response.message);
           reloadInitialDataAndShowChildren();
-        },
-        showError
-      );
+        }
+      });
     }
 
     function revokeAdminRole(idJudoka, name) {
       const label = name ? ` "${name}"` : "";
-      if (!window.confirm(`Retirer les droits admin${label} ?`)) {
+      confirmAndRun({
+        message: `Retirer les droits admin${label} ?`,
+        method: "revokeAdminRole",
+        args: [idJudoka],
+        onSuccess: response => {
+          showSuccess(response.message);
+          reloadInitialDataAndShowAdmins();
+        }
+      });
+    }
+
+    function confirmAndRun({ message, method, args, onSuccess }) {
+      if (!window.confirm(message)) {
         return;
       }
 
-      runServer(
-        "revokeAdminRole",
-        [idJudoka],
-        response => {
-          showSuccess(response.message);
-          reloadInitialDataAndShowAdmins();
-        },
-        showError
-      );
+      runServer(method, args, onSuccess, showError);
     }
 
     function reloadInitialData(openCompetitionId) {
+      reloadInitialDataThen(() => {
+        if (openCompetitionId) {
+          openCompetition(openCompetitionId, true);
+        } else {
+          showHome();
+        }
+      });
+    }
+
+    function reloadInitialDataThen(afterReload) {
       runServer(
         "getInitialData",
         [],
@@ -1659,49 +1683,18 @@
           }
 
           applyInitialData(data);
-
-          if (openCompetitionId) {
-            openCompetition(openCompetitionId, true);
-          } else {
-            showHome();
-          }
+          afterReload();
         },
         showError
       );
     }
 
     function reloadInitialDataAndShowChildren() {
-      runServer(
-        "getInitialData",
-        [],
-        data => {
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
-          applyInitialData(data);
-          showChildrenManagement(true);
-        },
-        showError
-      );
+      reloadInitialDataThen(() => showChildrenManagement(true));
     }
 
     function reloadInitialDataAndShowAdmins() {
-      runServer(
-        "getInitialData",
-        [],
-        data => {
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
-          applyInitialData(data);
-          showAdminsManagement(true);
-        },
-        showError
-      );
+      reloadInitialDataThen(() => showAdminsManagement(true));
     }
 
     function showHome() {
@@ -1715,11 +1708,11 @@
     }
 
     function showView(id) {
-      ["loginView", "homeView", "judokaView", "adminsView", "childrenView", "competitionView", "competitionFormView", "competitionFinalizationView", "combatFormView"].forEach(viewId => {
-        document.getElementById(viewId).classList.add("hidden");
+      viewIds.forEach(viewId => {
+        $(viewId).classList.add("hidden");
       });
 
-      document.getElementById(id).classList.remove("hidden");
+      $(id).classList.remove("hidden");
     }
 
     function formatDate(value) {
@@ -1797,7 +1790,7 @@
 
     function showToast(type, message, duration) {
       const toastId = `toast-${++toastSequence}`;
-      const toastLayer = document.getElementById("toastLayer");
+      const toastLayer = $("toastLayer");
       const toneClass = type === "success" ? "success" : "error";
       const role = type === "success" ? "status" : "alert";
       const icon = type === "success"
@@ -1837,7 +1830,7 @@
     function clearToasts() {
       activeToastTimers.forEach((timer) => clearTimeout(timer));
       activeToastTimers.clear();
-      document.getElementById("toastLayer").innerHTML = "";
+      $("toastLayer").innerHTML = "";
     }
 
     function escapeHtml(value) {
