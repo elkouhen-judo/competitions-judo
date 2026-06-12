@@ -47,7 +47,7 @@ This specification does not redefine product behavior already described in `SPEC
 
 - **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell.
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
-- **ARC-003**: `supabase/migrations/*` shall define and evolve database schema and database logic.
+- **ARC-003**: `supabase/migrations/*` shall contain one canonical SQL schema file for a fresh deployment.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
 - **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `core/domain/*`, application orchestration in `core/services/*`, and persistence adapters in `core/repositories/*`.
 - **ARC-006**: Domain objects shall not expose Supabase record serialization methods; repositories shall translate domain objects to persistence records.
@@ -81,6 +81,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
+- **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 
 ### 3.4 Authentication and authorization
 
