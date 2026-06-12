@@ -909,7 +909,6 @@
         document.getElementById("competition_date").value = toInputDate(c.competitionDate);
         document.getElementById("competition_categorie_age").value = c.ageCategory || "";
         document.getElementById("competition_categorie_poids").value = c.weightCategory || "";
-        document.getElementById("competition_classement").value = c.seasonResult || "";
       } else {
         previousView = "homeView";
         document.getElementById("competitionFormTitle").innerText = "Ajouter une compétition";
@@ -919,7 +918,6 @@
         document.getElementById("competition_date").value = getCurrentLocalDate();
         document.getElementById("competition_categorie_age").value = "";
         document.getElementById("competition_categorie_poids").value = "";
-        document.getElementById("competition_classement").value = "";
       }
 
       showView("competitionFormView");
@@ -941,8 +939,7 @@
         name: document.getElementById("competition_nom").value,
         competitionDate: document.getElementById("competition_date").value,
         ageCategory: document.getElementById("competition_categorie_age").value,
-        weightCategory: document.getElementById("competition_categorie_poids").value,
-        seasonResult: document.getElementById("competition_classement").value
+        weightCategory: document.getElementById("competition_categorie_poids").value
       };
 
       if (isAdmin || isParent) {
@@ -959,6 +956,38 @@
         response => {
           showSuccess(response.message);
           reloadInitialData(response.competitionId);
+        },
+        showError
+      );
+    }
+
+    function showCompetitionFinalizationForm() {
+      clearMessage();
+      if (!currentCompetition) {
+        showError({ message: "Compétition introuvable." });
+        return;
+      }
+
+      document.getElementById("finalization_competition_id").value = currentCompetition.competitionId || "";
+      document.getElementById("competitionFinalizationSubtitle").innerText = currentCompetition.name || "";
+      document.getElementById("finalization_classement").value = currentCompetition.seasonResult || "";
+      showView("competitionFinalizationView");
+    }
+
+    function cancelCompetitionFinalizationForm() {
+      showView("competitionView");
+    }
+
+    function finalizeCompetition() {
+      const competitionId = document.getElementById("finalization_competition_id").value;
+      const seasonResult = document.getElementById("finalization_classement").value;
+
+      runServer(
+        "finalizeCompetition",
+        [competitionId, seasonResult],
+        response => {
+          showSuccess(response.message);
+          openCompetition(response.competitionId || competitionId, true);
         },
         showError
       );
@@ -1598,7 +1627,7 @@
     }
 
     function showView(id) {
-      ["loginView", "homeView", "judokaView", "adminsView", "childrenView", "competitionView", "competitionFormView", "combatFormView"].forEach(viewId => {
+      ["loginView", "homeView", "judokaView", "adminsView", "childrenView", "competitionView", "competitionFormView", "competitionFinalizationView", "combatFormView"].forEach(viewId => {
         document.getElementById(viewId).classList.add("hidden");
       });
 
