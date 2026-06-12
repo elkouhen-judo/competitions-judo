@@ -28,7 +28,6 @@ const seasonStatisticsDomain = fs.readFileSync(path.join(root, "core", "domain",
 const judokaDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "judoka.js"), "utf8");
 const emailDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "email.js"), "utf8");
 const judokasRepository = fs.readFileSync(path.join(root, "core", "repositories", "judokas.repository.js"), "utf8");
-const invitationsRepository = fs.readFileSync(path.join(root, "core", "repositories", "invitations.repository.js"), "utf8");
 const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabase-client.js"), "utf8");
 const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
 const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
