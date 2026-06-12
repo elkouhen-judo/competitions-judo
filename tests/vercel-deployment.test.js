@@ -147,6 +147,13 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /return records\.map\(toCompetitionReadModel\);/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
+  assert.match(competitionsService, /async function finalizeCompetition\(email,\s*idCompetition,\s*seasonResult\)/);
+  assert.match(competitionsService, /await competitionsRepository\.updateSeasonResult\(idCompetition,\s*String\(seasonResult \|\| ""\)\.trim\(\)\);/);
+  assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
+  assert.match(uiBundle, /id="finalizeCompetitionButton" class="button-secondary" onclick="showCompetitionFinalizationForm\(\)"/);
+  assert.match(uiBundle, /function finalizeCompetition\(\)/);
+  assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*seasonResult\s*\]/);
+  assert.doesNotMatch(uiBundle, /id="competition_classement"/);
   assert.match(competitionDomain, /function createCompetitionDraft\(competition = \{\}\)/);
   assert.match(competitionDomain, /function cleanCompetitionText\(value\)/);
   assert.match(competitionDomain, /function createCompetitionDate\(value\)/);

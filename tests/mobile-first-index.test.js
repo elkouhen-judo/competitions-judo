@@ -47,6 +47,7 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
   assert.match(bundle, /id="competitionAdminActions" class="competition-management-actions hidden"/);
   assert.match(bundle, /id="editCompetitionButton"/);
+  assert.match(bundle, /id="finalizeCompetitionButton"/);
   assert.match(bundle, /id="deleteCompetitionButton"/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
@@ -88,7 +89,9 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaSeasonWins"/);
   assert.match(bundle, /id="judokaSeasonLosses"/);
-  assert.match(bundle, /id="competition_classement"/);
+  assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
+  assert.match(bundle, /id="finalization_classement"/);
+  assert.doesNotMatch(bundle, /id="competition_classement"/);
 });
 
 test("home action buttons share one stable height", () => {

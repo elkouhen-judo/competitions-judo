@@ -86,7 +86,6 @@ module.exports = function createCompetitionsService(deps) {
     const managedJudokaScope = userContext.managedJudokaScope;
     const domainCompetitionInput = toDomainCompetition(competition);
     const ownerJudokaId = resolveCompetitionOwnerId(domainUser, domainCompetitionInput, managedJudokaScope);
-    const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
 
     const competitionId = domainCompetitionInput.competitionId;
 
@@ -100,6 +99,8 @@ module.exports = function createCompetitionsService(deps) {
         "Modification de cette compétition non autorisée."
       );
 
+      domainCompetitionInput.seasonResult = toDomainCompetition(existingCompetition).seasonResult;
+      const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
       await competitionsRepository.update(competitionId, competitionDraft);
       return {
         success: true,
@@ -109,12 +110,38 @@ module.exports = function createCompetitionsService(deps) {
     }
 
     const idCompetition = buildCompetitionId();
+    const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
     await competitionsRepository.insert(competitionDraft, idCompetition);
 
     return {
       success: true,
       competitionId: idCompetition,
       message: "Compétition créée."
+    };
+  }
+
+  async function finalizeCompetition(email, idCompetition, seasonResult) {
+    const userContext = await userContextService.getCurrentUserContext(email);
+    const user = userContext.user;
+    const domainUser = toDomainJudoka(user);
+    const managedJudokaScope = userContext.managedJudokaScope;
+
+    if (!idCompetition) throw new Error("Compétition obligatoire.");
+
+    const competition = await competitionsRepository.getById(idCompetition);
+    if (!competition) throw new Error("Compétition introuvable.");
+    assertCanManageCompetition(
+      domainUser,
+      toDomainCompetition(competition),
+      managedJudokaScope,
+      "Finalisation de cette compétition non autorisée."
+    );
+
+    await competitionsRepository.updateSeasonResult(idCompetition, String(seasonResult || "").trim());
+    return {
+      success: true,
+      competitionId: idCompetition,
+      message: "Classement enregistré."
     };
   }
 
@@ -143,6 +170,7 @@ module.exports = function createCompetitionsService(deps) {
     getCompetitionsForUser,
     methods: {
       deleteCompetition,
+      finalizeCompetition,
       getCompetitionDetail,
       saveCompetition
     }
