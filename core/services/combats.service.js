@@ -1,4 +1,4 @@
-const { toDomainCombat, toDomainCompetition, toDomainJudoka } = require("./domain-adapters");
+const { toCanonicalCombat, toCanonicalCompetition, toCanonicalJudoka } = require("./domain-adapters");
 
 module.exports = function createCombatsService(deps) {
   const {
@@ -14,9 +14,9 @@ module.exports = function createCombatsService(deps) {
   async function ajouterCombat(email, combat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
-    const domainUser = toDomainJudoka(user);
+    const domainUser = toCanonicalJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope;
-    const domainCombat = toDomainCombat(combat);
+    const domainCombat = toCanonicalCombat(combat);
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
 
@@ -24,7 +24,7 @@ module.exports = function createCombatsService(deps) {
 
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
-    const competition = createPersistedCompetition(toDomainCompetition(competitionRecord));
+    const competition = createPersistedCompetition(toCanonicalCompetition(competitionRecord));
     const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.insert(combatDraft, buildCombatId());
@@ -35,9 +35,9 @@ module.exports = function createCombatsService(deps) {
   async function updateCombat(email, combat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
-    const domainUser = toDomainJudoka(user);
+    const domainUser = toCanonicalJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope;
-    const domainCombat = toDomainCombat(combat);
+    const domainCombat = toCanonicalCombat(combat);
     const combatId = domainCombat.combatId;
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
@@ -45,7 +45,7 @@ module.exports = function createCombatsService(deps) {
     if (!existingCombat) throw new Error("Combat introuvable.");
     assertCanManageCombatFor(
       domainUser,
-      toDomainCombat(existingCombat).judokaId,
+      toCanonicalCombat(existingCombat).judokaId,
       managedJudokaScope,
       "Modification de ce combat non autorisée."
     );
@@ -54,7 +54,7 @@ module.exports = function createCombatsService(deps) {
     createCombatUpdate(domainCombat);
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
-    const competition = createPersistedCompetition(toDomainCompetition(competitionRecord));
+    const competition = createPersistedCompetition(toCanonicalCompetition(competitionRecord));
     const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.update(combatId, combatDraft);
@@ -65,7 +65,7 @@ module.exports = function createCombatsService(deps) {
   async function deleteCombat(email, idCombat) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
-    const domainUser = toDomainJudoka(user);
+    const domainUser = toCanonicalJudoka(user);
     const managedJudokaScope = userContext.managedJudokaScope;
 
     if (!idCombat) throw new Error("Combat obligatoire.");
@@ -74,7 +74,7 @@ module.exports = function createCombatsService(deps) {
     if (!combat) throw new Error("Combat introuvable.");
     assertCanManageCombatFor(
       domainUser,
-      toDomainCombat(combat).judokaId,
+      toCanonicalCombat(combat).judokaId,
       managedJudokaScope,
       "Suppression de ce combat non autorisée."
     );

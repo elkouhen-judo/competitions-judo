@@ -33,10 +33,12 @@ const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabas
 const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
 const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
-const profileRegistrationMigration = fs.readFileSync(
-  path.join(root, "supabase", "migrations", "20260610000006_transactional_profile_registration.sql"),
-  "utf8"
-);
+const migrationFiles = fs.readdirSync(path.join(root, "supabase", "migrations"))
+  .filter(file => file.endsWith(".sql"))
+  .sort();
+const supabaseSchema = migrationFiles
+  .map(file => fs.readFileSync(path.join(root, "supabase", "migrations", file), "utf8"))
+  .join("\n");
 const uiBundle = `${html}\n${css}\n${client}`;
 
 test("vercel config routes the app shell and rpc endpoint", () => {
@@ -110,8 +112,10 @@ test("vercel login creates only the initial judoka profile", () => {
   assert.match(registrationService, /p_type: invitation\.invited_profile_type \|\| "JUDOKA"/);
   assert.match(registrationService, /p_children: \[\]/);
   assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
-  assert.match(profileRegistrationMigration, /alter column email drop not null/i);
-  assert.match(profileRegistrationMigration, /create or replace function public\.register_profile/i);
+  assert.equal(migrationFiles.length, 1);
+  assert.match(supabaseSchema, /email text unique/i);
+  assert.match(supabaseSchema, /create or replace function public\.register_profile/i);
+  assert.match(supabaseSchema, /'mehdi\.elkouhen@gmail\.com'[\s\S]*'Mehdi'[\s\S]*'EL KOUHEN'[\s\S]*'ADMIN'/i);
 });
 
 test("successful initial load leaves the login view", () => {
@@ -137,13 +141,24 @@ test("judoka home keeps competition creation available", () => {
 });
 
 test("competition persistence keeps categories and omits removed place and actual weight fields", () => {
-  assert.match(competitionsService, /const domainCompetitionInput = toDomainCompetition\(competition\);/);
+  assert.match(competitionsService, /const domainCompetitionInput = toCanonicalCompetition\(competition\);/);
   assert.match(competitionsService, /const competitionDraft = createCompetition\(domainCompetitionInput,\s*ownerJudokaId\);/);
   assert.match(competitionsService, /const competitionId = domainCompetitionInput\.competitionId;/);
   assert.match(competitionsService, /return records\.map\(toCompetitionReadModel\);/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
-  assert.match(competitionDomain, /function createCompetitionDraft\(competition = \{\}\)/);
+  assert.match(competitionsService, /async function finalizeCompetition\(email,\s*idCompetition,\s*result\)/);
+  assert.match(competitionsService, /const finalization = createPersistedCompetition\(toCanonicalCompetition\(competition\)\)\.finalize\(result\);/);
+  assert.match(competitionsService, /await competitionsRepository\.updateResult\(idCompetition,\s*finalization\);/);
+  assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
+  assert.match(uiBundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary hidden" onclick="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/);
+  assert.match(uiBundle, /function finalizeCompetition\(\)/);
+  assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
+  assert.doesNotMatch(uiBundle, /id="competition_classement"/);
+  assert.match(uiBundle, /id="competition_result"/);
+  assert.match(competitionDomain, /function createCompetitionDetailsDraft\(competition = \{\}\)/);
+  assert.match(competitionDomain, /function createCompetitionFinalResult\(value\)/);
+  assert.match(competitionDomain, /finalize\(finalResult\) \{/);
   assert.match(competitionDomain, /function cleanCompetitionText\(value\)/);
   assert.match(competitionDomain, /function createCompetitionDate\(value\)/);
   assert.match(competitionDomain, /ageCategory: cleanCompetitionText\(competition\.ageCategory\)/);
@@ -167,7 +182,7 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /async function getChildrenManagement\(email\)/);
   assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
   assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
-  assert.match(childrenService, /const childInput = toDomainManagedChild\(child\);/);
+  assert.match(childrenService, /const childInput = toCanonicalManagedChild\(child\);/);
   assert.match(childrenService, /const childJudokaId = childInput\.judokaId;/);
   assert.match(childrenService, /children: \(await userContextService\.getParentManagedJudokas\(user\.id_judoka\)\)\.map\(toJudokaReadModel\)/);
   assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(updatedChild\.accountEmail,\s*childJudokaId\)/);
@@ -204,8 +219,8 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
   assert.match(adminService, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
   assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
-  assert.match(adminService, /createJudoka\(toDomainJudoka\(target\)\)\.grantAdminRole\(\)/);
-  assert.match(adminService, /createJudoka\(toDomainJudoka\(target\)\)\.revokeAdminRole\(user\.id_judoka\)/);
+  assert.match(adminService, /createJudoka\(toCanonicalJudoka\(target\)\)\.grantAdminRole\(\)/);
+  assert.match(adminService, /createJudoka\(toCanonicalJudoka\(target\)\)\.revokeAdminRole\(user\.id_judoka\)/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("ADMIN"\) \};/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("NORMAL"\) \};/);
   assert.match(adminService, /async function revokeAdminRole\(email,\s*idJudoka\)/);
@@ -233,14 +248,14 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(userContextService, /const managedJudokaIds = judokas\.map\(j => String\(j\.id_judoka\)\);/);
   assert.match(userContextService, /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/);
   assert.match(userContextService, /return \{ user, judokas, managedJudokaScope \};/);
-  assert.match(userContextService, /assertCanAccessJudokaProfile\(toDomainJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/);
+  assert.match(userContextService, /assertCanAccessJudokaProfile\(toCanonicalJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/);
   assert.match(permissions, /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaScope\)/);
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
   assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
   assert.match(profileService, /const snapshot = buildJudokaProfileSnapshot\(\{/);
-  assert.match(profileService, /competitions: competitions\.map\(toDomainCompetition\),/);
-  assert.match(profileService, /combats: combats\.map\(toDomainCombat\),/);
+  assert.match(profileService, /competitions: competitions\.map\(toCanonicalCompetition\),/);
+  assert.match(profileService, /combats: combats\.map\(toCanonicalCombat\),/);
   assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "V"\)\.length;/);
   assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => String\(c\.result \|\| ""\)\.toUpperCase\(\) === "D"\)\.length;/);
   assert.match(seasonStatisticsDomain, /const sortedCompetitions = \[\.\.\.competitions\]\.sort/);
@@ -273,6 +288,8 @@ test("combat mutations reload competition details after save", () => {
 
 test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
+  assert.match(css, /\.user-pill\s*\{[\s\S]*?padding:\s*0 10px;[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;[\s\S]*?line-height:\s*1;[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/);
+  assert.match(css, /\.logout-button\s*\{[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;/);
   assert.match(uiBundle, /id="userInfo"/);
   assert.match(uiBundle, /id="logoutButton"/);
   assert.match(uiBundle, /aria-label="Déconnexion"/);
@@ -304,7 +321,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(textHelpers, /function normalizeLastName\(value\)/);
   assert.match(adminService, /async function getAccessInvitation\(email\)/);
   assert.match(adminService, /async function getAccessInvitations\(\)/);
-  assert.match(coreIndex, /const domainUser = toDomainJudoka\(user\);/);
+  assert.match(coreIndex, /const domainUser = toCanonicalJudoka\(user\);/);
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
   assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);

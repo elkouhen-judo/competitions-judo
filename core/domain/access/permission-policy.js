@@ -31,16 +31,49 @@ function isInManagedScope(managedJudokaScope, idJudoka) {
   return Boolean(managedJudokaScope && managedJudokaScope.includes(idJudoka));
 }
 
+function createAccessScope(kind, options = {}) {
+  const judokaId = options.judokaId || "";
+  const managedJudokaScope = options.managedJudokaScope;
+
+  return {
+    kind,
+    judokaId,
+    managedJudokaScope,
+    isAll() {
+      return kind === "ALL";
+    },
+    isManaged() {
+      return kind === "MANAGED";
+    },
+    isOwn() {
+      return kind === "OWN";
+    },
+    canManageJudoka(targetJudokaId) {
+      if (this.isAll()) return true;
+      if (this.isManaged()) return isInManagedScope(managedJudokaScope, targetJudokaId);
+      return String(judokaId) === String(targetJudokaId);
+    },
+    canManageCompetition(competition) {
+      return this.canManageJudoka(getCompetitionOwnerJudokaId(competition));
+    },
+    visibleJudokaIds() {
+      if (this.isAll()) return null;
+      if (this.isManaged()) return managedJudokaScope ? managedJudokaScope.toIds() : [];
+      return [judokaId];
+    }
+  };
+}
+
 function resolveJudokaDataAccess(user, managedJudokaScope) {
   if (isAdmin(user)) {
-    return { kind: "ALL" };
+    return createAccessScope("ALL");
   }
 
   if (isParent(user)) {
-    return { kind: "MANAGED", managedJudokaScope };
+    return createAccessScope("MANAGED", { managedJudokaScope });
   }
 
-  return { kind: "OWN", judokaId: getUserJudokaId(user) };
+  return createAccessScope("OWN", { judokaId: getUserJudokaId(user) });
 }
 
 function canManageCombatFor(user, idJudoka, managedJudokaScope) {
@@ -114,6 +147,7 @@ module.exports = {
   canManageChildrenProfile,
   canManageCombatFor,
   canManageCompetition,
+  createAccessScope,
   isAdmin,
   isParent,
   resolveJudokaDataAccess,
