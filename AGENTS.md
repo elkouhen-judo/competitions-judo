@@ -81,10 +81,12 @@ Ne conserve pas l'historique des anciennes demandes dans les specs. Les détails
 Pour un changement qui impacte le code applicatif :
 
 - exécuter les vérifications pertinentes ;
-- committer avec un message explicite ;
-- pousser la branche si nécessaire ;
-- déployer l'application ;
-- afficher l'URL déployée.
+- créer une branche dédiée depuis la branche de base ;
+- committer avec un message explicite sur cette branche, jamais directement sur la branche de base ;
+- pousser la branche ;
+- ouvrir une pull request avec un résumé clair et les tests exécutés ;
+- déployer l'application seulement si demandé ou si le flux de PR du projet le prévoit ;
+- afficher l'URL de la PR et l'URL déployée si applicable.
 
 Si le déploiement échoue, indiquer :
 
@@ -98,6 +100,6 @@ Inclure seulement :
 
 - résumé des changements ;
 - tests exécutés ;
-- commit créé ;
+- branche et pull request créées ;
 - URL déployée si applicable ;
 - limites restantes.
