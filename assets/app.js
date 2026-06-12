@@ -65,6 +65,7 @@
     reloadInitialDataAndShowChildren,
     reloadInitialDataThen,
     resetApplicationState,
+    runtimeConfig,
     runServer,
     screens,
     state,
