@@ -51,6 +51,8 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="deleteCompetitionButton"/);
   assert.match(bundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*Ajouter un combat/);
   assert.doesNotMatch(bundle, /id="competitionAdminActions" class="competition-management-actions hidden"[\s\S]*id="finalizeCompetitionButton"[\s\S]*id="deleteCompetitionButton"/);
+  assert.match(bundle, /const hasSeasonResult = Boolean\(String\(currentCompetition\.seasonResult \|\| ""\)\.trim\(\)\);/);
+  assert.match(bundle, /finalizeCompetitionButton"\)\.classList\.toggle\("hidden", !canEditCurrentCompetition \|\| hasSeasonResult\);/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
