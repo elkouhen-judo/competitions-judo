@@ -81,7 +81,7 @@ This specification does not define:
 - **COMP-003**: An `ADMIN` can create, update, and delete any competition.
 - **COMP-004**: Competition lists shall be sorted by date descending.
 - **COMP-005**: A competition must include a name and a date.
-- **COMP-006**: A competition shall expose an age category and a weight category.
+- **COMP-006**: A competition shall expose an age category chosen from the fixed list `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, and a weight category.
 - **COMP-007**: A competition shall not use a location field.
 - **COMP-008**: A competition shall not use an actual weigh-in field.
 - **COMP-009**: A competition may store a final ranking or result used for season statistics.

@@ -173,7 +173,8 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionDomain, /finalize\(finalResult\) \{/);
   assert.match(competitionDomain, /function cleanCompetitionText\(value\)/);
   assert.match(competitionDomain, /function createCompetitionDate\(value\)/);
-  assert.match(competitionDomain, /ageCategory: cleanCompetitionText\(competition\.ageCategory\)/);
+  assert.match(competitionDomain, /function createCompetitionAgeCategory\(value\)/);
+  assert.match(competitionDomain, /ageCategory: createCompetitionAgeCategory\(competition\.ageCategory\)/);
   assert.match(competitionDomain, /weightCategory: cleanCompetitionText\(competition\.weightCategory\)/);
   assert.doesNotMatch(competitionDomain, /nom:\s*name/);
   assert.doesNotMatch(competitionDomain, /categorie_age:/);

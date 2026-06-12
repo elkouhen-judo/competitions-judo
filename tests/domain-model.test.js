@@ -203,6 +203,12 @@ test("competition domain builds a normalized entity", () => {
   assert.equal(defaultCompetition.weightCategory, "");
   assert.equal(defaultCompetition.result, "");
 
+  const veteranCompetition = createCompetition(
+    { name: "Tournoi veteran", competitionDate: "2026-06-11", ageCategory: " veteran " },
+    "JUDO123"
+  );
+  assert.equal(veteranCompetition.ageCategory, "Vétéran");
+
   assert.throws(() => createCompetition({ name: "", competitionDate: "" }, "JUDO123"), /Nom et date obligatoires/);
   assert.throws(
     () => createCompetition({ name: "   ", competitionDate: "2026-06-11" }, "JUDO123"),
@@ -211,6 +217,10 @@ test("competition domain builds a normalized entity", () => {
   assert.throws(
     () => createCompetition({ name: "Tournoi", competitionDate: "2026-02-31" }, "JUDO123"),
     /Date de compétition invalide/
+  );
+  assert.throws(
+    () => createCompetition({ name: "Tournoi", competitionDate: "2026-06-11", ageCategory: "Espoir" }, "JUDO123"),
+    /Catégorie d'âge invalide/
   );
   assert.equal(createCompetitionRanking(" Non classé "), "Non classé");
 });
