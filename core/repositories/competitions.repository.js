@@ -64,7 +64,6 @@ module.exports = function createCompetitionsRepository(deps) {
   async function updateResult(idCompetition, finalization) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), {
       classement: finalization.result || ""
-
     });
   }
 
