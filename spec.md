@@ -138,6 +138,7 @@ This specification does not define:
 - **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data.
 - **AUTH-008**: A user without an existing judoka profile or an active invitation shall not be allowed to create an account in the application.
 - **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
+- **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and should display only a compact subset by default before progressive reveal.
 - **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
 - **AUTH-011**: The initial profile created after invitation shall use the invited profile type.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
