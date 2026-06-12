@@ -78,7 +78,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **DAT-011**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
 - **DAT-012**: `judokas.role` shall store the access level among `NORMAL` and `ADMIN`.
 - **DAT-013**: If admin rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
-- **DAT-014**: Result values in `combats` shall remain constrained to `V`, `D`, or `E`.
+- **DAT-014**: Result values in `combats` shall use the canonical labels `Victoire`, `Défaite`, `Egalité`, or `Disqualification`, while legacy values `V`, `D`, or `E` may remain readable for backward compatibility.
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
@@ -101,7 +101,7 @@ This specification does not redefine product behavior already described in `SPEC
 - **AUTH-013**: Backend profile registration shall create the initial profile type from `access_invitations.invited_profile_type`.
 - **AUTH-014**: Backend profile registration shall always create the initial access role as `NORMAL`.
 - **AUTH-015**: Child management permissions shall be restricted to users whose immutable `profile_type` is `PARENT`.
-- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither already linked to `judokas.email` nor present in `access_invitations`.
+- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is not present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
 - **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
 - **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
 

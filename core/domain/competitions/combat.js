@@ -1,4 +1,5 @@
 const { createCombatResult } = require("./combat-result");
+const { createCombatDecisionType } = require("./combat-decision-type");
 const { createCombatId, createCompetitionId, createJudokaId } = require("../shared/identity");
 
 function createCombatDraft(combat = {}) {
@@ -7,7 +8,7 @@ function createCombatDraft(combat = {}) {
   return {
     opponent: combat.opponent || "",
     result,
-    victoryType: combat.victoryType || "",
+    victoryType: createCombatDecisionType(combat.victoryType, result),
     notes: combat.notes || ""
   };
 }
