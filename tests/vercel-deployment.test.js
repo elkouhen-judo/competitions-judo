@@ -132,9 +132,9 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /addCompetitionButton\.disabled = actionDisabled;/);
-  assert.match(uiBundle, /profileButton\.disabled = actionDisabled;/);
-  assert.match(uiBundle, /document\.getElementById\("homeAdminActions"\)\.classList\.remove\("hidden"\);/);
+  assert.match(uiBundle, /\$\("addCompetitionButton"\)\.disabled = actionDisabled;/);
+  assert.match(uiBundle, /\$\("openHomeJudokaProfileButton"\)\.disabled = actionDisabled;/);
+  assert.match(uiBundle, /setHidden\("homeAdminActions", false\);/);
   assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">/);
   assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });
