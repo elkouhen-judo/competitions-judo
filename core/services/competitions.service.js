@@ -124,7 +124,7 @@ module.exports = function createCompetitionsService(deps) {
     };
   }
 
-  async function finalizeCompetition(email, idCompetition, seasonResult) {
+  async function finalizeCompetition(email, idCompetition, result) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const user = userContext.user;
     const domainUser = toCanonicalJudoka(user);
@@ -141,8 +141,8 @@ module.exports = function createCompetitionsService(deps) {
       "Finalisation de cette compétition non autorisée."
     );
 
-    const finalization = createPersistedCompetition(toCanonicalCompetition(competition)).finalize(seasonResult);
-    await competitionsRepository.updateSeasonResult(idCompetition, finalization);
+    const finalization = createPersistedCompetition(toCanonicalCompetition(competition)).finalize(result);
+    await competitionsRepository.updateResult(idCompetition, finalization);
     return {
       success: true,
       competitionId: idCompetition,

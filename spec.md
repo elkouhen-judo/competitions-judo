@@ -89,8 +89,8 @@ This specification does not define:
 - **COMP-011**: For `PARENT`, saving a competition for a judoka outside the managed scope must be rejected.
 - **COMP-012**: Deleting a competition shall remove all linked combats from the user's perspective.
 - **COMP-013**: When opening the competition creation form, the date field shall be initialized to the current day by default.
-- **COMP-014**: Competition creation and main editing shall not ask for the final ranking.
-- **COMP-015**: Final ranking shall be entered from a dedicated competition finalization action.
+- **COMP-014**: Competition creation shall not ask for the final ranking.
+- **COMP-015**: Final ranking shall be entered from a dedicated competition finalization action while empty, then can be edited from the competition edit form.
 - **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé`.
 - **COMP-017**: Competition finalization action shall be shown only when the competition has no final ranking yet.
 
@@ -184,8 +184,8 @@ This specification does not define:
 - **AC-021**: Given an admin grants or revokes admin rights, when the request succeeds, then the user's `JUDOKA` or `PARENT` profile type remains unchanged.
 - **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
 - **AC-022**: Given a user opens the competition creation form, when the form is displayed, then the competition date is prefilled with the current day.
-- **AC-023**: Given a user creates or edits a competition, when the form is displayed, then no ranking field is shown.
-- **AC-024**: Given a user can edit a competition, when they finalize it, then only the ranking/result is entered and saved.
+- **AC-023**: Given a user creates a competition, when the form is displayed, then no ranking field is shown.
+- **AC-024**: Given a user edits a competition, when the form is displayed, then the ranking/result can be modified with the other competition details.
 
 ## 5. Examples & Edge Cases
 

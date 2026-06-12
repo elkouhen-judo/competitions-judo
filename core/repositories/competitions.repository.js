@@ -19,7 +19,7 @@ module.exports = function createCompetitionsRepository(deps) {
       date: draft.competitionDate,
       categorie_age: draft.ageCategory,
       categorie_poids: draft.weightCategory,
-      classement: competition.seasonResult || ""
+      classement: competition.result || ""
     };
   }
 
@@ -61,9 +61,9 @@ module.exports = function createCompetitionsRepository(deps) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), toCompetitionRecord(competition));
   }
 
-  async function updateSeasonResult(idCompetition, finalization) {
+  async function updateResult(idCompetition, finalization) {
     return supabasePatch("competitions", eqFilter("id_competition", idCompetition), {
-      classement: finalization.seasonResult || ""
+      classement: finalization.result || ""
     });
   }
 
@@ -80,6 +80,6 @@ module.exports = function createCompetitionsRepository(deps) {
     listByJudokaIds,
     remove,
     update,
-    updateSeasonResult
+    updateResult
   };
 };
