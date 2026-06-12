@@ -23,9 +23,9 @@ function buildJudokaProfileSnapshot({
   const seasonLosses = seasonCombats.filter(c => String(c.result || "").toUpperCase() === "D").length;
 
   const bestSeasonResults = seasonCompetitions
-    .filter(c => c.seasonResult && Number.isFinite(getCompetitionResultRank(c.seasonResult)))
+    .filter(c => c.result && Number.isFinite(getCompetitionResultRank(c.result)))
     .sort((a, b) => {
-      const rankDiff = getCompetitionResultRank(a.seasonResult) - getCompetitionResultRank(b.seasonResult);
+      const rankDiff = getCompetitionResultRank(a.result) - getCompetitionResultRank(b.result);
       if (rankDiff !== 0) return rankDiff;
       return String(b.competitionDate || "").localeCompare(String(a.competitionDate || ""));
     })
@@ -34,7 +34,7 @@ function buildJudokaProfileSnapshot({
       competitionId: c.competitionId,
       name: c.name,
       competitionDate: c.competitionDate,
-      seasonResult: c.seasonResult
+      result: c.result
     }));
 
   return {

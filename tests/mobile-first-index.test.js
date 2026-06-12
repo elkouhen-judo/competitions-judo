@@ -47,7 +47,12 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
   assert.match(bundle, /id="competitionAdminActions" class="competition-management-actions hidden"/);
   assert.match(bundle, /id="editCompetitionButton"/);
+  assert.match(bundle, /id="finalizeCompetitionButton"/);
   assert.match(bundle, /id="deleteCompetitionButton"/);
+  assert.match(bundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*Ajouter un combat/);
+  assert.doesNotMatch(bundle, /id="competitionAdminActions" class="competition-management-actions hidden"[\s\S]*id="finalizeCompetitionButton"[\s\S]*id="deleteCompetitionButton"/);
+  assert.match(bundle, /const hasResult = Boolean\(String\(currentCompetition\.result \|\| ""\)\.trim\(\)\);/);
+  assert.match(bundle, /finalizeCompetitionButton"\)\.classList\.toggle\("hidden", !canEditCurrentCompetition \|\| hasResult\);/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
@@ -88,7 +93,9 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaSeasonWins"/);
   assert.match(bundle, /id="judokaSeasonLosses"/);
-  assert.match(bundle, /id="competition_classement"/);
+  assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
+  assert.match(bundle, /id="finalization_classement"/);
+  assert.doesNotMatch(bundle, /id="competition_classement"/);
 });
 
 test("home action buttons share one stable height", () => {
@@ -125,6 +132,10 @@ test("mobile actions stay explicit instead of icon-only", () => {
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(bundle, /id="competition_categorie_age"/);
   assert.match(bundle, /id="competition_categorie_poids"/);
+  assert.match(bundle, /id="competitionResultBlock" class="hidden"/);
+  assert.match(bundle, /id="competition_result"/);
+  assert.match(bundle, /document\.getElementById\("competitionResultBlock"\)\.classList\.remove\("hidden"\);/);
+  assert.match(bundle, /document\.getElementById\("competitionResultBlock"\)\.classList\.add\("hidden"\);/);
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
   assert.match(bundle, /<span id="competitionAgePoids"/);

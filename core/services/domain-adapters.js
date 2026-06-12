@@ -1,4 +1,4 @@
-function toDomainJudoka(user = {}) {
+function toCanonicalJudoka(user = {}) {
   return {
     judokaId: user.judokaId !== undefined ? user.judokaId : user.id_judoka,
     accountEmail: user.accountEmail !== undefined ? user.accountEmail : user.email,
@@ -9,7 +9,7 @@ function toDomainJudoka(user = {}) {
   };
 }
 
-function toDomainCompetition(competition = {}) {
+function toCanonicalCompetition(competition = {}) {
   return {
     competitionId: competition.competitionId !== undefined ? competition.competitionId : competition.id_competition,
     ownerJudokaId: competition.ownerJudokaId !== undefined ? competition.ownerJudokaId : competition.id_judoka,
@@ -17,11 +17,11 @@ function toDomainCompetition(competition = {}) {
     competitionDate: competition.competitionDate !== undefined ? competition.competitionDate : competition.date,
     ageCategory: competition.ageCategory !== undefined ? competition.ageCategory : competition.categorie_age,
     weightCategory: competition.weightCategory !== undefined ? competition.weightCategory : competition.categorie_poids,
-    seasonResult: competition.seasonResult !== undefined ? competition.seasonResult : competition.classement
+    result: competition.result !== undefined ? competition.result : competition.classement
   };
 }
 
-function toDomainCombat(combat = {}) {
+function toCanonicalCombat(combat = {}) {
   return {
     combatId: combat.combatId !== undefined ? combat.combatId : combat.id_combat,
     judokaId: combat.judokaId !== undefined ? combat.judokaId : combat.id_judoka,
@@ -33,7 +33,7 @@ function toDomainCombat(combat = {}) {
   };
 }
 
-function toDomainManagedChild(child = {}) {
+function toCanonicalManagedChild(child = {}) {
   return {
     judokaId: child.judokaId !== undefined ? child.judokaId : child.id_judoka,
     accountEmail: child.accountEmail !== undefined ? child.accountEmail : child.email,
@@ -43,16 +43,16 @@ function toDomainManagedChild(child = {}) {
 }
 
 function toJudokaReadModel(user = {}) {
-  return toDomainJudoka(user);
+  return toCanonicalJudoka(user);
 }
 
 function toCompetitionReadModel(competition = {}) {
-  return toDomainCompetition(competition);
+  return toCanonicalCompetition(competition);
 }
 
 function toCombatReadModel(combat = {}, extra = {}) {
   return {
-    ...toDomainCombat(combat),
+    ...toCanonicalCombat(combat),
     ...extra
   };
 }
@@ -64,7 +64,7 @@ function toCombatReadModelsWithJudokas(combats = [], judokas = [], options = {})
   const judokasById = new Map(judokas.map(judoka => [String(judoka.judokaId), judoka]));
 
   return combats.map(combat => {
-    const domainCombat = toDomainCombat(combat);
+    const domainCombat = toCanonicalCombat(combat);
     const judoka = judokasById.get(String(domainCombat.judokaId));
     return toCombatReadModel(domainCombat, {
       judokaDisplayName: judoka ? formatJudokaDisplayName(judoka) : domainCombat.judokaId
@@ -85,10 +85,14 @@ function toInvitationReadModel(invitation = {}) {
 }
 
 module.exports = {
-  toDomainCombat,
-  toDomainCompetition,
-  toDomainJudoka,
-  toDomainManagedChild,
+  toCanonicalCombat,
+  toCanonicalCompetition,
+  toCanonicalJudoka,
+  toCanonicalManagedChild,
+  toDomainCombat: toCanonicalCombat,
+  toDomainCompetition: toCanonicalCompetition,
+  toDomainJudoka: toCanonicalJudoka,
+  toDomainManagedChild: toCanonicalManagedChild,
   toCombatReadModel,
   toCombatReadModelsWithJudokas,
   toCompetitionReadModel,

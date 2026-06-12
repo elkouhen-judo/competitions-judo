@@ -35,7 +35,7 @@ const {
 } = require("./domain/competitions/competition");
 const { updateCombat } = require("./domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
-const { toDomainJudoka, toJudokaReadModel } = require("./services/domain-adapters");
+const { toCanonicalJudoka, toJudokaReadModel } = require("./services/domain-adapters");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
@@ -82,7 +82,8 @@ const competitionsService = createCompetitionsService({
   resolveJudokaDataAccess: permissions.resolveJudokaDataAccess,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
   buildCompetitionId: ids.buildCompetitionId,
-  createCompetition
+  createCompetition,
+  createPersistedCompetition
 });
 
 const combatsService = createCombatsService({
@@ -141,7 +142,7 @@ async function getInitialData(email) {
 
   const userContext = await userContextService.getCurrentUserContext(email);
   const user = userContext.user;
-  const domainUser = toDomainJudoka(user);
+  const domainUser = toCanonicalJudoka(user);
   const admin = permissions.isAdmin(domainUser);
   const parent = permissions.isParent(domainUser);
 

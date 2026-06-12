@@ -56,7 +56,7 @@ test("repositories map domain objects to supabase records", async () => {
       competitionDate: "2026-06-11",
       ageCategory: "",
       weightCategory: "",
-      seasonResult: ""
+      result: ""
     }
   }, "COMP1");
   await combatsRepository.insert({
