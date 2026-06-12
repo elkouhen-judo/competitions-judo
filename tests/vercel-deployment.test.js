@@ -6,7 +6,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
-const client = ["app-ui.js", "app.js"]
+const client = ["app-ui.js", "app-notifications.js", "app-auth.js", "app.js"]
   .map(file => fs.readFileSync(path.join(root, "assets", file), "utf8"))
   .join("\n");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
@@ -301,8 +301,8 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
   assert.match(uiBundle, /<p class="\$\{toneClass\}"><svg/);
   assert.match(uiBundle, /function clearToasts\(\)/);
-  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
-  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
+  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
+  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
   assert.match(uiBundle, /async function logoutUser\(\)/);
   assert.match(uiBundle, /auth\/v1\/logout/);
   assert.match(uiBundle, /clearVercelSession\(\)/);

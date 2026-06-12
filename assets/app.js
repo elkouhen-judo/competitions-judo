@@ -14,10 +14,7 @@
     let previousView = "homeView";
     let accessInvitationSearch = "";
     let accessInvitationVisibleCount = 8;
-    let toastSequence = 0;
-    const activeToastTimers = new Map();
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-    const sessionStorageKey = "kiroku_supabase_session";
     const defaultAccessInvitationVisibleCount = 8;
     const {
       $,
@@ -45,6 +42,24 @@
       toInputDate,
       viewIds
     } = window.KirokuUI;
+    const notifications = window.createKirokuNotifications({ $, escapeHtml });
+    const {
+      clearMessage,
+      dismissToast,
+      showError,
+      showSuccess
+    } = notifications;
+    const auth = window.createKirokuAuth({
+      runtimeConfig,
+      onInvitationRequired: showInvitationRequired,
+      onError: showError
+    });
+    const {
+      clearVercelSession,
+      getValidVercelSession,
+      logoutSupabaseSession,
+      parseVercelAuthCallback
+    } = auth;
 
     async function runServer(method, args, success, failure) {
       try {
@@ -85,22 +100,6 @@
       }
     }
 
-    function readVercelSession() {
-      try {
-        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
-      } catch (_error) {
-        return null;
-      }
-    }
-
-    function saveVercelSession(session) {
-      localStorage.setItem(sessionStorageKey, JSON.stringify(session));
-    }
-
-    function clearVercelSession() {
-      localStorage.removeItem(sessionStorageKey);
-    }
-
     function resetApplicationState() {
       currentUser = null;
       isAdmin = false;
@@ -122,162 +121,15 @@
 
     async function logoutUser() {
       clearMessage();
-      const session = readVercelSession();
-
-      if (session && session.access_token && runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey) {
-        try {
-          await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/logout`, {
-            method: "POST",
-            headers: {
-              ...getSupabaseAnonymousAuthHeaders(),
-              "Authorization": "Bearer " + session.access_token
-            }
-          });
-        } catch (_error) {
-          // Local logout must still happen if the remote session is already invalid.
-        }
-      }
-
-      clearVercelSession();
+      await logoutSupabaseSession();
       resetApplicationState();
       showVercelLogin();
       showSuccess("Vous êtes déconnecté.");
     }
 
-    function getVercelAuthRedirectUrl() {
-      const baseUrl = runtimeConfig.appUrl || window.location.origin;
-      return new URL(window.location.pathname || "/", baseUrl).toString();
-    }
-
     function startGoogleLogin() {
       clearMessage();
-
-      if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
-        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
-        return;
-      }
-
-      const authorizeUrl = new URL(`${runtimeConfig.supabaseUrl}/auth/v1/authorize`);
-      authorizeUrl.searchParams.set("provider", "google");
-      authorizeUrl.searchParams.set("redirect_to", getVercelAuthRedirectUrl());
-      window.location.href = authorizeUrl.toString();
-    }
-
-    async function parseVercelAuthCallback() {
-      const hashParams = window.location.hash
-        ? new URLSearchParams(window.location.hash.slice(1))
-        : new URLSearchParams();
-      const queryParams = window.location.search
-        ? new URLSearchParams(window.location.search)
-        : new URLSearchParams();
-      const error = hashParams.get("error_description")
-        || hashParams.get("error")
-        || queryParams.get("error_description")
-        || queryParams.get("error");
-      if (error) {
-        const normalizedError = String(error || "").toLowerCase();
-        history.replaceState(null, document.title, window.location.pathname);
-        clearVercelSession();
-        if (normalizedError.includes("invitation") || normalizedError.includes("non autorisé")) {
-          showInvitationRequired();
-          return;
-        }
-        showError({ message: "Connexion Google impossible : " + error });
-        return;
-      }
-
-      const params = hashParams;
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      const expiresIn = Number(params.get("expires_in") || "3600");
-      const authCode = queryParams.get("code");
-
-      if (accessToken) {
-        saveVercelSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || "",
-          expires_at: Math.floor(Date.now() / 1000) + expiresIn
-        });
-        history.replaceState(null, document.title, window.location.pathname);
-      } else if (authCode) {
-        await exchangeVercelAuthCode(authCode);
-        history.replaceState(null, document.title, window.location.pathname);
-      }
-    }
-
-    async function exchangeVercelAuthCode(authCode) {
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({
-          auth_code: authCode,
-          redirect_to: getVercelAuthRedirectUrl()
-        })
-      });
-
-      if (!response.ok) {
-        const authError = await readSupabaseAuthError(response);
-        throw new Error("Connexion Google impossible : " + (authError || "code OAuth invalide."));
-      }
-
-      const session = await response.json();
-      saveVercelSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token || "",
-        expires_at: Math.floor(Date.now() / 1000) + Number(session.expires_in || 3600)
-      });
-    }
-
-    async function getValidVercelSession() {
-      let session = readVercelSession();
-      if (!session) return null;
-
-      const expiresAt = Number(session.expires_at || 0);
-      if (expiresAt && expiresAt > Math.floor(Date.now() / 1000) + 60) {
-        return session;
-      }
-
-      if (!session.refresh_token) {
-        clearVercelSession();
-        return null;
-      }
-
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({ refresh_token: session.refresh_token })
-      });
-
-      if (!response.ok) {
-        clearVercelSession();
-        return null;
-      }
-
-      const refreshed = await response.json();
-      session = {
-        access_token: refreshed.access_token,
-        refresh_token: refreshed.refresh_token || session.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
-      };
-      saveVercelSession(session);
-      return session;
-    }
-
-    function getSupabaseAnonymousAuthHeaders() {
-      return {
-        "apikey": runtimeConfig.supabaseAnonKey,
-        "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
-        "Content-Type": "application/json"
-      };
-    }
-
-    async function readSupabaseAuthError(response) {
-      try {
-        const payload = await response.json();
-        return payload.msg || payload.message || payload.error_description || payload.error || "";
-      } catch (_error) {
-        return response.text();
-      }
+      auth.startGoogleLogin();
     }
 
     function showVercelLogin() {
@@ -1705,66 +1557,6 @@
       });
 
       $(id).classList.remove("hidden");
-    }
-
-    function showSuccess(message) {
-      document.getElementById("message").innerHTML = "";
-      showToast("success", message, 4000);
-    }
-
-    function showError(error) {
-      document.getElementById("message").innerHTML = "";
-      showToast("error", error.message || error, 7000);
-    }
-
-    function clearMessage() {
-      document.getElementById("message").innerHTML = "";
-      clearToasts();
-    }
-
-    function showToast(type, message, duration) {
-      const toastId = `toast-${++toastSequence}`;
-      const toastLayer = $("toastLayer");
-      const toneClass = type === "success" ? "success" : "error";
-      const role = type === "success" ? "status" : "alert";
-      const icon = type === "success"
-        ? `<path d="M20 6L9 17l-5-5"></path>`
-        : `<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>`;
-      const toast = document.createElement("div");
-      toast.className = `toast toast-${type}`;
-      toast.dataset.toastId = toastId;
-      toast.setAttribute("role", role);
-      toast.innerHTML = `<button type="button" class="toast-close" aria-label="Fermer la notification" onclick="dismissToast('${toastId}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><p class="${toneClass}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>${escapeHtml(message)}</p>`;
-      toastLayer.appendChild(toast);
-
-      const timer = setTimeout(() => {
-        dismissToast(toastId);
-      }, duration);
-      activeToastTimers.set(toastId, timer);
-    }
-
-    function dismissToast(toastId) {
-      const toast = document.querySelector(`[data-toast-id="${toastId}"]`);
-      if (!toast) {
-        return;
-      }
-
-      const timer = activeToastTimers.get(toastId);
-      if (timer) {
-        clearTimeout(timer);
-        activeToastTimers.delete(toastId);
-      }
-
-      toast.classList.add("toast-exit");
-      setTimeout(() => {
-        toast.remove();
-      }, 180);
-    }
-
-    function clearToasts() {
-      activeToastTimers.forEach((timer) => clearTimeout(timer));
-      activeToastTimers.clear();
-      $("toastLayer").innerHTML = "";
     }
 
     $("combat_resultat").addEventListener("change", () => {
