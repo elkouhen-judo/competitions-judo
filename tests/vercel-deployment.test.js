@@ -6,7 +6,9 @@ const path = require("node:path");
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
-const client = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
+const client = ["app-ui.js", "app-notifications.js", "app-auth.js", "app.js"]
+  .map(file => fs.readFileSync(path.join(root, "assets", file), "utf8"))
+  .join("\n");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
@@ -132,9 +134,9 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /addCompetitionButton\.disabled = actionDisabled;/);
-  assert.match(uiBundle, /profileButton\.disabled = actionDisabled;/);
-  assert.match(uiBundle, /document\.getElementById\("homeAdminActions"\)\.classList\.remove\("hidden"\);/);
+  assert.match(uiBundle, /\$\("addCompetitionButton"\)\.disabled = actionDisabled;/);
+  assert.match(uiBundle, /\$\("openHomeJudokaProfileButton"\)\.disabled = actionDisabled;/);
+  assert.match(uiBundle, /setHidden\("homeAdminActions", false\);/);
   assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">/);
   assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });
@@ -282,9 +284,9 @@ test("judoka lookup uses an exact normalized email match", () => {
 });
 
 test("combat mutations reload competition details after save", () => {
-  assert.match(uiBundle, /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(currentCompetition\.competitionId,\s*true\);/);
-  assert.match(uiBundle, /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(currentCompetition\.competitionId,\s*true\);/);
-  assert.doesNotMatch(uiBundle, /judoka_nom: currentUser \? getJudokaDisplayName\(currentUser\) : ""/);
+  assert.match(uiBundle, /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/);
+  assert.match(uiBundle, /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/);
+  assert.doesNotMatch(uiBundle, /judoka_nom: state\.currentUser \? getJudokaDisplayName\(state\.currentUser\) : ""/);
 });
 
 test("vercel runtime lets the connected user log out", () => {
@@ -295,12 +297,12 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /id="logoutButton"/);
   assert.match(uiBundle, /aria-label="Déconnexion"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
-  assert.match(uiBundle, /getJudokaDisplayName\(currentUser\)/);
+  assert.match(uiBundle, /getJudokaDisplayName\(state\.currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
   assert.match(uiBundle, /<p class="\$\{toneClass\}"><svg/);
   assert.match(uiBundle, /function clearToasts\(\)/);
-  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
-  assert.match(uiBundle, /document\.getElementById\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
+  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
+  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
   assert.match(uiBundle, /async function logoutUser\(\)/);
   assert.match(uiBundle, /auth\/v1\/logout/);
   assert.match(uiBundle, /clearVercelSession\(\)/);
@@ -324,7 +326,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(coreIndex, /const domainUser = toCanonicalJudoka\(user\);/);
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
-  assert.match(client, /const roleLabel = isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
+  assert.match(client, /const roleLabel = state\.isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
   assert.match(competitionsService, /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/);
   assert.match(competitionsService, /formatJudokaDisplayName: judoka => `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}`/);
