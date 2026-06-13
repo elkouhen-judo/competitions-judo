@@ -47,24 +47,19 @@
         accessInvitationForm: { ...defaultAccessInvitationForm }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(adminsViewModel),
-            deleteAccessInvitation,
-            resetAccessInvitationSearch,
-            resetAccessInvitationForm,
-            resetAdminForm,
-            revokeAdminRole,
-            saveAccessInvitation,
-            saveAdminRole,
-            showNextAccessInvitationPage,
-            showPreviousAccessInvitationPage,
-            showHome: () => app.showHome(),
-            updateAccessInvitationSearch
-          };
-        }
-      }).mount("#adminsView");
+      ui.mountViewModel("adminsView", adminsViewModel, {
+        deleteAccessInvitation,
+        resetAccessInvitationSearch,
+        resetAccessInvitationForm,
+        resetAdminForm,
+        revokeAdminRole,
+        saveAccessInvitation,
+        saveAdminRole,
+        showNextAccessInvitationPage,
+        showPreviousAccessInvitationPage,
+        showHome: () => app.showHome(),
+        updateAccessInvitationSearch
+      });
     }
 
     function saveAccessInvitation() {

@@ -59,22 +59,17 @@
 
       homeViewModel = window.Vue.reactive({ ...defaultHomeViewState });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(homeViewModel),
-            deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
-            openCompetition: screens.competition.openCompetition,
-            openHomeJudokaProfile,
-            selectFilterJudoka,
-            showAdminsManagement: screens.admins.showAdminsManagement,
-            showChildrenManagement: screens.children.showChildrenManagement,
-            showHomeCompetitionForm,
-            showHomeFilterOptions,
-            updateFilterJudokaText
-          };
-        }
-      }).mount("#homeView");
+      ui.mountViewModel("homeView", homeViewModel, {
+        deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
+        openCompetition: screens.competition.openCompetition,
+        openHomeJudokaProfile,
+        selectFilterJudoka,
+        showAdminsManagement: screens.admins.showAdminsManagement,
+        showChildrenManagement: screens.children.showChildrenManagement,
+        showHomeCompetitionForm,
+        showHomeFilterOptions,
+        updateFilterJudokaText
+      });
     }
 
     function getAccessibleHomeJudokas() {
