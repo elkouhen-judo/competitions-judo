@@ -256,5 +256,7 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
   assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
   assert.match(bundle, /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/);
   assert.match(bundle, /id="saveCombatButton" @click="saveCombat"/);
+  assert.match(bundle, /@click="showCombatForm\(\)"/);
+  assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
   assert.match(bundle, /function ensureCombatFormViewModel\(\)/);
 });
