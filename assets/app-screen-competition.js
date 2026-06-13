@@ -4,14 +4,12 @@
     const {
       $,
       cleanText,
-      escapeHtml,
       formatDate,
       formatResultat,
       getCurrentLocalDate,
       getJudokaDisplayName,
       normalizeDisplayName,
       setHidden,
-      setValue,
       toInputDate,
       showView
     } = ui;
@@ -44,6 +42,11 @@
     const defaultCompetitionFormViewState = {
       competitionFormTitle: "Compétition",
       showCompetitionResultBlock: false,
+      showCompetitionOwnerBlock: false,
+      ownerJudokaText: "",
+      ownerJudokaId: "",
+      ownerOptions: [],
+      showOwnerOptions: false,
       competitionForm: { ...defaultCompetitionForm }
     };
     const defaultCompetitionFinalizationViewState = {
@@ -110,7 +113,10 @@
           return {
             ...window.Vue.toRefs(competitionFormViewModel),
             cancelCompetitionForm,
-            saveCompetition
+            saveCompetition,
+            selectCompetitionOwner,
+            showCompetitionOwnerOptions,
+            updateCompetitionOwnerText
           };
         }
       }).mount("#competitionFormView");
@@ -513,19 +519,17 @@
     }
 
     function resolveCompetitionOwnerSelection() {
-      const hidden = $("competition_id_judoka");
-      const input = $("competition_judoka_text");
-      const hiddenValue = String(hidden.value || "").trim();
+      const hiddenValue = String(competitionFormViewModel.ownerJudokaId || "").trim();
 
       if (hiddenValue && state.judokas.some(j => String(j.judokaId) === hiddenValue)) {
         return hiddenValue;
       }
 
-      const typedValue = normalizeJudokaSelectionKey(input.value);
+      const typedValue = normalizeJudokaSelectionKey(competitionFormViewModel.ownerJudokaText);
       if (!typedValue) {
         const activeJudokaId = String(app.screens.home.getHomeActiveJudokaId() || "").trim();
         if (activeJudokaId && state.judokas.some(j => String(j.judokaId) === activeJudokaId)) {
-          hidden.value = activeJudokaId;
+          competitionFormViewModel.ownerJudokaId = activeJudokaId;
           return activeJudokaId;
         }
         return "";
@@ -541,101 +545,34 @@
 
       if (matches.length === 1) {
         const resolvedId = String(matches[0].judokaId || "");
-        hidden.value = resolvedId;
-        input.value = getJudokaDisplayName(matches[0]);
+        competitionFormViewModel.ownerJudokaId = resolvedId;
+        competitionFormViewModel.ownerJudokaText = getJudokaDisplayName(matches[0]);
         return resolvedId;
       }
 
       return "";
     }
 
-    function bindAutocomplete({ inputId, dropdownId, hiddenId, getItems, allowBlank, onChange }) {
-      const input = $(inputId);
-      const dropdown = $(dropdownId);
-      const hidden = $(hiddenId);
-      let isSelecting = false;
-
-      function select(value, label) {
-        input.value = label;
-        hidden.value = value;
-        dropdown.style.display = "none";
-        isSelecting = false;
-        onChange && onChange(value ? getItems().find(j => String(j.judokaId) === String(value)) : null);
-      }
-
-      function renderOptions(items) {
-        dropdown.innerHTML = "";
-
-        if (allowBlank) {
-          const opt = document.createElement("div");
-          opt.className = "autocomplete-option";
-          opt.textContent = "— Tous —";
-          opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select("", ""); });
-          dropdown.appendChild(opt);
-        }
-
-        if (!items.length) {
-          const empty = document.createElement("div");
-          empty.className = "autocomplete-empty";
-          empty.textContent = "Aucun résultat";
-          dropdown.appendChild(empty);
-        } else {
-          items.forEach(j => {
-            const name = getJudokaDisplayName(j);
-            const secondary = getJudokaSecondaryText(j);
-            const opt = document.createElement("div");
-            opt.className = "autocomplete-option";
-            opt.innerHTML = `<div class="autocomplete-option-copy"><strong>${escapeHtml(name)}</strong><span class="autocomplete-option-meta">${escapeHtml(secondary)}</span></div>`;
-            opt.addEventListener("pointerdown", e => { e.preventDefault(); isSelecting = true; select(j.judokaId, name); });
-            dropdown.appendChild(opt);
-          });
-        }
-
-        dropdown.style.display = "block";
-      }
-
-      input.addEventListener("focus", () => {
-        const q = input.value.toLowerCase().trim();
-        renderOptions(getItems().filter(j => !q || getJudokaSearchText(j).includes(q)));
-      });
-
-      input.addEventListener("input", () => {
-        const q = input.value.toLowerCase().trim();
-        hidden.value = "";
-        renderOptions(getItems().filter(j => !q || getJudokaSearchText(j).includes(q)));
-      });
-
-      input.addEventListener("blur", () => {
-        if (!isSelecting) {
-          dropdown.style.display = "none";
-        }
-      });
-    }
-
     function setCompetitionOwnerField(idJudoka) {
-      const block = $("competitionOwnerBlock");
-
       if (!state.isAdmin && !state.isParent) {
-        block.classList.add("hidden");
+        Object.assign(competitionFormViewModel, {
+          showCompetitionOwnerBlock: false,
+          ownerJudokaId: "",
+          ownerJudokaText: "",
+          ownerOptions: [],
+          showOwnerOptions: false
+        });
         return;
       }
 
-      block.classList.remove("hidden");
-
-      const input = $("competition_judoka_text");
-      if (!input.dataset.bound) {
-        bindAutocomplete({
-          inputId: "competition_judoka_text",
-          dropdownId: "competition_judoka_dropdown",
-          hiddenId: "competition_id_judoka",
-          getItems: () => state.judokas
-        });
-        input.dataset.bound = "1";
-      }
-
       const owner = state.judokas.find(j => String(j.judokaId) === String(idJudoka));
-      input.value = owner ? getJudokaDisplayName(owner) : "";
-      setValue("competition_id_judoka", idJudoka);
+      Object.assign(competitionFormViewModel, {
+        showCompetitionOwnerBlock: true,
+        ownerJudokaId: owner ? String(owner.judokaId || "") : "",
+        ownerJudokaText: owner ? getJudokaDisplayName(owner) : "",
+        ownerOptions: [],
+        showOwnerOptions: false
+      });
     }
 
     function getJudokaSecondaryText(judoka) {
@@ -648,6 +585,39 @@
 
     function getJudokaSearchText(judoka) {
       return `${getJudokaDisplayName(judoka)} ${getJudokaSecondaryText(judoka)}`.toLowerCase();
+    }
+
+    function getOwnerOption(judoka) {
+      return {
+        judokaId: String(judoka.judokaId || ""),
+        name: getJudokaDisplayName(judoka) || "Judoka",
+        meta: getJudokaSecondaryText(judoka),
+        searchText: getJudokaSearchText(judoka)
+      };
+    }
+
+    function refreshCompetitionOwnerOptions() {
+      const query = cleanText(competitionFormViewModel.ownerJudokaText).toLowerCase();
+      competitionFormViewModel.ownerOptions = state.judokas
+        .map(getOwnerOption)
+        .filter(option => !query || option.searchText.includes(query));
+    }
+
+    function showCompetitionOwnerOptions() {
+      refreshCompetitionOwnerOptions();
+      competitionFormViewModel.showOwnerOptions = true;
+    }
+
+    function updateCompetitionOwnerText() {
+      competitionFormViewModel.ownerJudokaId = "";
+      refreshCompetitionOwnerOptions();
+      competitionFormViewModel.showOwnerOptions = true;
+    }
+
+    function selectCompetitionOwner(option) {
+      competitionFormViewModel.ownerJudokaId = option ? option.judokaId : "";
+      competitionFormViewModel.ownerJudokaText = option ? option.name : "";
+      competitionFormViewModel.showOwnerOptions = false;
     }
 
     function getCombatDecisionOptions(result) {
@@ -703,7 +673,6 @@
     }
 
     return {
-      bindAutocomplete,
       bindEvents,
       cancelCombatForm,
       cancelCompetitionFinalizationForm,
@@ -723,10 +692,13 @@
       resolveCompetitionOwnerSelection,
       saveCombat,
       saveCompetition,
+      selectCompetitionOwner,
+      showCompetitionOwnerOptions,
       showCombatForm,
       showCompetitionFinalizationForm,
       showCompetitionForm,
-      syncCombatDecisionVisibility
+      syncCombatDecisionVisibility,
+      updateCompetitionOwnerText
     };
   }
 
