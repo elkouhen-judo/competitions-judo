@@ -122,14 +122,14 @@
       </div>
     </section>
 
-    <section id="judokaView" class="panel hidden">
+    <section id="judokaView" class="panel hidden" v-cloak>
       <div class="panel-header">
         <div>
-          <h2 id="judokaProfileTitle">Fiche judoka</h2>
-          <p id="judokaProfileSubtitle" class="subtitle"></p>
+          <h2 id="judokaProfileTitle">{{ profileTitle }}</h2>
+          <p id="judokaProfileSubtitle" class="subtitle">{{ profileSubtitle }}</p>
         </div>
         <div class="competition-header-actions">
-          <button class="button-secondary" onclick="showHome()">
+          <button class="button-secondary" @click="showHome">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             Retour
           </button>
@@ -137,14 +137,14 @@
       </div>
       <div class="panel-body">
         <div id="judokaHero" class="judoka-hero">
-          <div id="judokaHeroAvatar" class="hero-avatar">JJ</div>
+          <div id="judokaHeroAvatar" class="hero-avatar">{{ heroAvatar }}</div>
           <div class="hero-copy">
             <span class="hero-kicker">Fiche performance</span>
-            <h3 id="judokaHeroName" class="hero-title">Judoka</h3>
-            <p id="judokaHeroSummary" class="hero-highlight"></p>
+            <h3 id="judokaHeroName" class="hero-title">{{ heroName }}</h3>
+            <p id="judokaHeroSummary" class="hero-highlight">{{ heroSummary }}</p>
             <div class="hero-badges">
-              <span id="judokaHeroCategory" class="result-badge"></span>
-              <span id="judokaHeroRecord" class="result-badge"></span>
+              <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
+              <span id="judokaHeroRecord" class="result-badge">{{ heroRecord }}</span>
             </div>
           </div>
         </div>
@@ -155,32 +155,32 @@
               <p class="subtitle">Dernière compétition enregistrée et catégorie issue du dernier combat.</p>
             </div>
           </div>
-          <div id="judokaLastCompetition" class="summary"></div>
+          <div id="judokaLastCompetition" class="summary" v-html="lastCompetitionHtml"></div>
         </div>
 
         <div class="section">
           <div class="section-heading">
             <div>
               <h3>Saison</h3>
-              <p id="judokaSeasonLabel" class="subtitle"></p>
+              <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-highlight">
               <span class="stat-label">Competitions</span>
-              <span id="judokaSeasonCompetitionCount" class="stat-value">0</span>
+              <span id="judokaSeasonCompetitionCount" class="stat-value">{{ seasonCompetitionCount }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Combats</span>
-              <span id="judokaSeasonCombatCount" class="stat-value">0</span>
+              <span id="judokaSeasonCombatCount" class="stat-value">{{ seasonCombatCount }}</span>
             </div>
             <div class="stat-card stat-card-success">
               <span class="stat-label">Victoires</span>
-              <span id="judokaSeasonWins" class="stat-value">0</span>
+              <span id="judokaSeasonWins" class="stat-value">{{ seasonWins }}</span>
             </div>
             <div class="stat-card stat-card-danger">
               <span class="stat-label">Défaites</span>
-              <span id="judokaSeasonLosses" class="stat-value">0</span>
+              <span id="judokaSeasonLosses" class="stat-value">{{ seasonLosses }}</span>
             </div>
           </div>
         </div>
@@ -192,7 +192,7 @@
               <p class="subtitle">Meilleurs classements de la saison affichée.</p>
             </div>
           </div>
-          <div id="judokaBestResults"></div>
+          <div id="judokaBestResults" v-html="bestResultsHtml"></div>
         </div>
       </div>
     </section>
