@@ -1,25 +1,25 @@
     :root {
-      --bg: #f6f7f9;
-      --panel: #fff;
-      --text: #172033;
-      --muted: #667085;
-      --line: #d9dee8;
-      --primary: #174ea6;
-      --primary-hover: #123f86;
-      --accent: #7c3aed;
-      --accent-soft: #f3e8ff;
+      --bg: #f7f4ef;
+      --panel: #ffffff;
+      --text: #111111;
+      --muted: #5f5a54;
+      --line: #ddd6cc;
+      --primary: #111111;
+      --primary-hover: #2b2b2b;
+      --accent: #d83b26;
+      --accent-soft: #fff1ee;
       --danger: #b42318;
       --success: #027a48;
       --warning: #b54708;
       --warning-soft: #fffaeb;
-      --gold: #b27f00;
-      --gold-soft: #fff7d6;
-      --silver: #475467;
-      --silver-soft: #f2f4f7;
-      --bronze: #9a3412;
-      --bronze-soft: #ffedd5;
-      --soft: #f8fafc;
-      --shadow: 0 10px 26px rgba(23, 32, 51, 0.08);
+      --gold: #a56b00;
+      --gold-soft: #fff6d8;
+      --silver: #56606d;
+      --silver-soft: #f2f2ef;
+      --bronze: #8f4a2a;
+      --bronze-soft: #fff0e6;
+      --soft: #fbfaf7;
+      --shadow: 0 10px 26px rgba(17, 17, 17, 0.08);
     }
 
     * {
@@ -71,7 +71,7 @@
       border-radius: 14px;
       overflow: hidden;
       background: #fff;
-      box-shadow: 0 10px 20px rgba(23, 78, 166, 0.2);
+      box-shadow: 0 10px 20px rgba(17, 17, 17, 0.16);
     }
 
     .brand-logo-image {
@@ -189,7 +189,7 @@
     }
 
     .toast-close:hover {
-      background: rgba(23, 32, 51, 0.08);
+      background: rgba(17, 17, 17, 0.08);
     }
 
     .toast-close:focus-visible {
@@ -266,7 +266,7 @@
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      outline: 3px solid rgba(23, 78, 166, 0.14);
+      outline: 3px solid rgba(216, 59, 38, 0.16);
     }
 
     label {
@@ -288,7 +288,7 @@
       padding: 13px 15px;
       cursor: pointer;
       font-weight: bold;
-      border-radius: 8px; /* Slightly softer look */
+      border-radius: 8px;
       text-decoration: none;
       transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
     }
@@ -315,7 +315,7 @@
     }
 
     .button-secondary:hover {
-      background: #f2f4f7;
+      background: #f4f1eb;
     }
 
     .button-secondary:disabled:hover,
@@ -390,7 +390,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #f8fafc;
+      background: #f5f1ea;
     }
     .data-table td {
       cursor: pointer;
@@ -526,7 +526,7 @@
 
     .card-button:focus-visible {
       border-color: var(--primary);
-      outline: 3px solid rgba(23, 78, 166, 0.14);
+      outline: 3px solid rgba(216, 59, 38, 0.16);
       outline-offset: 2px;
     }
 
@@ -614,8 +614,8 @@
       margin: 14px -6px 0;
       padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
       border-top: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.97);
-      box-shadow: 0 -8px 20px rgba(23, 32, 51, 0.12);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 -8px 20px rgba(17, 17, 17, 0.12);
     }
 
     .admin-actions {
@@ -672,33 +672,33 @@
     }
 
     .result-e {
-      border-color: #fec84b;
-      background: #fffaeb;
-      color: #b54708;
+      border-color: #f1bc50;
+      background: #fff8df;
+      color: #8c5a00;
     }
 
     .rank-gold {
-      border-color: #fdb022;
-      background: #fffaeb;
-      color: #93370d;
+      border-color: #d79a00;
+      background: #fff6d7;
+      color: var(--gold);
     }
 
     .rank-silver {
-      border-color: #cfd4dc;
-      background: #f8f9fc;
-      color: #344054;
+      border-color: #cfc8be;
+      background: #f3f1ec;
+      color: var(--silver);
     }
 
     .rank-bronze {
-      border-color: #d0a37c;
-      background: #fff7ed;
-      color: #7c2d12;
+      border-color: #d18b61;
+      background: #fff1e7;
+      color: var(--bronze);
     }
 
     .rank-top5 {
-      border-color: #b2ddff;
-      background: #eff8ff;
-      color: #175cd3;
+      border-color: #d9c7bf;
+      background: #f7efeb;
+      color: #a24a2b;
     }
 
     .rank-unclassified {
@@ -762,12 +762,12 @@
     }
 
     .empty-state {
-      border: 1px dashed #c7d7fe;
+      border: 1px dashed #d9cfc2;
       border-radius: 12px;
       color: var(--muted);
       padding: 24px 18px;
       text-align: center;
-      background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+      background: linear-gradient(180deg, #fcfbf8 0%, #f7f3ee 100%);
     }
 
     .list-summary {
@@ -801,18 +801,18 @@
       border-radius: 12px;
       padding: 12px 14px;
       background: #fff;
-      box-shadow: 0 8px 18px rgba(23, 32, 51, 0.06);
+      box-shadow: 0 8px 18px rgba(17, 17, 17, 0.06);
     }
 
     .success {
-      border-color: #abefc6;
-      background: #ecfdf3;
+      border-color: #bcdcc9;
+      background: #eef8f1;
       color: var(--success);
     }
 
     .error {
-      border-color: #fecdca;
-      background: #fef3f2;
+      border-color: #f1c0b8;
+      background: #fff2ef;
       color: var(--danger);
     }
 
@@ -974,13 +974,13 @@
       .summary:hover,
       .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 14px 24px rgba(23, 32, 51, 0.12);
+        box-shadow: 0 14px 24px rgba(17, 17, 17, 0.12);
       }
 
       button:hover,
       .button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 10px 18px rgba(23, 32, 51, 0.12);
+        box-shadow: 0 10px 18px rgba(17, 17, 17, 0.12);
       }
 
       .judoka-hero {
@@ -1066,7 +1066,7 @@
       color: var(--text);
     }
     .button-google:hover {
-      background: #f2f4f7;
+      background: #f4f1eb;
     }
     .user-actions {
       display: flex;
@@ -1091,9 +1091,9 @@
     .stat-card {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: linear-gradient(180deg, #fff 0%, var(--soft) 100%);
+      background: linear-gradient(180deg, #fff 0%, #faf7f2 100%);
       padding: 14px;
-      box-shadow: 0 8px 16px rgba(23, 32, 51, 0.05);
+      box-shadow: 0 8px 16px rgba(17, 17, 17, 0.05);
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
 
@@ -1113,18 +1113,18 @@
     }
 
     .stat-card-highlight {
-      border-color: #c7d7fe;
-      background: linear-gradient(180deg, #f8fbff 0%, #edf3ff 100%);
+      border-color: #dfd0c7;
+      background: linear-gradient(180deg, #fffaf7 0%, #f7f0ea 100%);
     }
 
     .stat-card-success {
-      border-color: #abefc6;
-      background: linear-gradient(180deg, #f4fff8 0%, #ecfdf3 100%);
+      border-color: #c6dac9;
+      background: linear-gradient(180deg, #f8fbf6 0%, #eef5ef 100%);
     }
 
     .stat-card-danger {
-      border-color: #fecdca;
-      background: linear-gradient(180deg, #fff8f7 0%, #fef3f2 100%);
+      border-color: #e4c3bb;
+      background: linear-gradient(180deg, #fff9f7 0%, #fef2ee 100%);
     }
 
     .judoka-hero {
@@ -1133,9 +1133,9 @@
       margin-bottom: 18px;
       padding: 18px;
       border-radius: 18px;
-      border: 1px solid #d9ccff;
-      background: linear-gradient(135deg, #f7f2ff 0%, #eef4ff 45%, #ffffff 100%);
-      box-shadow: 0 14px 32px rgba(23, 32, 51, 0.1);
+      border: 1px solid #dfd6cb;
+      background: linear-gradient(135deg, #fffaf4 0%, #fff 42%, #f7f2ec 100%);
+      box-shadow: 0 14px 32px rgba(17, 17, 17, 0.1);
     }
 
     .hero-avatar {
@@ -1145,12 +1145,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+      background: linear-gradient(135deg, var(--accent) 0%, #111111 100%);
       color: #fff;
       font-size: 24px;
       font-weight: bold;
       letter-spacing: 0.04em;
-      box-shadow: 0 10px 20px rgba(124, 58, 237, 0.24);
+      box-shadow: 0 10px 20px rgba(216, 59, 38, 0.18);
     }
 
     .hero-copy {
@@ -1173,7 +1173,7 @@
     }
 
     .hero-highlight {
-      color: #344054;
+      color: #4f4942;
       font-size: 15px;
       margin: 0;
     }
@@ -1197,7 +1197,7 @@
     }
 
     .rank-2 {
-      border-color: #cbd5e1;
+      border-color: #cfc8be;
       background: var(--silver-soft);
       color: var(--silver);
     }
@@ -1209,7 +1209,7 @@
     }
 
     .rank-finalist {
-      border-color: #d9ccff;
+      border-color: #e5cdc6;
       background: var(--accent-soft);
       color: var(--accent);
     }
