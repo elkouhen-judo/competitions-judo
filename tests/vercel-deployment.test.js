@@ -220,7 +220,7 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /id="accessInvitationFilter"/);
   assert.match(uiBundle, /id="invite_email"/);
   assert.match(uiBundle, /id="invite_profile_type"/);
-  assert.match(uiBundle, /id="saveInvitationButton" onclick="saveAccessInvitation\(\)"/);
+  assert.match(uiBundle, /id="saveInvitationButton" @click="saveAccessInvitation"/);
   assert.match(uiBundle, /function saveAccessInvitation\(\)/);
   assert.match(uiBundle, /function deleteAccessInvitation\(email\)/);
   assert.match(uiBundle, /function updateAccessInvitationSearch\(value\)/);

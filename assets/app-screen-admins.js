@@ -7,16 +7,13 @@
       notifications
     } = app;
     const {
-      $,
       cleanText,
       emptyState,
       escapeAttribute,
       escapeHtml,
       formatDateTime,
       getJudokaDisplayName,
-      getValue,
       icons,
-      setValue,
       showView
     } = ui;
     const {
@@ -24,10 +21,49 @@
       showError,
       showSuccess
     } = notifications;
+    const defaultAccessInvitationForm = {
+      email: "",
+      profileType: "JUDOKA"
+    };
+    const defaultAdminsViewState = {
+      accessInvitationForm: { ...defaultAccessInvitationForm },
+      accessInvitationSearch: "",
+      accessInvitationsSummaryHtml: "",
+      accessInvitationsListHtml: "",
+      adminsListHtml: "",
+      adminEmail: ""
+    };
+    let adminsViewModel = null;
+
+    function ensureAdminsViewModel() {
+      if (!window.Vue || adminsViewModel) {
+        return;
+      }
+
+      adminsViewModel = window.Vue.reactive({
+        ...defaultAdminsViewState,
+        accessInvitationForm: { ...defaultAccessInvitationForm }
+      });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(adminsViewModel),
+            resetAccessInvitationForm,
+            resetAdminForm,
+            saveAccessInvitation,
+            saveAdminRole,
+            showHome: () => app.showHome(),
+            updateAccessInvitationSearch
+          };
+        }
+      }).mount("#adminsView");
+    }
 
     function saveAccessInvitation() {
-      const email = getValue("invite_email");
-      const profileType = getValue("invite_profile_type");
+      ensureAdminsViewModel();
+      const email = adminsViewModel.accessInvitationForm.email;
+      const profileType = adminsViewModel.accessInvitationForm.profileType;
 
       app.runServer(
         "saveAccessInvitation",
@@ -54,11 +90,10 @@
     }
 
     function renderManagedAccessInvitations() {
-      const target = $("accessInvitationsList");
-      const summary = $("accessInvitationsSummary");
+      ensureAdminsViewModel();
       if (!state.managedAccessInvitations.length) {
-        summary.innerHTML = "";
-        target.innerHTML = emptyState("Aucune invitation en attente.");
+        adminsViewModel.accessInvitationsSummaryHtml = "";
+        adminsViewModel.accessInvitationsListHtml = emptyState("Aucune invitation en attente.");
         return;
       }
       const filteredInvitations = getFilteredAccessInvitations();
@@ -69,7 +104,7 @@
       const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
       const summaryLabel = `${filteredInvitations.length} invitation(s)${state.accessInvitationSearch ? " trouvée(s)" : ""} · page ${currentPage} / ${totalPages}.`;
 
-      summary.innerHTML = `
+      adminsViewModel.accessInvitationsSummaryHtml = `
         <div class="list-summary">
           <p class="list-summary-text">${escapeHtml(summaryLabel)}</p>
           <div class="list-summary-actions">
@@ -87,7 +122,7 @@
       `;
 
       if (!filteredInvitations.length) {
-        target.innerHTML = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(state.accessInvitationSearch)}".</div>`;
+        adminsViewModel.accessInvitationsListHtml = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(state.accessInvitationSearch)}".</div>`;
         return;
       }
 
@@ -116,7 +151,7 @@
         `;
       });
       html += `</div>`;
-      target.innerHTML = html;
+      adminsViewModel.accessInvitationsListHtml = html;
     }
 
     function getFilteredAccessInvitations() {
@@ -130,18 +165,18 @@
     }
 
     function updateAccessInvitationSearch(value) {
+      ensureAdminsViewModel();
       state.accessInvitationSearch = cleanText(value).toLowerCase();
+      adminsViewModel.accessInvitationSearch = value || "";
       state.accessInvitationCurrentPage = 1;
       renderManagedAccessInvitations();
     }
 
     function resetAccessInvitationSearch() {
+      ensureAdminsViewModel();
       state.accessInvitationSearch = "";
+      adminsViewModel.accessInvitationSearch = "";
       state.accessInvitationCurrentPage = 1;
-      const input = $("accessInvitationFilter");
-      if (input) {
-        input.value = "";
-      }
       renderManagedAccessInvitations();
     }
 
@@ -164,14 +199,12 @@
         "getAdminsManagement",
         [],
         data => {
+          ensureAdminsViewModel();
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
           state.managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
-          const invitationSearchInput = $("accessInvitationFilter");
-          if (invitationSearchInput) {
-            invitationSearchInput.value = "";
-          }
+          adminsViewModel.accessInvitationSearch = "";
           renderManagedAdmins();
           renderManagedAccessInvitations();
           resetAccessInvitationForm();
@@ -183,9 +216,9 @@
     }
 
     function renderManagedAdmins() {
-      const target = $("adminsList");
+      ensureAdminsViewModel();
       if (!state.managedAdmins.length) {
-        target.innerHTML = emptyState("Aucun admin trouvé.");
+        adminsViewModel.adminsListHtml = emptyState("Aucun admin trouvé.");
         return;
       }
 
@@ -211,20 +244,22 @@
         `;
       });
       html += `</div>`;
-      target.innerHTML = html;
+      adminsViewModel.adminsListHtml = html;
     }
 
     function resetAdminForm() {
-      setValue("admin_email", "");
+      ensureAdminsViewModel();
+      adminsViewModel.adminEmail = "";
     }
 
     function resetAccessInvitationForm() {
-      setValue("invite_email", "");
-      setValue("invite_profile_type", "JUDOKA");
+      ensureAdminsViewModel();
+      Object.assign(adminsViewModel.accessInvitationForm, defaultAccessInvitationForm);
     }
 
     function saveAdminRole() {
-      const email = getValue("admin_email");
+      ensureAdminsViewModel();
+      const email = adminsViewModel.adminEmail;
 
       app.runServer(
         "grantAdminRole",
