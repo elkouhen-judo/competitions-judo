@@ -374,10 +374,43 @@ set
   profile_type = excluded.profile_type,
   updated_at = now();
 
+insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
+values (
+  'JUDO_CHRISTINE_EL_KOUHEN',
+  'christine.elkouhen@gmail.com',
+  'Christine',
+  'EL KOUHEN',
+  'NORMAL',
+  'PARENT'
+)
+on conflict (email) do update
+set
+  prenom = excluded.prenom,
+  nom = excluded.nom,
+  role = excluded.role,
+  profile_type = excluded.profile_type,
+  updated_at = now();
 
 insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
 values (
-  'JUDO_ADRIEN°HOUSSAIS',
+  'JUDO_RAYANE_EL_KOUHEN',
+  'rayane.elkouhen@gmail.com',
+  'Rayane',
+  'EL KOUHEN',
+  'NORMAL',
+  'JUDOKA'
+)
+on conflict (email) do update
+set
+  prenom = excluded.prenom,
+  nom = excluded.nom,
+  role = excluded.role,
+  profile_type = excluded.profile_type,
+  updated_at = now();
+
+insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
+values (
+  'JUDO_ADRIEN_HOUSSAIS',
   'adrien.houssais.judo@gmail.com',
   'Adrien',
   'HOUSSAIS',
