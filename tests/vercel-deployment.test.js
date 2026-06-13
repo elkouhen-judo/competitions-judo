@@ -341,8 +341,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /id="judokaSeasonBalance"/);
   assert.match(uiBundle, /id="judokaVictoryRate"/);
   assert.match(uiBundle, /Victoires ippon/);
-  assert.match(uiBundle, /Défaites pénalité/);
-  assert.match(uiBundle, /Défaites forfait/);
+  assert.match(uiBundle, /Pénalités/);
+  assert.match(uiBundle, /Forfaits/);
   assert.match(uiBundle, /rank-gold/);
   assert.match(uiBundle, /rank-silver/);
   assert.match(uiBundle, /rank-bronze/);
