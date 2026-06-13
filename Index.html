@@ -311,7 +311,42 @@
               <p class="subtitle">Les enfants ajoutés pourront être sélectionnés dans vos compétitions et combats, et se connecter seuls si un email est renseigné.</p>
             </div>
           </div>
-          <div id="childrenList" v-html="childrenListHtml"></div>
+          <div id="childrenList">
+            <div v-if="!hasChildren" class="empty-state">Aucun enfant enregistré pour le moment.</div>
+            <div v-else class="list">
+              <article v-for="child in children" :key="child.judokaId" class="card child-card">
+                <p class="card-title">{{ child.fullName }}</p>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Prénom</span>
+                    <span class="meta-value">{{ child.firstName }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Nom</span>
+                    <span class="meta-value">{{ child.lastName }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Email</span>
+                    <span class="meta-value">{{ child.accountEmail }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Connexion autonome</span>
+                    <span class="meta-value">{{ child.directAccessState }}</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="button-secondary" type="button" @click="editManagedChild(child.judokaId)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Modifier
+                  </button>
+                  <button class="button-danger" type="button" @click="deleteManagedChild(child.judokaId, child.fullName)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Supprimer
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
 
         <div class="section">

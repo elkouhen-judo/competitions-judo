@@ -192,6 +192,8 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(uiBundle, /id="childrenView" class="panel hidden"/);
   assert.match(uiBundle, /function showChildrenManagement\(keepMessage\)/);
   assert.match(uiBundle, /function saveManagedChild\(\)/);
+  assert.match(uiBundle, /v-for="child in children"/);
+  assert.doesNotMatch(uiBundle, /childrenListHtml/);
   assert.match(uiBundle, /id="child_email"/);
   assert.match(uiBundle, /se connecter seuls si un email est renseigné/);
   assert.match(uiBundle, /function normalizeLastName\(value\)/);

@@ -3,11 +3,7 @@
     const { state, ui, notifications } = app;
     const {
       $,
-      emptyState,
-      escapeAttribute,
-      escapeHtml,
       getJudokaDisplayName,
-      icons,
       normalizeDisplayName,
       normalizeLastName,
       showView
@@ -24,7 +20,8 @@
       accountEmail: ""
     };
     const defaultChildrenViewState = {
-      childrenListHtml: "",
+      children: [],
+      hasChildren: false,
       childFormTitle: "Ajouter un enfant",
       saveChildButtonText: "Ajouter l'enfant",
       childForm: { ...defaultChildForm }
@@ -45,6 +42,8 @@
         setup() {
           return {
             ...window.Vue.toRefs(childrenViewModel),
+            deleteManagedChild,
+            editManagedChild,
             resetChildForm,
             saveManagedChild,
             showHome: () => app.showHome()
@@ -74,45 +73,18 @@
 
     function renderManagedChildren() {
       ensureChildrenViewModel();
-      if (!state.managedChildren.length) {
-        childrenViewModel.childrenListHtml = emptyState("Aucun enfant enregistré pour le moment.");
-        return;
-      }
-
-      let html = `<div class="list">`;
-      state.managedChildren.forEach(child => {
+      childrenViewModel.children = state.managedChildren.map(child => {
         const fullName = getJudokaDisplayName(child) || "Enfant";
-        const directAccessState = child.accountEmail ? "Activée" : "Non activée";
-        html += `
-          <article class="card child-card">
-            <p class="card-title">${escapeHtml(fullName)}</p>
-            <div class="card-meta">
-              <div class="meta-row">
-                <span class="meta-label">Prénom</span>
-                <span class="meta-value">${escapeHtml(normalizeDisplayName(child.firstName || ""))}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Nom</span>
-                <span class="meta-value">${escapeHtml(normalizeLastName(child.lastName || ""))}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Email</span>
-                <span class="meta-value">${escapeHtml(child.accountEmail || "Non renseigné")}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Connexion autonome</span>
-                <span class="meta-value">${escapeHtml(directAccessState)}</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button class="button-secondary" data-id="${escapeAttribute(child.judokaId)}" onclick="editManagedChild(this.dataset.id)">${icons.edit}Modifier</button>
-              <button class="button-danger" data-id="${escapeAttribute(child.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="deleteManagedChild(this.dataset.id, this.dataset.name)">${icons.trash}Supprimer</button>
-            </div>
-          </article>
-        `;
+        return {
+          judokaId: child.judokaId || "",
+          fullName,
+          firstName: normalizeDisplayName(child.firstName || ""),
+          lastName: normalizeLastName(child.lastName || ""),
+          accountEmail: child.accountEmail || "Non renseigné",
+          directAccessState: child.accountEmail ? "Activée" : "Non activée"
+        };
       });
-      html += `</div>`;
-      childrenViewModel.childrenListHtml = html;
+      childrenViewModel.hasChildren = childrenViewModel.children.length > 0;
     }
 
     function resetChildForm() {
