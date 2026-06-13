@@ -81,9 +81,7 @@
         return;
       }
 
-      competitionDetailViewModel = window.Vue.reactive({ ...defaultCompetitionDetailViewState });
-
-      ui.mountViewModel("competitionView", competitionDetailViewModel, {
+      competitionDetailViewModel = ui.createMountedViewModel("competitionView", defaultCompetitionDetailViewState, {
         deleteCurrentCompetition,
         deleteCombat,
         editCurrentCompetition,
@@ -98,12 +96,7 @@
         return;
       }
 
-      competitionFormViewModel = window.Vue.reactive({
-        ...defaultCompetitionFormViewState,
-        competitionForm: { ...defaultCompetitionForm }
-      });
-
-      ui.mountViewModel("competitionFormView", competitionFormViewModel, {
+      competitionFormViewModel = ui.createMountedViewModel("competitionFormView", defaultCompetitionFormViewState, {
         cancelCompetitionForm,
         saveCompetition,
         selectCompetitionOwner,
@@ -117,12 +110,7 @@
         return;
       }
 
-      competitionFinalizationViewModel = window.Vue.reactive({
-        ...defaultCompetitionFinalizationViewState,
-        finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
-      });
-
-      ui.mountViewModel("competitionFinalizationView", competitionFinalizationViewModel, {
+      competitionFinalizationViewModel = ui.createMountedViewModel("competitionFinalizationView", defaultCompetitionFinalizationViewState, {
         cancelCompetitionFinalizationForm,
         finalizeCompetition
       });
@@ -133,12 +121,7 @@
         return;
       }
 
-      combatFormViewModel = window.Vue.reactive({
-        ...defaultCombatFormViewState,
-        combatForm: { ...defaultCombatForm }
-      });
-
-      ui.mountViewModel("combatFormView", combatFormViewModel, {
+      combatFormViewModel = ui.createMountedViewModel("combatFormView", defaultCombatFormViewState, {
         cancelCombatForm,
         saveCombat,
         syncCombatDecisionVisibility

@@ -58,9 +58,7 @@
         return;
       }
 
-      homeViewModel = window.Vue.reactive({ ...defaultHomeViewState });
-
-      ui.mountViewModel("homeView", homeViewModel, {
+      homeViewModel = ui.createMountedViewModel("homeView", defaultHomeViewState, {
         deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
         openCompetition: screens.competition.openCompetition,
         openHomeJudokaProfile,

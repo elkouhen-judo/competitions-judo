@@ -106,12 +106,7 @@
         return;
       }
 
-      loginViewModel = window.Vue.reactive({
-        ...defaultLoginState,
-        registration: { ...defaultLoginState.registration }
-      });
-
-      ui.mountViewModel("loginView", loginViewModel, {
+      loginViewModel = ui.createMountedViewModel("loginView", defaultLoginState, {
         startGoogleLogin,
         submitProfileRegistration
       });
