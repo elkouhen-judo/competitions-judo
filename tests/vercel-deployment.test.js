@@ -386,7 +386,13 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(css, /\.user-pill\s*\{[\s\S]*?padding:\s*0 10px;[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;[\s\S]*?line-height:\s*1;[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/);
   assert.match(css, /\.logout-button\s*\{[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;/);
   assert.match(uiBundle, /id="userInfo"/);
-  assert.match(uiBundle, /id="logoutButton"/);
+  assert.match(uiBundle, /id="userInfo" class="user-pill"><strong>\{\{ userName \}\}<\/strong> - \{\{ roleLabel \}\}<\/div>/);
+  assert.match(uiBundle, /id="logoutButton" type="button" class="button-secondary logout-button" @click="logoutUser\(\)"/);
+  assert.match(uiBundle, /showHeader: false/);
+  assert.match(uiBundle, /function setHeaderVisible\(visible\)/);
+  assert.match(uiBundle, /app\.setHeaderVisible\(false\);/);
+  assert.doesNotMatch(uiBundle, /onclick="logoutUser\(\)"/);
+  assert.doesNotMatch(uiBundle, /document\.querySelector\("header"\)\.classList/);
   assert.match(uiBundle, /aria-label="Déconnexion"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
   assert.match(uiBundle, /getJudokaDisplayName\(state\.currentUser\)/);
