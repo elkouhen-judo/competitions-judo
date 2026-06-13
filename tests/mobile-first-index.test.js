@@ -251,6 +251,11 @@ test("competition finalization screen is mounted through Vue 3 for the progressi
 test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /class="autocomplete-option-copy"/);
   assert.match(bundle, /class="autocomplete-option-meta"/);
+  assert.match(bundle, /v-for="option in ownerOptions"/);
+  assert.match(bundle, /v-for="option in filterOptions"/);
+  assert.match(bundle, /@pointerdown\.prevent="selectCompetitionOwner\(option\)"/);
+  assert.match(bundle, /@pointerdown\.prevent="selectFilterJudoka\(option\)"/);
+  assert.doesNotMatch(bundle, /bindAutocomplete|dataset\.bound|competition_id_judoka|id="filterJudoka"/);
   assert.match(bundle, /function getCompactJudokaLabel\(j\)/);
   assert.match(bundle, /function getClassementBadgeClass\(value\)/);
   assert.match(bundle, /function getJudokaInitials\(judoka\)/);

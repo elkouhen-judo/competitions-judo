@@ -429,6 +429,8 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(competitionsService, /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/);
   assert.match(competitionsService, /formatJudokaDisplayName: judoka => `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}`/);
   assert.match(client, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
+  assert.match(client, /ownerJudokaId: ""/);
+  assert.doesNotMatch(client, /bindAutocomplete|dataset\.bound|competition_id_judoka|id="filterJudoka"/);
   assert.doesNotMatch(client, /competition\.id_judoka = resolveCompetitionOwnerSelection\(\);/);
   assert.doesNotMatch(coreIndex, /auth\/v1\/signup/);
   assert.doesNotMatch(coreIndex, /auth\/v1\/admin\/users/);
