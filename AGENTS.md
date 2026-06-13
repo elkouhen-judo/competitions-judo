@@ -100,6 +100,7 @@ Pour ce dépôt, privilégier en priorité:
 - `vercel:verification` pour valider un flux de bout en bout sur l'application lancée ;
 - `vercel:auth` quand le travail touche au login, aux invitations ou aux permissions ;
 - `vercel:deployments-cicd` quand le sujet porte sur la livraison ou le déploiement.
+- `superpowers` quand le travail doit être exécuté de façon plus outillée, avec plans, sous-agents ou revue en plusieurs passes.
 
 Le noyau recommandé pour ce projet est `vue`, `frontend-design`, `domain-driven-design` et `vercel:verification`.
 
