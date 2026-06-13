@@ -1,25 +1,25 @@
     :root {
-      --bg: #ffffff;
+      --bg: #f6f8fc;
       --panel: #ffffff;
-      --text: #101010;
-      --muted: #5a5752;
-      --line: #e5e7eb;
-      --primary: #111111;
-      --primary-hover: #000000;
-      --accent: #c92d1b;
-      --accent-soft: #fff1ee;
+      --text: #0f172a;
+      --muted: #4b5563;
+      --line: #d9e2f0;
+      --primary: #123a72;
+      --primary-hover: #0f2f5c;
+      --accent: #1d4ed8;
+      --accent-soft: #e8f1ff;
       --danger: #b42318;
       --success: #027a48;
       --warning: #b54708;
-      --warning-soft: #f5f5f5;
-      --gold: #111111;
-      --gold-soft: #fff1ee;
-      --silver: #4b5563;
-      --silver-soft: #f3f4f6;
-      --bronze: #6b7280;
-      --bronze-soft: #f3f4f6;
-      --soft: #f5f5f5;
-      --shadow: 0 8px 18px rgba(17, 17, 17, 0.06);
+      --warning-soft: #f8fafc;
+      --gold: #1d4ed8;
+      --gold-soft: #e8f1ff;
+      --silver: #475569;
+      --silver-soft: #f1f5f9;
+      --bronze: #64748b;
+      --bronze-soft: #f1f5f9;
+      --soft: #f8fbff;
+      --shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
     }
 
     * {
@@ -200,7 +200,7 @@
     }
 
     .toast-close:hover {
-      background: rgba(17, 17, 17, 0.08);
+      background: rgba(29, 78, 216, 0.08);
     }
 
     .toast-close:focus-visible {
@@ -326,7 +326,7 @@
     }
 
     .button-secondary:hover {
-      background: #f5f5f5;
+      background: #eef4ff;
     }
 
     .button-secondary:disabled:hover,
@@ -335,13 +335,13 @@
     }
 
     .button-danger {
-      border-color: var(--accent);
+      border-color: var(--danger);
       background: #fff;
-      color: var(--accent);
+      color: var(--danger);
     }
 
     .button-danger:hover {
-      background: #fff;
+      background: #fff2ef;
     }
 
     .autocomplete-wrapper {
@@ -370,7 +370,7 @@
       touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: #f5f5f5; }
+    .autocomplete-option:hover { background: #eef4ff; }
     .autocomplete-empty {
       padding: 12px 14px;
       color: var(--muted);
@@ -401,7 +401,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #f5f5f5;
+      background: #eef4ff;
     }
     .data-table td {
       cursor: pointer;
@@ -677,15 +677,15 @@
     }
 
     .result-d {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
-      color: #111111;
+      color: var(--text);
     }
 
     .result-e {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
-      color: #4b5563;
+      color: var(--text);
     }
 
     .rank-gold {
@@ -695,21 +695,21 @@
     }
 
     .rank-silver {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
-      color: #4b5563;
+      color: var(--text);
     }
 
     .rank-bronze {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
-      color: #4b5563;
+      color: var(--text);
     }
 
     .rank-top5 {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
-      color: #4b5563;
+      color: var(--text);
     }
 
     .rank-unclassified {
@@ -773,7 +773,7 @@
     }
 
     .empty-state {
-      border: 1px dashed #d1d5db;
+      border: 1px dashed #c7d2fe;
       border-radius: 6px;
       color: var(--muted);
       padding: 24px 18px;
@@ -818,11 +818,11 @@
     .success {
       border-color: var(--accent);
       background: #fff;
-      color: var(--text);
+      color: var(--accent);
     }
 
     .error {
-      border-color: #d1d5db;
+      border-color: #c7d2fe;
       background: #fff;
       color: var(--text);
     }
@@ -1122,18 +1122,18 @@
     }
 
     .stat-card-highlight {
-      border-color: var(--line);
-      background: #fff;
+      border-color: #c7d2fe;
+      background: #f8fbff;
     }
 
     .stat-card-success {
-      border-color: var(--line);
-      background: #fff;
+      border-color: #c7d2fe;
+      background: #f8fbff;
     }
 
     .stat-card-danger {
-      border-color: var(--line);
-      background: #fff;
+      border-color: #c7d2fe;
+      background: #f8fbff;
     }
 
     .judoka-hero {
@@ -1155,7 +1155,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #111111;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
       color: #fff;
       font-size: 24px;
       font-weight: bold;
@@ -1183,7 +1183,7 @@
     }
 
     .hero-highlight {
-      color: #3c3a37;
+      color: var(--muted);
       font-size: 15px;
       margin: 0;
     }
@@ -1207,14 +1207,14 @@
     }
 
     .rank-2 {
-      border-color: #cfc8be;
-      background: var(--silver-soft);
+      border-color: #c7d2fe;
+      background: #fff;
       color: var(--silver);
     }
 
     .rank-3 {
-      border-color: #fdba74;
-      background: var(--bronze-soft);
+      border-color: #c7d2fe;
+      background: #fff;
       color: var(--bronze);
     }
 
