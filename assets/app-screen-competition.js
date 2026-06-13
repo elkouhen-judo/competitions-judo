@@ -27,16 +27,54 @@
       showError,
       showSuccess
     } = notifications;
+    const defaultCompetitionDetailViewState = {
+      competitionTitle: "Compétition",
+      competitionSubtitle: "",
+      competitionDate: "",
+      ageWeightLabel: "",
+      competitionResult: "",
+      canEditCompetition: false,
+      canFinalizeCompetition: false,
+      combatsHtml: ""
+    };
+    let competitionDetailViewModel = null;
+
+    function ensureCompetitionDetailViewModel() {
+      if (!window.Vue || competitionDetailViewModel) {
+        return;
+      }
+
+      competitionDetailViewModel = window.Vue.reactive({ ...defaultCompetitionDetailViewState });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(competitionDetailViewModel),
+            deleteCurrentCompetition,
+            editCurrentCompetition,
+            showCombatForm,
+            showCompetitionFinalizationForm,
+            showHome: () => app.showHome()
+          };
+        }
+      }).mount("#competitionView");
+    }
 
     function openCompetition(id, keepMessage) {
       if (!keepMessage) {
         clearMessage();
       }
-      setTexts({
+      ensureCompetitionDetailViewModel();
+      Object.assign(competitionDetailViewModel, {
         competitionTitle: "Chargement...",
-        competitionSubtitle: ""
+        competitionSubtitle: "",
+        competitionDate: "",
+        ageWeightLabel: "",
+        competitionResult: "",
+        canEditCompetition: false,
+        canFinalizeCompetition: false,
+        combatsHtml: emptyState("Chargement des combats...")
       });
-      $("combatsList").innerHTML = emptyState("Chargement des combats...");
       showView("competitionView");
 
       app.runServer(
@@ -56,22 +94,19 @@
     }
 
     function renderCompetitionDetail() {
-      setTexts({
+      ensureCompetitionDetailViewModel();
+      const agePoids = [state.currentCompetition.ageCategory, state.currentCompetition.weightCategory].filter(Boolean).join(" - ");
+      const hasResult = Boolean(String(state.currentCompetition.result || "").trim());
+
+      Object.assign(competitionDetailViewModel, {
         competitionTitle: state.currentCompetition.name || "Compétition",
         competitionSubtitle: "Détail de la compétition",
-        competitionDate: formatDate(state.currentCompetition.competitionDate)
+        competitionDate: formatDate(state.currentCompetition.competitionDate),
+        ageWeightLabel: agePoids,
+        competitionResult: state.currentCompetition.result || "",
+        canEditCompetition: state.canEditCurrentCompetition,
+        canFinalizeCompetition: state.canEditCurrentCompetition && !hasResult
       });
-
-      const agePoids = [state.currentCompetition.ageCategory, state.currentCompetition.weightCategory].filter(Boolean).join(" - ");
-      setHidden("row_competitionAgePoids", !agePoids);
-      setText("competitionAgePoids", agePoids);
-
-      const hasResult = Boolean(String(state.currentCompetition.result || "").trim());
-      setHidden("row_competitionClassement", !hasResult);
-      setText("competitionClassement", state.currentCompetition.result);
-
-      setHidden("competitionAdminActions", !state.canEditCurrentCompetition);
-      setHidden("finalizeCompetitionButton", !state.canEditCurrentCompetition || hasResult);
     }
 
     function editCurrentCompetition() {
@@ -84,10 +119,10 @@
     }
 
     function renderCombats() {
-      const target = $("combatsList");
+      ensureCompetitionDetailViewModel();
 
       if (!state.currentCombats.length) {
-        target.innerHTML = emptyState("Aucun combat pour cette compétition.");
+        competitionDetailViewModel.combatsHtml = emptyState("Aucun combat pour cette compétition.");
         return;
       }
 
@@ -125,7 +160,7 @@
       });
 
       html += `</div>`;
-      target.innerHTML = html;
+      competitionDetailViewModel.combatsHtml = html;
     }
 
     function showCompetitionForm(id) {
