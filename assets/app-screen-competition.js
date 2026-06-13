@@ -379,9 +379,10 @@
       clearMessage();
       ensureCombatFormViewModel();
       resetCombatForm();
+      const combatId = id && typeof id === "object" && "type" in id ? "" : id;
 
-      if (id) {
-        const combat = state.currentCombats.find(c => String(c.combatId) === String(id));
+      if (combatId) {
+        const combat = state.currentCombats.find(c => String(c.combatId) === String(combatId));
 
         if (!combat) {
           showError({ message: "Combat introuvable." });
