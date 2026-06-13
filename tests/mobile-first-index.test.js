@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
+const notificationsClient = fs.readFileSync(path.join(__dirname, "..", "assets", "app-notifications.js"), "utf8");
 const client = [
   "vendor/vue.global.prod.js",
   "app-ui.js",
@@ -41,6 +42,10 @@ test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /showToast\("error", error\.message \|\| error,\s*7000\)/);
   assert.match(bundle, /function showToast\(type,\s*message,\s*duration\)/);
   assert.match(bundle, /function dismissToast\(toastId\)/);
+  assert.match(bundle, /v-for="toast in toasts"/);
+  assert.match(bundle, /@click="dismissToast\(toast\.id\)"/);
+  assert.match(bundle, /\{\{ toast\.message \}\}/);
+  assert.doesNotMatch(notificationsClient, /onclick="dismissToast|document\.createElement|document\.querySelector|innerHTML/);
 });
 
 test("combat cards expose result as a first-class badge", () => {
