@@ -232,7 +232,7 @@
             <div class="combat-header">
               <p class="card-title">${escapeHtml(c.opponent || "Adversaire non renseigné")}</p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <span class="result-badge result-${escapeAttribute(String(c.result || "").toLowerCase())}">${formatResultat(c.result)}</span>
+                <span class="result-badge result-${escapeAttribute(String(c.result || "").toLowerCase())}">${escapeHtml(formatResultat(c.result))}</span>
                 ${c.victoryType ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.victoryType)}</span>` : ""}
               </div>
             </div>
