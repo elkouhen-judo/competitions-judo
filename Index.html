@@ -36,7 +36,6 @@
       </div>
     </header>
 
-    <div id="message" class="message"></div>
     <div id="toastLayer" class="toast-layer" aria-live="assertive" aria-relevant="additions text" v-cloak>
       <div v-for="toast in toasts" :key="toast.id" class="toast" :class="['toast-' + toast.type, { 'toast-exit': toast.leaving }]" :data-toast-id="toast.id" :role="toast.role">
         <button type="button" class="toast-close" aria-label="Fermer la notification" @click="dismissToast(toast.id)">
