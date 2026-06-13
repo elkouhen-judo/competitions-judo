@@ -109,7 +109,7 @@
         victoryRate: `${victoryRate || 0}%`,
         heroAvatar: getJudokaInitials(judoka),
         heroName: getJudokaDisplayName(judoka) || "Judoka",
-        heroSummary: `${seasonWins || 0}V · ${seasonLosses || 0}D · ${seasonDraws || 0}N · ${victoryRate || 0}% de victoires`,
+        heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
         heroCategory: `${category} · ${weightCategory}`,
         heroSeason: `Saison ${season.label}`
       });
@@ -126,9 +126,14 @@
         penalties: String(profile.penalties || 0),
         forfeits: String(profile.forfeits || 0)
       });
-      judokaViewModel.hasCombatProfileExtras = Boolean(profile.draws || 0);
+      judokaViewModel.hasCombatProfileExtras = Boolean(
+        Number(profile.draws || 0) ||
+        Number(profile.penalties || 0) ||
+        Number(profile.forfeits || 0)
+      );
 
       judokaViewModel.competitionResults = (competitionResults || []).map(result => ({
+        competitionId: result.competitionId || "",
         name: result.name || "Compétition",
         date: formatDate(result.competitionDate),
         result: result.result || "Non classé",

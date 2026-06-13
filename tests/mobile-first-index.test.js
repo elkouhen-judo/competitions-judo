@@ -116,13 +116,14 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Résumé performance/);
   assert.match(bundle, /Profil de combat/);
   assert.match(bundle, /id="judokaCompetitionResults"/);
+  assert.match(bundle, /:key="result\.competitionId \|\|/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaSeasonBalance"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
   assert.match(bundle, /Taux de victoire/);
   assert.match(bundle, /Victoires ippon/);
-  assert.match(bundle, /Défaites pénalité/);
-  assert.match(bundle, /Défaites forfait/);
+  assert.match(bundle, /v-if="Number\(combatProfile\.penalties\)"/);
+  assert.match(bundle, /v-if="Number\(combatProfile\.forfeits\)"/);
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
   assert.match(bundle, /id="finalization_classement"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
@@ -187,6 +188,7 @@ test("home screen is mounted through Vue 3 for the progressive screen migration"
 test("judoka profile screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="judokaView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
+  assert.match(judokaScreenClient, /heroSummary: `\$\{seasonCompetitionCount \|\| 0\} compétitions · \$\{seasonCombatCount \|\| 0\} combats · \$\{victoryRate \|\| 0\}% victoires`/);
   assert.match(bundle, /class="combat-profile-grid"/);
   assert.match(bundle, /v-if="!hasCompetitionResults"/);
   assert.match(bundle, /v-for="result in competitionResults"/);

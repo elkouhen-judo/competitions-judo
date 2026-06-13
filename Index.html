@@ -260,17 +260,11 @@
               <span class="stat-label">Défaites décision</span>
               <span class="stat-value">{{ combatProfile.lossDecision }}</span>
             </div>
-            <div class="stat-card stat-card-danger">
-              <span class="stat-label">Défaites pénalité</span>
-              <span class="stat-value">{{ combatProfile.lossPenalty }}</span>
-            </div>
-            <div class="stat-card stat-card-danger">
-              <span class="stat-label">Défaites forfait</span>
-              <span class="stat-value">{{ combatProfile.lossForfeit }}</span>
-            </div>
           </div>
           <div v-if="hasCombatProfileExtras" class="profile-extra-row">
             <span v-if="Number(combatProfile.draws)" class="result-badge">Égalités {{ combatProfile.draws }}</span>
+            <span v-if="Number(combatProfile.penalties)" class="result-badge">Pénalités {{ combatProfile.penalties }}</span>
+            <span v-if="Number(combatProfile.forfeits)" class="result-badge">Forfaits {{ combatProfile.forfeits }}</span>
           </div>
         </div>
 
@@ -284,7 +278,7 @@
           <div id="judokaCompetitionResults">
             <div v-if="!hasCompetitionResults" class="empty-state">Aucune compétition enregistrée pour cette saison.</div>
             <div v-else class="list">
-              <article v-for="result in competitionResults" :key="`${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
+              <article v-for="result in competitionResults" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
                 <div class="performance-result-header">
                   <p class="card-title">{{ result.name }}</p>
                   <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.badgeLabel }}</span>
