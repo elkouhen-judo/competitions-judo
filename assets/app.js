@@ -245,46 +245,5 @@
   loginScreen.bindEvents();
   screens.competition.bindEvents();
 
-  Object.assign(window, {
-    cancelCombatForm: screens.competition.cancelCombatForm,
-    cancelCompetitionFinalizationForm: screens.competition.cancelCompetitionFinalizationForm,
-    cancelCompetitionForm: screens.competition.cancelCompetitionForm,
-    deleteAccessInvitation: screens.admins.deleteAccessInvitation,
-    deleteCombat: screens.competition.deleteCombat,
-    deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
-    deleteCurrentCompetition,
-    deleteManagedChild: screens.children.deleteManagedChild,
-    editCurrentCompetition: screens.competition.editCurrentCompetition,
-    editManagedChild: screens.children.editManagedChild,
-    finalizeCompetition: screens.competition.finalizeCompetition,
-    logoutUser,
-    openCompetition: screens.competition.openCompetition,
-    openHomeJudokaProfile: screens.home.openHomeJudokaProfile,
-    resetAccessInvitationForm: screens.admins.resetAccessInvitationForm,
-    resetAccessInvitationSearch: screens.admins.resetAccessInvitationSearch,
-    resetAdminForm: screens.admins.resetAdminForm,
-    resetChildForm: screens.children.resetChildForm,
-    revokeAdminRole: screens.admins.revokeAdminRole,
-    saveAccessInvitation: screens.admins.saveAccessInvitation,
-    saveAdminRole: screens.admins.saveAdminRole,
-    saveCompetition: screens.competition.saveCompetition,
-    saveCombat: screens.competition.saveCombat,
-    saveManagedChild: screens.children.saveManagedChild,
-    showAdminsManagement: screens.admins.showAdminsManagement,
-    showChildrenManagement: screens.children.showChildrenManagement,
-    showCombatForm: screens.competition.showCombatForm,
-    showCompetitionFinalizationForm: screens.competition.showCompetitionFinalizationForm,
-    showHome,
-    showHomeCompetitionForm: screens.home.showHomeCompetitionForm,
-    showNextAccessInvitationPage: screens.admins.showNextAccessInvitationPage,
-    showPreviousAccessInvitationPage: screens.admins.showPreviousAccessInvitationPage,
-    startGoogleLogin: loginScreen.startGoogleLogin,
-    updateAccessInvitationSearch: screens.admins.updateAccessInvitationSearch
-  });
-
-  function deleteCurrentCompetition() {
-    screens.competition.deleteCurrentCompetition();
-  }
-
   loginScreen.init();
 })();
