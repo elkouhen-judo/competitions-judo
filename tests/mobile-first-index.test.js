@@ -18,6 +18,7 @@ const client = [
   "app-screen-competition.js",
   "app-screen-children.js",
   "app-screen-admins.js",
+  "app-runtime.js",
   "app.js"
 ]
   .map(file => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))

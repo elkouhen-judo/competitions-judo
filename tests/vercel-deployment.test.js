@@ -19,10 +19,13 @@ const client = [
   "app-screen-competition.js",
   "app-screen-children.js",
   "app-screen-admins.js",
+  "app-runtime.js",
   "app.js"
 ]
   .map(file => fs.readFileSync(path.join(root, "assets", file), "utf8"))
   .join("\n");
+const appRuntimeClient = fs.readFileSync(path.join(root, "assets", "app-runtime.js"), "utf8");
+const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
@@ -183,6 +186,12 @@ test("vercel runtime uses google auth without password login", () => {
   assert.doesNotMatch(uiBundle, /loginPassword/);
   assert.doesNotMatch(uiBundle, /Mot de passe oublié/);
   assert.doesNotMatch(vercel.rewrites.map(rewrite => rewrite.source).join("\n"), /auth-signup/);
+});
+
+test("app bootstrap delegates to the extracted runtime", () => {
+  assert.match(appRuntimeClient, /function createKirokuApp\(\)/);
+  assert.match(appBootstrapClient, /window\.createKirokuApp\(\)/);
+  assert.doesNotMatch(appBootstrapClient, /runServerWithOptions|logoutUser|applyInitialData/);
 });
 
 test("vercel login creates only the initial judoka profile", () => {
