@@ -51,7 +51,7 @@
       gap: 8px;
       padding: 12px 12px 8px;
       margin-bottom: 0;
-      background: #fff;
+      background: linear-gradient(180deg, #eff5ff 0%, #ffffff 100%);
       border-bottom: 1px solid var(--line);
     }
 
@@ -326,7 +326,7 @@
     }
 
     .button-secondary:hover {
-      background: #eef4ff;
+      background: #e8f1ff;
     }
 
     .button-secondary:disabled:hover,
@@ -370,7 +370,7 @@
       touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: #eef4ff; }
+    .autocomplete-option:hover { background: #e8f1ff; }
     .autocomplete-empty {
       padding: 12px 14px;
       color: var(--muted);
@@ -401,7 +401,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #eef4ff;
+      background: #e8f1ff;
     }
     .data-table td {
       cursor: pointer;
@@ -532,12 +532,12 @@
 
     .card-button:hover {
       background: #fff;
-      border-color: var(--primary);
+      border-color: var(--accent);
     }
 
     .card-button:focus-visible {
-      border-color: var(--primary);
-      outline: 3px solid rgba(216, 59, 38, 0.16);
+      border-color: var(--accent);
+      outline: 3px solid rgba(29, 78, 216, 0.18);
       outline-offset: 2px;
     }
 
@@ -558,7 +558,7 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 12px;
-      border-top: 1px solid #eef1f5;
+      border-top: 1px solid #d9e2f0;
       padding: 10px 0;
     }
 
@@ -601,7 +601,7 @@
       gap: 4px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: var(--soft);
+      background: #f8fbff;
       padding: 12px;
       transition: transform 180ms ease, border-color 180ms ease;
     }
@@ -659,9 +659,9 @@
     .result-badge {
       flex: 0 0 auto;
       min-width: 78px;
-      border: 1px solid var(--line);
+      border: 1px solid #bfd0ff;
       border-radius: 999px;
-      background: var(--soft);
+      background: #fff;
       color: var(--text);
       padding: 6px 10px;
       font-size: 13px;
@@ -695,25 +695,25 @@
     }
 
     .rank-silver {
-      border-color: #c7d2fe;
+      border-color: #bfd0ff;
       background: #fff;
       color: var(--text);
     }
 
     .rank-bronze {
-      border-color: #c7d2fe;
+      border-color: #bfd0ff;
       background: #fff;
       color: var(--text);
     }
 
     .rank-top5 {
-      border-color: #c7d2fe;
+      border-color: #bfd0ff;
       background: #fff;
       color: var(--text);
     }
 
     .rank-unclassified {
-      border-color: #d0d5dd;
+      border-color: #bfd0ff;
       background: #fff;
       color: var(--muted);
     }
@@ -1122,18 +1122,18 @@
     }
 
     .stat-card-highlight {
-      border-color: #c7d2fe;
+      border-color: #bfd0ff;
       background: #f8fbff;
     }
 
     .stat-card-success {
-      border-color: #c7d2fe;
-      background: #f8fbff;
+      border-color: #bfd0ff;
+      background: #fff;
     }
 
     .stat-card-danger {
-      border-color: #c7d2fe;
-      background: #f8fbff;
+      border-color: #bfd0ff;
+      background: #fff;
     }
 
     .judoka-hero {
@@ -1142,9 +1142,9 @@
       margin-bottom: 18px;
       padding: 18px;
       border-radius: 6px;
-      border: 1px solid var(--line);
+      border: 1px solid #bfd0ff;
       border-left: 4px solid var(--accent);
-      background: #fff;
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
       box-shadow: none;
     }
 
@@ -1183,7 +1183,7 @@
     }
 
     .hero-highlight {
-      color: var(--muted);
+      color: #3f4d63;
       font-size: 15px;
       margin: 0;
     }
