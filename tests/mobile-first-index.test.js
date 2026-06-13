@@ -149,15 +149,15 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
   assert.match(bundle, /window\.Vue\.createApp/);
   assert.match(bundle, /window\.Vue\.reactive/);
   assert.match(bundle, /v-model\.trim="registration\.firstName"/);
-  assert.match(bundle, /@submit\.prevent="submitProfileRegistration"/);
+  assert.match(bundle, /@submit\.prevent="submitProfileRegistration\(\)"/);
 });
 
 test("home screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="homeView" class="panel" v-cloak/);
   assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card" v-html="activeJudokaSummaryHtml"/);
   assert.match(bundle, /id="competitionsList" v-html="competitionsHtml"/);
-  assert.match(bundle, /@click="showHomeCompetitionForm"/);
-  assert.match(bundle, /@click="openHomeJudokaProfile"/);
+  assert.match(bundle, /@click="showHomeCompetitionForm\(\)"/);
+  assert.match(bundle, /@click="openHomeJudokaProfile\(\)"/);
   assert.match(bundle, /function ensureHomeViewModel\(\)/);
 });
 
@@ -173,7 +173,7 @@ test("children screen is mounted through Vue 3 for the progressive screen migrat
   assert.match(bundle, /id="childrenView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="childrenList" v-html="childrenListHtml"/);
   assert.match(bundle, /id="child_prenom" autocomplete="given-name" v-model\.trim="childForm\.firstName"/);
-  assert.match(bundle, /id="saveChildButton" @click="saveManagedChild"/);
+  assert.match(bundle, /id="saveChildButton" @click="saveManagedChild\(\)"/);
   assert.match(bundle, /function ensureChildrenViewModel\(\)/);
 });
 
@@ -182,7 +182,7 @@ test("admins screen is mounted through Vue 3 for the progressive screen migratio
   assert.match(bundle, /id="invite_email" autocomplete="email" placeholder="email@gmail.com" v-model\.trim="accessInvitationForm\.email"/);
   assert.match(bundle, /id="accessInvitationsList" v-html="accessInvitationsListHtml"/);
   assert.match(bundle, /id="adminsList" v-html="adminsListHtml"/);
-  assert.match(bundle, /id="saveAdminButton" @click="saveAdminRole"/);
+  assert.match(bundle, /id="saveAdminButton" @click="saveAdminRole\(\)"/);
   assert.match(bundle, /function ensureAdminsViewModel\(\)/);
 });
 
@@ -190,7 +190,7 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
   assert.match(bundle, /id="competitionView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competitionTitle">\{\{ competitionTitle \}\}<\/h2>/);
   assert.match(bundle, /id="combatsList" v-html="combatsHtml"/);
-  assert.match(bundle, /id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm"/);
+  assert.match(bundle, /id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm\(\)"/);
   assert.match(bundle, /function ensureCompetitionDetailViewModel\(\)/);
 });
 
@@ -215,7 +215,7 @@ test("competition form screen is mounted through Vue 3 for the progressive scree
   assert.match(bundle, /id="competitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competition_nom" v-model\.trim="competitionForm\.name"/);
   assert.match(bundle, /id="competition_date" v-model="competitionForm\.competitionDate"/);
-  assert.match(bundle, /@click="saveCompetition"/);
+  assert.match(bundle, /@click="saveCompetition\(\)"/);
   assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
 });
 
@@ -223,7 +223,7 @@ test("competition finalization screen is mounted through Vue 3 for the progressi
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competitionFinalizationSubtitle" class="subtitle">\{\{ finalizationSubtitle \}\}<\/p>/);
   assert.match(bundle, /id="finalization_classement" v-model="finalizationForm\.result"/);
-  assert.match(bundle, /@click="finalizeCompetition"/);
+  assert.match(bundle, /@click="finalizeCompetition\(\)"/);
   assert.match(bundle, /function ensureCompetitionFinalizationViewModel\(\)/);
 });
 
@@ -255,7 +255,7 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
   assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
   assert.match(bundle, /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/);
-  assert.match(bundle, /id="saveCombatButton" @click="saveCombat"/);
+  assert.match(bundle, /id="saveCombatButton" @click="saveCombat\(\)"/);
   assert.match(bundle, /@click="showCombatForm\(\)"/);
   assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
   assert.match(bundle, /function ensureCombatFormViewModel\(\)/);
