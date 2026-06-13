@@ -80,10 +80,18 @@
         <div id="homeFilters" class="filter-bar" :class="{ hidden: !canFilterByJudoka }">
           <label id="homeFilterLabel" for="filterJudokaText">Judoka actif</label>
           <div class="autocomplete-wrapper">
-            <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off">
-            <div class="autocomplete-dropdown" id="filterJudokaDropdown"></div>
+            <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="showFilterOptions = false">
+            <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">
+              <div class="autocomplete-option" @pointerdown.prevent="selectFilterJudoka(null)">— Tous —</div>
+              <div v-if="!filterOptions.length" class="autocomplete-empty">Aucun résultat</div>
+              <div v-for="option in filterOptions" :key="option.judokaId" class="autocomplete-option" @pointerdown.prevent="selectFilterJudoka(option)">
+                <div class="autocomplete-option-copy">
+                  <strong>{{ option.name }}</strong>
+                  <span class="autocomplete-option-meta">{{ option.meta }}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <input type="hidden" id="filterJudoka">
         </div>
         <div id="homeActiveJudokaSummary" class="summary home-context-card">
           <div class="home-context-copy">
@@ -605,13 +613,20 @@
       <div class="panel-body">
         <input type="hidden" id="competition_id" v-model="competitionForm.competitionId">
 
-        <div id="competitionOwnerBlock" class="hidden full-row">
+        <div id="competitionOwnerBlock" class="full-row" :class="{ hidden: !showCompetitionOwnerBlock }">
           <label>Judoka</label>
           <div class="autocomplete-wrapper">
-            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off">
-            <div class="autocomplete-dropdown" id="competition_judoka_dropdown"></div>
+            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="showOwnerOptions = false">
+            <div class="autocomplete-dropdown" id="competition_judoka_dropdown" v-show="showOwnerOptions">
+              <div v-if="!ownerOptions.length" class="autocomplete-empty">Aucun résultat</div>
+              <div v-for="option in ownerOptions" :key="option.judokaId" class="autocomplete-option" @pointerdown.prevent="selectCompetitionOwner(option)">
+                <div class="autocomplete-option-copy">
+                  <strong>{{ option.name }}</strong>
+                  <span class="autocomplete-option-meta">{{ option.meta }}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <input type="hidden" id="competition_id_judoka">
         </div>
 
         <label for="competition_nom">Nom de la compétition</label>

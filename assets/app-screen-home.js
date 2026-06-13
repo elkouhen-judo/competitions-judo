@@ -2,12 +2,10 @@
   function createKirokuHomeScreen(app) {
     const { state, screens, ui, notifications } = app;
     const {
-      $,
       cleanText,
       formatDate,
       getCompactJudokaLabel,
       getJudokaDisplayName,
-      getValue,
       showView
     } = ui;
     const { showError } = notifications;
@@ -15,6 +13,10 @@
       homeTitle: "Mon espace judoka",
       homeSubtitle: "Retrouvez votre fiche et vos compétitions.",
       filterPlaceholder: "Tous les judokas...",
+      filterJudokaText: "",
+      filterJudokaId: "",
+      filterOptions: [],
+      showFilterOptions: false,
       canFilterByJudoka: false,
       showHomeActions: false,
       canManageAdmins: false,
@@ -39,16 +41,13 @@
 
     function applyInitialData() {
       ensureHomeViewModel();
-      const filterInput = $("filterJudokaText");
-      const filterHidden = $("filterJudoka");
       const canFilterByJudoka = (state.isAdmin || state.isParent) && state.judokas.length > 0;
       homeViewModel.canFilterByJudoka = canFilterByJudoka;
       if (!canFilterByJudoka) {
-        filterInput.value = "";
-        filterHidden.value = "";
+        homeViewModel.filterJudokaText = "";
+        homeViewModel.filterJudokaId = "";
       }
 
-      ensureHomeFilterAutocomplete();
       ensureHomeActiveJudokaSelection();
       syncHomeContext();
     }
@@ -67,32 +66,15 @@
             deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
             openCompetition: screens.competition.openCompetition,
             openHomeJudokaProfile,
+            selectFilterJudoka,
             showAdminsManagement: screens.admins.showAdminsManagement,
             showChildrenManagement: screens.children.showChildrenManagement,
-            showHomeCompetitionForm
+            showHomeCompetitionForm,
+            showHomeFilterOptions,
+            updateFilterJudokaText
           };
         }
       }).mount("#homeView");
-    }
-
-    function ensureHomeFilterAutocomplete() {
-      const input = $("filterJudokaText");
-      if (input.dataset.bound) {
-        return;
-      }
-
-      screens.competition.bindAutocomplete({
-        inputId: "filterJudokaText",
-        dropdownId: "filterJudokaDropdown",
-        hiddenId: "filterJudoka",
-        getItems: () => state.judokas,
-        allowBlank: true,
-        onChange: () => {
-          syncHomeContext();
-          renderCompetitions();
-        }
-      });
-      input.dataset.bound = "1";
     }
 
     function getAccessibleHomeJudokas() {
@@ -112,14 +94,12 @@
     }
 
     function ensureHomeActiveJudokaSelection() {
-      const input = $("filterJudokaText");
-      const hidden = $("filterJudoka");
       const accessibleJudokas = getAccessibleHomeJudokas();
-      const currentValue = hidden.value;
+      const currentValue = homeViewModel.filterJudokaId;
 
       if (!(state.isAdmin || state.isParent)) {
-        input.value = "";
-        hidden.value = "";
+        homeViewModel.filterJudokaText = "";
+        homeViewModel.filterJudokaId = "";
         return;
       }
 
@@ -129,8 +109,8 @@
 
       const defaultId = getDefaultHomeJudokaId();
       const defaultJudoka = accessibleJudokas.find(j => String(j.judokaId) === String(defaultId));
-      input.value = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
-      hidden.value = defaultJudoka ? String(defaultJudoka.judokaId) : "";
+      homeViewModel.filterJudokaText = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
+      homeViewModel.filterJudokaId = defaultJudoka ? String(defaultJudoka.judokaId) : "";
     }
 
     function getHomeActiveJudokaId() {
@@ -138,7 +118,7 @@
         return "";
       }
       if (state.isAdmin || state.isParent) {
-        return getValue("filterJudoka") || "";
+        return homeViewModel ? homeViewModel.filterJudokaId || "" : "";
       }
       return String(state.currentUser.judokaId || "");
     }
@@ -146,6 +126,43 @@
     function getHomeActiveJudoka() {
       const targetId = getHomeActiveJudokaId();
       return getAccessibleHomeJudokas().find(j => String(j.judokaId) === String(targetId)) || null;
+    }
+
+    function getHomeFilterOption(judoka) {
+      return {
+        judokaId: String(judoka.judokaId || ""),
+        name: getJudokaDisplayName(judoka) || "Judoka",
+        meta: cleanText(judoka.accountEmail) ? judoka.accountEmail : `ID ${String(judoka.judokaId || "").slice(-6)}`,
+        searchText: `${getJudokaDisplayName(judoka)} ${judoka.accountEmail || ""} ${judoka.judokaId || ""}`.toLowerCase()
+      };
+    }
+
+    function refreshHomeFilterOptions() {
+      const query = cleanText(homeViewModel.filterJudokaText).toLowerCase();
+      homeViewModel.filterOptions = getAccessibleHomeJudokas()
+        .map(getHomeFilterOption)
+        .filter(option => !query || option.searchText.includes(query));
+    }
+
+    function showHomeFilterOptions() {
+      refreshHomeFilterOptions();
+      homeViewModel.showFilterOptions = true;
+    }
+
+    function updateFilterJudokaText() {
+      homeViewModel.filterJudokaId = "";
+      refreshHomeFilterOptions();
+      homeViewModel.showFilterOptions = true;
+      syncHomeContext();
+      renderCompetitions();
+    }
+
+    function selectFilterJudoka(option) {
+      homeViewModel.filterJudokaId = option ? option.judokaId : "";
+      homeViewModel.filterJudokaText = option ? option.name : "";
+      homeViewModel.showFilterOptions = false;
+      syncHomeContext();
+      renderCompetitions();
     }
 
     function syncHomeContext() {
@@ -340,8 +357,10 @@
       getHomeActiveJudokaId,
       openHomeJudokaProfile,
       renderCompetitions,
+      selectFilterJudoka,
       showHome,
       showHomeCompetitionForm,
+      showHomeFilterOptions,
       syncHomeContext
     };
   }
