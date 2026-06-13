@@ -18,7 +18,7 @@ const createCombatsService = require("./services/combats.service");
 const createChildrenService = require("./services/children.service");
 const createProfileService = require("./services/profile.service");
 const createRegistrationService = require("./services/registration.service");
-const { getCompetitionCategoryLabel, getCompetitionResultRank } = require("./domain/competition-results");
+const { getCompetitionCategoryLabel } = require("./domain/competition-results");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season");
 const {
   createJudoka,
@@ -118,7 +118,6 @@ const profileService = createProfileService({
   buildJudokaProfileSnapshot,
   userContextService,
   getCompetitionCategoryLabel,
-  getCompetitionResultRank,
   getCurrentSeasonBounds,
   isDateWithinSeason
 });
