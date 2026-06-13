@@ -407,15 +407,15 @@
       </div>
     </section>
 
-    <section id="competitionFormView" class="panel hidden">
+    <section id="competitionFormView" class="panel hidden" v-cloak>
       <div class="panel-header">
         <div>
-          <h2 id="competitionFormTitle">Compétition</h2>
+          <h2 id="competitionFormTitle">{{ competitionFormTitle }}</h2>
           <p class="subtitle">Nom, date et catégories</p>
         </div>
       </div>
       <div class="panel-body">
-        <input type="hidden" id="competition_id">
+        <input type="hidden" id="competition_id" v-model="competitionForm.competitionId">
 
         <div id="competitionOwnerBlock" class="hidden full-row">
           <label>Judoka</label>
@@ -427,15 +427,15 @@
         </div>
 
         <label for="competition_nom">Nom de la compétition</label>
-        <input type="text" id="competition_nom">
+        <input type="text" id="competition_nom" v-model.trim="competitionForm.name">
 
         <label for="competition_date">Date</label>
-        <input type="date" id="competition_date">
+        <input type="date" id="competition_date" v-model="competitionForm.competitionDate">
 
         <div class="form-grid">
           <div>
             <label for="competition_categorie_age">Catégorie d'âge</label>
-            <select id="competition_categorie_age">
+            <select id="competition_categorie_age" v-model="competitionForm.ageCategory">
               <option value="">Non renseignée</option>
               <option value="Poussinet">Poussinet</option>
               <option value="Poussin">Poussin</option>
@@ -449,13 +449,13 @@
           </div>
           <div>
             <label for="competition_categorie_poids">Catégorie de poids</label>
-            <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg">
+            <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg" v-model.trim="competitionForm.weightCategory">
           </div>
         </div>
 
-        <div id="competitionResultBlock" class="hidden">
+        <div id="competitionResultBlock" :class="{ hidden: !showCompetitionResultBlock }">
           <label for="competition_result">Classement / résultat</label>
-          <select id="competition_result">
+          <select id="competition_result" v-model="competitionForm.result">
             <option value="">Non renseigné</option>
             <option value="1er">1er</option>
             <option value="2e">2e</option>
@@ -467,11 +467,11 @@
         </div>
 
         <div class="form-actions mobile-action-bar">
-          <button class="button-secondary" onclick="cancelCompetitionForm()">
+          <button class="button-secondary" @click="cancelCompetitionForm">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
             Annuler
           </button>
-          <button onclick="saveCompetition()">
+          <button @click="saveCompetition">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
             Enregistrer
           </button>

@@ -195,12 +195,12 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
 });
 
 test("competition form keeps age and weight categories without place or actual weight", () => {
-  assert.match(bundle, /<select id="competition_categorie_age">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/);
-  assert.match(bundle, /id="competition_categorie_poids"/);
-  assert.match(bundle, /id="competitionResultBlock" class="hidden"/);
-  assert.match(bundle, /id="competition_result"/);
-  assert.match(bundle, /setHidden\("competitionResultBlock", false\);/);
-  assert.match(bundle, /setHidden\("competitionResultBlock", true\);/);
+  assert.match(bundle, /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/);
+  assert.match(bundle, /id="competition_categorie_poids" placeholder="ex: -73kg" v-model\.trim="competitionForm\.weightCategory"/);
+  assert.match(bundle, /id="competitionResultBlock" :class="\{ hidden: !showCompetitionResultBlock \}"/);
+  assert.match(bundle, /id="competition_result" v-model="competitionForm\.result"/);
+  assert.match(bundle, /competitionFormViewModel\.showCompetitionResultBlock = true;/);
+  assert.match(bundle, /competitionFormViewModel\.showCompetitionResultBlock = false;/);
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
   assert.match(bundle, /<span id="competitionAgePoids"/);
@@ -208,7 +208,15 @@ test("competition form keeps age and weight categories without place or actual w
 
 test("new competition form defaults the date to today", () => {
   assert.match(bundle, /function getCurrentLocalDate\(\)/);
-  assert.match(bundle, /competition_date: getCurrentLocalDate\(\),/);
+  assert.match(bundle, /competitionDate: getCurrentLocalDate\(\)/);
+});
+
+test("competition form screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(bundle, /id="competitionFormView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="competition_nom" v-model\.trim="competitionForm\.name"/);
+  assert.match(bundle, /id="competition_date" v-model="competitionForm\.competitionDate"/);
+  assert.match(bundle, /@click="saveCompetition"/);
+  assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
 });
 
 test("owner autocomplete provides disambiguation metadata", () => {

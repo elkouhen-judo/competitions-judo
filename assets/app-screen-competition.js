@@ -37,7 +37,21 @@
       canFinalizeCompetition: false,
       combatsHtml: ""
     };
+    const defaultCompetitionForm = {
+      competitionId: "",
+      name: "",
+      competitionDate: "",
+      ageCategory: "",
+      weightCategory: "",
+      result: ""
+    };
+    const defaultCompetitionFormViewState = {
+      competitionFormTitle: "Compétition",
+      showCompetitionResultBlock: false,
+      competitionForm: { ...defaultCompetitionForm }
+    };
     let competitionDetailViewModel = null;
+    let competitionFormViewModel = null;
 
     function ensureCompetitionDetailViewModel() {
       if (!window.Vue || competitionDetailViewModel) {
@@ -58,6 +72,27 @@
           };
         }
       }).mount("#competitionView");
+    }
+
+    function ensureCompetitionFormViewModel() {
+      if (!window.Vue || competitionFormViewModel) {
+        return;
+      }
+
+      competitionFormViewModel = window.Vue.reactive({
+        ...defaultCompetitionFormViewState,
+        competitionForm: { ...defaultCompetitionForm }
+      });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(competitionFormViewModel),
+            cancelCompetitionForm,
+            saveCompetition
+          };
+        }
+      }).mount("#competitionFormView");
     }
 
     function openCompetition(id, keepMessage) {
@@ -165,6 +200,7 @@
 
     function showCompetitionForm(id) {
       clearMessage();
+      ensureCompetitionFormViewModel();
       state.previousView = state.currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
@@ -175,30 +211,26 @@
           return;
         }
 
-        setText("competitionFormTitle", "Modifier la compétition");
+        competitionFormViewModel.competitionFormTitle = "Modifier la compétition";
         setCompetitionOwnerField(c.ownerJudokaId || "");
-        setValues({
-          competition_id: c.competitionId,
-          competition_nom: c.name,
-          competition_date: toInputDate(c.competitionDate),
-          competition_categorie_age: c.ageCategory,
-          competition_categorie_poids: c.weightCategory,
-          competition_result: c.result
+        Object.assign(competitionFormViewModel.competitionForm, {
+          competitionId: c.competitionId || "",
+          name: c.name || "",
+          competitionDate: toInputDate(c.competitionDate),
+          ageCategory: c.ageCategory || "",
+          weightCategory: c.weightCategory || "",
+          result: c.result || ""
         });
-        setHidden("competitionResultBlock", false);
+        competitionFormViewModel.showCompetitionResultBlock = true;
       } else {
         state.previousView = "homeView";
-        setText("competitionFormTitle", "Ajouter une compétition");
+        competitionFormViewModel.competitionFormTitle = "Ajouter une compétition";
         setCompetitionOwnerField(app.screens.home.getHomeActiveJudokaId());
-        setValues({
-          competition_id: "",
-          competition_nom: "",
-          competition_date: getCurrentLocalDate(),
-          competition_categorie_age: "",
-          competition_categorie_poids: "",
-          competition_result: ""
+        Object.assign(competitionFormViewModel.competitionForm, {
+          ...defaultCompetitionForm,
+          competitionDate: getCurrentLocalDate()
         });
-        setHidden("competitionResultBlock", true);
+        competitionFormViewModel.showCompetitionResultBlock = false;
       }
 
       showView("competitionFormView");
@@ -215,13 +247,14 @@
     }
 
     function saveCompetition() {
+      ensureCompetitionFormViewModel();
       const competition = {
-        competitionId: getValue("competition_id"),
-        name: getValue("competition_nom"),
-        competitionDate: getValue("competition_date"),
-        ageCategory: getValue("competition_categorie_age"),
-        weightCategory: getValue("competition_categorie_poids"),
-        result: getValue("competition_result")
+        competitionId: competitionFormViewModel.competitionForm.competitionId,
+        name: competitionFormViewModel.competitionForm.name,
+        competitionDate: competitionFormViewModel.competitionForm.competitionDate,
+        ageCategory: competitionFormViewModel.competitionForm.ageCategory,
+        weightCategory: competitionFormViewModel.competitionForm.weightCategory,
+        result: competitionFormViewModel.competitionForm.result
       };
 
       if (state.isAdmin || state.isParent) {
