@@ -8,12 +8,8 @@
     } = app;
     const {
       cleanText,
-      emptyState,
-      escapeAttribute,
-      escapeHtml,
       formatDateTime,
       getJudokaDisplayName,
-      icons,
       showView
     } = ui;
     const {
@@ -28,9 +24,15 @@
     const defaultAdminsViewState = {
       accessInvitationForm: { ...defaultAccessInvitationForm },
       accessInvitationSearch: "",
-      accessInvitationsSummaryHtml: "",
-      accessInvitationsListHtml: "",
-      adminsListHtml: "",
+      accessInvitations: [],
+      accessInvitationsSummary: "",
+      accessInvitationsEmptyMessage: "Aucune invitation en attente.",
+      canResetAccessInvitationSearch: false,
+      canShowPreviousAccessInvitationPage: false,
+      canShowNextAccessInvitationPage: false,
+      hasAccessInvitations: false,
+      admins: [],
+      hasAdmins: false,
       adminEmail: ""
     };
     let adminsViewModel = null;
@@ -49,10 +51,15 @@
         setup() {
           return {
             ...window.Vue.toRefs(adminsViewModel),
+            deleteAccessInvitation,
+            resetAccessInvitationSearch,
             resetAccessInvitationForm,
             resetAdminForm,
+            revokeAdminRole,
             saveAccessInvitation,
             saveAdminRole,
+            showNextAccessInvitationPage,
+            showPreviousAccessInvitationPage,
             showHome: () => app.showHome(),
             updateAccessInvitationSearch
           };
@@ -92,8 +99,15 @@
     function renderManagedAccessInvitations() {
       ensureAdminsViewModel();
       if (!state.managedAccessInvitations.length) {
-        adminsViewModel.accessInvitationsSummaryHtml = "";
-        adminsViewModel.accessInvitationsListHtml = emptyState("Aucune invitation en attente.");
+        Object.assign(adminsViewModel, {
+          accessInvitations: [],
+          accessInvitationsSummary: "",
+          accessInvitationsEmptyMessage: "Aucune invitation en attente.",
+          canResetAccessInvitationSearch: false,
+          canShowPreviousAccessInvitationPage: false,
+          canShowNextAccessInvitationPage: false,
+          hasAccessInvitations: false
+        });
         return;
       }
       const filteredInvitations = getFilteredAccessInvitations();
@@ -104,54 +118,21 @@
       const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
       const summaryLabel = `${filteredInvitations.length} invitation(s)${state.accessInvitationSearch ? " trouvée(s)" : ""} · page ${currentPage} / ${totalPages}.`;
 
-      adminsViewModel.accessInvitationsSummaryHtml = `
-        <div class="list-summary">
-          <p class="list-summary-text">${escapeHtml(summaryLabel)}</p>
-          <div class="list-summary-actions">
-            ${state.accessInvitationSearch
-              ? `<button class="button-secondary" type="button" onclick="resetAccessInvitationSearch()">Effacer le filtre</button>`
-              : ""}
-            ${currentPage > 1
-              ? `<button class="button-secondary" type="button" onclick="showPreviousAccessInvitationPage()">Page précédente</button>`
-              : ""}
-            ${currentPage < totalPages
-              ? `<button class="button-secondary" type="button" onclick="showNextAccessInvitationPage()">Page suivante</button>`
-              : ""}
-          </div>
-        </div>
-      `;
-
-      if (!filteredInvitations.length) {
-        adminsViewModel.accessInvitationsListHtml = `<div class="empty-state">Aucune invitation trouvée pour "${escapeHtml(state.accessInvitationSearch)}".</div>`;
-        return;
-      }
-
-      let html = `<div class="list">`;
-      visibleInvitations.forEach(invitation => {
-        html += `
-          <article class="card admin-card">
-            <p class="card-title">${escapeHtml(invitation.email || "Invitation")}</p>
-            <div class="card-meta">
-              <div class="meta-row">
-                <span class="meta-label">Profil</span>
-                <span class="meta-value">${escapeHtml(invitation.invitedProfileType || "JUDOKA")}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Créée le</span>
-                <span class="meta-value">${escapeHtml(formatDateTime(invitation.createdAt))}</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button class="button-danger" type="button" data-email="${escapeAttribute(invitation.email)}" onclick="deleteAccessInvitation(this.dataset.email)">
-                ${icons.trash}
-                Retirer l'invitation
-              </button>
-            </div>
-          </article>
-        `;
+      Object.assign(adminsViewModel, {
+        accessInvitations: visibleInvitations.map(invitation => ({
+          email: invitation.email || "Invitation",
+          invitedProfileType: invitation.invitedProfileType || "JUDOKA",
+          createdAt: formatDateTime(invitation.createdAt)
+        })),
+        accessInvitationsSummary: summaryLabel,
+        accessInvitationsEmptyMessage: state.accessInvitationSearch
+          ? `Aucune invitation trouvée pour "${state.accessInvitationSearch}".`
+          : "Aucune invitation en attente.",
+        canResetAccessInvitationSearch: Boolean(state.accessInvitationSearch),
+        canShowPreviousAccessInvitationPage: currentPage > 1,
+        canShowNextAccessInvitationPage: currentPage < totalPages,
+        hasAccessInvitations: Boolean(filteredInvitations.length)
       });
-      html += `</div>`;
-      adminsViewModel.accessInvitationsListHtml = html;
     }
 
     function getFilteredAccessInvitations() {
@@ -217,34 +198,17 @@
 
     function renderManagedAdmins() {
       ensureAdminsViewModel();
-      if (!state.managedAdmins.length) {
-        adminsViewModel.adminsListHtml = emptyState("Aucun admin trouvé.");
-        return;
-      }
-
-      let html = `<div class="list">`;
-      state.managedAdmins.forEach(admin => {
+      adminsViewModel.admins = state.managedAdmins.map(admin => {
         const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
         const isCurrentAdmin = state.currentUser && String(state.currentUser.judokaId) === String(admin.judokaId);
-        html += `
-          <article class="card admin-card">
-            <p class="card-title">${escapeHtml(fullName)}</p>
-            <div class="card-meta">
-              <div class="meta-row">
-                <span class="meta-label">Email</span>
-                <span class="meta-value">${escapeHtml(admin.accountEmail || "Non renseigné")}</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              ${isCurrentAdmin
-                ? `<span class="current-admin-note">Vous</span>`
-                : `<button class="button-danger" type="button" data-id="${escapeAttribute(admin.judokaId)}" data-name="${escapeAttribute(fullName)}" onclick="revokeAdminRole(this.dataset.id, this.dataset.name)">${icons.shieldOff}Révoquer</button>`}
-            </div>
-          </article>
-        `;
+        return {
+          judokaId: admin.judokaId || "",
+          fullName,
+          accountEmail: admin.accountEmail || "Non renseigné",
+          isCurrentAdmin
+        };
       });
-      html += `</div>`;
-      adminsViewModel.adminsListHtml = html;
+      adminsViewModel.hasAdmins = adminsViewModel.admins.length > 0;
     }
 
     function resetAdminForm() {
