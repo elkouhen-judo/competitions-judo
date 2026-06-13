@@ -155,7 +155,27 @@
               <p class="subtitle">Dernière compétition enregistrée et catégorie issue du dernier combat.</p>
             </div>
           </div>
-          <div id="judokaLastCompetition" class="summary" v-html="lastCompetitionHtml"></div>
+          <div id="judokaLastCompetition" class="summary">
+            <div v-if="!hasLastCompetition" class="empty-state">Aucune compétition enregistrée pour l'instant.</div>
+            <template v-else>
+              <div class="meta-row">
+                <span class="meta-label">Compétition</span>
+                <span class="meta-value">{{ lastCompetition.name }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Date</span>
+                <span class="meta-value">{{ lastCompetition.date }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Catégorie judoka</span>
+                <span class="meta-value">{{ lastCompetition.category }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Poids</span>
+                <span class="meta-value">{{ lastCompetition.weightCategory }}</span>
+              </div>
+            </template>
+          </div>
         </div>
 
         <div class="section">
@@ -192,7 +212,26 @@
               <p class="subtitle">Meilleurs classements de la saison affichée.</p>
             </div>
           </div>
-          <div id="judokaBestResults" v-html="bestResultsHtml"></div>
+          <div id="judokaBestResults">
+            <div v-if="!hasBestResults" class="empty-state">Pas encore de classement sur cette saison.</div>
+            <div v-else class="list">
+              <article v-for="result in bestResults" :key="`${result.name}-${result.date}-${result.result}`" class="card">
+                <p class="card-title">{{ result.name }}</p>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value">{{ result.date }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Résultat</span>
+                    <span class="meta-value">
+                      <span class="result-badge classement-badge" :class="result.badgeClass">{{ result.result }}</span>
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
       </div>
     </section>
