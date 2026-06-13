@@ -40,6 +40,55 @@ Après la modification :
 - mettre à jour `SPEC-TECH.md` quand architecture, données, auth, sécurité ou déploiement changent ;
 - vérifier `git status`.
 
+## Cadrage Avec LLM
+
+Avant de lancer un changement avec assistance LLM, cadrer explicitement:
+
+- l'objectif attendu en une phrase ;
+- le périmètre exact, y compris ce qui est hors scope ;
+- les références fonctionnelles et techniques à respecter ;
+- les contraintes de style, de structure ou de comportement ;
+- la méthode de travail attendue, de préférence par petites étapes ;
+- les critères de fin et de validation ;
+- la cadence de commit si le changement doit rester récupérable.
+
+Template simple à réutiliser:
+
+```text
+Objectif:
+- [résultat attendu en une phrase]
+
+Périmètre:
+- Modifier uniquement [fichiers / écrans / flux].
+- Ne pas toucher à [ce qui est hors scope].
+
+Références:
+- Fonctionnel: `SPEC.md`
+- Technique: `SPEC-TECH.md` si nécessaire
+- Comportement existant à préserver: [points clés]
+
+Contraintes:
+- Respecter les patterns du dépôt.
+- Mobile first.
+- Garder les changements petits et atomiques.
+- Ne pas introduire de nouvelle dépendance sans raison forte.
+
+Méthode:
+- Avancer écran par écran ou étape par étape.
+- Vérifier chaque étape avant de continuer.
+- Corriger seulement ce qui est nécessaire pour atteindre l'objectif.
+
+Validation:
+- Lancer les tests ciblés.
+- Puis la suite pertinente si le comportement est partagé.
+- Vérifier `git status` après chaque étape.
+
+Livraison:
+- Faire un commit par étape terminée.
+- Pousser après chaque commit si le flux projet l'exige.
+- S'arrêter si un point métier ou technique manque de clarté.
+```
+
 ## Spécifications
 
 `SPEC.md` contient le fonctionnel :
