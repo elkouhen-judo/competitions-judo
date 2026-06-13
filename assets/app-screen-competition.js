@@ -9,7 +9,6 @@
       getCurrentLocalDate,
       getJudokaDisplayName,
       normalizeDisplayName,
-      setHidden,
       toInputDate,
       showView
     } = ui;
