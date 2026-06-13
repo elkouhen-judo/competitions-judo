@@ -28,7 +28,6 @@
   const {
     $,
     escapeHtml,
-    setHidden,
     viewIds
   } = ui;
   const notifications = window.createKirokuNotifications({ $, escapeHtml });
@@ -144,10 +143,6 @@
     const roleLabel = state.isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
     $("userInfo").innerHTML =
       `<strong>${escapeHtml(ui.getJudokaDisplayName(state.currentUser) || "")}</strong> - ${roleLabel}`;
-    setHidden("homeAdminActions", false);
-    setHidden("manageAdminsButton", !state.isAdmin);
-    setHidden("manageChildrenButton", !state.canManageChildren);
-
     screens.home.applyInitialData();
   }
 

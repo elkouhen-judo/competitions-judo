@@ -59,7 +59,7 @@ test("small-screen layout is the base and desktop is progressive", () => {
 });
 
 test("admin competition management stays visible on mobile", () => {
-  assert.match(bundle, /id="homeAdminActions" class="toolbar admin-actions hidden"/);
+  assert.match(bundle, /id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions"/);
   assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
   assert.match(bundle, /id="competitionAdminActions" class="competition-management-actions" :class="\{ hidden: !canEditCompetition \}"/);
   assert.match(bundle, /id="editCompetitionButton"/);
