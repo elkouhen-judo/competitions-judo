@@ -1,134 +1,93 @@
-# TODO - Simplifier la maintenance du code par un LLM
+# TODO - Axes de simplification
 
 Audit realise le 2026-06-12.
 
-Objectif : rendre les changements futurs plus locaux, plus testables et plus faciles a verifier par un LLM.
+Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les prochains changements plus locaux, plus rapides a verifier et moins fragiles pour un LLM.
 
-## P0 - Prioritaire
+## P0 - Simplifications prioritaires
 
-1. Decouper `assets/app.js` par ecran ou flux utilisateur
-   - Constat : `assets/app.js` contient environ 1600 lignes et melange orchestration, etat, rendu HTML, formulaires, RPC, navigation et bindings globaux.
-   - Pratique : creer des modules frontend par flux : `home`, `competition-detail`, `competition-form`, `combat-form`, `judoka-profile`, `children-management`, `admin-management`.
-   - Benefice LLM : une demande utilisateur pointera vers un module court au lieu d'un gros fichier central.
-   - Critere de fin : aucun module frontend applicatif ne depasse environ 300 lignes, hors CSS.
+1. Extraire un client RPC frontend
+   - Constat : `assets/app.js` garde `runServer(method, args, success, failure)`, la session, le `fetch`, le routage d'erreurs et certaines transitions login.
+   - Simplification : creer `assets/app-api.js` avec des fonctions nommees (`getInitialData`, `saveCompetition`, `deleteCombat`, etc.) qui retournent des promesses et normalisent les erreurs.
+   - Critere de fin : les ecrans n'appellent plus `app.runServer("nomMethode", args)` directement.
 
-2. Extraire un client RPC frontend explicite
-   - Constat : `runServer` connait a la fois la session, le transport HTTP, les erreurs metier et certaines transitions UI.
-   - Pratique : creer `assets/app-api.js` avec des fonctions nommees : `getInitialData`, `saveCompetition`, `deleteCombat`, etc.
-   - Benefice LLM : les contrats entre navigateur et backend deviennent lisibles sans parcourir toute l'IHM.
-   - Critere de fin : les ecrans n'appellent plus `runServer("nomMethode", args)` directement.
+2. Remplacer les decisions frontend basees sur le texte des erreurs
+   - Constat : la navigation login/invitation/session depend de `message.includes(...)` dans `assets/app.js` et `assets/app-auth.js`.
+   - Simplification : faire retourner `/api/rpc` des erreurs structurees compatibles (`{ code, message }`) pour les cas `SESSION_INVALID`, `INVITATION_FOUND`, `INVITATION_REQUIRED`.
+   - Critere de fin : les transitions UI critiques ne dependent plus de fragments de messages serveur.
 
-3. Documenter les contrats RPC dans un fichier court et maintenu
-   - Constat : `SPEC-TECH.md` liste les methodes, mais le contrat executable reste implicite dans `core/index.js`, les services et le frontend.
-   - Pratique : creer `docs/rpc-contracts.md` ou `core/rpc-contracts.js` listant pour chaque methode : entrees, sortie, erreurs metier principales.
-   - Benefice LLM : avant de modifier un flux, le LLM peut verifier le contrat attendu sans inferer les formats.
-   - Critere de fin : chaque methode exposee dans `methods` a une entree dans le contrat.
+3. Supprimer les handlers globaux et les `onclick` inline
+   - Constat : `assets/app.js` expose de nombreuses fonctions via `Object.assign(window, ...)` et les templates HTML utilisent encore `onclick`.
+   - Simplification : utiliser `data-action` / `data-id` avec delegation d'evenements par ecran.
+   - Critere de fin : `Object.assign(window, ...)` disparait ou se limite a un cas documente, et les tests ne recherchent plus de `onclick`.
 
-4. Centraliser les transitions d'etat applicatif frontend
-   - Constat : `state` est explicite, mais il est modifie directement depuis beaucoup de fonctions.
-   - Pratique : introduire des actions nommees : `applyInitialData`, `setCurrentCompetitionDetail`, `setManagedChildren`, `resetToHome`, etc., dans un module d'etat.
-   - Benefice LLM : les mutations deviennent previsibles et les effets de bord plus faciles a auditer.
-   - Critere de fin : les ecrans ne modifient plus directement les champs complexes de `state` sauf via des actions.
+4. Isoler l'autocomplete judoka
+   - Constat : `bindAutocomplete` est generique mais vit dans `assets/app-screen-competition.js`; l'accueil l'utilise via `screens.competition.bindAutocomplete`.
+   - Simplification : creer `assets/app-autocomplete.js` avec une API explicite et sans dependance a l'ecran competition.
+   - Critere de fin : l'ecran home ne depend plus de l'ecran competition pour choisir un judoka.
 
-5. Remplacer les handlers `onclick` globaux par des bindings centralises
-   - Constat : le HTML genere contient beaucoup de `onclick="..."` et `Object.assign(window, ...)` expose de nombreuses fonctions.
-   - Pratique : utiliser des attributs `data-action` / `data-id` et un binding par vue ou une delegation d'evenements.
-   - Benefice LLM : moins de couplage invisible entre templates HTML et fonctions globales.
-   - Critere de fin : `Object.assign(window, ...)` disparait ou ne garde que des cas exceptionnels documentes.
+5. Rendre explicite le registre RPC backend
+   - Constat : `core/index.js` compose la surface publique par spreads de services, ce qui masque la liste exacte des methodes exposees.
+   - Simplification : declarer une table RPC unique et explicite (`getInitialData`, `saveCompetition`, `ajouterCombat`, etc.) avec une courte intention par methode.
+   - Critere de fin : renommer ou supprimer une methode publique impose une modification visible dans un seul registre.
 
-## P1 - Important
+## P1 - Simplifications importantes
 
-6. Extraire les templates HTML frontend en fonctions pures
-   - Constat : plusieurs fonctions construisent directement de longs fragments HTML dans les fonctions de rendu.
-   - Pratique : creer des fonctions pures comme `renderCompetitionCardHtml`, `renderCombatCardHtml`, `renderAdminCardHtml`.
-   - Benefice LLM : une modification visuelle devient locale et testable avec une entree simple.
-   - Critere de fin : les fonctions de rendu orchestrent la liste, les templates generent seulement du HTML.
+6. Factoriser le chargement du contexte utilisateur dans les services
+   - Constat : `competitions.service.js`, `combats.service.js` et `children.service.js` repetent la sequence `getCurrentUserContext` ou `getCurrentUser`, conversion canonique, scope et verification.
+   - Simplification : ajouter des helpers de service comme `getDomainUserContext(email)` et `getRequiredCurrentUser(email)`.
+   - Critere de fin : les services lisent d'abord l'intention metier, pas la plomberie d'auth/contexte.
 
-7. Ajouter des tests unitaires sur les helpers frontend purs
-   - Constat : les tests couvrent bien le backend, les specs et la structure mobile, mais peu la logique frontend extraite.
-   - Pratique : tester les fonctions pures d'etat, de filtrage, de selection de judoka actif et de rendu HTML critique.
-   - Benefice LLM : les refactos frontend deviennent moins risqués.
-   - Critere de fin : chaque module frontend extrait a au moins un test cible quand il contient de la logique.
+7. Clarifier les DTO par cas d'usage
+   - Constat : `domain-adapters.js` convertit entre formats Supabase, domaine et UI, mais les noms restent generiques (`toCompetitionReadModel`, `toJudokaReadModel`).
+   - Simplification : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) ou documenter les champs attendus par methode RPC.
+   - Critere de fin : chaque reponse RPC complexe a un DTO explicite ou une entree de contrat.
 
-8. Creer un registre unique des methodes backend exposees
-   - Constat : `core/index.js` compose `methods` par spread de services, ce qui est pratique mais rend la surface publique moins visible.
-   - Pratique : declarer explicitement la table RPC exportee avec un commentaire court par methode ou un mapping `methodName: service.method`.
-   - Benefice LLM : impossible de modifier ou renommer une methode publique sans voir l'impact API.
-   - Critere de fin : la liste publique des methodes RPC est lisible en un seul endroit.
+8. Extraire les templates HTML frontend en fonctions pures
+   - Constat : les ecrans construisent encore de longs fragments HTML avec `innerHTML`, rendu, echappement et actions melanges.
+   - Simplification : creer des fonctions pures par carte ou bloc (`competitionCardHtml`, `combatCardHtml`, `invitationRowHtml`, `childCardHtml`).
+   - Critere de fin : les fonctions de rendu orchestrent les listes; les templates ne font que transformer des donnees en HTML.
 
-9. Stabiliser les DTO avec des adaptateurs nommes par cas d'usage
-   - Constat : `domain-adapters.js` centralise deja des conversions, mais certains formats restent relies aux attentes UI.
-   - Pratique : nommer les DTO selon leur usage : `CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`.
-   - Benefice LLM : les champs attendus par chaque ecran sont plus clairs.
-   - Critere de fin : chaque reponse RPC complexe indique explicitement le DTO renvoye.
+9. Rendre les tests frontend moins couples aux chaines HTML
+   - Constat : plusieurs tests valident des regex longues sur le bundle complet et figent des details d'implementation (`onclick`, classes, ordre HTML).
+   - Simplification : tester des invariants plus stables via helpers purs, conventions de DOM minimales et tests structurels courts.
+   - Critere de fin : un refacto de template sans changement fonctionnel ne casse pas une grande partie de `tests/mobile-first-index.test.js` ou `tests/vercel-deployment.test.js`.
 
-10. Ajouter un test anti-regression sur la separation navigateur/backend
-    - Constat : la separation est deja testee partiellement, mais c'est une contrainte critique pour la securite et la clarte.
-    - Pratique : renforcer le test qui verifie que `assets/*` et `/api/client` n'importent jamais `core/`.
-    - Benefice LLM : un futur refacto ne pourra pas embarquer par erreur du code backend dans le navigateur.
-    - Critere de fin : un test echoue si `core` est reference depuis les assets client.
+10. Ajouter des scripts de test par zone
+    - Constat : `package.json` expose seulement `npm test`, alors que les changements schema, backend et structure frontend n'ont pas le meme perimetre.
+    - Simplification : ajouter `test:backend`, `test:frontend-structure`, `test:schema` en reutilisant les fichiers de test existants.
+    - Critere de fin : un changement local peut lancer une verification ciblee avant la suite complete.
 
-## P2 - Confort et lisibilite
+## P2 - Nettoyage utile
 
-11. Ajouter des en-tetes courts dans les gros modules restants
-    - Constat : certains fichiers sont comprehensibles, mais leur intention n'est pas toujours visible au premier coup d'oeil.
-    - Pratique : ajouter un commentaire d'en-tete de 2 ou 3 lignes : responsabilite, dependances, ce que le module ne doit pas faire.
-    - Benefice LLM : limite les modifications hors responsabilite.
-    - Critere de fin : chaque module applicatif majeur a une intention explicite.
+11. Reduire les gros modules frontend restants
+    - Constat : `assets/app-screen-competition.js` reste le plus charge (detail competition, formulaire competition, formulaire combat, autocomplete, decisions de combat).
+    - Simplification : separer `competition-detail`, `competition-form`, `combat-form` et `judoka-autocomplete`.
+    - Critere de fin : chaque module frontend reste proche d'un seul flux utilisateur.
 
-12. Garder une convention de taille de fichier
-    - Constat : le backend est deja assez modulaire, le frontend concentre encore trop de surface.
-    - Pratique : ajouter une convention dans `AGENTS.md` ou `SPEC-TECH.md` : refactorer quand un fichier applicatif depasse 300 a 400 lignes.
-    - Benefice LLM : force une decomposition avant que le contexte devienne couteux.
-    - Critere de fin : la convention est documentee et appliquee sur les nouveaux changements.
+12. Centraliser les options metier partagees
+    - Constat : les categories, classements, resultats et types de decision existent cote domaine, mais certaines listes ou regles sont aussi reproduites cote UI.
+    - Simplification : exposer un petit contrat public statique ou dupliquer volontairement dans un fichier frontend unique documente.
+    - Critere de fin : modifier une option metier ne demande pas de chercher dans plusieurs ecrans.
 
-13. Formaliser les messages d'erreur metier
-    - Constat : les messages sont explicites, mais disperses dans services et frontend.
-    - Pratique : centraliser les messages metier frequents ou au moins les tester sur les cas critiques.
-    - Benefice LLM : evite de casser des conditions UI basees sur le texte des erreurs.
-    - Critere de fin : le frontend ne depend plus de fragments de messages serveur pour choisir une transition quand un code d'erreur serait plus stable.
+13. Encadrer l'usage de `innerHTML`
+    - Constat : l'echappement est present, mais chaque nouveau fragment HTML doit penser a `escapeHtml` / `escapeAttribute`.
+    - Simplification : limiter `innerHTML` aux templates purs ou introduire de petits builders DOM pour les zones interactives.
+    - Critere de fin : les donnees utilisateur ne sont jamais inserees sans helper d'echappement identifiable.
 
-14. Preferer des codes d'erreur stables aux tests sur texte
-    - Constat : certains chemins frontend detectent des erreurs par `message.includes(...)`.
-    - Pratique : faire renvoyer `/api/rpc` avec `{ error: { code, message } }` ou un champ compatible.
-    - Benefice LLM : les textes peuvent changer sans casser la logique.
-    - Critere de fin : les transitions login/invitation/session utilisent un code stable.
+14. Documenter une carte courte de modification
+    - Constat : `SPEC-TECH.md` decrit l'architecture, mais pas le chemin pratique pour modifier un flux.
+    - Simplification : creer `docs/code-map.md` avec "pour modifier competition/combat/enfant/admin/auth, regarder ces fichiers et lancer ces tests".
+    - Critere de fin : une demande fonctionnelle peut etre reliee rapidement aux fichiers et tests utiles.
 
-15. Isoler les helpers d'autocomplete
-    - Constat : l'autocomplete est generique mais vit dans `assets/app.js`.
-    - Pratique : creer `assets/app-autocomplete.js` avec API explicite.
-    - Benefice LLM : les modifications de selection de judoka ne touchent pas les autres ecrans.
-    - Critere de fin : `bindAutocomplete` et ses helpers ne sont plus dans l'orchestrateur principal.
+15. Ajouter les IDs de regles dans les tests critiques
+    - Constat : les specs utilisent `COMP-*`, `CBT-*`, `AUTH-*`, `CHD-*`, mais les tests ne les mentionnent pas systematiquement.
+    - Simplification : inclure l'ID de regle dans le nom des tests quand le lien est direct.
+    - Critere de fin : `rg "COMP-015"` ou `rg "AUTH-009a"` retrouve spec et tests associes.
 
-## P3 - Discipline de changement
+## Discipline de refacto
 
-16. Ajouter une checklist de modification par flux
-    - Constat : les flux sont fonctionnels mais un changement traverse souvent UI, RPC, service, repository et test.
-    - Pratique : documenter pour chaque type de changement : fichier spec, module UI, methode RPC, service, repository, tests a lancer.
-    - Benefice LLM : le LLM peut suivre un parcours de modification standard au lieu de redécouvrir l'architecture.
-    - Critere de fin : `docs/change-checklist.md` existe et couvre competition, combat, enfant, admin, auth.
-
-17. Nommer les tests selon les regles fonctionnelles
-    - Constat : les specs utilisent des IDs comme `COMP-015`, `AUTH-009a`, `CHD-004`.
-    - Pratique : inclure ces IDs dans les noms de tests quand c'est pertinent.
-    - Benefice LLM : relier une demande metier au test correspondant devient direct.
-    - Critere de fin : les tests critiques mentionnent l'ID de regle couverte.
-
-18. Eviter les changements de comportement caches dans les refactos
-    - Constat : le projet a deja eu plusieurs refactos structurels.
-    - Pratique : pour chaque refacto, ajouter ou renforcer un test avant de deplacer le code.
-    - Benefice LLM : le refacto devient mecanique et verifiable.
-    - Critere de fin : tout refacto de module partage conserve ou augmente les tests ciblés.
-
-19. Maintenir une carte courte du code
-    - Constat : `SPEC-TECH.md` donne l'architecture, mais pas une carte orientee modification.
-    - Pratique : creer `docs/code-map.md` : "pour modifier X, regarder Y".
-    - Benefice LLM : reduit le temps d'exploration et les lectures inutiles.
-    - Critere de fin : chaque surface applicative majeure a une entree.
-
-20. Ajouter une commande de verification ciblee par zone
-    - Constat : la suite `npm test` est simple, mais tous les changements n'ont pas le meme perimetre.
-    - Pratique : ajouter des scripts comme `test:backend`, `test:frontend-structure`, `test:schema`.
-    - Benefice LLM : le LLM lance la verification la plus pertinente rapidement avant la suite complete.
-    - Critere de fin : `package.json` expose des scripts de test par zone.
-
+- Faire un axe a la fois, avec test cible avant la suite complete.
+- Eviter de modifier simultanement comportement metier et structure.
+- Mettre a jour `SPEC.md` seulement si une regle ou un flux change.
+- Mettre a jour `SPEC-TECH.md` seulement si contrat, architecture, securite, donnees ou deploiement changent.
