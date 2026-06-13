@@ -13,6 +13,7 @@ const client = [
   "app-ui.js",
   "app-notifications.js",
   "app-auth.js",
+  "app-screen-projections.js",
   "app-screen-login.js",
   "app-screen-home.js",
   "app-judoka-presentation.js",
@@ -28,6 +29,7 @@ const client = [
 const appRuntimeClient = fs.readFileSync(path.join(root, "assets", "app-runtime.js"), "utf8");
 const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
 const judokaPresentationClient = fs.readFileSync(path.join(root, "assets", "app-judoka-presentation.js"), "utf8");
+const screenProjectionsClient = fs.readFileSync(path.join(root, "assets", "app-screen-projections.js"), "utf8");
 const judokaScreenClient = fs.readFileSync(path.join(root, "assets", "app-screen-judoka.js"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
@@ -201,6 +203,12 @@ test("judoka presentation is extracted from the screen component", () => {
   assert.match(judokaPresentationClient, /function createJudokaProfileViewModel\(profile,\s*helpers\)/);
   assert.match(judokaScreenClient, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
   assert.doesNotMatch(judokaScreenClient, /heroSummary: `\$\{seasonCompetitionCount \|\| 0\} compétitions/);
+});
+
+test("screen projections are extracted into a shared helper module", () => {
+  assert.match(screenProjectionsClient, /function projectManagedChildren\(children,\s*helpers\)/);
+  assert.match(screenProjectionsClient, /function projectCompetitionDetail\(competition,\s*canEditCompetition,\s*helpers\)/);
+  assert.doesNotThrow(() => new Function(screenProjectionsClient));
 });
 
 test("vercel login creates only the initial judoka profile", () => {
