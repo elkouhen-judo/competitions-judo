@@ -16,21 +16,28 @@
       heroName: "Judoka",
       heroSummary: "",
       heroCategory: "",
-      heroRecord: "",
+      heroSeason: "",
       seasonLabel: "",
       seasonCompetitionCount: "0",
       seasonCombatCount: "0",
       seasonWins: "0",
       seasonLosses: "0",
-      hasLastCompetition: false,
-      lastCompetition: {
-        name: "",
-        date: "",
-        category: "",
-        weightCategory: ""
+      seasonDraws: "0",
+      victoryRate: "0%",
+      hasCombatProfileExtras: false,
+      combatProfile: {
+        victoryIppon: "0",
+        victoryDecision: "0",
+        lossIppon: "0",
+        lossDecision: "0",
+        lossPenalty: "0",
+        lossForfeit: "0",
+        draws: "0",
+        penalties: "0",
+        forfeits: "0"
       },
-      hasBestResults: false,
-      bestResults: []
+      hasCompetitionResults: false,
+      competitionResults: []
     };
     let judokaViewModel = null;
 
@@ -73,45 +80,64 @@
         judoka,
         season,
         lastCompetition,
-        bestSeasonResults,
         seasonCombatCount,
         seasonCompetitionCount,
         seasonWins,
-        seasonLosses
+        seasonLosses,
+        seasonDraws,
+        victoryRate,
+        combatProfile,
+        competitionResults
       } = state.currentJudokaProfile;
+      const highlightedCompetition = lastCompetition || (competitionResults && competitionResults[0]) || null;
+      const category = highlightedCompetition && highlightedCompetition.category
+        ? highlightedCompetition.category
+        : "Catégorie à confirmer";
+      const weightCategory = highlightedCompetition && highlightedCompetition.weightCategory
+        ? highlightedCompetition.weightCategory
+        : "Poids à confirmer";
 
       Object.assign(judokaViewModel, {
         profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
-        profileSubtitle: judoka.accountEmail,
+        profileSubtitle: `Saison ${season.label}`,
         seasonLabel: `Saison ${season.label}`,
         seasonCompetitionCount: String(seasonCompetitionCount || 0),
         seasonCombatCount: String(seasonCombatCount || 0),
         seasonWins: String(seasonWins || 0),
         seasonLosses: String(seasonLosses || 0),
+        seasonDraws: String(seasonDraws || 0),
+        victoryRate: `${victoryRate || 0}%`,
         heroAvatar: getJudokaInitials(judoka),
         heroName: getJudokaDisplayName(judoka) || "Judoka",
-        heroSummary: `Saison ${season.label} · ${seasonCompetitionCount || 0} compétition(s) · ${seasonCombatCount || 0} combat(s)`,
-        heroCategory: lastCompetition && lastCompetition.category ? lastCompetition.category : "Catégorie à confirmer",
-        heroRecord: `${seasonWins || 0} V · ${seasonLosses || 0} D`
+        heroSummary: `${seasonWins || 0}V · ${seasonLosses || 0}D · ${seasonDraws || 0}N · ${victoryRate || 0}% de victoires`,
+        heroCategory: `${category} · ${weightCategory}`,
+        heroSeason: `Saison ${season.label}`
       });
 
-      judokaViewModel.hasLastCompetition = Boolean(lastCompetition);
-      judokaViewModel.lastCompetition = lastCompetition
-        ? {
-            name: lastCompetition.name || "",
-            date: formatDate(lastCompetition.competitionDate),
-            category: lastCompetition.category || "Non renseignée",
-            weightCategory: lastCompetition.weightCategory || "Non renseigné"
-          }
-        : { ...defaultJudokaViewState.lastCompetition };
+      const profile = combatProfile || {};
+      Object.assign(judokaViewModel.combatProfile, {
+        victoryIppon: String(profile.victoryIppon || 0),
+        victoryDecision: String(profile.victoryDecision || 0),
+        lossIppon: String(profile.lossIppon || 0),
+        lossDecision: String(profile.lossDecision || 0),
+        lossPenalty: String(profile.lossPenalty || 0),
+        lossForfeit: String(profile.lossForfeit || 0),
+        draws: String(profile.draws || 0),
+        penalties: String(profile.penalties || 0),
+        forfeits: String(profile.forfeits || 0)
+      });
+      judokaViewModel.hasCombatProfileExtras = Boolean(profile.draws || 0);
 
-      judokaViewModel.bestResults = bestSeasonResults.map(result => ({
+      judokaViewModel.competitionResults = (competitionResults || []).map(result => ({
         name: result.name || "Compétition",
         date: formatDate(result.competitionDate),
-        result: result.result || "",
-        badgeClass: getClassementBadgeClass(result.result)
+        result: result.result || "Non classé",
+        resultClass: getClassementBadgeClass(result.result),
+        badgeLabel: result.resultBadge ? result.resultBadge.label : "non classé",
+        badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
+        combatRecord: result.combatRecord ? result.combatRecord.label : "0V · 0D"
       }));
-      judokaViewModel.hasBestResults = judokaViewModel.bestResults.length > 0;
+      judokaViewModel.hasCompetitionResults = judokaViewModel.competitionResults.length > 0;
     }
 
     return {

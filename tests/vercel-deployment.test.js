@@ -220,6 +220,7 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
+  assert.match(uiBundle, /canDelete: state\.isAdmin \|\| state\.isParent/);
   assert.match(uiBundle, /showHomeActions: true/);
   assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
   assert.match(uiBundle, /v-for="competition in competitions"/);
@@ -333,11 +334,18 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /Sélectionnez un judoka actif pour ouvrir sa fiche/);
   assert.match(uiBundle, /Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche/);
   assert.match(uiBundle, /Sélectionnez un judoka pour afficher son parcours/);
-  assert.match(uiBundle, /Catégorie judoka/);
-  assert.match(uiBundle, /Poids/);
+  assert.match(uiBundle, /Résumé performance/);
+  assert.match(uiBundle, /Profil de combat/);
+  assert.match(uiBundle, /Résultats compétition/);
   assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
-  assert.match(uiBundle, /id="judokaSeasonWins"/);
-  assert.match(uiBundle, /id="judokaSeasonLosses"/);
+  assert.match(uiBundle, /id="judokaSeasonBalance"/);
+  assert.match(uiBundle, /id="judokaVictoryRate"/);
+  assert.match(uiBundle, /Victoires ippon/);
+  assert.match(uiBundle, /Défaites pénalité/);
+  assert.match(uiBundle, /Défaites forfait/);
+  assert.match(uiBundle, /rank-gold/);
+  assert.match(uiBundle, /rank-silver/);
+  assert.match(uiBundle, /rank-bronze/);
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
   assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(uiBundle, /return \[normalizeDisplayName\(j && j\.firstName\), normalizeLastName\(j && j\.lastName\)\]\.filter\(Boolean\)\.join\(" "\);/);
@@ -355,12 +363,15 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(seasonStatisticsDomain, /const currentSeasonCompetitions = sortedCompetitions\.filter\(c => isDateWithinSeason\(c\.competitionDate,\s*currentBounds\)\);/);
   assert.match(seasonStatisticsDomain, /const seasonWins = seasonCombats\.filter\(c => isVictoryCombatResult\(c\.result\)\)\.length;/);
   assert.match(seasonStatisticsDomain, /const seasonLosses = seasonCombats\.filter\(c => isLossCombatResult\(c\.result\)\)\.length;/);
+  assert.match(seasonStatisticsDomain, /const seasonDraws = seasonCombats\.length - seasonWins - seasonLosses;/);
+  assert.match(seasonStatisticsDomain, /const victoryRate = seasonCombats\.length \? Math\.round\(\(seasonWins \/ seasonCombats\.length\) \* 100\) : 0;/);
+  assert.match(seasonStatisticsDomain, /function buildCombatProfile\(combats\)/);
+  assert.match(seasonStatisticsDomain, /function getCompetitionCombatRecord\(combats,\s*competitionId\)/);
   assert.match(seasonStatisticsDomain, /const sortedCompetitions = \[\.\.\.competitions\]\.sort/);
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
-  assert.match(seasonStatisticsDomain, /seasonWins/);
-  assert.match(seasonStatisticsDomain, /seasonLosses/);
-  assert.match(seasonStatisticsDomain, /bestSeasonResults/);
+  assert.match(seasonStatisticsDomain, /competitionResults/);
+  assert.match(seasonStatisticsDomain, /combatProfile/);
 });
 
 test("admin owner selection is not restricted by parent-managed scope", () => {

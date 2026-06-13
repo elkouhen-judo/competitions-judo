@@ -120,12 +120,15 @@ This specification does not define:
 
 - **STA-001**: The application shall provide a dedicated judoka profile view.
 - **STA-002**: The judoka profile shall display the judoka category derived from the latest competition of the displayed season.
-- **STA-003**: The judoka profile shall display the three best competition results of the displayed season.
+- **STA-003**: The judoka profile shall display a short competition-results list for the displayed season with date, competition name, final ranking, combat record, and a ranking badge.
 - **STA-004**: The season shall run from September 1st to August 31st.
 - **STA-005**: The judoka profile shall display the number of competitions for the displayed season.
 - **STA-006**: The judoka profile shall display the number of combats for the displayed season.
-- **STA-007**: The judoka profile shall display the victory/loss distribution for the displayed season.
+- **STA-007**: The judoka profile shall display the victory rate for the displayed season.
+- **STA-007aa**: The judoka profile shall display the direct season balance with victories, losses, and equalities for the displayed season.
 - **STA-007a**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
+- **STA-007b**: The judoka profile shall display a combat profile for the displayed season with victories by ippon, victories by decision, losses by ippon, losses by decision, losses by penalty, losses by forfeit, and optional equality counters when present.
+- **STA-007c**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
 - **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
 - **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
 - **STA-010**: An `ADMIN` shall be able to open the judoka profile of any judoka.

@@ -38,6 +38,7 @@
       hasCompetitions: false
     };
     let homeViewModel = null;
+    let hideFilterOptionsTimer = null;
 
     function applyInitialData() {
       ensureHomeViewModel();
@@ -132,16 +133,32 @@
       };
     }
 
-    function refreshHomeFilterOptions() {
-      const query = cleanText(homeViewModel.filterJudokaText).toLowerCase();
+    function refreshHomeFilterOptions(queryOverride) {
+      const query = queryOverride !== undefined
+        ? cleanText(queryOverride).toLowerCase()
+        : cleanText(homeViewModel.filterJudokaText).toLowerCase();
       homeViewModel.filterOptions = getAccessibleHomeJudokas()
         .map(getHomeFilterOption)
         .filter(option => !query || option.searchText.includes(query));
     }
 
     function showHomeFilterOptions() {
-      refreshHomeFilterOptions();
+      if (hideFilterOptionsTimer) {
+        window.clearTimeout(hideFilterOptionsTimer);
+        hideFilterOptionsTimer = null;
+      }
+      refreshHomeFilterOptions("");
       homeViewModel.showFilterOptions = true;
+    }
+
+    function hideHomeFilterOptions() {
+      if (hideFilterOptionsTimer) {
+        window.clearTimeout(hideFilterOptionsTimer);
+      }
+      hideFilterOptionsTimer = window.setTimeout(() => {
+        homeViewModel.showFilterOptions = false;
+        hideFilterOptionsTimer = null;
+      }, 120);
     }
 
     function updateFilterJudokaText() {
@@ -153,6 +170,10 @@
     }
 
     function selectFilterJudoka(option) {
+      if (hideFilterOptionsTimer) {
+        window.clearTimeout(hideFilterOptionsTimer);
+        hideFilterOptionsTimer = null;
+      }
       homeViewModel.filterJudokaId = option ? option.judokaId : "";
       homeViewModel.filterJudokaText = option ? option.name : "";
       homeViewModel.showFilterOptions = false;
@@ -288,7 +309,7 @@
           date: formatDate(c.competitionDate),
           judokaName: judoka ? getJudokaDisplayName(judoka) : "",
           showJudoka: state.isAdmin || state.isParent,
-          canDelete: state.isAdmin
+          canDelete: state.isAdmin || state.isParent
         };
       });
       homeViewModel.hasCompetitions = homeViewModel.competitions.length > 0;
@@ -355,6 +376,7 @@
       selectFilterJudoka,
       showHome,
       showHomeCompetitionForm,
+      hideHomeFilterOptions,
       showHomeFilterOptions,
       syncHomeContext
     };
