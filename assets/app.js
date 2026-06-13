@@ -29,7 +29,7 @@
     $,
     viewIds
   } = ui;
-  const notifications = window.createKirokuNotifications({ $, escapeHtml: ui.escapeHtml });
+  const notifications = window.createKirokuNotifications();
   const {
     clearMessage,
     dismissToast,
