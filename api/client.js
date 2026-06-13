@@ -7,6 +7,7 @@ module.exports = function handler(_req, res) {
     "app-ui.js",
     "app-notifications.js",
     "app-auth.js",
+    "app-screen-projections.js",
     "app-screen-login.js",
     "app-screen-home.js",
     "app-judoka-presentation.js",

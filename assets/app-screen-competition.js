@@ -166,18 +166,13 @@
 
     function renderCompetitionDetail() {
       ensureCompetitionDetailViewModel();
-      const agePoids = [state.currentCompetition.ageCategory, state.currentCompetition.weightCategory].filter(Boolean).join(" - ");
-      const hasResult = Boolean(String(state.currentCompetition.result || "").trim());
-
-      Object.assign(competitionDetailViewModel, {
-        competitionTitle: state.currentCompetition.name || "Compétition",
-        competitionSubtitle: "Détail de la compétition",
-        competitionDate: formatDate(state.currentCompetition.competitionDate),
-        ageWeightLabel: agePoids,
-        competitionResult: state.currentCompetition.result || "",
-        canEditCompetition: state.canEditCurrentCompetition,
-        canFinalizeCompetition: state.canEditCurrentCompetition && !hasResult
-      });
+      Object.assign(competitionDetailViewModel, window.KirokuScreenProjections.projectCompetitionDetail(
+        state.currentCompetition,
+        state.canEditCurrentCompetition,
+        {
+          formatDate
+        }
+      ));
     }
 
     function editCurrentCompetition() {
@@ -191,28 +186,14 @@
 
     function renderCombats() {
       ensureCompetitionDetailViewModel();
-
-      if (!state.currentCombats.length) {
-        competitionDetailViewModel.combats = [];
-        competitionDetailViewModel.combatsEmptyMessage = "Aucun combat pour cette compétition.";
-        competitionDetailViewModel.hasCombats = false;
-        competitionDetailViewModel.isLoadingCombats = false;
-        return;
-      }
-
-      competitionDetailViewModel.combats = state.currentCombats.map(c => ({
-        combatId: c.combatId || "",
-        opponent: c.opponent || "Adversaire non renseigné",
-        result: formatResultat(c.result),
-        resultClass: `result-${String(c.result || "").toLowerCase()}`,
-        victoryType: c.victoryType || "",
-        judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
-        showJudoka: state.isAdmin,
-        notes: c.notes || "Aucun déroulé renseigné"
-      }));
-      competitionDetailViewModel.combatsEmptyMessage = "";
-      competitionDetailViewModel.hasCombats = competitionDetailViewModel.combats.length > 0;
-      competitionDetailViewModel.isLoadingCombats = false;
+      Object.assign(competitionDetailViewModel, window.KirokuScreenProjections.projectCompetitionCombats(
+        state.currentCombats,
+        {
+          formatResultat,
+          normalizeDisplayName,
+          showJudoka: state.isAdmin
+        }
+      ));
     }
 
     function showCompetitionForm(id) {

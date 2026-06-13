@@ -102,27 +102,15 @@
       }
       const filteredInvitations = getFilteredAccessInvitations();
       const pageSize = defaultAccessInvitationVisibleCount;
-      const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
-      const currentPage = Math.min(state.accessInvitationCurrentPage, totalPages);
-      const startIndex = (currentPage - 1) * pageSize;
-      const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
-      const summaryLabel = `${filteredInvitations.length} invitation(s)${state.accessInvitationSearch ? " trouvée(s)" : ""} · page ${currentPage} / ${totalPages}.`;
-
-      Object.assign(adminsViewModel, {
-        accessInvitations: visibleInvitations.map(invitation => ({
-          email: invitation.email || "Invitation",
-          invitedProfileType: invitation.invitedProfileType || "JUDOKA",
-          createdAt: formatDateTime(invitation.createdAt)
-        })),
-        accessInvitationsSummary: summaryLabel,
-        accessInvitationsEmptyMessage: state.accessInvitationSearch
-          ? `Aucune invitation trouvée pour "${state.accessInvitationSearch}".`
-          : "Aucune invitation en attente.",
-        canResetAccessInvitationSearch: Boolean(state.accessInvitationSearch),
-        canShowPreviousAccessInvitationPage: currentPage > 1,
-        canShowNextAccessInvitationPage: currentPage < totalPages,
-        hasAccessInvitations: Boolean(filteredInvitations.length)
-      });
+      Object.assign(adminsViewModel, window.KirokuScreenProjections.projectAccessInvitations(
+        filteredInvitations,
+        state.accessInvitationSearch,
+        state.accessInvitationCurrentPage,
+        pageSize,
+        {
+          formatDateTime
+        }
+      ));
     }
 
     function getFilteredAccessInvitations() {
@@ -188,17 +176,13 @@
 
     function renderManagedAdmins() {
       ensureAdminsViewModel();
-      adminsViewModel.admins = state.managedAdmins.map(admin => {
-        const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
-        const isCurrentAdmin = state.currentUser && String(state.currentUser.judokaId) === String(admin.judokaId);
-        return {
-          judokaId: admin.judokaId || "",
-          fullName,
-          accountEmail: admin.accountEmail || "Non renseigné",
-          isCurrentAdmin
-        };
-      });
-      adminsViewModel.hasAdmins = adminsViewModel.admins.length > 0;
+      Object.assign(adminsViewModel, window.KirokuScreenProjections.projectManagedAdmins(
+        state.managedAdmins,
+        state.currentUser,
+        {
+          getJudokaDisplayName
+        }
+      ));
     }
 
     function resetAdminForm() {

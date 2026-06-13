@@ -3,9 +3,6 @@
     const { state, ui, notifications } = app;
     const {
       $,
-      getJudokaDisplayName,
-      normalizeDisplayName,
-      normalizeLastName,
       showView
     } = ui;
     const {
@@ -63,18 +60,14 @@
 
     function renderManagedChildren() {
       ensureChildrenViewModel();
-      childrenViewModel.children = state.managedChildren.map(child => {
-        const fullName = getJudokaDisplayName(child) || "Enfant";
-        return {
-          judokaId: child.judokaId || "",
-          fullName,
-          firstName: normalizeDisplayName(child.firstName || ""),
-          lastName: normalizeLastName(child.lastName || ""),
-          accountEmail: child.accountEmail || "Non renseigné",
-          directAccessState: child.accountEmail ? "Activée" : "Non activée"
-        };
-      });
-      childrenViewModel.hasChildren = childrenViewModel.children.length > 0;
+      Object.assign(childrenViewModel, window.KirokuScreenProjections.projectManagedChildren(
+        state.managedChildren,
+        {
+          getJudokaDisplayName: ui.getJudokaDisplayName,
+          normalizeDisplayName: ui.normalizeDisplayName,
+          normalizeLastName: ui.normalizeLastName
+        }
+      ));
     }
 
     function resetChildForm() {
