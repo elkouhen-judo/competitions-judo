@@ -45,6 +45,7 @@ test("notifications use a toast layer without shifting the main layout", () => {
 test("combat cards expose result as a first-class badge", () => {
   assert.match(bundle, /\.result-badge\s*\{/);
   assert.match(bundle, /<span class="result-badge/);
+  assert.match(bundle, /escapeHtml\(formatResultat\(c\.result\)\)/);
 });
 
 test("small-screen layout is the base and desktop is progressive", () => {
