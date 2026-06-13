@@ -10,10 +10,6 @@
       icons,
       normalizeDisplayName,
       normalizeLastName,
-      setText,
-      setTexts,
-      setValue,
-      setValues,
       showView
     } = ui;
     const {
@@ -21,6 +17,41 @@
       showError,
       showSuccess
     } = notifications;
+    const defaultChildForm = {
+      judokaId: "",
+      firstName: "",
+      lastName: "",
+      accountEmail: ""
+    };
+    const defaultChildrenViewState = {
+      childrenListHtml: "",
+      childFormTitle: "Ajouter un enfant",
+      saveChildButtonText: "Ajouter l'enfant",
+      childForm: { ...defaultChildForm }
+    };
+    let childrenViewModel = null;
+
+    function ensureChildrenViewModel() {
+      if (!window.Vue || childrenViewModel) {
+        return;
+      }
+
+      childrenViewModel = window.Vue.reactive({
+        ...defaultChildrenViewState,
+        childForm: { ...defaultChildForm }
+      });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(childrenViewModel),
+            resetChildForm,
+            saveManagedChild,
+            showHome: () => app.showHome()
+          };
+        }
+      }).mount("#childrenView");
+    }
 
     function showChildrenManagement(keepMessage) {
       if (!keepMessage) {
@@ -31,6 +62,7 @@
         "getChildrenManagement",
         [],
         data => {
+          ensureChildrenViewModel();
           state.managedChildren = Array.isArray(data.children) ? data.children : [];
           renderManagedChildren();
           resetChildForm();
@@ -41,9 +73,9 @@
     }
 
     function renderManagedChildren() {
-      const target = $("childrenList");
+      ensureChildrenViewModel();
       if (!state.managedChildren.length) {
-        target.innerHTML = emptyState("Aucun enfant enregistré pour le moment.");
+        childrenViewModel.childrenListHtml = emptyState("Aucun enfant enregistré pour le moment.");
         return;
       }
 
@@ -80,16 +112,14 @@
         `;
       });
       html += `</div>`;
-      target.innerHTML = html;
+      childrenViewModel.childrenListHtml = html;
     }
 
     function resetChildForm() {
-      setValue("child_id", "");
-      setValue("child_prenom", "");
-      setValue("child_nom", "");
-      setValue("child_email", "");
-      setText("childFormTitle", "Ajouter un enfant");
-      setText("saveChildButtonText", "Ajouter l'enfant");
+      ensureChildrenViewModel();
+      Object.assign(childrenViewModel.childForm, defaultChildForm);
+      childrenViewModel.childFormTitle = "Ajouter un enfant";
+      childrenViewModel.saveChildButtonText = "Ajouter l'enfant";
     }
 
     function editManagedChild(idJudoka) {
@@ -99,26 +129,26 @@
         return;
       }
 
-      setValues({
-        child_id: child.judokaId,
-        child_prenom: child.firstName,
-        child_nom: child.lastName,
-        child_email: child.accountEmail
+      ensureChildrenViewModel();
+      Object.assign(childrenViewModel.childForm, {
+        judokaId: child.judokaId || "",
+        firstName: child.firstName || "",
+        lastName: child.lastName || "",
+        accountEmail: child.accountEmail || ""
       });
-      setTexts({
-        childFormTitle: "Modifier l'enfant",
-        saveChildButtonText: "Enregistrer l'enfant"
-      });
+      childrenViewModel.childFormTitle = "Modifier l'enfant";
+      childrenViewModel.saveChildButtonText = "Enregistrer l'enfant";
       showView("childrenView");
-      $("child_prenom").focus();
+      window.Vue.nextTick(() => $("child_prenom").focus());
     }
 
     function saveManagedChild() {
+      ensureChildrenViewModel();
       const child = {
-        judokaId: ui.getValue("child_id"),
-        firstName: ui.getValue("child_prenom"),
-        lastName: ui.getValue("child_nom"),
-        accountEmail: ui.getValue("child_email")
+        judokaId: childrenViewModel.childForm.judokaId,
+        firstName: childrenViewModel.childForm.firstName,
+        lastName: childrenViewModel.childForm.lastName,
+        accountEmail: childrenViewModel.childForm.accountEmail
       };
 
       app.runServer(
