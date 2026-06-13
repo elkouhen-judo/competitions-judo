@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
 const client = [
+  "vendor/vue.global.prod.js",
   "app-ui.js",
   "app-notifications.js",
   "app-auth.js",
@@ -74,6 +75,9 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(appShell, /html\.replace\("<\/head>",/);
   assert.match(html, /href="\/api\/styles"/);
   assert.match(html, /src="\/api\/client" defer/);
+  assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
+  assert.match(client, /vue v3\./);
+  assert.match(client, /var Vue=function/);
   assert.match(uiBundle, /class="brand"/);
   assert.match(uiBundle, /async function runServer\(method,\s*args,\s*success,\s*failure\)/);
   assert.match(uiBundle, /fetch\("\/api\/rpc"/);
