@@ -80,6 +80,7 @@
     resetApplicationState,
     runtimeConfig,
     runServer,
+    runServerWithOptions,
     setHeaderVisible,
     screens,
     state,
@@ -95,42 +96,66 @@
   screens.login = loginScreen;
 
   async function runServer(method, args, success, failure) {
-    try {
-      const session = await getValidVercelSession();
-      if (!session) {
-        loginScreen.showVercelLogin();
+    return runServerWithOptions(method, args, success, failure);
+  }
+
+  async function runServerWithOptions(method, args, success, failure, options = {}) {
+    const maxAttempts = options.retrySessionOnce ? 2 : 1;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const session = await getValidVercelSession();
+        if (!session) {
+          loginScreen.showVercelLogin();
+          return;
+        }
+
+        const response = await fetch("/api/rpc", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + session.access_token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ method, args })
+        });
+        const payload = await response.json();
+
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || "Erreur serveur.");
+        }
+
+        success && success(payload.result);
+        return;
+      } catch (error) {
+        const errorMessage = String(error.message || "");
+        if (options.retrySessionOnce && attempt < maxAttempts && isSessionAuthError(errorMessage)) {
+          await wait(600);
+          continue;
+        }
+
+        if (isSessionAuthError(errorMessage)) {
+          clearVercelSession();
+          loginScreen.showVercelLogin();
+        } else if (method === "getInitialData" && errorMessage.includes("Invitation trouvée")) {
+          loginScreen.showProfileRegistration();
+          return;
+        } else if (method === "getInitialData" && errorMessage.includes("invitation est requise")) {
+          clearVercelSession();
+          loginScreen.showInvitationRequired();
+          return;
+        }
+        failure ? failure(error) : showError(error);
         return;
       }
-
-      const response = await fetch("/api/rpc", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + session.access_token,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ method, args })
-      });
-      const payload = await response.json();
-
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error || "Erreur serveur.");
-      }
-
-      success && success(payload.result);
-    } catch (error) {
-      if (String(error.message || "").includes("Session Supabase invalide") || String(error.message || "").includes("Utilisateur non identifié")) {
-        clearVercelSession();
-        loginScreen.showVercelLogin();
-      } else if (method === "getInitialData" && String(error.message || "").includes("Invitation trouvée")) {
-        loginScreen.showProfileRegistration();
-        return;
-      } else if (method === "getInitialData" && String(error.message || "").includes("invitation est requise")) {
-        clearVercelSession();
-        loginScreen.showInvitationRequired();
-        return;
-      }
-      failure ? failure(error) : showError(error);
     }
+  }
+
+  function isSessionAuthError(message) {
+    return message.includes("Session Supabase invalide") || message.includes("Utilisateur non identifié");
+  }
+
+  function wait(delayMs) {
+    return new Promise(resolve => window.setTimeout(resolve, delayMs));
   }
 
   function resetApplicationState() {
