@@ -89,6 +89,20 @@ Livraison:
 - S'arrêter si un point métier ou technique manque de clarté.
 ```
 
+## Skills Recommandés
+
+Pour ce dépôt, privilégier en priorité:
+
+- `vue` pour les écrans et composants Vue 3 ;
+- `frontend-design` pour les refontes visuelles et les arbitrages d'interface ;
+- `domain-driven-design` pour structurer les règles métier et le vocabulaire ;
+- `update-specification` quand un flux ou une règle fonctionnelle change ;
+- `vercel:verification` pour valider un flux de bout en bout sur l'application lancée ;
+- `vercel:auth` quand le travail touche au login, aux invitations ou aux permissions ;
+- `vercel:deployments-cicd` quand le sujet porte sur la livraison ou le déploiement.
+
+Le noyau recommandé pour ce projet est `vue`, `frontend-design`, `domain-driven-design` et `vercel:verification`.
+
 ## Spécifications
 
 `SPEC.md` contient le fonctionnel :
