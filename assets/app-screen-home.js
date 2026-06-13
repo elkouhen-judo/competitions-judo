@@ -12,17 +12,32 @@
       getJudokaDisplayName,
       getValue,
       icons,
-      setHidden,
-      setTexts,
       showView
     } = ui;
     const { showError } = notifications;
+    const defaultHomeViewState = {
+      homeTitle: "Mon espace judoka",
+      homeSubtitle: "Retrouvez votre fiche et vos compétitions.",
+      filterPlaceholder: "Tous les judokas...",
+      canFilterByJudoka: false,
+      activeJudokaSummaryHtml: "",
+      actionDisabled: false,
+      addCompetitionButtonText: "Ajouter une compétition",
+      addCompetitionButtonMeta: "",
+      profileButtonText: "Ma fiche judoka",
+      profileButtonMeta: "",
+      competitionsTitle: "Mes compétitions",
+      competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
+      competitionsHtml: ""
+    };
+    let homeViewModel = null;
 
     function applyInitialData() {
+      ensureHomeViewModel();
       const filterInput = $("filterJudokaText");
       const filterHidden = $("filterJudoka");
       const canFilterByJudoka = (state.isAdmin || state.isParent) && state.judokas.length > 0;
-      setHidden("homeFilters", !canFilterByJudoka);
+      homeViewModel.canFilterByJudoka = canFilterByJudoka;
       if (!canFilterByJudoka) {
         filterInput.value = "";
         filterHidden.value = "";
@@ -31,6 +46,24 @@
       ensureHomeFilterAutocomplete();
       ensureHomeActiveJudokaSelection();
       syncHomeContext();
+    }
+
+    function ensureHomeViewModel() {
+      if (!window.Vue || homeViewModel) {
+        return;
+      }
+
+      homeViewModel = window.Vue.reactive({ ...defaultHomeViewState });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(homeViewModel),
+            openHomeJudokaProfile,
+            showHomeCompetitionForm
+          };
+        }
+      }).mount("#homeView");
     }
 
     function ensureHomeFilterAutocomplete() {
@@ -107,24 +140,25 @@
     }
 
     function syncHomeContext() {
+      ensureHomeViewModel();
       const activeJudoka = getHomeActiveJudoka();
       const copy = getHomeContextCopy(activeJudoka);
       const activeJudokaLabel = activeJudoka ? getCompactJudokaLabel(activeJudoka) : copy.emptyActionMeta;
 
-      $("filterJudokaText").placeholder = copy.filterPlaceholder;
-      setTexts({
+      Object.assign(homeViewModel, {
         homeTitle: copy.homeTitle,
         homeSubtitle: copy.homeSubtitle,
-        openHomeJudokaProfileButtonText: copy.profileButtonText,
-        openHomeJudokaProfileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
+        filterPlaceholder: copy.filterPlaceholder,
+        profileButtonText: copy.profileButtonText,
+        profileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
         addCompetitionButtonText: "Nouvelle compétition",
         addCompetitionButtonMeta: activeJudoka ? activeJudokaLabel : copy.addCompetitionButtonMeta,
-        homeCompetitionsTitle: copy.competitionsTitle,
-        homeCompetitionsSubtitle: copy.competitionsSubtitle
+        competitionsTitle: copy.competitionsTitle,
+        competitionsSubtitle: copy.competitionsSubtitle
       });
 
       if (!activeJudoka) {
-        $("homeActiveJudokaSummary").innerHTML = `
+        homeViewModel.activeJudokaSummaryHtml = `
           <div class="home-context-copy">
             <span class="home-context-label">Judoka actif</span>
             <span class="home-context-value">Aucun judoka sélectionné</span>
@@ -137,7 +171,7 @@
           : state.isParent
             ? "Toutes les actions d'accueil concernent ce profil."
             : "Toutes vos actions principales sont regroupées ici.";
-        $("homeActiveJudokaSummary").innerHTML = `
+        homeViewModel.activeJudokaSummaryHtml = `
           <div class="home-context-copy">
             <span class="home-context-label">Judoka actif</span>
             <span class="home-context-value">${escapeHtml(getJudokaDisplayName(activeJudoka) || "Judoka")}</span>
@@ -147,8 +181,7 @@
       }
 
       const actionDisabled = Boolean((state.isAdmin || state.isParent) && !activeJudoka);
-      $("addCompetitionButton").disabled = actionDisabled;
-      $("openHomeJudokaProfileButton").disabled = actionDisabled;
+      homeViewModel.actionDisabled = actionDisabled;
     }
 
     function getHomeContextCopy(activeJudoka) {
@@ -202,12 +235,12 @@
     }
 
     function renderCompetitions() {
-      const target = $("competitionsList");
+      ensureHomeViewModel();
       const activeJudoka = getHomeActiveJudoka();
       const activeJudokaId = getHomeActiveJudokaId();
 
       if ((state.isAdmin || state.isParent) && !activeJudoka) {
-        target.innerHTML = emptyState("Sélectionnez un judoka pour afficher son parcours.");
+        homeViewModel.competitionsHtml = emptyState("Sélectionnez un judoka pour afficher son parcours.");
         return;
       }
 
@@ -217,7 +250,7 @@
       }
 
       if (!filteredComps.length) {
-        target.innerHTML = emptyState("Aucune compétition enregistrée pour ce judoka.");
+        homeViewModel.competitionsHtml = emptyState("Aucune compétition enregistrée pour ce judoka.");
         return;
       }
 
@@ -257,7 +290,7 @@
       });
 
       html += `</div>`;
-      target.innerHTML = html;
+      homeViewModel.competitionsHtml = html;
     }
 
     function openHomeJudokaProfile() {
