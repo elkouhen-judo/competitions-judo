@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
+const appHandler = require(path.join(root, "api", "app.js"));
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
 const client = [
@@ -42,10 +43,16 @@ const seasonStatisticsDomain = fs.readFileSync(path.join(root, "core", "domain",
 const judokaDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "judoka.js"), "utf8");
 const emailDomain = fs.readFileSync(path.join(root, "core", "domain", "access", "email.js"), "utf8");
 const judokasRepository = fs.readFileSync(path.join(root, "core", "repositories", "judokas.repository.js"), "utf8");
+const invitationsRepository = fs.readFileSync(path.join(root, "core", "repositories", "invitations.repository.js"), "utf8");
 const supabaseClient = fs.readFileSync(path.join(root, "core", "infra", "supabase-client.js"), "utf8");
 const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
 const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
+const {
+  CANONICAL_PRODUCTION_APP_URL,
+  getCanonicalRedirectUrl,
+  getRuntimeAppUrl
+} = appHandler.__internal;
 const migrationFiles = fs.readdirSync(path.join(root, "supabase", "migrations"))
   .filter(file => file.endsWith(".sql"))
   .sort();
@@ -68,6 +75,7 @@ test("vercel config routes the app shell and rpc endpoint", () => {
 
 test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(appShell, /KIROKU_RUNTIME_CONFIG/);
+  assert.match(appShell, /const CANONICAL_PRODUCTION_APP_URL = "https:\/\/competitions-judo\.vercel\.app";/);
   assert.match(appShell, /function getRuntimeAppUrl\(req\)/);
   assert.match(appShell, /function getCanonicalRedirectUrl\(req\)/);
   assert.match(appShell, /res\.redirect\(308,\s*redirectUrl\);/);
@@ -83,6 +91,59 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(uiBundle, /fetch\("\/api\/rpc"/);
   assert.match(uiBundle, /"Authorization": "Bearer " \+ session\.access_token/);
   assert.doesNotMatch(uiBundle, /google\.script/);
+});
+
+test("vercel runtime falls back to the canonical production URL for preview hosts", () => {
+  const request = {
+    headers: {
+      host: "competitions-judo-git-feature-1234.vercel.app",
+      "x-forwarded-proto": "https"
+    },
+    url: "/login?source=preview"
+  };
+  const previousPublicAppUrl = process.env.PUBLIC_APP_URL;
+  const previousAppUrl = process.env.APP_URL;
+  const previousProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  delete process.env.PUBLIC_APP_URL;
+  delete process.env.APP_URL;
+  delete process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  try {
+    assert.equal(getRuntimeAppUrl(request), CANONICAL_PRODUCTION_APP_URL);
+    assert.equal(
+      getCanonicalRedirectUrl(request),
+      "https://competitions-judo.vercel.app/login?source=preview"
+    );
+  } finally {
+    process.env.PUBLIC_APP_URL = previousPublicAppUrl;
+    process.env.APP_URL = previousAppUrl;
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = previousProductionUrl;
+  }
+});
+
+test("vercel runtime keeps localhost as-is for local development", () => {
+  const request = {
+    headers: {
+      host: "localhost:3000",
+      "x-forwarded-proto": "http"
+    },
+    url: "/"
+  };
+  const previousPublicAppUrl = process.env.PUBLIC_APP_URL;
+  const previousAppUrl = process.env.APP_URL;
+  const previousProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  delete process.env.PUBLIC_APP_URL;
+  delete process.env.APP_URL;
+  delete process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  try {
+    assert.equal(getRuntimeAppUrl(request), "http://localhost:3000");
+    assert.equal(getCanonicalRedirectUrl(request), "");
+  } finally {
+    process.env.PUBLIC_APP_URL = previousPublicAppUrl;
+    process.env.APP_URL = previousAppUrl;
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = previousProductionUrl;
+  }
 });
 
 test("vercel runtime uses google auth without password login", () => {
@@ -301,10 +362,13 @@ test("admin owner selection is not restricted by parent-managed scope", () => {
   assert.match(competitionsService, /const access = resolveJudokaDataAccess\(domainUser,\s*managedJudokaScope\);/);
 });
 
-test("judoka lookup uses an exact normalized email match", () => {
+test("judoka and invitation lookup use a case-insensitive normalized email match", () => {
   assert.match(userContextService, /const normalizedEmail = normalizeEmail\(email\);/);
-  assert.match(judokasRepository, /return supabaseSelectOne\("judokas", `select=\*&\$\{eqFilter\("email", email\)\}`\);/);
-  assert.doesNotMatch(judokasRepository, /email=ilike\./);
+  assert.match(judokasRepository, /function findEmailQueryValue\(email\)/);
+  assert.match(judokasRepository, /return supabaseSelectOne\("judokas", `select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\);/);
+  assert.match(invitationsRepository, /function findEmailQueryValue\(email\)/);
+  assert.match(invitationsRepository, /return supabaseSelectOne\("access_invitations", `select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\);/);
+  assert.match(invitationsRepository, /return supabaseDelete\("access_invitations", `email=ilike\.\$\{findEmailQueryValue\(email\)\}`\);/);
 });
 
 test("combat mutations reload competition details after save", () => {

@@ -15,8 +15,12 @@ module.exports = function createInvitationsRepository(deps) {
     };
   }
 
+  function findEmailQueryValue(email) {
+    return encodeURIComponent(String(email || "").trim());
+  }
+
   async function getByEmail(email) {
-    return supabaseSelectOne("access_invitations", `select=*&${eqFilter("email", email)}`);
+    return supabaseSelectOne("access_invitations", `select=*&email=ilike.${findEmailQueryValue(email)}`);
   }
 
   async function listAll() {
@@ -28,7 +32,7 @@ module.exports = function createInvitationsRepository(deps) {
   }
 
   async function removeByEmail(email) {
-    return supabaseDelete("access_invitations", eqFilter("email", email));
+    return supabaseDelete("access_invitations", `email=ilike.${findEmailQueryValue(email)}`);
   }
 
   return {

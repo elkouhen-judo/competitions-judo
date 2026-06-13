@@ -1,11 +1,38 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const CANONICAL_PRODUCTION_APP_URL = "https://competitions-judo.vercel.app";
+
 function escapeScriptString(value) {
   return String(value || "").replace(/\\/g, "\\\\").replace(/</g, "\\u003c");
 }
 
+function readRequestHost(req) {
+  return String(req.headers.host || "").trim();
+}
+
+function readRequestProtocol(req) {
+  return String(req.headers["x-forwarded-proto"] || "https").trim();
+}
+
+function isLocalHost(host) {
+  return host.startsWith("localhost")
+    || host.startsWith("127.0.0.1")
+    || host.startsWith("[::1]");
+}
+
+function isVercelDeploymentHost(host) {
+  return host.endsWith(".vercel.app");
+}
+
 function getRuntimeAppUrl(req) {
+  const host = readRequestHost(req);
+  const protocol = readRequestProtocol(req);
+  const requestOrigin = host ? `${protocol}://${host}` : "";
+  if (isLocalHost(host)) {
+    return requestOrigin;
+  }
+
   const configuredUrl = String(process.env.PUBLIC_APP_URL || process.env.APP_URL || "").trim();
   if (configuredUrl) {
     return configuredUrl;
@@ -16,9 +43,11 @@ function getRuntimeAppUrl(req) {
     return `https://${productionHost}`;
   }
 
-  const protocol = String(req.headers["x-forwarded-proto"] || "https").trim();
-  const host = String(req.headers.host || "").trim();
-  return host ? `${protocol}://${host}` : "";
+  if (isVercelDeploymentHost(host)) {
+    return CANONICAL_PRODUCTION_APP_URL;
+  }
+
+  return requestOrigin;
 }
 
 function getCanonicalRedirectUrl(req) {
@@ -28,7 +57,7 @@ function getCanonicalRedirectUrl(req) {
   }
 
   const canonical = new URL(appUrl);
-  const requestHost = String(req.headers.host || "").trim();
+  const requestHost = readRequestHost(req);
   if (!requestHost || requestHost === canonical.host) {
     return "";
   }
@@ -37,7 +66,7 @@ function getCanonicalRedirectUrl(req) {
   return new URL(requestPath, canonical).toString();
 }
 
-module.exports = function handler(req, res) {
+function handler(req, res) {
   const redirectUrl = getCanonicalRedirectUrl(req);
   if (redirectUrl) {
     res.redirect(308, redirectUrl);
@@ -57,4 +86,13 @@ module.exports = function handler(req, res) {
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.status(200).send(html.replace("</head>", `${configScript}\n</head>`));
+}
+
+module.exports = handler;
+module.exports.__internal = {
+  CANONICAL_PRODUCTION_APP_URL,
+  getCanonicalRedirectUrl,
+  getRuntimeAppUrl,
+  isLocalHost,
+  isVercelDeploymentHost
 };
