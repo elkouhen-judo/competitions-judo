@@ -88,7 +88,7 @@
     }
 
     function showLoginState({ text, hint, showHint, showOAuth, showRegistration }) {
-      document.querySelector("header").classList.add("hidden");
+      app.setHeaderVisible(false);
       if (loginViewModel) {
         Object.assign(loginViewModel, {
           text: text || "",

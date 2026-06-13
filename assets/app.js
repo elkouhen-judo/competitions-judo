@@ -27,10 +27,9 @@
   const ui = window.KirokuUI;
   const {
     $,
-    escapeHtml,
     viewIds
   } = ui;
-  const notifications = window.createKirokuNotifications({ $, escapeHtml });
+  const notifications = window.createKirokuNotifications({ $, escapeHtml: ui.escapeHtml });
   const {
     clearMessage,
     dismissToast,
@@ -39,6 +38,21 @@
   } = notifications;
 
   let loginScreen;
+  const headerViewModel = window.Vue.reactive({
+    showHeader: false,
+    userName: "",
+    roleLabel: ""
+  });
+
+  window.Vue.createApp({
+    setup() {
+      return {
+        ...window.Vue.toRefs(headerViewModel),
+        logoutUser
+      };
+    }
+  }).mount("#appHeader");
+
   const auth = window.createKirokuAuth({
     runtimeConfig,
     onInvitationRequired: () => loginScreen && loginScreen.showInvitationRequired(),
@@ -66,6 +80,7 @@
     resetApplicationState,
     runtimeConfig,
     runServer,
+    setHeaderVisible,
     screens,
     state,
     ui
@@ -137,13 +152,18 @@
     state.canManageChildren = Boolean(data.canManageChildren);
     state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
     state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
-    document.querySelector("header").classList.remove("hidden");
-
     const profileTypeLabel = state.isParent ? "PARENT" : "JUDOKA";
     const roleLabel = state.isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
-    $("userInfo").innerHTML =
-      `<strong>${escapeHtml(ui.getJudokaDisplayName(state.currentUser) || "")}</strong> - ${roleLabel}`;
+    Object.assign(headerViewModel, {
+      showHeader: true,
+      userName: ui.getJudokaDisplayName(state.currentUser) || "",
+      roleLabel
+    });
     screens.home.applyInitialData();
+  }
+
+  function setHeaderVisible(visible) {
+    headerViewModel.showHeader = Boolean(visible);
   }
 
   function confirmAndRun({ message, method, args, onSuccess }) {
