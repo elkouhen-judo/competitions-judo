@@ -147,11 +147,15 @@ test("vercel runtime keeps localhost as-is for local development", () => {
 });
 
 test("vercel runtime uses google auth without password login", () => {
+  assert.match(uiBundle, /function waitForSupabaseSessionReadiness\(accessToken\)/);
   assert.match(uiBundle, /function getSupabaseAnonymousAuthHeaders\(\)/);
   assert.match(uiBundle, /const baseUrl = runtimeConfig\.appUrl \|\| window\.location\.origin;/);
   assert.match(uiBundle, /return new URL\(window\.location\.pathname \|\| "\/", baseUrl\)\.toString\(\);/);
   assert.match(uiBundle, /"Authorization": "Bearer " \+ runtimeConfig\.supabaseAnonKey/);
   assert.match(uiBundle, /kiroku_supabase_session/);
+  assert.match(uiBundle, /fetch\(`\$\{runtimeConfig\.supabaseUrl\}\/auth\/v1\/user`,/);
+  assert.match(uiBundle, /await waitForSupabaseSessionReadiness\(accessToken\);/);
+  assert.match(uiBundle, /await waitForSupabaseSessionReadiness\(session\.access_token\);/);
   assert.match(uiBundle, /\/auth\/v1\/token\?grant_type=refresh_token/);
   assert.doesNotMatch(uiBundle, /auth\/v1\/token\?grant_type=password/);
   assert.doesNotMatch(uiBundle, /auth\/v1\/signup/);
