@@ -23,6 +23,10 @@
       return new URL(window.location.pathname || "/", baseUrl).toString();
     }
 
+    function wait(delayMs) {
+      return new Promise(resolve => window.setTimeout(resolve, delayMs));
+    }
+
     function startGoogleLogin() {
       if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
         onError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
@@ -70,6 +74,7 @@
           refresh_token: refreshToken || "",
           expires_at: Math.floor(Date.now() / 1000) + expiresIn
         });
+        await waitForSupabaseSessionReadiness(accessToken);
         history.replaceState(null, document.title, window.location.pathname);
       } else if (authCode) {
         await exchangeVercelAuthCode(authCode);
@@ -98,6 +103,7 @@
         refresh_token: session.refresh_token || "",
         expires_at: Math.floor(Date.now() / 1000) + Number(session.expires_in || 3600)
       });
+      await waitForSupabaseSessionReadiness(session.access_token);
     }
 
     async function getValidVercelSession() {
@@ -141,6 +147,28 @@
         "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
         "Content-Type": "application/json"
       };
+    }
+
+    async function waitForSupabaseSessionReadiness(accessToken) {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/user`, {
+          headers: {
+            ...getSupabaseAnonymousAuthHeaders(),
+            "Authorization": "Bearer " + accessToken
+          }
+        });
+
+        if (response.ok) {
+          return;
+        }
+
+        const authError = await readSupabaseAuthError(response);
+        if (attempt === 3) {
+          throw new Error("Connexion Google impossible : " + (authError || "session OAuth non prête."));
+        }
+
+        await wait(300 * (attempt + 1));
+      }
     }
 
     async function readSupabaseAuthError(response) {
