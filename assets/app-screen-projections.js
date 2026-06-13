@@ -1,0 +1,111 @@
+(() => {
+  function projectManagedChildren(children, helpers) {
+    const { getJudokaDisplayName, normalizeDisplayName, normalizeLastName } = helpers;
+
+    const projectedChildren = (children || []).map(child => {
+      const fullName = getJudokaDisplayName(child) || "Enfant";
+      return {
+        judokaId: child.judokaId || "",
+        fullName,
+        firstName: normalizeDisplayName(child.firstName || ""),
+        lastName: normalizeLastName(child.lastName || ""),
+        accountEmail: child.accountEmail || "Non renseigné",
+        directAccessState: child.accountEmail ? "Activée" : "Non activée"
+      };
+    });
+
+    return {
+      children: projectedChildren,
+      hasChildren: projectedChildren.length > 0
+    };
+  }
+
+  function projectManagedAdmins(admins, currentUser, helpers) {
+    const { getJudokaDisplayName } = helpers;
+
+    const projectedAdmins = (admins || []).map(admin => {
+      const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
+      const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
+      return {
+        judokaId: admin.judokaId || "",
+        fullName,
+        accountEmail: admin.accountEmail || "Non renseigné",
+        isCurrentAdmin
+      };
+    });
+
+    return {
+      admins: projectedAdmins,
+      hasAdmins: projectedAdmins.length > 0
+    };
+  }
+
+  function projectAccessInvitations(filteredInvitations, search, currentPage, pageSize, helpers) {
+    const { formatDateTime } = helpers;
+    const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+    const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
+
+    return {
+      accessInvitations: visibleInvitations.map(invitation => ({
+        email: invitation.email || "Invitation",
+        invitedProfileType: invitation.invitedProfileType || "JUDOKA",
+        createdAt: formatDateTime(invitation.createdAt)
+      })),
+      accessInvitationsSummary: `${filteredInvitations.length} invitation(s)${search ? " trouvée(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      accessInvitationsEmptyMessage: search
+        ? `Aucune invitation trouvée pour "${search}".`
+        : "Aucune invitation en attente.",
+      canResetAccessInvitationSearch: Boolean(search),
+      canShowPreviousAccessInvitationPage: safeCurrentPage > 1,
+      canShowNextAccessInvitationPage: safeCurrentPage < totalPages,
+      hasAccessInvitations: Boolean(filteredInvitations.length)
+    };
+  }
+
+  function projectCompetitionDetail(competition, canEditCompetition, helpers) {
+    const { formatDate } = helpers;
+    const ageWeightLabel = [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - ");
+    const hasResult = Boolean(String(competition.result || "").trim());
+
+    return {
+      competitionTitle: competition.name || "Compétition",
+      competitionSubtitle: "Détail de la compétition",
+      competitionDate: formatDate(competition.competitionDate),
+      ageWeightLabel,
+      competitionResult: competition.result || "",
+      canEditCompetition,
+      canFinalizeCompetition: canEditCompetition && !hasResult
+    };
+  }
+
+  function projectCompetitionCombats(combats, helpers) {
+    const { formatResultat, normalizeDisplayName } = helpers;
+    const projectedCombats = (combats || []).map(c => ({
+      combatId: c.combatId || "",
+      opponent: c.opponent || "Adversaire non renseigné",
+      result: formatResultat(c.result),
+      resultClass: `result-${String(c.result || "").toLowerCase()}`,
+      victoryType: c.victoryType || "",
+      judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
+      showJudoka: Boolean(helpers.showJudoka),
+      notes: c.notes || "Aucun déroulé renseigné"
+    }));
+
+    return {
+      combats: projectedCombats,
+      combatsEmptyMessage: projectedCombats.length ? "" : "Aucun combat pour cette compétition.",
+      hasCombats: projectedCombats.length > 0,
+      isLoadingCombats: false
+    };
+  }
+
+  window.KirokuScreenProjections = {
+    projectAccessInvitations,
+    projectCompetitionCombats,
+    projectCompetitionDetail,
+    projectManagedAdmins,
+    projectManagedChildren
+  };
+})();

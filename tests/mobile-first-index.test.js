@@ -12,6 +12,7 @@ const client = [
   "app-ui.js",
   "app-notifications.js",
   "app-auth.js",
+  "app-screen-projections.js",
   "app-screen-login.js",
   "app-screen-home.js",
   "app-judoka-presentation.js",
@@ -77,8 +78,8 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="deleteCompetitionButton"/);
   assert.match(bundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*Ajouter un combat/);
   assert.doesNotMatch(bundle, /id="competitionAdminActions" class="competition-management-actions"[\s\S]*id="finalizeCompetitionButton"[\s\S]*id="deleteCompetitionButton"/);
-  assert.match(bundle, /const hasResult = Boolean\(String\(state\.currentCompetition\.result \|\| ""\)\.trim\(\)\);/);
-  assert.match(bundle, /canFinalizeCompetition: state\.canEditCurrentCompetition && !hasResult/);
+  assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionDetail\(/);
+  assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionCombats\(/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
