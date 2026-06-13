@@ -1,24 +1,24 @@
     :root {
-      --bg: #f6f4ee;
+      --bg: #ffffff;
       --panel: #ffffff;
       --text: #101010;
       --muted: #5a5752;
-      --line: #d8d2c8;
+      --line: #e5e7eb;
       --primary: #111111;
       --primary-hover: #000000;
       --accent: #c92d1b;
-      --accent-soft: #fff0ec;
+      --accent-soft: #fff1ee;
       --danger: #b42318;
       --success: #027a48;
       --warning: #b54708;
-      --warning-soft: #fffaeb;
-      --gold: #a56b00;
-      --gold-soft: #fff6d8;
-      --silver: #56606d;
-      --silver-soft: #f2f2ef;
-      --bronze: #8f4a2a;
-      --bronze-soft: #fff0e6;
-      --soft: #fbfaf7;
+      --warning-soft: #f5f5f5;
+      --gold: #111111;
+      --gold-soft: #fff1ee;
+      --silver: #4b5563;
+      --silver-soft: #f3f4f6;
+      --bronze: #6b7280;
+      --bronze-soft: #f3f4f6;
+      --soft: #f5f5f5;
       --shadow: 0 8px 18px rgba(17, 17, 17, 0.06);
     }
 
@@ -51,7 +51,7 @@
       gap: 8px;
       padding: 12px 12px 8px;
       margin-bottom: 0;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0));
+      background: #fff;
       border-bottom: 1px solid var(--line);
     }
 
@@ -326,7 +326,7 @@
     }
 
     .button-secondary:hover {
-      background: #f7f4ef;
+      background: #f5f5f5;
     }
 
     .button-secondary:disabled:hover,
@@ -335,13 +335,13 @@
     }
 
     .button-danger {
-      border-color: #fecdca;
+      border-color: var(--accent);
       background: #fff;
-      color: var(--danger);
+      color: var(--accent);
     }
 
     .button-danger:hover {
-      background: #fef3f2;
+      background: #fff;
     }
 
     .autocomplete-wrapper {
@@ -352,7 +352,7 @@
       z-index: 200;
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 7px;
+      border-radius: 6px;
       max-height: 220px;
       overflow-y: auto;
       width: 100%;
@@ -370,7 +370,7 @@
       touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: var(--soft); }
+    .autocomplete-option:hover { background: #f5f5f5; }
     .autocomplete-empty {
       padding: 12px 14px;
       color: var(--muted);
@@ -401,7 +401,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #f5f1ea;
+      background: #f5f5f5;
     }
     .data-table td {
       cursor: pointer;
@@ -671,50 +671,50 @@
     }
 
     .result-v {
-      border-color: #abefc6;
-      background: #ecfdf3;
-      color: var(--success);
+      border-color: var(--accent);
+      background: #fff;
+      color: var(--accent);
     }
 
     .result-d {
-      border-color: #fecdca;
-      background: #fef3f2;
-      color: var(--danger);
+      border-color: #d1d5db;
+      background: #fff;
+      color: #111111;
     }
 
     .result-e {
-      border-color: #f1bc50;
-      background: #fff8df;
-      color: #8c5a00;
+      border-color: #d1d5db;
+      background: #fff;
+      color: #4b5563;
     }
 
     .rank-gold {
-      border-color: #d79a00;
-      background: #fff6d7;
-      color: var(--gold);
+      border-color: var(--accent);
+      background: #fff;
+      color: var(--accent);
     }
 
     .rank-silver {
-      border-color: #cfc8be;
-      background: #f3f1ec;
-      color: var(--silver);
+      border-color: #d1d5db;
+      background: #fff;
+      color: #4b5563;
     }
 
     .rank-bronze {
-      border-color: #d18b61;
-      background: #fff1e7;
-      color: var(--bronze);
+      border-color: #d1d5db;
+      background: #fff;
+      color: #4b5563;
     }
 
     .rank-top5 {
-      border-color: #d5c6bd;
-      background: #f7f3f0;
-      color: #8f4a2a;
+      border-color: #d1d5db;
+      background: #fff;
+      color: #4b5563;
     }
 
     .rank-unclassified {
       border-color: #d0d5dd;
-      background: #fafafa;
+      background: #fff;
       color: var(--muted);
     }
 
@@ -725,7 +725,7 @@
     }
 
     .danger-zone {
-      border-top: 1px solid #fecdca;
+      border-top: 1px solid var(--line);
       margin-top: 22px;
       padding-top: 16px;
     }
@@ -773,7 +773,7 @@
     }
 
     .empty-state {
-      border: 1px dashed #d9cfc2;
+      border: 1px dashed #d1d5db;
       border-radius: 6px;
       color: var(--muted);
       padding: 24px 18px;
@@ -816,15 +816,15 @@
     }
 
     .success {
-      border-color: #bcdcc9;
-      background: #eef8f1;
-      color: var(--success);
+      border-color: var(--accent);
+      background: #fff;
+      color: var(--text);
     }
 
     .error {
-      border-color: #f1c0b8;
-      background: #fff2ef;
-      color: var(--danger);
+      border-color: #d1d5db;
+      background: #fff;
+      color: var(--text);
     }
 
     .hidden {
@@ -1075,7 +1075,7 @@
       color: var(--text);
     }
     .button-google:hover {
-      background: #f7f4ef;
+      background: #f5f5f5;
     }
     .user-actions {
       display: flex;
@@ -1122,18 +1122,18 @@
     }
 
     .stat-card-highlight {
-      border-color: #d8c3ba;
-      background: #fffaf8;
+      border-color: var(--line);
+      background: #fff;
     }
 
     .stat-card-success {
-      border-color: #c6dac9;
-      background: #f8fbf8;
+      border-color: var(--line);
+      background: #fff;
     }
 
     .stat-card-danger {
-      border-color: #e0c1b8;
-      background: #fff8f6;
+      border-color: var(--line);
+      background: #fff;
     }
 
     .judoka-hero {
