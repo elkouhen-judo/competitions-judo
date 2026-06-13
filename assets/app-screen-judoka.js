@@ -2,7 +2,6 @@
   function createKirokuJudokaScreen(app) {
     const { state, ui, notifications } = app;
     const {
-      $,
       emptyState,
       escapeAttribute,
       escapeHtml,
@@ -10,11 +9,43 @@
       getClassementBadgeClass,
       getJudokaDisplayName,
       getJudokaInitials,
-      setText,
-      setTexts,
       showView
     } = ui;
     const { clearMessage } = notifications;
+    const defaultJudokaViewState = {
+      profileTitle: "Fiche judoka",
+      profileSubtitle: "",
+      heroAvatar: "JJ",
+      heroName: "Judoka",
+      heroSummary: "",
+      heroCategory: "",
+      heroRecord: "",
+      seasonLabel: "",
+      seasonCompetitionCount: "0",
+      seasonCombatCount: "0",
+      seasonWins: "0",
+      seasonLosses: "0",
+      lastCompetitionHtml: "",
+      bestResultsHtml: ""
+    };
+    let judokaViewModel = null;
+
+    function ensureJudokaViewModel() {
+      if (!window.Vue || judokaViewModel) {
+        return;
+      }
+
+      judokaViewModel = window.Vue.reactive({ ...defaultJudokaViewState });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(judokaViewModel),
+            showHome: () => app.showHome()
+          };
+        }
+      }).mount("#judokaView");
+    }
 
     function showJudokaProfile(idJudoka, keepMessage) {
       if (!keepMessage) {
@@ -34,6 +65,7 @@
     }
 
     function renderJudokaProfile() {
+      ensureJudokaViewModel();
       if (!state.currentJudokaProfile) {
         return;
       }
@@ -49,26 +81,25 @@
         seasonLosses
       } = state.currentJudokaProfile;
 
-      setTexts({
-        judokaProfileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
-        judokaProfileSubtitle: judoka.accountEmail,
-        judokaSeasonLabel: `Saison ${season.label}`,
-        judokaSeasonCompetitionCount: String(seasonCompetitionCount || 0),
-        judokaSeasonCombatCount: String(seasonCombatCount || 0),
-        judokaSeasonWins: String(seasonWins || 0),
-        judokaSeasonLosses: String(seasonLosses || 0),
-        judokaHeroAvatar: getJudokaInitials(judoka),
-        judokaHeroName: getJudokaDisplayName(judoka) || "Judoka",
-        judokaHeroSummary: `Saison ${season.label} · ${seasonCompetitionCount || 0} compétition(s) · ${seasonCombatCount || 0} combat(s)`,
-        judokaHeroCategory: lastCompetition && lastCompetition.category ? lastCompetition.category : "Catégorie à confirmer",
-        judokaHeroRecord: `${seasonWins || 0} V · ${seasonLosses || 0} D`
+      Object.assign(judokaViewModel, {
+        profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
+        profileSubtitle: judoka.accountEmail,
+        seasonLabel: `Saison ${season.label}`,
+        seasonCompetitionCount: String(seasonCompetitionCount || 0),
+        seasonCombatCount: String(seasonCombatCount || 0),
+        seasonWins: String(seasonWins || 0),
+        seasonLosses: String(seasonLosses || 0),
+        heroAvatar: getJudokaInitials(judoka),
+        heroName: getJudokaDisplayName(judoka) || "Judoka",
+        heroSummary: `Saison ${season.label} · ${seasonCompetitionCount || 0} compétition(s) · ${seasonCombatCount || 0} combat(s)`,
+        heroCategory: lastCompetition && lastCompetition.category ? lastCompetition.category : "Catégorie à confirmer",
+        heroRecord: `${seasonWins || 0} V · ${seasonLosses || 0} D`
       });
 
-      const lastCompetitionTarget = $("judokaLastCompetition");
       if (!lastCompetition) {
-        lastCompetitionTarget.innerHTML = emptyState("Aucune compétition enregistrée pour l'instant.");
+        judokaViewModel.lastCompetitionHtml = emptyState("Aucune compétition enregistrée pour l'instant.");
       } else {
-        lastCompetitionTarget.innerHTML = `
+        judokaViewModel.lastCompetitionHtml = `
           <div class="meta-row">
             <span class="meta-label">Compétition</span>
             <span class="meta-value">${escapeHtml(lastCompetition.name || "")}</span>
@@ -88,9 +119,8 @@
         `;
       }
 
-      const bestResultsTarget = $("judokaBestResults");
       if (!bestSeasonResults.length) {
-        bestResultsTarget.innerHTML = emptyState("Pas encore de classement sur cette saison.");
+        judokaViewModel.bestResultsHtml = emptyState("Pas encore de classement sur cette saison.");
       } else {
         let html = `<div class="list">`;
         bestSeasonResults.forEach(result => {
@@ -111,7 +141,7 @@
           `;
         });
         html += `</div>`;
-        bestResultsTarget.innerHTML = html;
+        judokaViewModel.bestResultsHtml = html;
       }
     }
 

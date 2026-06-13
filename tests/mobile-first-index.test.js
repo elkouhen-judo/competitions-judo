@@ -161,6 +161,14 @@ test("home screen is mounted through Vue 3 for the progressive screen migration"
   assert.match(bundle, /function ensureHomeViewModel\(\)/);
 });
 
+test("judoka profile screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(bundle, /id="judokaView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
+  assert.match(bundle, /id="judokaLastCompetition" class="summary" v-html="lastCompetitionHtml"/);
+  assert.match(bundle, /id="judokaBestResults" v-html="bestResultsHtml"/);
+  assert.match(bundle, /function ensureJudokaViewModel\(\)/);
+});
+
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(bundle, /<select id="competition_categorie_age">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/);
   assert.match(bundle, /id="competition_categorie_poids"/);
