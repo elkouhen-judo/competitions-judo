@@ -11,14 +11,10 @@
       formatResultat,
       getCurrentLocalDate,
       getJudokaDisplayName,
-      getValue,
       icons,
       normalizeDisplayName,
       setHidden,
-      setText,
-      setTexts,
       setValue,
-      setValues,
       toInputDate,
       showView
     } = ui;
@@ -57,9 +53,25 @@
         result: ""
       }
     };
+    const defaultCombatForm = {
+      combatId: "",
+      opponent: "",
+      result: "",
+      victoryType: "",
+      notes: ""
+    };
+    const defaultCombatFormViewState = {
+      combatFormTitle: "Ajouter un combat",
+      combatFormSubtitle: "Combat de la compétition en cours",
+      saveCombatButtonText: "Ajouter le combat",
+      showCombatDecisionBlock: false,
+      combatDecisionOptions: [],
+      combatForm: { ...defaultCombatForm }
+    };
     let competitionDetailViewModel = null;
     let competitionFormViewModel = null;
     let competitionFinalizationViewModel = null;
+    let combatFormViewModel = null;
 
     function ensureCompetitionDetailViewModel() {
       if (!window.Vue || competitionDetailViewModel) {
@@ -122,6 +134,28 @@
           };
         }
       }).mount("#competitionFinalizationView");
+    }
+
+    function ensureCombatFormViewModel() {
+      if (!window.Vue || combatFormViewModel) {
+        return;
+      }
+
+      combatFormViewModel = window.Vue.reactive({
+        ...defaultCombatFormViewState,
+        combatForm: { ...defaultCombatForm }
+      });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(combatFormViewModel),
+            cancelCombatForm,
+            saveCombat,
+            syncCombatDecisionVisibility
+          };
+        }
+      }).mount("#combatFormView");
     }
 
     function openCompetition(id, keepMessage) {
@@ -343,6 +377,7 @@
 
     function showCombatForm(id) {
       clearMessage();
+      ensureCombatFormViewModel();
       resetCombatForm();
 
       if (id) {
@@ -353,29 +388,29 @@
           return;
         }
 
-        setTexts({
+        Object.assign(combatFormViewModel, {
           combatFormTitle: "Modifier le combat",
-          combatFormSubtitle: state.currentCompetition.name,
+          combatFormSubtitle: state.currentCompetition.name || "",
           saveCombatButtonText: "Enregistrer le combat"
         });
-        setValues({
-          combat_id: combat.combatId,
-          combat_adversaire: combat.opponent,
-          combat_resultat: combat.result,
-          combat_type_victoire: combat.victoryType,
-          combat_deroule: combat.notes
+        Object.assign(combatFormViewModel.combatForm, {
+          combatId: combat.combatId || "",
+          opponent: combat.opponent || "",
+          result: combat.result || "",
+          victoryType: combat.victoryType || "",
+          notes: combat.notes || ""
         });
         syncCombatDecisionVisibility(false);
       } else {
-        setTexts({
+        Object.assign(combatFormViewModel, {
           combatFormTitle: "Ajouter un combat",
-          combatFormSubtitle: state.currentCompetition.name
+          combatFormSubtitle: state.currentCompetition.name || ""
         });
         syncCombatDecisionVisibility(true);
       }
 
       showView("combatFormView");
-      $("combat_adversaire").focus();
+      window.Vue.nextTick(() => $("combat_adversaire").focus());
     }
 
     function cancelCombatForm() {
@@ -384,7 +419,8 @@
     }
 
     function saveCombat() {
-      const idCombat = getValue("combat_id");
+      ensureCombatFormViewModel();
+      const idCombat = combatFormViewModel.combatForm.combatId;
 
       if (idCombat) {
         updateCombat(idCombat);
@@ -430,14 +466,15 @@
     }
 
     function getCombatFormValue() {
-      const result = getValue("combat_resultat");
+      ensureCombatFormViewModel();
+      const result = combatFormViewModel.combatForm.result;
       return {
         competitionId: state.currentCompetition.competitionId,
         judokaId: state.currentCompetition.ownerJudokaId,
-        opponent: getValue("combat_adversaire"),
+        opponent: combatFormViewModel.combatForm.opponent,
         result,
-        victoryType: result === "Egalité" ? "Hiki wake" : getValue("combat_type_victoire"),
-        notes: getValue("combat_deroule")
+        victoryType: result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
+        notes: combatFormViewModel.combatForm.notes
       };
     }
 
@@ -638,53 +675,45 @@
     }
 
     function renderCombatDecisionOptions(result) {
-      const select = $("combat_type_victoire");
+      ensureCombatFormViewModel();
       const options = getCombatDecisionOptions(result);
-      const currentValue = getValue("combat_type_victoire");
-      let html = `<option value="">Non spécifié</option>`;
-
-      options.forEach(option => {
-        html += `<option value="${escapeAttribute(option)}">${escapeHtml(option)}</option>`;
-      });
-      select.innerHTML = html;
+      const currentValue = combatFormViewModel.combatForm.victoryType;
+      combatFormViewModel.combatDecisionOptions = options;
 
       if (options.includes(currentValue)) {
-        setValue("combat_type_victoire", currentValue);
+        combatFormViewModel.combatForm.victoryType = currentValue;
       } else if (result === "Egalité") {
-        setValue("combat_type_victoire", "Hiki wake");
+        combatFormViewModel.combatForm.victoryType = "Hiki wake";
       } else {
-        setValue("combat_type_victoire", "");
+        combatFormViewModel.combatForm.victoryType = "";
       }
     }
 
     function syncCombatDecisionVisibility(clearValueWhenHidden) {
-      const result = getValue("combat_resultat");
-      const block = $("combatDecisionBlock");
+      ensureCombatFormViewModel();
+      const result = combatFormViewModel.combatForm.result;
       const shouldShow = getCombatDecisionOptions(result).length > 0;
       renderCombatDecisionOptions(result);
-      block.classList.toggle("hidden", !shouldShow);
+      combatFormViewModel.showCombatDecisionBlock = shouldShow;
 
       if (!shouldShow && clearValueWhenHidden) {
-        setValue("combat_type_victoire", "");
+        combatFormViewModel.combatForm.victoryType = "";
       }
     }
 
     function resetCombatForm() {
-      setValues({
-        combat_id: "",
-        combat_adversaire: "",
-        combat_resultat: "",
-        combat_type_victoire: "",
-        combat_deroule: ""
+      ensureCombatFormViewModel();
+      Object.assign(combatFormViewModel.combatForm, defaultCombatForm);
+      Object.assign(combatFormViewModel, {
+        combatFormTitle: "Ajouter un combat",
+        combatFormSubtitle: "Combat de la compétition en cours",
+        saveCombatButtonText: "Ajouter le combat"
       });
-      setText("saveCombatButtonText", "Ajouter le combat");
       syncCombatDecisionVisibility(true);
     }
 
     function bindEvents() {
-      $("combat_resultat").addEventListener("change", () => {
-        syncCombatDecisionVisibility(true);
-      });
+      ensureCombatFormViewModel();
     }
 
     return {

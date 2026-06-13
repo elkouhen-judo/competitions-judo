@@ -513,25 +513,25 @@
       </div>
     </section>
 
-    <section id="combatFormView" class="panel hidden">
+    <section id="combatFormView" class="panel hidden" v-cloak>
       <div class="panel-header">
         <div>
-          <h2 id="combatFormTitle">Ajouter un combat</h2>
-          <p id="combatFormSubtitle" class="subtitle">Combat de la compétition en cours</p>
+          <h2 id="combatFormTitle">{{ combatFormTitle }}</h2>
+          <p id="combatFormSubtitle" class="subtitle">{{ combatFormSubtitle }}</p>
         </div>
       </div>
       <div class="panel-body">
-        <input type="hidden" id="combat_id">
+        <input type="hidden" id="combat_id" v-model="combatForm.combatId">
 
         <div class="form-grid">
           <div>
             <label for="combat_adversaire">Adversaire</label>
-            <input type="text" id="combat_adversaire">
+            <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent">
           </div>
 
           <div>
             <label for="combat_resultat">Résultat</label>
-            <select id="combat_resultat">
+            <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
               <option value="">Choisir</option>
               <option value="Victoire">Victoire</option>
               <option value="Défaite">Défaite</option>
@@ -539,33 +539,28 @@
             </select>
           </div>
 
-          <div id="combatDecisionBlock" class="hidden">
+          <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
             <label for="combat_type_victoire">Type de décision</label>
-            <select id="combat_type_victoire">
+            <select id="combat_type_victoire" v-model="combatForm.victoryType">
               <option value="">Non spécifié</option>
-              <option value="Ippon">Ippon</option>
-              <option value="Waza-ari">Waza-ari</option>
-              <option value="Décision">Décision</option>
-              <option value="Hiki wake">Hiki wake</option>
-              <option value="Hansoku-make">Hansoku-make</option>
-              <option value="Forfait">Forfait</option>
+              <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
             </select>
           </div>
 
           <div class="full-row">
             <label for="combat_deroule">Déroulé du combat</label>
-            <textarea id="combat_deroule" rows="3" placeholder="Racontez le déroulé du combat (prises, temps forts...)"></textarea>
+            <textarea id="combat_deroule" rows="3" placeholder="Racontez le déroulé du combat (prises, temps forts...)" v-model.trim="combatForm.notes"></textarea>
           </div>
         </div>
 
         <div class="form-actions mobile-action-bar">
-          <button class="button-secondary" onclick="cancelCombatForm()">
+          <button class="button-secondary" @click="cancelCombatForm">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
             Annuler
           </button>
-          <button id="saveCombatButton" onclick="saveCombat()">
+          <button id="saveCombatButton" @click="saveCombat">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            <span id="saveCombatButtonText">Ajouter le combat</span>
+            <span id="saveCombatButtonText">{{ saveCombatButtonText }}</span>
           </button>
         </div>
       </div>

@@ -240,7 +240,7 @@ test("owner autocomplete provides disambiguation metadata", () => {
 });
 
 test("combat decision type appears only after choosing a result", () => {
-  assert.match(bundle, /id="combatDecisionBlock" class="hidden"/);
+  assert.match(bundle, /id="combatDecisionBlock" :class="\{ hidden: !showCombatDecisionBlock \}"/);
   assert.match(bundle, /function getCombatDecisionOptions\(result\)/);
   assert.match(bundle, /function renderCombatDecisionOptions\(result\)/);
   assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
@@ -248,5 +248,13 @@ test("combat decision type appears only after choosing a result", () => {
   assert.match(bundle, /if \(result === "Egalité"\)/);
   assert.match(bundle, /Hansoku-make/);
   assert.match(bundle, /const shouldShow = getCombatDecisionOptions\(result\)\.length > 0;/);
-  assert.match(bundle, /\$\("combat_resultat"\)\.addEventListener\("change",/);
+  assert.match(bundle, /id="combat_resultat" v-model="combatForm\.result" @change="syncCombatDecisionVisibility\(true\)"/);
+});
+
+test("combat form screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
+  assert.match(bundle, /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/);
+  assert.match(bundle, /id="saveCombatButton" @click="saveCombat"/);
+  assert.match(bundle, /function ensureCombatFormViewModel\(\)/);
 });
