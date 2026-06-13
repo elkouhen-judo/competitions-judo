@@ -46,7 +46,8 @@ test("notifications use a toast layer without shifting the main layout", () => {
 test("combat cards expose result as a first-class badge", () => {
   assert.match(bundle, /\.result-badge\s*\{/);
   assert.match(bundle, /<span class="result-badge/);
-  assert.match(bundle, /escapeHtml\(formatResultat\(c\.result\)\)/);
+  assert.match(bundle, /result:\s*formatResultat\(c\.result\),/);
+  assert.match(bundle, /<span class="result-badge" :class="combat\.resultClass">\{\{ combat\.result \}\}<\/span>/);
 });
 
 test("small-screen layout is the base and desktop is progressive", () => {
@@ -137,8 +138,8 @@ test("competition list exposes direct delete actions without nesting buttons", (
 });
 
 test("mobile actions stay explicit instead of icon-only", () => {
-  assert.match(bundle, /onclick="showCombatForm\(this\.dataset\.id\)"[\s\S]*?>[\s\S]*?Modifier\s*<\/button>/);
-  assert.match(bundle, /onclick="deleteCombat\(this\.dataset\.id\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
+  assert.match(bundle, /@click="showCombatForm\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Modifier\s*<\/button>/);
+  assert.match(bundle, /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
   assert.match(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
   assert.match(bundle, /Créer mon profil/);
   assert.doesNotMatch(bundle, /title="Éditer"/);
@@ -208,7 +209,8 @@ test("admins screen is mounted through Vue 3 for the progressive screen migratio
 test("competition detail screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="competitionView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competitionTitle">\{\{ competitionTitle \}\}<\/h2>/);
-  assert.match(bundle, /id="combatsList" v-html="combatsHtml"/);
+  assert.match(bundle, /id="combatsList">[\s\S]*v-for="combat in combats"/);
+  assert.doesNotMatch(bundle, /combatsHtml/);
   assert.match(bundle, /id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm\(\)"/);
   assert.match(bundle, /function ensureCompetitionDetailViewModel\(\)/);
 });
