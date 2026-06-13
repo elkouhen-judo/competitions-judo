@@ -223,6 +223,9 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /id="adminsView" class="panel hidden"/);
   assert.match(uiBundle, /function showAdminsManagement\(keepMessage\)/);
   assert.match(uiBundle, /id="accessInvitationsList"/);
+  assert.match(uiBundle, /v-for="invitation in accessInvitations"/);
+  assert.match(uiBundle, /v-for="admin in admins"/);
+  assert.doesNotMatch(uiBundle, /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/);
   assert.match(uiBundle, /id="accessInvitationFilter"/);
   assert.match(uiBundle, /id="invite_email"/);
   assert.match(uiBundle, /id="invite_profile_type"/);
