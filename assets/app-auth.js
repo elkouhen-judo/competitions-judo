@@ -56,10 +56,10 @@
         clearVercelSession();
         if (normalizedError.includes("invitation") || normalizedError.includes("non autorisé")) {
           onInvitationRequired();
-          return;
+          return { handled: true, completedAuth: false };
         }
         onError({ message: "Connexion Google impossible : " + error });
-        return;
+        return { handled: true, completedAuth: false };
       }
 
       const params = hashParams;
@@ -76,10 +76,14 @@
         });
         await waitForSupabaseSessionReadiness(accessToken);
         history.replaceState(null, document.title, window.location.pathname);
+        return { handled: false, completedAuth: true };
       } else if (authCode) {
         await exchangeVercelAuthCode(authCode);
         history.replaceState(null, document.title, window.location.pathname);
+        return { handled: false, completedAuth: true };
       }
+
+      return { handled: false, completedAuth: false };
     }
 
     async function exchangeVercelAuthCode(authCode) {
