@@ -174,7 +174,11 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
 
 test("children screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="childrenView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="childrenList" v-html="childrenListHtml"/);
+  assert.match(bundle, /id="childrenList"/);
+  assert.match(bundle, /v-for="child in children"/);
+  assert.match(bundle, /@click="editManagedChild\(child\.judokaId\)"/);
+  assert.match(bundle, /@click="deleteManagedChild\(child\.judokaId, child\.fullName\)"/);
+  assert.doesNotMatch(bundle, /childrenListHtml/);
   assert.match(bundle, /id="child_prenom" autocomplete="given-name" v-model\.trim="childForm\.firstName"/);
   assert.match(bundle, /id="saveChildButton" @click="saveManagedChild\(\)"/);
   assert.match(bundle, /function ensureChildrenViewModel\(\)/);
