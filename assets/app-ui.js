@@ -120,6 +120,16 @@
     }).mount(`#${id}`);
   }
 
+  function cloneDefaultState(defaultState) {
+    return JSON.parse(JSON.stringify(defaultState));
+  }
+
+  function createMountedViewModel(id, defaultState, actions = {}) {
+    const viewModel = window.Vue.reactive(cloneDefaultState(defaultState));
+    mountViewModel(id, viewModel, actions);
+    return viewModel;
+  }
+
   window.KirokuUI = {
     $,
     cleanText,
@@ -131,6 +141,7 @@
     getCurrentLocalDate,
     getJudokaDisplayName,
     getJudokaInitials,
+    createMountedViewModel,
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,

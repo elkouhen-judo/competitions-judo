@@ -42,12 +42,7 @@
         return;
       }
 
-      adminsViewModel = window.Vue.reactive({
-        ...defaultAdminsViewState,
-        accessInvitationForm: { ...defaultAccessInvitationForm }
-      });
-
-      ui.mountViewModel("adminsView", adminsViewModel, {
+      adminsViewModel = ui.createMountedViewModel("adminsView", defaultAdminsViewState, {
         deleteAccessInvitation,
         resetAccessInvitationSearch,
         resetAccessInvitationForm,

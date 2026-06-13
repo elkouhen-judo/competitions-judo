@@ -14,6 +14,7 @@ const client = [
   "app-auth.js",
   "app-screen-login.js",
   "app-screen-home.js",
+  "app-judoka-presentation.js",
   "app-screen-judoka.js",
   "app-screen-competition.js",
   "app-screen-children.js",
@@ -167,8 +168,8 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
   assert.match(client, /vue v3\./);
   assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
   assert.match(bundle, /function mountViewModel\(id, viewModel, actions = \{\}\)/);
-  assert.match(bundle, /ui\.mountViewModel\("loginView", loginViewModel,/);
-  assert.match(bundle, /window\.Vue\.reactive/);
+  assert.match(bundle, /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\}\)/);
+  assert.match(bundle, /ui\.createMountedViewModel\("loginView", defaultLoginState,/);
   assert.match(bundle, /v-model\.trim="registration\.firstName"/);
   assert.match(bundle, /@submit\.prevent="submitProfileRegistration\(\)"/);
 });
@@ -189,7 +190,8 @@ test("home screen is mounted through Vue 3 for the progressive screen migration"
 test("judoka profile screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="judokaView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
-  assert.match(judokaScreenClient, /heroSummary: `\$\{seasonCompetitionCount \|\| 0\} compétitions · \$\{seasonCombatCount \|\| 0\} combats · \$\{victoryRate \|\| 0\}% victoires`/);
+  assert.match(bundle, /function createJudokaProfileViewModel\(profile,\s*helpers\)/);
+  assert.match(bundle, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
   assert.match(bundle, /class="combat-profile-grid"/);
   assert.match(bundle, /v-if="!hasCompetitionResults"/);
   assert.match(bundle, /v-for="result in competitionResults"/);

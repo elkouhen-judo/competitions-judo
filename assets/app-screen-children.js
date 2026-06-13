@@ -33,12 +33,7 @@
         return;
       }
 
-      childrenViewModel = window.Vue.reactive({
-        ...defaultChildrenViewState,
-        childForm: { ...defaultChildForm }
-      });
-
-      ui.mountViewModel("childrenView", childrenViewModel, {
+      childrenViewModel = ui.createMountedViewModel("childrenView", defaultChildrenViewState, {
         deleteManagedChild,
         editManagedChild,
         resetChildForm,

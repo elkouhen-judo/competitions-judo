@@ -15,6 +15,7 @@ const client = [
   "app-auth.js",
   "app-screen-login.js",
   "app-screen-home.js",
+  "app-judoka-presentation.js",
   "app-screen-judoka.js",
   "app-screen-competition.js",
   "app-screen-children.js",
@@ -26,6 +27,8 @@ const client = [
   .join("\n");
 const appRuntimeClient = fs.readFileSync(path.join(root, "assets", "app-runtime.js"), "utf8");
 const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
+const judokaPresentationClient = fs.readFileSync(path.join(root, "assets", "app-judoka-presentation.js"), "utf8");
+const judokaScreenClient = fs.readFileSync(path.join(root, "assets", "app-screen-judoka.js"), "utf8");
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
@@ -194,6 +197,12 @@ test("app bootstrap delegates to the extracted runtime", () => {
   assert.doesNotMatch(appBootstrapClient, /runServerWithOptions|logoutUser|applyInitialData/);
 });
 
+test("judoka presentation is extracted from the screen component", () => {
+  assert.match(judokaPresentationClient, /function createJudokaProfileViewModel\(profile,\s*helpers\)/);
+  assert.match(judokaScreenClient, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
+  assert.doesNotMatch(judokaScreenClient, /heroSummary: `\$\{seasonCompetitionCount \|\| 0\} compétitions/);
+});
+
 test("vercel login creates only the initial judoka profile", () => {
   assert.match(uiBundle, /id="profileRegistrationForm"/);
   assert.match(uiBundle, /"registerProfile",\s*\[\s*profile\s*\]/);
@@ -234,7 +243,8 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
   assert.match(uiBundle, /v-for="competition in competitions"/);
   assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
-  assert.match(uiBundle, /ui\.mountViewModel\("homeView", homeViewModel,[\s\S]*?showHomeCompetitionForm/);
+  assert.match(uiBundle, /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\}\)/);
+  assert.match(uiBundle, /ui\.createMountedViewModel\("homeView", defaultHomeViewState,/);
   assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });
 
