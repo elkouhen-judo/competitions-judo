@@ -43,14 +43,9 @@
     roleLabel: ""
   });
 
-  window.Vue.createApp({
-    setup() {
-      return {
-        ...window.Vue.toRefs(headerViewModel),
-        logoutUser
-      };
-    }
-  }).mount("#appHeader");
+  ui.mountViewModel("appHeader", headerViewModel, {
+    logoutUser
+  });
 
   const auth = window.createKirokuAuth({
     runtimeConfig,
