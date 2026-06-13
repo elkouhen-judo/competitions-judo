@@ -135,7 +135,7 @@ test("successful initial load leaves the login view", () => {
 });
 
 test("judoka home keeps competition creation available", () => {
-  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm"/);
+  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/);
   assert.match(uiBundle, /id="addCompetitionButtonText"/);
   assert.match(uiBundle, /id="addCompetitionButtonMeta"/);
   assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
@@ -163,7 +163,7 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /const finalization = createPersistedCompetition\(toCanonicalCompetition\(competition\)\)\.finalize\(result\);/);
   assert.match(competitionsService, /await competitionsRepository\.updateResult\(idCompetition,\s*finalization\);/);
   assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
-  assert.match(uiBundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm"[\s\S]*Ajouter un combat/);
+  assert.match(uiBundle, /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/);
   assert.match(uiBundle, /function finalizeCompetition\(\)/);
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
   assert.doesNotMatch(uiBundle, /id="competition_classement"/);
@@ -220,7 +220,7 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /id="accessInvitationFilter"/);
   assert.match(uiBundle, /id="invite_email"/);
   assert.match(uiBundle, /id="invite_profile_type"/);
-  assert.match(uiBundle, /id="saveInvitationButton" @click="saveAccessInvitation"/);
+  assert.match(uiBundle, /id="saveInvitationButton" @click="saveAccessInvitation\(\)"/);
   assert.match(uiBundle, /function saveAccessInvitation\(\)/);
   assert.match(uiBundle, /function deleteAccessInvitation\(email\)/);
   assert.match(uiBundle, /function updateAccessInvitationSearch\(value\)/);
@@ -243,7 +243,7 @@ test("admin can manage admins from a dedicated screen", () => {
 });
 
 test("judoka profile exposes season statistics through a dedicated screen", () => {
-  assert.match(uiBundle, /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile"/);
+  assert.match(uiBundle, /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile\(\)"/);
   assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
   assert.match(uiBundle, /id="judokaView" class="panel hidden"/);
   assert.match(uiBundle, /id="judokaHeroAvatar"/);
