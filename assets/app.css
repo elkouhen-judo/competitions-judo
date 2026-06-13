@@ -1,24 +1,24 @@
     :root {
-      --bg: #f1f5ff;
+      --bg: #ffffff;
       --panel: #ffffff;
       --text: #0b1020;
       --muted: #4c5870;
-      --line: #bfcdf6;
+      --line: #dbe3ef;
       --primary: #002fa7;
       --primary-hover: #00258a;
       --accent: #002fa7;
-      --accent-soft: #e7eeff;
+      --accent-soft: #edf3ff;
       --danger: #b42318;
       --success: #027a48;
       --warning: #b54708;
-      --warning-soft: #f4f7ff;
+      --warning-soft: #f8fafc;
       --gold: #002fa7;
-      --gold-soft: #e7eeff;
+      --gold-soft: #edf3ff;
       --silver: #1f3d8a;
-      --silver-soft: #edf2ff;
+      --silver-soft: #f4f7fb;
       --bronze: #3b5bb8;
-      --bronze-soft: #edf2ff;
-      --soft: #f5f8ff;
+      --bronze-soft: #f4f7fb;
+      --soft: #f8fafc;
       --shadow: 0 8px 18px rgba(0, 47, 167, 0.10);
     }
 
@@ -51,7 +51,7 @@
       gap: 8px;
       padding: 12px 12px 8px;
       margin-bottom: 0;
-      background: linear-gradient(180deg, #dde8ff 0%, #ffffff 100%);
+      background: #ffffff;
       border-bottom: 1px solid var(--line);
     }
 
@@ -200,7 +200,7 @@
     }
 
     .toast-close:hover {
-      background: rgba(0, 47, 167, 0.10);
+      background: rgba(0, 47, 167, 0.08);
     }
 
     .toast-close:focus-visible {
@@ -326,7 +326,7 @@
     }
 
     .button-secondary:hover {
-      background: #dde8ff;
+      background: #f2f6ff;
     }
 
     .button-secondary:disabled:hover,
@@ -370,7 +370,7 @@
       touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: #dde8ff; }
+    .autocomplete-option:hover { background: #f2f6ff; }
     .autocomplete-empty {
       padding: 12px 14px;
       color: var(--muted);
@@ -401,7 +401,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #dde8ff;
+      background: #f2f6ff;
     }
     .data-table td {
       cursor: pointer;
@@ -601,7 +601,7 @@
       gap: 4px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #eef3ff;
+      background: #fff;
       padding: 12px;
       transition: transform 180ms ease, border-color 180ms ease;
     }
@@ -695,25 +695,25 @@
     }
 
     .rank-silver {
-      border-color: #9fb4f7;
+      border-color: var(--line);
       background: #fff;
-      color: var(--text);
+      color: var(--muted);
     }
 
     .rank-bronze {
-      border-color: #9fb4f7;
+      border-color: var(--line);
       background: #fff;
-      color: var(--text);
+      color: var(--muted);
     }
 
     .rank-top5 {
-      border-color: #9fb4f7;
+      border-color: var(--line);
       background: #fff;
-      color: var(--text);
+      color: var(--muted);
     }
 
     .rank-unclassified {
-      border-color: #9fb4f7;
+      border-color: var(--line);
       background: #fff;
       color: var(--muted);
     }
@@ -788,7 +788,7 @@
       padding: 12px 14px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: var(--soft);
+      background: #fff;
     }
 
     .list-summary-text {
@@ -1122,17 +1122,17 @@
     }
 
     .stat-card-highlight {
-      border-color: #bfd0ff;
-      background: #eef4ff;
+      border-color: #dbe3ef;
+      background: #ffffff;
     }
 
     .stat-card-success {
-      border-color: #bfd0ff;
+      border-color: #dbe3ef;
       background: #fff;
     }
 
     .stat-card-danger {
-      border-color: #bfd0ff;
+      border-color: #dbe3ef;
       background: #fff;
     }
 
@@ -1142,9 +1142,9 @@
       margin-bottom: 18px;
       padding: 18px;
       border-radius: 6px;
-      border: 1px solid #bfd0ff;
+      border: 1px solid #dbe3ef;
       border-left: 4px solid var(--accent);
-      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      background: #ffffff;
       box-shadow: none;
     }
 
@@ -1183,7 +1183,7 @@
     }
 
     .hero-highlight {
-      color: #3f4d63;
+      color: var(--muted);
       font-size: 15px;
       margin: 0;
     }
@@ -1207,15 +1207,15 @@
     }
 
     .rank-2 {
-      border-color: #bfd0ff;
+      border-color: var(--line);
       background: #fff;
-      color: var(--silver);
+      color: var(--muted);
     }
 
     .rank-3 {
-      border-color: #bfd0ff;
+      border-color: var(--line);
       background: #fff;
-      color: var(--bronze);
+      color: var(--muted);
     }
 
     .rank-finalist {
