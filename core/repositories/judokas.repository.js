@@ -49,6 +49,10 @@ module.exports = function createJudokasRepository(deps) {
     };
   }
 
+  function findEmailQueryValue(email) {
+    return encodeURIComponent(String(email || "").trim());
+  }
+
   async function listAll() {
     return supabaseSelect("judokas", "select=*&order=nom.asc,prenom.asc");
   }
@@ -65,7 +69,7 @@ module.exports = function createJudokasRepository(deps) {
   }
 
   async function getByEmail(email) {
-    return supabaseSelectOne("judokas", `select=*&${eqFilter("email", email)}`);
+    return supabaseSelectOne("judokas", `select=*&email=ilike.${findEmailQueryValue(email)}`);
   }
 
   async function getById(idJudoka) {
