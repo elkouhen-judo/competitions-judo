@@ -16,6 +16,9 @@
       homeSubtitle: "Retrouvez votre fiche et vos compétitions.",
       filterPlaceholder: "Tous les judokas...",
       canFilterByJudoka: false,
+      showHomeActions: false,
+      canManageAdmins: false,
+      canManageChildren: false,
       activeJudokaSummary: {
         label: "Judoka actif",
         value: "",
@@ -64,6 +67,8 @@
             deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
             openCompetition: screens.competition.openCompetition,
             openHomeJudokaProfile,
+            showAdminsManagement: screens.admins.showAdminsManagement,
+            showChildrenManagement: screens.children.showChildrenManagement,
             showHomeCompetitionForm
           };
         }
@@ -153,6 +158,9 @@
         homeTitle: copy.homeTitle,
         homeSubtitle: copy.homeSubtitle,
         filterPlaceholder: copy.filterPlaceholder,
+        showHomeActions: true,
+        canManageAdmins: state.isAdmin,
+        canManageChildren: state.canManageChildren,
         profileButtonText: copy.profileButtonText,
         profileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
         addCompetitionButtonText: "Nouvelle compétition",

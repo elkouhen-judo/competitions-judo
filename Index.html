@@ -92,7 +92,7 @@
             <span class="home-context-meta">{{ activeJudokaSummary.meta }}</span>
           </div>
         </div>
-        <div id="homeAdminActions" class="toolbar admin-actions hidden">
+        <div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">
           <button id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
             <span class="button-copy">
@@ -107,11 +107,11 @@
               <span id="openHomeJudokaProfileButtonMeta" class="button-meta">{{ profileButtonMeta }}</span>
             </span>
           </button>
-          <button id="manageAdminsButton" class="button-secondary hidden" onclick="showAdminsManagement()">
+          <button id="manageAdminsButton" v-if="canManageAdmins" class="button-secondary" @click="showAdminsManagement()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M12 10v4"></path><path d="M10 12h4"></path></svg>
             Invitations et admins
           </button>
-          <button id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement()">
+          <button id="manageChildrenButton" v-if="canManageChildren" class="button-secondary" @click="showChildrenManagement()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M17 11h6"></path></svg>
             Gérer les enfants
           </button>

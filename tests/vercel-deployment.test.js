@@ -215,8 +215,8 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
-  assert.match(uiBundle, /setHidden\("homeAdminActions", false\);/);
-  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
+  assert.match(uiBundle, /showHomeActions: true/);
+  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
   assert.match(uiBundle, /v-for="competition in competitions"/);
   assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
   assert.match(uiBundle, /window\.Vue\.createApp\(\{[\s\S]*?showHomeCompetitionForm/);
@@ -255,7 +255,7 @@ test("competition persistence keeps categories and omits removed place and actua
 });
 
 test("connected parent can manage children from a dedicated screen", () => {
-  assert.match(uiBundle, /id="manageChildrenButton" class="button-secondary hidden" onclick="showChildrenManagement\(\)"/);
+  assert.match(uiBundle, /id="manageChildrenButton" v-if="canManageChildren" class="button-secondary" @click="showChildrenManagement\(\)"/);
   assert.match(uiBundle, /id="childrenView" class="panel hidden"/);
   assert.match(uiBundle, /function showChildrenManagement\(keepMessage\)/);
   assert.match(uiBundle, /function saveManagedChild\(\)/);
@@ -286,7 +286,7 @@ test("connected parent can manage children from a dedicated screen", () => {
 });
 
 test("admin can manage admins from a dedicated screen", () => {
-  assert.match(uiBundle, /id="manageAdminsButton" class="button-secondary hidden" onclick="showAdminsManagement\(\)"/);
+  assert.match(uiBundle, /id="manageAdminsButton" v-if="canManageAdmins" class="button-secondary" @click="showAdminsManagement\(\)"/);
   assert.match(uiBundle, /id="adminsView" class="panel hidden"/);
   assert.match(uiBundle, /function showAdminsManagement\(keepMessage\)/);
   assert.match(uiBundle, /id="accessInvitationsList"/);
