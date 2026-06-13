@@ -3,6 +3,7 @@ const path = require("node:path");
 
 module.exports = function handler(_req, res) {
   const clientFiles = [
+    "vendor/vue.global.prod.js",
     "app-ui.js",
     "app-notifications.js",
     "app-auth.js",
