@@ -409,7 +409,7 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /function clearToasts\(\)/);
   assert.doesNotMatch(html, /id="message" class="message"/);
   assert.doesNotMatch(css, /\.message/);
-  assert.doesNotMatch(client, /Object\.assign\(window,[\s\S]*dismissToast/);
+  assert.doesNotMatch(client, /Object\.assign\(window,[\s\S]*?(dismissToast|saveCompetition|showHomeCompetitionForm|startGoogleLogin)/);
   assert.doesNotMatch(notificationsClient, /\$\("message"\)\.innerHTML|onclick="dismissToast|document\.createElement|document\.querySelector|innerHTML/);
   assert.match(uiBundle, /async function logoutUser\(\)/);
   assert.match(uiBundle, /auth\/v1\/logout/);
