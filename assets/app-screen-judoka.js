@@ -41,14 +41,9 @@
 
       judokaViewModel = window.Vue.reactive({ ...defaultJudokaViewState });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(judokaViewModel),
-            showHome: () => app.showHome()
-          };
-        }
-      }).mount("#judokaView");
+      ui.mountViewModel("judokaView", judokaViewModel, {
+        showHome: () => app.showHome()
+      });
     }
 
     function showJudokaProfile(idJudoka, keepMessage) {

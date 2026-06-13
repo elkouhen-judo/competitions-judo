@@ -6,14 +6,9 @@
       toasts: []
     });
 
-    window.Vue.createApp({
-      setup() {
-        return {
-          ...window.Vue.toRefs(notificationsViewModel),
-          dismissToast
-        };
-      }
-    }).mount("#toastLayer");
+    window.KirokuUI.mountViewModel("toastLayer", notificationsViewModel, {
+      dismissToast
+    });
 
     function showSuccess(message) {
       showToast("success", message, 4000);

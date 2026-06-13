@@ -156,6 +156,17 @@
     }).format(date);
   }
 
+  function mountViewModel(id, viewModel, actions = {}) {
+    window.Vue.createApp({
+      setup() {
+        return {
+          ...window.Vue.toRefs(viewModel),
+          ...actions
+        };
+      }
+    }).mount(`#${id}`);
+  }
+
   window.KirokuUI = {
     $,
     cleanText,
@@ -172,6 +183,7 @@
     getJudokaInitials,
     getValue,
     icons,
+    mountViewModel,
     normalizeDisplayName,
     normalizeLastName,
     setHidden,

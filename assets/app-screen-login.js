@@ -111,15 +111,10 @@
         registration: { ...defaultLoginState.registration }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(loginViewModel),
-            startGoogleLogin,
-            submitProfileRegistration
-          };
-        }
-      }).mount("#loginView");
+      ui.mountViewModel("loginView", loginViewModel, {
+        startGoogleLogin,
+        submitProfileRegistration
+      });
     }
 
     async function init() {

@@ -38,18 +38,13 @@
         childForm: { ...defaultChildForm }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(childrenViewModel),
-            deleteManagedChild,
-            editManagedChild,
-            resetChildForm,
-            saveManagedChild,
-            showHome: () => app.showHome()
-          };
-        }
-      }).mount("#childrenView");
+      ui.mountViewModel("childrenView", childrenViewModel, {
+        deleteManagedChild,
+        editManagedChild,
+        resetChildForm,
+        saveManagedChild,
+        showHome: () => app.showHome()
+      });
     }
 
     function showChildrenManagement(keepMessage) {

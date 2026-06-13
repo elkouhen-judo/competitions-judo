@@ -83,19 +83,14 @@
 
       competitionDetailViewModel = window.Vue.reactive({ ...defaultCompetitionDetailViewState });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(competitionDetailViewModel),
-            deleteCurrentCompetition,
-            deleteCombat,
-            editCurrentCompetition,
-            showCombatForm,
-            showCompetitionFinalizationForm,
-            showHome: () => app.showHome()
-          };
-        }
-      }).mount("#competitionView");
+      ui.mountViewModel("competitionView", competitionDetailViewModel, {
+        deleteCurrentCompetition,
+        deleteCombat,
+        editCurrentCompetition,
+        showCombatForm,
+        showCompetitionFinalizationForm,
+        showHome: () => app.showHome()
+      });
     }
 
     function ensureCompetitionFormViewModel() {
@@ -108,18 +103,13 @@
         competitionForm: { ...defaultCompetitionForm }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(competitionFormViewModel),
-            cancelCompetitionForm,
-            saveCompetition,
-            selectCompetitionOwner,
-            showCompetitionOwnerOptions,
-            updateCompetitionOwnerText
-          };
-        }
-      }).mount("#competitionFormView");
+      ui.mountViewModel("competitionFormView", competitionFormViewModel, {
+        cancelCompetitionForm,
+        saveCompetition,
+        selectCompetitionOwner,
+        showCompetitionOwnerOptions,
+        updateCompetitionOwnerText
+      });
     }
 
     function ensureCompetitionFinalizationViewModel() {
@@ -132,15 +122,10 @@
         finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(competitionFinalizationViewModel),
-            cancelCompetitionFinalizationForm,
-            finalizeCompetition
-          };
-        }
-      }).mount("#competitionFinalizationView");
+      ui.mountViewModel("competitionFinalizationView", competitionFinalizationViewModel, {
+        cancelCompetitionFinalizationForm,
+        finalizeCompetition
+      });
     }
 
     function ensureCombatFormViewModel() {
@@ -153,16 +138,11 @@
         combatForm: { ...defaultCombatForm }
       });
 
-      window.Vue.createApp({
-        setup() {
-          return {
-            ...window.Vue.toRefs(combatFormViewModel),
-            cancelCombatForm,
-            saveCombat,
-            syncCombatDecisionVisibility
-          };
-        }
-      }).mount("#combatFormView");
+      ui.mountViewModel("combatFormView", combatFormViewModel, {
+        cancelCombatForm,
+        saveCombat,
+        syncCombatDecisionVisibility
+      });
     }
 
     function openCompetition(id, keepMessage) {

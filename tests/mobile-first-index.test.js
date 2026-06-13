@@ -157,7 +157,8 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
   assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
   assert.match(client, /vue v3\./);
   assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /window\.Vue\.createApp/);
+  assert.match(bundle, /function mountViewModel\(id, viewModel, actions = \{\}\)/);
+  assert.match(bundle, /ui\.mountViewModel\("loginView", loginViewModel,/);
   assert.match(bundle, /window\.Vue\.reactive/);
   assert.match(bundle, /v-model\.trim="registration\.firstName"/);
   assert.match(bundle, /@submit\.prevent="submitProfileRegistration\(\)"/);
