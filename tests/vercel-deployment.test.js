@@ -135,7 +135,7 @@ test("successful initial load leaves the login view", () => {
 });
 
 test("judoka home keeps competition creation available", () => {
-  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" onclick="showHomeCompetitionForm\(\)"/);
+  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm"/);
   assert.match(uiBundle, /id="addCompetitionButtonText"/);
   assert.match(uiBundle, /id="addCompetitionButtonMeta"/);
   assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
@@ -145,10 +145,10 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /\$\("addCompetitionButton"\)\.disabled = actionDisabled;/);
-  assert.match(uiBundle, /\$\("openHomeJudokaProfileButton"\)\.disabled = actionDisabled;/);
+  assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
   assert.match(uiBundle, /setHidden\("homeAdminActions", false\);/);
-  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">/);
+  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card" v-html="activeJudokaSummaryHtml"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
+  assert.match(uiBundle, /window\.Vue\.createApp\(\{[\s\S]*?showHomeCompetitionForm/);
   assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });
 
@@ -243,7 +243,7 @@ test("admin can manage admins from a dedicated screen", () => {
 });
 
 test("judoka profile exposes season statistics through a dedicated screen", () => {
-  assert.match(uiBundle, /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" onclick="openHomeJudokaProfile\(\)"/);
+  assert.match(uiBundle, /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile"/);
   assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
   assert.match(uiBundle, /id="judokaView" class="panel hidden"/);
   assert.match(uiBundle, /id="judokaHeroAvatar"/);
