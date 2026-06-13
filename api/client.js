@@ -13,6 +13,7 @@ module.exports = function handler(_req, res) {
     "app-screen-competition.js",
     "app-screen-children.js",
     "app-screen-admins.js",
+    "app-runtime.js",
     "app.js"
   ];
   const client = clientFiles
