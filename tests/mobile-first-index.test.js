@@ -219,6 +219,14 @@ test("competition form screen is mounted through Vue 3 for the progressive scree
   assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
 });
 
+test("competition finalization screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(bundle, /id="competitionFinalizationView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="competitionFinalizationSubtitle" class="subtitle">\{\{ finalizationSubtitle \}\}<\/p>/);
+  assert.match(bundle, /id="finalization_classement" v-model="finalizationForm\.result"/);
+  assert.match(bundle, /@click="finalizeCompetition"/);
+  assert.match(bundle, /function ensureCompetitionFinalizationViewModel\(\)/);
+});
+
 test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /class="autocomplete-option-copy"/);
   assert.match(bundle, /class="autocomplete-option-meta"/);
