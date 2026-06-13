@@ -4,14 +4,11 @@
     const {
       $,
       cleanText,
-      emptyState,
-      escapeAttribute,
       escapeHtml,
       formatDate,
       formatResultat,
       getCurrentLocalDate,
       getJudokaDisplayName,
-      icons,
       normalizeDisplayName,
       setHidden,
       setValue,
@@ -31,7 +28,10 @@
       competitionResult: "",
       canEditCompetition: false,
       canFinalizeCompetition: false,
-      combatsHtml: ""
+      combats: [],
+      combatsEmptyMessage: "",
+      hasCombats: false,
+      isLoadingCombats: false
     };
     const defaultCompetitionForm = {
       competitionId: "",
@@ -85,6 +85,7 @@
           return {
             ...window.Vue.toRefs(competitionDetailViewModel),
             deleteCurrentCompetition,
+            deleteCombat,
             editCurrentCompetition,
             showCombatForm,
             showCompetitionFinalizationForm,
@@ -171,7 +172,10 @@
         competitionResult: "",
         canEditCompetition: false,
         canFinalizeCompetition: false,
-        combatsHtml: emptyState("Chargement des combats...")
+        combats: [],
+        combatsEmptyMessage: "Chargement des combats...",
+        hasCombats: false,
+        isLoadingCombats: true
       });
       showView("competitionView");
 
@@ -220,45 +224,26 @@
       ensureCompetitionDetailViewModel();
 
       if (!state.currentCombats.length) {
-        competitionDetailViewModel.combatsHtml = emptyState("Aucun combat pour cette compétition.");
+        competitionDetailViewModel.combats = [];
+        competitionDetailViewModel.combatsEmptyMessage = "Aucun combat pour cette compétition.";
+        competitionDetailViewModel.hasCombats = false;
+        competitionDetailViewModel.isLoadingCombats = false;
         return;
       }
 
-      let html = `<div class="list">`;
-
-      state.currentCombats.forEach(c => {
-        html += `
-          <article class="card combat-card">
-            <div class="combat-header">
-              <p class="card-title">${escapeHtml(c.opponent || "Adversaire non renseigné")}</p>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                <span class="result-badge result-${escapeAttribute(String(c.result || "").toLowerCase())}">${escapeHtml(formatResultat(c.result))}</span>
-                ${c.victoryType ? `<span class="result-badge" style="background: var(--line); border-color: var(--muted);">${escapeHtml(c.victoryType)}</span>` : ""}
-              </div>
-            </div>
-            ${state.isAdmin ? `
-              <div class="meta-row">
-                <span class="meta-label">Judoka</span>
-                <span class="meta-value">${escapeHtml(normalizeDisplayName(c.judokaDisplayName || ""))}</span>
-              </div>
-            ` : ""}
-            <p class="combat-comment">${escapeHtml(c.notes || "Aucun déroulé renseigné")}</p>
-            <div class="card-actions">
-              <button class="button-secondary" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="showCombatForm(this.dataset.id)">
-                ${icons.edit}
-                Modifier
-              </button>
-              <button class="button-danger" type="button" data-id="${escapeAttribute(c.combatId)}" onclick="deleteCombat(this.dataset.id)">
-                ${icons.trash}
-                Supprimer
-              </button>
-            </div>
-          </article>
-        `;
-      });
-
-      html += `</div>`;
-      competitionDetailViewModel.combatsHtml = html;
+      competitionDetailViewModel.combats = state.currentCombats.map(c => ({
+        combatId: c.combatId || "",
+        opponent: c.opponent || "Adversaire non renseigné",
+        result: formatResultat(c.result),
+        resultClass: `result-${String(c.result || "").toLowerCase()}`,
+        victoryType: c.victoryType || "",
+        judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
+        showJudoka: state.isAdmin,
+        notes: c.notes || "Aucun déroulé renseigné"
+      }));
+      competitionDetailViewModel.combatsEmptyMessage = "";
+      competitionDetailViewModel.hasCombats = competitionDetailViewModel.combats.length > 0;
+      competitionDetailViewModel.isLoadingCombats = false;
     }
 
     function showCompetitionForm(id) {
