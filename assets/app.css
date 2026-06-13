@@ -143,15 +143,6 @@
       padding: 0;
     }
 
-    .message {
-      padding: 0 10px;
-      margin-bottom: 10px;
-    }
-
-    .message:empty {
-      display: none;
-    }
-
     .toast-layer {
       position: fixed;
       top: max(12px, env(safe-area-inset-top));
@@ -799,10 +790,6 @@
 
       .user-actions {
         justify-content: flex-end;
-      }
-
-      .message {
-        padding: 0;
       }
 
       .panel {

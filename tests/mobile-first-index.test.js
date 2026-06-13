@@ -45,6 +45,8 @@ test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /v-for="toast in toasts"/);
   assert.match(bundle, /@click="dismissToast\(toast\.id\)"/);
   assert.match(bundle, /\{\{ toast\.message \}\}/);
+  assert.doesNotMatch(html, /id="message" class="message"/);
+  assert.doesNotMatch(css, /\.message/);
   assert.doesNotMatch(notificationsClient, /onclick="dismissToast|document\.createElement|document\.querySelector|innerHTML/);
 });
 

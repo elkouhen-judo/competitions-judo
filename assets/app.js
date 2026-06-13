@@ -32,7 +32,6 @@
   const notifications = window.createKirokuNotifications();
   const {
     clearMessage,
-    dismissToast,
     showError,
     showSuccess
   } = notifications;
@@ -260,7 +259,6 @@
     deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
     deleteCurrentCompetition,
     deleteManagedChild: screens.children.deleteManagedChild,
-    dismissToast,
     editCurrentCompetition: screens.competition.editCurrentCompetition,
     editManagedChild: screens.children.editManagedChild,
     finalizeCompetition: screens.competition.finalizeCompetition,
