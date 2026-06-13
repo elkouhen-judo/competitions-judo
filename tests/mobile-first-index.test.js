@@ -6,6 +6,7 @@ const path = require("node:path");
 const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
 const notificationsClient = fs.readFileSync(path.join(__dirname, "..", "assets", "app-notifications.js"), "utf8");
+const judokaScreenClient = fs.readFileSync(path.join(__dirname, "..", "assets", "app-screen-judoka.js"), "utf8");
 const client = [
   "vendor/vue.global.prod.js",
   "app-ui.js",
@@ -112,11 +113,16 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Judoka actif/);
   assert.match(bundle, /Compétitions du judoka actif/);
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
-  assert.match(bundle, /id="judokaLastCompetition"/);
-  assert.match(bundle, /id="judokaBestResults"/);
+  assert.match(bundle, /Résumé performance/);
+  assert.match(bundle, /Profil de combat/);
+  assert.match(bundle, /id="judokaCompetitionResults"/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
-  assert.match(bundle, /id="judokaSeasonWins"/);
-  assert.match(bundle, /id="judokaSeasonLosses"/);
+  assert.match(bundle, /id="judokaSeasonBalance"/);
+  assert.match(bundle, /id="judokaVictoryRate"/);
+  assert.match(bundle, /Taux de victoire/);
+  assert.match(bundle, /Victoires ippon/);
+  assert.match(bundle, /Défaites pénalité/);
+  assert.match(bundle, /Défaites forfait/);
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
   assert.match(bundle, /id="finalization_classement"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
@@ -139,6 +145,7 @@ test("competition list exposes direct delete actions without nesting buttons", (
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.match(bundle, /Ouvrir les combats/);
+  assert.match(client, /canDelete: state\.isAdmin \|\| state\.isParent/);
   assert.match(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/);
   assert.match(bundle, /function deleteCompetitionFromList\(id,\s*name\)/);
   assert.doesNotMatch(bundle, /<button class="card card-button"[\s\S]*?<button/);
@@ -180,12 +187,16 @@ test("home screen is mounted through Vue 3 for the progressive screen migration"
 test("judoka profile screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="judokaView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
-  assert.match(bundle, /id="judokaLastCompetition" class="summary"/);
-  assert.match(bundle, /v-if="!hasLastCompetition"/);
-  assert.match(bundle, /v-for="result in bestResults"/);
-  assert.match(bundle, /:class="result\.badgeClass"/);
+  assert.match(bundle, /class="combat-profile-grid"/);
+  assert.match(bundle, /v-if="!hasCompetitionResults"/);
+  assert.match(bundle, /v-for="result in competitionResults"/);
+  assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
   assert.doesNotMatch(bundle, /lastCompetitionHtml|bestResultsHtml/);
   assert.match(bundle, /function ensureJudokaViewModel\(\)/);
+});
+
+test("judoka profile client script stays parseable", () => {
+  assert.doesNotThrow(() => new Function(judokaScreenClient));
 });
 
 test("children screen is mounted through Vue 3 for the progressive screen migration", () => {
@@ -259,10 +270,19 @@ test("competition finalization screen is mounted through Vue 3 for the progressi
 test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /class="autocomplete-option-copy"/);
   assert.match(bundle, /class="autocomplete-option-meta"/);
+  assert.doesNotMatch(css, /\.autocomplete-dropdown\s*\{[\s\S]*display:\s*none;/);
   assert.match(bundle, /v-for="option in ownerOptions"/);
   assert.match(bundle, /v-for="option in filterOptions"/);
+  assert.match(bundle, /@blur="hideHomeFilterOptions\(\)"/);
+  assert.match(bundle, /@blur="hideCompetitionOwnerOptions\(\)"/);
   assert.match(bundle, /@pointerdown\.prevent="selectCompetitionOwner\(option\)"/);
   assert.match(bundle, /@pointerdown\.prevent="selectFilterJudoka\(option\)"/);
+  assert.match(client, /function hideHomeFilterOptions\(\)/);
+  assert.match(client, /function hideCompetitionOwnerOptions\(\)/);
+  assert.match(client, /refreshHomeFilterOptions\(""\)/);
+  assert.match(client, /refreshCompetitionOwnerOptions\(""\)/);
+  assert.match(client, /window\.setTimeout\(\(\) => \{\s*homeViewModel\.showFilterOptions = false;/);
+  assert.match(client, /window\.setTimeout\(\(\) => \{\s*competitionFormViewModel\.showOwnerOptions = false;/);
   assert.doesNotMatch(bundle, /bindAutocomplete|dataset\.bound|competition_id_judoka|id="filterJudoka"/);
   assert.match(bundle, /function getCompactJudokaLabel\(j\)/);
   assert.match(bundle, /function getClassementBadgeClass\(value\)/);

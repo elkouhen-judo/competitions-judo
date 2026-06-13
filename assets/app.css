@@ -345,7 +345,6 @@
       max-height: 220px;
       overflow-y: auto;
       width: 100%;
-      display: none;
       box-shadow: var(--shadow);
       top: calc(100% - 10px);
     }
@@ -678,6 +677,36 @@
       color: #b54708;
     }
 
+    .rank-gold {
+      border-color: #fdb022;
+      background: #fffaeb;
+      color: #93370d;
+    }
+
+    .rank-silver {
+      border-color: #cfd4dc;
+      background: #f8f9fc;
+      color: #344054;
+    }
+
+    .rank-bronze {
+      border-color: #d0a37c;
+      background: #fff7ed;
+      color: #7c2d12;
+    }
+
+    .rank-top5 {
+      border-color: #b2ddff;
+      background: #eff8ff;
+      color: #175cd3;
+    }
+
+    .rank-unclassified {
+      border-color: #d0d5dd;
+      background: #f9fafb;
+      color: var(--muted);
+    }
+
     .combat-comment {
       margin-bottom: 0;
       color: var(--muted);
@@ -700,6 +729,36 @@
       display: grid;
       gap: 10px;
       margin-bottom: 12px;
+    }
+
+    .combat-profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .profile-extra-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .performance-result-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .performance-result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .performance-result-header .card-title {
+      margin-bottom: 0;
+      min-width: 0;
     }
 
     .empty-state {

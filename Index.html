@@ -99,7 +99,7 @@
         <div id="homeFilters" class="filter-bar" :class="{ hidden: !canFilterByJudoka }">
           <label id="homeFilterLabel" for="filterJudokaText">Judoka actif</label>
           <div class="autocomplete-wrapper">
-            <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="showFilterOptions = false">
+            <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">
               <div class="autocomplete-option" @pointerdown.prevent="selectFilterJudoka(null)">— Tous —</div>
               <div v-if="!filterOptions.length" class="autocomplete-empty">Aucun résultat</div>
@@ -205,63 +205,33 @@
             <p id="judokaHeroSummary" class="hero-highlight">{{ heroSummary }}</p>
             <div class="hero-badges">
               <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
-              <span id="judokaHeroRecord" class="result-badge">{{ heroRecord }}</span>
+              <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
             </div>
           </div>
         </div>
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Dernière compétition</h3>
-              <p class="subtitle">Dernière compétition enregistrée et catégorie issue du dernier combat.</p>
-            </div>
-          </div>
-          <div id="judokaLastCompetition" class="summary">
-            <div v-if="!hasLastCompetition" class="empty-state">Aucune compétition enregistrée pour l'instant.</div>
-            <template v-else>
-              <div class="meta-row">
-                <span class="meta-label">Compétition</span>
-                <span class="meta-value">{{ lastCompetition.name }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Date</span>
-                <span class="meta-value">{{ lastCompetition.date }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Catégorie judoka</span>
-                <span class="meta-value">{{ lastCompetition.category }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-label">Poids</span>
-                <span class="meta-value">{{ lastCompetition.weightCategory }}</span>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-heading">
-            <div>
-              <h3>Saison</h3>
+              <h3>Résumé performance</h3>
               <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-highlight">
-              <span class="stat-label">Competitions</span>
+              <span class="stat-label">Compétitions</span>
               <span id="judokaSeasonCompetitionCount" class="stat-value">{{ seasonCompetitionCount }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Combats</span>
               <span id="judokaSeasonCombatCount" class="stat-value">{{ seasonCombatCount }}</span>
             </div>
-            <div class="stat-card stat-card-success">
-              <span class="stat-label">Victoires</span>
-              <span id="judokaSeasonWins" class="stat-value">{{ seasonWins }}</span>
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Bilan</span>
+              <span id="judokaSeasonBalance" class="stat-value">{{ seasonWins }}V · {{ seasonLosses }}D · {{ seasonDraws }}N</span>
             </div>
-            <div class="stat-card stat-card-danger">
-              <span class="stat-label">Défaites</span>
-              <span id="judokaSeasonLosses" class="stat-value">{{ seasonLosses }}</span>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Taux de victoire</span>
+              <span id="judokaVictoryRate" class="stat-value">{{ victoryRate }}</span>
             </div>
           </div>
         </div>
@@ -269,15 +239,56 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>3 meilleurs resultats</h3>
-              <p class="subtitle">Meilleurs classements de la saison affichée.</p>
+              <h3>Profil de combat</h3>
+              <p class="subtitle">Modes de victoire et de défaite sur la saison affichée.</p>
             </div>
           </div>
-          <div id="judokaBestResults">
-            <div v-if="!hasBestResults" class="empty-state">Pas encore de classement sur cette saison.</div>
+          <div class="combat-profile-grid">
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires ippon</span>
+              <span class="stat-value">{{ combatProfile.victoryIppon }}</span>
+            </div>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires décision</span>
+              <span class="stat-value">{{ combatProfile.victoryDecision }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites ippon</span>
+              <span class="stat-value">{{ combatProfile.lossIppon }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites décision</span>
+              <span class="stat-value">{{ combatProfile.lossDecision }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites pénalité</span>
+              <span class="stat-value">{{ combatProfile.lossPenalty }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites forfait</span>
+              <span class="stat-value">{{ combatProfile.lossForfeit }}</span>
+            </div>
+          </div>
+          <div v-if="hasCombatProfileExtras" class="profile-extra-row">
+            <span v-if="Number(combatProfile.draws)" class="result-badge">Égalités {{ combatProfile.draws }}</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Résultats compétition</h3>
+              <p class="subtitle">Liste courte des compétitions de la saison affichée.</p>
+            </div>
+          </div>
+          <div id="judokaCompetitionResults">
+            <div v-if="!hasCompetitionResults" class="empty-state">Aucune compétition enregistrée pour cette saison.</div>
             <div v-else class="list">
-              <article v-for="result in bestResults" :key="`${result.name}-${result.date}-${result.result}`" class="card">
-                <p class="card-title">{{ result.name }}</p>
+              <article v-for="result in competitionResults" :key="`${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
+                <div class="performance-result-header">
+                  <p class="card-title">{{ result.name }}</p>
+                  <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.badgeLabel }}</span>
+                </div>
                 <div class="card-meta">
                   <div class="meta-row">
                     <span class="meta-label">Date</span>
@@ -286,8 +297,12 @@
                   <div class="meta-row">
                     <span class="meta-label">Résultat</span>
                     <span class="meta-value">
-                      <span class="result-badge classement-badge" :class="result.badgeClass">{{ result.result }}</span>
+                      <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
                     </span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Combats</span>
+                    <span class="meta-value">{{ result.combatRecord }}</span>
                   </div>
                 </div>
               </article>
@@ -635,7 +650,7 @@
         <div id="competitionOwnerBlock" class="full-row" :class="{ hidden: !showCompetitionOwnerBlock }">
           <label>Judoka</label>
           <div class="autocomplete-wrapper">
-            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="showOwnerOptions = false">
+            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="hideCompetitionOwnerOptions()">
             <div class="autocomplete-dropdown" id="competition_judoka_dropdown" v-show="showOwnerOptions">
               <div v-if="!ownerOptions.length" class="autocomplete-empty">Aucun résultat</div>
               <div v-for="option in ownerOptions" :key="option.judokaId" class="autocomplete-option" @pointerdown.prevent="selectCompetitionOwner(option)">

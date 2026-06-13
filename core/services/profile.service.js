@@ -12,7 +12,6 @@ module.exports = function createProfileService(deps) {
     buildJudokaProfileSnapshot,
     userContextService,
     getCompetitionCategoryLabel,
-    getCompetitionResultRank,
     getCurrentSeasonBounds,
     isDateWithinSeason
   } = deps;
@@ -26,7 +25,6 @@ module.exports = function createProfileService(deps) {
       competitions: competitions.map(toCanonicalCompetition),
       combats: combats.map(toCanonicalCombat),
       getCompetitionCategoryLabel,
-      getCompetitionResultRank,
       getCurrentSeasonBounds,
       isDateWithinSeason
     });

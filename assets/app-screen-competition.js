@@ -74,6 +74,7 @@
     let competitionFormViewModel = null;
     let competitionFinalizationViewModel = null;
     let combatFormViewModel = null;
+    let hideOwnerOptionsTimer = null;
 
     function ensureCompetitionDetailViewModel() {
       if (!window.Vue || competitionDetailViewModel) {
@@ -575,16 +576,32 @@
       };
     }
 
-    function refreshCompetitionOwnerOptions() {
-      const query = cleanText(competitionFormViewModel.ownerJudokaText).toLowerCase();
+    function refreshCompetitionOwnerOptions(queryOverride) {
+      const query = queryOverride !== undefined
+        ? cleanText(queryOverride).toLowerCase()
+        : cleanText(competitionFormViewModel.ownerJudokaText).toLowerCase();
       competitionFormViewModel.ownerOptions = state.judokas
         .map(getOwnerOption)
         .filter(option => !query || option.searchText.includes(query));
     }
 
     function showCompetitionOwnerOptions() {
-      refreshCompetitionOwnerOptions();
+      if (hideOwnerOptionsTimer) {
+        window.clearTimeout(hideOwnerOptionsTimer);
+        hideOwnerOptionsTimer = null;
+      }
+      refreshCompetitionOwnerOptions("");
       competitionFormViewModel.showOwnerOptions = true;
+    }
+
+    function hideCompetitionOwnerOptions() {
+      if (hideOwnerOptionsTimer) {
+        window.clearTimeout(hideOwnerOptionsTimer);
+      }
+      hideOwnerOptionsTimer = window.setTimeout(() => {
+        competitionFormViewModel.showOwnerOptions = false;
+        hideOwnerOptionsTimer = null;
+      }, 120);
     }
 
     function updateCompetitionOwnerText() {
@@ -594,6 +611,10 @@
     }
 
     function selectCompetitionOwner(option) {
+      if (hideOwnerOptionsTimer) {
+        window.clearTimeout(hideOwnerOptionsTimer);
+        hideOwnerOptionsTimer = null;
+      }
       competitionFormViewModel.ownerJudokaId = option ? option.judokaId : "";
       competitionFormViewModel.ownerJudokaText = option ? option.name : "";
       competitionFormViewModel.showOwnerOptions = false;
@@ -664,6 +685,7 @@
       getCompetitionOwnerRequiredMessage,
       getJudokaSecondaryText,
       getCombatDecisionOptions,
+      hideCompetitionOwnerOptions,
       openCompetition,
       renderCombatDecisionOptions,
       renderCombats,

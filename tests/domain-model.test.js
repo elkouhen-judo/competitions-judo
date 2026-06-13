@@ -370,20 +370,35 @@ test("season statistics domain computes current season snapshot", () => {
       }
     ],
     combats: [
-      { combatId: "CB2", competitionId: "COMP2", result: "V" },
-      { combatId: "CB1", competitionId: "COMP1", result: "D" }
+      { combatId: "CB2", competitionId: "COMP2", result: "V", victoryType: "Ippon" },
+      { combatId: "CB1", competitionId: "COMP1", result: "D", victoryType: "Décision" },
+      { combatId: "CB3", competitionId: "COMP2", result: "E", victoryType: "Hiki wake" }
     ],
     getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[value] || Number.POSITIVE_INFINITY),
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
 
   assert.equal(snapshot.seasonCompetitionCount, 2);
-  assert.equal(snapshot.seasonCombatCount, 2);
+  assert.equal(snapshot.seasonCombatCount, 3);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
-  assert.equal(snapshot.bestSeasonResults[0].competitionId, "COMP2");
+  assert.equal(snapshot.seasonDraws, 1);
+  assert.equal(snapshot.victoryRate, 33);
+  assert.deepEqual(snapshot.combatProfile, {
+    victoryIppon: 1,
+    victoryDecision: 0,
+    lossIppon: 0,
+    lossDecision: 1,
+    lossPenalty: 0,
+    lossForfeit: 0,
+    draws: 1,
+    penalties: 0,
+    forfeits: 0
+  });
+  assert.equal(snapshot.competitionResults[0].competitionId, "COMP2");
+  assert.equal(snapshot.competitionResults[0].combatRecord.label, "1V · 0D · 1N");
+  assert.deepEqual(snapshot.competitionResults[0].resultBadge, { label: "podium", className: "rank-gold" });
   assert.equal(snapshot.lastCompetition.weightCategory, "-55 kg");
 });
 
@@ -417,24 +432,30 @@ test("season statistics keep latest competition details and normalize combat res
       }
     ],
     combats: [
-      { combatId: "CB2", competitionId: "COMP2", result: "v" },
-      { combatId: "CB1", competitionId: "COMP1", result: "d" }
+      { combatId: "CB2", competitionId: "COMP2", result: "v", victoryType: "Décision" },
+      { combatId: "CB1", competitionId: "COMP1", result: "d", victoryType: "Ippon" },
+      { combatId: "CB3", competitionId: "COMP3", result: "d", victoryType: "Hansoku-make" },
+      { combatId: "CB4", competitionId: "COMP3", result: "d", victoryType: "Forfait" }
     ],
     getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCompetitionResultRank,
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
 
   assert.equal(snapshot.seasonCompetitionCount, 3);
-  assert.equal(snapshot.seasonCombatCount, 2);
+  assert.equal(snapshot.seasonCombatCount, 4);
   assert.equal(snapshot.seasonWins, 1);
-  assert.equal(snapshot.seasonLosses, 1);
+  assert.equal(snapshot.seasonLosses, 3);
+  assert.equal(snapshot.seasonDraws, 0);
   assert.equal(snapshot.lastCompetition.competitionId, "COMP3");
   assert.equal(snapshot.lastCompetition.category, "Junior - -57 kg");
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1", "COMP3"]);
-  assert.equal(snapshot.bestSeasonResults[2].result, "Non classé");
+  assert.equal(snapshot.combatProfile.lossIppon, 1);
+  assert.equal(snapshot.combatProfile.lossDecision, 0);
+  assert.equal(snapshot.combatProfile.lossPenalty, 1);
+  assert.equal(snapshot.combatProfile.lossForfeit, 1);
+  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["COMP3", "COMP2", "COMP1"]);
+  assert.deepEqual(snapshot.competitionResults.map(result => result.resultBadge.className), ["rank-unclassified", "rank-gold", "rank-bronze"]);
 });
 
 test("season statistics prefer the current season when it contains competition data", () => {
@@ -463,7 +484,6 @@ test("season statistics prefer the current season when it contains competition d
       { combatId: "CB2", competitionId: "LATEST", result: "D" }
     ],
     getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCompetitionResultRank,
     getCurrentSeasonBounds: referenceDate => {
       if (referenceDate && referenceDate.getFullYear() === 2026 && referenceDate.getMonth() >= 8) {
         return { start: "2026-09-01", end: "2027-08-31", label: "2026-2027" };
@@ -479,7 +499,8 @@ test("season statistics prefer the current season when it contains competition d
   assert.equal(snapshot.seasonCombatCount, 1);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 0);
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["CURRENT"]);
+  assert.equal(snapshot.seasonDraws, 0);
+  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["CURRENT"]);
 });
 
 test("season statistics fall back to the latest season with competition data", () => {
@@ -508,7 +529,6 @@ test("season statistics fall back to the latest season with competition data", (
       { combatId: "CB1", competitionId: "COMP1", result: "D" }
     ],
     getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCompetitionResultRank: value => ({ "1er": 1, "3e": 3 }[value] || Number.POSITIVE_INFINITY),
     getCurrentSeasonBounds: referenceDate => (
       referenceDate
         ? { start: "2024-09-01", end: "2025-08-31", label: "2024-2025" }
@@ -522,5 +542,6 @@ test("season statistics fall back to the latest season with competition data", (
   assert.equal(snapshot.seasonCombatCount, 2);
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
-  assert.deepEqual(snapshot.bestSeasonResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
+  assert.equal(snapshot.seasonDraws, 0);
+  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
 });
