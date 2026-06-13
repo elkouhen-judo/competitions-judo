@@ -11,55 +11,8 @@
     "combatFormView"
   ];
 
-  const icons = {
-    edit: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
-    shieldOff: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M9 9l6 6"></path><path d="M15 9l-6 6"></path></svg>`,
-    trash: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`
-  };
-
   function $(id) {
     return document.getElementById(id);
-  }
-
-  function setValue(id, value) {
-    $(id).value = value || "";
-  }
-
-  function getValue(id) {
-    return $(id).value;
-  }
-
-  function setText(id, value) {
-    $(id).innerText = value || "";
-  }
-
-  function setTexts(valuesById) {
-    Object.entries(valuesById).forEach(([id, value]) => setText(id, value));
-  }
-
-  function setValues(valuesById) {
-    Object.entries(valuesById).forEach(([id, value]) => setValue(id, value));
-  }
-
-  function setHidden(id, hidden) {
-    $(id).classList.toggle("hidden", hidden);
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function escapeAttribute(value) {
-    return escapeHtml(value).replaceAll("`", "&#096;");
-  }
-
-  function emptyState(message) {
-    return `<div class="empty-state">${escapeHtml(message)}</div>`;
   }
 
   function normalizeDisplayName(value) {
@@ -170,9 +123,6 @@
   window.KirokuUI = {
     $,
     cleanText,
-    emptyState,
-    escapeAttribute,
-    escapeHtml,
     formatDate,
     formatDateTime,
     formatResultat,
@@ -181,16 +131,9 @@
     getCurrentLocalDate,
     getJudokaDisplayName,
     getJudokaInitials,
-    getValue,
-    icons,
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,
-    setHidden,
-    setText,
-    setTexts,
-    setValue,
-    setValues,
     toInputDate,
     viewIds
   };
