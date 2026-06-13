@@ -143,6 +143,15 @@ test("mobile actions stay explicit instead of icon-only", () => {
   assert.doesNotMatch(bundle, /title="Supprimer"/);
 });
 
+test("login screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(html, /vue@3\/dist\/vue\.global\.prod\.js/);
+  assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /window\.Vue\.createApp/);
+  assert.match(bundle, /window\.Vue\.reactive/);
+  assert.match(bundle, /v-model\.trim="registration\.firstName"/);
+  assert.match(bundle, /@submit\.prevent="submitProfileRegistration"/);
+});
+
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(bundle, /<select id="competition_categorie_age">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/);
   assert.match(bundle, /id="competition_categorie_poids"/);
