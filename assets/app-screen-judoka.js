@@ -2,9 +2,6 @@
   function createKirokuJudokaScreen(app) {
     const { state, ui, notifications } = app;
     const {
-      emptyState,
-      escapeAttribute,
-      escapeHtml,
       formatDate,
       getClassementBadgeClass,
       getJudokaDisplayName,
@@ -25,8 +22,15 @@
       seasonCombatCount: "0",
       seasonWins: "0",
       seasonLosses: "0",
-      lastCompetitionHtml: "",
-      bestResultsHtml: ""
+      hasLastCompetition: false,
+      lastCompetition: {
+        name: "",
+        date: "",
+        category: "",
+        weightCategory: ""
+      },
+      hasBestResults: false,
+      bestResults: []
     };
     let judokaViewModel = null;
 
@@ -96,53 +100,23 @@
         heroRecord: `${seasonWins || 0} V · ${seasonLosses || 0} D`
       });
 
-      if (!lastCompetition) {
-        judokaViewModel.lastCompetitionHtml = emptyState("Aucune compétition enregistrée pour l'instant.");
-      } else {
-        judokaViewModel.lastCompetitionHtml = `
-          <div class="meta-row">
-            <span class="meta-label">Compétition</span>
-            <span class="meta-value">${escapeHtml(lastCompetition.name || "")}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Date</span>
-            <span class="meta-value">${escapeHtml(formatDate(lastCompetition.competitionDate))}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Catégorie judoka</span>
-            <span class="meta-value">${escapeHtml(lastCompetition.category || "Non renseignée")}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Poids</span>
-            <span class="meta-value">${escapeHtml(lastCompetition.weightCategory || "Non renseigné")}</span>
-          </div>
-        `;
-      }
+      judokaViewModel.hasLastCompetition = Boolean(lastCompetition);
+      judokaViewModel.lastCompetition = lastCompetition
+        ? {
+            name: lastCompetition.name || "",
+            date: formatDate(lastCompetition.competitionDate),
+            category: lastCompetition.category || "Non renseignée",
+            weightCategory: lastCompetition.weightCategory || "Non renseigné"
+          }
+        : { ...defaultJudokaViewState.lastCompetition };
 
-      if (!bestSeasonResults.length) {
-        judokaViewModel.bestResultsHtml = emptyState("Pas encore de classement sur cette saison.");
-      } else {
-        let html = `<div class="list">`;
-        bestSeasonResults.forEach(result => {
-          html += `
-            <article class="card">
-              <p class="card-title">${escapeHtml(result.name || "Compétition")}</p>
-              <div class="card-meta">
-                <div class="meta-row">
-                  <span class="meta-label">Date</span>
-                  <span class="meta-value">${escapeHtml(formatDate(result.competitionDate))}</span>
-                </div>
-                <div class="meta-row">
-                  <span class="meta-label">Résultat</span>
-                  <span class="meta-value"><span class="result-badge classement-badge ${escapeAttribute(getClassementBadgeClass(result.result))}">${escapeHtml(result.result)}</span></span>
-                </div>
-              </div>
-            </article>
-          `;
-        });
-        html += `</div>`;
-        judokaViewModel.bestResultsHtml = html;
-      }
+      judokaViewModel.bestResults = bestSeasonResults.map(result => ({
+        name: result.name || "Compétition",
+        date: formatDate(result.competitionDate),
+        result: result.result || "",
+        badgeClass: getClassementBadgeClass(result.result)
+      }));
+      judokaViewModel.hasBestResults = judokaViewModel.bestResults.length > 0;
     }
 
     return {
