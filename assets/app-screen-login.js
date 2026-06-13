@@ -129,8 +129,9 @@
         return;
       }
 
+      let callbackResult = { handled: false, completedAuth: false };
       try {
-        await parseVercelAuthCallback();
+        callbackResult = await parseVercelAuthCallback();
       } catch (error) {
         clearVercelSession();
         showVercelLogin();
@@ -138,7 +139,11 @@
         return;
       }
 
-      runServer(
+      if (callbackResult && callbackResult.handled) {
+        return;
+      }
+
+      app.runServerWithOptions(
         "getInitialData",
         [],
         data => {
@@ -155,7 +160,8 @@
           applyInitialData(data);
           screens.home.showHome();
         },
-        showError
+        showError,
+        { retrySessionOnce: Boolean(callbackResult && callbackResult.completedAuth) }
       );
     }
 
