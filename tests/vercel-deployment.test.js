@@ -151,7 +151,9 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
   assert.match(uiBundle, /setHidden\("homeAdminActions", false\);/);
-  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card" v-html="activeJudokaSummaryHtml"><\/div>\s*<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
+  assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions hidden">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
+  assert.match(uiBundle, /v-for="competition in competitions"/);
+  assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
   assert.match(uiBundle, /window\.Vue\.createApp\(\{[\s\S]*?showHomeCompetitionForm/);
   assert.doesNotMatch(uiBundle, /if \(!isAdmin && !isParent\) \{\s*document\.getElementById\("homeAdminActions"\)\.classList\.add\("hidden"\);/);
 });

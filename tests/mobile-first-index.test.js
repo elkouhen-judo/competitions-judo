@@ -131,7 +131,7 @@ test("competition list exposes direct delete actions without nesting buttons", (
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.match(bundle, /Ouvrir les combats/);
-  assert.match(bundle, /onclick="deleteCompetitionFromList\(this\.dataset\.id,\s*this\.dataset\.name\)"/);
+  assert.match(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/);
   assert.match(bundle, /function deleteCompetitionFromList\(id,\s*name\)/);
   assert.doesNotMatch(bundle, /<button class="card card-button"[\s\S]*?<button/);
 });
@@ -139,7 +139,7 @@ test("competition list exposes direct delete actions without nesting buttons", (
 test("mobile actions stay explicit instead of icon-only", () => {
   assert.match(bundle, /onclick="showCombatForm\(this\.dataset\.id\)"[\s\S]*?>[\s\S]*?Modifier\s*<\/button>/);
   assert.match(bundle, /onclick="deleteCombat\(this\.dataset\.id\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
-  assert.match(bundle, /onclick="deleteCompetitionFromList\(this\.dataset\.id,\s*this\.dataset\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
+  assert.match(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
   assert.match(bundle, /Créer mon profil/);
   assert.doesNotMatch(bundle, /title="Éditer"/);
   assert.doesNotMatch(bundle, /title="Supprimer"/);
@@ -157,8 +157,12 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
 
 test("home screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="homeView" class="panel" v-cloak/);
-  assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card" v-html="activeJudokaSummaryHtml"/);
-  assert.match(bundle, /id="competitionsList" v-html="competitionsHtml"/);
+  assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
+  assert.match(bundle, /\{\{ activeJudokaSummary\.value \}\}/);
+  assert.match(bundle, /id="competitionsList"/);
+  assert.match(bundle, /v-for="competition in competitions"/);
+  assert.match(bundle, /@click="openCompetition\(competition\.competitionId\)"/);
+  assert.doesNotMatch(bundle, /activeJudokaSummaryHtml|competitionsHtml/);
   assert.match(bundle, /@click="showHomeCompetitionForm\(\)"/);
   assert.match(bundle, /@click="openHomeJudokaProfile\(\)"/);
   assert.match(bundle, /function ensureHomeViewModel\(\)/);

@@ -85,7 +85,13 @@
           </div>
           <input type="hidden" id="filterJudoka">
         </div>
-        <div id="homeActiveJudokaSummary" class="summary home-context-card" v-html="activeJudokaSummaryHtml"></div>
+        <div id="homeActiveJudokaSummary" class="summary home-context-card">
+          <div class="home-context-copy">
+            <span class="home-context-label">{{ activeJudokaSummary.label }}</span>
+            <span class="home-context-value">{{ activeJudokaSummary.value }}</span>
+            <span class="home-context-meta">{{ activeJudokaSummary.meta }}</span>
+          </div>
+        </div>
         <div id="homeAdminActions" class="toolbar admin-actions hidden">
           <button id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
@@ -117,7 +123,35 @@
               <p id="homeCompetitionsSubtitle" class="subtitle">{{ competitionsSubtitle }}</p>
             </div>
           </div>
-          <div id="competitionsList" v-html="competitionsHtml"></div>
+          <div id="competitionsList">
+            <div v-if="!hasCompetitions" class="empty-state">{{ competitionsEmptyMessage }}</div>
+            <div v-else class="list">
+              <article v-for="competition in competitions" :key="competition.competitionId" class="card competition-card">
+                <button class="card-button competition-open-button" type="button" @click="openCompetition(competition.competitionId)">
+                  <span class="competition-card-button-copy">
+                    <span class="card-title">{{ competition.name }}</span>
+                    <span class="card-meta">
+                      <span class="meta-row">
+                        <span class="meta-label">Date</span>
+                        <span class="meta-value">{{ competition.date }}</span>
+                      </span>
+                      <span v-if="competition.showJudoka" class="meta-row">
+                        <span class="meta-label">Judoka</span>
+                        <span class="meta-value">{{ competition.judokaName }}</span>
+                      </span>
+                    </span>
+                    <span class="card-open-hint">Ouvrir les combats</span>
+                  </span>
+                </button>
+                <div v-if="competition.canDelete" class="card-actions">
+                  <button class="button-danger" type="button" @click="deleteCompetitionFromList(competition.competitionId, competition.name)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Supprimer
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
         </div>
       </div>
     </section>

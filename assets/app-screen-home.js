@@ -4,14 +4,10 @@
     const {
       $,
       cleanText,
-      emptyState,
-      escapeAttribute,
-      escapeHtml,
       formatDate,
       getCompactJudokaLabel,
       getJudokaDisplayName,
       getValue,
-      icons,
       showView
     } = ui;
     const { showError } = notifications;
@@ -20,7 +16,11 @@
       homeSubtitle: "Retrouvez votre fiche et vos compétitions.",
       filterPlaceholder: "Tous les judokas...",
       canFilterByJudoka: false,
-      activeJudokaSummaryHtml: "",
+      activeJudokaSummary: {
+        label: "Judoka actif",
+        value: "",
+        meta: ""
+      },
       actionDisabled: false,
       addCompetitionButtonText: "Ajouter une compétition",
       addCompetitionButtonMeta: "",
@@ -28,7 +28,9 @@
       profileButtonMeta: "",
       competitionsTitle: "Mes compétitions",
       competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
-      competitionsHtml: ""
+      competitions: [],
+      competitionsEmptyMessage: "",
+      hasCompetitions: false
     };
     let homeViewModel = null;
 
@@ -59,6 +61,8 @@
         setup() {
           return {
             ...window.Vue.toRefs(homeViewModel),
+            deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
+            openCompetition: screens.competition.openCompetition,
             openHomeJudokaProfile,
             showHomeCompetitionForm
           };
@@ -158,26 +162,22 @@
       });
 
       if (!activeJudoka) {
-        homeViewModel.activeJudokaSummaryHtml = `
-          <div class="home-context-copy">
-            <span class="home-context-label">Judoka actif</span>
-            <span class="home-context-value">Aucun judoka sélectionné</span>
-            <span class="home-context-meta">Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions.</span>
-          </div>
-        `;
+        homeViewModel.activeJudokaSummary = {
+          label: "Judoka actif",
+          value: "Aucun judoka sélectionné",
+          meta: "Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions."
+        };
       } else {
         const summaryMeta = state.isAdmin
           ? "Vous consultez actuellement le parcours de ce judoka."
           : state.isParent
             ? "Toutes les actions d'accueil concernent ce profil."
             : "Toutes vos actions principales sont regroupées ici.";
-        homeViewModel.activeJudokaSummaryHtml = `
-          <div class="home-context-copy">
-            <span class="home-context-label">Judoka actif</span>
-            <span class="home-context-value">${escapeHtml(getJudokaDisplayName(activeJudoka) || "Judoka")}</span>
-            <span class="home-context-meta">${escapeHtml(summaryMeta)}</span>
-          </div>
-        `;
+        homeViewModel.activeJudokaSummary = {
+          label: "Judoka actif",
+          value: getJudokaDisplayName(activeJudoka) || "Judoka",
+          meta: summaryMeta
+        };
       }
 
       const actionDisabled = Boolean((state.isAdmin || state.isParent) && !activeJudoka);
@@ -240,7 +240,9 @@
       const activeJudokaId = getHomeActiveJudokaId();
 
       if ((state.isAdmin || state.isParent) && !activeJudoka) {
-        homeViewModel.competitionsHtml = emptyState("Sélectionnez un judoka pour afficher son parcours.");
+        homeViewModel.competitions = [];
+        homeViewModel.hasCompetitions = false;
+        homeViewModel.competitionsEmptyMessage = "Sélectionnez un judoka pour afficher son parcours.";
         return;
       }
 
@@ -250,47 +252,27 @@
       }
 
       if (!filteredComps.length) {
-        homeViewModel.competitionsHtml = emptyState("Aucune compétition enregistrée pour ce judoka.");
+        homeViewModel.competitions = [];
+        homeViewModel.hasCompetitions = false;
+        homeViewModel.competitionsEmptyMessage = "Aucune compétition enregistrée pour ce judoka.";
         return;
       }
 
       const judokasById = new Map(state.judokas.map(j => [String(j.judokaId), j]));
 
-      let html = `<div class="list">`;
-
-      filteredComps.forEach(c => {
+      homeViewModel.competitions = filteredComps.map(c => {
         const judoka = judokasById.get(String(c.ownerJudokaId));
-        const judokaNom = judoka ? getJudokaDisplayName(judoka) : "";
-        html += `
-          <article class="card competition-card">
-            <button class="card-button competition-open-button" type="button" onclick="openCompetition('${escapeAttribute(c.competitionId)}')">
-              <span class="competition-card-button-copy">
-                <span class="card-title">${escapeHtml(c.name || "Compétition")}</span>
-                <span class="card-meta">
-                  <span class="meta-row">
-                    <span class="meta-label">Date</span>
-                    <span class="meta-value">${formatDate(c.competitionDate)}</span>
-                  </span>
-                  ${(state.isAdmin || state.isParent) ? `<span class="meta-row">
-                    <span class="meta-label">Judoka</span>
-                    <span class="meta-value">${escapeHtml(judokaNom)}</span>
-                  </span>` : ""}
-                </span>
-                <span class="card-open-hint">Ouvrir les combats</span>
-              </span>
-            </button>
-            ${state.isAdmin ? `<div class="card-actions">
-              <button class="button-danger" type="button" data-id="${escapeAttribute(c.competitionId)}" data-name="${escapeAttribute(c.name || "")}" onclick="deleteCompetitionFromList(this.dataset.id, this.dataset.name)">
-                ${icons.trash}
-                Supprimer
-              </button>
-            </div>` : ""}
-          </article>
-        `;
+        return {
+          competitionId: c.competitionId || "",
+          name: c.name || "Compétition",
+          date: formatDate(c.competitionDate),
+          judokaName: judoka ? getJudokaDisplayName(judoka) : "",
+          showJudoka: state.isAdmin || state.isParent,
+          canDelete: state.isAdmin
+        };
       });
-
-      html += `</div>`;
-      homeViewModel.competitionsHtml = html;
+      homeViewModel.hasCompetitions = homeViewModel.competitions.length > 0;
+      homeViewModel.competitionsEmptyMessage = "";
     }
 
     function openHomeJudokaProfile() {
