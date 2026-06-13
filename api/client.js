@@ -9,6 +9,7 @@ module.exports = function handler(_req, res) {
     "app-auth.js",
     "app-screen-login.js",
     "app-screen-home.js",
+    "app-judoka-presentation.js",
     "app-screen-judoka.js",
     "app-screen-competition.js",
     "app-screen-children.js",
