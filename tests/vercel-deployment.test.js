@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const appHandler = require(path.join(root, "api", "app.js"));
 const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
+const notificationsClient = fs.readFileSync(path.join(root, "assets", "app-notifications.js"), "utf8");
 const client = [
   "vendor/vue.global.prod.js",
   "app-ui.js",
@@ -401,10 +402,12 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
   assert.match(uiBundle, /getJudokaDisplayName\(state\.currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
-  assert.match(uiBundle, /<p class="\$\{toneClass\}"><svg/);
+  assert.match(uiBundle, /notificationsViewModel = window\.Vue\.reactive\(\{/);
+  assert.match(uiBundle, /notificationsViewModel\.toasts\.push\(\{/);
+  assert.match(uiBundle, /<p :class="toast\.toneClass">/);
+  assert.match(uiBundle, /@click="dismissToast\(toast\.id\)"/);
   assert.match(uiBundle, /function clearToasts\(\)/);
-  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("success", message,\s*4000\);/);
-  assert.match(uiBundle, /\$\("message"\)\.innerHTML = "";\s*showToast\("error", error\.message \|\| error,\s*7000\);/);
+  assert.doesNotMatch(notificationsClient, /\$\("message"\)\.innerHTML|onclick="dismissToast|document\.createElement|document\.querySelector|innerHTML/);
   assert.match(uiBundle, /async function logoutUser\(\)/);
   assert.match(uiBundle, /auth\/v1\/logout/);
   assert.match(uiBundle, /clearVercelSession\(\)/);
