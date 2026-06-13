@@ -6,6 +6,7 @@ const path = require("node:path");
 const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
 const client = [
+  "vendor/vue.global.prod.js",
   "app-ui.js",
   "app-notifications.js",
   "app-auth.js",
@@ -145,7 +146,8 @@ test("mobile actions stay explicit instead of icon-only", () => {
 });
 
 test("login screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(html, /vue@3\/dist\/vue\.global\.prod\.js/);
+  assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
+  assert.match(client, /vue v3\./);
   assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
   assert.match(bundle, /window\.Vue\.createApp/);
   assert.match(bundle, /window\.Vue\.reactive/);
