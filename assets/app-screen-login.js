@@ -10,10 +10,6 @@
       notifications
     } = app;
     const {
-      $,
-      getValue,
-      setHidden,
-      setText,
       showView
     } = ui;
     const {
@@ -25,10 +21,41 @@
       clearVercelSession,
       parseVercelAuthCallback
     } = auth;
+    const defaultLoginState = {
+      text: "Connectez-vous avec le compte Google associé à votre fiche judoka ou enfant.",
+      hint: "",
+      showHint: false,
+      showOAuth: false,
+      showRegistration: false,
+      registration: {
+        firstName: "",
+        lastName: ""
+      }
+    };
+    let loginViewModel = null;
 
     function startGoogleLogin() {
       clearMessage();
       auth.startGoogleLogin();
+    }
+
+    function submitProfileRegistration() {
+      clearMessage();
+
+      const profile = {
+        firstName: loginViewModel ? loginViewModel.registration.firstName : "",
+        lastName: loginViewModel ? loginViewModel.registration.lastName : ""
+      };
+
+      runServer(
+        "registerProfile",
+        [profile],
+        response => {
+          showSuccess(response.message);
+          init();
+        },
+        showError
+      );
     }
 
     function showVercelLogin() {
@@ -62,34 +89,37 @@
 
     function showLoginState({ text, hint, showHint, showOAuth, showRegistration }) {
       document.querySelector("header").classList.add("hidden");
-      setText("loginText", text);
-      setText("loginHint", hint);
-      setHidden("loginHint", !showHint);
-      setHidden("oauthLoginOptions", !showOAuth);
-      setHidden("profileRegistrationForm", !showRegistration);
+      if (loginViewModel) {
+        Object.assign(loginViewModel, {
+          text: text || "",
+          hint: hint || "",
+          showHint: Boolean(showHint),
+          showOAuth: Boolean(showOAuth),
+          showRegistration: Boolean(showRegistration)
+        });
+      }
       showView("loginView");
     }
 
     function bindEvents() {
-      $("profileRegistrationForm").addEventListener("submit", event => {
-        event.preventDefault();
-        clearMessage();
+      if (!window.Vue || loginViewModel) {
+        return;
+      }
 
-        const profile = {
-          firstName: getValue("registrationPrenom"),
-          lastName: getValue("registrationNom")
-        };
-
-        runServer(
-          "registerProfile",
-          [profile],
-          response => {
-            showSuccess(response.message);
-            init();
-          },
-          showError
-        );
+      loginViewModel = window.Vue.reactive({
+        ...defaultLoginState,
+        registration: { ...defaultLoginState.registration }
       });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(loginViewModel),
+            startGoogleLogin,
+            submitProfileRegistration
+          };
+        }
+      }).mount("#loginView");
     }
 
     async function init() {
