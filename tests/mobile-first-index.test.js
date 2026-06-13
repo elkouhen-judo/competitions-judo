@@ -190,8 +190,13 @@ test("children screen is mounted through Vue 3 for the progressive screen migrat
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="invite_email" autocomplete="email" placeholder="email@gmail.com" v-model\.trim="accessInvitationForm\.email"/);
-  assert.match(bundle, /id="accessInvitationsList" v-html="accessInvitationsListHtml"/);
-  assert.match(bundle, /id="adminsList" v-html="adminsListHtml"/);
+  assert.match(bundle, /id="accessInvitationsList"/);
+  assert.match(bundle, /v-for="invitation in accessInvitations"/);
+  assert.match(bundle, /@click="deleteAccessInvitation\(invitation\.email\)"/);
+  assert.match(bundle, /id="adminsList"/);
+  assert.match(bundle, /v-for="admin in admins"/);
+  assert.match(bundle, /@click="revokeAdminRole\(admin\.judokaId, admin\.fullName\)"/);
+  assert.doesNotMatch(bundle, /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/);
   assert.match(bundle, /id="saveAdminButton" @click="saveAdminRole\(\)"/);
   assert.match(bundle, /function ensureAdminsViewModel\(\)/);
 });
