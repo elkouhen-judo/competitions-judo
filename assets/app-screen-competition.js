@@ -50,8 +50,16 @@
       showCompetitionResultBlock: false,
       competitionForm: { ...defaultCompetitionForm }
     };
+    const defaultCompetitionFinalizationViewState = {
+      finalizationSubtitle: "",
+      finalizationForm: {
+        competitionId: "",
+        result: ""
+      }
+    };
     let competitionDetailViewModel = null;
     let competitionFormViewModel = null;
+    let competitionFinalizationViewModel = null;
 
     function ensureCompetitionDetailViewModel() {
       if (!window.Vue || competitionDetailViewModel) {
@@ -93,6 +101,27 @@
           };
         }
       }).mount("#competitionFormView");
+    }
+
+    function ensureCompetitionFinalizationViewModel() {
+      if (!window.Vue || competitionFinalizationViewModel) {
+        return;
+      }
+
+      competitionFinalizationViewModel = window.Vue.reactive({
+        ...defaultCompetitionFinalizationViewState,
+        finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
+      });
+
+      window.Vue.createApp({
+        setup() {
+          return {
+            ...window.Vue.toRefs(competitionFinalizationViewModel),
+            cancelCompetitionFinalizationForm,
+            finalizeCompetition
+          };
+        }
+      }).mount("#competitionFinalizationView");
     }
 
     function openCompetition(id, keepMessage) {
@@ -278,14 +307,17 @@
 
     function showCompetitionFinalizationForm() {
       clearMessage();
+      ensureCompetitionFinalizationViewModel();
       if (!state.currentCompetition) {
         showError({ message: "Compétition introuvable." });
         return;
       }
 
-      setValue("finalization_competition_id", state.currentCompetition.competitionId);
-      setText("competitionFinalizationSubtitle", state.currentCompetition.name);
-      setValue("finalization_classement", state.currentCompetition.result);
+      competitionFinalizationViewModel.finalizationSubtitle = state.currentCompetition.name || "";
+      Object.assign(competitionFinalizationViewModel.finalizationForm, {
+        competitionId: state.currentCompetition.competitionId || "",
+        result: state.currentCompetition.result || ""
+      });
       showView("competitionFinalizationView");
     }
 
@@ -294,8 +326,9 @@
     }
 
     function finalizeCompetition() {
-      const competitionId = getValue("finalization_competition_id");
-      const result = getValue("finalization_classement");
+      ensureCompetitionFinalizationViewModel();
+      const competitionId = competitionFinalizationViewModel.finalizationForm.competitionId;
+      const result = competitionFinalizationViewModel.finalizationForm.result;
 
       app.runServer(
         "finalizeCompetition",
