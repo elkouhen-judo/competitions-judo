@@ -37,20 +37,30 @@ module.exports = function createClubCompetitionsService(deps) {
     const userContext = await userContextService.getCurrentUserContext(email);
     assertCanManage(userContext.user);
 
+    const isEditing = Boolean(input.clubCompetitionId);
     const clubCompetitionId = input.clubCompetitionId || buildClubCompetitionId();
-    const event = createClubCompetition({ ...input, clubCompetitionId });
-    if (!event.participantJudokaIds.length) {
+
+    // An empty array is truthy and would cause the domain to throw — normalize it to undefined
+    const participantJudokaIds = Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
+      ? input.participantJudokaIds
+      : undefined;
+
+    const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds });
+
+    if (!isEditing && !event.participantJudokaIds.length) {
       throw new Error("Au moins un judoka doit être sélectionné.");
     }
-    await assertParticipantIdsExist(event.participantJudokaIds);
+    if (event.participantJudokaIds.length) {
+      await assertParticipantIdsExist(event.participantJudokaIds);
+    }
 
-    if (input.clubCompetitionId) {
+    if (isEditing) {
       await clubCompetitionsRepository.update(clubCompetitionId, event);
     } else {
       await clubCompetitionsRepository.insert(event);
     }
 
-    const existing = input.clubCompetitionId
+    const existing = isEditing
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
     const existingJudokaIds = new Set(existing.map(row => String(row.id_judoka)));
@@ -88,6 +98,18 @@ module.exports = function createClubCompetitionsService(deps) {
     };
   }
 
+  async function deleteClubCompetition(email, idClubCompetition) {
+    const userContext = await userContextService.getCurrentUserContext(email);
+    assertCanManage(userContext.user);
+    const event = await clubCompetitionsRepository.getById(idClubCompetition);
+    if (!event) throw new Error("Compétition club introuvable.");
+    await clubCompetitionsRepository.remove(idClubCompetition);
+    return {
+      success: true,
+      message: "Compétition club supprimée. Les compétitions individuelles des judokas sont conservées."
+    };
+  }
+
   async function detachClubCompetitionParticipant(email, idClubCompetition, idCompetition) {
     const userContext = await userContextService.getCurrentUserContext(email);
     assertCanManage(userContext.user);
@@ -106,6 +128,7 @@ module.exports = function createClubCompetitionsService(deps) {
 
   return {
     methods: {
+      deleteClubCompetition,
       detachClubCompetitionParticipant,
       getClubCompetitionDetail,
       saveClubCompetition
