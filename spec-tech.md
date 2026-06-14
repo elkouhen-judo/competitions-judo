@@ -64,7 +64,7 @@ This specification does not redefine product behavior already described in `spec
 
 ### 3.3 Data model constraints
 
-- **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `competitions`, and `combats`.
+- **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `club_competitions`, `competitions`, and `combats`.
 - **DAT-001a**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
 - **DAT-002**: Business identifiers shall remain text fields.
 - **DAT-003**: `judokas.id_judoka` is the judoka business identifier.
@@ -83,6 +83,9 @@ This specification does not redefine product behavior already described in `spec
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
+- **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
+- **DAT-020**: `competitions.club_competition_id` optionally links an individual competition participation to a club competition.
+- **DAT-021**: Deleting or detaching a club competition link shall not delete combats or rankings for individual competitions.
 
 ### 3.4 Authentication and authorization
 

@@ -19,9 +19,21 @@ create table if not exists public.judokas (
   constraint judokas_nom_not_blank check (btrim(nom) <> '')
 );
 
+create table if not exists public.club_competitions (
+  id_club_competition text primary key,
+  nom text not null,
+  date date not null,
+  categorie_age text not null default '',
+  categorie_poids text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint club_competitions_nom_not_blank check (btrim(nom) <> '')
+);
+
 create table if not exists public.competitions (
   id_competition text primary key,
   id_judoka text not null,
+  club_competition_id text,
   nom text not null,
   date date not null,
   categorie_age text not null default '',
@@ -34,6 +46,11 @@ create table if not exists public.competitions (
     references public.judokas (id_judoka)
     on update cascade
     on delete restrict,
+  constraint competitions_club_competition_id_fkey
+    foreign key (club_competition_id)
+    references public.club_competitions (id_club_competition)
+    on update cascade
+    on delete set null,
   constraint competitions_nom_not_blank check (btrim(nom) <> '')
 );
 
@@ -89,8 +106,19 @@ create table if not exists public.access_invitations (
 
 alter table public.competitions
   add column if not exists classement text not null default '',
+  add column if not exists club_competition_id text,
   drop column if exists lieu,
   drop column if exists poids_pesee;
+
+alter table public.competitions
+  drop constraint if exists competitions_club_competition_id_fkey;
+
+alter table public.competitions
+  add constraint competitions_club_competition_id_fkey
+  foreign key (club_competition_id)
+  references public.club_competitions (id_club_competition)
+  on update cascade
+  on delete set null;
 
 alter table public.judokas
   drop constraint if exists judokas_role_check;
@@ -115,6 +143,9 @@ create index if not exists competitions_id_judoka_idx
 
 create index if not exists competitions_date_idx
   on public.competitions (date desc);
+
+create index if not exists competitions_club_competition_id_idx
+  on public.competitions (club_competition_id);
 
 create index if not exists combats_id_judoka_idx
   on public.combats (id_judoka);
@@ -150,6 +181,12 @@ before update on public.competitions
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists club_competitions_set_updated_at on public.club_competitions;
+create trigger club_competitions_set_updated_at
+before update on public.club_competitions
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists combats_set_updated_at on public.combats;
 create trigger combats_set_updated_at
 before update on public.combats
@@ -163,12 +200,14 @@ for each row
 execute function public.set_updated_at();
 
 alter table public.judokas enable row level security;
+alter table public.club_competitions enable row level security;
 alter table public.competitions enable row level security;
 alter table public.combats enable row level security;
 alter table public.parent_judokas enable row level security;
 alter table public.access_invitations enable row level security;
 
 drop policy if exists "Allow all operations on judokas" on public.judokas;
+drop policy if exists "Allow all operations on club_competitions" on public.club_competitions;
 drop policy if exists "Allow all operations on competitions" on public.competitions;
 drop policy if exists "Allow all operations on combats" on public.combats;
 drop policy if exists "Allow all operations on parent_judokas" on public.parent_judokas;
@@ -177,6 +216,14 @@ drop policy if exists "Allow all operations on access_invitations" on public.acc
 drop policy if exists "Service role access on judokas" on public.judokas;
 create policy "Service role access on judokas"
 on public.judokas
+for all
+to service_role
+using (true)
+with check (true);
+
+drop policy if exists "Service role access on club_competitions" on public.club_competitions;
+create policy "Service role access on club_competitions"
+on public.club_competitions
 for all
 to service_role
 using (true)
@@ -215,12 +262,14 @@ using (true)
 with check (true);
 
 revoke all on table public.judokas from anon, authenticated;
+revoke all on table public.club_competitions from anon, authenticated;
 revoke all on table public.access_invitations from anon, authenticated;
 revoke all on table public.competitions from anon, authenticated;
 revoke all on table public.combats from anon, authenticated;
 revoke all on table public.parent_judokas from anon, authenticated;
 
 grant select, insert, update, delete on table public.judokas to service_role;
+grant select, insert, update, delete on table public.club_competitions to service_role;
 grant select, insert, update, delete on table public.access_invitations to service_role;
 grant select, insert, update, delete on table public.competitions to service_role;
 grant select, insert, update, delete on table public.combats to service_role;

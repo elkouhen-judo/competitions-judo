@@ -48,6 +48,18 @@
       showOwnerOptions: false,
       competitionForm: { ...defaultCompetitionForm }
     };
+    const defaultClubCompetitionFormViewState = {
+      clubCompetitionFormTitle: "Créer une compétition club",
+      clubCompetitionParticipants: [],
+      clubCompetitionForm: {
+        clubCompetitionId: "",
+        name: "",
+        competitionDate: "",
+        ageCategory: "",
+        weightCategory: "",
+        participantJudokaIds: []
+      }
+    };
     const defaultCompetitionFinalizationViewState = {
       finalizationSubtitle: "",
       finalizationForm: {
@@ -72,6 +84,7 @@
     };
     let competitionDetailViewModel = null;
     let competitionFormViewModel = null;
+    let clubCompetitionFormViewModel = null;
     let competitionFinalizationViewModel = null;
     let combatFormViewModel = null;
     let hideOwnerOptionsTimer = null;
@@ -102,6 +115,17 @@
         selectCompetitionOwner,
         showCompetitionOwnerOptions,
         updateCompetitionOwnerText
+      });
+    }
+
+    function ensureClubCompetitionFormViewModel() {
+      if (!window.Vue || clubCompetitionFormViewModel) {
+        return;
+      }
+
+      clubCompetitionFormViewModel = ui.createMountedViewModel("clubCompetitionFormView", defaultClubCompetitionFormViewState, {
+        cancelClubCompetitionForm,
+        saveClubCompetition
       });
     }
 
@@ -237,6 +261,54 @@
 
     function cancelCompetitionForm() {
       showView(state.previousView || "homeView");
+    }
+
+    function showClubCompetitionForm() {
+      clearMessage();
+      ensureClubCompetitionFormViewModel();
+      clubCompetitionFormViewModel.clubCompetitionParticipants = state.judokas.map(j => ({
+        judokaId: String(j.judokaId || ""),
+        name: getJudokaDisplayName(j) || "Judoka"
+      }));
+      Object.assign(clubCompetitionFormViewModel.clubCompetitionForm, {
+        clubCompetitionId: "",
+        name: "",
+        competitionDate: getCurrentLocalDate(),
+        ageCategory: "",
+        weightCategory: "",
+        participantJudokaIds: []
+      });
+      showView("clubCompetitionFormView");
+    }
+
+    function cancelClubCompetitionForm() {
+      showView("homeView");
+    }
+
+    function saveClubCompetition() {
+      ensureClubCompetitionFormViewModel();
+      const form = clubCompetitionFormViewModel.clubCompetitionForm;
+      app.runServer(
+        "saveClubCompetition",
+        [form],
+        response => {
+          showSuccess(response.message);
+          app.reloadInitialData();
+        },
+        showError
+      );
+    }
+
+    function detachClubCompetitionParticipant(idClubCompetition, idCompetition) {
+      app.confirmAndRun({
+        message: "Retirer ce judoka de la compétition club sans supprimer ses résultats ?",
+        method: "detachClubCompetitionParticipant",
+        args: [idClubCompetition, idCompetition],
+        onSuccess: response => {
+          showSuccess(response.message);
+          app.reloadInitialData();
+        }
+      });
     }
 
     function getCompetitionOwnerRequiredMessage() {
@@ -639,12 +711,14 @@
 
     return {
       bindEvents,
+      cancelClubCompetitionForm,
       cancelCombatForm,
       cancelCompetitionFinalizationForm,
       cancelCompetitionForm,
       deleteCombat,
       deleteCompetitionFromList,
       deleteCurrentCompetition,
+      detachClubCompetitionParticipant,
       editCurrentCompetition,
       finalizeCompetition,
       getCompetitionOwnerRequiredMessage,
@@ -657,10 +731,12 @@
       renderCompetitionDetail,
       resolveCompetitionOwnerSelection,
       saveCombat,
+      saveClubCompetition,
       saveCompetition,
       selectCompetitionOwner,
       showCompetitionOwnerOptions,
       showCombatForm,
+      showClubCompetitionForm,
       showCompetitionFinalizationForm,
       showCompetitionForm,
       syncCombatDecisionVisibility,

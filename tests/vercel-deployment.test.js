@@ -459,10 +459,12 @@ test("vercel runtime lets the connected user log out", () => {
 test("vercel api keeps supabase api key usage server side", () => {
   assert.match(core, /module\.exports = require\("\.\.\/core"\);/);
   assert.match(coreIndex, /createAdminService/);
+  assert.match(coreIndex, /createClubCompetitionsService/);
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
   assert.match(coreIndex, /buildJudokaProfileSnapshot/);
   assert.match(coreIndex, /\.\.\.adminService\.methods/);
+  assert.match(coreIndex, /\.\.\.clubCompetitionsService\.methods/);
   assert.match(coreIndex, /\.\.\.competitionsService\.methods/);
   assert.match(coreIndex, /\.\.\.combatsService\.methods/);
   assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);

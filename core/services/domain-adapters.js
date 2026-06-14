@@ -14,6 +14,7 @@ function toCanonicalJudoka(user = {}) {
 function toCanonicalCompetition(competition = {}) {
   return {
     competitionId: competition.competitionId !== undefined ? competition.competitionId : competition.id_competition,
+    clubCompetitionId: competition.clubCompetitionId !== undefined ? competition.clubCompetitionId : competition.club_competition_id,
     ownerJudokaId: competition.ownerJudokaId !== undefined ? competition.ownerJudokaId : competition.id_judoka,
     name: competition.name !== undefined ? competition.name : competition.nom,
     competitionDate: competition.competitionDate !== undefined ? competition.competitionDate : competition.date,
