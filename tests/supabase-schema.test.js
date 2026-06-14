@@ -36,6 +36,14 @@ test("supabase schema includes role and result constraints", () => {
   assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'\)/i);
 });
 
+test("supabase schema stores club competitions and linked participations", () => {
+  assert.match(schema, /create table if not exists public\.club_competitions/i);
+  assert.match(schema, /id_club_competition text primary key/i);
+  assert.match(schema, /competitions_club_competition_id_fkey[\s\S]*references public\.club_competitions \(id_club_competition\)[\s\S]*on delete set null/i);
+  assert.match(schema, /add column if not exists club_competition_id text/i);
+  assert.match(schema, /grant select,\s*insert,\s*update,\s*delete on table public\.club_competitions to service_role/i);
+});
+
 test("supabase schema enables row level security for app tables", () => {
   assert.match(schema, /alter table public\.judokas enable row level security/i);
   assert.match(schema, /alter table public\.access_invitations enable row level security/i);

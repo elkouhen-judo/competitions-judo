@@ -7,12 +7,14 @@ const text = require("./shared/text");
 const { eqFilter } = require("./shared/filters");
 const ids = require("./shared/ids");
 const createJudokasRepository = require("./repositories/judokas.repository");
+const createClubCompetitionsRepository = require("./repositories/club-competitions.repository");
 const createCompetitionsRepository = require("./repositories/competitions.repository");
 const createCombatsRepository = require("./repositories/combats.repository");
 const createInvitationsRepository = require("./repositories/invitations.repository");
 const createParentLinksRepository = require("./repositories/parent-links.repository");
 const createUserContextService = require("./services/user-context.service");
 const createAdminService = require("./services/admin.service");
+const createClubCompetitionsService = require("./services/club-competitions.service");
 const createCompetitionsService = require("./services/competitions.service");
 const createCombatsService = require("./services/combats.service");
 const createChildrenService = require("./services/children.service");
@@ -29,6 +31,7 @@ const {
 const { createEmail } = require("./domain/access/email");
 const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope");
 const { createAccessInvitation } = require("./domain/access/access-invitation");
+const { createClubCompetition } = require("./domain/competitions/club-competition");
 const {
   createCompetition,
   createPersistedCompetition
@@ -47,6 +50,7 @@ const repositoryDeps = {
 };
 
 const judokasRepository = createJudokasRepository(repositoryDeps);
+const clubCompetitionsRepository = createClubCompetitionsRepository(repositoryDeps);
 const competitionsRepository = createCompetitionsRepository(repositoryDeps);
 const combatsRepository = createCombatsRepository(repositoryDeps);
 const invitationsRepository = createInvitationsRepository(repositoryDeps);
@@ -71,6 +75,18 @@ const adminService = createAdminService({
   createEmail,
   createJudoka,
   normalizeEmail: text.normalizeEmail
+});
+
+const clubCompetitionsService = createClubCompetitionsService({
+  clubCompetitionsRepository,
+  competitionsRepository,
+  judokasRepository,
+  userContextService,
+  canManageClubCompetition: permissions.canManageClubCompetition,
+  buildClubCompetitionId: ids.buildCompetitionId,
+  buildCompetitionId: ids.buildCompetitionId,
+  createClubCompetition,
+  createCompetition
 });
 
 const competitionsService = createCompetitionsService({
@@ -165,6 +181,7 @@ const methods = {
   ...profileService.methods,
   ...registrationService.methods,
   ...adminService.methods,
+  ...clubCompetitionsService.methods,
   ...competitionsService.methods,
   ...combatsService.methods
 };
