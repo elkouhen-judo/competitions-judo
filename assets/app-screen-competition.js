@@ -191,7 +191,8 @@
         {
           formatResultat,
           normalizeDisplayName,
-          showJudoka: state.isAdmin
+          showJudoka: state.isAdmin || state.isCoach,
+          canEdit: state.canEditCurrentCompetition
         }
       ));
     }
