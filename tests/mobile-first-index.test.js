@@ -265,6 +265,16 @@ test("competition form screen is mounted through Vue 3 for the progressive scree
   assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
 });
 
+test("coach can open club competition creation and participant management UI", () => {
+  assert.match(bundle, /id="addClubCompetitionButton"/);
+  assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="clubCompetitionParticipants"/);
+  assert.match(bundle, /v-for="participant in clubCompetitionParticipants"/);
+  assert.match(client, /function showClubCompetitionForm\(\)/);
+  assert.match(client, /"saveClubCompetition"/);
+  assert.match(client, /detachClubCompetitionParticipant/);
+});
+
 test("competition finalization screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competitionFinalizationSubtitle" class="subtitle">\{\{ finalizationSubtitle \}\}<\/p>/);
