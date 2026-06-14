@@ -55,8 +55,6 @@
         clubCompetitionId: "",
         name: "",
         competitionDate: "",
-        ageCategory: "",
-        weightCategory: "",
         participantJudokaIds: []
       }
     };
@@ -274,8 +272,6 @@
         clubCompetitionId: "",
         name: "",
         competitionDate: getCurrentLocalDate(),
-        ageCategory: "",
-        weightCategory: "",
         participantJudokaIds: []
       });
       showView("clubCompetitionFormView");
