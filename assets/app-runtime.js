@@ -8,6 +8,7 @@
       return {
         currentUser: null,
         isAdmin: false,
+        isCoach: false,
         isParent: false,
         canManageChildren: false,
         competitions: [],
@@ -169,12 +170,17 @@
     function applyInitialData(data) {
       state.currentUser = data.user;
       state.isAdmin = Boolean(data.isAdmin);
+      state.isCoach = Boolean(data.isCoach);
       state.isParent = Boolean(data.isParent);
       state.canManageChildren = Boolean(data.canManageChildren);
       state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
       state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
       const profileTypeLabel = state.isParent ? "PARENT" : "JUDOKA";
-      const roleLabel = state.isAdmin ? `ADMIN · ${profileTypeLabel}` : profileTypeLabel;
+      const roleLabel = state.isAdmin
+        ? `ADMIN · ${profileTypeLabel}`
+        : state.isCoach
+          ? `COACH · ${profileTypeLabel}`
+          : profileTypeLabel;
       Object.assign(headerViewModel, {
         showHeader: true,
         userName: ui.getJudokaDisplayName(state.currentUser) || "",

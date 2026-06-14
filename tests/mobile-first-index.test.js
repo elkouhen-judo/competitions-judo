@@ -149,7 +149,7 @@ test("competition list exposes direct delete actions without nesting buttons", (
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.match(bundle, /Ouvrir les combats/);
-  assert.match(client, /canDelete: state\.isAdmin \|\| state\.isParent/);
+  assert.match(client, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
   assert.match(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/);
   assert.match(bundle, /function deleteCompetitionFromList\(id,\s*name\)/);
   assert.doesNotMatch(bundle, /<button class="card card-button"[\s\S]*?<button/);

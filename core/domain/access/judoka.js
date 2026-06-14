@@ -24,6 +24,9 @@ function createJudoka(user = {}) {
     isAdmin() {
       return record.accessRole === "ADMIN";
     },
+    isCoach() {
+      return record.accessRole === "COACH";
+    },
     grantAdminRole() {
       if (this.isAdmin()) {
         throw new Error("Cet utilisateur est déjà admin.");

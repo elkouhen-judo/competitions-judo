@@ -59,6 +59,7 @@ const userContextService = createUserContextService({
   assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
   createManagedJudokaScope,
   isAdmin: permissions.isAdmin,
+  isCoach: permissions.isCoach,
   isParent: permissions.isParent
 });
 
@@ -78,6 +79,7 @@ const competitionsService = createCompetitionsService({
   userContextService,
   normalizeLastName: text.normalizeLastName,
   canManageCompetition: permissions.canManageCompetition,
+  assertCanAccessCompetition: permissions.assertCanAccessCompetition,
   assertCanManageCompetition: permissions.assertCanManageCompetition,
   resolveJudokaDataAccess: permissions.resolveJudokaDataAccess,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
@@ -143,15 +145,17 @@ async function getInitialData(email) {
   const user = userContext.user;
   const domainUser = toCanonicalJudoka(user);
   const admin = permissions.isAdmin(domainUser);
+  const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
 
   return {
     user: toJudokaReadModel(user),
     isAdmin: admin,
+    isCoach: coach,
     isParent: parent,
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
     competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaScope),
-    judokas: (admin || parent) ? userContext.judokas.map(toJudokaReadModel) : []
+    judokas: (admin || coach || parent) ? userContext.judokas.map(toJudokaReadModel) : []
   };
 }
 

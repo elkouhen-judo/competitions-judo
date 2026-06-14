@@ -30,7 +30,7 @@ test("supabase schema protects relationships and cascade delete", () => {
 });
 
 test("supabase schema includes role and result constraints", () => {
-  assert.match(schema, /judokas_role_check[\s\S]*role in \('NORMAL', 'ADMIN'\)/i);
+  assert.match(schema, /judokas_role_check[\s\S]*role in \('NORMAL', 'COACH', 'ADMIN'\)/i);
   assert.match(schema, /judokas_profile_type_check[\s\S]*profile_type in \('JUDOKA', 'PARENT'\)/i);
   assert.match(schema, /access_invitations_invited_profile_type_check[\s\S]*invited_profile_type in \('JUDOKA', 'PARENT'\)/i);
   assert.match(schema, /combats_resultat_check[\s\S]*resultat in \('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'\)/i);

@@ -1,8 +1,16 @@
 const { isParentProfileType } = require("./profile-type");
-const { isAdminRole } = require("./role");
+const { isAdminRole, isCoachRole } = require("./role");
 
 function isAdmin(user) {
   return isAdminRole(user && user.accessRole);
+}
+
+function isCoach(user) {
+  return isCoachRole(user && user.accessRole);
+}
+
+function hasClubReadAccess(user) {
+  return isAdmin(user) || isCoach(user);
 }
 
 function isParent(user) {
@@ -65,7 +73,7 @@ function createAccessScope(kind, options = {}) {
 }
 
 function resolveJudokaDataAccess(user, managedJudokaScope) {
-  if (isAdmin(user)) {
+  if (hasClubReadAccess(user)) {
     return createAccessScope("ALL");
   }
 
@@ -78,6 +86,7 @@ function resolveJudokaDataAccess(user, managedJudokaScope) {
 
 function canManageCombatFor(user, idJudoka, managedJudokaScope) {
   if (isAdmin(user)) return true;
+  if (isCoach(user)) return false;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
   }
@@ -93,6 +102,7 @@ function assertCanManageCombatFor(user, idJudoka, managedJudokaScope, message) {
 function canManageCompetition(user, competition, managedJudokaScope) {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
   if (isAdmin(user)) return true;
+  if (isCoach(user)) return false;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, ownerJudokaId);
   }
@@ -106,7 +116,7 @@ function assertCanManageCompetition(user, competition, managedJudokaScope, messa
 }
 
 function canAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
-  if (isAdmin(user)) return true;
+  if (hasClubReadAccess(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
   }
@@ -116,6 +126,21 @@ function canAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
 function assertCanAccessJudokaProfile(user, idJudoka, managedJudokaScope) {
   if (!canAccessJudokaProfile(user, idJudoka, managedJudokaScope)) {
     throw new Error("Accès refusé à cette fiche judoka.");
+  }
+}
+
+function canAccessCompetition(user, competition, managedJudokaScope) {
+  const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
+  if (hasClubReadAccess(user)) return true;
+  if (isParent(user)) {
+    return isInManagedScope(managedJudokaScope, ownerJudokaId);
+  }
+  return String(getUserJudokaId(user)) === String(ownerJudokaId);
+}
+
+function assertCanAccessCompetition(user, competition, managedJudokaScope, message) {
+  if (!canAccessCompetition(user, competition, managedJudokaScope)) {
+    throw new Error(message);
   }
 }
 
@@ -140,15 +165,19 @@ function resolveCompetitionOwnerId(user, competition, managedJudokaScope) {
 
 module.exports = {
   assertCanAccessJudokaProfile,
+  assertCanAccessCompetition,
   assertCanManageChildrenProfile,
   assertCanManageCombatFor,
   assertCanManageCompetition,
+  canAccessCompetition,
   canAccessJudokaProfile,
   canManageChildrenProfile,
   canManageCombatFor,
   canManageCompetition,
   createAccessScope,
+  hasClubReadAccess,
   isAdmin,
+  isCoach,
   isParent,
   resolveJudokaDataAccess,
   resolveCompetitionOwnerId
