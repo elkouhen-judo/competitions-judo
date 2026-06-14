@@ -18,6 +18,7 @@
       filterOptions: [],
       showFilterOptions: false,
       canFilterByJudoka: false,
+      canCreateCompetition: true,
       showHomeActions: false,
       canManageAdmins: false,
       canManageChildren: false,
@@ -42,7 +43,7 @@
 
     function applyInitialData() {
       ensureHomeViewModel();
-      const canFilterByJudoka = (state.isAdmin || state.isParent) && state.judokas.length > 0;
+      const canFilterByJudoka = (state.isAdmin || state.isCoach || state.isParent) && state.judokas.length > 0;
       homeViewModel.canFilterByJudoka = canFilterByJudoka;
       if (!canFilterByJudoka) {
         homeViewModel.filterJudokaText = "";
@@ -75,7 +76,7 @@
       if (!state.currentUser) {
         return [];
       }
-      return (state.isAdmin || state.isParent) ? state.judokas : [state.currentUser];
+      return (state.isAdmin || state.isCoach || state.isParent) ? state.judokas : [state.currentUser];
     }
 
     function getDefaultHomeJudokaId() {
@@ -91,7 +92,7 @@
       const accessibleJudokas = getAccessibleHomeJudokas();
       const currentValue = homeViewModel.filterJudokaId;
 
-      if (!(state.isAdmin || state.isParent)) {
+      if (!(state.isAdmin || state.isCoach || state.isParent)) {
         homeViewModel.filterJudokaText = "";
         homeViewModel.filterJudokaId = "";
         return;
@@ -111,7 +112,7 @@
       if (!state.currentUser) {
         return "";
       }
-      if (state.isAdmin || state.isParent) {
+      if (state.isAdmin || state.isCoach || state.isParent) {
         return homeViewModel ? homeViewModel.filterJudokaId || "" : "";
       }
       return String(state.currentUser.judokaId || "");
@@ -192,6 +193,7 @@
         showHomeActions: true,
         canManageAdmins: state.isAdmin,
         canManageChildren: state.canManageChildren,
+        canCreateCompetition: !state.isCoach,
         profileButtonText: copy.profileButtonText,
         profileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
         addCompetitionButtonText: "Nouvelle compétition",
@@ -207,7 +209,7 @@
           meta: "Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions."
         };
       } else {
-        const summaryMeta = state.isAdmin
+        const summaryMeta = state.isAdmin || state.isCoach
           ? "Vous consultez actuellement le parcours de ce judoka."
           : state.isParent
             ? "Toutes les actions d'accueil concernent ce profil."
@@ -219,14 +221,14 @@
         };
       }
 
-      const actionDisabled = Boolean((state.isAdmin || state.isParent) && !activeJudoka);
+      const actionDisabled = Boolean((state.isAdmin || state.isCoach || state.isParent) && !activeJudoka);
       homeViewModel.actionDisabled = actionDisabled;
     }
 
     function getHomeContextCopy(activeJudoka) {
-      if (state.isAdmin) {
+      if (state.isAdmin || state.isCoach) {
         return {
-          homeTitle: "Suivi des judokas",
+          homeTitle: state.isCoach ? "Vue coach" : "Suivi des judokas",
           homeSubtitle: activeJudoka
             ? "Le parcours d'accueil est centré sur le judoka actif."
             : "Choisissez un judoka pour afficher sa fiche et ses compétitions.",
@@ -234,10 +236,16 @@
           profileButtonText: "Voir la fiche",
           profileButtonMeta: "Choisir un judoka",
           addCompetitionButtonMeta: "Choisir un judoka",
-          competitionsTitle: activeJudoka ? `Compétitions de ${getJudokaDisplayName(activeJudoka)}` : "Compétitions du judoka actif",
+          competitionsTitle: activeJudoka
+            ? `Compétitions de ${getJudokaDisplayName(activeJudoka)}`
+            : state.isCoach
+              ? "Compétitions du club"
+              : "Compétitions du judoka actif",
           competitionsSubtitle: activeJudoka
             ? "Touchez une carte pour ouvrir ses combats."
-            : "Sélectionnez d'abord un judoka pour afficher son parcours.",
+            : state.isCoach
+              ? "Touchez une carte pour ouvrir les résultats de la compétition."
+              : "Sélectionnez d'abord un judoka pour afficher son parcours.",
           emptyActionMeta: "Choisir un judoka"
         };
       }
@@ -306,8 +314,8 @@
           name: c.name || "Compétition",
           date: formatDate(c.competitionDate),
           judokaName: judoka ? getJudokaDisplayName(judoka) : "",
-          showJudoka: state.isAdmin || state.isParent,
-          canDelete: state.isAdmin || state.isParent
+          showJudoka: state.isAdmin || state.isCoach || state.isParent,
+          canDelete: (state.isAdmin || state.isParent) && !state.isCoach
         };
       });
       homeViewModel.hasCompetitions = homeViewModel.competitions.length > 0;
@@ -323,9 +331,9 @@
       const accessibleJudokas = getAccessibleHomeJudokas();
       const targetJudokaId = getHomeActiveJudokaId();
 
-      if ((state.isAdmin || state.isParent) && !targetJudokaId) {
+      if ((state.isAdmin || state.isCoach || state.isParent) && !targetJudokaId) {
         showError({
-          message: state.isAdmin
+          message: state.isAdmin || state.isCoach
             ? "Sélectionnez un judoka actif pour ouvrir sa fiche."
             : "Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche."
         });
@@ -341,6 +349,11 @@
     }
 
     function showHomeCompetitionForm() {
+      if (state.isCoach) {
+        showError({ message: "Le coach dispose d'un accès en lecture seule." });
+        return;
+      }
+
       const activeJudokaId = getHomeActiveJudokaId();
       if ((state.isAdmin || state.isParent) && !activeJudokaId) {
         showError({

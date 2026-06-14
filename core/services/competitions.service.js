@@ -13,6 +13,7 @@ module.exports = function createCompetitionsService(deps) {
     userContextService,
     normalizeLastName,
     canManageCompetition,
+    assertCanAccessCompetition,
     assertCanManageCompetition,
     resolveJudokaDataAccess,
     resolveCompetitionOwnerId,
@@ -52,7 +53,7 @@ module.exports = function createCompetitionsService(deps) {
     }
     const domainCompetition = toCanonicalCompetition(competitionRecord);
 
-    assertCanManageCompetition(domainUser, domainCompetition, managedJudokaScope, "Accès refusé à cette compétition.");
+    assertCanAccessCompetition(domainUser, domainCompetition, managedJudokaScope, "Accès refusé à cette compétition.");
 
     let filtered;
     if (access.isAll()) {
@@ -72,7 +73,8 @@ module.exports = function createCompetitionsService(deps) {
     return {
       competition: toCompetitionReadModel(competitionRecord),
       combats: enriched,
-      isAdmin: access.isAll(),
+      isAdmin: domainUser.accessRole === "ADMIN",
+      isCoach: domainUser.accessRole === "COACH",
       isParent: access.isManaged(),
       canManageCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
       canEditCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),

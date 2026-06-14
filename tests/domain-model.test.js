@@ -23,6 +23,7 @@ test("permission policy derives access from immutable profile type and role", ()
   const scope = createManagedJudokaScope(["PARENT1", "CHILD1"]);
   assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
+  assert.equal(permissions.isCoach({ profileType: "JUDOKA", accessRole: "COACH" }), true);
   assert.equal(permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }), false);
   const parentAccess = permissions.resolveJudokaDataAccess(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
@@ -43,6 +44,28 @@ test("permission policy derives access from immutable profile type and role", ()
     "OTHER",
     createManagedJudokaScope([])
   ), /Accès refusé/);
+
+  const coachAccess = permissions.resolveJudokaDataAccess(
+    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+    createManagedJudokaScope([])
+  );
+  assert.equal(coachAccess.kind, "ALL");
+  assert.equal(coachAccess.canManageJudoka("OTHER"), true);
+  assert.equal(permissions.canManageCompetition(
+    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+    { ownerJudokaId: "OTHER" },
+    createManagedJudokaScope([])
+  ), false);
+  assert.equal(permissions.canManageCombatFor(
+    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+    "OTHER",
+    createManagedJudokaScope([])
+  ), false);
+  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
+    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+    "OTHER",
+    createManagedJudokaScope([])
+  ));
 });
 
 test("email value object normalizes and validates addresses", () => {
@@ -132,6 +155,20 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
       message: "Enfant retiré."
     }
   );
+});
+
+test("judoka domain accepts coach as a structural role without changing profile type", () => {
+  const coach = createJudoka({
+    judokaId: "COACH1",
+    accountEmail: "coach@example.com",
+    profileType: "PARENT",
+    accessRole: "COACH"
+  });
+
+  assert.equal(coach.profileType, "PARENT");
+  assert.equal(coach.accessRole, "COACH");
+  assert.equal(coach.isCoach(), true);
+  assert.equal(coach.isAdmin(), false);
 });
 
 test("access invitation domain normalizes invited profile type", () => {
