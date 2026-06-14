@@ -15,6 +15,7 @@ module.exports = function createCompetitionsRepository(deps) {
     }
     return {
       id_judoka: competition.ownerJudokaId,
+      club_competition_id: competition.clubCompetitionId || null,
       nom: draft.name,
       date: draft.competitionDate,
       categorie_age: draft.ageCategory,
@@ -45,6 +46,10 @@ module.exports = function createCompetitionsRepository(deps) {
     return supabaseSelect("competitions", `select=*&id_judoka=in.(${ids.join(",")})&order=date.desc`);
   }
 
+  async function listByClubCompetition(idClubCompetition) {
+    return supabaseSelect("competitions", `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc`);
+  }
+
   async function getById(idCompetition) {
     return supabaseSelectOne("competitions", `select=*&${eqFilter("id_competition", idCompetition)}`);
   }
@@ -67,15 +72,23 @@ module.exports = function createCompetitionsRepository(deps) {
     });
   }
 
+  async function detachFromClubCompetition(idCompetition) {
+    return supabasePatch("competitions", eqFilter("id_competition", idCompetition), {
+      club_competition_id: null
+    });
+  }
+
   async function remove(idCompetition) {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
 
   return {
+    detachFromClubCompetition,
     existsForJudoka,
     getById,
     insert,
     listAll,
+    listByClubCompetition,
     listByJudoka,
     listByJudokaIds,
     remove,
