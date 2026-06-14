@@ -15,6 +15,10 @@ const {
   assertCompetitionCanContainCombat,
   createCompetition
 } = require("../core/domain/competitions/competition");
+const {
+  createClubCompetition,
+  createClubCompetitionParticipantIds
+} = require("../core/domain/competitions/club-competition");
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
 const { createCompetitionRanking, getCompetitionResultRank } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
@@ -55,17 +59,55 @@ test("permission policy derives access from immutable profile type and role", ()
     { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
     { ownerJudokaId: "OTHER" },
     createManagedJudokaScope([])
-  ), false);
+  ), true);
   assert.equal(permissions.canManageCombatFor(
     { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
     "OTHER",
     createManagedJudokaScope([])
-  ), false);
+  ), true);
   assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
     { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
     "OTHER",
     createManagedJudokaScope([])
   ));
+});
+
+test("club competition domain normalizes event details and participant ids", () => {
+  const event = createClubCompetition({
+    clubCompetitionId: "CLUB1",
+    name: " Tournoi Nantes ",
+    competitionDate: "2026-06-14",
+    ageCategory: " minime ",
+    weightCategory: " -50kg ",
+    participantJudokaIds: ["J1", "J2", "J1"]
+  });
+
+  assert.equal(event.clubCompetitionId, "CLUB1");
+  assert.equal(event.name, "Tournoi Nantes");
+  assert.equal(event.competitionDate, "2026-06-14");
+  assert.equal(event.ageCategory, "Minime");
+  assert.equal(event.weightCategory, "-50kg");
+  assert.deepEqual(event.participantJudokaIds, ["J1", "J2"]);
+  assert.throws(() => createClubCompetition({ name: "", competitionDate: "2026-06-14" }), /Nom et date obligatoires/);
+  assert.throws(() => createClubCompetitionParticipantIds([]), /Au moins un judoka/);
+});
+
+test("competition domain carries optional club competition link", () => {
+  const competition = createCompetition({
+    name: "Tournoi Nantes",
+    competitionDate: "2026-06-14",
+    clubCompetitionId: "CLUB1"
+  }, "J1");
+
+  assert.equal(competition.clubCompetitionId, "CLUB1");
+  assert.equal(competition.changeDetails({ name: "Tournoi Nantes 2", competitionDate: "2026-06-15" }).clubCompetitionId, "CLUB1");
+});
+
+test("permission policy grants coach sports management without admin invitations", () => {
+  const coach = { judokaId: "C1", profileType: "JUDOKA", accessRole: "COACH" };
+  assert.equal(permissions.canManageClubCompetition(coach), true);
+  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope([])), true);
+  assert.equal(permissions.canManageChildrenProfile(coach), false);
 });
 
 test("email value object normalizes and validates addresses", () => {
