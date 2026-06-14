@@ -235,7 +235,7 @@ test("successful initial load leaves the login view", () => {
 });
 
 test("judoka home keeps competition creation available", () => {
-  assert.match(uiBundle, /id="addCompetitionButton" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/);
+  assert.match(uiBundle, /id="addCompetitionButton" v-if="canCreateCompetition" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/);
   assert.match(uiBundle, /id="addCompetitionButtonText"/);
   assert.match(uiBundle, /id="addCompetitionButtonMeta"/);
   assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
@@ -246,7 +246,7 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
-  assert.match(uiBundle, /canDelete: state\.isAdmin \|\| state\.isParent/);
+  assert.match(uiBundle, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
   assert.match(uiBundle, /showHomeActions: true/);
   assert.match(uiBundle, /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/);
   assert.match(uiBundle, /v-for="competition in competitions"/);
@@ -472,7 +472,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(coreIndex, /const domainUser = toCanonicalJudoka\(user\);/);
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
-  assert.match(client, /const roleLabel = state\.isAdmin \? `ADMIN · \$\{profileTypeLabel\}` : profileTypeLabel;/);
+  assert.match(client, /state\.isCoach\s*\?\s*`COACH · \$\{profileTypeLabel\}`/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
   assert.match(competitionsService, /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/);
   assert.match(competitionsService, /formatJudokaDisplayName: judoka => `\$\{judoka\.firstName\} \$\{normalizeLastName\(judoka\.lastName\)\}`/);

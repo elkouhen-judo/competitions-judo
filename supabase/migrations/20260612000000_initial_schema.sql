@@ -12,7 +12,7 @@ create table if not exists public.judokas (
   profile_type text not null default 'JUDOKA',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint judokas_role_check check (role in ('NORMAL', 'ADMIN')),
+  constraint judokas_role_check check (role in ('NORMAL', 'COACH', 'ADMIN')),
   constraint judokas_profile_type_check check (profile_type in ('JUDOKA', 'PARENT')),
   constraint judokas_email_not_blank check (email is null or btrim(email) <> ''),
   constraint judokas_prenom_not_blank check (btrim(prenom) <> ''),
@@ -91,6 +91,13 @@ alter table public.competitions
   add column if not exists classement text not null default '',
   drop column if exists lieu,
   drop column if exists poids_pesee;
+
+alter table public.judokas
+  drop constraint if exists judokas_role_check;
+
+alter table public.judokas
+  add constraint judokas_role_check
+  check (role in ('NORMAL', 'COACH', 'ADMIN'));
 
 alter table public.combats
   drop constraint if exists combats_resultat_check;

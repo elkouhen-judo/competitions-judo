@@ -4,10 +4,14 @@ function normalizeRole(value) {
 
 function createRole(value) {
   const role = normalizeRole(value);
-  if (!["NORMAL", "ADMIN"].includes(role)) {
+  if (!["NORMAL", "COACH", "ADMIN"].includes(role)) {
     throw new Error("Rôle invalide.");
   }
   return role;
+}
+
+function isCoachRole(value) {
+  return normalizeRole(value) === "COACH";
 }
 
 function isAdminRole(value) {
@@ -17,5 +21,6 @@ function isAdminRole(value) {
 module.exports = {
   createRole,
   isAdminRole,
+  isCoachRole,
   normalizeRole
 };
