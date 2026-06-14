@@ -88,10 +88,12 @@ function createCompetition(competition, ownerJudokaId) {
   const draft = createCompetitionDetailsDraft(competition);
   const resolvedOwnerJudokaId = createJudokaId(ownerJudokaId, "Judoka participant obligatoire.");
   const competitionId = createOptionalCompetitionId(competition && competition.competitionId);
+  const clubCompetitionId = createOptionalCompetitionId(competition && competition.clubCompetitionId);
   const result = createCompetitionFinalResult(competition && competition.result);
 
   const record = {
     competitionId,
+    clubCompetitionId,
     ownerJudokaId: resolvedOwnerJudokaId,
     draft,
     name: draft.name,
@@ -107,6 +109,7 @@ function createCompetition(competition, ownerJudokaId) {
       return createCompetition({
         ...details,
         competitionId: record.competitionId,
+        clubCompetitionId: record.clubCompetitionId,
         result: details.result !== undefined ? details.result : record.result
       }, record.ownerJudokaId);
     },
