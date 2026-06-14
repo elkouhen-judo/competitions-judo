@@ -67,7 +67,7 @@ This specification does not define:
 
 - **ROL-001**: A `JUDOKA` profile can access only its own competitions, combats, and statistics.
 - **ROL-002**: A `PARENT` profile can access and edit data of linked child judokas.
-- **ROL-003**: A `COACH` profile has read-only access to all judokas, competitions, and stats within the club. They cannot modify sports data or manage invitations.
+- **ROL-003**: A `COACH` profile has read access to all judokas, competitions, and stats within the club, and can manage club competition events and their linked sports data. They cannot manage invitations.
 - **ROL-004**: An `ADMIN` profile inherits all `COACH` rights and has write access to invitations and system configurations.
 - **ROL-005**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
 - **ROL-006**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
@@ -87,10 +87,15 @@ This specification does not define:
 - **COMP-014**: Competition creation shall not ask for the final ranking.
 - **COMP-015**: Final ranking shall be entered from a dedicated competition finalization action while empty, then can be edited from the competition edit form.
 - **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé`.
+- **COMP-017**: A `COACH` or `ADMIN` can create a club competition event and assign one or more judokas as participants.
+- **COMP-018**: Assigning a judoka to a club competition creates an individual competition participation for that judoka.
+- **COMP-019**: A linked participation remains visible and editable in the judoka's individual competition history.
+- **COMP-020**: Removing a judoka from a club competition detaches only the club link and shall not delete the individual competition, combats, or final ranking.
+- **COMP-021**: A `JUDOKA` or `PARENT` can still create individual competitions outside a club competition.
 
 ### 3.4 Combat rules
 
-- **CBT-001**: A `JUDOKA` or `PARENT` can manage combats for their own scope. `COACH` users have read-only access.
+- **CBT-001**: A `JUDOKA` or `PARENT` can manage combats for their own scope. `COACH` users can manage combats for club competition participations.
 - **CBT-004**: A combat must include a parent competition, a judoka, and a result.
 - **CBT-005**: A combat may include an opponent name and match notes (free text for technical feedback).
 - **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, or `Egalité`.
@@ -184,6 +189,9 @@ This specification does not define:
 - **AC-022**: Given a user creates a competition, when the form is displayed, then no ranking field is shown.
 - **AC-023**: Given a user edits a competition, when the form is displayed, then the ranking/result can be modified with the other competition details.
 - **AC-024**: Given a user typing combat details, when saving the combat, then they can optionally write any text in the notes field (e.g., "Perdu par Ippon sur Uchi-Mata").
+- **AC-025**: Given a connected `COACH`, when they create a club competition with selected judokas, then one club event and one linked individual competition per selected judoka are created.
+- **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
+- **AC-027**: Given a coach removes a participant from a club competition, when the operation succeeds, then the individual competition and sports data remain available outside the club event.
 
 ## 5. Examples & Edge Cases
 
