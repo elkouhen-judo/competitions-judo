@@ -360,7 +360,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function openHomeJudokaProfile\(\)/);
   assert.match(uiBundle, /Sélectionnez un judoka actif pour ouvrir sa fiche/);
   assert.match(uiBundle, /Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche/);
-  assert.match(uiBundle, /Sélectionnez un judoka pour afficher son parcours/);
+  assert.match(uiBundle, /Aucune compétition enregistrée pour votre périmètre/);
   assert.match(uiBundle, /Résumé performance/);
   assert.match(uiBundle, /Profil de combat/);
   assert.match(uiBundle, /Résultats compétition/);

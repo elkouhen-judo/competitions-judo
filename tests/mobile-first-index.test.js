@@ -101,6 +101,12 @@ test("club competition creation keeps only the shared event basics", () => {
   assert.doesNotMatch(bundle, /id="club_competition_weight"/);
 });
 
+test("parent home keeps visible competitions when no judoka is selected", () => {
+  assert.doesNotMatch(bundle, /if \(\(state\.isAdmin \|\| state\.isParent\) && !activeJudoka\) \{/);
+  assert.match(bundle, /let filteredComps = state\.competitions;/);
+  assert.match(bundle, /if \(activeJudokaId\) \{\s*filteredComps = state\.competitions\.filter\(c => String\(c\.ownerJudokaId\) === String\(activeJudokaId\)\);/);
+});
+
 test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="manageAdminsButton"/);
   assert.match(bundle, /id="adminsView" class="panel hidden"/);
