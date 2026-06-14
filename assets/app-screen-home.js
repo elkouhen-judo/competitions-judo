@@ -19,6 +19,7 @@
       showFilterOptions: false,
       canFilterByJudoka: false,
       canCreateCompetition: true,
+      canCreateClubCompetition: false,
       showHomeActions: false,
       canManageAdmins: false,
       canManageChildren: false,
@@ -66,6 +67,7 @@
         selectFilterJudoka,
         showAdminsManagement: screens.admins.showAdminsManagement,
         showChildrenManagement: screens.children.showChildrenManagement,
+        showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
         updateFilterJudokaText
@@ -194,6 +196,7 @@
         canManageAdmins: state.isAdmin,
         canManageChildren: state.canManageChildren,
         canCreateCompetition: !state.isCoach,
+        canCreateClubCompetition: state.isCoach || state.isAdmin,
         profileButtonText: copy.profileButtonText,
         profileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
         addCompetitionButtonText: "Nouvelle compétition",
