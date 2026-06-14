@@ -164,6 +164,13 @@ async function getInitialData(email) {
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
 
+  const clubCompetitionsRaw = (admin || coach) ? await clubCompetitionsRepository.listAll() : [];
+  const clubCompetitions = clubCompetitionsRaw.map(cc => ({
+    clubCompetitionId: cc.id_club_competition,
+    name: cc.nom,
+    competitionDate: cc.date
+  }));
+
   return {
     user: toJudokaReadModel(user),
     isAdmin: admin,
@@ -171,6 +178,7 @@ async function getInitialData(email) {
     isParent: parent,
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
     competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaScope),
+    clubCompetitions,
     judokas: (admin || coach || parent) ? userContext.judokas.map(toJudokaReadModel) : []
   };
 }

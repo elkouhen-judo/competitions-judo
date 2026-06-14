@@ -231,7 +231,7 @@ test("vercel login creates only the initial judoka profile", () => {
 });
 
 test("successful initial load leaves the login view", () => {
-  assert.match(uiBundle, /renderCompetitions\(\);\s*showView\("homeView"\);/);
+  assert.match(uiBundle, /renderCompetitions\(\);[\s\S]*?showView\("homeView"\);/);
 });
 
 test("judoka home keeps competition creation available", () => {

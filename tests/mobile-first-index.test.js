@@ -283,7 +283,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(bundle, /id="addClubCompetitionButton"/);
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
-  assert.match(bundle, /v-for="participant in clubCompetitionParticipants"/);
+  assert.match(bundle, /v-for="participant in filteredClubCompetitionParticipants"/);
   assert.match(client, /function showClubCompetitionForm\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);

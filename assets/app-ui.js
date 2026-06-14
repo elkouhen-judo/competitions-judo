@@ -6,6 +6,8 @@
     "adminsView",
     "childrenView",
     "competitionView",
+    "clubCompetitionFormView",
+    "clubCompetitionDetailView",
     "competitionFormView",
     "competitionFinalizationView",
     "combatFormView"

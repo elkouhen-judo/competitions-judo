@@ -23,6 +23,11 @@
       showHomeActions: false,
       canManageAdmins: false,
       canManageChildren: false,
+      showClubCompetitionsSection: false,
+      showCompetitionsSection: true,
+      clubCompetitionsList: [],
+      hasClubCompetitions: false,
+      clubCompetitionsEmptyMessage: "",
       activeJudokaSummary: {
         label: "Judoka actif",
         value: "",
@@ -53,6 +58,9 @@
 
       ensureHomeActiveJudokaSelection();
       syncHomeContext();
+      if (state.isCoach || state.isAdmin) {
+        renderClubCompetitions();
+      }
     }
 
     function ensureHomeViewModel() {
@@ -62,6 +70,8 @@
 
       homeViewModel = ui.createMountedViewModel("homeView", defaultHomeViewState, {
         deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
+        deleteClubCompetitionFromList: screens.competition.confirmDeleteClubCompetitionById,
+        openClubCompetition: screens.competition.openClubCompetition,
         openCompetition: screens.competition.openCompetition,
         openHomeJudokaProfile,
         selectFilterJudoka,
@@ -197,6 +207,8 @@
         canManageChildren: state.canManageChildren,
         canCreateCompetition: !state.isCoach,
         canCreateClubCompetition: state.isCoach || state.isAdmin,
+        showClubCompetitionsSection: state.isCoach || state.isAdmin,
+        showCompetitionsSection: !state.isCoach || Boolean(activeJudoka),
         profileButtonText: copy.profileButtonText,
         profileButtonMeta: activeJudoka ? activeJudokaLabel : copy.profileButtonMeta,
         addCompetitionButtonText: "Nouvelle compétition",
@@ -282,6 +294,23 @@
         competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
         emptyActionMeta: ""
       };
+    }
+
+    function renderClubCompetitions() {
+      ensureHomeViewModel();
+      if (!state.clubCompetitions.length) {
+        homeViewModel.clubCompetitionsList = [];
+        homeViewModel.hasClubCompetitions = false;
+        homeViewModel.clubCompetitionsEmptyMessage = "Aucune compétition club créée.";
+        return;
+      }
+      homeViewModel.clubCompetitionsList = state.clubCompetitions.map(cc => ({
+        clubCompetitionId: cc.clubCompetitionId || "",
+        name: cc.name || "Compétition",
+        date: formatDate(cc.competitionDate)
+      }));
+      homeViewModel.hasClubCompetitions = homeViewModel.clubCompetitionsList.length > 0;
+      homeViewModel.clubCompetitionsEmptyMessage = "";
     }
 
     function renderCompetitions() {
@@ -376,6 +405,9 @@
       state.canEditCurrentCompetition = false;
       syncHomeContext();
       renderCompetitions();
+      if (state.isCoach || state.isAdmin) {
+        renderClubCompetitions();
+      }
       showView("homeView");
     }
 
@@ -385,6 +417,7 @@
       getHomeActiveJudoka,
       getHomeActiveJudokaId,
       openHomeJudokaProfile,
+      renderClubCompetitions,
       renderCompetitions,
       selectFilterJudoka,
       showHome,

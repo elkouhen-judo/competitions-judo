@@ -12,6 +12,7 @@
         isParent: false,
         canManageChildren: false,
         competitions: [],
+        clubCompetitions: [],
         currentCompetition: null,
         judokas: [],
         currentCombats: [],
@@ -174,6 +175,7 @@
       state.isParent = Boolean(data.isParent);
       state.canManageChildren = Boolean(data.canManageChildren);
       state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
+      state.clubCompetitions = Array.isArray(data.clubCompetitions) ? data.clubCompetitions : [];
       state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
       const profileTypeLabel = state.isParent ? "PARENT" : "JUDOKA";
       const roleLabel = state.isAdmin
