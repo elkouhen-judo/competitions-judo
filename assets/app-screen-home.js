@@ -286,15 +286,8 @@
 
     function renderCompetitions() {
       ensureHomeViewModel();
-      const activeJudoka = getHomeActiveJudoka();
       const activeJudokaId = getHomeActiveJudokaId();
-
-      if ((state.isAdmin || state.isParent) && !activeJudoka) {
-        homeViewModel.competitions = [];
-        homeViewModel.hasCompetitions = false;
-        homeViewModel.competitionsEmptyMessage = "Sélectionnez un judoka pour afficher son parcours.";
-        return;
-      }
+      const activeJudoka = getHomeActiveJudoka();
 
       let filteredComps = state.competitions;
       if (activeJudokaId) {
@@ -304,7 +297,13 @@
       if (!filteredComps.length) {
         homeViewModel.competitions = [];
         homeViewModel.hasCompetitions = false;
-        homeViewModel.competitionsEmptyMessage = "Aucune compétition enregistrée pour ce judoka.";
+        homeViewModel.competitionsEmptyMessage = activeJudokaId
+          ? "Aucune compétition enregistrée pour ce judoka."
+          : state.isParent
+            ? "Aucune compétition enregistrée pour votre périmètre."
+            : state.isCoach
+              ? "Aucune compétition enregistrée dans le club."
+              : "Aucune compétition enregistrée.";
         return;
       }
 
