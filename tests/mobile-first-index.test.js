@@ -93,6 +93,14 @@ test("child management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="saveChildButton"/);
 });
 
+test("club competition creation keeps only the shared event basics", () => {
+  assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="club_competition_name"/);
+  assert.match(bundle, /id="club_competition_date"/);
+  assert.doesNotMatch(bundle, /id="club_competition_age"/);
+  assert.doesNotMatch(bundle, /id="club_competition_weight"/);
+});
+
 test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="manageAdminsButton"/);
   assert.match(bundle, /id="adminsView" class="panel hidden"/);
