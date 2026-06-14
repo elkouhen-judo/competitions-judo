@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const createCombatsRepository = require("../core/repositories/combats.repository");
 const createCompetitionsRepository = require("../core/repositories/competitions.repository");
+const createClubCompetitionsRepository = require("../core/repositories/club-competitions.repository");
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
 const { toCanonicalCombat } = require("../core/services/domain-adapters");
@@ -93,6 +94,7 @@ test("repositories map domain objects to supabase records", async () => {
     ["insert", "competitions", {
       id_competition: "COMP1",
       id_judoka: "JUDO1",
+      club_competition_id: null,
       nom: "Tournoi",
       date: "2026-06-11",
       categorie_age: "",
@@ -201,6 +203,27 @@ test("combats repository retries legacy result codes when the remote constraint 
       deroule: ""
     }]
   ]);
+});
+
+test("repositories map club competitions and participation links", async () => {
+  const calls = [];
+  const clubRepository = createClubCompetitionsRepository(createRepositoryDeps(calls));
+
+  await clubRepository.insert({
+    clubCompetitionId: "CLUB1",
+    name: "Tournoi Nantes",
+    competitionDate: "2026-06-14",
+    ageCategory: "Minime",
+    weightCategory: "-50kg"
+  });
+
+  assert.deepEqual(calls[0], ["insert", "club_competitions", {
+    id_club_competition: "CLUB1",
+    nom: "Tournoi Nantes",
+    date: "2026-06-14",
+    categorie_age: "Minime",
+    categorie_poids: "-50kg"
+  }]);
 });
 
 test("combat read models normalize legacy result codes", () => {

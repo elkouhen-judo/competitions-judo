@@ -13,22 +13,26 @@ Le schéma initial est dans :
 Il crée les tables :
 
 - `public.judokas`
+- `public.club_competitions`
 - `public.competitions`
 - `public.combats`
 
 Les identifiants existants sont conservés en `text` pour simplifier l'import depuis Google Sheets :
 
 - `id_judoka`
+- `id_club_competition`
 - `id_competition`
 - `id_combat`
 
 ## Relations
 
+- `competitions.club_competition_id` référence optionnellement `club_competitions.id_club_competition`.
 - `competitions.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_competition` référence `competitions.id_competition` avec `on delete cascade`.
 
 La cascade permet de supprimer automatiquement les combats d'une compétition supprimée.
+La suppression ou le détachement d'une compétition club conserve les compétitions individuelles via `club_competition_id = null`.
 
 ## Exécution
 
