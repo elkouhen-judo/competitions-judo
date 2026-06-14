@@ -90,6 +90,7 @@
       victoryType: c.victoryType || "",
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
+      canEdit: Boolean(helpers.canEdit),
       notes: c.notes || "Aucun déroulé renseigné"
     }));
 

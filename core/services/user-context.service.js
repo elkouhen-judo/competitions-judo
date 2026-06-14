@@ -8,6 +8,7 @@ module.exports = function createUserContextService(deps) {
     assertCanAccessJudokaProfile,
     createManagedJudokaScope,
     isAdmin,
+    isCoach,
     isParent
   } = deps;
 
@@ -64,7 +65,7 @@ module.exports = function createUserContextService(deps) {
     let managedJudokaScope = createManagedJudokaScope([]);
     const domainUser = toCanonicalJudoka(user);
 
-    if (isAdmin(domainUser)) {
+    if (isAdmin(domainUser) || isCoach(domainUser)) {
       judokas = await getJudokas();
     } else if (isParent(domainUser)) {
       const children = await getParentManagedJudokas(user.id_judoka);
