@@ -72,7 +72,7 @@
       competitionForm: { ...defaultCompetitionForm }
     };
     const defaultClubCompetitionFormViewState = {
-      clubCompetitionFormTitle: "Créer une compétition club",
+      clubCompetitionFormTitle: "Nouvelle compétition club",
       clubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
       filteredClubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
       clubCompetitionFormParticipantsPage: [] as ClubCompetitionJudokaOption[],
