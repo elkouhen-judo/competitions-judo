@@ -1,3 +1,13 @@
+---
+title: Kiroku Refactoring Backlog
+date_created: 2026-06-12
+last_updated: 2026-06-15
+owner: competitions-judo
+tags:
+  - refactoring
+  - backlog
+---
+
 # TODO - Axes de simplification
 
 Audit realise le 2026-06-12.
@@ -78,7 +88,7 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
     - Critere de fin : les donnees utilisateur ne sont jamais inserees sans helper d'echappement identifiable.
 
 14. Documenter une carte courte de modification
-    - Constat : `SPEC-TECH.md` decrit l'architecture, mais pas le chemin pratique pour modifier un flux.
+    - Constat : `spec-tech.md` decrit l'architecture, mais pas le chemin pratique pour modifier un flux.
     - Simplification : creer `docs/code-map.md` avec "pour modifier competition/combat/enfant/admin/auth, regarder ces fichiers et lancer ces tests".
     - Critere de fin : une demande fonctionnelle peut etre reliee rapidement aux fichiers et tests utiles.
 
@@ -122,5 +132,5 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 - Faire un axe a la fois, avec test cible avant la suite complete.
 - Eviter de modifier simultanement comportement metier et structure.
-- Mettre a jour `SPEC.md` seulement si une regle ou un flux change.
-- Mettre a jour `SPEC-TECH.md` seulement si contrat, architecture, securite, donnees ou deploiement changent.
+- Mettre a jour `spec.md` seulement si une regle ou un flux change.
+- Mettre a jour `spec-tech.md` seulement si contrat, architecture, securite, donnees ou deploiement changent.

@@ -4,13 +4,23 @@
 
 Tu es un développeur senior assisté par IA. Livre des changements simples, testés et cohérents avec l'existant.
 
+## Documentation
+
+Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'index complet :
+
+- `docs/spec.md` : règles fonctionnelles.
+- `docs/spec-tech.md` : architecture, données, auth, sécurité, déploiement.
+- `docs/produit.md` : vision produit.
+- `docs/supabase-schema.md` : schéma Supabase.
+- `docs/todo.md` : backlog de refactoring.
+
 ## Budget de contexte
 
 - Ne relis pas tout le dépôt ni toutes les specs par défaut.
 - Utilise `rg` pour trouver les règles, fonctions et tests concernés.
 - Lis seulement les fichiers utiles à la demande.
-- Lis `spec.md` pour les règles fonctionnelles.
-- Lis `spec-tech.md` seulement pour architecture, données, auth, sécurité ou déploiement.
+- Lis `docs/spec.md` pour les règles fonctionnelles.
+- Lis `docs/spec-tech.md` seulement pour architecture, données, auth, sécurité ou déploiement.
 - Évite de recopier de longs extraits de code ou de spec dans les réponses.
 - Pour un changement simple, donne une réponse courte et actionnable.
 - Si un échec de test est préexistant, signale-le sans le résoudre hors périmètre.
@@ -19,8 +29,8 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 
 Avant de modifier :
 
-- identifier la règle métier ou l'écran concerné dans `spec.md` ;
-- identifier la contrainte technique concernée dans `spec-tech.md` si nécessaire ;
+- identifier la règle métier ou l'écran concerné dans `docs/spec.md` ;
+- identifier la contrainte technique concernée dans `docs/spec-tech.md` si nécessaire ;
 - vérifier s'il existe déjà une fonction, un composant ou un test équivalent ;
 - limiter le périmètre aux fichiers nécessaires.
 
@@ -36,8 +46,8 @@ Après la modification :
 
 - lancer le test ciblé en premier ;
 - lancer la suite complète si le changement touche un comportement partagé ;
-- mettre à jour `spec.md` quand une règle, un écran ou un flux utilisateur change ;
-- mettre à jour `spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent ;
+- mettre à jour `docs/spec.md` quand une règle, un écran ou un flux utilisateur change ;
+- mettre à jour `docs/spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent ;
 - vérifier `git status`.
 
 ## Cadrage Avec LLM
@@ -63,8 +73,8 @@ Périmètre:
 - Ne pas toucher à [ce qui est hors scope].
 
 Références:
-- Fonctionnel: `spec.md`
-- Technique: `spec-tech.md` si nécessaire
+- Fonctionnel: `docs/spec.md`
+- Technique: `docs/spec-tech.md` si nécessaire
 - Comportement existant à préserver: [points clés]
 
 Contraintes:
@@ -110,18 +120,18 @@ Le noyau recommandé pour ce projet est `vue`, `frontend-design`, `domain-driven
 - `.github/copilot-instructions.md` sert d'entrée Copilot repository-wide et doit rester un résumé court qui renvoie vers `AGENTS.md`.
 - Les skills repo sont dans `.agents/skills/*/SKILL.md`; ne pas dupliquer leur contenu complet dans les instructions globales.
 - Quand un outil ne sait pas activer un skill automatiquement, appliquer le résumé de `AGENTS.md` et lire le `SKILL.md` concerné seulement si la tâche le justifie.
-- Garder les noms de fichiers réels en minuscules: `spec.md` et `spec-tech.md`.
+- Garder les noms de fichiers réels en minuscules: `docs/spec.md` et `docs/spec-tech.md`.
 
 ## Spécifications
 
-`spec.md` contient le fonctionnel :
+`docs/spec.md` contient le fonctionnel :
 
 - un besoin utilisateur court ;
 - les règles métier au format `DOMAINE-ACTION-N` ;
 - les cas limites ;
 - les critères d'acceptation utiles.
 
-`spec-tech.md` contient le technique :
+`docs/spec-tech.md` contient le technique :
 
 - surfaces applicatives ;
 - données ;

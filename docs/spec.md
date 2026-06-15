@@ -217,4 +217,4 @@ This specification does not define:
 
 ## 6. Related Specifications / Further Reading
 
-- `SPEC-TECH.md` - technical constraints, architecture, interfaces, and validation rules
+- `docs/spec-tech.md` - technical constraints, architecture, interfaces, and validation rules
