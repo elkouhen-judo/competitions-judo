@@ -1,3 +1,13 @@
+---
+title: Kiroku Product Vision
+date_created: 2026-06-13
+last_updated: 2026-06-14
+owner: competitions-judo
+tags:
+  - product
+  - vision
+---
+
 # Produit - Kiroku
 
 ## Vision
