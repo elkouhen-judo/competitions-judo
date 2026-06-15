@@ -1,5 +1,28 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type Judoka = import("../core/types").Judoka;
+
+  interface HomeFilterOption {
+    judokaId: string;
+    name: string;
+    meta: string;
+    searchText: string;
+  }
+
+  interface HomeClubCompetitionCard {
+    clubCompetitionId: string;
+    name: string;
+    date: string;
+  }
+
+  interface HomeCompetitionCard {
+    competitionId: string;
+    name: string;
+    date: string;
+    judokaName: string;
+    showJudoka: boolean;
+    canDelete: boolean;
+  }
 
   function createKirokuHomeScreen(app: KirokuApp) {
     const { defaultListPageSize, state, screens, ui, notifications } = app;
@@ -11,7 +34,7 @@
       filterPlaceholder: "Tous les judokas...",
       filterJudokaText: "",
       filterJudokaId: "",
-      filterOptions: [],
+      filterOptions: [] as HomeFilterOption[],
       showFilterOptions: false,
       canFilterByJudoka: false,
       canCreateCompetition: true,
@@ -21,7 +44,7 @@
       canManageChildren: false,
       showClubCompetitionsSection: false,
       showCompetitionsSection: true,
-      clubCompetitionsList: [],
+      clubCompetitionsList: [] as HomeClubCompetitionCard[],
       hasClubCompetitions: false,
       clubCompetitionsEmptyMessage: "",
       clubCompetitionsTotalPages: 1,
@@ -41,7 +64,7 @@
       profileButtonMeta: "",
       competitionsTitle: "Mes compétitions",
       competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
-      competitions: [],
+      competitions: [] as HomeCompetitionCard[],
       competitionsEmptyMessage: "",
       hasCompetitions: false,
       competitionsTotalPages: 1,
@@ -50,17 +73,25 @@
       competitionsCanShowPreviousPage: false,
       competitionsCanShowNextPage: false
     };
-    let homeViewModel: (typeof defaultHomeViewState) | null = null;
+    let homeViewModelRef: (typeof defaultHomeViewState) | null = null;
     let hideFilterOptionsTimer: number | null = null;
 
-    function applyInitialData() {
+    function getHomeViewModel() {
       ensureHomeViewModel();
+      if (!homeViewModelRef) {
+        throw new Error("Vue model de l'accueil non initialisé.");
+      }
+      return homeViewModelRef;
+    }
+
+    function applyInitialData() {
+      const viewModel = getHomeViewModel();
       const canFilterByJudoka =
         (state.isAdmin || state.isCoach || state.isParent) && state.judokas.length > 0;
-      homeViewModel.canFilterByJudoka = canFilterByJudoka;
+      viewModel.canFilterByJudoka = canFilterByJudoka;
       if (!canFilterByJudoka) {
-        homeViewModel.filterJudokaText = "";
-        homeViewModel.filterJudokaId = "";
+        viewModel.filterJudokaText = "";
+        viewModel.filterJudokaId = "";
       }
 
       ensureHomeActiveJudokaSelection();
@@ -71,11 +102,11 @@
     }
 
     function ensureHomeViewModel() {
-      if (!window.Vue || homeViewModel) {
+      if (!window.Vue || homeViewModelRef) {
         return;
       }
 
-      homeViewModel = ui.createMountedViewModel("homeView", defaultHomeViewState, {
+      homeViewModelRef = ui.createMountedViewModel("homeView", defaultHomeViewState, {
         deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
         deleteClubCompetitionFromList: screens.competition.confirmDeleteClubCompetitionById,
         openClubCompetition: screens.competition.openClubCompetition,
@@ -112,12 +143,13 @@
     }
 
     function ensureHomeActiveJudokaSelection() {
+      const viewModel = getHomeViewModel();
       const accessibleJudokas = getAccessibleHomeJudokas();
-      const currentValue = homeViewModel.filterJudokaId;
+      const currentValue = viewModel.filterJudokaId;
 
       if (!(state.isAdmin || state.isCoach || state.isParent)) {
-        homeViewModel.filterJudokaText = "";
-        homeViewModel.filterJudokaId = "";
+        viewModel.filterJudokaText = "";
+        viewModel.filterJudokaId = "";
         return;
       }
 
@@ -130,8 +162,8 @@
 
       const defaultId = getDefaultHomeJudokaId();
       const defaultJudoka = accessibleJudokas.find((j) => String(j.judokaId) === String(defaultId));
-      homeViewModel.filterJudokaText = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
-      homeViewModel.filterJudokaId = defaultJudoka ? String(defaultJudoka.judokaId) : "";
+      viewModel.filterJudokaText = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
+      viewModel.filterJudokaId = defaultJudoka ? String(defaultJudoka.judokaId) : "";
     }
 
     function getHomeActiveJudokaId() {
@@ -139,7 +171,7 @@
         return "";
       }
       if (state.isAdmin || state.isCoach || state.isParent) {
-        return homeViewModel ? homeViewModel.filterJudokaId || "" : "";
+        return homeViewModelRef ? homeViewModelRef.filterJudokaId || "" : "";
       }
       return String(state.currentUser.judokaId || "");
     }
@@ -151,7 +183,7 @@
       );
     }
 
-    function getHomeFilterOption(judoka) {
+    function getHomeFilterOption(judoka: Judoka): HomeFilterOption {
       return {
         judokaId: String(judoka.judokaId || ""),
         name: getJudokaDisplayName(judoka) || "Judoka",
@@ -163,12 +195,13 @@
       };
     }
 
-    function refreshHomeFilterOptions(queryOverride?) {
+    function refreshHomeFilterOptions(queryOverride?: string) {
+      const viewModel = getHomeViewModel();
       const query =
         queryOverride !== undefined
           ? cleanText(queryOverride).toLowerCase()
-          : cleanText(homeViewModel.filterJudokaText).toLowerCase();
-      homeViewModel.filterOptions = getAccessibleHomeJudokas()
+          : cleanText(viewModel.filterJudokaText).toLowerCase();
+      viewModel.filterOptions = getAccessibleHomeJudokas()
         .map(getHomeFilterOption)
         .filter((option) => !query || option.searchText.includes(query));
     }
@@ -179,7 +212,7 @@
         hideFilterOptionsTimer = null;
       }
       refreshHomeFilterOptions("");
-      homeViewModel.showFilterOptions = true;
+      getHomeViewModel().showFilterOptions = true;
     }
 
     function hideHomeFilterOptions() {
@@ -187,42 +220,45 @@
         window.clearTimeout(hideFilterOptionsTimer);
       }
       hideFilterOptionsTimer = window.setTimeout(() => {
+        const homeViewModel = getHomeViewModel();
         homeViewModel.showFilterOptions = false;
         hideFilterOptionsTimer = null;
       }, 120);
     }
 
     function updateFilterJudokaText() {
-      homeViewModel.filterJudokaId = "";
+      const viewModel = getHomeViewModel();
+      viewModel.filterJudokaId = "";
       refreshHomeFilterOptions();
-      homeViewModel.showFilterOptions = true;
+      viewModel.showFilterOptions = true;
       state.competitionsCurrentPage = 1;
       syncHomeContext();
       renderCompetitions();
     }
 
-    function selectFilterJudoka(option) {
+    function selectFilterJudoka(option: HomeFilterOption | null) {
       if (hideFilterOptionsTimer) {
         window.clearTimeout(hideFilterOptionsTimer);
         hideFilterOptionsTimer = null;
       }
-      homeViewModel.filterJudokaId = option ? option.judokaId : "";
-      homeViewModel.filterJudokaText = option ? option.name : "";
-      homeViewModel.showFilterOptions = false;
+      const viewModel = getHomeViewModel();
+      viewModel.filterJudokaId = option ? option.judokaId : "";
+      viewModel.filterJudokaText = option ? option.name : "";
+      viewModel.showFilterOptions = false;
       state.competitionsCurrentPage = 1;
       syncHomeContext();
       renderCompetitions();
     }
 
     function syncHomeContext() {
-      ensureHomeViewModel();
+      const viewModel = getHomeViewModel();
       const activeJudoka = getHomeActiveJudoka();
       const copy = getHomeContextCopy(activeJudoka);
       const activeJudokaLabel = activeJudoka
         ? getCompactJudokaLabel(activeJudoka)
         : copy.emptyActionMeta;
 
-      Object.assign(homeViewModel, {
+      Object.assign(viewModel, {
         homeTitle: copy.homeTitle,
         homeSubtitle: copy.homeSubtitle,
         filterPlaceholder: copy.filterPlaceholder,
@@ -242,7 +278,7 @@
       });
 
       if (!activeJudoka) {
-        homeViewModel.activeJudokaSummary = {
+        viewModel.activeJudokaSummary = {
           label: "Judoka actif",
           value: "Aucun judoka sélectionné",
           meta: "Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions."
@@ -254,7 +290,7 @@
             : state.isParent
               ? "Toutes les actions d'accueil concernent ce profil."
               : "Toutes vos actions principales sont regroupées ici.";
-        homeViewModel.activeJudokaSummary = {
+        viewModel.activeJudokaSummary = {
           label: "Judoka actif",
           value: getJudokaDisplayName(activeJudoka) || "Judoka",
           meta: summaryMeta
@@ -264,10 +300,11 @@
       const actionDisabled = Boolean(
         (state.isAdmin || state.isCoach || state.isParent) && !activeJudoka
       );
+      const homeViewModel = getHomeViewModel();
       homeViewModel.actionDisabled = actionDisabled;
     }
 
-    function getHomeContextCopy(activeJudoka) {
+    function getHomeContextCopy(activeJudoka: Judoka | null) {
       if (state.isAdmin || state.isCoach) {
         return {
           homeTitle: state.isCoach ? "Vue coach" : "Suivi des judokas",
@@ -326,16 +363,16 @@
     }
 
     function renderClubCompetitions() {
-      ensureHomeViewModel();
+      const viewModel = getHomeViewModel();
       if (!state.clubCompetitions.length) {
-        homeViewModel.clubCompetitionsList = [];
-        homeViewModel.hasClubCompetitions = false;
-        homeViewModel.clubCompetitionsEmptyMessage = "Aucune compétition club créée.";
-        homeViewModel.clubCompetitionsTotalPages = 1;
-        homeViewModel.clubCompetitionsCurrentPage = 1;
-        homeViewModel.clubCompetitionsTotalCount = 0;
-        homeViewModel.clubCompetitionsCanShowPreviousPage = false;
-        homeViewModel.clubCompetitionsCanShowNextPage = false;
+        viewModel.clubCompetitionsList = [];
+        viewModel.hasClubCompetitions = false;
+        viewModel.clubCompetitionsEmptyMessage = "Aucune compétition club créée.";
+        viewModel.clubCompetitionsTotalPages = 1;
+        viewModel.clubCompetitionsCurrentPage = 1;
+        viewModel.clubCompetitionsTotalCount = 0;
+        viewModel.clubCompetitionsCanShowPreviousPage = false;
+        viewModel.clubCompetitionsCanShowNextPage = false;
         return;
       }
       const allClubCompetitions = state.clubCompetitions.map((cc) => ({
@@ -348,14 +385,14 @@
         state.clubCompetitionsCurrentPage,
         defaultListPageSize
       );
-      homeViewModel.clubCompetitionsList = pagination.pageItems;
-      homeViewModel.hasClubCompetitions = allClubCompetitions.length > 0;
-      homeViewModel.clubCompetitionsEmptyMessage = "";
-      homeViewModel.clubCompetitionsTotalPages = pagination.totalPages;
-      homeViewModel.clubCompetitionsCurrentPage = pagination.currentPage;
-      homeViewModel.clubCompetitionsTotalCount = pagination.totalItems;
-      homeViewModel.clubCompetitionsCanShowPreviousPage = pagination.canShowPreviousPage;
-      homeViewModel.clubCompetitionsCanShowNextPage = pagination.canShowNextPage;
+      viewModel.clubCompetitionsList = pagination.pageItems;
+      viewModel.hasClubCompetitions = allClubCompetitions.length > 0;
+      viewModel.clubCompetitionsEmptyMessage = "";
+      viewModel.clubCompetitionsTotalPages = pagination.totalPages;
+      viewModel.clubCompetitionsCurrentPage = pagination.currentPage;
+      viewModel.clubCompetitionsTotalCount = pagination.totalItems;
+      viewModel.clubCompetitionsCanShowPreviousPage = pagination.canShowPreviousPage;
+      viewModel.clubCompetitionsCanShowNextPage = pagination.canShowNextPage;
       state.clubCompetitionsCurrentPage = pagination.currentPage;
     }
 
@@ -370,7 +407,7 @@
     }
 
     function renderCompetitions() {
-      ensureHomeViewModel();
+      const viewModel = getHomeViewModel();
       const activeJudokaId = getHomeActiveJudokaId();
 
       let filteredComps = state.competitions;
@@ -381,20 +418,20 @@
       }
 
       if (!filteredComps.length) {
-        homeViewModel.competitions = [];
-        homeViewModel.hasCompetitions = false;
-        homeViewModel.competitionsEmptyMessage = activeJudokaId
+        viewModel.competitions = [];
+        viewModel.hasCompetitions = false;
+        viewModel.competitionsEmptyMessage = activeJudokaId
           ? "Aucune compétition enregistrée pour ce judoka."
           : state.isParent
             ? "Aucune compétition enregistrée pour votre périmètre."
             : state.isCoach
               ? "Aucune compétition enregistrée dans le club."
               : "Aucune compétition enregistrée.";
-        homeViewModel.competitionsTotalPages = 1;
-        homeViewModel.competitionsCurrentPage = 1;
-        homeViewModel.competitionsTotalCount = 0;
-        homeViewModel.competitionsCanShowPreviousPage = false;
-        homeViewModel.competitionsCanShowNextPage = false;
+        viewModel.competitionsTotalPages = 1;
+        viewModel.competitionsCurrentPage = 1;
+        viewModel.competitionsTotalCount = 0;
+        viewModel.competitionsCanShowPreviousPage = false;
+        viewModel.competitionsCanShowNextPage = false;
         return;
       }
 
@@ -416,14 +453,14 @@
         state.competitionsCurrentPage,
         defaultListPageSize
       );
-      homeViewModel.competitions = pagination.pageItems;
-      homeViewModel.hasCompetitions = allCompetitions.length > 0;
-      homeViewModel.competitionsEmptyMessage = "";
-      homeViewModel.competitionsTotalPages = pagination.totalPages;
-      homeViewModel.competitionsCurrentPage = pagination.currentPage;
-      homeViewModel.competitionsTotalCount = pagination.totalItems;
-      homeViewModel.competitionsCanShowPreviousPage = pagination.canShowPreviousPage;
-      homeViewModel.competitionsCanShowNextPage = pagination.canShowNextPage;
+      viewModel.competitions = pagination.pageItems;
+      viewModel.hasCompetitions = allCompetitions.length > 0;
+      viewModel.competitionsEmptyMessage = "";
+      viewModel.competitionsTotalPages = pagination.totalPages;
+      viewModel.competitionsCurrentPage = pagination.currentPage;
+      viewModel.competitionsTotalCount = pagination.totalItems;
+      viewModel.competitionsCanShowPreviousPage = pagination.canShowPreviousPage;
+      viewModel.competitionsCanShowNextPage = pagination.canShowNextPage;
       state.competitionsCurrentPage = pagination.currentPage;
     }
 

@@ -10,7 +10,8 @@ import type {
   RpcClientMethod,
   RpcClientResult,
   RunServerOptions,
-  RuntimeConfig
+  RuntimeConfig,
+  ViewId
 } from "./types";
 
 (() => {
@@ -57,6 +58,14 @@ import type {
     const { clearMessage, showError, showSuccess } = notifications;
 
     let loginScreen: AppScreens["login"] | undefined;
+
+    function getLoginScreen(): AppScreens["login"] {
+      if (!loginScreen) {
+        throw new Error("Écran de connexion non initialisé.");
+      }
+      return loginScreen;
+    }
+
     const headerViewModel = window.Vue.reactive({
       showHeader: false,
       userName: "",
@@ -150,7 +159,7 @@ import type {
         try {
           const session = await getValidVercelSession();
           if (!session) {
-            loginScreen.showVercelLogin();
+            getLoginScreen().showVercelLogin();
             return;
           }
 
@@ -170,7 +179,7 @@ import type {
             throw new Error("Réponse vide ou invalide reçue depuis /api/rpc.");
           }
 
-          if (!response.ok || payload.error) {
+          if (!response.ok || payload.error || payload.result === undefined) {
             throw new Error(payload.error || "Erreur serveur.");
           }
 
@@ -192,16 +201,16 @@ import type {
 
           if (isSessionAuthError(errorMessage)) {
             clearVercelSession();
-            loginScreen.showVercelLogin();
+            getLoginScreen().showVercelLogin();
           } else if (method === "getInitialData" && errorMessage.includes("Invitation trouvée")) {
-            loginScreen.showProfileRegistration();
+            getLoginScreen().showProfileRegistration();
             return;
           } else if (
             method === "getInitialData" &&
             errorMessage.includes("invitation est requise")
           ) {
             clearVercelSession();
-            loginScreen.showInvitationRequired();
+            getLoginScreen().showInvitationRequired();
             return;
           }
           failure ? failure(error) : showError(error);
@@ -210,7 +219,7 @@ import type {
       }
     }
 
-    function isSessionAuthError(message) {
+    function isSessionAuthError(message: string) {
       return (
         message.includes("Session Supabase invalide") ||
         message.includes("Utilisateur non identifié")
@@ -229,7 +238,7 @@ import type {
       clearMessage();
       await logoutSupabaseSession();
       resetApplicationState();
-      loginScreen.showVercelLogin();
+      getLoginScreen().showVercelLogin();
       showSuccess("Vous êtes déconnecté.");
     }
 
@@ -256,34 +265,29 @@ import type {
       screens.home.applyInitialData();
     }
 
-    function setHeaderVisible(visible) {
+    function setHeaderVisible(visible: boolean) {
       headerViewModel.showHeader = Boolean(visible);
     }
 
-    function confirmAndRun({
+    function confirmAndRun<M extends RpcClientMethod>({
       message,
       method,
       args,
       onSuccess
     }: {
       message: string;
-      method: RpcClientMethod;
-      args: unknown[];
-      onSuccess?: (response: OperationResult) => void;
+      method: M;
+      args: RpcClientArgs<M>;
+      onSuccess?: (response: RpcClientResult<M>) => void;
     }) {
       if (!window.confirm(message)) {
         return;
       }
 
-      runServer(
-        method as RpcClientMethod,
-        args as never,
-        onSuccess as ((result: never) => void) | undefined,
-        showError
-      );
+      runServer(method, args, onSuccess, showError);
     }
 
-    function reloadInitialData(openCompetitionId) {
+    function reloadInitialData(openCompetitionId?: string) {
       reloadInitialDataThen(() => {
         if (openCompetitionId) {
           screens.competition.openCompetition(openCompetitionId, true);
@@ -293,7 +297,7 @@ import type {
       });
     }
 
-    function reloadInitialDataThen(afterReload) {
+    function reloadInitialDataThen(afterReload: () => void) {
       runServer(
         "getInitialData",
         [],
@@ -317,7 +321,7 @@ import type {
       screens.home.showHome();
     }
 
-    function showView(id) {
+    function showView(id: ViewId) {
       viewIds.forEach((viewId) => {
         $(viewId).classList.add("hidden");
       });

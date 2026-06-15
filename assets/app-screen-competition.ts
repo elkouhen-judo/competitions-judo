@@ -1,5 +1,31 @@
 (() => {
-  function createKirokuCompetitionScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+  type Judoka = import("../core/types").Judoka;
+  type Competition = import("../core/types").Competition;
+  type CompetitionDetail = import("../core/types").CompetitionDetail;
+  type ClubCompetitionDetail = import("../core/types").ClubCompetitionDetail;
+  type CompetitionCombatCard = import("./types").CompetitionCombatCard;
+
+  interface CompetitionOwnerOption {
+    judokaId: string;
+    name: string;
+    meta: string;
+    searchText: string;
+  }
+
+  interface ClubCompetitionJudokaOption {
+    judokaId: string;
+    name: string;
+  }
+
+  interface ClubCompetitionParticipantCard {
+    competitionId: string;
+    judokaName: string;
+    result: string;
+    resultClass: string;
+  }
+
+  function createKirokuCompetitionScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
     const {
       $,
@@ -22,7 +48,7 @@
       competitionResult: "",
       canEditCompetition: false,
       canFinalizeCompetition: false,
-      combats: [],
+      combats: [] as CompetitionCombatCard[],
       combatsEmptyMessage: "",
       hasCombats: false,
       isLoadingCombats: false
@@ -41,15 +67,15 @@
       showCompetitionOwnerBlock: false,
       ownerJudokaText: "",
       ownerJudokaId: "",
-      ownerOptions: [],
+      ownerOptions: [] as CompetitionOwnerOption[],
       showOwnerOptions: false,
       competitionForm: { ...defaultCompetitionForm }
     };
     const defaultClubCompetitionFormViewState = {
       clubCompetitionFormTitle: "Créer une compétition club",
-      clubCompetitionParticipants: [],
-      filteredClubCompetitionParticipants: [],
-      clubCompetitionFormParticipantsPage: [],
+      clubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
+      filteredClubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
+      clubCompetitionFormParticipantsPage: [] as ClubCompetitionJudokaOption[],
       clubCompetitionFormParticipantsTotalPages: 1,
       clubCompetitionFormParticipantsCurrentPage: 1,
       clubCompetitionFormParticipantsTotalCount: 0,
@@ -60,7 +86,7 @@
         clubCompetitionId: "",
         name: "",
         competitionDate: "",
-        participantJudokaIds: []
+        participantJudokaIds: [] as string[]
       }
     };
     const defaultClubCompetitionDetailViewState = {
@@ -72,23 +98,23 @@
         ageCategory: "",
         weightCategory: ""
       },
-      clubCompetitionCurrentParticipants: [],
-      clubCompetitionParticipantsPage: [],
+      clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
+      clubCompetitionParticipantsPage: [] as ClubCompetitionParticipantCard[],
       clubCompetitionParticipantsTotalPages: 1,
       clubCompetitionParticipantsCurrentPage: 1,
       clubCompetitionParticipantsTotalCount: 0,
       clubCompetitionParticipantsCanShowPreviousPage: false,
       clubCompetitionParticipantsCanShowNextPage: false,
-      clubCompetitionAvailableJudokas: [],
-      filteredClubCompetitionAvailableJudokas: [],
-      clubCompetitionAvailableJudokasPage: [],
+      clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
+      filteredClubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
+      clubCompetitionAvailableJudokasPage: [] as ClubCompetitionJudokaOption[],
       clubCompetitionAvailableJudokasTotalPages: 1,
       clubCompetitionAvailableJudokasCurrentPage: 1,
       clubCompetitionAvailableJudokasTotalCount: 0,
       clubCompetitionAvailableJudokasCanShowPreviousPage: false,
       clubCompetitionAvailableJudokasCanShowNextPage: false,
       judokaAvailableSearchText: "",
-      clubCompetitionNewJudokaIds: []
+      clubCompetitionNewJudokaIds: [] as string[]
     };
     const defaultCompetitionFinalizationViewState = {
       finalizationSubtitle: "",
@@ -109,20 +135,20 @@
       combatFormSubtitle: "Combat de la compétition en cours",
       saveCombatButtonText: "Ajouter le combat",
       showCombatDecisionBlock: false,
-      combatDecisionOptions: [],
+      combatDecisionOptions: [] as string[],
       combatForm: { ...defaultCombatForm }
     };
-    let competitionDetailViewModel = null;
-    let competitionFormViewModel = null;
-    let clubCompetitionFormViewModel = null;
-    let clubCompetitionDetailViewModel = null;
-    let competitionFinalizationViewModel = null;
-    let combatFormViewModel = null;
-    let hideOwnerOptionsTimer = null;
-    let currentCompetitionReturnView = "homeView";
+    let competitionDetailViewModel = defaultCompetitionDetailViewState;
+    let competitionFormViewModel = defaultCompetitionFormViewState;
+    let clubCompetitionFormViewModel = defaultClubCompetitionFormViewState;
+    let clubCompetitionDetailViewModel = defaultClubCompetitionDetailViewState;
+    let competitionFinalizationViewModel = defaultCompetitionFinalizationViewState;
+    let combatFormViewModel = defaultCombatFormViewState;
+    let hideOwnerOptionsTimer: number | null = null;
+    let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" = "homeView";
 
     function ensureCompetitionDetailViewModel() {
-      if (!window.Vue || competitionDetailViewModel) {
+      if (!window.Vue || competitionDetailViewModel !== defaultCompetitionDetailViewState) {
         return;
       }
 
@@ -141,7 +167,7 @@
     }
 
     function ensureCompetitionFormViewModel() {
-      if (!window.Vue || competitionFormViewModel) {
+      if (!window.Vue || competitionFormViewModel !== defaultCompetitionFormViewState) {
         return;
       }
 
@@ -159,7 +185,7 @@
     }
 
     function ensureClubCompetitionFormViewModel() {
-      if (!window.Vue || clubCompetitionFormViewModel) {
+      if (!window.Vue || clubCompetitionFormViewModel !== defaultClubCompetitionFormViewState) {
         return;
       }
 
@@ -177,7 +203,7 @@
     }
 
     function ensureClubCompetitionDetailViewModel() {
-      if (!window.Vue || clubCompetitionDetailViewModel) {
+      if (!window.Vue || clubCompetitionDetailViewModel !== defaultClubCompetitionDetailViewState) {
         return;
       }
 
@@ -200,7 +226,7 @@
     }
 
     function ensureCompetitionFinalizationViewModel() {
-      if (!window.Vue || competitionFinalizationViewModel) {
+      if (!window.Vue || competitionFinalizationViewModel !== defaultCompetitionFinalizationViewState) {
         return;
       }
 
@@ -215,7 +241,7 @@
     }
 
     function ensureCombatFormViewModel() {
-      if (!window.Vue || combatFormViewModel) {
+      if (!window.Vue || combatFormViewModel !== defaultCombatFormViewState) {
         return;
       }
 
@@ -234,16 +260,23 @@
       if (currentCompetitionReturnView === "clubCompetitionDetailView") {
         showView("clubCompetitionDetailView");
       } else {
-        app.showHome();
+        app.showHome && app.showHome();
       }
     }
 
-    function openCompetitionFromClubDetail(competitionId) {
+    function getCurrentCompetition(): Competition {
+      if (!state.currentCompetition) {
+        throw new Error("Compétition introuvable.");
+      }
+      return state.currentCompetition;
+    }
+
+    function openCompetitionFromClubDetail(competitionId: string) {
       openCompetition(competitionId);
       currentCompetitionReturnView = "clubCompetitionDetailView";
     }
 
-    function openCompetition(id, keepMessage = false) {
+    function openCompetition(id: string, keepMessage = false) {
       if (!keepMessage) {
         clearMessage();
         currentCompetitionReturnView = "homeView";
@@ -267,7 +300,7 @@
       app.runServer(
         "getCompetitionDetail",
         [id],
-        (data) => {
+        (data: CompetitionDetail) => {
           state.currentCompetition = data.competition;
           state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
           state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
@@ -282,6 +315,9 @@
 
     function renderCompetitionDetail() {
       ensureCompetitionDetailViewModel();
+      if (!state.currentCompetition) {
+        return;
+      }
       Object.assign(
         competitionDetailViewModel,
         window.KirokuScreenProjections.projectCompetitionDetail(
@@ -316,13 +352,13 @@
       );
     }
 
-    function showCompetitionForm(id) {
+    function showCompetitionForm(id?: string) {
       clearMessage();
       ensureCompetitionFormViewModel();
       state.previousView = state.currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
-        const c =
+        const c: Competition | null =
           state.competitions.find((x) => String(x.competitionId) === String(id)) ||
           state.currentCompetition;
 
@@ -526,7 +562,7 @@
       );
     }
 
-    function openClubCompetition(id) {
+    function openClubCompetition(id: string) {
       clearMessage();
       ensureClubCompetitionDetailViewModel();
       clubCompetitionDetailViewModel.clubCompetitionDetailTitle = "Chargement...";
@@ -538,7 +574,7 @@
       app.runServer(
         "getClubCompetitionDetail",
         [id],
-        (data) => {
+        (data: ClubCompetitionDetail) => {
           const cc = data.clubCompetition;
           const judokasById = new Map(data.judokas.map((j) => [String(j.judokaId), j]));
           const participantJudokaIds = new Set(
@@ -605,7 +641,11 @@
       );
     }
 
-    function confirmDetachClubParticipant(clubCompetitionId, competitionId, judokaName) {
+    function confirmDetachClubParticipant(
+      clubCompetitionId: string,
+      competitionId: string,
+      judokaName: string
+    ) {
       app.confirmAndRun({
         message: `Retirer ${judokaName} de cette compétition club ? Ses résultats individuels seront conservés.`,
         method: "detachClubCompetitionParticipant",
@@ -629,7 +669,7 @@
       confirmDeleteClubCompetitionById(clubCompetitionId, name);
     }
 
-    function confirmDeleteClubCompetitionById(clubCompetitionId, name) {
+    function confirmDeleteClubCompetitionById(clubCompetitionId: string, name?: string) {
       app.confirmAndRun({
         message: `Supprimer la compétition club "${name}" ? Les compétitions et combats individuels des judokas associés seront aussi supprimés.`,
         method: "deleteClubCompetition",
@@ -641,7 +681,7 @@
       });
     }
 
-    function detachClubCompetitionParticipant(idClubCompetition, idCompetition) {
+    function detachClubCompetitionParticipant(idClubCompetition: string, idCompetition: string) {
       app.confirmAndRun({
         message: "Retirer ce judoka de la compétition club sans supprimer ses résultats ?",
         method: "detachClubCompetitionParticipant",
@@ -726,11 +766,12 @@
       );
     }
 
-    function showCombatForm(id) {
+    function showCombatForm(id?: string | Event) {
       clearMessage();
       ensureCombatFormViewModel();
       resetCombatForm();
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
+      const competitionName = getCurrentCompetition().name;
 
       if (combatId) {
         const combat = state.currentCombats.find((c) => String(c.combatId) === String(combatId));
@@ -742,7 +783,7 @@
 
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Modifier le combat",
-          combatFormSubtitle: state.currentCompetition.name || "",
+          combatFormSubtitle: competitionName || "",
           saveCombatButtonText: "Enregistrer le combat"
         });
         Object.assign(combatFormViewModel.combatForm, {
@@ -756,7 +797,7 @@
       } else {
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Ajouter un combat",
-          combatFormSubtitle: state.currentCompetition.name || ""
+          combatFormSubtitle: competitionName || ""
         });
         syncCombatDecisionVisibility(true);
       }
@@ -787,6 +828,7 @@
         return;
       }
 
+      const competitionId = state.currentCompetition.competitionId;
       const combat = getCombatFormValue();
 
       app.runServer(
@@ -795,13 +837,14 @@
         (response) => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(state.currentCompetition.competitionId, true);
+          openCompetition(competitionId, true);
         },
         showError
       );
     }
 
-    function updateCombat(idCombat) {
+    function updateCombat(idCombat: string) {
+      const competitionId = getCurrentCompetition().competitionId;
       const combat = getCombatFormValue();
       combat.combatId = idCombat;
 
@@ -811,7 +854,7 @@
         (response) => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(state.currentCompetition.competitionId, true);
+          openCompetition(competitionId, true);
         },
         showError
       );
@@ -819,10 +862,11 @@
 
     function getCombatFormValue() {
       ensureCombatFormViewModel();
+      const competition = getCurrentCompetition();
       const result = combatFormViewModel.combatForm.result;
       return {
-        competitionId: state.currentCompetition.competitionId,
-        judokaId: state.currentCompetition.ownerJudokaId,
+        competitionId: competition.competitionId,
+        judokaId: competition.ownerJudokaId,
         opponent: combatFormViewModel.combatForm.opponent,
         result,
         victoryType:
@@ -835,11 +879,12 @@
     function deleteCurrentCompetition() {
       if (!state.currentCompetition) return;
 
+      const competitionId = state.currentCompetition.competitionId;
       const label = state.currentCompetition.name ? ` "${state.currentCompetition.name}"` : "";
       app.confirmAndRun({
         message: `Supprimer la compétition${label} et tous ses combats ?`,
         method: "deleteCompetition",
-        args: [state.currentCompetition.competitionId],
+        args: [competitionId],
         onSuccess: (response) => {
           showSuccess(response.message);
           state.currentCompetition = null;
@@ -848,7 +893,7 @@
       });
     }
 
-    function deleteCompetitionFromList(id, name) {
+    function deleteCompetitionFromList(id: string, name?: string) {
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
         message: `Supprimer la compétition${label} et tous ses combats ?`,
@@ -861,19 +906,20 @@
       });
     }
 
-    function deleteCombat(id) {
+    function deleteCombat(id: string) {
+      const competitionId = getCurrentCompetition().competitionId;
       app.confirmAndRun({
         message: "Supprimer ce combat ?",
         method: "deleteCombat",
         args: [id],
         onSuccess: (response) => {
           showSuccess(response.message);
-          openCompetition(state.currentCompetition.competitionId, true);
+          openCompetition(competitionId, true);
         }
       });
     }
 
-    function normalizeJudokaSelectionKey(value) {
+    function normalizeJudokaSelectionKey(value: string) {
       return String(value || "")
         .trim()
         .replace(/\s+/g, " ")
@@ -898,22 +944,26 @@
       }
 
       const matches = state.judokas.filter((j) => {
-        return [getJudokaDisplayName(j), ui.getCompactJudokaLabel(j), j && j.judokaId].some(
+        return [getJudokaDisplayName(j), ui.getCompactJudokaLabel(j), j.judokaId].some(
           (label) => normalizeJudokaSelectionKey(label) === typedValue
         );
       });
 
       if (matches.length === 1) {
-        const resolvedId = String(matches[0].judokaId || "");
+        const match = matches[0];
+        if (!match) {
+          return "";
+        }
+        const resolvedId = String(match.judokaId || "");
         competitionFormViewModel.ownerJudokaId = resolvedId;
-        competitionFormViewModel.ownerJudokaText = getJudokaDisplayName(matches[0]);
+        competitionFormViewModel.ownerJudokaText = getJudokaDisplayName(match);
         return resolvedId;
       }
 
       return "";
     }
 
-    function setCompetitionOwnerField(idJudoka) {
+    function setCompetitionOwnerField(idJudoka: string) {
       if (!state.isAdmin && !state.isParent) {
         Object.assign(competitionFormViewModel, {
           showCompetitionOwnerBlock: false,
@@ -935,7 +985,7 @@
       });
     }
 
-    function getJudokaSecondaryText(judoka) {
+    function getJudokaSecondaryText(judoka: Judoka) {
       if (cleanText(judoka.accountEmail)) {
         return judoka.accountEmail;
       }
@@ -943,11 +993,11 @@
       return `ID ${String(judoka.judokaId || "").slice(-6)}`;
     }
 
-    function getJudokaSearchText(judoka) {
+    function getJudokaSearchText(judoka: Judoka) {
       return `${getJudokaDisplayName(judoka)} ${getJudokaSecondaryText(judoka)}`.toLowerCase();
     }
 
-    function getOwnerOption(judoka) {
+    function getOwnerOption(judoka: Judoka): CompetitionOwnerOption {
       return {
         judokaId: String(judoka.judokaId || ""),
         name: getJudokaDisplayName(judoka) || "Judoka",
@@ -956,7 +1006,7 @@
       };
     }
 
-    function refreshCompetitionOwnerOptions(queryOverride?) {
+    function refreshCompetitionOwnerOptions(queryOverride?: string) {
       const query =
         queryOverride !== undefined
           ? cleanText(queryOverride).toLowerCase()
@@ -991,7 +1041,7 @@
       competitionFormViewModel.showOwnerOptions = true;
     }
 
-    function selectCompetitionOwner(option) {
+    function selectCompetitionOwner(option: CompetitionOwnerOption | null) {
       if (hideOwnerOptionsTimer) {
         window.clearTimeout(hideOwnerOptionsTimer);
         hideOwnerOptionsTimer = null;
@@ -1001,7 +1051,7 @@
       competitionFormViewModel.showOwnerOptions = false;
     }
 
-    function getCombatDecisionOptions(result) {
+    function getCombatDecisionOptions(result: string): string[] {
       if (result === "Victoire" || result === "Défaite") {
         return ["Ippon", "Waza-ari", "Yuko", "Décision", "Hansoku-make", "Forfait"];
       }
@@ -1011,7 +1061,7 @@
       return [];
     }
 
-    function renderCombatDecisionOptions(result) {
+    function renderCombatDecisionOptions(result: string) {
       ensureCombatFormViewModel();
       const options = getCombatDecisionOptions(result);
       const currentValue = combatFormViewModel.combatForm.victoryType;
@@ -1026,7 +1076,7 @@
       }
     }
 
-    function syncCombatDecisionVisibility(clearValueWhenHidden) {
+    function syncCombatDecisionVisibility(clearValueWhenHidden: boolean) {
       ensureCombatFormViewModel();
       const result = combatFormViewModel.combatForm.result;
       const shouldShow = getCombatDecisionOptions(result).length > 0;

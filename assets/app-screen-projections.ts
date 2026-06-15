@@ -64,7 +64,9 @@
 
     const projectedAdmins: ManagedAdminCard[] = (admins || []).map((admin) => {
       const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
-      const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
+      const isCurrentAdmin = Boolean(
+        currentUser && String(currentUser.judokaId) === String(admin.judokaId)
+      );
       return {
         judokaId: admin.judokaId || "",
         fullName,

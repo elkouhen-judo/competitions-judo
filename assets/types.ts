@@ -23,6 +23,8 @@ export interface RuntimeConfig {
 
 export interface SessionLike {
   access_token: string;
+  refresh_token?: string;
+  expires_at?: number;
 }
 
 export interface AuthCallbackResult {
@@ -41,7 +43,7 @@ export interface VueLike {
   nextTick(callback: () => void): Promise<void>;
 }
 
-export type ActionMap = Record<string, (...args: unknown[]) => unknown>;
+export type ActionMap = Record<string, (...args: never[]) => unknown>;
 
 export type ViewId =
   | "loginView"
@@ -205,6 +207,7 @@ export interface AuthApi {
 
 export interface HomeScreen {
   applyInitialData(): void;
+  getHomeActiveJudokaId(): string;
   showHome(): void;
   showChildrenManagement?(keepMessage?: boolean): void;
 }
@@ -294,11 +297,11 @@ export type RpcClientResult<M extends RpcClientMethod> = Awaited<ReturnType<RpcM
 export interface KirokuApp {
   applyInitialData(data: InitialData): void;
   auth: AuthApi;
-  confirmAndRun(config: {
+  confirmAndRun<M extends RpcClientMethod>(config: {
     message: string;
-    method: RpcClientMethod;
-    args: unknown[];
-    onSuccess?: (response: OperationResult) => void;
+    method: M;
+    args: RpcClientArgs<M>;
+    onSuccess?: (response: RpcClientResult<M>) => void;
   }): void;
   defaultAccessInvitationVisibleCount: number;
   defaultListPageSize: number;

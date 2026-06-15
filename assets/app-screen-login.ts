@@ -77,7 +77,19 @@
       });
     }
 
-    function showLoginState({ text, hint, showHint, showOAuth, showRegistration }) {
+    function showLoginState({
+      text,
+      hint,
+      showHint,
+      showOAuth,
+      showRegistration
+    }: {
+      text?: string;
+      hint?: string;
+      showHint?: boolean;
+      showOAuth?: boolean;
+      showRegistration?: boolean;
+    }) {
       app.setHeaderVisible(false);
       if (loginViewModel) {
         Object.assign(loginViewModel, {

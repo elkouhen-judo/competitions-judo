@@ -73,7 +73,7 @@ function isInManagedScope(
 
 export function createAccessScope(
   kind: AccessScopeKind,
-  options: { judokaId?: unknown; managedJudokaScope?: ManagedJudokaScope } = {}
+  options: { judokaId?: unknown; managedJudokaScope?: ManagedJudokaScope | undefined } = {}
 ): AccessScope {
   const judokaId = String(options.judokaId || "");
   const managedJudokaScope = options.managedJudokaScope;

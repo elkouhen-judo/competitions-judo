@@ -1,4 +1,6 @@
 (() => {
+  type Judoka = import("../core/types").Judoka;
+
   const viewIds = [
     "loginView",
     "homeView",
@@ -14,7 +16,7 @@
   ] as const;
 
   type ViewId = (typeof viewIds)[number];
-  type ActionMap = Record<string, (...args: unknown[]) => unknown>;
+  type ActionMap = Record<string, (...args: never[]) => unknown>;
 
   function $<TElement extends HTMLElement = HTMLElement>(id: string): TElement {
     const element = document.getElementById(id);
@@ -25,7 +27,7 @@
     return element as TElement;
   }
 
-  function normalizeDisplayName(value) {
+  function normalizeDisplayName(value: unknown) {
     const cleaned = String(value || "")
       .trim()
       .toLocaleLowerCase("fr-FR");
@@ -38,17 +40,17 @@
     });
   }
 
-  function normalizeLastName(value) {
+  function normalizeLastName(value: unknown) {
     return normalizeDisplayName(value).toLocaleUpperCase("fr-FR");
   }
 
-  function getJudokaDisplayName(j) {
+  function getJudokaDisplayName(j: Partial<Judoka> | null | undefined) {
     return [normalizeDisplayName(j && j.firstName), normalizeLastName(j && j.lastName)]
       .filter(Boolean)
       .join(" ");
   }
 
-  function getCompactJudokaLabel(j) {
+  function getCompactJudokaLabel(j: Partial<Judoka> | null | undefined) {
     const firstName = normalizeDisplayName(j && j.firstName);
     const lastName = normalizeLastName(j && j.lastName);
     if (!firstName && !lastName) {
@@ -60,20 +62,20 @@
     return `${firstName} ${lastName.charAt(0)}.`;
   }
 
-  function cleanText(value) {
+  function cleanText(value: unknown) {
     return String(value || "").trim();
   }
 
-  function formatDate(value) {
+  function formatDate(value: unknown) {
     if (!value) return "";
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? value : d.toLocaleDateString("fr-FR");
+    const d = new Date(value as string | number | Date);
+    return isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("fr-FR");
   }
 
-  function toInputDate(value) {
+  function toInputDate(value: unknown) {
     if (!value) return "";
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? value : d.toISOString().slice(0, 10);
+    const d = new Date(value as string | number | Date);
+    return isNaN(d.getTime()) ? String(value) : d.toISOString().slice(0, 10);
   }
 
   function getCurrentLocalDate() {
@@ -84,15 +86,15 @@
     return `${year}-${month}-${day}`;
   }
 
-  function formatResultat(value) {
+  function formatResultat(value: unknown) {
     if (value === "V" || value === "Victoire") return "Victoire";
     if (value === "D" || value === "Défaite") return "Défaite";
     if (value === "E" || value === "Egalité") return "Egalité";
     if (value === "Disqualification") return "Défaite";
-    return value || "";
+    return value ? String(value) : "";
   }
 
-  function getClassementBadgeClass(value) {
+  function getClassementBadgeClass(value: unknown) {
     const normalized = String(value || "").toLowerCase();
     if (normalized === "1er") return "rank-1";
     if (normalized === "2e") return "rank-2";
@@ -101,20 +103,20 @@
     return "";
   }
 
-  function getJudokaInitials(judoka) {
+  function getJudokaInitials(judoka: Partial<Judoka> | null | undefined) {
     const firstName = normalizeDisplayName(judoka && judoka.firstName);
     const lastName = normalizeLastName(judoka && judoka.lastName);
     return `${firstName.charAt(0) || ""}${lastName.charAt(0) || ""}`.trim() || "J";
   }
 
-  function formatDateTime(value) {
+  function formatDateTime(value: unknown) {
     if (!value) {
       return "Non renseigné";
     }
 
-    const date = new Date(value);
+    const date = new Date(value as string | number | Date);
     if (Number.isNaN(date.getTime())) {
-      return value;
+      return String(value);
     }
 
     return new Intl.DateTimeFormat("fr-FR", {

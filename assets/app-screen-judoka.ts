@@ -55,13 +55,17 @@
       }
 
       judokaViewModel = ui.createMountedViewModel("judokaView", defaultJudokaViewState, {
-        showHome: () => app.showHome(),
+        showHome: () => app.showHome && app.showHome(),
         showCompetitionResultsPreviousPage,
         showCompetitionResultsNextPage
       });
     }
 
     function renderCompetitionResultsPage() {
+      if (!judokaViewModel) {
+        return;
+      }
+
       const pagination = window.KirokuScreenProjections.paginateList(
         judokaViewModel.competitionResults,
         state.judokaCompetitionResultsCurrentPage,
@@ -89,7 +93,7 @@
       renderCompetitionResultsPage();
     }
 
-    function showJudokaProfile(idJudoka, keepMessage) {
+    function showJudokaProfile(idJudoka: string, keepMessage?: boolean) {
       if (!keepMessage) {
         clearMessage();
       }
@@ -112,15 +116,17 @@
         return;
       }
 
-      Object.assign(
-        judokaViewModel,
-        window.createJudokaProfileViewModel(state.currentJudokaProfile, {
-          formatDate,
-          getClassementBadgeClass,
-          getJudokaDisplayName,
-          getJudokaInitials
-        })
-      );
+      const profileViewModel = window.createJudokaProfileViewModel(state.currentJudokaProfile, {
+        formatDate,
+        getClassementBadgeClass,
+        getJudokaDisplayName,
+        getJudokaInitials
+      });
+      if (!judokaViewModel || !profileViewModel) {
+        return;
+      }
+
+      Object.assign(judokaViewModel, profileViewModel);
       state.judokaCompetitionResultsCurrentPage = 1;
       renderCompetitionResultsPage();
     }

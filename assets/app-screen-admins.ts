@@ -49,15 +49,23 @@
         showPreviousAccessInvitationPage,
         showAdminsPreviousPage,
         showAdminsNextPage,
-        showHome: () => app.showHome(),
+        showHome: () => app.showHome && app.showHome(),
         updateAccessInvitationSearch
       });
     }
 
-    function saveAccessInvitation() {
+    function getAdminsViewModel() {
       ensureAdminsViewModel();
-      const email = adminsViewModel.accessInvitationForm.email;
-      const profileType = adminsViewModel.accessInvitationForm.profileType;
+      if (!adminsViewModel) {
+        throw new Error("Vue model des administrateurs non initialisé.");
+      }
+      return adminsViewModel;
+    }
+
+    function saveAccessInvitation() {
+      const viewModel = getAdminsViewModel();
+      const email = viewModel.accessInvitationForm.email;
+      const profileType = viewModel.accessInvitationForm.profileType;
 
       app.runServer(
         "saveAccessInvitation",
@@ -70,7 +78,7 @@
       );
     }
 
-    function deleteAccessInvitation(email) {
+    function deleteAccessInvitation(email: string) {
       const label = email ? ` pour "${email}"` : "";
       app.confirmAndRun({
         message: `Supprimer l'invitation${label} ?`,
@@ -84,9 +92,9 @@
     }
 
     function renderManagedAccessInvitations() {
-      ensureAdminsViewModel();
+      const viewModel = getAdminsViewModel();
       if (!state.managedAccessInvitations.length) {
-        Object.assign(adminsViewModel, {
+        Object.assign(viewModel, {
           accessInvitations: [],
           accessInvitationsSummary: "",
           accessInvitationsEmptyMessage: "Aucune invitation en attente.",
@@ -100,7 +108,7 @@
       const filteredInvitations = getFilteredAccessInvitations();
       const pageSize = defaultAccessInvitationVisibleCount;
       Object.assign(
-        adminsViewModel,
+        viewModel,
         window.KirokuScreenProjections.projectAccessInvitations(
           filteredInvitations,
           state.accessInvitationSearch,
@@ -123,18 +131,18 @@
       );
     }
 
-    function updateAccessInvitationSearch(value) {
-      ensureAdminsViewModel();
+    function updateAccessInvitationSearch(value: string) {
+      const viewModel = getAdminsViewModel();
       state.accessInvitationSearch = cleanText(value).toLowerCase();
-      adminsViewModel.accessInvitationSearch = value || "";
+      viewModel.accessInvitationSearch = value || "";
       state.accessInvitationCurrentPage = 1;
       renderManagedAccessInvitations();
     }
 
     function resetAccessInvitationSearch() {
-      ensureAdminsViewModel();
+      const viewModel = getAdminsViewModel();
       state.accessInvitationSearch = "";
-      adminsViewModel.accessInvitationSearch = "";
+      viewModel.accessInvitationSearch = "";
       state.accessInvitationCurrentPage = 1;
       renderManagedAccessInvitations();
     }
@@ -149,7 +157,7 @@
       renderManagedAccessInvitations();
     }
 
-    function showAdminsManagement(keepMessage) {
+    function showAdminsManagement(keepMessage?: boolean) {
       if (!keepMessage) {
         clearMessage();
       }
@@ -158,7 +166,7 @@
         "getAdminsManagement",
         [],
         (data) => {
-          ensureAdminsViewModel();
+          const viewModel = getAdminsViewModel();
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
           state.managedAccessInvitations = Array.isArray(data.accessInvitations)
             ? data.accessInvitations
@@ -166,7 +174,7 @@
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
           state.adminsCurrentPage = 1;
-          adminsViewModel.accessInvitationSearch = "";
+          viewModel.accessInvitationSearch = "";
           renderManagedAdmins();
           renderManagedAccessInvitations();
           resetAccessInvitationForm();
@@ -178,9 +186,9 @@
     }
 
     function renderManagedAdmins() {
-      ensureAdminsViewModel();
+      const viewModel = getAdminsViewModel();
       Object.assign(
-        adminsViewModel,
+        viewModel,
         window.KirokuScreenProjections.projectManagedAdmins(
           state.managedAdmins,
           state.currentUser,
@@ -190,16 +198,16 @@
         )
       );
       const pagination = window.KirokuScreenProjections.paginateList(
-        adminsViewModel.admins,
+        viewModel.admins,
         state.adminsCurrentPage,
         defaultListPageSize
       );
-      adminsViewModel.adminsPage = pagination.pageItems;
-      adminsViewModel.adminsTotalPages = pagination.totalPages;
-      adminsViewModel.adminsCurrentPage = pagination.currentPage;
-      adminsViewModel.adminsTotalCount = pagination.totalItems;
-      adminsViewModel.adminsCanShowPreviousPage = pagination.canShowPreviousPage;
-      adminsViewModel.adminsCanShowNextPage = pagination.canShowNextPage;
+      viewModel.adminsPage = pagination.pageItems;
+      viewModel.adminsTotalPages = pagination.totalPages;
+      viewModel.adminsCurrentPage = pagination.currentPage;
+      viewModel.adminsTotalCount = pagination.totalItems;
+      viewModel.adminsCanShowPreviousPage = pagination.canShowPreviousPage;
+      viewModel.adminsCanShowNextPage = pagination.canShowNextPage;
       state.adminsCurrentPage = pagination.currentPage;
     }
 
@@ -214,18 +222,15 @@
     }
 
     function resetAdminForm() {
-      ensureAdminsViewModel();
-      adminsViewModel.adminEmail = "";
+      getAdminsViewModel().adminEmail = "";
     }
 
     function resetAccessInvitationForm() {
-      ensureAdminsViewModel();
-      Object.assign(adminsViewModel.accessInvitationForm, defaultAccessInvitationForm);
+      Object.assign(getAdminsViewModel().accessInvitationForm, defaultAccessInvitationForm);
     }
 
     function saveAdminRole() {
-      ensureAdminsViewModel();
-      const email = adminsViewModel.adminEmail;
+      const email = getAdminsViewModel().adminEmail;
 
       app.runServer(
         "grantAdminRole",
@@ -238,7 +243,7 @@
       );
     }
 
-    function revokeAdminRole(idJudoka, name) {
+    function revokeAdminRole(idJudoka: string, name?: string) {
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
         message: `Retirer les droits admin${label} ?`,

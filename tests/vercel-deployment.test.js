@@ -341,7 +341,7 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /homeViewModel\.actionDisabled = actionDisabled;/);
+  assert.match(uiBundle, /const homeViewModel = getHomeViewModel\(\);\s*homeViewModel\.actionDisabled = actionDisabled;/);
   assert.match(uiBundle, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
   assert.match(uiBundle, /showHomeActions: true/);
   assert.match(
@@ -667,11 +667,11 @@ test("judoka and invitation lookup use a case-insensitive normalized email match
 test("combat mutations reload competition details after save", () => {
   assert.match(
     uiBundle,
-    /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/
+    /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(competitionId,\s*true\);/
   );
   assert.match(
     uiBundle,
-    /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(state\.currentCompetition\.competitionId,\s*true\);/
+    /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(competitionId,\s*true\);/
   );
   assert.doesNotMatch(
     uiBundle,
