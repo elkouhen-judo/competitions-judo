@@ -248,6 +248,9 @@ test("vercel runtime uses google auth without password login", () => {
     /retrySessionOnce: Boolean\(callbackResult && callbackResult\.completedAuth\)/
   );
   assert.match(uiBundle, /Connexion Google impossible/);
+  assert.match(uiBundle, /Réponse invalide reçue depuis \/api\/rpc\./);
+  assert.match(uiBundle, /Connexion Google impossible : réponse Supabase invalide\./);
+  assert.doesNotMatch(uiBundle, /response\.json\(\)/);
   assert.match(uiBundle, /function showInvitationRequired\(\)/);
   assert.match(
     uiBundle,
@@ -262,6 +265,7 @@ test("vercel runtime uses google auth without password login", () => {
 
 test("app bootstrap delegates to the extracted runtime", () => {
   assert.match(appRuntimeClient, /function createKirokuApp\(\)/);
+  assert.match(appRuntimeClient, /async function readJsonResponse\(response,\s*invalidMessage\)/);
   assert.match(appBootstrapClient, /window\.createKirokuApp\(\)/);
   assert.doesNotMatch(appBootstrapClient, /runServerWithOptions|logoutUser|applyInitialData/);
 });
@@ -730,6 +734,9 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createClubCompetitionsService/);
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
+  assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/repositories\/competitions\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/repositories\/combats\.repository\.js/);
   assert.match(coreIndex, /buildJudokaProfileSnapshot/);
   assert.match(coreIndex, /\.\.\.adminService\.methods/);
   assert.match(coreIndex, /\.\.\.clubCompetitionsService\.methods/);
@@ -764,6 +771,12 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.doesNotMatch(client, /competition\.id_judoka = resolveCompetitionOwnerSelection\(\);/);
   assert.doesNotMatch(coreIndex, /auth\/v1\/signup/);
   assert.doesNotMatch(coreIndex, /auth\/v1\/admin\/users/);
+  assert.match(rpc, /const bodyPromise = readBody\(req\)/);
   assert.match(rpc, /verifySupabaseUser\(accessToken\)/);
+  assert.match(rpc, /const body = await bodyPromise/);
   assert.match(rpc, /methods\[body\.method\]/);
+  assert.match(rpc, /Corps JSON invalide\./);
+  assert.match(sessionAuth, /Réponse Supabase invalide pendant la vérification de session\./);
+  assert.match(supabaseClient, /Réponse Supabase invalide sur/);
+  assert.match(supabaseClient, /Réponse Supabase RPC invalide pour/);
 });
