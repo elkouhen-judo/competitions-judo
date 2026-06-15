@@ -6,20 +6,62 @@ const permissions = require("./auth/permissions");
 const text = require("./shared/text");
 const { eqFilter } = require("./shared/filters");
 const ids = require("./shared/ids");
-const createJudokasRepository = require("./repositories/judokas.repository");
-const createClubCompetitionsRepository = require("./repositories/club-competitions.repository");
-const createCompetitionsRepository = require("./repositories/competitions.repository");
-const createCombatsRepository = require("./repositories/combats.repository");
-const createInvitationsRepository = require("./repositories/invitations.repository");
-const createParentLinksRepository = require("./repositories/parent-links.repository");
-const createUserContextService = require("./services/user-context.service");
-const createAdminService = require("./services/admin.service");
-const createClubCompetitionsService = require("./services/club-competitions.service");
-const createCompetitionsService = require("./services/competitions.service");
-const createCombatsService = require("./services/combats.service");
-const createChildrenService = require("./services/children.service");
-const createProfileService = require("./services/profile.service");
-const createRegistrationService = require("./services/registration.service");
+const createJudokasRepository =
+  /** @type {typeof import("./repositories/judokas.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/judokas.repository"))
+  );
+const createClubCompetitionsRepository =
+  /** @type {typeof import("./repositories/club-competitions.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/club-competitions.repository"))
+  );
+const createCompetitionsRepository =
+  /** @type {typeof import("./repositories/competitions.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/competitions.repository"))
+  );
+const createCombatsRepository =
+  /** @type {typeof import("./repositories/combats.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/combats.repository"))
+  );
+const createInvitationsRepository =
+  /** @type {typeof import("./repositories/invitations.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/invitations.repository"))
+  );
+const createParentLinksRepository =
+  /** @type {typeof import("./repositories/parent-links.repository").default} */ (
+    /** @type {unknown} */ (require("./repositories/parent-links.repository"))
+  );
+const createUserContextService =
+  /** @type {typeof import("./services/user-context.service").default} */ (
+    /** @type {unknown} */ (require("./services/user-context.service"))
+  );
+const createAdminService =
+  /** @type {typeof import("./services/admin.service").default} */ (
+    /** @type {unknown} */ (require("./services/admin.service"))
+  );
+const createClubCompetitionsService =
+  /** @type {typeof import("./services/club-competitions.service").default} */ (
+    /** @type {unknown} */ (require("./services/club-competitions.service"))
+  );
+const createCompetitionsService =
+  /** @type {typeof import("./services/competitions.service").default} */ (
+    /** @type {unknown} */ (require("./services/competitions.service"))
+  );
+const createCombatsService =
+  /** @type {typeof import("./services/combats.service").default} */ (
+    /** @type {unknown} */ (require("./services/combats.service"))
+  );
+const createChildrenService =
+  /** @type {typeof import("./services/children.service").default} */ (
+    /** @type {unknown} */ (require("./services/children.service"))
+  );
+const createProfileService =
+  /** @type {typeof import("./services/profile.service").default} */ (
+    /** @type {unknown} */ (require("./services/profile.service"))
+  );
+const createRegistrationService =
+  /** @type {typeof import("./services/registration.service").default} */ (
+    /** @type {unknown} */ (require("./services/registration.service"))
+  );
 const { getCompetitionCategoryLabel } = require("./domain/competition-results");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season");
 const {

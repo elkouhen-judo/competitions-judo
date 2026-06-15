@@ -51,27 +51,27 @@ const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const coreIndex = fs.readFileSync(path.join(root, "core", "index.js"), "utf8");
 const adminService = fs.readFileSync(
-  path.join(root, "core", "services", "admin.service.js"),
+  path.join(root, "core", "services", "admin.service.ts"),
   "utf8"
 );
 const childrenService = fs.readFileSync(
-  path.join(root, "core", "services", "children.service.js"),
+  path.join(root, "core", "services", "children.service.ts"),
   "utf8"
 );
 const competitionsService = fs.readFileSync(
-  path.join(root, "core", "services", "competitions.service.js"),
+  path.join(root, "core", "services", "competitions.service.ts"),
   "utf8"
 );
 const profileService = fs.readFileSync(
-  path.join(root, "core", "services", "profile.service.js"),
+  path.join(root, "core", "services", "profile.service.ts"),
   "utf8"
 );
 const registrationService = fs.readFileSync(
-  path.join(root, "core", "services", "registration.service.js"),
+  path.join(root, "core", "services", "registration.service.ts"),
   "utf8"
 );
 const userContextService = fs.readFileSync(
-  path.join(root, "core", "services", "user-context.service.js"),
+  path.join(root, "core", "services", "user-context.service.ts"),
   "utf8"
 );
 const permissions = fs.readFileSync(
@@ -100,11 +100,11 @@ const emailDomain = fs.readFileSync(
   "utf8"
 );
 const judokasRepository = fs.readFileSync(
-  path.join(root, "core", "repositories", "judokas.repository.js"),
+  path.join(root, "core", "repositories", "judokas.repository.ts"),
   "utf8"
 );
 const invitationsRepository = fs.readFileSync(
-  path.join(root, "core", "repositories", "invitations.repository.js"),
+  path.join(root, "core", "repositories", "invitations.repository.ts"),
   "utf8"
 );
 const supabaseClient = fs.readFileSync(
@@ -296,7 +296,10 @@ test("vercel login creates only the initial judoka profile", () => {
   assert.match(uiBundle, /Votre invitation est validée/);
   assert.doesNotMatch(uiBundle, /id="registrationType"/);
   assert.doesNotMatch(uiBundle, /registrationChildren/);
-  assert.match(registrationService, /async function registerProfile\(email,\s*profile\)/);
+  assert.match(
+    registrationService,
+    /async function registerProfile\(email: string,\s*profile: RegistrationProfileInput\)/
+  );
   assert.match(
     registrationService,
     /const invitation = await adminService\.getAccessInvitation\(email\)/
@@ -371,7 +374,7 @@ test("competition persistence keeps categories and omits removed place and actua
   );
   assert.match(
     competitionsService,
-    /async function finalizeCompetition\(email,\s*idCompetition,\s*result\)/
+    /async function finalizeCompetition\(email: string,\s*idCompetition: string,\s*result: string\)/
   );
   assert.match(
     competitionsService,
@@ -428,8 +431,8 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(uiBundle, /se connecter seuls si un email est renseigné/);
   assert.match(uiBundle, /function normalizeLastName\(value\)/);
   assert.match(uiBundle, /function deleteManagedChild\(idJudoka,\s*name\)/);
-  assert.match(childrenService, /async function getChildrenManagement\(email\)/);
-  assert.match(childrenService, /async function saveManagedChild\(email,\s*child\)/);
+  assert.match(childrenService, /async function getChildrenManagement\(email: string\)/);
+  assert.match(childrenService, /async function saveManagedChild\(email: string,\s*child: object\)/);
   assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
   assert.match(childrenService, /const childInput = toCanonicalManagedChild\(child\);/);
   assert.match(childrenService, /const childJudokaId = childInput\.judokaId;/);
@@ -464,7 +467,7 @@ test("connected parent can manage children from a dedicated screen", () => {
     judokaDomain,
     /function decideManagedChildRemoval\(\{\s*child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink\s*\}: DecideManagedChildRemovalInput\)/
   );
-  assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
+  assert.match(childrenService, /async function deleteManagedChild\(email: string,\s*idJudoka: string\)/);
   assert.match(childrenService, /isParent: isParent\(domainUser\)/);
   assert.match(judokaDomain, /accessRole: "NORMAL"/);
 });
@@ -492,14 +495,14 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /function updateAccessInvitationSearch\(value\)/);
   assert.match(uiBundle, /function saveAdminRole\(\)/);
   assert.match(uiBundle, /function revokeAdminRole\(idJudoka,\s*name\)/);
-  assert.match(adminService, /async function getAdminsManagement\(email\)/);
+  assert.match(adminService, /async function getAdminsManagement\(email: string\)/);
   assert.match(
     adminService,
     /accessInvitations: \(await getAccessInvitations\(\)\)\.map\(toInvitationReadModel\)/
   );
   assert.match(
     adminService,
-    /async function saveAccessInvitation\(email,\s*targetEmail,\s*targetProfileType\)/
+    /async function saveAccessInvitation\(\s*email: string,\s*targetEmail: string,\s*targetProfileType: string\s*\)/
   );
   assert.match(adminService, /const invitation = createAccessInvitation\(\{/);
   assert.match(
@@ -507,8 +510,8 @@ test("admin can manage admins from a dedicated screen", () => {
     /invited_profile_type: createProfileType\(invited_profile_type\)/
   );
   assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
-  assert.match(adminService, /async function deleteAccessInvitation\(email,\s*invitedEmail\)/);
-  assert.match(adminService, /async function grantAdminRole\(email,\s*targetEmail\)/);
+  assert.match(adminService, /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/);
+  assert.match(adminService, /async function grantAdminRole\(email: string,\s*targetEmail: string\)/);
   assert.match(adminService, /createJudoka\(toCanonicalJudoka\(target\)\)\.grantAdminRole\(\)/);
   assert.match(
     adminService,
@@ -516,7 +519,7 @@ test("admin can manage admins from a dedicated screen", () => {
   );
   assert.match(judokaDomain, /return \{ accessRole: createRole\("ADMIN"\) \};/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("NORMAL"\) \};/);
-  assert.match(adminService, /async function revokeAdminRole\(email,\s*idJudoka\)/);
+  assert.match(adminService, /async function revokeAdminRole\(email: string,\s*idJudoka: string\)/);
   assert.match(adminService, /Vous ne pouvez pas retirer vos propres droits admin/);
 });
 
@@ -572,7 +575,10 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     /function assertCanAccessJudokaProfile\(\s*user: UserLike \| null \| undefined,\s*idJudoka: unknown,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\)/
   );
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
-  assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
+  assert.match(
+    profileService,
+    /async function getJudokaProfile\(email: string,\s*idJudoka\?: string\): Promise<JudokaProfile>/
+  );
   assert.match(
     seasonDomain,
     /function getCurrentSeasonBounds\(referenceDate: Date = new Date\(\)\)/
@@ -637,19 +643,19 @@ test("admin owner selection is not restricted by parent-managed scope", () => {
 
 test("judoka and invitation lookup use a case-insensitive normalized email match", () => {
   assert.match(userContextService, /const normalizedEmail = normalizeEmail\(email\);/);
-  assert.match(judokasRepository, /function findEmailQueryValue\(email\)/);
+  assert.match(judokasRepository, /function findEmailQueryValue\(email: unknown\): string/);
   assert.match(
     judokasRepository,
-    /return supabaseSelectOne\("judokas", `select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\);/
+    /return supabaseSelectOne<JudokaRow>\(\s*"judokas",\s*`select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/
   );
-  assert.match(invitationsRepository, /function findEmailQueryValue\(email\)/);
+  assert.match(invitationsRepository, /function findEmailQueryValue\(email: unknown\): string/);
   assert.match(
     invitationsRepository,
-    /return supabaseSelectOne\(\s*"access_invitations",\s*`select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/
+    /return supabaseSelectOne<AccessInvitationRow>\(\s*"access_invitations",\s*`select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/
   );
   assert.match(
     invitationsRepository,
-    /return supabaseDelete\("access_invitations", `email=ilike\.\$\{findEmailQueryValue\(email\)\}`\);/
+    /return supabaseDelete\(\s*"access_invitations",\s*`email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/
   );
 });
 
@@ -732,7 +738,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);
   assert.match(supabaseClient, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
   assert.match(textHelpers, /function normalizeLastName\(value: unknown\): string/);
-  assert.match(adminService, /async function getAccessInvitation\(email\)/);
+  assert.match(adminService, /async function getAccessInvitation\(email: string\): Promise<AccessInvitationRow \| null>/);
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(
     coreIndex,
