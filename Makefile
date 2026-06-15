@@ -4,4 +4,5 @@ VERCEL ?= vercel
 
 deploy:
 	npm test
+	npm run build:assets
 	$(VERCEL) --prod

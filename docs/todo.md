@@ -129,7 +129,7 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 18. Migration vers de vrais fichiers `.ts`
     - [PARTIEL] Decision prise : mise en place d'un bundler de transpilation (esbuild,
-      `bundle: false`, cible `es2022`) via `npm run build` (`scripts/build-assets.js`),
+      `bundle: false`, cible `es2022`) via `npm run build:assets` (`scripts/build-assets.js`),
       execute aussi en `pretest` et en `postinstall` (pour que Vercel produise
       `assets/dist/*` avant le bundling des fonctions serverless).
     - Preuve de concept faite : `assets/app-notifications.js` converti en
