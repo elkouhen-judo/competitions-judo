@@ -110,13 +110,18 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
     - A planifier separement (chantier dedie, hors perimetre de l'introduction des types
       JSDoc/`jsconfig` realisee en parallele).
 
-17. Etendre les types JSDoc / `jsconfig` a `assets/**`
+17. [FAIT] Etendre les types JSDoc / `jsconfig` a `assets/**`
     - Constat : `jsconfig.json` couvre actuellement `core/**` et `api/**` ; le frontend
       (`assets/`) n'est pas type-checke.
-    - Simplification : une fois le pattern valide cote `core/` (cf. `core/types.js`,
-      item 5 et 7), etendre `include` a `assets/**/*.js` et annoter progressivement
-      `assets/app-api.js` (futur client RPC, item 1) avec les types de `core/types.js`
-      (notamment `RpcMethods`, `Judoka`, `Competition`, `Combat`).
+    - Fait : `include` etendu a `assets/**/*.js` (hors `assets/vendor`) ; `assets/global.d.ts`
+      declare les globaux `window.*` partages entre scripts (`Vue`, `KirokuUI`,
+      `KirokuScreenProjections`, `KIROKU_RUNTIME_CONFIG`, les `createKiroku*Screen` etc.) avec
+      des types volontairement larges (`any`) pour debloquer le typecheck sans etape de build ;
+      une incoherence reelle corrigee dans `app-screen-login.js` (`showVercelLogin` n'envoyait
+      pas `hint` a `showLoginState`).
+    - Reste ouvert : annoter progressivement `assets/app-api.js` (futur client RPC, item 1)
+      avec les types de `core/types.js` (`RpcMethods`, `Judoka`, `Competition`, `Combat`), et
+      affiner les types `any` de `assets/global.d.ts` au fil des modifications.
     - Critere de fin : `npm run typecheck` couvre aussi `assets/`.
 
 18. Migration vers de vrais fichiers `.ts`

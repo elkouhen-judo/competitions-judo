@@ -44,6 +44,7 @@
     function showVercelLogin() {
       showLoginState({
         text: "Connectez-vous avec le compte Google associé à votre fiche judoka ou enfant. Les droits sont ensuite appliqués à partir du profil judoka correspondant.",
+        hint: "",
         showHint: false,
         showOAuth: true,
         showRegistration: false
