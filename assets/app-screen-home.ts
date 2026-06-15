@@ -161,7 +161,7 @@
       };
     }
 
-    function refreshHomeFilterOptions(queryOverride) {
+    function refreshHomeFilterOptions(queryOverride?) {
       const query =
         queryOverride !== undefined
           ? cleanText(queryOverride).toLowerCase()
