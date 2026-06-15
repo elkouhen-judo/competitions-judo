@@ -61,6 +61,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-003**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
+- **VCL-006**: Vercel shall run `npm run build` (`scripts/build-assets.js`, esbuild transpilation) before deployment to produce the compiled `assets/dist/*` files consumed by `/api/client`.
 
 ### 3.3 Data model constraints
 
@@ -145,6 +146,8 @@ This specification does not redefine product behavior already described in `docs
 | `core/services/*` | Backend application services | Use-case orchestration over the domain |
 | `core/repositories/*` | Backend persistence adapters | Data access for business aggregates and mapping from domain objects to Supabase records |
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
+| `/api/client` | Vercel serverless endpoint | Concatenates frontend JS, including files compiled from `assets/*.ts` into `assets/dist/*` |
+| `assets/dist/*` | Build output (gitignored) | esbuild-transpiled `assets/*.ts` sources, produced by `npm run build` (`scripts/build-assets.js`) |
 
 ### 4.2 Vercel routing contract
 

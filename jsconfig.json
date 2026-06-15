@@ -10,6 +10,12 @@
     "maxNodeModuleJsDepth": 0,
     "skipLibCheck": true
   },
-  "include": ["core/**/*.js", "api/**/*.js", "assets/**/*.js", "assets/**/*.d.ts"],
-  "exclude": ["node_modules", "tests", "assets/vendor"]
+  "include": [
+    "core/**/*.js",
+    "api/**/*.js",
+    "assets/**/*.js",
+    "assets/**/*.ts",
+    "assets/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "tests", "assets/vendor", "assets/dist"]
 }

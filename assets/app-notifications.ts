@@ -1,8 +1,17 @@
 (() => {
+  interface Toast {
+    id: string;
+    type: "success" | "error";
+    message: string;
+    toneClass: "success" | "error";
+    role: "status" | "alert";
+    leaving: boolean;
+  }
+
   function createKirokuNotifications() {
     let toastSequence = 0;
-    const activeToastTimers = new Map();
-    const notificationsViewModel = window.Vue.reactive({
+    const activeToastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    const notificationsViewModel: { toasts: Toast[] } = window.Vue.reactive({
       toasts: []
     });
 
@@ -10,11 +19,11 @@
       dismissToast
     });
 
-    function showSuccess(message) {
+    function showSuccess(message: string) {
       showToast("success", message, 4000);
     }
 
-    function showError(error) {
+    function showError(error: any) {
       showToast("error", error.message || error, 7000);
     }
 
@@ -22,7 +31,7 @@
       clearToasts();
     }
 
-    function showToast(type, message, duration) {
+    function showToast(type: "success" | "error", message: unknown, duration: number) {
       const toastId = `toast-${++toastSequence}`;
       const toneClass = type === "success" ? "success" : "error";
       const role = type === "success" ? "status" : "alert";
@@ -41,7 +50,7 @@
       activeToastTimers.set(toastId, timer);
     }
 
-    function dismissToast(toastId) {
+    function dismissToast(toastId: string) {
       const toast = notificationsViewModel.toasts.find((item) => item.id === toastId);
       if (!toast) {
         return;

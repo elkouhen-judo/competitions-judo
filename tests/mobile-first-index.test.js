@@ -7,7 +7,7 @@ const appHandler = require(path.join(__dirname, "..", "api", "app.js"));
 const html = appHandler.renderIndexHtml();
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
 const notificationsClient = fs.readFileSync(
-  path.join(__dirname, "..", "assets", "app-notifications.js"),
+  path.join(__dirname, "..", "assets", "dist", "app-notifications.js"),
   "utf8"
 );
 const judokaScreenClient = fs.readFileSync(
@@ -15,23 +15,23 @@ const judokaScreenClient = fs.readFileSync(
   "utf8"
 );
 const client = [
-  "vendor/vue.global.prod.js",
-  "app-ui.js",
-  "app-notifications.js",
-  "app-auth.js",
-  "app-screen-projections.js",
-  "app-screen-login.js",
-  "app-screen-home.js",
-  "app-judoka-presentation.js",
-  "app-screen-judoka.js",
-  "app-screen-competition.js",
-  "app-screen-children.js",
-  "app-screen-admins.js",
-  "app-runtime.js",
-  "app.js"
-]
-  .map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))
-  .join("\n");
+  fs.readFileSync(path.join(__dirname, "..", "assets", "vendor/vue.global.prod.js"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "..", "assets", "app-ui.js"), "utf8"),
+  notificationsClient,
+  ...[
+    "app-auth.js",
+    "app-screen-projections.js",
+    "app-screen-login.js",
+    "app-screen-home.js",
+    "app-judoka-presentation.js",
+    "app-screen-judoka.js",
+    "app-screen-competition.js",
+    "app-screen-children.js",
+    "app-screen-admins.js",
+    "app-runtime.js",
+    "app.js"
+  ].map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))
+].join("\n");
 const bundle = `${html}\n${css}\n${client}`;
 
 test("competition cards avoid redundant mobile action rows", () => {
@@ -49,8 +49,8 @@ test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /id="toastLayer" class="toast-layer"/);
   assert.match(bundle, /\.toast-layer\s*\{/);
   assert.match(bundle, /\.toast-close\s*\{/);
-  assert.match(bundle, /showToast\("success", message,\s*4000\)/);
-  assert.match(bundle, /showToast\("error", error\.message \|\| error,\s*7000\)/);
+  assert.match(bundle, /showToast\("success", message,\s*4e3\)/);
+  assert.match(bundle, /showToast\("error", error\.message \|\| error,\s*7e3\)/);
   assert.match(bundle, /function showToast\(type,\s*message,\s*duration\)/);
   assert.match(bundle, /function dismissToast\(toastId\)/);
   assert.match(bundle, /v-for="toast in toasts"/);

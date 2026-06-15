@@ -128,13 +128,21 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
     - Critere de fin : `npm run typecheck` couvre aussi `assets/`.
 
 18. Migration vers de vrais fichiers `.ts`
-    - Constat : l'app n'a pas d'etape de build (Vue 3 global build servi directement,
-      deploiement Vercel sans bundler) ; une migration `.ts` reelle impose d'en introduire une.
-    - Simplification : a reconsiderer apres le decoupage d'`Index.html` (item 16) et
-      l'extension des types a `assets/` (item 17), en evaluant l'impact d'un build step
-      sur le deploiement Vercel actuel.
-    - Critere de fin : decision documentee (go/no-go build step) avant toute conversion
-      `.js` -> `.ts`.
+    - [PARTIEL] Decision prise : mise en place d'un bundler de transpilation (esbuild,
+      `bundle: false`, cible `es2022`) via `npm run build` (`scripts/build-assets.js`),
+      execute aussi en `pretest` et par Vercel via `buildCommand` dans `vercel.json`.
+    - Preuve de concept faite : `assets/app-notifications.js` converti en
+      `assets/app-notifications.ts`, compile vers `assets/dist/app-notifications.js`
+      (gitignore), inclus par `/api/client` (api/client.js) et par les tests
+      (`tests/mobile-first-index.test.js`, `tests/vercel-deployment.test.js`).
+    - Pattern etabli pour la suite : chaque fichier `assets/*.js` migre vers `.ts` doit
+      etre ajoute a `entryPoints` dans `scripts/build-assets.js`, retire de `clientFiles`
+      et ajoute a `builtClientFiles` dans `api/client.js`, et son chargement dans les
+      tests doit pointer vers `assets/dist/`.
+    - Reste a faire : migrer progressivement les autres fichiers `assets/*.js` vers `.ts`
+      en suivant ce pattern.
+    - Critere de fin : tous les fichiers `assets/*.js` consommes par `/api/client` sont
+      des `.ts` compiles, `npm run typecheck` couvre l'ensemble sans `any` superflus.
 
 ## Discipline de refacto
 

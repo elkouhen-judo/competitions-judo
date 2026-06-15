@@ -8,27 +8,27 @@ const appHandler = require(path.join(root, "api", "app.js"));
 const html = appHandler.renderIndexHtml();
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
 const notificationsClient = fs.readFileSync(
-  path.join(root, "assets", "app-notifications.js"),
+  path.join(root, "assets", "dist", "app-notifications.js"),
   "utf8"
 );
 const client = [
-  "vendor/vue.global.prod.js",
-  "app-ui.js",
-  "app-notifications.js",
-  "app-auth.js",
-  "app-screen-projections.js",
-  "app-screen-login.js",
-  "app-screen-home.js",
-  "app-judoka-presentation.js",
-  "app-screen-judoka.js",
-  "app-screen-competition.js",
-  "app-screen-children.js",
-  "app-screen-admins.js",
-  "app-runtime.js",
-  "app.js"
-]
-  .map((file) => fs.readFileSync(path.join(root, "assets", file), "utf8"))
-  .join("\n");
+  fs.readFileSync(path.join(root, "assets", "vendor/vue.global.prod.js"), "utf8"),
+  fs.readFileSync(path.join(root, "assets", "app-ui.js"), "utf8"),
+  notificationsClient,
+  ...[
+    "app-auth.js",
+    "app-screen-projections.js",
+    "app-screen-login.js",
+    "app-screen-home.js",
+    "app-judoka-presentation.js",
+    "app-screen-judoka.js",
+    "app-screen-competition.js",
+    "app-screen-children.js",
+    "app-screen-admins.js",
+    "app-runtime.js",
+    "app.js"
+  ].map((file) => fs.readFileSync(path.join(root, "assets", file), "utf8"))
+].join("\n");
 const appRuntimeClient = fs.readFileSync(path.join(root, "assets", "app-runtime.js"), "utf8");
 const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
 const judokaPresentationClient = fs.readFileSync(
