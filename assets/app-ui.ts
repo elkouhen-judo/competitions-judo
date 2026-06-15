@@ -11,10 +11,18 @@
     "competitionFormView",
     "competitionFinalizationView",
     "combatFormView"
-  ];
+  ] as const;
 
-  function $(id) {
-    return document.getElementById(id);
+  type ViewId = (typeof viewIds)[number];
+  type ActionMap = Record<string, (...args: unknown[]) => unknown>;
+
+  function $<TElement extends HTMLElement = HTMLElement>(id: string): TElement {
+    const element = document.getElementById(id);
+    if (!element) {
+      throw new Error(`Élément introuvable: ${id}`);
+    }
+
+    return element as TElement;
   }
 
   function normalizeDisplayName(value) {
@@ -115,7 +123,11 @@
     }).format(date);
   }
 
-  function mountViewModel(id, viewModel, actions = {}) {
+  function mountViewModel<TViewModel extends object>(
+    id: string,
+    viewModel: TViewModel,
+    actions: ActionMap = {}
+  ): void {
     window.Vue.createApp({
       setup() {
         return {
@@ -126,11 +138,19 @@
     }).mount(`#${id}`);
   }
 
-  function cloneDefaultState(defaultState) {
-    return JSON.parse(JSON.stringify(defaultState));
+  function cloneDefaultState<TValue>(defaultState: TValue): TValue {
+    if (typeof structuredClone === "function") {
+      return structuredClone(defaultState);
+    }
+
+    return JSON.parse(JSON.stringify(defaultState)) as TValue;
   }
 
-  function createMountedViewModel(id, defaultState, actions = {}) {
+  function createMountedViewModel<TViewModel extends object>(
+    id: string,
+    defaultState: TViewModel,
+    actions: ActionMap = {}
+  ): TViewModel {
     const viewModel = window.Vue.reactive(cloneDefaultState(defaultState));
     mountViewModel(id, viewModel, actions);
     return viewModel;
@@ -151,6 +171,7 @@
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,
+    showView() {},
     toInputDate,
     viewIds
   };

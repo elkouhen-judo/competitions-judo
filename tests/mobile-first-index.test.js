@@ -50,7 +50,7 @@ test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /\.toast-layer\s*\{/);
   assert.match(bundle, /\.toast-close\s*\{/);
   assert.match(bundle, /showToast\("success", message,\s*4e3\)/);
-  assert.match(bundle, /showToast\("error", error\.message \|\| error,\s*7e3\)/);
+  assert.match(bundle, /showToast\("error", getErrorMessage\(error\),\s*7e3\)/);
   assert.match(bundle, /function showToast\(type,\s*message,\s*duration\)/);
   assert.match(bundle, /function dismissToast\(toastId\)/);
   assert.match(bundle, /v-for="toast in toasts"/);

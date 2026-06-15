@@ -1,11 +1,27 @@
+import type {
+  AppScreens,
+  AuthApi,
+  InitialData,
+  KirokuApp,
+  KirokuAppState,
+  NotificationsApi,
+  OperationResult,
+  RpcClientArgs,
+  RpcClientMethod,
+  RpcClientResult,
+  RunServerOptions,
+  RuntimeConfig
+} from "./types";
+
 (() => {
+
   window.createKirokuApp = function createKirokuApp() {
-    const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
+    const runtimeConfig: RuntimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const defaultAccessInvitationVisibleCount = 5;
     const defaultListPageSize = 10;
     const state = createInitialState();
 
-    function createInitialState() {
+    function createInitialState(): KirokuAppState {
       return {
         currentUser: null,
         isAdmin: false,
@@ -37,10 +53,10 @@
 
     const ui = window.KirokuUI;
     const { $, viewIds } = ui;
-    const notifications = window.createKirokuNotifications();
+    const notifications: NotificationsApi = window.createKirokuNotifications();
     const { clearMessage, showError, showSuccess } = notifications;
 
-    let loginScreen;
+    let loginScreen: AppScreens["login"] | undefined;
     const headerViewModel = window.Vue.reactive({
       showHeader: false,
       userName: "",
@@ -51,7 +67,7 @@
       logoutUser
     });
 
-    const auth = window.createKirokuAuth({
+    const auth: AuthApi = window.createKirokuAuth({
       runtimeConfig,
       onInvitationRequired: () => loginScreen && loginScreen.showInvitationRequired(),
       onError: showError
@@ -60,8 +76,8 @@
 
     ui.showView = showView;
 
-    const screens: any = {};
-    const app: any = {
+    const screens = {} as AppScreens;
+    const app: KirokuApp = {
       applyInitialData,
       auth,
       confirmAndRun,
@@ -91,11 +107,22 @@
     screens.login = loginScreen;
     app.loginScreen = loginScreen;
 
-    async function runServer(method, args, success, failure) {
+    async function runServer<M extends RpcClientMethod>(
+      method: M,
+      args: RpcClientArgs<M>,
+      success?: (result: RpcClientResult<M>) => void,
+      failure?: (error: unknown) => void
+    ) {
       return runServerWithOptions(method, args, success, failure);
     }
 
-    async function runServerWithOptions(method, args, success, failure, options: any = {}) {
+    async function runServerWithOptions<M extends RpcClientMethod>(
+      method: M,
+      args: RpcClientArgs<M>,
+      success?: (result: RpcClientResult<M>) => void,
+      failure?: (error: unknown) => void,
+      options: RunServerOptions = {}
+    ) {
       const maxAttempts = options.retrySessionOnce ? 2 : 1;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -123,7 +150,10 @@
           success && success(payload.result);
           return;
         } catch (error) {
-          const errorMessage = String(error.message || "");
+          const errorMessage =
+            error && typeof error === "object" && "message" in error
+              ? String((error as { message?: unknown }).message || "")
+              : String(error || "");
           if (
             options.retrySessionOnce &&
             attempt < maxAttempts &&
@@ -160,7 +190,7 @@
       );
     }
 
-    function wait(delayMs) {
+    function wait(delayMs: number): Promise<void> {
       return new Promise((resolve) => window.setTimeout(resolve, delayMs));
     }
 
@@ -176,7 +206,7 @@
       showSuccess("Vous êtes déconnecté.");
     }
 
-    function applyInitialData(data) {
+    function applyInitialData(data: InitialData) {
       state.currentUser = data.user;
       state.isAdmin = Boolean(data.isAdmin);
       state.isCoach = Boolean(data.isCoach);
@@ -203,12 +233,27 @@
       headerViewModel.showHeader = Boolean(visible);
     }
 
-    function confirmAndRun({ message, method, args, onSuccess }) {
+    function confirmAndRun({
+      message,
+      method,
+      args,
+      onSuccess
+    }: {
+      message: string;
+      method: RpcClientMethod;
+      args: unknown[];
+      onSuccess?: (response: OperationResult) => void;
+    }) {
       if (!window.confirm(message)) {
         return;
       }
 
-      runServer(method, args, onSuccess, showError);
+      runServer(
+        method as RpcClientMethod,
+        args as never,
+        onSuccess as ((result: never) => void) | undefined,
+        showError
+      );
     }
 
     function reloadInitialData(openCompetitionId) {
@@ -226,11 +271,6 @@
         "getInitialData",
         [],
         (data) => {
-          if (data.error) {
-            showError({ message: data.error });
-            return;
-          }
-
           applyInitialData(data);
           afterReload();
         },
