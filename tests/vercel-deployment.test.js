@@ -736,8 +736,14 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/competitions\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/combats\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/repositories\/invitations\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/repositories\/parent-links\.repository\.js/);
+  assert.match(coreIndex, /core-dist\/services\/admin\.service\.js/);
+  assert.match(coreIndex, /core-dist\/services\/competitions\.service\.js/);
+  assert.match(coreIndex, /core-dist\/services\/combats\.service\.js/);
   assert.match(coreIndex, /buildJudokaProfileSnapshot/);
   assert.match(coreIndex, /\.\.\.adminService\.methods/);
   assert.match(coreIndex, /\.\.\.clubCompetitionsService\.methods/);
