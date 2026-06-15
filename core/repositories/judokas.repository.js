@@ -32,7 +32,8 @@ module.exports = function createJudokasRepository(deps) {
       record.nom = changes.name ? changes.name.lastName : changes.nom;
     }
     if (changes.profileType !== undefined || changes.profile_type !== undefined) {
-      record.profile_type = changes.profileType !== undefined ? changes.profileType : changes.profile_type;
+      record.profile_type =
+        changes.profileType !== undefined ? changes.profileType : changes.profile_type;
     }
     if (changes.accessRole !== undefined || changes.role !== undefined) {
       record.role = changes.accessRole !== undefined ? changes.accessRole : changes.role;
@@ -65,7 +66,10 @@ module.exports = function createJudokasRepository(deps) {
     if (!ids || !ids.length) {
       return [];
     }
-    return supabaseSelect("judokas", `select=*&id_judoka=in.(${ids.join(",")})&order=nom.asc,prenom.asc`);
+    return supabaseSelect(
+      "judokas",
+      `select=*&id_judoka=in.(${ids.join(",")})&order=nom.asc,prenom.asc`
+    );
   }
 
   async function getByEmail(email) {
@@ -81,7 +85,11 @@ module.exports = function createJudokasRepository(deps) {
   }
 
   async function update(idJudoka, judokaChanges) {
-    return supabasePatch("judokas", eqFilter("id_judoka", idJudoka), toJudokaChangesRecord(judokaChanges));
+    return supabasePatch(
+      "judokas",
+      eqFilter("id_judoka", idJudoka),
+      toJudokaChangesRecord(judokaChanges)
+    );
   }
 
   async function updateManagedChild(idJudoka, child) {

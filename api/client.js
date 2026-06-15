@@ -19,7 +19,7 @@ module.exports = function handler(_req, res) {
     "app.js"
   ];
   const client = clientFiles
-    .map(file => fs.readFileSync(path.join(process.cwd(), "assets", file), "utf8"))
+    .map((file) => fs.readFileSync(path.join(process.cwd(), "assets", file), "utf8"))
     .join("\n\n");
 
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");

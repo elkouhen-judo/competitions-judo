@@ -30,16 +30,21 @@ module.exports = function createCompetitionsService(deps) {
     } else {
       const visibleJudokaIds = access.visibleJudokaIds();
       if (!visibleJudokaIds.length) return [];
-      records = visibleJudokaIds.length === 1
-        ? await competitionsRepository.listByJudoka(visibleJudokaIds[0])
-        : await competitionsRepository.listByJudokaIds(visibleJudokaIds);
+      records =
+        visibleJudokaIds.length === 1
+          ? await competitionsRepository.listByJudoka(visibleJudokaIds[0])
+          : await competitionsRepository.listByJudokaIds(visibleJudokaIds);
     }
 
     return records.map(toCanonicalCompetition);
   }
 
   async function getCompetitionDetail(email, idCompetition) {
-    const { judokas: contextJudokas, managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
+    const {
+      judokas: contextJudokas,
+      managedJudokaScope,
+      domainUser
+    } = await userContextService.getDomainUserContext(email);
     const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
     const competitionRecord = await competitionsRepository.getById(idCompetition);
 
@@ -48,21 +53,28 @@ module.exports = function createCompetitionsService(deps) {
     }
     const domainCompetition = toCanonicalCompetition(competitionRecord);
 
-    assertCanAccessCompetition(domainUser, domainCompetition, managedJudokaScope, "Accès refusé à cette compétition.");
+    assertCanAccessCompetition(
+      domainUser,
+      domainCompetition,
+      managedJudokaScope,
+      "Accès refusé à cette compétition."
+    );
 
     let filtered;
     if (access.isAll()) {
       filtered = await combatsRepository.listByCompetition(idCompetition);
     } else {
       const visibleJudokaIds = access.visibleJudokaIds();
-      filtered = visibleJudokaIds.length === 1
-        ? await combatsRepository.listByCompetitionAndJudoka(idCompetition, visibleJudokaIds[0])
-        : await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, visibleJudokaIds);
+      filtered =
+        visibleJudokaIds.length === 1
+          ? await combatsRepository.listByCompetitionAndJudoka(idCompetition, visibleJudokaIds[0])
+          : await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, visibleJudokaIds);
     }
 
     const judokas = access.isOwn() ? [] : contextJudokas.map(toCanonicalJudoka);
     const enriched = toCombatReadModelsWithJudokas(filtered, judokas, {
-      formatJudokaDisplayName: judoka => `${judoka.firstName} ${normalizeLastName(judoka.lastName)}`
+      formatJudokaDisplayName: (judoka) =>
+        `${judoka.firstName} ${normalizeLastName(judoka.lastName)}`
     });
 
     return {
@@ -80,7 +92,11 @@ module.exports = function createCompetitionsService(deps) {
   async function saveCompetition(email, competition) {
     const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     const domainCompetitionInput = toCanonicalCompetition(competition);
-    const ownerJudokaId = resolveCompetitionOwnerId(domainUser, domainCompetitionInput, managedJudokaScope);
+    const ownerJudokaId = resolveCompetitionOwnerId(
+      domainUser,
+      domainCompetitionInput,
+      managedJudokaScope
+    );
 
     const competitionId = domainCompetitionInput.competitionId;
 
@@ -132,7 +148,9 @@ module.exports = function createCompetitionsService(deps) {
       "Finalisation de cette compétition non autorisée."
     );
 
-    const finalization = createPersistedCompetition(toCanonicalCompetition(competition)).finalize(result);
+    const finalization = createPersistedCompetition(toCanonicalCompetition(competition)).finalize(
+      result
+    );
     await competitionsRepository.updateResult(idCompetition, finalization);
     return {
       success: true,

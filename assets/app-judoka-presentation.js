@@ -4,12 +4,8 @@
       return null;
     }
 
-    const {
-      formatDate,
-      getClassementBadgeClass,
-      getJudokaDisplayName,
-      getJudokaInitials
-    } = helpers;
+    const { formatDate, getClassementBadgeClass, getJudokaDisplayName, getJudokaInitials } =
+      helpers;
     const {
       judoka,
       season,
@@ -23,13 +19,16 @@
       combatProfile,
       competitionResults
     } = profile;
-    const highlightedCompetition = lastCompetition || (competitionResults && competitionResults[0]) || null;
-    const category = highlightedCompetition && highlightedCompetition.category
-      ? highlightedCompetition.category
-      : "Catégorie à confirmer";
-    const weightCategory = highlightedCompetition && highlightedCompetition.weightCategory
-      ? highlightedCompetition.weightCategory
-      : "Poids à confirmer";
+    const highlightedCompetition =
+      lastCompetition || (competitionResults && competitionResults[0]) || null;
+    const category =
+      highlightedCompetition && highlightedCompetition.category
+        ? highlightedCompetition.category
+        : "Catégorie à confirmer";
+    const weightCategory =
+      highlightedCompetition && highlightedCompetition.weightCategory
+        ? highlightedCompetition.weightCategory
+        : "Poids à confirmer";
     const normalizedCombatProfile = combatProfile || {};
 
     return {
@@ -63,7 +62,7 @@
         Number(normalizedCombatProfile.penalties || 0) ||
         Number(normalizedCombatProfile.forfeits || 0)
       ),
-      competitionResults: (competitionResults || []).map(result => ({
+      competitionResults: (competitionResults || []).map((result) => ({
         competitionId: result.competitionId || "",
         name: result.name || "Compétition",
         date: formatDate(result.competitionDate),

@@ -1,7 +1,4 @@
-const {
-  isLossCombatResult,
-  isVictoryCombatResult
-} = require("./competitions/combat-result");
+const { isLossCombatResult, isVictoryCombatResult } = require("./competitions/combat-result");
 
 function buildJudokaProfileSnapshot({
   judoka,
@@ -12,39 +9,43 @@ function buildJudokaProfileSnapshot({
   isDateWithinSeason
 }) {
   const currentBounds = getCurrentSeasonBounds();
-  const sortedCompetitions = [...competitions].sort((a, b) => (
+  const sortedCompetitions = [...competitions].sort((a, b) =>
     String(b.competitionDate || "").localeCompare(String(a.competitionDate || ""))
-  ));
-  const currentSeasonCompetitions = sortedCompetitions.filter(c => isDateWithinSeason(c.competitionDate, currentBounds));
+  );
+  const currentSeasonCompetitions = sortedCompetitions.filter((c) =>
+    isDateWithinSeason(c.competitionDate, currentBounds)
+  );
   const latestCompetition = sortedCompetitions[0] || null;
   const referenceDate = latestCompetition ? new Date(latestCompetition.competitionDate) : null;
-  const fallbackBounds = referenceDate && !Number.isNaN(referenceDate.getTime())
-    ? getCurrentSeasonBounds(referenceDate)
-    : currentBounds;
+  const fallbackBounds =
+    referenceDate && !Number.isNaN(referenceDate.getTime())
+      ? getCurrentSeasonBounds(referenceDate)
+      : currentBounds;
   const bounds = currentSeasonCompetitions.length ? currentBounds : fallbackBounds;
   const seasonCompetitions = currentSeasonCompetitions.length
     ? currentSeasonCompetitions
-    : sortedCompetitions.filter(c => isDateWithinSeason(c.competitionDate, bounds));
+    : sortedCompetitions.filter((c) => isDateWithinSeason(c.competitionDate, bounds));
   const lastCompetition = seasonCompetitions[0] || null;
-  const seasonCompetitionIds = new Set(seasonCompetitions.map(c => String(c.competitionId)));
-  const seasonCombats = combats.filter(c => seasonCompetitionIds.has(String(c.competitionId)));
-  const seasonWins = seasonCombats.filter(c => isVictoryCombatResult(c.result)).length;
-  const seasonLosses = seasonCombats.filter(c => isLossCombatResult(c.result)).length;
+  const seasonCompetitionIds = new Set(seasonCompetitions.map((c) => String(c.competitionId)));
+  const seasonCombats = combats.filter((c) => seasonCompetitionIds.has(String(c.competitionId)));
+  const seasonWins = seasonCombats.filter((c) => isVictoryCombatResult(c.result)).length;
+  const seasonLosses = seasonCombats.filter((c) => isLossCombatResult(c.result)).length;
   const seasonDraws = seasonCombats.length - seasonWins - seasonLosses;
-  const victoryRate = seasonCombats.length ? Math.round((seasonWins / seasonCombats.length) * 100) : 0;
+  const victoryRate = seasonCombats.length
+    ? Math.round((seasonWins / seasonCombats.length) * 100)
+    : 0;
   const combatProfile = buildCombatProfile(seasonCombats);
 
-  const competitionResults = seasonCompetitions
-    .map(c => ({
-      competitionId: c.competitionId,
-      name: c.name,
-      competitionDate: c.competitionDate,
-      result: c.result || "",
-      category: getCompetitionCategoryLabel(c),
-      weightCategory: c.weightCategory || "",
-      resultBadge: getCompetitionResultBadge(c.result),
-      combatRecord: getCompetitionCombatRecord(seasonCombats, c.competitionId)
-    }));
+  const competitionResults = seasonCompetitions.map((c) => ({
+    competitionId: c.competitionId,
+    name: c.name,
+    competitionDate: c.competitionDate,
+    result: c.result || "",
+    category: getCompetitionCategoryLabel(c),
+    weightCategory: c.weightCategory || "",
+    resultBadge: getCompetitionResultBadge(c.result),
+    combatRecord: getCompetitionCombatRecord(seasonCombats, c.competitionId)
+  }));
 
   return {
     judoka,
@@ -82,7 +83,7 @@ function buildCombatProfile(combats) {
     forfeits: 0
   };
 
-  combats.forEach(combat => {
+  combats.forEach((combat) => {
     const decisionType = String(combat.victoryType || "");
     if (isVictoryCombatResult(combat.result)) {
       if (decisionType === "Ippon") stats.victoryIppon += 1;
@@ -104,9 +105,11 @@ function buildCombatProfile(combats) {
 }
 
 function getCompetitionCombatRecord(combats, competitionId) {
-  const competitionCombats = combats.filter(c => String(c.competitionId) === String(competitionId));
-  const wins = competitionCombats.filter(c => isVictoryCombatResult(c.result)).length;
-  const losses = competitionCombats.filter(c => isLossCombatResult(c.result)).length;
+  const competitionCombats = combats.filter(
+    (c) => String(c.competitionId) === String(competitionId)
+  );
+  const wins = competitionCombats.filter((c) => isVictoryCombatResult(c.result)).length;
+  const losses = competitionCombats.filter((c) => isLossCombatResult(c.result)).length;
   const draws = competitionCombats.length - wins - losses;
   return {
     total: competitionCombats.length,

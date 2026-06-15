@@ -36,26 +36,41 @@ module.exports = function createCompetitionsRepository(deps) {
   }
 
   async function listByJudoka(idJudoka) {
-    return supabaseSelect("competitions", `select=*&${eqFilter("id_judoka", idJudoka)}&order=date.desc`);
+    return supabaseSelect(
+      "competitions",
+      `select=*&${eqFilter("id_judoka", idJudoka)}&order=date.desc`
+    );
   }
 
   async function listByJudokaIds(ids) {
     if (!ids || !ids.length) {
       return [];
     }
-    return supabaseSelect("competitions", `select=*&id_judoka=in.(${ids.join(",")})&order=date.desc`);
+    return supabaseSelect(
+      "competitions",
+      `select=*&id_judoka=in.(${ids.join(",")})&order=date.desc`
+    );
   }
 
   async function listByClubCompetition(idClubCompetition) {
-    return supabaseSelect("competitions", `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc`);
+    return supabaseSelect(
+      "competitions",
+      `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc`
+    );
   }
 
   async function getById(idCompetition) {
-    return supabaseSelectOne("competitions", `select=*&${eqFilter("id_competition", idCompetition)}`);
+    return supabaseSelectOne(
+      "competitions",
+      `select=*&${eqFilter("id_competition", idCompetition)}`
+    );
   }
 
   async function existsForJudoka(idJudoka) {
-    return supabaseSelectOne("competitions", `select=id_competition&${eqFilter("id_judoka", idJudoka)}`);
+    return supabaseSelectOne(
+      "competitions",
+      `select=id_competition&${eqFilter("id_judoka", idJudoka)}`
+    );
   }
 
   async function insert(competition, idCompetition) {
@@ -63,7 +78,11 @@ module.exports = function createCompetitionsRepository(deps) {
   }
 
   async function update(idCompetition, competition) {
-    return supabasePatch("competitions", eqFilter("id_competition", idCompetition), toCompetitionRecord(competition));
+    return supabasePatch(
+      "competitions",
+      eqFilter("id_competition", idCompetition),
+      toCompetitionRecord(competition)
+    );
   }
 
   async function updateResult(idCompetition, finalization) {

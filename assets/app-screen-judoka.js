@@ -75,7 +75,10 @@
     }
 
     function showCompetitionResultsPreviousPage() {
-      state.judokaCompetitionResultsCurrentPage = Math.max(state.judokaCompetitionResultsCurrentPage - 1, 1);
+      state.judokaCompetitionResultsCurrentPage = Math.max(
+        state.judokaCompetitionResultsCurrentPage - 1,
+        1
+      );
       renderCompetitionResultsPage();
     }
 
@@ -92,7 +95,7 @@
       app.runServer(
         "getJudokaProfile",
         [idJudoka],
-        data => {
+        (data) => {
           state.currentJudokaProfile = data;
           renderJudokaProfile();
           showView("judokaView");
@@ -107,12 +110,15 @@
         return;
       }
 
-      Object.assign(judokaViewModel, window.createJudokaProfileViewModel(state.currentJudokaProfile, {
-        formatDate,
-        getClassementBadgeClass,
-        getJudokaDisplayName,
-        getJudokaInitials
-      }));
+      Object.assign(
+        judokaViewModel,
+        window.createJudokaProfileViewModel(state.currentJudokaProfile, {
+          formatDate,
+          getClassementBadgeClass,
+          getJudokaDisplayName,
+          getJudokaInitials
+        })
+      );
       state.judokaCompetitionResultsCurrentPage = 1;
       renderCompetitionResultsPage();
     }

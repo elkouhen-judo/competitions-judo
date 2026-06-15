@@ -1,9 +1,5 @@
 module.exports = function createRegistrationService(deps) {
-  const {
-    adminService,
-    createEmail,
-    supabaseRpc
-  } = deps;
+  const { adminService, createEmail, supabaseRpc } = deps;
 
   async function registerProfile(email, profile) {
     const invitation = await adminService.getAccessInvitation(email);

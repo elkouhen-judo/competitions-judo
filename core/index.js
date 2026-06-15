@@ -157,13 +157,14 @@ async function getInitialData(email) {
     throw new Error("Accès non autorisé. Une invitation est requise.");
   }
 
-  const { user, judokas, managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
+  const { user, judokas, managedJudokaScope, domainUser } =
+    await userContextService.getDomainUserContext(email);
   const admin = permissions.isAdmin(domainUser);
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
 
-  const clubCompetitionsRaw = (admin || coach) ? await clubCompetitionsRepository.listAll() : [];
-  const clubCompetitions = clubCompetitionsRaw.map(cc => ({
+  const clubCompetitionsRaw = admin || coach ? await clubCompetitionsRepository.listAll() : [];
+  const clubCompetitions = clubCompetitionsRaw.map((cc) => ({
     clubCompetitionId: cc.id_club_competition,
     name: cc.nom,
     competitionDate: cc.date
@@ -177,7 +178,7 @@ async function getInitialData(email) {
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
     competitions: await competitionsService.getCompetitionsForUser(user, managedJudokaScope),
     clubCompetitions,
-    judokas: (admin || coach || parent) ? judokas.map(toCanonicalJudoka) : []
+    judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : []
   };
 }
 

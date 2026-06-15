@@ -1,11 +1,5 @@
 module.exports = function createParentLinksRepository(deps) {
-  const {
-    supabaseDelete,
-    supabaseInsert,
-    supabaseSelect,
-    supabaseSelectOne,
-    eqFilter
-  } = deps;
+  const { supabaseDelete, supabaseInsert, supabaseSelect, supabaseSelectOne, eqFilter } = deps;
 
   async function listByParent(idParent) {
     return supabaseSelect("parent_judokas", `select=id_judoka&${eqFilter("id_parent", idParent)}`);
@@ -19,8 +13,11 @@ module.exports = function createParentLinksRepository(deps) {
   }
 
   async function getOtherByJudoka(idJudoka, excludedParentId) {
-    const links = await supabaseSelect("parent_judokas", `select=id_parent&${eqFilter("id_judoka", idJudoka)}`);
-    return links.find(link => String(link.id_parent) !== String(excludedParentId)) || null;
+    const links = await supabaseSelect(
+      "parent_judokas",
+      `select=id_parent&${eqFilter("id_judoka", idJudoka)}`
+    );
+    return links.find((link) => String(link.id_parent) !== String(excludedParentId)) || null;
   }
 
   async function insert(payload) {
@@ -28,7 +25,10 @@ module.exports = function createParentLinksRepository(deps) {
   }
 
   async function remove(idParent, idJudoka) {
-    return supabaseDelete("parent_judokas", `${eqFilter("id_parent", idParent)}&${eqFilter("id_judoka", idJudoka)}`);
+    return supabaseDelete(
+      "parent_judokas",
+      `${eqFilter("id_parent", idParent)}&${eqFilter("id_judoka", idJudoka)}`
+    );
   }
 
   return {

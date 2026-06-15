@@ -1,18 +1,16 @@
-const {
-  createCompetitionAgeCategory,
-  createCompetitionDetailsDraft
-} = require("./competition");
-const {
-  createJudokaId,
-  createOptionalCompetitionId
-} = require("../shared/identity");
+const { createCompetitionAgeCategory, createCompetitionDetailsDraft } = require("./competition");
+const { createJudokaId, createOptionalCompetitionId } = require("../shared/identity");
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
 function createClubCompetitionParticipantIds(values) {
-  const ids = [...new Set((values || []).map(value => createJudokaId(value, "Judoka participant obligatoire.")))];
+  const ids = [
+    ...new Set(
+      (values || []).map((value) => createJudokaId(value, "Judoka participant obligatoire."))
+    )
+  ];
   if (!ids.length) {
     throw new Error("Au moins un judoka doit être sélectionné.");
   }

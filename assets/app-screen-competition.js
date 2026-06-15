@@ -13,11 +13,7 @@
       toInputDate,
       showView
     } = ui;
-    const {
-      clearMessage,
-      showError,
-      showSuccess
-    } = notifications;
+    const { clearMessage, showError, showSuccess } = notifications;
     const defaultCompetitionDetailViewState = {
       competitionTitle: "Compétition",
       competitionSubtitle: "",
@@ -130,14 +126,18 @@
         return;
       }
 
-      competitionDetailViewModel = ui.createMountedViewModel("competitionView", defaultCompetitionDetailViewState, {
-        deleteCurrentCompetition,
-        deleteCombat,
-        editCurrentCompetition,
-        navigateBackFromCompetition,
-        showCombatForm,
-        showCompetitionFinalizationForm
-      });
+      competitionDetailViewModel = ui.createMountedViewModel(
+        "competitionView",
+        defaultCompetitionDetailViewState,
+        {
+          deleteCurrentCompetition,
+          deleteCombat,
+          editCurrentCompetition,
+          navigateBackFromCompetition,
+          showCombatForm,
+          showCompetitionFinalizationForm
+        }
+      );
     }
 
     function ensureCompetitionFormViewModel() {
@@ -145,13 +145,17 @@
         return;
       }
 
-      competitionFormViewModel = ui.createMountedViewModel("competitionFormView", defaultCompetitionFormViewState, {
-        cancelCompetitionForm,
-        saveCompetition,
-        selectCompetitionOwner,
-        showCompetitionOwnerOptions,
-        updateCompetitionOwnerText
-      });
+      competitionFormViewModel = ui.createMountedViewModel(
+        "competitionFormView",
+        defaultCompetitionFormViewState,
+        {
+          cancelCompetitionForm,
+          saveCompetition,
+          selectCompetitionOwner,
+          showCompetitionOwnerOptions,
+          updateCompetitionOwnerText
+        }
+      );
     }
 
     function ensureClubCompetitionFormViewModel() {
@@ -159,13 +163,17 @@
         return;
       }
 
-      clubCompetitionFormViewModel = ui.createMountedViewModel("clubCompetitionFormView", defaultClubCompetitionFormViewState, {
-        cancelClubCompetitionForm,
-        saveClubCompetition,
-        updateClubCompetitionJudokaSearch,
-        showClubCompetitionFormParticipantsPreviousPage,
-        showClubCompetitionFormParticipantsNextPage
-      });
+      clubCompetitionFormViewModel = ui.createMountedViewModel(
+        "clubCompetitionFormView",
+        defaultClubCompetitionFormViewState,
+        {
+          cancelClubCompetitionForm,
+          saveClubCompetition,
+          updateClubCompetitionJudokaSearch,
+          showClubCompetitionFormParticipantsPreviousPage,
+          showClubCompetitionFormParticipantsNextPage
+        }
+      );
     }
 
     function ensureClubCompetitionDetailViewModel() {
@@ -173,18 +181,22 @@
         return;
       }
 
-      clubCompetitionDetailViewModel = ui.createMountedViewModel("clubCompetitionDetailView", defaultClubCompetitionDetailViewState, {
-        cancelClubCompetitionDetail,
-        confirmDeleteClubCompetition,
-        confirmDetachClubParticipant,
-        openCompetitionFromClubDetail,
-        saveClubCompetitionDetails,
-        updateClubAvailableJudokaSearch,
-        showClubCompetitionParticipantsPreviousPage,
-        showClubCompetitionParticipantsNextPage,
-        showClubCompetitionAvailableJudokasPreviousPage,
-        showClubCompetitionAvailableJudokasNextPage
-      });
+      clubCompetitionDetailViewModel = ui.createMountedViewModel(
+        "clubCompetitionDetailView",
+        defaultClubCompetitionDetailViewState,
+        {
+          cancelClubCompetitionDetail,
+          confirmDeleteClubCompetition,
+          confirmDetachClubParticipant,
+          openCompetitionFromClubDetail,
+          saveClubCompetitionDetails,
+          updateClubAvailableJudokaSearch,
+          showClubCompetitionParticipantsPreviousPage,
+          showClubCompetitionParticipantsNextPage,
+          showClubCompetitionAvailableJudokasPreviousPage,
+          showClubCompetitionAvailableJudokasNextPage
+        }
+      );
     }
 
     function ensureCompetitionFinalizationViewModel() {
@@ -192,10 +204,14 @@
         return;
       }
 
-      competitionFinalizationViewModel = ui.createMountedViewModel("competitionFinalizationView", defaultCompetitionFinalizationViewState, {
-        cancelCompetitionFinalizationForm,
-        finalizeCompetition
-      });
+      competitionFinalizationViewModel = ui.createMountedViewModel(
+        "competitionFinalizationView",
+        defaultCompetitionFinalizationViewState,
+        {
+          cancelCompetitionFinalizationForm,
+          finalizeCompetition
+        }
+      );
     }
 
     function ensureCombatFormViewModel() {
@@ -203,11 +219,15 @@
         return;
       }
 
-      combatFormViewModel = ui.createMountedViewModel("combatFormView", defaultCombatFormViewState, {
-        cancelCombatForm,
-        saveCombat,
-        syncCombatDecisionVisibility
-      });
+      combatFormViewModel = ui.createMountedViewModel(
+        "combatFormView",
+        defaultCombatFormViewState,
+        {
+          cancelCombatForm,
+          saveCombat,
+          syncCombatDecisionVisibility
+        }
+      );
     }
 
     function navigateBackFromCompetition() {
@@ -247,7 +267,7 @@
       app.runServer(
         "getCompetitionDetail",
         [id],
-        data => {
+        (data) => {
           state.currentCompetition = data.competition;
           state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
           state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
@@ -262,13 +282,16 @@
 
     function renderCompetitionDetail() {
       ensureCompetitionDetailViewModel();
-      Object.assign(competitionDetailViewModel, window.KirokuScreenProjections.projectCompetitionDetail(
-        state.currentCompetition,
-        state.canEditCurrentCompetition,
-        {
-          formatDate
-        }
-      ));
+      Object.assign(
+        competitionDetailViewModel,
+        window.KirokuScreenProjections.projectCompetitionDetail(
+          state.currentCompetition,
+          state.canEditCurrentCompetition,
+          {
+            formatDate
+          }
+        )
+      );
     }
 
     function editCurrentCompetition() {
@@ -282,15 +305,15 @@
 
     function renderCombats() {
       ensureCompetitionDetailViewModel();
-      Object.assign(competitionDetailViewModel, window.KirokuScreenProjections.projectCompetitionCombats(
-        state.currentCombats,
-        {
+      Object.assign(
+        competitionDetailViewModel,
+        window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
           formatResultat,
           normalizeDisplayName,
           showJudoka: state.isAdmin || state.isCoach,
           canEdit: state.canEditCurrentCompetition
-        }
-      ));
+        })
+      );
     }
 
     function showCompetitionForm(id) {
@@ -299,7 +322,9 @@
       state.previousView = state.currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
-        const c = state.competitions.find(x => String(x.competitionId) === String(id)) || state.currentCompetition;
+        const c =
+          state.competitions.find((x) => String(x.competitionId) === String(id)) ||
+          state.currentCompetition;
 
         if (!c) {
           showError({ message: "Compétition introuvable." });
@@ -337,10 +362,13 @@
 
     function updateClubCompetitionJudokaSearch() {
       const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
-      const selectedIds = new Set(clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.map(String));
+      const selectedIds = new Set(
+        clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.map(String)
+      );
       clubCompetitionFormViewModel.filteredClubCompetitionParticipants =
-        clubCompetitionFormViewModel.clubCompetitionParticipants.filter(p =>
-          selectedIds.has(String(p.judokaId)) || !query || p.name.toLowerCase().includes(query)
+        clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
+          (p) =>
+            selectedIds.has(String(p.judokaId)) || !query || p.name.toLowerCase().includes(query)
         );
       state.clubCompetitionFormParticipantsCurrentPage = 1;
       renderClubCompetitionFormParticipantsPage();
@@ -353,16 +381,24 @@
         defaultListPageSize
       );
       clubCompetitionFormViewModel.clubCompetitionFormParticipantsPage = pagination.pageItems;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalPages = pagination.totalPages;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCurrentPage = pagination.currentPage;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalCount = pagination.totalItems;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowPreviousPage = pagination.canShowPreviousPage;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowNextPage = pagination.canShowNextPage;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalPages =
+        pagination.totalPages;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCurrentPage =
+        pagination.currentPage;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalCount =
+        pagination.totalItems;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowPreviousPage =
+        pagination.canShowPreviousPage;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowNextPage =
+        pagination.canShowNextPage;
       state.clubCompetitionFormParticipantsCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionFormParticipantsPreviousPage() {
-      state.clubCompetitionFormParticipantsCurrentPage = Math.max(state.clubCompetitionFormParticipantsCurrentPage - 1, 1);
+      state.clubCompetitionFormParticipantsCurrentPage = Math.max(
+        state.clubCompetitionFormParticipantsCurrentPage - 1,
+        1
+      );
       renderClubCompetitionFormParticipantsPage();
     }
 
@@ -372,11 +408,16 @@
     }
 
     function updateClubAvailableJudokaSearch() {
-      const query = cleanText(clubCompetitionDetailViewModel.judokaAvailableSearchText).toLowerCase();
-      const selectedIds = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
+      const query = cleanText(
+        clubCompetitionDetailViewModel.judokaAvailableSearchText
+      ).toLowerCase();
+      const selectedIds = new Set(
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String)
+      );
       clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas =
-        clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(j =>
-          selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query)
+        clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(
+          (j) =>
+            selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query)
         );
       state.clubCompetitionAvailableJudokasCurrentPage = 1;
       renderClubCompetitionAvailableJudokasPage();
@@ -389,16 +430,24 @@
         defaultListPageSize
       );
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasPage = pagination.pageItems;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalPages = pagination.totalPages;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCurrentPage = pagination.currentPage;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalCount = pagination.totalItems;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowPreviousPage = pagination.canShowPreviousPage;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowNextPage = pagination.canShowNextPage;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalPages =
+        pagination.totalPages;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCurrentPage =
+        pagination.currentPage;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalCount =
+        pagination.totalItems;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowPreviousPage =
+        pagination.canShowPreviousPage;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowNextPage =
+        pagination.canShowNextPage;
       state.clubCompetitionAvailableJudokasCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionAvailableJudokasPreviousPage() {
-      state.clubCompetitionAvailableJudokasCurrentPage = Math.max(state.clubCompetitionAvailableJudokasCurrentPage - 1, 1);
+      state.clubCompetitionAvailableJudokasCurrentPage = Math.max(
+        state.clubCompetitionAvailableJudokasCurrentPage - 1,
+        1
+      );
       renderClubCompetitionAvailableJudokasPage();
     }
 
@@ -415,15 +464,21 @@
       );
       clubCompetitionDetailViewModel.clubCompetitionParticipantsPage = pagination.pageItems;
       clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalPages = pagination.totalPages;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCurrentPage = pagination.currentPage;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCurrentPage =
+        pagination.currentPage;
       clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalCount = pagination.totalItems;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowPreviousPage = pagination.canShowPreviousPage;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowNextPage = pagination.canShowNextPage;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowPreviousPage =
+        pagination.canShowPreviousPage;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowNextPage =
+        pagination.canShowNextPage;
       state.clubCompetitionParticipantsCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionParticipantsPreviousPage() {
-      state.clubCompetitionParticipantsCurrentPage = Math.max(state.clubCompetitionParticipantsCurrentPage - 1, 1);
+      state.clubCompetitionParticipantsCurrentPage = Math.max(
+        state.clubCompetitionParticipantsCurrentPage - 1,
+        1
+      );
       renderClubCompetitionParticipantsPage();
     }
 
@@ -435,7 +490,7 @@
     function showClubCompetitionForm() {
       clearMessage();
       ensureClubCompetitionFormViewModel();
-      const allParticipants = state.judokas.map(j => ({
+      const allParticipants = state.judokas.map((j) => ({
         judokaId: String(j.judokaId || ""),
         name: getJudokaDisplayName(j) || "Judoka"
       }));
@@ -463,7 +518,7 @@
       app.runServer(
         "saveClubCompetition",
         [form],
-        response => {
+        (response) => {
           showSuccess(response.message);
           app.reloadInitialData();
         },
@@ -483,10 +538,12 @@
       app.runServer(
         "getClubCompetitionDetail",
         [id],
-        data => {
+        (data) => {
           const cc = data.clubCompetition;
-          const judokasById = new Map(data.judokas.map(j => [String(j.judokaId), j]));
-          const participantJudokaIds = new Set(data.participations.map(p => String(p.ownerJudokaId)));
+          const judokasById = new Map(data.judokas.map((j) => [String(j.judokaId), j]));
+          const participantJudokaIds = new Set(
+            data.participations.map((p) => String(p.ownerJudokaId))
+          );
 
           Object.assign(clubCompetitionDetailViewModel.clubCompetitionDetailForm, {
             clubCompetitionId: cc.id_club_competition || "",
@@ -496,20 +553,21 @@
             weightCategory: cc.categorie_poids || ""
           });
           clubCompetitionDetailViewModel.clubCompetitionDetailTitle = cc.nom || "Compétition club";
-          clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = data.participations.map(p => {
-            const judoka = judokasById.get(String(p.ownerJudokaId));
-            return {
-              competitionId: p.competitionId || "",
-              judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
-              result: p.result || "Non classé",
-              resultClass: getClassementBadgeClass(p.result)
-            };
-          });
+          clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants =
+            data.participations.map((p) => {
+              const judoka = judokasById.get(String(p.ownerJudokaId));
+              return {
+                competitionId: p.competitionId || "",
+                judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
+                result: p.result || "Non classé",
+                resultClass: getClassementBadgeClass(p.result)
+              };
+            });
           state.clubCompetitionParticipantsCurrentPage = 1;
           renderClubCompetitionParticipantsPage();
           const available = state.judokas
-            .filter(j => !participantJudokaIds.has(String(j.judokaId)))
-            .map(j => ({
+            .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
+            .map((j) => ({
               judokaId: String(j.judokaId || ""),
               name: getJudokaDisplayName(j) || "Judoka"
             }));
@@ -529,15 +587,17 @@
       const form = clubCompetitionDetailViewModel.clubCompetitionDetailForm;
       app.runServer(
         "saveClubCompetition",
-        [{
-          clubCompetitionId: form.clubCompetitionId,
-          name: form.name,
-          competitionDate: form.competitionDate,
-          ageCategory: form.ageCategory,
-          weightCategory: form.weightCategory,
-          participantJudokaIds: clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
-        }],
-        response => {
+        [
+          {
+            clubCompetitionId: form.clubCompetitionId,
+            name: form.name,
+            competitionDate: form.competitionDate,
+            ageCategory: form.ageCategory,
+            weightCategory: form.weightCategory,
+            participantJudokaIds: clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
+          }
+        ],
+        (response) => {
           showSuccess(response.message);
           openClubCompetition(form.clubCompetitionId);
         },
@@ -550,7 +610,7 @@
         message: `Retirer ${judokaName} de cette compétition club ? Ses résultats individuels seront conservés.`,
         method: "detachClubCompetitionParticipant",
         args: [clubCompetitionId, competitionId],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           openClubCompetition(clubCompetitionId);
         }
@@ -563,7 +623,8 @@
 
     function confirmDeleteClubCompetition() {
       ensureClubCompetitionDetailViewModel();
-      const clubCompetitionId = clubCompetitionDetailViewModel.clubCompetitionDetailForm.clubCompetitionId;
+      const clubCompetitionId =
+        clubCompetitionDetailViewModel.clubCompetitionDetailForm.clubCompetitionId;
       const name = clubCompetitionDetailViewModel.clubCompetitionDetailTitle;
       confirmDeleteClubCompetitionById(clubCompetitionId, name);
     }
@@ -573,7 +634,7 @@
         message: `Supprimer la compétition club "${name}" ? Les compétitions et combats individuels des judokas associés seront aussi supprimés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialData();
         }
@@ -585,7 +646,7 @@
         message: "Retirer ce judoka de la compétition club sans supprimer ses résultats ?",
         method: "detachClubCompetitionParticipant",
         args: [idClubCompetition, idCompetition],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialData();
         }
@@ -620,7 +681,7 @@
       app.runServer(
         "saveCompetition",
         [competition],
-        response => {
+        (response) => {
           showSuccess(response.message);
           app.reloadInitialData(response.competitionId);
         },
@@ -656,7 +717,7 @@
       app.runServer(
         "finalizeCompetition",
         [competitionId, result],
-        response => {
+        (response) => {
           showSuccess(response.message);
           openCompetition(response.competitionId || competitionId, true);
         },
@@ -671,7 +732,7 @@
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
 
       if (combatId) {
-        const combat = state.currentCombats.find(c => String(c.combatId) === String(combatId));
+        const combat = state.currentCombats.find((c) => String(c.combatId) === String(combatId));
 
         if (!combat) {
           showError({ message: "Combat introuvable." });
@@ -730,7 +791,7 @@
       app.runServer(
         "ajouterCombat",
         [combat],
-        response => {
+        (response) => {
           showSuccess(response.message);
           resetCombatForm();
           openCompetition(state.currentCompetition.competitionId, true);
@@ -746,7 +807,7 @@
       app.runServer(
         "updateCombat",
         [combat],
-        response => {
+        (response) => {
           showSuccess(response.message);
           resetCombatForm();
           openCompetition(state.currentCompetition.competitionId, true);
@@ -763,7 +824,8 @@
         judokaId: state.currentCompetition.ownerJudokaId,
         opponent: combatFormViewModel.combatForm.opponent,
         result,
-        victoryType: result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
+        victoryType:
+          result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
         notes: combatFormViewModel.combatForm.notes
       };
     }
@@ -776,7 +838,7 @@
         message: `Supprimer la compétition${label} et tous ses combats ?`,
         method: "deleteCompetition",
         args: [state.currentCompetition.competitionId],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           state.currentCompetition = null;
           app.reloadInitialData();
@@ -790,7 +852,7 @@
         message: `Supprimer la compétition${label} et tous ses combats ?`,
         method: "deleteCompetition",
         args: [id],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialData();
         }
@@ -802,7 +864,7 @@
         message: "Supprimer ce combat ?",
         method: "deleteCombat",
         args: [id],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           openCompetition(state.currentCompetition.competitionId, true);
         }
@@ -819,26 +881,24 @@
     function resolveCompetitionOwnerSelection() {
       const hiddenValue = String(competitionFormViewModel.ownerJudokaId || "").trim();
 
-      if (hiddenValue && state.judokas.some(j => String(j.judokaId) === hiddenValue)) {
+      if (hiddenValue && state.judokas.some((j) => String(j.judokaId) === hiddenValue)) {
         return hiddenValue;
       }
 
       const typedValue = normalizeJudokaSelectionKey(competitionFormViewModel.ownerJudokaText);
       if (!typedValue) {
         const activeJudokaId = String(app.screens.home.getHomeActiveJudokaId() || "").trim();
-        if (activeJudokaId && state.judokas.some(j => String(j.judokaId) === activeJudokaId)) {
+        if (activeJudokaId && state.judokas.some((j) => String(j.judokaId) === activeJudokaId)) {
           competitionFormViewModel.ownerJudokaId = activeJudokaId;
           return activeJudokaId;
         }
         return "";
       }
 
-      const matches = state.judokas.filter(j => {
-        return [
-          getJudokaDisplayName(j),
-          ui.getCompactJudokaLabel(j),
-          j && j.judokaId
-        ].some(label => normalizeJudokaSelectionKey(label) === typedValue);
+      const matches = state.judokas.filter((j) => {
+        return [getJudokaDisplayName(j), ui.getCompactJudokaLabel(j), j && j.judokaId].some(
+          (label) => normalizeJudokaSelectionKey(label) === typedValue
+        );
       });
 
       if (matches.length === 1) {
@@ -863,7 +923,7 @@
         return;
       }
 
-      const owner = state.judokas.find(j => String(j.judokaId) === String(idJudoka));
+      const owner = state.judokas.find((j) => String(j.judokaId) === String(idJudoka));
       Object.assign(competitionFormViewModel, {
         showCompetitionOwnerBlock: true,
         ownerJudokaId: owner ? String(owner.judokaId || "") : "",
@@ -895,12 +955,13 @@
     }
 
     function refreshCompetitionOwnerOptions(queryOverride) {
-      const query = queryOverride !== undefined
-        ? cleanText(queryOverride).toLowerCase()
-        : cleanText(competitionFormViewModel.ownerJudokaText).toLowerCase();
+      const query =
+        queryOverride !== undefined
+          ? cleanText(queryOverride).toLowerCase()
+          : cleanText(competitionFormViewModel.ownerJudokaText).toLowerCase();
       competitionFormViewModel.ownerOptions = state.judokas
         .map(getOwnerOption)
-        .filter(option => !query || option.searchText.includes(query));
+        .filter((option) => !query || option.searchText.includes(query));
     }
 
     function showCompetitionOwnerOptions() {

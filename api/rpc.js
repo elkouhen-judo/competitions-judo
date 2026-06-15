@@ -3,7 +3,7 @@ const { methods, verifySupabaseUser } = require("./_core");
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
-    req.on("data", chunk => {
+    req.on("data", (chunk) => {
       body += chunk;
       if (body.length > 1024 * 1024) {
         reject(new Error("Requête trop volumineuse."));

@@ -1,4 +1,8 @@
-const { createCompetitionId, createJudokaId, createOptionalCompetitionId } = require("../shared/identity");
+const {
+  createCompetitionId,
+  createJudokaId,
+  createOptionalCompetitionId
+} = require("../shared/identity");
 const { createCompetitionRanking } = require("../competition-results");
 const { createCombat } = require("./combat");
 
@@ -18,10 +22,7 @@ const AGE_CATEGORIES = [
 ];
 
 const AGE_CATEGORY_ALIASES = new Map(
-  AGE_CATEGORIES.map(category => [
-    normalizeCompetitionKey(category),
-    category
-  ])
+  AGE_CATEGORIES.map((category) => [normalizeCompetitionKey(category), category])
 );
 
 function normalizeCompetitionKey(value) {
@@ -57,7 +58,10 @@ function createCompetitionDate(value) {
   }
 
   const parsedDate = new Date(`${competitionDate}T00:00:00Z`);
-  if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== competitionDate) {
+  if (
+    Number.isNaN(parsedDate.getTime()) ||
+    parsedDate.toISOString().slice(0, 10) !== competitionDate
+  ) {
     throw new Error("Date de compétition invalide.");
   }
 
@@ -88,7 +92,9 @@ function createCompetition(competition, ownerJudokaId) {
   const draft = createCompetitionDetailsDraft(competition);
   const resolvedOwnerJudokaId = createJudokaId(ownerJudokaId, "Judoka participant obligatoire.");
   const competitionId = createOptionalCompetitionId(competition && competition.competitionId);
-  const clubCompetitionId = createOptionalCompetitionId(competition && competition.clubCompetitionId);
+  const clubCompetitionId = createOptionalCompetitionId(
+    competition && competition.clubCompetitionId
+  );
   const result = createCompetitionFinalResult(competition && competition.result);
 
   const record = {
@@ -106,12 +112,15 @@ function createCompetition(competition, ownerJudokaId) {
   return {
     ...record,
     changeDetails(details = {}) {
-      return createCompetition({
-        ...details,
-        competitionId: record.competitionId,
-        clubCompetitionId: record.clubCompetitionId,
-        result: details.result !== undefined ? details.result : record.result
-      }, record.ownerJudokaId);
+      return createCompetition(
+        {
+          ...details,
+          competitionId: record.competitionId,
+          clubCompetitionId: record.clubCompetitionId,
+          result: details.result !== undefined ? details.result : record.result
+        },
+        record.ownerJudokaId
+      );
     },
     finalize(finalResult) {
       return {

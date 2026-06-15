@@ -57,7 +57,10 @@ module.exports = function createAdminService(deps) {
       throw new Error("Aucun judoka trouvé avec cet email.");
     }
 
-    await judokasRepository.update(target.id_judoka, createJudoka(toCanonicalJudoka(target)).grantAdminRole());
+    await judokasRepository.update(
+      target.id_judoka,
+      createJudoka(toCanonicalJudoka(target)).grantAdminRole()
+    );
 
     return {
       success: true,
@@ -108,7 +111,10 @@ module.exports = function createAdminService(deps) {
       throw new Error("Admin introuvable.");
     }
 
-    await judokasRepository.update(idJudoka, createJudoka(toCanonicalJudoka(target)).revokeAdminRole(user.id_judoka));
+    await judokasRepository.update(
+      idJudoka,
+      createJudoka(toCanonicalJudoka(target)).revokeAdminRole(user.id_judoka)
+    );
 
     return { success: true, message: "Droits admin retirés." };
   }

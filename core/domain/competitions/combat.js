@@ -4,9 +4,8 @@ const { createCombatId, createCompetitionId, createJudokaId } = require("../shar
 
 function createCombatDraft(combat = {}) {
   const result = createCombatResult(combat.result);
-  const victoryTypeValue = result === "Egalité"
-    ? (combat.victoryType || "Hiki wake")
-    : combat.victoryType;
+  const victoryTypeValue =
+    result === "Egalité" ? combat.victoryType || "Hiki wake" : combat.victoryType;
 
   return {
     opponent: combat.opponent || "",
@@ -19,9 +18,7 @@ function createCombatDraft(combat = {}) {
 function createCombat(combat) {
   const competitionId = createCompetitionId(combat && combat.competitionId);
   const judokaId = createJudokaId(combat && combat.judokaId);
-  const combatId = combat && combat.combatId
-    ? createCombatId(combat.combatId)
-    : null;
+  const combatId = combat && combat.combatId ? createCombatId(combat.combatId) : null;
   const draft = createCombatDraft(combat);
 
   return {

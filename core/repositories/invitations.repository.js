@@ -1,10 +1,5 @@
 module.exports = function createInvitationsRepository(deps) {
-  const {
-    supabaseDelete,
-    supabaseInsert,
-    supabaseSelect,
-    supabaseSelectOne
-  } = deps;
+  const { supabaseDelete, supabaseInsert, supabaseSelect, supabaseSelectOne } = deps;
 
   function toAccessInvitationRecord(invitation) {
     return {
@@ -19,7 +14,10 @@ module.exports = function createInvitationsRepository(deps) {
   }
 
   async function getByEmail(email) {
-    return supabaseSelectOne("access_invitations", `select=*&email=ilike.${findEmailQueryValue(email)}`);
+    return supabaseSelectOne(
+      "access_invitations",
+      `select=*&email=ilike.${findEmailQueryValue(email)}`
+    );
   }
 
   async function listAll() {

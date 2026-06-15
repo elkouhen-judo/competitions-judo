@@ -1,13 +1,7 @@
 (() => {
   function createKirokuHomeScreen(app) {
     const { defaultListPageSize, state, screens, ui, notifications } = app;
-    const {
-      cleanText,
-      formatDate,
-      getCompactJudokaLabel,
-      getJudokaDisplayName,
-      showView
-    } = ui;
+    const { cleanText, formatDate, getCompactJudokaLabel, getJudokaDisplayName, showView } = ui;
     const { showError } = notifications;
     const defaultHomeViewState = {
       homeTitle: "Mon espace judoka",
@@ -59,7 +53,8 @@
 
     function applyInitialData() {
       ensureHomeViewModel();
-      const canFilterByJudoka = (state.isAdmin || state.isCoach || state.isParent) && state.judokas.length > 0;
+      const canFilterByJudoka =
+        (state.isAdmin || state.isCoach || state.isParent) && state.judokas.length > 0;
       homeViewModel.canFilterByJudoka = canFilterByJudoka;
       if (!canFilterByJudoka) {
         homeViewModel.filterJudokaText = "";
@@ -102,7 +97,7 @@
       if (!state.currentUser) {
         return [];
       }
-      return (state.isAdmin || state.isCoach || state.isParent) ? state.judokas : [state.currentUser];
+      return state.isAdmin || state.isCoach || state.isParent ? state.judokas : [state.currentUser];
     }
 
     function getDefaultHomeJudokaId() {
@@ -124,12 +119,15 @@
         return;
       }
 
-      if (currentValue && accessibleJudokas.some(j => String(j.judokaId) === String(currentValue))) {
+      if (
+        currentValue &&
+        accessibleJudokas.some((j) => String(j.judokaId) === String(currentValue))
+      ) {
         return;
       }
 
       const defaultId = getDefaultHomeJudokaId();
-      const defaultJudoka = accessibleJudokas.find(j => String(j.judokaId) === String(defaultId));
+      const defaultJudoka = accessibleJudokas.find((j) => String(j.judokaId) === String(defaultId));
       homeViewModel.filterJudokaText = defaultJudoka ? getJudokaDisplayName(defaultJudoka) : "";
       homeViewModel.filterJudokaId = defaultJudoka ? String(defaultJudoka.judokaId) : "";
     }
@@ -146,25 +144,31 @@
 
     function getHomeActiveJudoka() {
       const targetId = getHomeActiveJudokaId();
-      return getAccessibleHomeJudokas().find(j => String(j.judokaId) === String(targetId)) || null;
+      return (
+        getAccessibleHomeJudokas().find((j) => String(j.judokaId) === String(targetId)) || null
+      );
     }
 
     function getHomeFilterOption(judoka) {
       return {
         judokaId: String(judoka.judokaId || ""),
         name: getJudokaDisplayName(judoka) || "Judoka",
-        meta: cleanText(judoka.accountEmail) ? judoka.accountEmail : `ID ${String(judoka.judokaId || "").slice(-6)}`,
-        searchText: `${getJudokaDisplayName(judoka)} ${judoka.accountEmail || ""} ${judoka.judokaId || ""}`.toLowerCase()
+        meta: cleanText(judoka.accountEmail)
+          ? judoka.accountEmail
+          : `ID ${String(judoka.judokaId || "").slice(-6)}`,
+        searchText:
+          `${getJudokaDisplayName(judoka)} ${judoka.accountEmail || ""} ${judoka.judokaId || ""}`.toLowerCase()
       };
     }
 
     function refreshHomeFilterOptions(queryOverride) {
-      const query = queryOverride !== undefined
-        ? cleanText(queryOverride).toLowerCase()
-        : cleanText(homeViewModel.filterJudokaText).toLowerCase();
+      const query =
+        queryOverride !== undefined
+          ? cleanText(queryOverride).toLowerCase()
+          : cleanText(homeViewModel.filterJudokaText).toLowerCase();
       homeViewModel.filterOptions = getAccessibleHomeJudokas()
         .map(getHomeFilterOption)
-        .filter(option => !query || option.searchText.includes(query));
+        .filter((option) => !query || option.searchText.includes(query));
     }
 
     function showHomeFilterOptions() {
@@ -212,7 +216,9 @@
       ensureHomeViewModel();
       const activeJudoka = getHomeActiveJudoka();
       const copy = getHomeContextCopy(activeJudoka);
-      const activeJudokaLabel = activeJudoka ? getCompactJudokaLabel(activeJudoka) : copy.emptyActionMeta;
+      const activeJudokaLabel = activeJudoka
+        ? getCompactJudokaLabel(activeJudoka)
+        : copy.emptyActionMeta;
 
       Object.assign(homeViewModel, {
         homeTitle: copy.homeTitle,
@@ -240,11 +246,12 @@
           meta: "Choisissez un judoka pour ouvrir sa fiche et parcourir ses compétitions."
         };
       } else {
-        const summaryMeta = state.isAdmin || state.isCoach
-          ? "Vous consultez actuellement le parcours de ce judoka."
-          : state.isParent
-            ? "Toutes les actions d'accueil concernent ce profil."
-            : "Toutes vos actions principales sont regroupées ici.";
+        const summaryMeta =
+          state.isAdmin || state.isCoach
+            ? "Vous consultez actuellement le parcours de ce judoka."
+            : state.isParent
+              ? "Toutes les actions d'accueil concernent ce profil."
+              : "Toutes vos actions principales sont regroupées ici.";
         homeViewModel.activeJudokaSummary = {
           label: "Judoka actif",
           value: getJudokaDisplayName(activeJudoka) || "Judoka",
@@ -252,7 +259,9 @@
         };
       }
 
-      const actionDisabled = Boolean((state.isAdmin || state.isCoach || state.isParent) && !activeJudoka);
+      const actionDisabled = Boolean(
+        (state.isAdmin || state.isCoach || state.isParent) && !activeJudoka
+      );
       homeViewModel.actionDisabled = actionDisabled;
     }
 
@@ -291,7 +300,9 @@
           profileButtonText: "Voir la fiche",
           profileButtonMeta: "Moi ou un enfant",
           addCompetitionButtonMeta: "Moi ou un enfant",
-          competitionsTitle: activeJudoka ? `Compétitions de ${getJudokaDisplayName(activeJudoka)}` : "Compétitions du judoka actif",
+          competitionsTitle: activeJudoka
+            ? `Compétitions de ${getJudokaDisplayName(activeJudoka)}`
+            : "Compétitions du judoka actif",
           competitionsSubtitle: activeJudoka
             ? "Touchez une carte pour ouvrir ses combats."
             : "Sélectionnez d'abord un judoka pour afficher son parcours.",
@@ -325,7 +336,7 @@
         homeViewModel.clubCompetitionsCanShowNextPage = false;
         return;
       }
-      const allClubCompetitions = state.clubCompetitions.map(cc => ({
+      const allClubCompetitions = state.clubCompetitions.map((cc) => ({
         clubCompetitionId: cc.clubCompetitionId || "",
         name: cc.name || "Compétition",
         date: formatDate(cc.competitionDate)
@@ -362,7 +373,9 @@
 
       let filteredComps = state.competitions;
       if (activeJudokaId) {
-        filteredComps = state.competitions.filter(c => String(c.ownerJudokaId) === String(activeJudokaId));
+        filteredComps = state.competitions.filter(
+          (c) => String(c.ownerJudokaId) === String(activeJudokaId)
+        );
       }
 
       if (!filteredComps.length) {
@@ -383,9 +396,9 @@
         return;
       }
 
-      const judokasById = new Map(state.judokas.map(j => [String(j.judokaId), j]));
+      const judokasById = new Map(state.judokas.map((j) => [String(j.judokaId), j]));
 
-      const allCompetitions = filteredComps.map(c => {
+      const allCompetitions = filteredComps.map((c) => {
         const judoka = judokasById.get(String(c.ownerJudokaId));
         return {
           competitionId: c.competitionId || "",
@@ -433,14 +446,18 @@
 
       if ((state.isAdmin || state.isCoach || state.isParent) && !targetJudokaId) {
         showError({
-          message: state.isAdmin || state.isCoach
-            ? "Sélectionnez un judoka actif pour ouvrir sa fiche."
-            : "Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche."
+          message:
+            state.isAdmin || state.isCoach
+              ? "Sélectionnez un judoka actif pour ouvrir sa fiche."
+              : "Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche."
         });
         return;
       }
 
-      if (!targetJudokaId || !accessibleJudokas.some(j => String(j.judokaId) === String(targetJudokaId))) {
+      if (
+        !targetJudokaId ||
+        !accessibleJudokas.some((j) => String(j.judokaId) === String(targetJudokaId))
+      ) {
         showError({ message: "Sélectionnez d'abord un judoka." });
         return;
       }
