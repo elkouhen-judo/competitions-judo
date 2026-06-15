@@ -3,7 +3,10 @@ function isJwtLikeToken(value) {
 }
 
 function getResponsePreview(body) {
-  return String(body || "").replace(/\s+/g, " ").trim().slice(0, 160);
+  return String(body || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
 }
 
 function parseJsonBody(body, invalidMessage) {
@@ -13,9 +16,9 @@ function parseJsonBody(body, invalidMessage) {
 
   try {
     return JSON.parse(body);
-  } catch (_error) {
+  } catch (error) {
     const preview = getResponsePreview(body);
-    throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
+    throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage, { cause: error });
   }
 }
 

@@ -43,10 +43,7 @@ function normalizeCanonicalCombatResult(value: unknown): Combat["result"] {
   if (normalized) {
     return normalized;
   }
-  if (String(value || "").trim() === "Disqualification") {
-    return "Défaite";
-  }
-  return String(value || "").trim() as Combat["result"];
+  return "Défaite";
 }
 
 export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
