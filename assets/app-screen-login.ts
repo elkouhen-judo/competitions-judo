@@ -1,5 +1,7 @@
 (() => {
-  function createKirokuLoginScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+
+  function createKirokuLoginScreen(app: KirokuApp) {
     const { runtimeConfig, auth, applyInitialData, runServer, screens, ui, notifications } = app;
     const { showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
@@ -15,7 +17,7 @@
         lastName: ""
       }
     };
-    let loginViewModel = null;
+    let loginViewModel: (typeof defaultLoginState) | null = null;
 
     function startGoogleLogin() {
       clearMessage();
@@ -34,7 +36,11 @@
         "registerProfile",
         [profile],
         (response) => {
-          showSuccess(response.message);
+          showSuccess(
+            response && typeof response === "object" && "message" in response
+              ? String((response as { message?: unknown }).message || "Profil créé.")
+              : "Profil créé."
+          );
           init();
         },
         showError
@@ -126,11 +132,6 @@
         (data) => {
           if (!data) {
             showError({ message: "getInitialData() a renvoyé null." });
-            return;
-          }
-
-          if (data.error) {
-            showError({ message: data.error });
             return;
           }
 

@@ -1,5 +1,7 @@
 (() => {
-  function createKirokuChildrenScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+
+  function createKirokuChildrenScreen(app: KirokuApp) {
     const { state, ui, notifications } = app;
     const { $, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
@@ -16,7 +18,7 @@
       saveChildButtonText: "Ajouter l'enfant",
       childForm: { ...defaultChildForm }
     };
-    let childrenViewModel = null;
+    let childrenViewModel: (typeof defaultChildrenViewState) | null = null;
 
     function ensureChildrenViewModel() {
       if (!window.Vue || childrenViewModel) {

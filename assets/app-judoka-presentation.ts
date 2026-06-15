@@ -1,5 +1,25 @@
 (() => {
-  function createJudokaProfileViewModel(profile, helpers) {
+  type JudokaProfile = import("./types").JudokaProfile;
+  type JudokaProfilePresentationHelpers = import("./types").JudokaProfilePresentationHelpers;
+  type JudokaProfileViewModel = import("./types").JudokaProfileViewModel;
+  type CombatProfile = NonNullable<JudokaProfile["combatProfile"]>;
+
+  const emptyCombatProfile: CombatProfile = {
+    victoryIppon: 0,
+    victoryDecision: 0,
+    lossIppon: 0,
+    lossDecision: 0,
+    lossPenalty: 0,
+    lossForfeit: 0,
+    draws: 0,
+    penalties: 0,
+    forfeits: 0
+  };
+
+  function createJudokaProfileViewModel(
+    profile: JudokaProfile | null,
+    helpers: JudokaProfilePresentationHelpers
+  ): JudokaProfileViewModel | null {
     if (!profile) {
       return null;
     }
@@ -29,7 +49,7 @@
       highlightedCompetition && highlightedCompetition.weightCategory
         ? highlightedCompetition.weightCategory
         : "Poids à confirmer";
-    const normalizedCombatProfile = combatProfile || {};
+    const normalizedCombatProfile = combatProfile || emptyCombatProfile;
 
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
@@ -62,7 +82,7 @@
         Number(normalizedCombatProfile.penalties || 0) ||
         Number(normalizedCombatProfile.forfeits || 0)
       ),
-      competitionResults: (competitionResults || []).map((result) => ({
+      competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
         competitionId: result.competitionId || "",
         name: result.name || "Compétition",
         date: formatDate(result.competitionDate),

@@ -1,5 +1,7 @@
 (() => {
-  function createKirokuAdminsScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+
+  function createKirokuAdminsScreen(app: KirokuApp) {
     const { defaultAccessInvitationVisibleCount, defaultListPageSize, state, ui, notifications } =
       app;
     const { cleanText, formatDateTime, getJudokaDisplayName, showView } = ui;
@@ -28,7 +30,7 @@
       hasAdmins: false,
       adminEmail: ""
     };
-    let adminsViewModel = null;
+    let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
 
     function ensureAdminsViewModel() {
       if (!window.Vue || adminsViewModel) {
