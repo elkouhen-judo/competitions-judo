@@ -1,1 +1,1 @@
-module.exports = require("../domain/access/permission-policy");
+module.exports = require("../domain/access/permission-policy.js");

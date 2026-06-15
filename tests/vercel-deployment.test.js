@@ -50,6 +50,7 @@ const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const coreIndex = fs.readFileSync(path.join(root, "core", "index.js"), "utf8");
+const permissionsShim = fs.readFileSync(path.join(root, "core", "auth", "permissions.js"), "utf8");
 const adminService = fs.readFileSync(
   path.join(root, "core", "services", "admin.service.ts"),
   "utf8"
@@ -744,6 +745,31 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /core-dist\/services\/admin\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/competitions\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/combats\.service\.js/);
+  assert.deepEqual(
+    [...coreIndex.matchAll(/require\("(\.\/[^"]+)"\)/g)].map((match) => match[1]),
+    [
+      "./config/env.js",
+      "./infra/supabase-client.js",
+      "./infra/supabase-rest.js",
+      "./auth/session.js",
+      "./auth/permissions.js",
+      "./shared/text.js",
+      "./shared/filters.js",
+      "./shared/ids.js",
+      "./domain/competition-results.js",
+      "./domain/season.js",
+      "./domain/access/judoka.js",
+      "./domain/access/email.js",
+      "./domain/access/managed-judoka-scope.js",
+      "./domain/access/access-invitation.js",
+      "./domain/competitions/club-competition.js",
+      "./domain/competitions/competition.js",
+      "./domain/competitions/combat.js",
+      "./domain/season-statistics.js",
+      "./services/domain-adapters.js"
+    ]
+  );
+  assert.match(permissionsShim, /require\("\.\.\/domain\/access\/permission-policy\.js"\)/);
   assert.match(coreIndex, /buildJudokaProfileSnapshot/);
   assert.match(coreIndex, /\.\.\.adminService\.methods/);
   assert.match(coreIndex, /\.\.\.clubCompetitionsService\.methods/);

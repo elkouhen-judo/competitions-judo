@@ -1,11 +1,11 @@
-const { getSupabaseConfig } = require("./config/env");
-const { createSupabaseClient } = require("./infra/supabase-client");
-const { createSupabaseRest } = require("./infra/supabase-rest");
-const createSessionAuth = require("./auth/session");
-const permissions = require("./auth/permissions");
-const text = require("./shared/text");
-const { eqFilter } = require("./shared/filters");
-const ids = require("./shared/ids");
+const { getSupabaseConfig } = require("./config/env.js");
+const { createSupabaseClient } = require("./infra/supabase-client.js");
+const { createSupabaseRest } = require("./infra/supabase-rest.js");
+const createSessionAuth = require("./auth/session.js");
+const permissions = require("./auth/permissions.js");
+const text = require("./shared/text.js");
+const { eqFilter } = require("./shared/filters.js");
+const ids = require("./shared/ids.js");
 const createJudokasRepository =
   /** @type {typeof import("./repositories/judokas.repository").default} */ (
     /** @type {unknown} */ (require("../core-dist/repositories/judokas.repository.js").default)
@@ -62,25 +62,25 @@ const createRegistrationService =
   /** @type {typeof import("./services/registration.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/registration.service.js").default)
   );
-const { getCompetitionCategoryLabel } = require("./domain/competition-results");
-const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season");
+const { getCompetitionCategoryLabel } = require("./domain/competition-results.js");
+const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.js");
 const {
   createJudoka,
   createManagedChild,
   decideManagedChildRemoval,
   updateManagedChild
-} = require("./domain/access/judoka");
-const { createEmail } = require("./domain/access/email");
-const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope");
-const { createAccessInvitation } = require("./domain/access/access-invitation");
-const { createClubCompetition } = require("./domain/competitions/club-competition");
+} = require("./domain/access/judoka.js");
+const { createEmail } = require("./domain/access/email.js");
+const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope.js");
+const { createAccessInvitation } = require("./domain/access/access-invitation.js");
+const { createClubCompetition } = require("./domain/competitions/club-competition.js");
 const {
   createCompetition,
   createPersistedCompetition
-} = require("./domain/competitions/competition");
-const { updateCombat } = require("./domain/competitions/combat");
-const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
-const { toCanonicalJudoka } = require("./services/domain-adapters");
+} = require("./domain/competitions/competition.js");
+const { updateCombat } = require("./domain/competitions/combat.js");
+const { buildJudokaProfileSnapshot } = require("./domain/season-statistics.js");
+const { toCanonicalJudoka } = require("./services/domain-adapters.js");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
