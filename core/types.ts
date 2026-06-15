@@ -5,6 +5,8 @@
  * no entry in `scripts/build-core.js`, no `core-dist/` output, no shim.
  */
 
+import type { JudokaRow, ClubCompetitionRow } from "./repositories/types";
+
 export interface Judoka {
   judokaId: string;
   accountEmail: string;
@@ -66,8 +68,8 @@ export interface ManagedJudokaScope {
  * are raw Supabase judoka rows (not yet passed through `toCanonicalJudoka`).
  */
 export interface UserContext {
-  user: object;
-  judokas: object[];
+  user: JudokaRow;
+  judokas: JudokaRow[];
   managedJudokaScope: ManagedJudokaScope;
 }
 
@@ -117,7 +119,7 @@ export interface CompetitionDetail {
  * `clubCompetition` is the raw Supabase row for the club competition.
  */
 export interface ClubCompetitionDetail {
-  clubCompetition: object;
+  clubCompetition: ClubCompetitionRow;
   participations: Competition[];
   judokas: Judoka[];
 }
