@@ -22,7 +22,22 @@ const entryPoints = [
   "core/domain/competitions/competition.ts",
   "core/domain/competitions/club-competition.ts",
   "core/domain/season.ts",
-  "core/domain/season-statistics.ts"
+  "core/domain/season-statistics.ts",
+  "core/repositories/judokas.repository.ts",
+  "core/repositories/competitions.repository.ts",
+  "core/repositories/combats.repository.ts",
+  "core/repositories/club-competitions.repository.ts",
+  "core/repositories/invitations.repository.ts",
+  "core/repositories/parent-links.repository.ts",
+  "core/services/domain-adapters.ts",
+  "core/services/user-context.service.ts",
+  "core/services/admin.service.ts",
+  "core/services/children.service.ts",
+  "core/services/combats.service.ts",
+  "core/services/club-competitions.service.ts",
+  "core/services/competitions.service.ts",
+  "core/services/profile.service.ts",
+  "core/services/registration.service.ts"
 ];
 
 esbuild

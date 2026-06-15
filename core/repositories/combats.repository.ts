@@ -1,4 +1,67 @@
-module.exports = function createCombatsRepository(deps) {
+import type { CombatModel } from "../domain/competitions/combat";
+import type { CombatRow, SupabaseRestDeps } from "./types";
+
+const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
+  Victoire: "V",
+  Défaite: "D",
+  Egalité: "E"
+};
+
+export interface CombatsRepository {
+  existsForJudoka(idJudoka: unknown): Promise<CombatRow | null>;
+  getById(idCombat: unknown): Promise<CombatRow | null>;
+  insert(combat: CombatModel, idCombat: unknown): Promise<CombatRow | null>;
+  listByCompetition(idCompetition: unknown): Promise<CombatRow[]>;
+  listByCompetitionAndJudoka(idCompetition: unknown, idJudoka: unknown): Promise<CombatRow[]>;
+  listByCompetitionAndJudokaIds(idCompetition: unknown, ids: unknown[]): Promise<CombatRow[]>;
+  listByJudoka(idJudoka: unknown): Promise<CombatRow[]>;
+  remove(idCombat: unknown): Promise<void>;
+  update(idCombat: unknown, combat: CombatModel): Promise<CombatRow | null>;
+}
+
+function toLegacyCompatibleResult(value: unknown): string {
+  return LEGACY_RESULTS_BY_CANONICAL_RESULT[String(value)] || String(value || "");
+}
+
+function toLegacyCompatibleCombatRecord(record: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...record,
+    resultat: toLegacyCompatibleResult(record.resultat)
+  };
+}
+
+function shouldRetryWithLegacyResult(error: unknown, record: Record<string, unknown>): boolean {
+  const result = String(record.resultat || "");
+  return Boolean(
+    LEGACY_RESULTS_BY_CANONICAL_RESULT[result] &&
+      /combats_resultat_check/.test(String((error as Error | null)?.message || error || ""))
+  );
+}
+
+function toCombatRecord(combat: CombatModel): Record<string, unknown> {
+  const { draft } = combat;
+  if (!draft) {
+    throw new Error("Combat domain draft required.");
+  }
+
+  return {
+    id_judoka: combat.judokaId,
+    id_competition: combat.competitionId,
+    adversaire: draft.opponent,
+    resultat: draft.result,
+    type_victoire: draft.victoryType,
+    deroule: draft.notes
+  };
+}
+
+function toNewCombatRecord(combat: CombatModel, idCombat: unknown): Record<string, unknown> {
+  return {
+    id_combat: idCombat,
+    ...toCombatRecord(combat)
+  };
+}
+
+export default function createCombatsRepository(deps: SupabaseRestDeps): CombatsRepository {
   const {
     supabaseDelete,
     supabaseInsert,
@@ -8,108 +71,74 @@ module.exports = function createCombatsRepository(deps) {
     eqFilter
   } = deps;
 
-  const LEGACY_RESULTS_BY_CANONICAL_RESULT = {
-    Victoire: "V",
-    Défaite: "D",
-    Egalité: "E"
-  };
-
-  function toLegacyCompatibleResult(value) {
-    return LEGACY_RESULTS_BY_CANONICAL_RESULT[value] || value || "";
+  async function listByJudoka(idJudoka: unknown): Promise<CombatRow[]> {
+    return supabaseSelect<CombatRow>("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  function toLegacyCompatibleCombatRecord(record) {
-    return {
-      ...record,
-      resultat: toLegacyCompatibleResult(record && record.resultat)
-    };
-  }
-
-  function shouldRetryWithLegacyResult(error, record) {
-    return Boolean(
-      error &&
-      record &&
-      LEGACY_RESULTS_BY_CANONICAL_RESULT[record.resultat] &&
-      /combats_resultat_check/.test(String(error.message || error))
+  async function listByCompetition(idCompetition: unknown): Promise<CombatRow[]> {
+    return supabaseSelect<CombatRow>(
+      "combats",
+      `select=*&${eqFilter("id_competition", idCompetition)}`
     );
   }
 
-  function toCombatRecord(combat) {
-    const draft = combat && combat.draft;
-    if (!draft) {
-      throw new Error("Combat domain draft required.");
-    }
-    return {
-      id_judoka: combat.judokaId,
-      id_competition: combat.competitionId,
-      adversaire: draft.opponent,
-      resultat: draft.result,
-      type_victoire: draft.victoryType,
-      deroule: draft.notes
-    };
-  }
-
-  function toNewCombatRecord(combat, idCombat) {
-    return {
-      id_combat: idCombat,
-      ...toCombatRecord(combat)
-    };
-  }
-
-  async function listByJudoka(idJudoka) {
-    return supabaseSelect("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
-  }
-
-  async function listByCompetition(idCompetition) {
-    return supabaseSelect("combats", `select=*&${eqFilter("id_competition", idCompetition)}`);
-  }
-
-  async function listByCompetitionAndJudoka(idCompetition, idJudoka) {
-    return supabaseSelect(
+  async function listByCompetitionAndJudoka(
+    idCompetition: unknown,
+    idJudoka: unknown
+  ): Promise<CombatRow[]> {
+    return supabaseSelect<CombatRow>(
       "combats",
       `select=*&${eqFilter("id_competition", idCompetition)}&${eqFilter("id_judoka", idJudoka)}`
     );
   }
 
-  async function listByCompetitionAndJudokaIds(idCompetition, ids) {
-    if (!ids || !ids.length) {
+  async function listByCompetitionAndJudokaIds(
+    idCompetition: unknown,
+    ids: unknown[]
+  ): Promise<CombatRow[]> {
+    if (!ids?.length) {
       return [];
     }
-    return supabaseSelect(
+
+    return supabaseSelect<CombatRow>(
       "combats",
       `select=*&${eqFilter("id_competition", idCompetition)}&id_judoka=in.(${ids.join(",")})`
     );
   }
 
-  async function getById(idCombat) {
-    return supabaseSelectOne("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
+  async function getById(idCombat: unknown): Promise<CombatRow | null> {
+    return supabaseSelectOne<CombatRow>("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
   }
 
-  async function existsForJudoka(idJudoka) {
-    return supabaseSelectOne("combats", `select=id_combat&${eqFilter("id_judoka", idJudoka)}`);
+  async function existsForJudoka(idJudoka: unknown): Promise<CombatRow | null> {
+    return supabaseSelectOne<CombatRow>("combats", `select=id_combat&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(combat, idCombat) {
+  async function insert(combat: CombatModel, idCombat: unknown): Promise<CombatRow | null> {
     const record = toNewCombatRecord(combat, idCombat);
+
     try {
-      return await supabaseInsert("combats", record);
+      return await supabaseInsert<CombatRow>("combats", record);
     } catch (error) {
       if (!shouldRetryWithLegacyResult(error, record)) {
         throw error;
       }
-      return supabaseInsert("combats", toLegacyCompatibleCombatRecord(record));
+
+      return supabaseInsert<CombatRow>("combats", toLegacyCompatibleCombatRecord(record));
     }
   }
 
-  async function update(idCombat, combat) {
+  async function update(idCombat: unknown, combat: CombatModel): Promise<CombatRow | null> {
     const record = toCombatRecord(combat);
+
     try {
-      return await supabasePatch("combats", eqFilter("id_combat", idCombat), record);
+      return await supabasePatch<CombatRow>("combats", eqFilter("id_combat", idCombat), record);
     } catch (error) {
       if (!shouldRetryWithLegacyResult(error, record)) {
         throw error;
       }
-      return supabasePatch(
+
+      return supabasePatch<CombatRow>(
         "combats",
         eqFilter("id_combat", idCombat),
         toLegacyCompatibleCombatRecord(record)
@@ -117,7 +146,7 @@ module.exports = function createCombatsRepository(deps) {
     }
   }
 
-  async function remove(idCombat) {
+  async function remove(idCombat: unknown): Promise<void> {
     return supabaseDelete("combats", eqFilter("id_combat", idCombat));
   }
 
@@ -132,4 +161,4 @@ module.exports = function createCombatsRepository(deps) {
     remove,
     update
   };
-};
+}

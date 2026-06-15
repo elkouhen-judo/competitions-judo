@@ -24,7 +24,9 @@ export interface CompetitionsRepository {
   ): Promise<CompetitionRow | null>;
 }
 
-export function createCompetitionsRepository(deps: SupabaseRestDeps): CompetitionsRepository {
+export default function createCompetitionsRepository(
+  deps: SupabaseRestDeps
+): CompetitionsRepository {
   const {
     supabaseDelete,
     supabaseInsert,
