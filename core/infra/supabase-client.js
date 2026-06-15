@@ -2,6 +2,23 @@ function isJwtLikeToken(value) {
   return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(value || ""));
 }
 
+function getResponsePreview(body) {
+  return String(body || "").replace(/\s+/g, " ").trim().slice(0, 160);
+}
+
+function parseJsonBody(body, invalidMessage) {
+  if (!body) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(body);
+  } catch (_error) {
+    const preview = getResponsePreview(body);
+    throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
+  }
+}
+
 function createSupabaseHeaders(apiKey, options = {}) {
   const headers = {
     apikey: apiKey
@@ -45,7 +62,7 @@ function createSupabaseClient({ getSupabaseConfig }) {
       throw new Error(`Erreur Supabase ${response.status} sur ${table} : ${body}`);
     }
 
-    return body ? JSON.parse(body) : null;
+    return parseJsonBody(body, `Réponse Supabase invalide sur ${table}.`);
   }
 
   async function supabaseRpc(functionName, payload) {
@@ -63,7 +80,7 @@ function createSupabaseClient({ getSupabaseConfig }) {
       throw new Error(body || `Erreur Supabase RPC ${functionName}.`);
     }
 
-    return body ? JSON.parse(body) : null;
+    return parseJsonBody(body, `Réponse Supabase RPC invalide pour ${functionName}.`);
   }
 
   return {

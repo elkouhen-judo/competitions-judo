@@ -8,7 +8,7 @@ const { eqFilter } = require("./shared/filters");
 const ids = require("./shared/ids");
 const createJudokasRepository =
   /** @type {typeof import("./repositories/judokas.repository").default} */ (
-    /** @type {unknown} */ (require("./repositories/judokas.repository"))
+    /** @type {unknown} */ (require("../core-dist/repositories/judokas.repository.js").default)
   );
 const createClubCompetitionsRepository =
   /** @type {typeof import("./repositories/club-competitions.repository").default} */ (
@@ -16,11 +16,11 @@ const createClubCompetitionsRepository =
   );
 const createCompetitionsRepository =
   /** @type {typeof import("./repositories/competitions.repository").default} */ (
-    /** @type {unknown} */ (require("./repositories/competitions.repository"))
+    /** @type {unknown} */ (require("../core-dist/repositories/competitions.repository.js").default)
   );
 const createCombatsRepository =
   /** @type {typeof import("./repositories/combats.repository").default} */ (
-    /** @type {unknown} */ (require("./repositories/combats.repository"))
+    /** @type {unknown} */ (require("../core-dist/repositories/combats.repository.js").default)
   );
 const createInvitationsRepository =
   /** @type {typeof import("./repositories/invitations.repository").default} */ (
