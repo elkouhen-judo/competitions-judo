@@ -1,0 +1,25 @@
+    <header id="appHeader" class="topbar" :class="{ hidden: !showHeader }" v-cloak>
+      <div class="brand">
+        <div class="brand-logo">
+          <img
+            class="brand-logo-image"
+            src="https://s1.qwant.com/thumbr/474x474/9/e/fa3015ea6c561c107f0cf721991fdb75be4e334e5c30201ed296d964509cf4/OIP.2L4yJnGwNyAZkgiTuUu-NAHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.2L4yJnGwNyAZkgiTuUu-NAHaHa%3Fpid%3DApi&amp;q=0&amp;b=1&amp;p=0&amp;a=0"
+            alt="Kiroku"
+          >
+        </div>
+        <div class="brand-copy">
+          <h1>Kiroku - 記録</h1>
+          <p class="subtitle">Suivi de compétitions</p>
+        </div>
+      </div>
+      <div class="user-actions">
+        <div id="userInfo" class="user-pill"><strong>{{ userName }}</strong> - {{ roleLabel }}</div>
+        <button id="logoutButton" type="button" class="button-secondary logout-button" @click="logoutUser()" aria-label="Déconnexion" title="Déconnexion">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <path d="M16 17l5-5-5-5"></path>
+            <path d="M21 12H9"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
