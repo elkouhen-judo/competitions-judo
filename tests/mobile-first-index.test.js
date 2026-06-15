@@ -209,7 +209,7 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
   assert.match(bundle, /class="combat-profile-grid"/);
   assert.match(bundle, /v-if="!hasCompetitionResults"/);
-  assert.match(bundle, /v-for="result in competitionResults"/);
+  assert.match(bundle, /v-for="result in competitionResultsPage"/);
   assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
   assert.doesNotMatch(bundle, /lastCompetitionHtml|bestResultsHtml/);
   assert.match(bundle, /function ensureJudokaViewModel\(\)/);
@@ -238,7 +238,7 @@ test("admins screen is mounted through Vue 3 for the progressive screen migratio
   assert.match(bundle, /v-for="invitation in accessInvitations"/);
   assert.match(bundle, /@click="deleteAccessInvitation\(invitation\.email\)"/);
   assert.match(bundle, /id="adminsList"/);
-  assert.match(bundle, /v-for="admin in admins"/);
+  assert.match(bundle, /v-for="admin in adminsPage"/);
   assert.match(bundle, /@click="revokeAdminRole\(admin\.judokaId, admin\.fullName\)"/);
   assert.doesNotMatch(bundle, /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/);
   assert.match(bundle, /id="saveAdminButton" @click="saveAdminRole\(\)"/);
@@ -283,7 +283,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(bundle, /id="addClubCompetitionButton"/);
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
-  assert.match(bundle, /v-for="participant in filteredClubCompetitionParticipants"/);
+  assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
   assert.match(client, /function showClubCompetitionForm\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);

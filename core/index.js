@@ -38,7 +38,7 @@ const {
 } = require("./domain/competitions/competition");
 const { updateCombat } = require("./domain/competitions/combat");
 const { buildJudokaProfileSnapshot } = require("./domain/season-statistics");
-const { toCanonicalJudoka, toJudokaReadModel } = require("./services/domain-adapters");
+const { toCanonicalJudoka } = require("./services/domain-adapters");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
@@ -157,9 +157,7 @@ async function getInitialData(email) {
     throw new Error("Accès non autorisé. Une invitation est requise.");
   }
 
-  const userContext = await userContextService.getCurrentUserContext(email);
-  const user = userContext.user;
-  const domainUser = toCanonicalJudoka(user);
+  const { user, judokas, managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
   const admin = permissions.isAdmin(domainUser);
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
@@ -172,14 +170,14 @@ async function getInitialData(email) {
   }));
 
   return {
-    user: toJudokaReadModel(user),
+    user: toCanonicalJudoka(user),
     isAdmin: admin,
     isCoach: coach,
     isParent: parent,
     canManageChildren: permissions.canManageChildrenProfile(domainUser),
-    competitions: await competitionsService.getCompetitionsForUser(user, userContext.managedJudokaScope),
+    competitions: await competitionsService.getCompetitionsForUser(user, managedJudokaScope),
     clubCompetitions,
-    judokas: (admin || coach || parent) ? userContext.judokas.map(toJudokaReadModel) : []
+    judokas: (admin || coach || parent) ? judokas.map(toCanonicalJudoka) : []
   };
 }
 

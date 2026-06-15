@@ -181,6 +181,13 @@
                 </div>
               </article>
             </div>
+            <div v-if="clubCompetitionsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ clubCompetitionsCurrentPage }} / {{ clubCompetitionsTotalPages }} ({{ clubCompetitionsTotalCount }} compétitions club)</p>
+              <div class="list-summary-actions">
+                <button v-if="clubCompetitionsCanShowPreviousPage" class="button-secondary" type="button" @click="showClubCompetitionsPreviousPage()">Page précédente</button>
+                <button v-if="clubCompetitionsCanShowNextPage" class="button-secondary" type="button" @click="showClubCompetitionsNextPage()">Page suivante</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -218,6 +225,13 @@
                   </button>
                 </div>
               </article>
+            </div>
+            <div v-if="competitionsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ competitionsCurrentPage }} / {{ competitionsTotalPages }} ({{ competitionsTotalCount }} compétitions)</p>
+              <div class="list-summary-actions">
+                <button v-if="competitionsCanShowPreviousPage" class="button-secondary" type="button" @click="showCompetitionsPreviousPage()">Page précédente</button>
+                <button v-if="competitionsCanShowNextPage" class="button-secondary" type="button" @click="showCompetitionsNextPage()">Page suivante</button>
+              </div>
             </div>
           </div>
         </div>
@@ -319,10 +333,10 @@
           <div id="judokaCompetitionResults">
             <div v-if="!hasCompetitionResults" class="empty-state">Aucune compétition enregistrée pour cette saison.</div>
             <div v-else class="list">
-              <article v-for="result in competitionResults" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
+              <article v-for="result in competitionResultsPage" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
                 <div class="performance-result-header">
                   <p class="card-title">{{ result.name }}</p>
-                  <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.badgeLabel }}</span>
+                  <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
                 </div>
                 <div class="card-meta">
                   <div class="meta-row">
@@ -330,17 +344,18 @@
                     <span class="meta-value">{{ result.date }}</span>
                   </div>
                   <div class="meta-row">
-                    <span class="meta-label">Résultat</span>
-                    <span class="meta-value">
-                      <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
-                    </span>
-                  </div>
-                  <div class="meta-row">
                     <span class="meta-label">Combats</span>
                     <span class="meta-value">{{ result.combatRecord }}</span>
                   </div>
                 </div>
               </article>
+            </div>
+            <div v-if="competitionResultsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ competitionResultsCurrentPage }} / {{ competitionResultsTotalPages }} ({{ competitionResultsTotalCount }} compétitions)</p>
+              <div class="list-summary-actions">
+                <button v-if="competitionResultsCanShowPreviousPage" class="button-secondary" type="button" @click="showCompetitionResultsPreviousPage()">Page précédente</button>
+                <button v-if="competitionResultsCanShowNextPage" class="button-secondary" type="button" @click="showCompetitionResultsNextPage()">Page suivante</button>
+              </div>
             </div>
           </div>
         </div>
@@ -447,7 +462,7 @@
           <div id="adminsList">
             <div v-if="!hasAdmins" class="empty-state">Aucun admin trouvé.</div>
             <div v-else class="list">
-              <article v-for="admin in admins" :key="admin.judokaId" class="card admin-card">
+              <article v-for="admin in adminsPage" :key="admin.judokaId" class="card admin-card">
                 <p class="card-title">{{ admin.fullName }}</p>
                 <div class="card-meta">
                   <div class="meta-row">
@@ -463,6 +478,13 @@
                   </button>
                 </div>
               </article>
+            </div>
+            <div v-if="adminsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ adminsCurrentPage }} / {{ adminsTotalPages }} ({{ adminsTotalCount }} admins)</p>
+              <div class="list-summary-actions">
+                <button v-if="adminsCanShowPreviousPage" class="button-secondary" type="button" @click="showAdminsPreviousPage()">Page précédente</button>
+                <button v-if="adminsCanShowNextPage" class="button-secondary" type="button" @click="showAdminsNextPage()">Page suivante</button>
+              </div>
             </div>
           </div>
         </div>
@@ -711,8 +733,11 @@
           <div id="clubDetailParticipantsList">
             <div v-if="!clubCompetitionCurrentParticipants.length" class="empty-state">Aucun participant.</div>
             <div v-else class="list">
-              <article v-for="p in clubCompetitionCurrentParticipants" :key="p.competitionId" class="card">
-                <p class="card-title">{{ p.judokaName }}</p>
+              <article v-for="p in clubCompetitionParticipantsPage" :key="p.competitionId" class="card">
+                <div class="performance-result-header">
+                  <p class="card-title">{{ p.judokaName }}</p>
+                  <span class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
+                </div>
                 <div class="card-actions">
                   <button class="button-secondary" type="button" @click="openCompetitionFromClubDetail(p.competitionId)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -724,6 +749,13 @@
                   </button>
                 </div>
               </article>
+            </div>
+            <div v-if="clubCompetitionParticipantsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ clubCompetitionParticipantsCurrentPage }} / {{ clubCompetitionParticipantsTotalPages }} ({{ clubCompetitionParticipantsTotalCount }} participants)</p>
+              <div class="list-summary-actions">
+                <button v-if="clubCompetitionParticipantsCanShowPreviousPage" class="button-secondary" type="button" @click="showClubCompetitionParticipantsPreviousPage()">Page précédente</button>
+                <button v-if="clubCompetitionParticipantsCanShowNextPage" class="button-secondary" type="button" @click="showClubCompetitionParticipantsNextPage()">Page suivante</button>
+              </div>
             </div>
           </div>
         </div>
@@ -741,12 +773,21 @@
             <label for="clubDetailJudokaSearch">Rechercher</label>
             <input type="search" id="clubDetailJudokaSearch" placeholder="Nom du judoka..." autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
           </div>
-          <div id="clubDetailAvailableJudokas" class="list">
+          <div id="clubDetailAvailableJudokas">
             <div v-if="!filteredClubCompetitionAvailableJudokas.length" class="empty-state">Aucun résultat.</div>
-            <label v-for="j in filteredClubCompetitionAvailableJudokas" :key="j.judokaId" class="checkbox-row">
-              <input type="checkbox" :value="j.judokaId" v-model="clubCompetitionNewJudokaIds">
-              <span>{{ j.name }}</span>
-            </label>
+            <div v-else class="list">
+              <label v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" class="checkbox-row">
+                <input type="checkbox" :value="j.judokaId" v-model="clubCompetitionNewJudokaIds">
+                <span>{{ j.name }}</span>
+              </label>
+            </div>
+            <div v-if="clubCompetitionAvailableJudokasTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ clubCompetitionAvailableJudokasCurrentPage }} / {{ clubCompetitionAvailableJudokasTotalPages }} ({{ clubCompetitionAvailableJudokasTotalCount }} judokas)</p>
+              <div class="list-summary-actions">
+                <button v-if="clubCompetitionAvailableJudokasCanShowPreviousPage" class="button-secondary" type="button" @click="showClubCompetitionAvailableJudokasPreviousPage()">Page précédente</button>
+                <button v-if="clubCompetitionAvailableJudokasCanShowNextPage" class="button-secondary" type="button" @click="showClubCompetitionAvailableJudokasNextPage()">Page suivante</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -762,6 +803,12 @@
         <div>
           <h2>{{ clubCompetitionFormTitle }}</h2>
           <p class="subtitle">Créer un événement partagé et sélectionner les judokas concernés.</p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" type="button" @click="cancelClubCompetitionForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
         </div>
       </div>
       <div class="panel-body">
@@ -789,12 +836,21 @@
             <label for="clubFormJudokaSearch">Rechercher</label>
             <input type="search" id="clubFormJudokaSearch" placeholder="Nom du judoka..." autocomplete="off" v-model="judokaSearchText" @input="updateClubCompetitionJudokaSearch()">
           </div>
-          <div id="clubCompetitionParticipants" class="list">
+          <div id="clubCompetitionParticipants">
             <div v-if="!filteredClubCompetitionParticipants.length" class="empty-state">Aucun résultat.</div>
-            <label v-for="participant in filteredClubCompetitionParticipants" :key="participant.judokaId" class="checkbox-row">
-              <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds">
-              <span>{{ participant.name }}</span>
-            </label>
+            <div v-else class="list">
+              <label v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" class="checkbox-row">
+                <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds">
+                <span>{{ participant.name }}</span>
+              </label>
+            </div>
+            <div v-if="clubCompetitionFormParticipantsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ clubCompetitionFormParticipantsCurrentPage }} / {{ clubCompetitionFormParticipantsTotalPages }} ({{ clubCompetitionFormParticipantsTotalCount }} judokas)</p>
+              <div class="list-summary-actions">
+                <button v-if="clubCompetitionFormParticipantsCanShowPreviousPage" class="button-secondary" type="button" @click="showClubCompetitionFormParticipantsPreviousPage()">Page précédente</button>
+                <button v-if="clubCompetitionFormParticipantsCanShowNextPage" class="button-secondary" type="button" @click="showClubCompetitionFormParticipantsNextPage()">Page suivante</button>
+              </div>
+            </div>
           </div>
         </div>
 

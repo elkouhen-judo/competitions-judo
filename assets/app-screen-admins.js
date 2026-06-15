@@ -2,6 +2,7 @@
   function createKirokuAdminsScreen(app) {
     const {
       defaultAccessInvitationVisibleCount,
+      defaultListPageSize,
       state,
       ui,
       notifications
@@ -32,6 +33,12 @@
       canShowNextAccessInvitationPage: false,
       hasAccessInvitations: false,
       admins: [],
+      adminsPage: [],
+      adminsTotalPages: 1,
+      adminsCurrentPage: 1,
+      adminsTotalCount: 0,
+      adminsCanShowPreviousPage: false,
+      adminsCanShowNextPage: false,
       hasAdmins: false,
       adminEmail: ""
     };
@@ -52,6 +59,8 @@
         saveAdminRole,
         showNextAccessInvitationPage,
         showPreviousAccessInvitationPage,
+        showAdminsPreviousPage,
+        showAdminsNextPage,
         showHome: () => app.showHome(),
         updateAccessInvitationSearch
       });
@@ -163,6 +172,7 @@
           state.managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
+          state.adminsCurrentPage = 1;
           adminsViewModel.accessInvitationSearch = "";
           renderManagedAdmins();
           renderManagedAccessInvitations();
@@ -183,6 +193,28 @@
           getJudokaDisplayName
         }
       ));
+      const pagination = window.KirokuScreenProjections.paginateList(
+        adminsViewModel.admins,
+        state.adminsCurrentPage,
+        defaultListPageSize
+      );
+      adminsViewModel.adminsPage = pagination.pageItems;
+      adminsViewModel.adminsTotalPages = pagination.totalPages;
+      adminsViewModel.adminsCurrentPage = pagination.currentPage;
+      adminsViewModel.adminsTotalCount = pagination.totalItems;
+      adminsViewModel.adminsCanShowPreviousPage = pagination.canShowPreviousPage;
+      adminsViewModel.adminsCanShowNextPage = pagination.canShowNextPage;
+      state.adminsCurrentPage = pagination.currentPage;
+    }
+
+    function showAdminsPreviousPage() {
+      state.adminsCurrentPage = Math.max(state.adminsCurrentPage - 1, 1);
+      renderManagedAdmins();
+    }
+
+    function showAdminsNextPage() {
+      state.adminsCurrentPage += 1;
+      renderManagedAdmins();
     }
 
     function resetAdminForm() {
@@ -234,6 +266,8 @@
       saveAccessInvitation,
       saveAdminRole,
       showAdminsManagement,
+      showAdminsNextPage,
+      showAdminsPreviousPage,
       showNextAccessInvitationPage,
       showPreviousAccessInvitationPage,
       updateAccessInvitationSearch
