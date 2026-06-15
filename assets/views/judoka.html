@@ -1,0 +1,123 @@
+    <section id="judokaView" class="panel hidden" v-cloak>
+      <div class="panel-header">
+        <div>
+          <h2 id="judokaProfileTitle">{{ profileTitle }}</h2>
+          <p id="judokaProfileSubtitle" class="subtitle">{{ profileSubtitle }}</p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" @click="showHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="judokaHero" class="judoka-hero">
+          <div id="judokaHeroAvatar" class="hero-avatar">{{ heroAvatar }}</div>
+          <div class="hero-copy">
+            <span class="hero-kicker">Fiche performance</span>
+            <h3 id="judokaHeroName" class="hero-title">{{ heroName }}</h3>
+            <p id="judokaHeroSummary" class="hero-highlight">{{ heroSummary }}</p>
+            <div class="hero-badges">
+              <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
+              <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Résumé performance</h3>
+              <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Compétitions</span>
+              <span id="judokaSeasonCompetitionCount" class="stat-value">{{ seasonCompetitionCount }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Combats</span>
+              <span id="judokaSeasonCombatCount" class="stat-value">{{ seasonCombatCount }}</span>
+            </div>
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Bilan</span>
+              <span id="judokaSeasonBalance" class="stat-value">{{ seasonWins }}V · {{ seasonLosses }}D · {{ seasonDraws }}N</span>
+            </div>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Taux de victoire</span>
+              <span id="judokaVictoryRate" class="stat-value">{{ victoryRate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Profil de combat</h3>
+              <p class="subtitle">Modes de victoire et de défaite sur la saison affichée.</p>
+            </div>
+          </div>
+          <div class="combat-profile-grid">
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires ippon</span>
+              <span class="stat-value">{{ combatProfile.victoryIppon }}</span>
+            </div>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires décision</span>
+              <span class="stat-value">{{ combatProfile.victoryDecision }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites ippon</span>
+              <span class="stat-value">{{ combatProfile.lossIppon }}</span>
+            </div>
+            <div class="stat-card stat-card-danger">
+              <span class="stat-label">Défaites décision</span>
+              <span class="stat-value">{{ combatProfile.lossDecision }}</span>
+            </div>
+          </div>
+          <div v-if="hasCombatProfileExtras" class="profile-extra-row">
+            <span v-if="Number(combatProfile.draws)" class="result-badge">Égalités {{ combatProfile.draws }}</span>
+            <span v-if="Number(combatProfile.penalties)" class="result-badge">Pénalités {{ combatProfile.penalties }}</span>
+            <span v-if="Number(combatProfile.forfeits)" class="result-badge">Forfaits {{ combatProfile.forfeits }}</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Résultats compétition</h3>
+              <p class="subtitle">Liste courte des compétitions de la saison affichée.</p>
+            </div>
+          </div>
+          <div id="judokaCompetitionResults">
+            <div v-if="!hasCompetitionResults" class="empty-state">Aucune compétition enregistrée pour cette saison.</div>
+            <div v-else class="list">
+              <article v-for="result in competitionResultsPage" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
+                <div class="performance-result-header">
+                  <p class="card-title">{{ result.name }}</p>
+                  <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
+                </div>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value">{{ result.date }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Combats</span>
+                    <span class="meta-value">{{ result.combatRecord }}</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div v-if="competitionResultsTotalPages > 1" class="list-summary">
+              <p class="list-summary-text">Page {{ competitionResultsCurrentPage }} / {{ competitionResultsTotalPages }} ({{ competitionResultsTotalCount }} compétitions)</p>
+              <div class="list-summary-actions">
+                <button v-if="competitionResultsCanShowPreviousPage" class="button-secondary" type="button" @click="showCompetitionResultsPreviousPage()">Page précédente</button>
+                <button v-if="competitionResultsCanShowNextPage" class="button-secondary" type="button" @click="showCompetitionResultsNextPage()">Page suivante</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>

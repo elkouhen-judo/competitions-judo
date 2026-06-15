@@ -25,6 +25,37 @@ function isVercelDeploymentHost(host) {
   return host.endsWith(".vercel.app");
 }
 
+const VIEW_PARTIAL_FILES = {
+  header: "header.html",
+  toasts: "toasts.html",
+  login: "login.html",
+  home: "home.html",
+  judoka: "judoka.html",
+  admins: "admins.html",
+  children: "children.html",
+  competition: "competition.html",
+  "club-competition-detail": "club-competition-detail.html",
+  "club-competition-form": "club-competition-form.html",
+  "competition-form": "competition-form.html",
+  "competition-finalization": "competition-finalization.html",
+  "combat-form": "combat-form.html"
+};
+
+function readViewPartial(name) {
+  const viewsDir = path.join(process.cwd(), "assets", "views");
+  return fs.readFileSync(path.join(viewsDir, VIEW_PARTIAL_FILES[name]), "utf8");
+}
+
+function renderIndexHtml() {
+  const htmlPath = path.join(process.cwd(), "Index.html");
+  let html = fs.readFileSync(htmlPath, "utf8");
+  for (const name of Object.keys(VIEW_PARTIAL_FILES)) {
+    html = html.replace(`<!-- view:${name} -->`, readViewPartial(name).trimEnd());
+  }
+
+  return html;
+}
+
 function getRuntimeAppUrl(req) {
   const host = readRequestHost(req);
   const protocol = readRequestProtocol(req);
@@ -73,8 +104,7 @@ function handler(req, res) {
     return;
   }
 
-  const htmlPath = path.join(process.cwd(), "Index.html");
-  const html = fs.readFileSync(htmlPath, "utf8");
+  const html = renderIndexHtml();
   const configScript = `<script>
     window.KIROKU_RUNTIME_CONFIG = {
       runtime: "vercel",
@@ -89,6 +119,7 @@ function handler(req, res) {
 }
 
 module.exports = handler;
+module.exports.renderIndexHtml = renderIndexHtml;
 module.exports.__internal = {
   CANONICAL_PRODUCTION_APP_URL,
   getCanonicalRedirectUrl,

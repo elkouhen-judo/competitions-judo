@@ -5,7 +5,7 @@ const path = require("node:path");
 
 const root = path.join(__dirname, "..");
 const appHandler = require(path.join(root, "api", "app.js"));
-const html = fs.readFileSync(path.join(root, "Index.html"), "utf8");
+const html = appHandler.renderIndexHtml();
 const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
 const notificationsClient = fs.readFileSync(
   path.join(root, "assets", "app-notifications.js"),

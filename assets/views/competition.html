@@ -1,0 +1,87 @@
+    <section id="competitionView" class="panel hidden" v-cloak>
+      <div class="panel-header">
+        <div>
+          <h2 id="competitionTitle">{{ competitionTitle }}</h2>
+          <p id="competitionSubtitle" class="subtitle">{{ competitionSubtitle }}</p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" @click="navigateBackFromCompetition()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
+          <div id="competitionAdminActions" class="competition-management-actions" :class="{ hidden: !canEditCompetition }">
+            <button id="editCompetitionButton" class="button-secondary" @click="editCurrentCompetition()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              Modifier
+            </button>
+            <button id="deleteCompetitionButton" class="button-danger" @click="deleteCurrentCompetition()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="summary">
+          <div class="meta-row">
+            <span class="meta-label">Date</span>
+            <span id="competitionDate" class="meta-value">{{ competitionDate }}</span>
+          </div>
+          <div class="meta-row" id="row_competitionAgePoids" v-show="ageWeightLabel">
+            <span class="meta-label">Catégories</span>
+            <span id="competitionAgePoids" class="meta-value">{{ ageWeightLabel }}</span>
+          </div>
+          <div class="meta-row" id="row_competitionClassement" v-show="competitionResult">
+            <span class="meta-label">Classement</span>
+            <span id="competitionClassement" class="meta-value">{{ competitionResult }}</span>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Combats</h3>
+              <p class="subtitle">Liste des combats de cette compétition</p>
+            </div>
+          </div>
+          <div id="combatsList">
+            <div v-if="!hasCombats" class="empty-state">{{ combatsEmptyMessage }}</div>
+            <div v-else class="list">
+              <article v-for="combat in combats" :key="combat.combatId" class="card combat-card">
+                <div class="combat-header">
+                  <p class="card-title">{{ combat.opponent }}</p>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                    <span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span>
+                    <span v-if="combat.victoryType" class="result-badge" style="background: var(--line); border-color: var(--muted);">{{ combat.victoryType }}</span>
+                  </div>
+                </div>
+                <div v-if="combat.showJudoka" class="meta-row">
+                  <span class="meta-label">Judoka</span>
+                  <span class="meta-value">{{ combat.judokaDisplayName }}</span>
+                </div>
+                <p class="combat-comment">{{ combat.notes }}</p>
+                <div v-if="combat.canEdit" class="card-actions">
+                  <button class="button-secondary" type="button" @click="showCombatForm(combat.combatId)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Modifier
+                  </button>
+                  <button class="button-danger" type="button" @click="deleteCombat(combat.combatId)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Supprimer
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="mobile-action-bar primary-action">
+            <button id="finalizeCompetitionButton" class="button-secondary" :class="{ hidden: !canFinalizeCompetition }" @click="showCompetitionFinalizationForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              Finaliser
+            </button>
+            <button :class="{ hidden: !canEditCompetition }" @click="showCombatForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+              Ajouter un combat
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>

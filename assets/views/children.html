@@ -1,0 +1,91 @@
+    <section id="childrenView" class="panel hidden" v-cloak>
+      <div class="panel-header">
+        <div>
+          <h2>Enfants</h2>
+          <p class="subtitle">Ajoutez ou modifiez les judokas dont vous avez la charge, et activez leur accès autonome si besoin.</p>
+        </div>
+        <div class="competition-header-actions">
+          <button class="button-secondary" @click="showHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Retour
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Liste des enfants</h3>
+              <p class="subtitle">Les enfants ajoutés pourront être sélectionnés dans vos compétitions et combats, et se connecter seuls si un email est renseigné.</p>
+            </div>
+          </div>
+          <div id="childrenList">
+            <div v-if="!hasChildren" class="empty-state">Aucun enfant enregistré pour le moment.</div>
+            <div v-else class="list">
+              <article v-for="child in children" :key="child.judokaId" class="card child-card">
+                <p class="card-title">{{ child.fullName }}</p>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Prénom</span>
+                    <span class="meta-value">{{ child.firstName }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Nom</span>
+                    <span class="meta-value">{{ child.lastName }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Email</span>
+                    <span class="meta-value">{{ child.accountEmail }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Connexion autonome</span>
+                    <span class="meta-value">{{ child.directAccessState }}</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="button-secondary" type="button" @click="editManagedChild(child.judokaId)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Modifier
+                  </button>
+                  <button class="button-danger" type="button" @click="deleteManagedChild(child.judokaId, child.fullName)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Supprimer
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3 id="childFormTitle">{{ childFormTitle }}</h3>
+              <p class="subtitle">Renseignez le prénom, le nom et, si besoin, l'email Google qui lui permettra de se connecter seul.</p>
+            </div>
+          </div>
+
+          <input type="hidden" id="child_id" v-model="childForm.judokaId">
+
+          <label for="child_prenom">Prénom</label>
+          <input type="text" id="child_prenom" autocomplete="given-name" v-model.trim="childForm.firstName">
+
+          <label for="child_nom">Nom</label>
+          <input type="text" id="child_nom" autocomplete="family-name" v-model.trim="childForm.lastName">
+
+          <label for="child_email">Email de connexion (optionnel)</label>
+          <input type="email" id="child_email" autocomplete="email" placeholder="email@gmail.com" v-model.trim="childForm.accountEmail">
+
+          <div class="form-actions mobile-action-bar">
+            <button class="button-secondary" @click="resetChildForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
+              Réinitialiser
+            </button>
+            <button id="saveChildButton" @click="saveManagedChild()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span id="saveChildButtonText">{{ saveChildButtonText }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
