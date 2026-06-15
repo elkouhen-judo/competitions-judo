@@ -182,6 +182,7 @@ async function getInitialData(email) {
   };
 }
 
+/** @type {import("./types").RpcMethods} */
 const methods = {
   getInitialData,
   ...childrenService.methods,

@@ -1,9 +1,22 @@
 const { normalizeCombatResult } = require("../domain/competitions/combat-result");
 
+/**
+ * @typedef {import("../types").Judoka} Judoka
+ * @typedef {import("../types").Competition} Competition
+ * @typedef {import("../types").Combat} Combat
+ * @typedef {import("../types").CombatReadModel} CombatReadModel
+ * @typedef {import("../types").ManagedChild} ManagedChild
+ * @typedef {import("../types").AccessInvitation} AccessInvitation
+ */
+
 function pick(source, camelKey, snakeKey) {
   return source[camelKey] !== undefined ? source[camelKey] : source[snakeKey];
 }
 
+/**
+ * @param {object} [user]
+ * @returns {Judoka}
+ */
 function toCanonicalJudoka(user = {}) {
   return {
     judokaId: pick(user, "judokaId", "id_judoka"),
@@ -15,6 +28,10 @@ function toCanonicalJudoka(user = {}) {
   };
 }
 
+/**
+ * @param {object} [competition]
+ * @returns {Competition}
+ */
 function toCanonicalCompetition(competition = {}) {
   return {
     competitionId: pick(competition, "competitionId", "id_competition"),
@@ -28,6 +45,10 @@ function toCanonicalCompetition(competition = {}) {
   };
 }
 
+/**
+ * @param {object} [combat]
+ * @returns {Combat}
+ */
 function toCanonicalCombat(combat = {}) {
   const rawResult = pick(combat, "result", "resultat");
   const normalizedResult = normalizeCombatResult(rawResult);
@@ -42,6 +63,10 @@ function toCanonicalCombat(combat = {}) {
   };
 }
 
+/**
+ * @param {object} [child]
+ * @returns {ManagedChild}
+ */
 function toCanonicalManagedChild(child = {}) {
   return {
     judokaId: pick(child, "judokaId", "id_judoka"),
@@ -51,6 +76,11 @@ function toCanonicalManagedChild(child = {}) {
   };
 }
 
+/**
+ * @param {object} [combat]
+ * @param {object} [extra]
+ * @returns {CombatReadModel}
+ */
 function toCombatReadModel(combat = {}, extra = {}) {
   return {
     ...toCanonicalCombat(combat),
@@ -58,6 +88,12 @@ function toCombatReadModel(combat = {}, extra = {}) {
   };
 }
 
+/**
+ * @param {object[]} [combats]
+ * @param {Judoka[]} [judokas]
+ * @param {{ formatJudokaDisplayName?: (judoka: Judoka) => string }} [options]
+ * @returns {CombatReadModel[]}
+ */
 function toCombatReadModelsWithJudokas(combats = [], judokas = [], options = {}) {
   const formatJudokaDisplayName =
     options.formatJudokaDisplayName ||
@@ -75,6 +111,10 @@ function toCombatReadModelsWithJudokas(combats = [], judokas = [], options = {})
   });
 }
 
+/**
+ * @param {object} [invitation]
+ * @returns {AccessInvitation}
+ */
 function toInvitationReadModel(invitation = {}) {
   return {
     email: invitation.email,

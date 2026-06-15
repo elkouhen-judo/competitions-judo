@@ -2,6 +2,9 @@ function cleanNamePart(value) {
   return String(value || "").trim();
 }
 
+/**
+ * @param {{ firstName?: string, lastName?: string }} [name]
+ */
 function createPersonName({ firstName, lastName } = {}) {
   const normalizedFirstName = cleanNamePart(firstName);
   const normalizedLastName = cleanNamePart(lastName);
@@ -19,6 +22,9 @@ function createPersonName({ firstName, lastName } = {}) {
   };
 }
 
+/**
+ * @param {{ firstName?: string, lastName?: string }} [name]
+ */
 function createOptionalPersonName({ firstName, lastName } = {}) {
   const normalizedFirstName = cleanNamePart(firstName);
   const normalizedLastName = cleanNamePart(lastName);
