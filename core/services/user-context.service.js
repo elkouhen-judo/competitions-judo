@@ -1,5 +1,10 @@
 const { toCanonicalJudoka } = require("./domain-adapters");
 
+/**
+ * @typedef {import("../types").UserContext} UserContext
+ * @typedef {import("../types").DomainUserContext} DomainUserContext
+ */
+
 module.exports = function createUserContextService(deps) {
   const {
     judokasRepository,
@@ -54,6 +59,10 @@ module.exports = function createUserContextService(deps) {
     }
   }
 
+  /**
+   * @param {string} email
+   * @returns {Promise<UserContext>}
+   */
   async function getCurrentUserContext(email) {
     const user = await getCurrentUser(email);
 
@@ -78,6 +87,10 @@ module.exports = function createUserContextService(deps) {
     return { user, judokas, managedJudokaScope };
   }
 
+  /**
+   * @param {string} email
+   * @returns {Promise<DomainUserContext>}
+   */
   async function getDomainUserContext(email) {
     const userContext = await getCurrentUserContext(email);
     return {
