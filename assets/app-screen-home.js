@@ -1,6 +1,6 @@
 (() => {
   function createKirokuHomeScreen(app) {
-    const { state, screens, ui, notifications } = app;
+    const { defaultListPageSize, state, screens, ui, notifications } = app;
     const {
       cleanText,
       formatDate,
@@ -28,6 +28,11 @@
       clubCompetitionsList: [],
       hasClubCompetitions: false,
       clubCompetitionsEmptyMessage: "",
+      clubCompetitionsTotalPages: 1,
+      clubCompetitionsCurrentPage: 1,
+      clubCompetitionsTotalCount: 0,
+      clubCompetitionsCanShowPreviousPage: false,
+      clubCompetitionsCanShowNextPage: false,
       activeJudokaSummary: {
         label: "Judoka actif",
         value: "",
@@ -42,7 +47,12 @@
       competitionsSubtitle: "Touchez une carte pour ouvrir ses combats.",
       competitions: [],
       competitionsEmptyMessage: "",
-      hasCompetitions: false
+      hasCompetitions: false,
+      competitionsTotalPages: 1,
+      competitionsCurrentPage: 1,
+      competitionsTotalCount: 0,
+      competitionsCanShowPreviousPage: false,
+      competitionsCanShowNextPage: false
     };
     let homeViewModel = null;
     let hideFilterOptionsTimer = null;
@@ -80,6 +90,10 @@
         showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
+        showCompetitionsPreviousPage,
+        showCompetitionsNextPage,
+        showClubCompetitionsPreviousPage,
+        showClubCompetitionsNextPage,
         updateFilterJudokaText
       });
     }
@@ -176,6 +190,7 @@
       homeViewModel.filterJudokaId = "";
       refreshHomeFilterOptions();
       homeViewModel.showFilterOptions = true;
+      state.competitionsCurrentPage = 1;
       syncHomeContext();
       renderCompetitions();
     }
@@ -188,6 +203,7 @@
       homeViewModel.filterJudokaId = option ? option.judokaId : "";
       homeViewModel.filterJudokaText = option ? option.name : "";
       homeViewModel.showFilterOptions = false;
+      state.competitionsCurrentPage = 1;
       syncHomeContext();
       renderCompetitions();
     }
@@ -302,21 +318,47 @@
         homeViewModel.clubCompetitionsList = [];
         homeViewModel.hasClubCompetitions = false;
         homeViewModel.clubCompetitionsEmptyMessage = "Aucune compétition club créée.";
+        homeViewModel.clubCompetitionsTotalPages = 1;
+        homeViewModel.clubCompetitionsCurrentPage = 1;
+        homeViewModel.clubCompetitionsTotalCount = 0;
+        homeViewModel.clubCompetitionsCanShowPreviousPage = false;
+        homeViewModel.clubCompetitionsCanShowNextPage = false;
         return;
       }
-      homeViewModel.clubCompetitionsList = state.clubCompetitions.map(cc => ({
+      const allClubCompetitions = state.clubCompetitions.map(cc => ({
         clubCompetitionId: cc.clubCompetitionId || "",
         name: cc.name || "Compétition",
         date: formatDate(cc.competitionDate)
       }));
-      homeViewModel.hasClubCompetitions = homeViewModel.clubCompetitionsList.length > 0;
+      const pagination = window.KirokuScreenProjections.paginateList(
+        allClubCompetitions,
+        state.clubCompetitionsCurrentPage,
+        defaultListPageSize
+      );
+      homeViewModel.clubCompetitionsList = pagination.pageItems;
+      homeViewModel.hasClubCompetitions = allClubCompetitions.length > 0;
       homeViewModel.clubCompetitionsEmptyMessage = "";
+      homeViewModel.clubCompetitionsTotalPages = pagination.totalPages;
+      homeViewModel.clubCompetitionsCurrentPage = pagination.currentPage;
+      homeViewModel.clubCompetitionsTotalCount = pagination.totalItems;
+      homeViewModel.clubCompetitionsCanShowPreviousPage = pagination.canShowPreviousPage;
+      homeViewModel.clubCompetitionsCanShowNextPage = pagination.canShowNextPage;
+      state.clubCompetitionsCurrentPage = pagination.currentPage;
+    }
+
+    function showClubCompetitionsPreviousPage() {
+      state.clubCompetitionsCurrentPage = Math.max(state.clubCompetitionsCurrentPage - 1, 1);
+      renderClubCompetitions();
+    }
+
+    function showClubCompetitionsNextPage() {
+      state.clubCompetitionsCurrentPage += 1;
+      renderClubCompetitions();
     }
 
     function renderCompetitions() {
       ensureHomeViewModel();
       const activeJudokaId = getHomeActiveJudokaId();
-      const activeJudoka = getHomeActiveJudoka();
 
       let filteredComps = state.competitions;
       if (activeJudokaId) {
@@ -333,12 +375,17 @@
             : state.isCoach
               ? "Aucune compétition enregistrée dans le club."
               : "Aucune compétition enregistrée.";
+        homeViewModel.competitionsTotalPages = 1;
+        homeViewModel.competitionsCurrentPage = 1;
+        homeViewModel.competitionsTotalCount = 0;
+        homeViewModel.competitionsCanShowPreviousPage = false;
+        homeViewModel.competitionsCanShowNextPage = false;
         return;
       }
 
       const judokasById = new Map(state.judokas.map(j => [String(j.judokaId), j]));
 
-      homeViewModel.competitions = filteredComps.map(c => {
+      const allCompetitions = filteredComps.map(c => {
         const judoka = judokasById.get(String(c.ownerJudokaId));
         return {
           competitionId: c.competitionId || "",
@@ -349,8 +396,30 @@
           canDelete: (state.isAdmin || state.isParent) && !state.isCoach
         };
       });
-      homeViewModel.hasCompetitions = homeViewModel.competitions.length > 0;
+      const pagination = window.KirokuScreenProjections.paginateList(
+        allCompetitions,
+        state.competitionsCurrentPage,
+        defaultListPageSize
+      );
+      homeViewModel.competitions = pagination.pageItems;
+      homeViewModel.hasCompetitions = allCompetitions.length > 0;
       homeViewModel.competitionsEmptyMessage = "";
+      homeViewModel.competitionsTotalPages = pagination.totalPages;
+      homeViewModel.competitionsCurrentPage = pagination.currentPage;
+      homeViewModel.competitionsTotalCount = pagination.totalItems;
+      homeViewModel.competitionsCanShowPreviousPage = pagination.canShowPreviousPage;
+      homeViewModel.competitionsCanShowNextPage = pagination.canShowNextPage;
+      state.competitionsCurrentPage = pagination.currentPage;
+    }
+
+    function showCompetitionsPreviousPage() {
+      state.competitionsCurrentPage = Math.max(state.competitionsCurrentPage - 1, 1);
+      renderCompetitions();
+    }
+
+    function showCompetitionsNextPage() {
+      state.competitionsCurrentPage += 1;
+      renderCompetitions();
     }
 
     function openHomeJudokaProfile() {
@@ -424,6 +493,10 @@
       showHomeCompetitionForm,
       hideHomeFilterOptions,
       showHomeFilterOptions,
+      showCompetitionsPreviousPage,
+      showCompetitionsNextPage,
+      showClubCompetitionsPreviousPage,
+      showClubCompetitionsNextPage,
       syncHomeContext
     };
   }

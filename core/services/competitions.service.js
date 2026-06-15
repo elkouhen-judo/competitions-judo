@@ -1,9 +1,7 @@
 const {
   toCombatReadModelsWithJudokas,
-  toCompetitionReadModel,
   toCanonicalCompetition,
-  toCanonicalJudoka,
-  toJudokaReadModel
+  toCanonicalJudoka
 } = require("./domain-adapters");
 
 module.exports = function createCompetitionsService(deps) {
@@ -37,14 +35,11 @@ module.exports = function createCompetitionsService(deps) {
         : await competitionsRepository.listByJudokaIds(visibleJudokaIds);
     }
 
-    return records.map(toCompetitionReadModel);
+    return records.map(toCanonicalCompetition);
   }
 
   async function getCompetitionDetail(email, idCompetition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { judokas: contextJudokas, managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     const access = resolveJudokaDataAccess(domainUser, managedJudokaScope);
     const competitionRecord = await competitionsRepository.getById(idCompetition);
 
@@ -65,13 +60,13 @@ module.exports = function createCompetitionsService(deps) {
         : await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, visibleJudokaIds);
     }
 
-    const judokas = access.isOwn() ? [] : userContext.judokas.map(toJudokaReadModel);
+    const judokas = access.isOwn() ? [] : contextJudokas.map(toCanonicalJudoka);
     const enriched = toCombatReadModelsWithJudokas(filtered, judokas, {
       formatJudokaDisplayName: judoka => `${judoka.firstName} ${normalizeLastName(judoka.lastName)}`
     });
 
     return {
-      competition: toCompetitionReadModel(competitionRecord),
+      competition: toCanonicalCompetition(competitionRecord),
       combats: enriched,
       isAdmin: domainUser.accessRole === "ADMIN",
       isCoach: domainUser.accessRole === "COACH",
@@ -83,10 +78,7 @@ module.exports = function createCompetitionsService(deps) {
   }
 
   async function saveCompetition(email, competition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     const domainCompetitionInput = toCanonicalCompetition(competition);
     const ownerJudokaId = resolveCompetitionOwnerId(domainUser, domainCompetitionInput, managedJudokaScope);
 
@@ -127,10 +119,7 @@ module.exports = function createCompetitionsService(deps) {
   }
 
   async function finalizeCompetition(email, idCompetition, result) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
 
     if (!idCompetition) throw new Error("Compétition obligatoire.");
 
@@ -153,10 +142,7 @@ module.exports = function createCompetitionsService(deps) {
   }
 
   async function deleteCompetition(email, idCompetition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
 
     if (!idCompetition) throw new Error("Compétition obligatoire.");
 

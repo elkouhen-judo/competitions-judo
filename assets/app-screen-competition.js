@@ -1,11 +1,12 @@
 (() => {
   function createKirokuCompetitionScreen(app) {
-    const { state, ui, notifications } = app;
+    const { defaultListPageSize, state, ui, notifications } = app;
     const {
       $,
       cleanText,
       formatDate,
       formatResultat,
+      getClassementBadgeClass,
       getCurrentLocalDate,
       getJudokaDisplayName,
       normalizeDisplayName,
@@ -52,6 +53,12 @@
       clubCompetitionFormTitle: "Créer une compétition club",
       clubCompetitionParticipants: [],
       filteredClubCompetitionParticipants: [],
+      clubCompetitionFormParticipantsPage: [],
+      clubCompetitionFormParticipantsTotalPages: 1,
+      clubCompetitionFormParticipantsCurrentPage: 1,
+      clubCompetitionFormParticipantsTotalCount: 0,
+      clubCompetitionFormParticipantsCanShowPreviousPage: false,
+      clubCompetitionFormParticipantsCanShowNextPage: false,
       judokaSearchText: "",
       clubCompetitionForm: {
         clubCompetitionId: "",
@@ -70,8 +77,20 @@
         weightCategory: ""
       },
       clubCompetitionCurrentParticipants: [],
+      clubCompetitionParticipantsPage: [],
+      clubCompetitionParticipantsTotalPages: 1,
+      clubCompetitionParticipantsCurrentPage: 1,
+      clubCompetitionParticipantsTotalCount: 0,
+      clubCompetitionParticipantsCanShowPreviousPage: false,
+      clubCompetitionParticipantsCanShowNextPage: false,
       clubCompetitionAvailableJudokas: [],
       filteredClubCompetitionAvailableJudokas: [],
+      clubCompetitionAvailableJudokasPage: [],
+      clubCompetitionAvailableJudokasTotalPages: 1,
+      clubCompetitionAvailableJudokasCurrentPage: 1,
+      clubCompetitionAvailableJudokasTotalCount: 0,
+      clubCompetitionAvailableJudokasCanShowPreviousPage: false,
+      clubCompetitionAvailableJudokasCanShowNextPage: false,
       judokaAvailableSearchText: "",
       clubCompetitionNewJudokaIds: []
     };
@@ -143,7 +162,9 @@
       clubCompetitionFormViewModel = ui.createMountedViewModel("clubCompetitionFormView", defaultClubCompetitionFormViewState, {
         cancelClubCompetitionForm,
         saveClubCompetition,
-        updateClubCompetitionJudokaSearch
+        updateClubCompetitionJudokaSearch,
+        showClubCompetitionFormParticipantsPreviousPage,
+        showClubCompetitionFormParticipantsNextPage
       });
     }
 
@@ -158,7 +179,11 @@
         confirmDetachClubParticipant,
         openCompetitionFromClubDetail,
         saveClubCompetitionDetails,
-        updateClubAvailableJudokaSearch
+        updateClubAvailableJudokaSearch,
+        showClubCompetitionParticipantsPreviousPage,
+        showClubCompetitionParticipantsNextPage,
+        showClubCompetitionAvailableJudokasPreviousPage,
+        showClubCompetitionAvailableJudokasNextPage
       });
     }
 
@@ -317,6 +342,33 @@
         clubCompetitionFormViewModel.clubCompetitionParticipants.filter(p =>
           selectedIds.has(String(p.judokaId)) || !query || p.name.toLowerCase().includes(query)
         );
+      state.clubCompetitionFormParticipantsCurrentPage = 1;
+      renderClubCompetitionFormParticipantsPage();
+    }
+
+    function renderClubCompetitionFormParticipantsPage() {
+      const pagination = window.KirokuScreenProjections.paginateList(
+        clubCompetitionFormViewModel.filteredClubCompetitionParticipants,
+        state.clubCompetitionFormParticipantsCurrentPage,
+        defaultListPageSize
+      );
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsPage = pagination.pageItems;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalPages = pagination.totalPages;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCurrentPage = pagination.currentPage;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalCount = pagination.totalItems;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowPreviousPage = pagination.canShowPreviousPage;
+      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowNextPage = pagination.canShowNextPage;
+      state.clubCompetitionFormParticipantsCurrentPage = pagination.currentPage;
+    }
+
+    function showClubCompetitionFormParticipantsPreviousPage() {
+      state.clubCompetitionFormParticipantsCurrentPage = Math.max(state.clubCompetitionFormParticipantsCurrentPage - 1, 1);
+      renderClubCompetitionFormParticipantsPage();
+    }
+
+    function showClubCompetitionFormParticipantsNextPage() {
+      state.clubCompetitionFormParticipantsCurrentPage += 1;
+      renderClubCompetitionFormParticipantsPage();
     }
 
     function updateClubAvailableJudokaSearch() {
@@ -326,6 +378,58 @@
         clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(j =>
           selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query)
         );
+      state.clubCompetitionAvailableJudokasCurrentPage = 1;
+      renderClubCompetitionAvailableJudokasPage();
+    }
+
+    function renderClubCompetitionAvailableJudokasPage() {
+      const pagination = window.KirokuScreenProjections.paginateList(
+        clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas,
+        state.clubCompetitionAvailableJudokasCurrentPage,
+        defaultListPageSize
+      );
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasPage = pagination.pageItems;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalPages = pagination.totalPages;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCurrentPage = pagination.currentPage;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalCount = pagination.totalItems;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowPreviousPage = pagination.canShowPreviousPage;
+      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowNextPage = pagination.canShowNextPage;
+      state.clubCompetitionAvailableJudokasCurrentPage = pagination.currentPage;
+    }
+
+    function showClubCompetitionAvailableJudokasPreviousPage() {
+      state.clubCompetitionAvailableJudokasCurrentPage = Math.max(state.clubCompetitionAvailableJudokasCurrentPage - 1, 1);
+      renderClubCompetitionAvailableJudokasPage();
+    }
+
+    function showClubCompetitionAvailableJudokasNextPage() {
+      state.clubCompetitionAvailableJudokasCurrentPage += 1;
+      renderClubCompetitionAvailableJudokasPage();
+    }
+
+    function renderClubCompetitionParticipantsPage() {
+      const pagination = window.KirokuScreenProjections.paginateList(
+        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants,
+        state.clubCompetitionParticipantsCurrentPage,
+        defaultListPageSize
+      );
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsPage = pagination.pageItems;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalPages = pagination.totalPages;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCurrentPage = pagination.currentPage;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalCount = pagination.totalItems;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowPreviousPage = pagination.canShowPreviousPage;
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowNextPage = pagination.canShowNextPage;
+      state.clubCompetitionParticipantsCurrentPage = pagination.currentPage;
+    }
+
+    function showClubCompetitionParticipantsPreviousPage() {
+      state.clubCompetitionParticipantsCurrentPage = Math.max(state.clubCompetitionParticipantsCurrentPage - 1, 1);
+      renderClubCompetitionParticipantsPage();
+    }
+
+    function showClubCompetitionParticipantsNextPage() {
+      state.clubCompetitionParticipantsCurrentPage += 1;
+      renderClubCompetitionParticipantsPage();
     }
 
     function showClubCompetitionForm() {
@@ -344,6 +448,8 @@
         competitionDate: getCurrentLocalDate(),
         participantJudokaIds: []
       });
+      state.clubCompetitionFormParticipantsCurrentPage = 1;
+      renderClubCompetitionFormParticipantsPage();
       showView("clubCompetitionFormView");
     }
 
@@ -394,9 +500,13 @@
             const judoka = judokasById.get(String(p.ownerJudokaId));
             return {
               competitionId: p.competitionId || "",
-              judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId)
+              judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
+              result: p.result || "Non classé",
+              resultClass: getClassementBadgeClass(p.result)
             };
           });
+          state.clubCompetitionParticipantsCurrentPage = 1;
+          renderClubCompetitionParticipantsPage();
           const available = state.judokas
             .filter(j => !participantJudokaIds.has(String(j.judokaId)))
             .map(j => ({
@@ -407,6 +517,8 @@
           clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas = available;
           clubCompetitionDetailViewModel.judokaAvailableSearchText = "";
           clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
+          state.clubCompetitionAvailableJudokasCurrentPage = 1;
+          renderClubCompetitionAvailableJudokasPage();
         },
         showError
       );
@@ -458,7 +570,7 @@
 
     function confirmDeleteClubCompetitionById(clubCompetitionId, name) {
       app.confirmAndRun({
-        message: `Supprimer la compétition club "${name}" ? Les compétitions individuelles des judokas seront conservées.`,
+        message: `Supprimer la compétition club "${name}" ? Les compétitions et combats individuels des judokas associés seront aussi supprimés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
         onSuccess: response => {

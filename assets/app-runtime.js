@@ -2,6 +2,7 @@
   window.createKirokuApp = function createKirokuApp() {
     const runtimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const defaultAccessInvitationVisibleCount = 5;
+    const defaultListPageSize = 10;
     const state = createInitialState();
 
     function createInitialState() {
@@ -23,7 +24,14 @@
         canEditCurrentCompetition: false,
         previousView: "homeView",
         accessInvitationSearch: "",
-        accessInvitationCurrentPage: 1
+        accessInvitationCurrentPage: 1,
+        competitionsCurrentPage: 1,
+        clubCompetitionsCurrentPage: 1,
+        clubCompetitionParticipantsCurrentPage: 1,
+        clubCompetitionAvailableJudokasCurrentPage: 1,
+        clubCompetitionFormParticipantsCurrentPage: 1,
+        judokaCompetitionResultsCurrentPage: 1,
+        adminsCurrentPage: 1
       };
     }
 
@@ -69,6 +77,7 @@
       auth,
       confirmAndRun,
       defaultAccessInvitationVisibleCount,
+      defaultListPageSize,
       notifications,
       reloadInitialData,
       reloadInitialDataAndShowAdmins,

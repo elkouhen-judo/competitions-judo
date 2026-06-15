@@ -3,8 +3,7 @@ module.exports = function createInvitationsRepository(deps) {
     supabaseDelete,
     supabaseInsert,
     supabaseSelect,
-    supabaseSelectOne,
-    eqFilter
+    supabaseSelectOne
   } = deps;
 
   function toAccessInvitationRecord(invitation) {

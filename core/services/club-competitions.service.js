@@ -1,8 +1,4 @@
-const {
-  toCanonicalJudoka,
-  toCompetitionReadModel,
-  toJudokaReadModel
-} = require("./domain-adapters");
+const { toCanonicalJudoka, toCanonicalCompetition } = require("./domain-adapters");
 
 module.exports = function createClubCompetitionsService(deps) {
   const {
@@ -17,8 +13,8 @@ module.exports = function createClubCompetitionsService(deps) {
     createCompetition
   } = deps;
 
-  function assertCanManage(user) {
-    if (!canManageClubCompetition(toCanonicalJudoka(user))) {
+  function assertCanManage(domainUser) {
+    if (!canManageClubCompetition(domainUser)) {
       throw new Error("Gestion des compétitions club réservée aux coachs.");
     }
   }
@@ -34,8 +30,8 @@ module.exports = function createClubCompetitionsService(deps) {
   }
 
   async function saveClubCompetition(email, input) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    assertCanManage(userContext.user);
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    assertCanManage(domainUser);
 
     const isEditing = Boolean(input.clubCompetitionId);
     const clubCompetitionId = input.clubCompetitionId || buildClubCompetitionId();
@@ -85,34 +81,38 @@ module.exports = function createClubCompetitionsService(deps) {
   }
 
   async function getClubCompetitionDetail(email, idClubCompetition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    assertCanManage(userContext.user);
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    assertCanManage(domainUser);
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) throw new Error("Compétition club introuvable.");
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
     const judokas = await judokasRepository.listByIds(participations.map(row => row.id_judoka));
     return {
       clubCompetition: event,
-      participations: participations.map(toCompetitionReadModel),
-      judokas: judokas.map(toJudokaReadModel)
+      participations: participations.map(toCanonicalCompetition),
+      judokas: judokas.map(toCanonicalJudoka)
     };
   }
 
   async function deleteClubCompetition(email, idClubCompetition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    assertCanManage(userContext.user);
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    assertCanManage(domainUser);
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) throw new Error("Compétition club introuvable.");
+    const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
+    for (const participation of participations) {
+      await competitionsRepository.remove(participation.id_competition);
+    }
     await clubCompetitionsRepository.remove(idClubCompetition);
     return {
       success: true,
-      message: "Compétition club supprimée. Les compétitions individuelles des judokas sont conservées."
+      message: "Compétition club supprimée avec les compétitions et combats des judokas associés."
     };
   }
 
   async function detachClubCompetitionParticipant(email, idClubCompetition, idCompetition) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    assertCanManage(userContext.user);
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    assertCanManage(domainUser);
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) throw new Error("Compétition club introuvable.");
     const participation = await competitionsRepository.getById(idCompetition);

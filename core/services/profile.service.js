@@ -1,8 +1,7 @@
 const {
   toCanonicalCombat,
   toCanonicalCompetition,
-  toCanonicalJudoka,
-  toJudokaReadModel
+  toCanonicalJudoka
 } = require("./domain-adapters");
 
 module.exports = function createProfileService(deps) {
@@ -31,7 +30,7 @@ module.exports = function createProfileService(deps) {
 
     return {
       ...snapshot,
-      judoka: toJudokaReadModel(target)
+      judoka: toCanonicalJudoka(target)
     };
   }
 

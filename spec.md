@@ -92,6 +92,8 @@ This specification does not define:
 - **COMP-019**: A linked participation remains visible and editable in the judoka's individual competition history.
 - **COMP-020**: Removing a judoka from a club competition detaches only the club link and shall not delete the individual competition, combats, or final ranking.
 - **COMP-021**: A `JUDOKA` or `PARENT` can still create individual competitions outside a club competition.
+- **COMP-022**: Deleting a club competition shall also delete every linked individual competition participation and its combats.
+- **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` or `ADMIN` can see standings at a glance.
 
 ### 3.4 Combat rules
 
@@ -192,6 +194,7 @@ This specification does not define:
 - **AC-025**: Given a connected `COACH`, when they create a club competition with selected judokas, then one club event and one linked individual competition per selected judoka are created.
 - **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
 - **AC-027**: Given a coach removes a participant from a club competition, when the operation succeeds, then the individual competition and sports data remain available outside the club event.
+- **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
 
 ## 5. Examples & Edge Cases
 

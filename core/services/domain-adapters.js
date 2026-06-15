@@ -1,58 +1,54 @@
 const { normalizeCombatResult } = require("../domain/competitions/combat-result");
 
+function pick(source, camelKey, snakeKey) {
+  return source[camelKey] !== undefined ? source[camelKey] : source[snakeKey];
+}
+
 function toCanonicalJudoka(user = {}) {
   return {
-    judokaId: user.judokaId !== undefined ? user.judokaId : user.id_judoka,
-    accountEmail: user.accountEmail !== undefined ? user.accountEmail : user.email,
-    firstName: user.firstName !== undefined ? user.firstName : user.prenom,
-    lastName: user.lastName !== undefined ? user.lastName : user.nom,
-    profileType: user.profileType !== undefined ? user.profileType : user.profile_type,
-    accessRole: user.accessRole !== undefined ? user.accessRole : user.role
+    judokaId: pick(user, "judokaId", "id_judoka"),
+    accountEmail: pick(user, "accountEmail", "email"),
+    firstName: pick(user, "firstName", "prenom"),
+    lastName: pick(user, "lastName", "nom"),
+    profileType: pick(user, "profileType", "profile_type"),
+    accessRole: pick(user, "accessRole", "role")
   };
 }
 
 function toCanonicalCompetition(competition = {}) {
   return {
-    competitionId: competition.competitionId !== undefined ? competition.competitionId : competition.id_competition,
-    clubCompetitionId: competition.clubCompetitionId !== undefined ? competition.clubCompetitionId : competition.club_competition_id,
-    ownerJudokaId: competition.ownerJudokaId !== undefined ? competition.ownerJudokaId : competition.id_judoka,
-    name: competition.name !== undefined ? competition.name : competition.nom,
-    competitionDate: competition.competitionDate !== undefined ? competition.competitionDate : competition.date,
-    ageCategory: competition.ageCategory !== undefined ? competition.ageCategory : competition.categorie_age,
-    weightCategory: competition.weightCategory !== undefined ? competition.weightCategory : competition.categorie_poids,
-    result: competition.result !== undefined ? competition.result : competition.classement
+    competitionId: pick(competition, "competitionId", "id_competition"),
+    clubCompetitionId: pick(competition, "clubCompetitionId", "club_competition_id"),
+    ownerJudokaId: pick(competition, "ownerJudokaId", "id_judoka"),
+    name: pick(competition, "name", "nom"),
+    competitionDate: pick(competition, "competitionDate", "date"),
+    ageCategory: pick(competition, "ageCategory", "categorie_age"),
+    weightCategory: pick(competition, "weightCategory", "categorie_poids"),
+    result: pick(competition, "result", "classement")
   };
 }
 
 function toCanonicalCombat(combat = {}) {
-  const rawResult = combat.result !== undefined ? combat.result : combat.resultat;
+  const rawResult = pick(combat, "result", "resultat");
   const normalizedResult = normalizeCombatResult(rawResult);
   return {
-    combatId: combat.combatId !== undefined ? combat.combatId : combat.id_combat,
-    judokaId: combat.judokaId !== undefined ? combat.judokaId : combat.id_judoka,
-    competitionId: combat.competitionId !== undefined ? combat.competitionId : combat.id_competition,
-    opponent: combat.opponent !== undefined ? combat.opponent : combat.adversaire,
+    combatId: pick(combat, "combatId", "id_combat"),
+    judokaId: pick(combat, "judokaId", "id_judoka"),
+    competitionId: pick(combat, "competitionId", "id_competition"),
+    opponent: pick(combat, "opponent", "adversaire"),
     result: normalizedResult || (rawResult === "Disqualification" ? "Défaite" : rawResult),
-    victoryType: combat.victoryType !== undefined ? combat.victoryType : combat.type_victoire,
-    notes: combat.notes !== undefined ? combat.notes : combat.deroule
+    victoryType: pick(combat, "victoryType", "type_victoire"),
+    notes: pick(combat, "notes", "deroule")
   };
 }
 
 function toCanonicalManagedChild(child = {}) {
   return {
-    judokaId: child.judokaId !== undefined ? child.judokaId : child.id_judoka,
-    accountEmail: child.accountEmail !== undefined ? child.accountEmail : child.email,
-    firstName: child.firstName !== undefined ? child.firstName : child.prenom,
-    lastName: child.lastName !== undefined ? child.lastName : child.nom
+    judokaId: pick(child, "judokaId", "id_judoka"),
+    accountEmail: pick(child, "accountEmail", "email"),
+    firstName: pick(child, "firstName", "prenom"),
+    lastName: pick(child, "lastName", "nom")
   };
-}
-
-function toJudokaReadModel(user = {}) {
-  return toCanonicalJudoka(user);
-}
-
-function toCompetitionReadModel(competition = {}) {
-  return toCanonicalCompetition(competition);
 }
 
 function toCombatReadModel(combat = {}, extra = {}) {
@@ -80,12 +76,10 @@ function toCombatReadModelsWithJudokas(combats = [], judokas = [], options = {})
 function toInvitationReadModel(invitation = {}) {
   return {
     email: invitation.email,
-    invitedProfileType: invitation.invitedProfileType !== undefined
-      ? invitation.invitedProfileType
-      : invitation.invited_profile_type,
-    invitedBy: invitation.invitedBy !== undefined ? invitation.invitedBy : invitation.invited_by,
-    createdAt: invitation.createdAt !== undefined ? invitation.createdAt : invitation.created_at,
-    updatedAt: invitation.updatedAt !== undefined ? invitation.updatedAt : invitation.updated_at
+    invitedProfileType: pick(invitation, "invitedProfileType", "invited_profile_type"),
+    invitedBy: pick(invitation, "invitedBy", "invited_by"),
+    createdAt: pick(invitation, "createdAt", "created_at"),
+    updatedAt: pick(invitation, "updatedAt", "updated_at")
   };
 }
 
@@ -94,13 +88,7 @@ module.exports = {
   toCanonicalCompetition,
   toCanonicalJudoka,
   toCanonicalManagedChild,
-  toDomainCombat: toCanonicalCombat,
-  toDomainCompetition: toCanonicalCompetition,
-  toDomainJudoka: toCanonicalJudoka,
-  toDomainManagedChild: toCanonicalManagedChild,
   toCombatReadModel,
   toCombatReadModelsWithJudokas,
-  toCompetitionReadModel,
-  toInvitationReadModel,
-  toJudokaReadModel
+  toInvitationReadModel
 };

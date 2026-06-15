@@ -20,7 +20,7 @@ const {
   createClubCompetitionParticipantIds
 } = require("../core/domain/competitions/club-competition");
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
-const { createCompetitionRanking, getCompetitionResultRank } = require("../core/domain/competition-results");
+const { createCompetitionRanking } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 
 test("permission policy derives access from immutable profile type and role", () => {

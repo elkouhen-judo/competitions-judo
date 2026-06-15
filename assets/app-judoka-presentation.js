@@ -69,7 +69,6 @@
         date: formatDate(result.competitionDate),
         result: result.result || "Non classé",
         resultClass: getClassementBadgeClass(result.result),
-        badgeLabel: result.resultBadge ? result.resultBadge.label : "non classé",
         badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
         combatRecord: result.combatRecord ? result.combatRecord.label : "0V · 0D"
       })),

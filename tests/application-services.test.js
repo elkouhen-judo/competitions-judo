@@ -10,6 +10,7 @@ const { updateCombat } = require("../core/domain/competitions/combat");
 const createChildrenService = require("../core/services/children.service");
 const createCombatsService = require("../core/services/combats.service");
 const createClubCompetitionsService = require("../core/services/club-competitions.service");
+const { toCanonicalJudoka } = require("../core/services/domain-adapters");
 
 test("children service fully removes an unlinked child with no sports data", async () => {
   const calls = [];
@@ -62,8 +63,9 @@ test("combats service rejects a combat attached to another judoka competition", 
       })
     },
     userContextService: {
-      getCurrentUserContext: async () => ({
+      getDomainUserContext: async () => ({
         user: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
+        domainUser: toCanonicalJudoka({ id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
@@ -100,8 +102,9 @@ test("coach creates a club competition with linked judoka participations", async
       listByIds: async ids => ids.map(id => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST" }))
     },
     userContextService: {
-      getCurrentUserContext: async () => ({
+      getDomainUserContext: async () => ({
         user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
@@ -141,8 +144,9 @@ test("detaching a club participant keeps the individual competition", async () =
       detachFromClubCompetition: async id => calls.push(["detach", id])
     },
     userContextService: {
-      getCurrentUserContext: async () => ({
+      getDomainUserContext: async () => ({
         user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
@@ -153,4 +157,38 @@ test("detaching a club participant keeps the individual competition", async () =
 
   assert.deepEqual(calls, [["detach", "COMP1"]]);
   assert.match(result.message, /sans supprimer ses résultats/);
+});
+
+test("deleting a club competition removes the linked individual competitions", async () => {
+  const calls = [];
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" }),
+      remove: async id => calls.push(["removeClub", id])
+    },
+    competitionsRepository: {
+      listByClubCompetition: async () => [
+        { id_competition: "COMP1", id_judoka: "J1" },
+        { id_competition: "COMP2", id_judoka: "J2" }
+      ],
+      remove: async id => calls.push(["removeCompetition", id])
+    },
+    userContextService: {
+      getDomainUserContext: async () => ({
+        user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    canManageClubCompetition: permissions.canManageClubCompetition
+  });
+
+  const result = await service.methods.deleteClubCompetition("coach@example.com", "CLUB1");
+
+  assert.deepEqual(calls, [
+    ["removeCompetition", "COMP1"],
+    ["removeCompetition", "COMP2"],
+    ["removeClub", "CLUB1"]
+  ]);
+  assert.match(result.message, /compétitions et combats des judokas associés/);
 });

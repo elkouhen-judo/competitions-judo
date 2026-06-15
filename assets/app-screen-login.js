@@ -119,7 +119,7 @@
         return;
       }
 
-      let callbackResult = { handled: false, completedAuth: false };
+      let callbackResult;
       try {
         callbackResult = await parseVercelAuthCallback();
       } catch (error) {
