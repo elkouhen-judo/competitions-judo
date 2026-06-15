@@ -135,11 +135,77 @@
  */
 
 /**
+ * @typedef {Object} SeasonBounds
+ * @property {string} start
+ * @property {string} end
+ * @property {string} label
+ */
+
+/**
+ * @typedef {Object} CombatProfile
+ * @property {number} victoryIppon
+ * @property {number} victoryDecision
+ * @property {number} lossIppon
+ * @property {number} lossDecision
+ * @property {number} lossPenalty
+ * @property {number} lossForfeit
+ * @property {number} draws
+ * @property {number} penalties
+ * @property {number} forfeits
+ */
+
+/**
+ * @typedef {Object} CompetitionResultBadge
+ * @property {string} label
+ * @property {string} className
+ */
+
+/**
+ * @typedef {Object} CompetitionCombatRecord
+ * @property {number} total
+ * @property {number} wins
+ * @property {number} losses
+ * @property {number} draws
+ * @property {string} label
+ */
+
+/**
+ * @typedef {Object} SeasonCompetitionResult
+ * @property {string} competitionId
+ * @property {string} name
+ * @property {string} competitionDate
+ * @property {string} result
+ * @property {string} category
+ * @property {string} weightCategory
+ * @property {CompetitionResultBadge} resultBadge
+ * @property {CompetitionCombatRecord} combatRecord
+ */
+
+/**
+ * @typedef {Object} JudokaProfileLastCompetition
+ * @property {string} competitionId
+ * @property {string} name
+ * @property {string} competitionDate
+ * @property {string} category
+ * @property {string} weightCategory
+ */
+
+/**
  * Season statistics snapshot (see `core/domain/season-statistics.js`) plus
- * the canonical judoka it was computed for. The statistics fields are not
- * enumerated here yet.
+ * the canonical judoka it was computed for.
  *
- * @typedef {{ judoka: Judoka, [key: string]: any }} JudokaProfile
+ * @typedef {Object} JudokaProfile
+ * @property {Judoka} judoka
+ * @property {SeasonBounds} season
+ * @property {JudokaProfileLastCompetition|null} lastCompetition
+ * @property {CombatProfile} combatProfile
+ * @property {SeasonCompetitionResult[]} competitionResults
+ * @property {number} seasonCombatCount
+ * @property {number} seasonCompetitionCount
+ * @property {number} seasonWins
+ * @property {number} seasonLosses
+ * @property {number} seasonDraws
+ * @property {number} victoryRate
  */
 
 /**
@@ -159,28 +225,28 @@
  * method name dispatched by `body.method` in `api/rpc.js`.
  *
  * @typedef {Object} RpcMethods
- * @property {(email: string) => Promise<InitialData>} getInitialData
- * @property {(email: string) => Promise<ChildrenManagement>} getChildrenManagement
- * @property {(email: string, child: ManagedChild) => Promise<OperationResult>} saveManagedChild
- * @property {(email: string, idJudoka: string) => Promise<OperationResult>} deleteManagedChild
- * @property {(email: string, idJudoka?: string) => Promise<JudokaProfile>} getJudokaProfile
- * @property {(email: string, profile: object) => Promise<object>} registerProfile
- * @property {(email: string, invitedEmail: string) => Promise<OperationResult>} deleteAccessInvitation
- * @property {(email: string) => Promise<AdminsManagement>} getAdminsManagement
- * @property {(email: string, targetEmail: string) => Promise<OperationResult>} grantAdminRole
- * @property {(email: string, idJudoka: string) => Promise<OperationResult>} revokeAdminRole
- * @property {(email: string, targetEmail: string, targetProfileType: string) => Promise<OperationResult>} saveAccessInvitation
- * @property {(email: string, idClubCompetition: string) => Promise<OperationResult>} deleteClubCompetition
- * @property {(email: string, idClubCompetition: string, idCompetition: string) => Promise<OperationResult>} detachClubCompetitionParticipant
- * @property {(email: string, idClubCompetition: string) => Promise<ClubCompetitionDetail>} getClubCompetitionDetail
- * @property {(email: string, input: object) => Promise<OperationResult>} saveClubCompetition
- * @property {(email: string, idCompetition: string) => Promise<OperationResult>} deleteCompetition
- * @property {(email: string, idCompetition: string, result: string) => Promise<OperationResult>} finalizeCompetition
- * @property {(email: string, idCompetition: string) => Promise<CompetitionDetail>} getCompetitionDetail
- * @property {(email: string, competition: object) => Promise<OperationResult>} saveCompetition
- * @property {(email: string, combat: object) => Promise<OperationResult>} ajouterCombat
- * @property {(email: string, idCombat: string) => Promise<OperationResult>} deleteCombat
- * @property {(email: string, combat: object) => Promise<OperationResult>} updateCombat
+ * @property {(email: string) => Promise<InitialData>} getInitialData - Charge le contexte de l'utilisateur courant, ses compétitions et celles du club.
+ * @property {(email: string) => Promise<ChildrenManagement>} getChildrenManagement - Liste les enfants gérés par l'utilisateur (profil parent).
+ * @property {(email: string, child: ManagedChild) => Promise<OperationResult>} saveManagedChild - Crée ou met à jour un enfant géré.
+ * @property {(email: string, idJudoka: string) => Promise<OperationResult>} deleteManagedChild - Supprime un enfant géré.
+ * @property {(email: string, idJudoka?: string) => Promise<JudokaProfile>} getJudokaProfile - Calcule le profil saisonnier d'un judoka (soi-même par défaut, ou un profil accessible).
+ * @property {(email: string, profile: object) => Promise<object>} registerProfile - Finalise l'inscription d'un compte après une invitation.
+ * @property {(email: string, invitedEmail: string) => Promise<OperationResult>} deleteAccessInvitation - Annule une invitation d'accès en attente.
+ * @property {(email: string) => Promise<AdminsManagement>} getAdminsManagement - Liste les administrateurs et les invitations d'accès en attente.
+ * @property {(email: string, targetEmail: string) => Promise<OperationResult>} grantAdminRole - Promeut un judoka au rôle administrateur.
+ * @property {(email: string, idJudoka: string) => Promise<OperationResult>} revokeAdminRole - Retire le rôle administrateur d'un judoka.
+ * @property {(email: string, targetEmail: string, targetProfileType: string) => Promise<OperationResult>} saveAccessInvitation - Crée ou met à jour une invitation d'accès.
+ * @property {(email: string, idClubCompetition: string) => Promise<OperationResult>} deleteClubCompetition - Supprime une compétition de club.
+ * @property {(email: string, idClubCompetition: string, idCompetition: string) => Promise<OperationResult>} detachClubCompetitionParticipant - Détache une participation personnelle d'une compétition de club.
+ * @property {(email: string, idClubCompetition: string) => Promise<ClubCompetitionDetail>} getClubCompetitionDetail - Détail d'une compétition de club et de ses participations.
+ * @property {(email: string, input: object) => Promise<OperationResult>} saveClubCompetition - Crée ou met à jour une compétition de club.
+ * @property {(email: string, idCompetition: string) => Promise<OperationResult>} deleteCompetition - Supprime une compétition personnelle.
+ * @property {(email: string, idCompetition: string, result: string) => Promise<OperationResult>} finalizeCompetition - Enregistre le classement final d'une compétition.
+ * @property {(email: string, idCompetition: string) => Promise<CompetitionDetail>} getCompetitionDetail - Détail d'une compétition personnelle (combats, droits, judokas accessibles).
+ * @property {(email: string, competition: object) => Promise<OperationResult>} saveCompetition - Crée ou met à jour une compétition personnelle.
+ * @property {(email: string, combat: object) => Promise<OperationResult>} ajouterCombat - Ajoute un combat à une compétition.
+ * @property {(email: string, idCombat: string) => Promise<OperationResult>} deleteCombat - Supprime un combat.
+ * @property {(email: string, combat: object) => Promise<OperationResult>} updateCombat - Met à jour un combat existant.
  */
 
 module.exports = {};
