@@ -127,23 +127,21 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
       affiner les types `any` de `assets/global.d.ts` au fil des modifications.
     - Critere de fin : `npm run typecheck` couvre aussi `assets/`.
 
-18. Migration vers de vrais fichiers `.ts`
-    - [PARTIEL] Decision prise : mise en place d'un bundler de transpilation (esbuild,
-      `bundle: false`, cible `es2022`) via `npm run build:assets` (`scripts/build-assets.js`),
-      execute aussi en `pretest` et en `postinstall` (pour que Vercel produise
-      `assets/dist/*` avant le bundling des fonctions serverless).
-    - Preuve de concept faite : `assets/app-notifications.js` converti en
-      `assets/app-notifications.ts`, compile vers `assets/dist/app-notifications.js`
-      (gitignore), inclus par `/api/client` (api/client.js) et par les tests
-      (`tests/mobile-first-index.test.js`, `tests/vercel-deployment.test.js`).
-    - Pattern etabli pour la suite : chaque fichier `assets/*.js` migre vers `.ts` doit
-      etre ajoute a `entryPoints` dans `scripts/build-assets.js`, retire de `clientFiles`
-      et ajoute a `builtClientFiles` dans `api/client.js`, et son chargement dans les
-      tests doit pointer vers `assets/dist/`.
-    - Reste a faire : migrer progressivement les autres fichiers `assets/*.js` vers `.ts`
-      en suivant ce pattern.
-    - Critere de fin : tous les fichiers `assets/*.js` consommes par `/api/client` sont
-      des `.ts` compiles, `npm run typecheck` couvre l'ensemble sans `any` superflus.
+18. [FAIT] Migration vers de vrais fichiers `.ts`
+    - Fait : tous les fichiers `assets/*.js` consommes par `/api/client` (app-ui,
+      app-notifications, app-auth, app-screen-projections, app-screen-login,
+      app-screen-home, app-judoka-presentation, app-screen-judoka,
+      app-screen-competition, app-screen-children, app-screen-admins, app-runtime, app)
+      sont desormais des `.ts`, compiles vers `assets/dist/*.js` (gitignore) via
+      `npm run build:assets` (esbuild, `bundle: false`, cible `es2022`, `charset: "utf8"`
+      pour preserver les caracteres non-ASCII comme `·`), execute en `pretest` et
+      `postinstall`. `api/client.js` et les tests (`tests/mobile-first-index.test.js`,
+      `tests/vercel-deployment.test.js`) lisent tous depuis `assets/dist/`.
+    - Quelques annotations `any` / `undefined as T | undefined` ajoutees uniquement ou
+      `tsc` l'exigeait (objets construits par assignation progressive, parametres
+      optionnels) ; `eslint.config.mjs` exclut desormais `assets/dist/**`.
+    - Critere de fin : `npm run typecheck` (0 erreur), `npm test` (85/85) et
+      `npx eslint .` passent sur l'ensemble du frontend migre.
 
 ## Discipline de refacto
 
