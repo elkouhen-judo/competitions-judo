@@ -27,7 +27,7 @@ This specification covers:
 - server-side API contracts;
 - test automation and validation expectations.
 
-This specification does not redefine product behavior already described in `spec.md`.
+This specification does not redefine product behavior already described in `docs/spec.md`.
 
 ## 2. Definitions
 
