@@ -722,7 +722,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /\.\.\.combatsService\.methods/);
   assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);
   assert.match(supabaseClient, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
-  assert.match(textHelpers, /function normalizeLastName\(value\)/);
+  assert.match(textHelpers, /function normalizeLastName\(value: unknown\): string/);
   assert.match(adminService, /async function getAccessInvitation\(email\)/);
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(
