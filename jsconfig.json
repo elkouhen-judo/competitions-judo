@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "target": "es2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": false,
+    "maxNodeModuleJsDepth": 0,
+    "skipLibCheck": true
+  },
+  "include": ["core/**/*.js", "api/**/*.js"],
+  "exclude": ["node_modules", "assets", "tests"]
+}
