@@ -14,7 +14,7 @@ interface JudokaDataAccess {
   isAll(): boolean;
   isManaged(): boolean;
   isOwn(): boolean;
-  visibleJudokaIds(): unknown[];
+  visibleJudokaIds(): string[];
 }
 
 type CompetitionMethods = Pick<
@@ -52,7 +52,7 @@ export interface CompetitionsServiceDeps {
     user: ReturnType<typeof toCanonicalJudoka> | null | undefined,
     competition: ReturnType<typeof toCanonicalCompetition> | null | undefined,
     managedJudokaScope: ManagedJudokaScope | null | undefined
-  ) => unknown;
+  ) => string;
   buildCompetitionId: () => string;
   createCompetition: typeof createCompetition;
   createPersistedCompetition: typeof createPersistedCompetition;

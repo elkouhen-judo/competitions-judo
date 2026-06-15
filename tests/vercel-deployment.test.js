@@ -630,7 +630,7 @@ test("admin owner selection is not restricted by parent-managed scope", () => {
   );
   assert.match(
     permissions,
-    /function resolveCompetitionOwnerId\(\s*user: UserLike \| null \| undefined,\s*competition: CompetitionLike \| null \| undefined,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\): unknown \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/
+    /function resolveCompetitionOwnerId\(\s*user: UserLike \| null \| undefined,\s*competition: CompetitionLike \| null \| undefined,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\): string \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/
   );
   assert.match(
     permissions,
@@ -648,12 +648,12 @@ test("admin owner selection is not restricted by parent-managed scope", () => {
 
 test("judoka and invitation lookup use a case-insensitive normalized email match", () => {
   assert.match(userContextService, /const normalizedEmail = normalizeEmail\(email\);/);
-  assert.match(judokasRepository, /function findEmailQueryValue\(email: unknown\): string/);
+  assert.match(judokasRepository, /function findEmailQueryValue\(email: string\): string/);
   assert.match(
     judokasRepository,
     /return supabaseSelectOne<JudokaRow>\(\s*"judokas",\s*`select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/
   );
-  assert.match(invitationsRepository, /function findEmailQueryValue\(email: unknown\): string/);
+  assert.match(invitationsRepository, /function findEmailQueryValue\(email: string\): string/);
   assert.match(
     invitationsRepository,
     /return supabaseSelectOne<AccessInvitationRow>\(\s*"access_invitations",\s*`select=\*&email=ilike\.\$\{findEmailQueryValue\(email\)\}`\s*\);/

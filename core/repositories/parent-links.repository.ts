@@ -1,24 +1,24 @@
 import type { ParentLinkRow, SupabaseRestDeps } from "./types";
 
 export interface ParentLinksRepository {
-  getLink(idParent: unknown, idJudoka: unknown): Promise<ParentLinkRow | null>;
-  getOtherByJudoka(idJudoka: unknown, excludedParentId: unknown): Promise<ParentLinkRow | null>;
+  getLink(idParent: string, idJudoka: string): Promise<ParentLinkRow | null>;
+  getOtherByJudoka(idJudoka: string, excludedParentId: string): Promise<ParentLinkRow | null>;
   insert(payload: ParentLinkRow): Promise<ParentLinkRow | null>;
-  listByParent(idParent: unknown): Promise<Pick<ParentLinkRow, "id_judoka">[]>;
-  remove(idParent: unknown, idJudoka: unknown): Promise<void>;
+  listByParent(idParent: string): Promise<Pick<ParentLinkRow, "id_judoka">[]>;
+  remove(idParent: string, idJudoka: string): Promise<void>;
 }
 
 export default function createParentLinksRepository(deps: SupabaseRestDeps): ParentLinksRepository {
   const { supabaseDelete, supabaseInsert, supabaseSelect, supabaseSelectOne, eqFilter } = deps;
 
-  async function listByParent(idParent: unknown): Promise<Pick<ParentLinkRow, "id_judoka">[]> {
+  async function listByParent(idParent: string): Promise<Pick<ParentLinkRow, "id_judoka">[]> {
     return supabaseSelect<Pick<ParentLinkRow, "id_judoka">>(
       "parent_judokas",
       `select=id_judoka&${eqFilter("id_parent", idParent)}`
     );
   }
 
-  async function getLink(idParent: unknown, idJudoka: unknown): Promise<ParentLinkRow | null> {
+  async function getLink(idParent: string, idJudoka: string): Promise<ParentLinkRow | null> {
     return supabaseSelectOne<ParentLinkRow>(
       "parent_judokas",
       `select=id_parent,id_judoka&${eqFilter("id_parent", idParent)}&${eqFilter("id_judoka", idJudoka)}`
@@ -26,8 +26,8 @@ export default function createParentLinksRepository(deps: SupabaseRestDeps): Par
   }
 
   async function getOtherByJudoka(
-    idJudoka: unknown,
-    excludedParentId: unknown
+    idJudoka: string,
+    excludedParentId: string
   ): Promise<ParentLinkRow | null> {
     const links = await supabaseSelect<ParentLinkRow>(
       "parent_judokas",
@@ -41,7 +41,7 @@ export default function createParentLinksRepository(deps: SupabaseRestDeps): Par
     return supabaseInsert<ParentLinkRow>("parent_judokas", payload);
   }
 
-  async function remove(idParent: unknown, idJudoka: unknown): Promise<void> {
+  async function remove(idParent: string, idJudoka: string): Promise<void> {
     return supabaseDelete(
       "parent_judokas",
       `${eqFilter("id_parent", idParent)}&${eqFilter("id_judoka", idJudoka)}`

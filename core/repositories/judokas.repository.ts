@@ -4,27 +4,27 @@ import type { PersonName } from "../domain/access/person-name";
 import type { JudokaRow, SupabaseRestDeps } from "./types";
 
 export interface JudokaChangesInput {
-  accountEmail?: unknown;
-  email?: unknown;
+  accountEmail?: string;
+  email?: string;
   name?: PersonName;
-  prenom?: unknown;
-  nom?: unknown;
-  profileType?: unknown;
-  profile_type?: unknown;
+  prenom?: string;
+  nom?: string;
+  profileType?: string;
+  profile_type?: string;
   accessRole?: AccessRole;
-  role?: unknown;
+  role?: string;
 }
 
 export interface JudokasRepository {
-  getByEmail(email: unknown): Promise<JudokaRow | null>;
-  getById(idJudoka: unknown): Promise<JudokaRow | null>;
+  getByEmail(email: string): Promise<JudokaRow | null>;
+  getById(idJudoka: string): Promise<JudokaRow | null>;
   insert(judoka: JudokaModel): Promise<JudokaRow | null>;
   listAdmins(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
-  listByIds(ids: unknown[]): Promise<JudokaRow[]>;
-  remove(idJudoka: unknown): Promise<void>;
-  update(idJudoka: unknown, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
-  updateManagedChild(idJudoka: unknown, child: UpdateManagedChildResult): Promise<JudokaRow | null>;
+  listByIds(ids: string[]): Promise<JudokaRow[]>;
+  remove(idJudoka: string): Promise<void>;
+  update(idJudoka: string, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
+  updateManagedChild(idJudoka: string, child: UpdateManagedChildResult): Promise<JudokaRow | null>;
 }
 
 export default function createJudokasRepository(deps: SupabaseRestDeps): JudokasRepository {
@@ -79,7 +79,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     };
   }
 
-  function findEmailQueryValue(email: unknown): string {
+  function findEmailQueryValue(email: string): string {
     return encodeURIComponent(String(email || "").trim());
   }
 
@@ -91,7 +91,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return supabaseSelect<JudokaRow>("judokas", "select=*&role=eq.ADMIN&order=nom.asc,prenom.asc");
   }
 
-  async function listByIds(ids: unknown[]): Promise<JudokaRow[]> {
+  async function listByIds(ids: string[]): Promise<JudokaRow[]> {
     if (!ids || !ids.length) {
       return [];
     }
@@ -101,14 +101,14 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     );
   }
 
-  async function getByEmail(email: unknown): Promise<JudokaRow | null> {
+  async function getByEmail(email: string): Promise<JudokaRow | null> {
     return supabaseSelectOne<JudokaRow>(
       "judokas",
       `select=*&email=ilike.${findEmailQueryValue(email)}`
     );
   }
 
-  async function getById(idJudoka: unknown): Promise<JudokaRow | null> {
+  async function getById(idJudoka: string): Promise<JudokaRow | null> {
     return supabaseSelectOne<JudokaRow>("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
@@ -117,7 +117,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   }
 
   async function update(
-    idJudoka: unknown,
+    idJudoka: string,
     judokaChanges: JudokaChangesInput
   ): Promise<JudokaRow | null> {
     return supabasePatch<JudokaRow>(
@@ -128,13 +128,13 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   }
 
   async function updateManagedChild(
-    idJudoka: unknown,
+    idJudoka: string,
     child: UpdateManagedChildResult
   ): Promise<JudokaRow | null> {
     return update(idJudoka, toManagedChildUpdateRecord(child));
   }
 
-  async function remove(idJudoka: unknown): Promise<void> {
+  async function remove(idJudoka: string): Promise<void> {
     return supabaseDelete("judokas", eqFilter("id_judoka", idJudoka));
   }
 

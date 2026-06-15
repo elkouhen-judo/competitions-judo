@@ -8,15 +8,15 @@ const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
 };
 
 export interface CombatsRepository {
-  existsForJudoka(idJudoka: unknown): Promise<CombatRow | null>;
-  getById(idCombat: unknown): Promise<CombatRow | null>;
-  insert(combat: CombatModel, idCombat: unknown): Promise<CombatRow | null>;
-  listByCompetition(idCompetition: unknown): Promise<CombatRow[]>;
-  listByCompetitionAndJudoka(idCompetition: unknown, idJudoka: unknown): Promise<CombatRow[]>;
-  listByCompetitionAndJudokaIds(idCompetition: unknown, ids: unknown[]): Promise<CombatRow[]>;
-  listByJudoka(idJudoka: unknown): Promise<CombatRow[]>;
-  remove(idCombat: unknown): Promise<void>;
-  update(idCombat: unknown, combat: CombatModel): Promise<CombatRow | null>;
+  existsForJudoka(idJudoka: string): Promise<CombatRow | null>;
+  getById(idCombat: string): Promise<CombatRow | null>;
+  insert(combat: CombatModel, idCombat: string): Promise<CombatRow | null>;
+  listByCompetition(idCompetition: string): Promise<CombatRow[]>;
+  listByCompetitionAndJudoka(idCompetition: string, idJudoka: string): Promise<CombatRow[]>;
+  listByCompetitionAndJudokaIds(idCompetition: string, ids: string[]): Promise<CombatRow[]>;
+  listByJudoka(idJudoka: string): Promise<CombatRow[]>;
+  remove(idCombat: string): Promise<void>;
+  update(idCombat: string, combat: CombatModel): Promise<CombatRow | null>;
 }
 
 function toLegacyCompatibleResult(value: unknown): string {
@@ -54,7 +54,7 @@ function toCombatRecord(combat: CombatModel): Record<string, unknown> {
   };
 }
 
-function toNewCombatRecord(combat: CombatModel, idCombat: unknown): Record<string, unknown> {
+function toNewCombatRecord(combat: CombatModel, idCombat: string): Record<string, unknown> {
   return {
     id_combat: idCombat,
     ...toCombatRecord(combat)
@@ -71,11 +71,11 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     eqFilter
   } = deps;
 
-  async function listByJudoka(idJudoka: unknown): Promise<CombatRow[]> {
+  async function listByJudoka(idJudoka: string): Promise<CombatRow[]> {
     return supabaseSelect<CombatRow>("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function listByCompetition(idCompetition: unknown): Promise<CombatRow[]> {
+  async function listByCompetition(idCompetition: string): Promise<CombatRow[]> {
     return supabaseSelect<CombatRow>(
       "combats",
       `select=*&${eqFilter("id_competition", idCompetition)}`
@@ -83,8 +83,8 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
   }
 
   async function listByCompetitionAndJudoka(
-    idCompetition: unknown,
-    idJudoka: unknown
+    idCompetition: string,
+    idJudoka: string
   ): Promise<CombatRow[]> {
     return supabaseSelect<CombatRow>(
       "combats",
@@ -93,8 +93,8 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
   }
 
   async function listByCompetitionAndJudokaIds(
-    idCompetition: unknown,
-    ids: unknown[]
+    idCompetition: string,
+    ids: string[]
   ): Promise<CombatRow[]> {
     if (!ids?.length) {
       return [];
@@ -106,15 +106,15 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     );
   }
 
-  async function getById(idCombat: unknown): Promise<CombatRow | null> {
+  async function getById(idCombat: string): Promise<CombatRow | null> {
     return supabaseSelectOne<CombatRow>("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
   }
 
-  async function existsForJudoka(idJudoka: unknown): Promise<CombatRow | null> {
+  async function existsForJudoka(idJudoka: string): Promise<CombatRow | null> {
     return supabaseSelectOne<CombatRow>("combats", `select=id_combat&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(combat: CombatModel, idCombat: unknown): Promise<CombatRow | null> {
+  async function insert(combat: CombatModel, idCombat: string): Promise<CombatRow | null> {
     const record = toNewCombatRecord(combat, idCombat);
 
     try {
@@ -128,7 +128,7 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     }
   }
 
-  async function update(idCombat: unknown, combat: CombatModel): Promise<CombatRow | null> {
+  async function update(idCombat: string, combat: CombatModel): Promise<CombatRow | null> {
     const record = toCombatRecord(combat);
 
     try {
@@ -146,7 +146,7 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     }
   }
 
-  async function remove(idCombat: unknown): Promise<void> {
+  async function remove(idCombat: string): Promise<void> {
     return supabaseDelete("combats", eqFilter("id_combat", idCombat));
   }
 
