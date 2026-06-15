@@ -75,28 +75,28 @@ const userContextService = fs.readFileSync(
   "utf8"
 );
 const permissions = fs.readFileSync(
-  path.join(root, "core", "domain", "access", "permission-policy.js"),
+  path.join(root, "core", "domain", "access", "permission-policy.ts"),
   "utf8"
 );
 const accessInvitationDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "access", "access-invitation.js"),
+  path.join(root, "core", "domain", "access", "access-invitation.ts"),
   "utf8"
 );
 const competitionDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "competitions", "competition.js"),
+  path.join(root, "core", "domain", "competitions", "competition.ts"),
   "utf8"
 );
-const seasonDomain = fs.readFileSync(path.join(root, "core", "domain", "season.js"), "utf8");
+const seasonDomain = fs.readFileSync(path.join(root, "core", "domain", "season.ts"), "utf8");
 const seasonStatisticsDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "season-statistics.js"),
+  path.join(root, "core", "domain", "season-statistics.ts"),
   "utf8"
 );
 const judokaDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "access", "judoka.js"),
+  path.join(root, "core", "domain", "access", "judoka.ts"),
   "utf8"
 );
 const emailDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "access", "email.js"),
+  path.join(root, "core", "domain", "access", "email.ts"),
   "utf8"
 );
 const judokasRepository = fs.readFileSync(
@@ -390,12 +390,15 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
   assert.doesNotMatch(uiBundle, /id="competition_classement"/);
   assert.match(uiBundle, /id="competition_result"/);
-  assert.match(competitionDomain, /function createCompetitionDetailsDraft\(competition = \{\}\)/);
-  assert.match(competitionDomain, /function createCompetitionFinalResult\(value\)/);
-  assert.match(competitionDomain, /finalize\(finalResult\) \{/);
-  assert.match(competitionDomain, /function cleanCompetitionText\(value\)/);
-  assert.match(competitionDomain, /function createCompetitionDate\(value\)/);
-  assert.match(competitionDomain, /function createCompetitionAgeCategory\(value\)/);
+  assert.match(
+    competitionDomain,
+    /function createCompetitionDetailsDraft\(\s*competition: CompetitionInput = \{\}\s*\)/
+  );
+  assert.match(competitionDomain, /function createCompetitionFinalResult\(value: unknown\)/);
+  assert.match(competitionDomain, /finalize\(finalResult: unknown\) \{/);
+  assert.match(competitionDomain, /function cleanCompetitionText\(value: unknown\)/);
+  assert.match(competitionDomain, /function createCompetitionDate\(value: unknown\)/);
+  assert.match(competitionDomain, /function createCompetitionAgeCategory\(value: unknown\)/);
   assert.match(
     competitionDomain,
     /ageCategory: createCompetitionAgeCategory\(competition\.ageCategory\)/
@@ -446,20 +449,20 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /const deletionDecision = decideManagedChildRemoval\(\{/);
   assert.match(
     judokaDomain,
-    /function createManagedChild\(\{ judokaId,\s*accountEmail,\s*name,\s*firstName,\s*lastName \}\)/
+    /function createManagedChild\(\{\s*judokaId,\s*accountEmail,\s*name,\s*firstName,\s*lastName\s*\}: ManagedChildInput\)/
   );
   assert.match(judokaDomain, /judokaId: createJudokaId\(judokaId\)/);
   assert.match(
     judokaDomain,
-    /function updateManagedChild\(\{ accountEmail,\s*name,\s*firstName,\s*lastName \}\)/
+    /function updateManagedChild\(\{\s*accountEmail,\s*name,\s*firstName,\s*lastName\s*\}: ManagedChildInput\)/
   );
   assert.match(
     emailDomain,
-    /function createOptionalEmail\(value,\s*message = "Email invalide\."\)/
+    /function createOptionalEmail\(value: unknown,\s*message = "Email invalide\."\)/
   );
   assert.match(
     judokaDomain,
-    /function decideManagedChildRemoval\(\{ child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink \}\)/
+    /function decideManagedChildRemoval\(\{\s*child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink\s*\}: DecideManagedChildRemovalInput\)/
   );
   assert.match(childrenService, /async function deleteManagedChild\(email,\s*idJudoka\)/);
   assert.match(childrenService, /isParent: isParent\(domainUser\)/);
@@ -566,11 +569,14 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   );
   assert.match(
     permissions,
-    /function assertCanAccessJudokaProfile\(user,\s*idJudoka,\s*managedJudokaScope\)/
+    /function assertCanAccessJudokaProfile\(\s*user: UserLike \| null \| undefined,\s*idJudoka: unknown,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\)/
   );
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(profileService, /async function getJudokaProfile\(email,\s*idJudoka\)/);
-  assert.match(seasonDomain, /function getCurrentSeasonBounds\(referenceDate = new Date\(\)\)/);
+  assert.match(
+    seasonDomain,
+    /function getCurrentSeasonBounds\(referenceDate: Date = new Date\(\)\)/
+  );
   assert.match(profileService, /const snapshot = buildJudokaProfileSnapshot\(\{/);
   assert.match(profileService, /competitions: competitions\.map\(toCanonicalCompetition\),/);
   assert.match(profileService, /combats: combats\.map\(toCanonicalCombat\),/);
@@ -594,10 +600,10 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     seasonStatisticsDomain,
     /const victoryRate = seasonCombats\.length\s*\? Math\.round\(\(seasonWins \/ seasonCombats\.length\) \* 100\)\s*: 0;/
   );
-  assert.match(seasonStatisticsDomain, /function buildCombatProfile\(combats\)/);
+  assert.match(seasonStatisticsDomain, /function buildCombatProfile\(combats: Combat\[\]\)/);
   assert.match(
     seasonStatisticsDomain,
-    /function getCompetitionCombatRecord\(combats,\s*competitionId\)/
+    /function getCompetitionCombatRecord\(\s*combats: Combat\[\],\s*competitionId: unknown\s*\)/
   );
   assert.match(seasonStatisticsDomain, /const sortedCompetitions = \[\.\.\.competitions\]\.sort/);
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
@@ -609,17 +615,20 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
 test("admin owner selection is not restricted by parent-managed scope", () => {
   assert.match(
     permissions,
-    /function getCompetitionOwnerJudokaId\(competition\) \{\s*return competition && competition\.ownerJudokaId;\s*\}/
+    /function getCompetitionOwnerJudokaId\(competition: CompetitionLike \| null \| undefined\): unknown \{\s*return competition && competition\.ownerJudokaId;\s*\}/
   );
   assert.match(
     permissions,
-    /function resolveCompetitionOwnerId\(user,\s*competition,\s*managedJudokaScope\) \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/
+    /function resolveCompetitionOwnerId\(\s*user: UserLike \| null \| undefined,\s*competition: CompetitionLike \| null \| undefined,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\): unknown \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/
   );
   assert.match(
     permissions,
-    /function isInManagedScope\(managedJudokaScope,\s*idJudoka\) \{\s*return Boolean\(managedJudokaScope && managedJudokaScope\.includes\(idJudoka\)\);/
+    /function isInManagedScope\(\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined,\s*idJudoka: unknown\s*\): boolean \{\s*return Boolean\(managedJudokaScope && managedJudokaScope\.includes\(idJudoka\)\);/
   );
-  assert.match(permissions, /function resolveJudokaDataAccess\(user,\s*managedJudokaScope\)/);
+  assert.match(
+    permissions,
+    /function resolveJudokaDataAccess\(\s*user: UserLike \| null \| undefined,\s*managedJudokaScope: ManagedJudokaScope \| undefined\s*\)/
+  );
   assert.match(
     competitionsService,
     /const access = resolveJudokaDataAccess\(domainUser,\s*managedJudokaScope\);/

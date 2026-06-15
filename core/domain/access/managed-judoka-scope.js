@@ -1,17 +1,1 @@
-function createManagedJudokaScope(judokaIds = []) {
-  const ids = judokaIds.map((id) => String(id));
-
-  return {
-    ids,
-    includes(judokaId) {
-      return ids.includes(String(judokaId));
-    },
-    toIds() {
-      return [...ids];
-    }
-  };
-}
-
-module.exports = {
-  createManagedJudokaScope
-};
+module.exports = require("../../../core-dist/domain/access/managed-judoka-scope.js");
