@@ -13,7 +13,7 @@ const notificationsClient = fs.readFileSync(
 );
 const client = [
   fs.readFileSync(path.join(root, "assets", "vendor/vue.global.prod.js"), "utf8"),
-  fs.readFileSync(path.join(root, "assets", "app-ui.js"), "utf8"),
+  fs.readFileSync(path.join(root, "assets", "dist", "app-ui.js"), "utf8"),
   notificationsClient,
   ...[
     "app-auth.js",
@@ -27,20 +27,23 @@ const client = [
     "app-screen-admins.js",
     "app-runtime.js",
     "app.js"
-  ].map((file) => fs.readFileSync(path.join(root, "assets", file), "utf8"))
+  ].map((file) => fs.readFileSync(path.join(root, "assets", "dist", file), "utf8"))
 ].join("\n");
-const appRuntimeClient = fs.readFileSync(path.join(root, "assets", "app-runtime.js"), "utf8");
-const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "app.js"), "utf8");
+const appRuntimeClient = fs.readFileSync(
+  path.join(root, "assets", "dist", "app-runtime.js"),
+  "utf8"
+);
+const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "dist", "app.js"), "utf8");
 const judokaPresentationClient = fs.readFileSync(
-  path.join(root, "assets", "app-judoka-presentation.js"),
+  path.join(root, "assets", "dist", "app-judoka-presentation.js"),
   "utf8"
 );
 const screenProjectionsClient = fs.readFileSync(
-  path.join(root, "assets", "app-screen-projections.js"),
+  path.join(root, "assets", "dist", "app-screen-projections.js"),
   "utf8"
 );
 const judokaScreenClient = fs.readFileSync(
-  path.join(root, "assets", "app-screen-judoka.js"),
+  path.join(root, "assets", "dist", "app-screen-judoka.js"),
   "utf8"
 );
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));

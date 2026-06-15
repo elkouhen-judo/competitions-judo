@@ -11,12 +11,12 @@ const notificationsClient = fs.readFileSync(
   "utf8"
 );
 const judokaScreenClient = fs.readFileSync(
-  path.join(__dirname, "..", "assets", "app-screen-judoka.js"),
+  path.join(__dirname, "..", "assets", "dist", "app-screen-judoka.js"),
   "utf8"
 );
 const client = [
   fs.readFileSync(path.join(__dirname, "..", "assets", "vendor/vue.global.prod.js"), "utf8"),
-  fs.readFileSync(path.join(__dirname, "..", "assets", "app-ui.js"), "utf8"),
+  fs.readFileSync(path.join(__dirname, "..", "assets", "dist", "app-ui.js"), "utf8"),
   notificationsClient,
   ...[
     "app-auth.js",
@@ -30,7 +30,7 @@ const client = [
     "app-screen-admins.js",
     "app-runtime.js",
     "app.js"
-  ].map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", file), "utf8"))
+  ].map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", "dist", file), "utf8"))
 ].join("\n");
 const bundle = `${html}\n${css}\n${client}`;
 

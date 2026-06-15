@@ -243,7 +243,7 @@
       currentCompetitionReturnView = "clubCompetitionDetailView";
     }
 
-    function openCompetition(id, keepMessage) {
+    function openCompetition(id, keepMessage = false) {
       if (!keepMessage) {
         clearMessage();
         currentCompetitionReturnView = "homeView";
@@ -667,7 +667,8 @@
         competitionDate: competitionFormViewModel.competitionForm.competitionDate,
         ageCategory: competitionFormViewModel.competitionForm.ageCategory,
         weightCategory: competitionFormViewModel.competitionForm.weightCategory,
-        result: competitionFormViewModel.competitionForm.result
+        result: competitionFormViewModel.competitionForm.result,
+        ownerJudokaId: undefined as string | undefined
       };
 
       if (state.isAdmin || state.isParent) {
@@ -826,7 +827,8 @@
         result,
         victoryType:
           result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
-        notes: combatFormViewModel.combatForm.notes
+        notes: combatFormViewModel.combatForm.notes,
+        combatId: undefined as string | undefined
       };
     }
 
@@ -954,7 +956,7 @@
       };
     }
 
-    function refreshCompetitionOwnerOptions(queryOverride) {
+    function refreshCompetitionOwnerOptions(queryOverride?) {
       const query =
         queryOverride !== undefined
           ? cleanText(queryOverride).toLowerCase()

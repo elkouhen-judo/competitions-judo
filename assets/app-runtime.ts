@@ -60,8 +60,8 @@
 
     ui.showView = showView;
 
-    const screens = {};
-    const app = {
+    const screens: any = {};
+    const app: any = {
       applyInitialData,
       auth,
       confirmAndRun,
@@ -95,7 +95,7 @@
       return runServerWithOptions(method, args, success, failure);
     }
 
-    async function runServerWithOptions(method, args, success, failure, options = {}) {
+    async function runServerWithOptions(method, args, success, failure, options: any = {}) {
       const maxAttempts = options.retrySessionOnce ? 2 : 1;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
