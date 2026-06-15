@@ -17,7 +17,12 @@ module.exports = function createCombatsService(deps) {
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
 
-    assertCanManageCombatFor(domainUser, judokaId, managedJudokaScope, "Ajout de ce combat non autorisé.");
+    assertCanManageCombatFor(
+      domainUser,
+      judokaId,
+      managedJudokaScope,
+      "Ajout de ce combat non autorisé."
+    );
 
     const competitionRecord = await competitionsRepository.getById(competitionId);
     if (!competitionRecord) throw new Error("Compétition introuvable.");
@@ -43,7 +48,12 @@ module.exports = function createCombatsService(deps) {
       managedJudokaScope,
       "Modification de ce combat non autorisée."
     );
-    assertCanManageCombatFor(domainUser, judokaId, managedJudokaScope, "Modification de ce combat non autorisée.");
+    assertCanManageCombatFor(
+      domainUser,
+      judokaId,
+      managedJudokaScope,
+      "Modification de ce combat non autorisée."
+    );
 
     createCombatUpdate(domainCombat);
     const competitionRecord = await competitionsRepository.getById(competitionId);

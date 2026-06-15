@@ -1,26 +1,9 @@
 (() => {
   function createKirokuLoginScreen(app) {
-    const {
-      runtimeConfig,
-      auth,
-      applyInitialData,
-      runServer,
-      screens,
-      ui,
-      notifications
-    } = app;
-    const {
-      showView
-    } = ui;
-    const {
-      clearMessage,
-      showError,
-      showSuccess
-    } = notifications;
-    const {
-      clearVercelSession,
-      parseVercelAuthCallback
-    } = auth;
+    const { runtimeConfig, auth, applyInitialData, runServer, screens, ui, notifications } = app;
+    const { showView } = ui;
+    const { clearMessage, showError, showSuccess } = notifications;
+    const { clearVercelSession, parseVercelAuthCallback } = auth;
     const defaultLoginState = {
       text: "Connectez-vous avec le compte Google associé à votre fiche judoka ou enfant.",
       hint: "",
@@ -50,7 +33,7 @@
       runServer(
         "registerProfile",
         [profile],
-        response => {
+        (response) => {
           showSuccess(response.message);
           init();
         },
@@ -114,7 +97,10 @@
 
     async function init() {
       if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
-        showError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
+        showError({
+          message:
+            "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires."
+        });
         showVercelLogin();
         return;
       }
@@ -136,7 +122,7 @@
       app.runServerWithOptions(
         "getInitialData",
         [],
-        data => {
+        (data) => {
           if (!data) {
             showError({ message: "getInitialData() a renvoyé null." });
             return;

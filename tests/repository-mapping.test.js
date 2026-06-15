@@ -51,26 +51,32 @@ test("repositories map domain objects to supabase records", async () => {
       lastName: "Martin"
     }
   });
-  await competitionsRepository.insert({
-    ownerJudokaId: "JUDO1",
-    draft: {
-      name: "Tournoi",
-      competitionDate: "2026-06-11",
-      ageCategory: "",
-      weightCategory: "",
-      result: ""
-    }
-  }, "COMP1");
-  await combatsRepository.insert({
-    judokaId: "JUDO1",
-    competitionId: "COMP1",
-    draft: {
-      opponent: "",
-      result: "V",
-      victoryType: "",
-      notes: ""
-    }
-  }, "CB1");
+  await competitionsRepository.insert(
+    {
+      ownerJudokaId: "JUDO1",
+      draft: {
+        name: "Tournoi",
+        competitionDate: "2026-06-11",
+        ageCategory: "",
+        weightCategory: "",
+        result: ""
+      }
+    },
+    "COMP1"
+  );
+  await combatsRepository.insert(
+    {
+      judokaId: "JUDO1",
+      competitionId: "COMP1",
+      draft: {
+        opponent: "",
+        result: "V",
+        victoryType: "",
+        notes: ""
+      }
+    },
+    "CB1"
+  );
   await invitationsRepository.insert({
     email: "parent@example.com",
     invited_profile_type: "PARENT",
@@ -78,43 +84,64 @@ test("repositories map domain objects to supabase records", async () => {
   });
 
   assert.deepEqual(calls, [
-    ["insert", "judokas", {
-      id_judoka: "JUDO1",
-      email: "child@example.com",
-      prenom: "Aya",
-      nom: "Martin",
-      profile_type: "JUDOKA",
-      role: "NORMAL"
-    }],
-    ["patch", "judokas", "id_judoka=eq.JUDO1", {
-      email: null,
-      prenom: "Aya",
-      nom: "Martin"
-    }],
-    ["insert", "competitions", {
-      id_competition: "COMP1",
-      id_judoka: "JUDO1",
-      club_competition_id: null,
-      nom: "Tournoi",
-      date: "2026-06-11",
-      categorie_age: "",
-      categorie_poids: "",
-      classement: ""
-    }],
-    ["insert", "combats", {
-      id_combat: "CB1",
-      id_judoka: "JUDO1",
-      id_competition: "COMP1",
-      adversaire: "",
-      resultat: "V",
-      type_victoire: "",
-      deroule: ""
-    }],
-    ["insert", "access_invitations", {
-      email: "parent@example.com",
-      invited_profile_type: "PARENT",
-      invited_by: "ADMIN1"
-    }]
+    [
+      "insert",
+      "judokas",
+      {
+        id_judoka: "JUDO1",
+        email: "child@example.com",
+        prenom: "Aya",
+        nom: "Martin",
+        profile_type: "JUDOKA",
+        role: "NORMAL"
+      }
+    ],
+    [
+      "patch",
+      "judokas",
+      "id_judoka=eq.JUDO1",
+      {
+        email: null,
+        prenom: "Aya",
+        nom: "Martin"
+      }
+    ],
+    [
+      "insert",
+      "competitions",
+      {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        club_competition_id: null,
+        nom: "Tournoi",
+        date: "2026-06-11",
+        categorie_age: "",
+        categorie_poids: "",
+        classement: ""
+      }
+    ],
+    [
+      "insert",
+      "combats",
+      {
+        id_combat: "CB1",
+        id_judoka: "JUDO1",
+        id_competition: "COMP1",
+        adversaire: "",
+        resultat: "V",
+        type_victoire: "",
+        deroule: ""
+      }
+    ],
+    [
+      "insert",
+      "access_invitations",
+      {
+        email: "parent@example.com",
+        invited_profile_type: "PARENT",
+        invited_by: "ADMIN1"
+      }
+    ]
   ]);
 });
 
@@ -129,7 +156,9 @@ test("combats repository retries legacy result codes when the remote constraint 
       calls.push(["insert", table, payload]);
       insertAttempts += 1;
       if (insertAttempts === 1) {
-        throw new Error('Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}');
+        throw new Error(
+          'Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}'
+        );
       }
       return payload;
     },
@@ -137,7 +166,9 @@ test("combats repository retries legacy result codes when the remote constraint 
       calls.push(["patch", table, query, payload]);
       patchAttempts += 1;
       if (patchAttempts === 1) {
-        throw new Error('Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}');
+        throw new Error(
+          'Erreur Supabase 400 sur combats : {"code":"23514","message":"new row for relation \\"combats\\" violates check constraint \\"combats_resultat_check\\""}'
+        );
       }
       return payload;
     },
@@ -145,16 +176,19 @@ test("combats repository retries legacy result codes when the remote constraint 
     supabaseSelectOne: async () => null
   });
 
-  await combatsRepository.insert({
-    judokaId: "JUDO1",
-    competitionId: "COMP1",
-    draft: {
-      opponent: "Lee",
-      result: "Victoire",
-      victoryType: "Ippon",
-      notes: ""
-    }
-  }, "CB1");
+  await combatsRepository.insert(
+    {
+      judokaId: "JUDO1",
+      competitionId: "COMP1",
+      draft: {
+        opponent: "Lee",
+        result: "Victoire",
+        victoryType: "Ippon",
+        notes: ""
+      }
+    },
+    "CB1"
+  );
 
   await combatsRepository.update("CB1", {
     judokaId: "JUDO1",
@@ -168,40 +202,58 @@ test("combats repository retries legacy result codes when the remote constraint 
   });
 
   assert.deepEqual(calls, [
-    ["insert", "combats", {
-      id_combat: "CB1",
-      id_judoka: "JUDO1",
-      id_competition: "COMP1",
-      adversaire: "Lee",
-      resultat: "Victoire",
-      type_victoire: "Ippon",
-      deroule: ""
-    }],
-    ["insert", "combats", {
-      id_combat: "CB1",
-      id_judoka: "JUDO1",
-      id_competition: "COMP1",
-      adversaire: "Lee",
-      resultat: "V",
-      type_victoire: "Ippon",
-      deroule: ""
-    }],
-    ["patch", "combats", "id_combat=eq.CB1", {
-      id_judoka: "JUDO1",
-      id_competition: "COMP1",
-      adversaire: "Lee",
-      resultat: "Défaite",
-      type_victoire: "Décision",
-      deroule: ""
-    }],
-    ["patch", "combats", "id_combat=eq.CB1", {
-      id_judoka: "JUDO1",
-      id_competition: "COMP1",
-      adversaire: "Lee",
-      resultat: "D",
-      type_victoire: "Décision",
-      deroule: ""
-    }]
+    [
+      "insert",
+      "combats",
+      {
+        id_combat: "CB1",
+        id_judoka: "JUDO1",
+        id_competition: "COMP1",
+        adversaire: "Lee",
+        resultat: "Victoire",
+        type_victoire: "Ippon",
+        deroule: ""
+      }
+    ],
+    [
+      "insert",
+      "combats",
+      {
+        id_combat: "CB1",
+        id_judoka: "JUDO1",
+        id_competition: "COMP1",
+        adversaire: "Lee",
+        resultat: "V",
+        type_victoire: "Ippon",
+        deroule: ""
+      }
+    ],
+    [
+      "patch",
+      "combats",
+      "id_combat=eq.CB1",
+      {
+        id_judoka: "JUDO1",
+        id_competition: "COMP1",
+        adversaire: "Lee",
+        resultat: "Défaite",
+        type_victoire: "Décision",
+        deroule: ""
+      }
+    ],
+    [
+      "patch",
+      "combats",
+      "id_combat=eq.CB1",
+      {
+        id_judoka: "JUDO1",
+        id_competition: "COMP1",
+        adversaire: "Lee",
+        resultat: "D",
+        type_victoire: "Décision",
+        deroule: ""
+      }
+    ]
   ]);
 });
 
@@ -217,13 +269,17 @@ test("repositories map club competitions and participation links", async () => {
     weightCategory: "-50kg"
   });
 
-  assert.deepEqual(calls[0], ["insert", "club_competitions", {
-    id_club_competition: "CLUB1",
-    nom: "Tournoi Nantes",
-    date: "2026-06-14",
-    categorie_age: "Minime",
-    categorie_poids: "-50kg"
-  }]);
+  assert.deepEqual(calls[0], [
+    "insert",
+    "club_competitions",
+    {
+      id_club_competition: "CLUB1",
+      nom: "Tournoi Nantes",
+      date: "2026-06-14",
+      categorie_age: "Minime",
+      categorie_poids: "-50kg"
+    }
+  ]);
 });
 
 test("combat read models normalize legacy result codes", () => {

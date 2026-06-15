@@ -1,5 +1,5 @@
 function createManagedJudokaScope(judokaIds = []) {
-  const ids = judokaIds.map(id => String(id));
+  const ids = judokaIds.map((id) => String(id));
 
   return {
     ids,

@@ -1,5 +1,9 @@
 function normalizeRole(value) {
-  return String(value || "").toUpperCase().trim() || "NORMAL";
+  return (
+    String(value || "")
+      .toUpperCase()
+      .trim() || "NORMAL"
+  );
 }
 
 function createRole(value) {

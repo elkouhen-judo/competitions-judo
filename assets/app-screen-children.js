@@ -1,15 +1,8 @@
 (() => {
   function createKirokuChildrenScreen(app) {
     const { state, ui, notifications } = app;
-    const {
-      $,
-      showView
-    } = ui;
-    const {
-      clearMessage,
-      showError,
-      showSuccess
-    } = notifications;
+    const { $, showView } = ui;
+    const { clearMessage, showError, showSuccess } = notifications;
     const defaultChildForm = {
       judokaId: "",
       firstName: "",
@@ -47,7 +40,7 @@
       app.runServer(
         "getChildrenManagement",
         [],
-        data => {
+        (data) => {
           ensureChildrenViewModel();
           state.managedChildren = Array.isArray(data.children) ? data.children : [];
           renderManagedChildren();
@@ -60,14 +53,14 @@
 
     function renderManagedChildren() {
       ensureChildrenViewModel();
-      Object.assign(childrenViewModel, window.KirokuScreenProjections.projectManagedChildren(
-        state.managedChildren,
-        {
+      Object.assign(
+        childrenViewModel,
+        window.KirokuScreenProjections.projectManagedChildren(state.managedChildren, {
           getJudokaDisplayName: ui.getJudokaDisplayName,
           normalizeDisplayName: ui.normalizeDisplayName,
           normalizeLastName: ui.normalizeLastName
-        }
-      ));
+        })
+      );
     }
 
     function resetChildForm() {
@@ -78,7 +71,9 @@
     }
 
     function editManagedChild(idJudoka) {
-      const child = state.managedChildren.find(item => String(item.judokaId) === String(idJudoka));
+      const child = state.managedChildren.find(
+        (item) => String(item.judokaId) === String(idJudoka)
+      );
       if (!child) {
         showError({ message: "Enfant introuvable." });
         return;
@@ -109,7 +104,7 @@
       app.runServer(
         "saveManagedChild",
         [child],
-        response => {
+        (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowChildren();
         },
@@ -123,7 +118,7 @@
         message: `Supprimer l'enfant${label} ?`,
         method: "deleteManagedChild",
         args: [idJudoka],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowChildren();
         }

@@ -23,7 +23,10 @@ module.exports = function createClubCompetitionsRepository(deps) {
   }
 
   async function getById(idClubCompetition) {
-    return supabaseSelectOne("club_competitions", `select=*&${eqFilter("id_club_competition", idClubCompetition)}`);
+    return supabaseSelectOne(
+      "club_competitions",
+      `select=*&${eqFilter("id_club_competition", idClubCompetition)}`
+    );
   }
 
   async function insert(event) {
@@ -33,7 +36,11 @@ module.exports = function createClubCompetitionsRepository(deps) {
   async function update(idClubCompetition, event) {
     const record = toClubCompetitionRecord({ ...event, clubCompetitionId: idClubCompetition });
     delete record.id_club_competition;
-    return supabasePatch("club_competitions", eqFilter("id_club_competition", idClubCompetition), record);
+    return supabasePatch(
+      "club_competitions",
+      eqFilter("id_club_competition", idClubCompetition),
+      record
+    );
   }
 
   async function remove(idClubCompetition) {

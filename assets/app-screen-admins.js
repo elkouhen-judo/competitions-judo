@@ -1,23 +1,9 @@
 (() => {
   function createKirokuAdminsScreen(app) {
-    const {
-      defaultAccessInvitationVisibleCount,
-      defaultListPageSize,
-      state,
-      ui,
-      notifications
-    } = app;
-    const {
-      cleanText,
-      formatDateTime,
-      getJudokaDisplayName,
-      showView
-    } = ui;
-    const {
-      clearMessage,
-      showError,
-      showSuccess
-    } = notifications;
+    const { defaultAccessInvitationVisibleCount, defaultListPageSize, state, ui, notifications } =
+      app;
+    const { cleanText, formatDateTime, getJudokaDisplayName, showView } = ui;
+    const { clearMessage, showError, showSuccess } = notifications;
     const defaultAccessInvitationForm = {
       email: "",
       profileType: "JUDOKA"
@@ -74,7 +60,7 @@
       app.runServer(
         "saveAccessInvitation",
         [email, profileType],
-        response => {
+        (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowAdmins();
         },
@@ -88,7 +74,7 @@
         message: `Supprimer l'invitation${label} ?`,
         method: "deleteAccessInvitation",
         args: [email],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowAdmins();
         }
@@ -111,15 +97,18 @@
       }
       const filteredInvitations = getFilteredAccessInvitations();
       const pageSize = defaultAccessInvitationVisibleCount;
-      Object.assign(adminsViewModel, window.KirokuScreenProjections.projectAccessInvitations(
-        filteredInvitations,
-        state.accessInvitationSearch,
-        state.accessInvitationCurrentPage,
-        pageSize,
-        {
-          formatDateTime
-        }
-      ));
+      Object.assign(
+        adminsViewModel,
+        window.KirokuScreenProjections.projectAccessInvitations(
+          filteredInvitations,
+          state.accessInvitationSearch,
+          state.accessInvitationCurrentPage,
+          pageSize,
+          {
+            formatDateTime
+          }
+        )
+      );
     }
 
     function getFilteredAccessInvitations() {
@@ -127,7 +116,7 @@
         return state.managedAccessInvitations;
       }
 
-      return state.managedAccessInvitations.filter(invitation =>
+      return state.managedAccessInvitations.filter((invitation) =>
         cleanText(invitation.email).toLowerCase().includes(state.accessInvitationSearch)
       );
     }
@@ -166,10 +155,12 @@
       app.runServer(
         "getAdminsManagement",
         [],
-        data => {
+        (data) => {
           ensureAdminsViewModel();
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
-          state.managedAccessInvitations = Array.isArray(data.accessInvitations) ? data.accessInvitations : [];
+          state.managedAccessInvitations = Array.isArray(data.accessInvitations)
+            ? data.accessInvitations
+            : [];
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
           state.adminsCurrentPage = 1;
@@ -186,13 +177,16 @@
 
     function renderManagedAdmins() {
       ensureAdminsViewModel();
-      Object.assign(adminsViewModel, window.KirokuScreenProjections.projectManagedAdmins(
-        state.managedAdmins,
-        state.currentUser,
-        {
-          getJudokaDisplayName
-        }
-      ));
+      Object.assign(
+        adminsViewModel,
+        window.KirokuScreenProjections.projectManagedAdmins(
+          state.managedAdmins,
+          state.currentUser,
+          {
+            getJudokaDisplayName
+          }
+        )
+      );
       const pagination = window.KirokuScreenProjections.paginateList(
         adminsViewModel.admins,
         state.adminsCurrentPage,
@@ -234,7 +228,7 @@
       app.runServer(
         "grantAdminRole",
         [email],
-        response => {
+        (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowAdmins();
         },
@@ -248,7 +242,7 @@
         message: `Retirer les droits admin${label} ?`,
         method: "revokeAdminRole",
         args: [idJudoka],
-        onSuccess: response => {
+        onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialDataAndShowAdmins();
         }

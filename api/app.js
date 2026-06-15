@@ -4,7 +4,9 @@ const path = require("node:path");
 const CANONICAL_PRODUCTION_APP_URL = "https://competitions-judo.vercel.app";
 
 function escapeScriptString(value) {
-  return String(value || "").replace(/\\/g, "\\\\").replace(/</g, "\\u003c");
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/</g, "\\u003c");
 }
 
 function readRequestHost(req) {
@@ -16,9 +18,7 @@ function readRequestProtocol(req) {
 }
 
 function isLocalHost(host) {
-  return host.startsWith("localhost")
-    || host.startsWith("127.0.0.1")
-    || host.startsWith("[::1]");
+  return host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
 }
 
 function isVercelDeploymentHost(host) {

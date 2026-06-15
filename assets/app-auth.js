@@ -24,12 +24,15 @@
     }
 
     function wait(delayMs) {
-      return new Promise(resolve => window.setTimeout(resolve, delayMs));
+      return new Promise((resolve) => window.setTimeout(resolve, delayMs));
     }
 
     function startGoogleLogin() {
       if (!runtimeConfig.supabaseUrl || !runtimeConfig.supabaseAnonKey) {
-        onError({ message: "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires." });
+        onError({
+          message:
+            "Configuration Vercel manquante : SUPABASE_URL et SUPABASE_ANON_KEY sont obligatoires."
+        });
         return;
       }
 
@@ -46,10 +49,11 @@
       const queryParams = window.location.search
         ? new URLSearchParams(window.location.search)
         : new URLSearchParams();
-      const error = hashParams.get("error_description")
-        || hashParams.get("error")
-        || queryParams.get("error_description")
-        || queryParams.get("error");
+      const error =
+        hashParams.get("error_description") ||
+        hashParams.get("error") ||
+        queryParams.get("error_description") ||
+        queryParams.get("error");
       if (error) {
         const normalizedError = String(error || "").toLowerCase();
         history.replaceState(null, document.title, window.location.pathname);
@@ -87,14 +91,17 @@
     }
 
     async function exchangeVercelAuthCode(authCode) {
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=authorization_code`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({
-          auth_code: authCode,
-          redirect_to: getVercelAuthRedirectUrl()
-        })
-      });
+      const response = await fetch(
+        `${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=authorization_code`,
+        {
+          method: "POST",
+          headers: getSupabaseAnonymousAuthHeaders(),
+          body: JSON.stringify({
+            auth_code: authCode,
+            redirect_to: getVercelAuthRedirectUrl()
+          })
+        }
+      );
 
       if (!response.ok) {
         const authError = await readSupabaseAuthError(response);
@@ -124,11 +131,14 @@
         return null;
       }
 
-      const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: getSupabaseAnonymousAuthHeaders(),
-        body: JSON.stringify({ refresh_token: session.refresh_token })
-      });
+      const response = await fetch(
+        `${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`,
+        {
+          method: "POST",
+          headers: getSupabaseAnonymousAuthHeaders(),
+          body: JSON.stringify({ refresh_token: session.refresh_token })
+        }
+      );
 
       if (!response.ok) {
         clearVercelSession();
@@ -147,8 +157,8 @@
 
     function getSupabaseAnonymousAuthHeaders() {
       return {
-        "apikey": runtimeConfig.supabaseAnonKey,
-        "Authorization": "Bearer " + runtimeConfig.supabaseAnonKey,
+        apikey: runtimeConfig.supabaseAnonKey,
+        Authorization: "Bearer " + runtimeConfig.supabaseAnonKey,
         "Content-Type": "application/json"
       };
     }
@@ -158,7 +168,7 @@
         const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/user`, {
           headers: {
             ...getSupabaseAnonymousAuthHeaders(),
-            "Authorization": "Bearer " + accessToken
+            Authorization: "Bearer " + accessToken
           }
         });
 
@@ -168,7 +178,9 @@
 
         const authError = await readSupabaseAuthError(response);
         if (attempt === 3) {
-          throw new Error("Connexion Google impossible : " + (authError || "session OAuth non prête."));
+          throw new Error(
+            "Connexion Google impossible : " + (authError || "session OAuth non prête.")
+          );
         }
 
         await wait(300 * (attempt + 1));
@@ -187,13 +199,18 @@
     async function logoutSupabaseSession() {
       const session = readVercelSession();
 
-      if (session && session.access_token && runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey) {
+      if (
+        session &&
+        session.access_token &&
+        runtimeConfig.supabaseUrl &&
+        runtimeConfig.supabaseAnonKey
+      ) {
         try {
           await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/logout`, {
             method: "POST",
             headers: {
               ...getSupabaseAnonymousAuthHeaders(),
-              "Authorization": "Bearer " + session.access_token
+              Authorization: "Bearer " + session.access_token
             }
           });
         } catch (_error) {

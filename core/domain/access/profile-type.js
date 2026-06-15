@@ -1,5 +1,9 @@
 function normalizeProfileType(value) {
-  return String(value || "").toUpperCase().trim() || "JUDOKA";
+  return (
+    String(value || "")
+      .toUpperCase()
+      .trim() || "JUDOKA"
+  );
 }
 
 function createProfileType(value) {

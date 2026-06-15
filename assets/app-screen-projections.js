@@ -18,7 +18,7 @@
   function projectManagedChildren(children, helpers) {
     const { getJudokaDisplayName, normalizeDisplayName, normalizeLastName } = helpers;
 
-    const projectedChildren = (children || []).map(child => {
+    const projectedChildren = (children || []).map((child) => {
       const fullName = getJudokaDisplayName(child) || "Enfant";
       return {
         judokaId: child.judokaId || "",
@@ -39,7 +39,7 @@
   function projectManagedAdmins(admins, currentUser, helpers) {
     const { getJudokaDisplayName } = helpers;
 
-    const projectedAdmins = (admins || []).map(admin => {
+    const projectedAdmins = (admins || []).map((admin) => {
       const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
       const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
       return {
@@ -64,7 +64,7 @@
     const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
 
     return {
-      accessInvitations: visibleInvitations.map(invitation => ({
+      accessInvitations: visibleInvitations.map((invitation) => ({
         email: invitation.email || "Invitation",
         invitedProfileType: invitation.invitedProfileType || "JUDOKA",
         createdAt: formatDateTime(invitation.createdAt)
@@ -82,7 +82,9 @@
 
   function projectCompetitionDetail(competition, canEditCompetition, helpers) {
     const { formatDate } = helpers;
-    const ageWeightLabel = [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - ");
+    const ageWeightLabel = [competition.ageCategory, competition.weightCategory]
+      .filter(Boolean)
+      .join(" - ");
     const hasResult = Boolean(String(competition.result || "").trim());
 
     return {
@@ -98,7 +100,7 @@
 
   function projectCompetitionCombats(combats, helpers) {
     const { formatResultat, normalizeDisplayName } = helpers;
-    const projectedCombats = (combats || []).map(c => ({
+    const projectedCombats = (combats || []).map((c) => ({
       combatId: c.combatId || "",
       opponent: c.opponent || "Adversaire non renseigné",
       result: formatResultat(c.result),

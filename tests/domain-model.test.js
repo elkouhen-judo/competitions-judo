@@ -28,7 +28,10 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
   assert.equal(permissions.isCoach({ profileType: "JUDOKA", accessRole: "COACH" }), true);
-  assert.equal(permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }), false);
+  assert.equal(
+    permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }),
+    false
+  );
   const parentAccess = permissions.resolveJudokaDataAccess(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     scope
@@ -37,17 +40,23 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(parentAccess.isManaged(), true);
   assert.equal(parentAccess.canManageJudoka("CHILD1"), true);
   assert.deepEqual(parentAccess.visibleJudokaIds(), ["PARENT1", "CHILD1"]);
-  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
-    { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
-    "CHILD1",
-    scope
-  ));
+  assert.doesNotThrow(() =>
+    permissions.assertCanAccessJudokaProfile(
+      { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
+      "CHILD1",
+      scope
+    )
+  );
   assert.deepEqual(scope.toIds(), ["PARENT1", "CHILD1"]);
-  assert.throws(() => permissions.assertCanAccessJudokaProfile(
-    { judokaId: "JUDO1", profileType: "JUDOKA", accessRole: "NORMAL" },
-    "OTHER",
-    createManagedJudokaScope([])
-  ), /Accès refusé/);
+  assert.throws(
+    () =>
+      permissions.assertCanAccessJudokaProfile(
+        { judokaId: "JUDO1", profileType: "JUDOKA", accessRole: "NORMAL" },
+        "OTHER",
+        createManagedJudokaScope([])
+      ),
+    /Accès refusé/
+  );
 
   const coachAccess = permissions.resolveJudokaDataAccess(
     { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
@@ -55,21 +64,29 @@ test("permission policy derives access from immutable profile type and role", ()
   );
   assert.equal(coachAccess.kind, "ALL");
   assert.equal(coachAccess.canManageJudoka("OTHER"), true);
-  assert.equal(permissions.canManageCompetition(
-    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-    { ownerJudokaId: "OTHER" },
-    createManagedJudokaScope([])
-  ), true);
-  assert.equal(permissions.canManageCombatFor(
-    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-    "OTHER",
-    createManagedJudokaScope([])
-  ), true);
-  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(
-    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-    "OTHER",
-    createManagedJudokaScope([])
-  ));
+  assert.equal(
+    permissions.canManageCompetition(
+      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+      { ownerJudokaId: "OTHER" },
+      createManagedJudokaScope([])
+    ),
+    true
+  );
+  assert.equal(
+    permissions.canManageCombatFor(
+      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+      "OTHER",
+      createManagedJudokaScope([])
+    ),
+    true
+  );
+  assert.doesNotThrow(() =>
+    permissions.assertCanAccessJudokaProfile(
+      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
+      "OTHER",
+      createManagedJudokaScope([])
+    )
+  );
 });
 
 test("club competition domain normalizes event details and participant ids", () => {
@@ -88,25 +105,38 @@ test("club competition domain normalizes event details and participant ids", () 
   assert.equal(event.ageCategory, "Minime");
   assert.equal(event.weightCategory, "-50kg");
   assert.deepEqual(event.participantJudokaIds, ["J1", "J2"]);
-  assert.throws(() => createClubCompetition({ name: "", competitionDate: "2026-06-14" }), /Nom et date obligatoires/);
+  assert.throws(
+    () => createClubCompetition({ name: "", competitionDate: "2026-06-14" }),
+    /Nom et date obligatoires/
+  );
   assert.throws(() => createClubCompetitionParticipantIds([]), /Au moins un judoka/);
 });
 
 test("competition domain carries optional club competition link", () => {
-  const competition = createCompetition({
-    name: "Tournoi Nantes",
-    competitionDate: "2026-06-14",
-    clubCompetitionId: "CLUB1"
-  }, "J1");
+  const competition = createCompetition(
+    {
+      name: "Tournoi Nantes",
+      competitionDate: "2026-06-14",
+      clubCompetitionId: "CLUB1"
+    },
+    "J1"
+  );
 
   assert.equal(competition.clubCompetitionId, "CLUB1");
-  assert.equal(competition.changeDetails({ name: "Tournoi Nantes 2", competitionDate: "2026-06-15" }).clubCompetitionId, "CLUB1");
+  assert.equal(
+    competition.changeDetails({ name: "Tournoi Nantes 2", competitionDate: "2026-06-15" })
+      .clubCompetitionId,
+    "CLUB1"
+  );
 });
 
 test("permission policy grants coach sports management without admin invitations", () => {
   const coach = { judokaId: "C1", profileType: "JUDOKA", accessRole: "COACH" };
   assert.equal(permissions.canManageClubCompetition(coach), true);
-  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope([])), true);
+  assert.equal(
+    permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope([])),
+    true
+  );
   assert.equal(permissions.canManageChildrenProfile(coach), false);
 });
 
@@ -114,8 +144,14 @@ test("email value object normalizes and validates addresses", () => {
   assert.equal(createEmail(" User@Example.COM "), "user@example.com");
   assert.equal(createOptionalEmail(""), null);
   assert.throws(() => createEmail("not-an-email"), /Email invalide/);
-  assert.throws(() => createEmail("", "Email invalide.", "Email obligatoire."), /Email obligatoire/);
-  assert.throws(() => createOptionalEmail("child@", "Email de l'enfant invalide."), /Email de l'enfant invalide/);
+  assert.throws(
+    () => createEmail("", "Email invalide.", "Email obligatoire."),
+    /Email obligatoire/
+  );
+  assert.throws(
+    () => createOptionalEmail("child@", "Email de l'enfant invalide."),
+    /Email de l'enfant invalide/
+  );
 });
 
 test("judoka domain creates and updates managed child records with invariants", () => {
@@ -174,7 +210,12 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
 
   assert.deepEqual(
     decideManagedChildRemoval({
-      child: { judokaId: "JUDO123", accountEmail: null, profileType: "JUDOKA", accessRole: "NORMAL" },
+      child: {
+        judokaId: "JUDO123",
+        accountEmail: null,
+        profileType: "JUDOKA",
+        accessRole: "NORMAL"
+      },
       hasCompetitions: false,
       hasCombats: false,
       hasOtherParentLink: false
@@ -187,7 +228,12 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
 
   assert.deepEqual(
     decideManagedChildRemoval({
-      child: { judokaId: "JUDO123", accountEmail: "child@example.com", profileType: "JUDOKA", accessRole: "NORMAL" },
+      child: {
+        judokaId: "JUDO123",
+        accountEmail: "child@example.com",
+        profileType: "JUDOKA",
+        accessRole: "NORMAL"
+      },
       hasCompetitions: false,
       hasCombats: false,
       hasOtherParentLink: false
@@ -263,11 +309,14 @@ test("competition domain builds a normalized entity", () => {
     ownerJudokaId: "JUDO123",
     result: "2e"
   });
-  assert.equal(competition.changeDetails({
-    name: "Tournoi modifie",
-    competitionDate: "2026-06-12",
-    result: "1er"
-  }).result, "1er");
+  assert.equal(
+    competition.changeDetails({
+      name: "Tournoi modifie",
+      competitionDate: "2026-06-12",
+      result: "1er"
+    }).result,
+    "1er"
+  );
   assert.throws(() => competition.finalize("podium"), /Classement invalide/);
   assert.equal("id_judoka" in competition, false);
   assert.equal("nom" in competition, false);
@@ -277,7 +326,10 @@ test("competition domain builds a normalized entity", () => {
   assert.equal("classement" in competition, false);
   assert.equal(typeof competition.assertCanContainCombat, "function");
 
-  const defaultCompetition = createCompetition({ name: "Tournoi regional", competitionDate: "2026-06-11" }, "JUDO123");
+  const defaultCompetition = createCompetition(
+    { name: "Tournoi regional", competitionDate: "2026-06-11" },
+    "JUDO123"
+  );
   assert.equal(defaultCompetition.ageCategory, "");
   assert.equal(defaultCompetition.weightCategory, "");
   assert.equal(defaultCompetition.result, "");
@@ -288,7 +340,10 @@ test("competition domain builds a normalized entity", () => {
   );
   assert.equal(veteranCompetition.ageCategory, "Vétéran");
 
-  assert.throws(() => createCompetition({ name: "", competitionDate: "" }, "JUDO123"), /Nom et date obligatoires/);
+  assert.throws(
+    () => createCompetition({ name: "", competitionDate: "" }, "JUDO123"),
+    /Nom et date obligatoires/
+  );
   assert.throws(
     () => createCompetition({ name: "   ", competitionDate: "2026-06-11" }, "JUDO123"),
     /Nom et date obligatoires/
@@ -298,7 +353,11 @@ test("competition domain builds a normalized entity", () => {
     /Date de compétition invalide/
   );
   assert.throws(
-    () => createCompetition({ name: "Tournoi", competitionDate: "2026-06-11", ageCategory: "Espoir" }, "JUDO123"),
+    () =>
+      createCompetition(
+        { name: "Tournoi", competitionDate: "2026-06-11", ageCategory: "Espoir" },
+        "JUDO123"
+      ),
     /Catégorie d'âge invalide/
   );
   assert.equal(createCompetitionRanking(" Non classé "), "Non classé");
@@ -312,17 +371,23 @@ test("competition domain enforces combat ownership", () => {
     competitionDate: "2026-06-11"
   };
 
-  assert.doesNotThrow(() => assertCompetitionCanContainCombat(competition, {
-    competitionId: "COMP123",
-    judokaId: "JUDO123",
-    result: "V"
-  }));
+  assert.doesNotThrow(() =>
+    assertCompetitionCanContainCombat(competition, {
+      competitionId: "COMP123",
+      judokaId: "JUDO123",
+      result: "V"
+    })
+  );
 
-  assert.throws(() => assertCompetitionCanContainCombat(competition, {
-    competitionId: "COMP123",
-    judokaId: "JUDO999",
-    result: "V"
-  }), /judoka de la compétition/);
+  assert.throws(
+    () =>
+      assertCompetitionCanContainCombat(competition, {
+        competitionId: "COMP123",
+        judokaId: "JUDO999",
+        result: "V"
+      }),
+    /judoka de la compétition/
+  );
 });
 
 test("combat domain enforces allowed results and required identifiers", () => {
@@ -363,66 +428,111 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.victoryType, "");
   assert.equal(updatedCombat.notes, "");
 
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Défaite",
-    victoryType: "Décision"
-  }).victoryType, "Décision");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Défaite",
-    victoryType: "Yuko"
-  }).victoryType, "Yuko");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Victoire",
-    victoryType: "Forfait"
-  }).victoryType, "Forfait");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Victoire",
-    victoryType: "Pénalité (Hansoku-make / Shido)"
-  }).victoryType, "Hansoku-make");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Défaite",
-    victoryType: "Pénalité (Hansoku-make / Shido)"
-  }).victoryType, "Hansoku-make");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Egalité",
-    victoryType: "Hiki wake"
-  }).victoryType, "Hiki wake");
-  assert.equal(createCombat({
-    judokaId: "JUDO123",
-    competitionId: "COMP123",
-    result: "Egalité"
-  }).victoryType, "Hiki wake");
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Défaite",
+      victoryType: "Décision"
+    }).victoryType,
+    "Décision"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Défaite",
+      victoryType: "Yuko"
+    }).victoryType,
+    "Yuko"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Victoire",
+      victoryType: "Forfait"
+    }).victoryType,
+    "Forfait"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Victoire",
+      victoryType: "Pénalité (Hansoku-make / Shido)"
+    }).victoryType,
+    "Hansoku-make"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Défaite",
+      victoryType: "Pénalité (Hansoku-make / Shido)"
+    }).victoryType,
+    "Hansoku-make"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Egalité",
+      victoryType: "Hiki wake"
+    }).victoryType,
+    "Hiki wake"
+  );
+  assert.equal(
+    createCombat({
+      judokaId: "JUDO123",
+      competitionId: "COMP123",
+      result: "Egalité"
+    }).victoryType,
+    "Hiki wake"
+  );
 
   assert.throws(
     () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "X" }),
     /Résultat invalide/
   );
   assert.throws(
-    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire", victoryType: "Golden score" }),
+    () =>
+      createCombat({
+        judokaId: "JUDO123",
+        competitionId: "COMP123",
+        result: "Victoire",
+        victoryType: "Golden score"
+      }),
     /Type de décision invalide/
   );
   assert.throws(
-    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Egalité", victoryType: "Décision" }),
+    () =>
+      createCombat({
+        judokaId: "JUDO123",
+        competitionId: "COMP123",
+        result: "Egalité",
+        victoryType: "Décision"
+      }),
     /Type de décision incompatible/
   );
   assert.throws(
-    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Disqualification", victoryType: "Hansoku-make" }),
+    () =>
+      createCombat({
+        judokaId: "JUDO123",
+        competitionId: "COMP123",
+        result: "Disqualification",
+        victoryType: "Hansoku-make"
+      }),
     /Résultat invalide/
   );
   assert.throws(
-    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire", victoryType: "Hiki wake" }),
+    () =>
+      createCombat({
+        judokaId: "JUDO123",
+        competitionId: "COMP123",
+        result: "Victoire",
+        victoryType: "Hiki wake"
+      }),
     /Type de décision incompatible/
   );
 });
@@ -453,7 +563,8 @@ test("season statistics domain computes current season snapshot", () => {
       { combatId: "CB1", competitionId: "COMP1", result: "D", victoryType: "Décision" },
       { combatId: "CB3", competitionId: "COMP2", result: "E", victoryType: "Hiki wake" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCompetitionCategoryLabel: (competition) =>
+      [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
@@ -477,7 +588,10 @@ test("season statistics domain computes current season snapshot", () => {
   });
   assert.equal(snapshot.competitionResults[0].competitionId, "COMP2");
   assert.equal(snapshot.competitionResults[0].combatRecord.label, "1V · 0D · 1N");
-  assert.deepEqual(snapshot.competitionResults[0].resultBadge, { label: "podium", className: "rank-gold" });
+  assert.deepEqual(snapshot.competitionResults[0].resultBadge, {
+    label: "podium",
+    className: "rank-gold"
+  });
   assert.equal(snapshot.lastCompetition.weightCategory, "-55 kg");
 });
 
@@ -516,7 +630,8 @@ test("season statistics keep latest competition details and normalize combat res
       { combatId: "CB3", competitionId: "COMP3", result: "d", victoryType: "Hansoku-make" },
       { combatId: "CB4", competitionId: "COMP3", result: "d", victoryType: "Forfait" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCompetitionCategoryLabel: (competition) =>
+      [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
     getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
@@ -533,8 +648,14 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.combatProfile.lossDecision, 0);
   assert.equal(snapshot.combatProfile.lossPenalty, 1);
   assert.equal(snapshot.combatProfile.lossForfeit, 1);
-  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["COMP3", "COMP2", "COMP1"]);
-  assert.deepEqual(snapshot.competitionResults.map(result => result.resultBadge.className), ["rank-unclassified", "rank-gold", "rank-bronze"]);
+  assert.deepEqual(
+    snapshot.competitionResults.map((result) => result.competitionId),
+    ["COMP3", "COMP2", "COMP1"]
+  );
+  assert.deepEqual(
+    snapshot.competitionResults.map((result) => result.resultBadge.className),
+    ["rank-unclassified", "rank-gold", "rank-bronze"]
+  );
 });
 
 test("season statistics prefer the current season when it contains competition data", () => {
@@ -562,8 +683,9 @@ test("season statistics prefer the current season when it contains competition d
       { combatId: "CB1", competitionId: "CURRENT", result: "V" },
       { combatId: "CB2", competitionId: "LATEST", result: "D" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCurrentSeasonBounds: referenceDate => {
+    getCompetitionCategoryLabel: (competition) =>
+      [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCurrentSeasonBounds: (referenceDate) => {
       if (referenceDate && referenceDate.getFullYear() === 2026 && referenceDate.getMonth() >= 8) {
         return { start: "2026-09-01", end: "2027-08-31", label: "2026-2027" };
       }
@@ -579,7 +701,10 @@ test("season statistics prefer the current season when it contains competition d
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 0);
   assert.equal(snapshot.seasonDraws, 0);
-  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["CURRENT"]);
+  assert.deepEqual(
+    snapshot.competitionResults.map((result) => result.competitionId),
+    ["CURRENT"]
+  );
 });
 
 test("season statistics fall back to the latest season with competition data", () => {
@@ -607,12 +732,12 @@ test("season statistics fall back to the latest season with competition data", (
       { combatId: "CB2", competitionId: "COMP2", result: "V" },
       { combatId: "CB1", competitionId: "COMP1", result: "D" }
     ],
-    getCompetitionCategoryLabel: competition => [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
-    getCurrentSeasonBounds: referenceDate => (
+    getCompetitionCategoryLabel: (competition) =>
+      [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCurrentSeasonBounds: (referenceDate) =>
       referenceDate
         ? { start: "2024-09-01", end: "2025-08-31", label: "2024-2025" }
-        : { start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }
-    ),
+        : { start: "2025-09-01", end: "2026-08-31", label: "2025-2026" },
     isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
   });
 
@@ -622,5 +747,8 @@ test("season statistics fall back to the latest season with competition data", (
   assert.equal(snapshot.seasonWins, 1);
   assert.equal(snapshot.seasonLosses, 1);
   assert.equal(snapshot.seasonDraws, 0);
-  assert.deepEqual(snapshot.competitionResults.map(result => result.competitionId), ["COMP2", "COMP1"]);
+  assert.deepEqual(
+    snapshot.competitionResults.map((result) => result.competitionId),
+    ["COMP2", "COMP1"]
+  );
 });
