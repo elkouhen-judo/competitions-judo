@@ -1,4 +1,21 @@
 function createSessionAuth({ getSupabaseConfig }) {
+  function getResponsePreview(body) {
+    return String(body || "").replace(/\s+/g, " ").trim().slice(0, 160);
+  }
+
+  function parseJsonBody(body, invalidMessage) {
+    if (!body) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(body);
+    } catch (_error) {
+      const preview = getResponsePreview(body);
+      throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
+    }
+  }
+
   async function verifySupabaseUser(accessToken) {
     if (!accessToken) {
       throw new Error("Utilisateur non identifié.");
@@ -17,7 +34,7 @@ function createSessionAuth({ getSupabaseConfig }) {
       throw new Error(`Session Supabase invalide : ${body}`);
     }
 
-    const authUser = body ? JSON.parse(body) : {};
+    const authUser = parseJsonBody(body, "Réponse Supabase invalide pendant la vérification de session.");
     if (!authUser.email) {
       throw new Error("Utilisateur non identifié.");
     }

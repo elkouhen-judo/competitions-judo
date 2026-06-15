@@ -116,6 +116,27 @@ import type {
       return runServerWithOptions(method, args, success, failure);
     }
 
+    function getResponsePreview(body: unknown) {
+      return String(body || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 160);
+    }
+
+    async function readJsonResponse<T>(response: Response, invalidMessage: string): Promise<T | null> {
+      const body = await response.text();
+      if (!body) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(body) as T;
+      } catch (_error) {
+        const preview = getResponsePreview(body);
+        throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
+      }
+    }
+
     async function runServerWithOptions<M extends RpcClientMethod>(
       method: M,
       args: RpcClientArgs<M>,
@@ -141,7 +162,13 @@ import type {
             },
             body: JSON.stringify({ method, args })
           });
-          const payload = await response.json();
+          const payload = await readJsonResponse<{
+            error?: string;
+            result?: RpcClientResult<M>;
+          }>(response, "Réponse invalide reçue depuis /api/rpc.");
+          if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+            throw new Error("Réponse vide ou invalide reçue depuis /api/rpc.");
+          }
 
           if (!response.ok || payload.error) {
             throw new Error(payload.error || "Erreur serveur.");

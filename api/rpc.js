@@ -10,7 +10,18 @@ function readBody(req) {
         req.destroy();
       }
     });
-    req.on("end", () => resolve(body ? JSON.parse(body) : {}));
+    req.on("end", () => {
+      if (!body) {
+        resolve({});
+        return;
+      }
+
+      try {
+        resolve(JSON.parse(body));
+      } catch (_error) {
+        reject(new Error("Corps JSON invalide."));
+      }
+    });
     req.on("error", reject);
   });
 }
@@ -25,8 +36,9 @@ module.exports = async function handler(req, res) {
   try {
     const authorization = req.headers.authorization || "";
     const accessToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+    const bodyPromise = readBody(req);
     const email = await verifySupabaseUser(accessToken);
-    const body = await readBody(req);
+    const body = await bodyPromise;
 
     if (typeof body.method !== "string" || !Object.hasOwn(methods, body.method)) {
       throw new Error("Méthode inconnue.");
