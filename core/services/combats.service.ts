@@ -14,7 +14,7 @@ export interface CombatsServiceDeps {
   userContextService: UserContextService;
   assertCanManageCombatFor: (
     domainUser: ReturnType<typeof toCanonicalJudoka> | null | undefined,
-    judokaId: unknown,
+    judokaId: string,
     managedJudokaScope: ManagedJudokaScope,
     message?: string
   ) => void;

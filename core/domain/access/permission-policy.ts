@@ -16,14 +16,14 @@ export type AccessScopeKind = "ALL" | "MANAGED" | "OWN";
 
 export interface AccessScope {
   kind: AccessScopeKind;
-  judokaId: unknown;
+  judokaId: string;
   managedJudokaScope: ManagedJudokaScope | undefined;
   isAll(): boolean;
   isManaged(): boolean;
   isOwn(): boolean;
   canManageJudoka(targetJudokaId: unknown): boolean;
   canManageCompetition(competition: CompetitionLike | null | undefined): boolean;
-  visibleJudokaIds(): unknown[] | null;
+  visibleJudokaIds(): string[] | null;
 }
 
 export function isAdmin(user: UserLike | null | undefined): boolean {
@@ -75,7 +75,7 @@ export function createAccessScope(
   kind: AccessScopeKind,
   options: { judokaId?: unknown; managedJudokaScope?: ManagedJudokaScope } = {}
 ): AccessScope {
-  const judokaId = options.judokaId || "";
+  const judokaId = String(options.judokaId || "");
   const managedJudokaScope = options.managedJudokaScope;
 
   return {
@@ -219,12 +219,12 @@ export function resolveCompetitionOwnerId(
   user: UserLike | null | undefined,
   competition: CompetitionLike | null | undefined,
   managedJudokaScope: ManagedJudokaScope | null | undefined
-): unknown {
+): string {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
 
   if (isAdmin(user)) {
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");
-    return ownerJudokaId;
+    return String(ownerJudokaId);
   }
 
   if (isParent(user)) {
@@ -232,8 +232,8 @@ export function resolveCompetitionOwnerId(
     if (!isInManagedScope(managedJudokaScope, ownerJudokaId)) {
       throw new Error("Ce judoka n'est pas dans votre liste.");
     }
-    return ownerJudokaId;
+    return String(ownerJudokaId);
   }
 
-  return getUserJudokaId(user);
+  return String(getUserJudokaId(user) || "");
 }

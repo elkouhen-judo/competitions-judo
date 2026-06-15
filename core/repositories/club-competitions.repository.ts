@@ -2,12 +2,12 @@ import type { ClubCompetitionModel } from "../domain/competitions/club-competiti
 import type { ClubCompetitionRow, SupabaseRestDeps } from "./types";
 
 export interface ClubCompetitionsRepository {
-  getById(idClubCompetition: unknown): Promise<ClubCompetitionRow | null>;
+  getById(idClubCompetition: string): Promise<ClubCompetitionRow | null>;
   insert(event: ClubCompetitionModel): Promise<ClubCompetitionRow | null>;
   listAll(): Promise<ClubCompetitionRow[]>;
-  remove(idClubCompetition: unknown): Promise<void>;
+  remove(idClubCompetition: string): Promise<void>;
   update(
-    idClubCompetition: unknown,
+    idClubCompetition: string,
     event: ClubCompetitionModel
   ): Promise<ClubCompetitionRow | null>;
 }
@@ -38,7 +38,7 @@ export default function createClubCompetitionsRepository(
     return supabaseSelect<ClubCompetitionRow>("club_competitions", "select=*&order=date.desc");
   }
 
-  async function getById(idClubCompetition: unknown): Promise<ClubCompetitionRow | null> {
+  async function getById(idClubCompetition: string): Promise<ClubCompetitionRow | null> {
     return supabaseSelectOne<ClubCompetitionRow>(
       "club_competitions",
       `select=*&${eqFilter("id_club_competition", idClubCompetition)}`
@@ -50,7 +50,7 @@ export default function createClubCompetitionsRepository(
   }
 
   async function update(
-    idClubCompetition: unknown,
+    idClubCompetition: string,
     event: ClubCompetitionModel
   ): Promise<ClubCompetitionRow | null> {
     const record = toClubCompetitionRecord({
@@ -66,7 +66,7 @@ export default function createClubCompetitionsRepository(
     );
   }
 
-  async function remove(idClubCompetition: unknown): Promise<void> {
+  async function remove(idClubCompetition: string): Promise<void> {
     return supabaseDelete(
       "club_competitions",
       eqFilter("id_club_competition", idClubCompetition)

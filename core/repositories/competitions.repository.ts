@@ -8,18 +8,18 @@ interface CompetitionFinalization {
 }
 
 export interface CompetitionsRepository {
-  detachFromClubCompetition(idCompetition: unknown): Promise<CompetitionRow | null>;
-  existsForJudoka(idJudoka: unknown): Promise<CompetitionRow | null>;
-  getById(idCompetition: unknown): Promise<CompetitionRow | null>;
-  insert(competition: CompetitionModel, idCompetition: unknown): Promise<CompetitionRow | null>;
+  detachFromClubCompetition(idCompetition: string): Promise<CompetitionRow | null>;
+  existsForJudoka(idJudoka: string): Promise<CompetitionRow | null>;
+  getById(idCompetition: string): Promise<CompetitionRow | null>;
+  insert(competition: CompetitionModel, idCompetition: string): Promise<CompetitionRow | null>;
   listAll(): Promise<CompetitionRow[]>;
-  listByClubCompetition(idClubCompetition: unknown): Promise<CompetitionRow[]>;
-  listByJudoka(idJudoka: unknown): Promise<CompetitionRow[]>;
-  listByJudokaIds(ids: unknown[]): Promise<CompetitionRow[]>;
-  remove(idCompetition: unknown): Promise<void>;
-  update(idCompetition: unknown, competition: CompetitionModel): Promise<CompetitionRow | null>;
+  listByClubCompetition(idClubCompetition: string): Promise<CompetitionRow[]>;
+  listByJudoka(idJudoka: string): Promise<CompetitionRow[]>;
+  listByJudokaIds(ids: string[]): Promise<CompetitionRow[]>;
+  remove(idCompetition: string): Promise<void>;
+  update(idCompetition: string, competition: CompetitionModel): Promise<CompetitionRow | null>;
   updateResult(
-    idCompetition: unknown,
+    idCompetition: string,
     finalization: CompetitionFinalization
   ): Promise<CompetitionRow | null>;
 }
@@ -54,7 +54,7 @@ export default function createCompetitionsRepository(
 
   function toNewCompetitionRecord(
     competition: CompetitionModel,
-    idCompetition: unknown
+    idCompetition: string
   ): Record<string, unknown> {
     return {
       id_competition: idCompetition,
@@ -66,14 +66,14 @@ export default function createCompetitionsRepository(
     return supabaseSelect<CompetitionRow>("competitions", "select=*&order=date.desc");
   }
 
-  async function listByJudoka(idJudoka: unknown): Promise<CompetitionRow[]> {
+  async function listByJudoka(idJudoka: string): Promise<CompetitionRow[]> {
     return supabaseSelect<CompetitionRow>(
       "competitions",
       `select=*&${eqFilter("id_judoka", idJudoka)}&order=date.desc`
     );
   }
 
-  async function listByJudokaIds(ids: unknown[]): Promise<CompetitionRow[]> {
+  async function listByJudokaIds(ids: string[]): Promise<CompetitionRow[]> {
     if (!ids || !ids.length) {
       return [];
     }
@@ -83,21 +83,21 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function listByClubCompetition(idClubCompetition: unknown): Promise<CompetitionRow[]> {
+  async function listByClubCompetition(idClubCompetition: string): Promise<CompetitionRow[]> {
     return supabaseSelect<CompetitionRow>(
       "competitions",
       `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc`
     );
   }
 
-  async function getById(idCompetition: unknown): Promise<CompetitionRow | null> {
+  async function getById(idCompetition: string): Promise<CompetitionRow | null> {
     return supabaseSelectOne<CompetitionRow>(
       "competitions",
       `select=*&${eqFilter("id_competition", idCompetition)}`
     );
   }
 
-  async function existsForJudoka(idJudoka: unknown): Promise<CompetitionRow | null> {
+  async function existsForJudoka(idJudoka: string): Promise<CompetitionRow | null> {
     return supabaseSelectOne<CompetitionRow>(
       "competitions",
       `select=id_competition&${eqFilter("id_judoka", idJudoka)}`
@@ -106,7 +106,7 @@ export default function createCompetitionsRepository(
 
   async function insert(
     competition: CompetitionModel,
-    idCompetition: unknown
+    idCompetition: string
   ): Promise<CompetitionRow | null> {
     return supabaseInsert<CompetitionRow>(
       "competitions",
@@ -115,7 +115,7 @@ export default function createCompetitionsRepository(
   }
 
   async function update(
-    idCompetition: unknown,
+    idCompetition: string,
     competition: CompetitionModel
   ): Promise<CompetitionRow | null> {
     return supabasePatch<CompetitionRow>(
@@ -126,7 +126,7 @@ export default function createCompetitionsRepository(
   }
 
   async function updateResult(
-    idCompetition: unknown,
+    idCompetition: string,
     finalization: CompetitionFinalization
   ): Promise<CompetitionRow | null> {
     return supabasePatch<CompetitionRow>(
@@ -136,7 +136,7 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function detachFromClubCompetition(idCompetition: unknown): Promise<CompetitionRow | null> {
+  async function detachFromClubCompetition(idCompetition: string): Promise<CompetitionRow | null> {
     return supabasePatch<CompetitionRow>(
       "competitions",
       eqFilter("id_competition", idCompetition),
@@ -144,7 +144,7 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function remove(idCompetition: unknown): Promise<void> {
+  async function remove(idCompetition: string): Promise<void> {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
 

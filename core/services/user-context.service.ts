@@ -10,10 +10,10 @@ export interface UserContextServiceDeps {
   normalizeEmail: (value: unknown) => string;
   assertCanAccessJudokaProfile: (
     user: ReturnType<typeof toCanonicalJudoka> | null | undefined,
-    idJudoka: unknown,
+    idJudoka: string,
     managedJudokaScope: ManagedJudokaScope | null | undefined
   ) => void;
-  createManagedJudokaScope: (judokaIds: unknown[]) => ManagedJudokaScope;
+  createManagedJudokaScope: (judokaIds: string[]) => ManagedJudokaScope;
   isAdmin: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
   isCoach: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
   isParent: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
@@ -28,10 +28,10 @@ export interface UserContextService {
   getCurrentUser(email: string): Promise<JudokaRow | null>;
   getCurrentUserContext(email: string): Promise<UserContext>;
   getDomainUserContext(email: string): Promise<DomainUserContext>;
-  getJudokaById(idJudoka: unknown): Promise<JudokaRow | null>;
+  getJudokaById(idJudoka: string): Promise<JudokaRow | null>;
   getJudokas(): Promise<JudokaRow[]>;
-  getManagedChild(idParent: unknown, idJudoka: unknown): Promise<JudokaRow | null>;
-  getParentManagedJudokas(idParent: unknown): Promise<JudokaRow[]>;
+  getManagedChild(idParent: string, idJudoka: string): Promise<JudokaRow | null>;
+  getParentManagedJudokas(idParent: string): Promise<JudokaRow[]>;
 }
 
 export default function createUserContextService(
@@ -61,11 +61,11 @@ export default function createUserContextService(
     return judokasRepository.listAll();
   }
 
-  async function getJudokaById(idJudoka: unknown): Promise<JudokaRow | null> {
+  async function getJudokaById(idJudoka: string): Promise<JudokaRow | null> {
     return judokasRepository.getById(idJudoka);
   }
 
-  async function getParentManagedJudokas(idParent: unknown): Promise<JudokaRow[]> {
+  async function getParentManagedJudokas(idParent: string): Promise<JudokaRow[]> {
     const rows = await parentLinksRepository.listByParent(idParent);
     if (!rows.length) {
       return [];
@@ -75,7 +75,7 @@ export default function createUserContextService(
     return judokasRepository.listByIds(ids);
   }
 
-  async function getManagedChild(idParent: unknown, idJudoka: unknown): Promise<JudokaRow | null> {
+  async function getManagedChild(idParent: string, idJudoka: string): Promise<JudokaRow | null> {
     const link = await parentLinksRepository.getLink(idParent, idJudoka);
     if (!link) {
       return null;
