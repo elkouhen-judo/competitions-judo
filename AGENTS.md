@@ -12,7 +12,6 @@ Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'ind
 - `docs/spec-tech.md` : architecture, données, auth, sécurité, déploiement.
 - `docs/produit.md` : vision produit.
 - `docs/supabase-schema.md` : schéma Supabase.
-- `docs/todo.md` : backlog de refactoring.
 
 ## Budget de contexte
 

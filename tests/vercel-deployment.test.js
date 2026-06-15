@@ -342,7 +342,10 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /const homeViewModel = getHomeViewModel\(\);\s*homeViewModel\.actionDisabled = actionDisabled;/);
+  assert.match(
+    uiBundle,
+    /const homeViewModel = getHomeViewModel\(\);\s*homeViewModel\.actionDisabled = actionDisabled;/
+  );
   assert.match(uiBundle, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
   assert.match(uiBundle, /showHomeActions: true/);
   assert.match(
@@ -438,7 +441,10 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(uiBundle, /function normalizeLastName\(value\)/);
   assert.match(uiBundle, /function deleteManagedChild\(idJudoka,\s*name\)/);
   assert.match(childrenService, /async function getChildrenManagement\(email: string\)/);
-  assert.match(childrenService, /async function saveManagedChild\(email: string,\s*child: object\)/);
+  assert.match(
+    childrenService,
+    /async function saveManagedChild\(email: string,\s*child: object\)/
+  );
   assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
   assert.match(childrenService, /const childInput = toCanonicalManagedChild\(child\);/);
   assert.match(childrenService, /const childJudokaId = childInput\.judokaId;/);
@@ -473,7 +479,10 @@ test("connected parent can manage children from a dedicated screen", () => {
     judokaDomain,
     /function decideManagedChildRemoval\(\{\s*child,\s*hasCompetitions,\s*hasCombats,\s*hasOtherParentLink\s*\}: DecideManagedChildRemovalInput\)/
   );
-  assert.match(childrenService, /async function deleteManagedChild\(email: string,\s*idJudoka: string\)/);
+  assert.match(
+    childrenService,
+    /async function deleteManagedChild\(email: string,\s*idJudoka: string\)/
+  );
   assert.match(childrenService, /isParent: isParent\(domainUser\)/);
   assert.match(judokaDomain, /accessRole: "NORMAL"/);
 });
@@ -516,8 +525,14 @@ test("admin can manage admins from a dedicated screen", () => {
     /invited_profile_type: createProfileType\(invited_profile_type\)/
   );
   assert.doesNotMatch(adminService, /"ADMIN", "JUDOKA", "PARENT"/);
-  assert.match(adminService, /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/);
-  assert.match(adminService, /async function grantAdminRole\(email: string,\s*targetEmail: string\)/);
+  assert.match(
+    adminService,
+    /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/
+  );
+  assert.match(
+    adminService,
+    /async function grantAdminRole\(email: string,\s*targetEmail: string\)/
+  );
   assert.match(adminService, /createJudoka\(toCanonicalJudoka\(target\)\)\.grantAdminRole\(\)/);
   assert.match(
     adminService,
@@ -778,7 +793,10 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);
   assert.match(supabaseClient, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
   assert.match(textHelpers, /function normalizeLastName\(value: unknown\): string/);
-  assert.match(adminService, /async function getAccessInvitation\(email: string\): Promise<AccessInvitationRow \| null>/);
+  assert.match(
+    adminService,
+    /async function getAccessInvitation\(email: string\): Promise<AccessInvitationRow \| null>/
+  );
   assert.match(adminService, /async function getAccessInvitations\(\)/);
   assert.match(
     coreIndex,

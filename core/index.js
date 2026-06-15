@@ -12,7 +12,9 @@ const createJudokasRepository =
   );
 const createClubCompetitionsRepository =
   /** @type {typeof import("./repositories/club-competitions.repository").default} */ (
-    /** @type {unknown} */ (require("../core-dist/repositories/club-competitions.repository.js").default)
+    /** @type {unknown} */ (
+      require("../core-dist/repositories/club-competitions.repository.js").default
+    )
   );
 const createCompetitionsRepository =
   /** @type {typeof import("./repositories/competitions.repository").default} */ (
@@ -34,10 +36,9 @@ const createUserContextService =
   /** @type {typeof import("./services/user-context.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/user-context.service.js").default)
   );
-const createAdminService =
-  /** @type {typeof import("./services/admin.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/admin.service.js").default)
-  );
+const createAdminService = /** @type {typeof import("./services/admin.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/admin.service.js").default)
+);
 const createClubCompetitionsService =
   /** @type {typeof import("./services/club-competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/club-competitions.service.js").default)
@@ -46,18 +47,15 @@ const createCompetitionsService =
   /** @type {typeof import("./services/competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/competitions.service.js").default)
   );
-const createCombatsService =
-  /** @type {typeof import("./services/combats.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/combats.service.js").default)
-  );
-const createChildrenService =
-  /** @type {typeof import("./services/children.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/children.service.js").default)
-  );
-const createProfileService =
-  /** @type {typeof import("./services/profile.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/profile.service.js").default)
-  );
+const createCombatsService = /** @type {typeof import("./services/combats.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/combats.service.js").default)
+);
+const createChildrenService = /** @type {typeof import("./services/children.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/children.service.js").default)
+);
+const createProfileService = /** @type {typeof import("./services/profile.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/profile.service.js").default)
+);
 const createRegistrationService =
   /** @type {typeof import("./services/registration.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/registration.service.js").default)
