@@ -4,7 +4,7 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
-    ignores: ["assets/vendor/**", "assets/dist/**"]
+    ignores: ["assets/vendor/**", "assets/dist/**", "core-dist/**"]
   },
   {
     files: ["eslint.config.mjs"],

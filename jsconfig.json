@@ -12,10 +12,11 @@
   },
   "include": [
     "core/**/*.js",
+    "core/**/*.ts",
     "api/**/*.js",
     "assets/**/*.js",
     "assets/**/*.ts",
     "assets/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "tests", "assets/vendor", "assets/dist"]
+  "exclude": ["node_modules", "tests", "assets/vendor", "assets/dist", "core-dist"]
 }
