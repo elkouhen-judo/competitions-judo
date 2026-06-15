@@ -127,6 +127,7 @@ const uiBundle = `${html}\n${css}\n${client}`;
 
 test("vercel config routes the app shell and rpc endpoint", () => {
   assert.equal(vercel.version, 2);
+  assert.equal(vercel.installCommand, "npm install --include=dev");
   assert.deepEqual(vercel.rewrites[0], {
     source: "/api/rpc",
     destination: "/api/rpc"
