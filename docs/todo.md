@@ -143,32 +143,38 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
     - Critere de fin : `npm run typecheck` (0 erreur), `npm test` (85/85) et
       `npx eslint .` passent sur l'ensemble du frontend migre.
 
-19. [POC FAIT] Migration `.ts` pour `core/` (backend, sans toucher `api/`)
+19. [EN COURS] Migration `.ts` pour `core/` (backend, sans toucher `api/`)
     - Constat : `core/` (42 fichiers) et `api/` sont des modules CommonJS
       executes directement par Node (tests + fonctions serverless Vercel),
       sans etape de build, deja type-checkes via `checkJs`/JSDoc.
-    - Fait (POC sur 2 fichiers "feuilles") : `core/shared/ids.js` et
-      `core/shared/text.js` convertis en `core/shared/ids.ts` /
-      `core/shared/text.ts` (export ESM `export function ...`, requis pour
-      que `tsc` les traite comme des modules), compiles vers
-      `core-dist/shared/*.js` (gitignore, CJS) via `npm run build:core`
-      (`scripts/build-core.js`, esbuild, `platform: "node"`, `format: "cjs"`,
-      `target: "node20"`, `outbase: "core"`), execute en `pretest` et
-      `postinstall` (apres `build:assets`).
-    - Pattern shim : `core/shared/ids.js` / `core/shared/text.js` d'origine
-      remplaces par un fichier d'une ligne
-      `module.exports = require("../../core-dist/shared/xxx.js")`, pour que
-      `core/index.js` (`require("./shared/ids")`) et donc `api/_core.js`
+    - Pattern (valide sur POC puis etendu) : chaque fichier `core/**/X.js`
+      converti en `core/**/X.ts` (export ESM `export function ...`, requis
+      pour que `tsc` les traite comme des modules, types reels : `unknown`
+      pour les entrees non fiables, unions litterales pour les enums
+      metier), compile vers `core-dist/**/*.js` (gitignore, CJS) via
+      `npm run build:core` (`scripts/build-core.js`, esbuild,
+      `platform: "node"`, `format: "cjs"`, `target: "node20"`,
+      `outbase: "core"`), execute en `pretest` et `postinstall` (apres
+      `build:assets`).
+    - Pattern shim : `core/**/X.js` d'origine remplace par un fichier d'une
+      ligne `module.exports = require(".../core-dist/.../X.js")`, pour que
+      `core/index.js`, les autres fichiers `core/*.js` et les tests
       continuent de fonctionner sans aucune modification de `api/`.
-    - Verifie : `npm run typecheck` (0 erreur), `npm test` (85/85),
-      `npx eslint .` (0 erreur, `core-dist/**` exclu), et `vercel build`
-      (le tracing Vercel resout correctement le shim vers le contenu compile
-      de `core-dist/`, fonction `/api/rpc` testee en local avec
-      `require("./api/_core.js")`).
-    - Reste ouvert : decider si on etend ce pattern aux 40 autres fichiers
-      `core/` (un par un, meme pattern shim + `core-dist/`), ou si on s'arrete
-      la (le typage est deja assure par `checkJs`/JSDoc, le gain des `.ts`
-      reels est donc surtout stylistique pour le backend).
+    - Fait :
+      - POC (2 fichiers "feuilles") : `core/shared/ids.ts` /
+        `core/shared/text.ts`.
+      - Couche `core/domain/**` (17 fichiers) + `core/types.ts` (types
+        TypeScript purs, conversion des `@typedef` de `core/types.js`, sans
+        entree `build-core.js` ni shim car erase a la compilation).
+    - Verifie (apres chaque etape) : `npm run typecheck` (0 erreur, hors
+      erreur preexistante non liee dans
+      `core/services/user-context.service.js`), `npm test` (85/85),
+      `npx eslint .` (0 erreur, `core-dist/**` exclu), `npx prettier --check`
+      et `vercel build` (le tracing Vercel resout/compile correctement les
+      shims `core/**/*.js` -> `core-dist/**/*.js`).
+    - Reste a faire (etapes suivantes a planifier separement) : `core/infra/**`,
+      `core/auth/**`, `core/repositories/**`, `core/services/**`,
+      `core/shared/filters.js`, `core/config/env.js`, `core/index.js`.
 
 ## Discipline de refacto
 
