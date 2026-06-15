@@ -1,5 +1,7 @@
 (() => {
-  function createKirokuHomeScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+
+  function createKirokuHomeScreen(app: KirokuApp) {
     const { defaultListPageSize, state, screens, ui, notifications } = app;
     const { cleanText, formatDate, getCompactJudokaLabel, getJudokaDisplayName, showView } = ui;
     const { showError } = notifications;
@@ -48,8 +50,8 @@
       competitionsCanShowPreviousPage: false,
       competitionsCanShowNextPage: false
     };
-    let homeViewModel = null;
-    let hideFilterOptionsTimer = null;
+    let homeViewModel: (typeof defaultHomeViewState) | null = null;
+    let hideFilterOptionsTimer: number | null = null;
 
     function applyInitialData() {
       ensureHomeViewModel();

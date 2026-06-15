@@ -1,5 +1,7 @@
 (() => {
-  function createKirokuJudokaScreen(app) {
+  type KirokuApp = import("./types").KirokuApp;
+
+  function createKirokuJudokaScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
     const {
       formatDate,
@@ -45,7 +47,7 @@
       competitionResultsCanShowPreviousPage: false,
       competitionResultsCanShowNextPage: false
     };
-    let judokaViewModel = null;
+    let judokaViewModel: (typeof defaultJudokaViewState) | null = null;
 
     function ensureJudokaViewModel() {
       if (!window.Vue || judokaViewModel) {

@@ -1,5 +1,17 @@
 (() => {
-  function paginateList(items, currentPage, pageSize) {
+  type AccessInvitation = import("./types").AccessInvitation;
+  type Competition = import("./types").Competition;
+  type CompetitionCombatCard = import("./types").CompetitionCombatCard;
+  type CombatReadModel = import("./types").CombatReadModel;
+  type Judoka = import("./types").Judoka;
+  type ManagedAdminCard = import("./types").ManagedAdminCard;
+  type ManagedChildCard = import("./types").ManagedChildCard;
+
+  function paginateList<TItem>(
+    items: TItem[] | null | undefined,
+    currentPage: number,
+    pageSize: number
+  ) {
     const totalItems = (items || []).length;
     const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
     const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
@@ -15,10 +27,17 @@
     };
   }
 
-  function projectManagedChildren(children, helpers) {
+  function projectManagedChildren(
+    children: Judoka[] | null | undefined,
+    helpers: {
+      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
+      normalizeDisplayName(value: unknown): string;
+      normalizeLastName(value: unknown): string;
+    }
+  ) {
     const { getJudokaDisplayName, normalizeDisplayName, normalizeLastName } = helpers;
 
-    const projectedChildren = (children || []).map((child) => {
+    const projectedChildren: ManagedChildCard[] = (children || []).map((child) => {
       const fullName = getJudokaDisplayName(child) || "Enfant";
       return {
         judokaId: child.judokaId || "",
@@ -36,10 +55,14 @@
     };
   }
 
-  function projectManagedAdmins(admins, currentUser, helpers) {
+  function projectManagedAdmins(
+    admins: Judoka[] | null | undefined,
+    currentUser: Judoka | null | undefined,
+    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string }
+  ) {
     const { getJudokaDisplayName } = helpers;
 
-    const projectedAdmins = (admins || []).map((admin) => {
+    const projectedAdmins: ManagedAdminCard[] = (admins || []).map((admin) => {
       const fullName = getJudokaDisplayName(admin) || admin.accountEmail || "Admin";
       const isCurrentAdmin = currentUser && String(currentUser.judokaId) === String(admin.judokaId);
       return {
@@ -56,7 +79,13 @@
     };
   }
 
-  function projectAccessInvitations(filteredInvitations, search, currentPage, pageSize, helpers) {
+  function projectAccessInvitations(
+    filteredInvitations: AccessInvitation[],
+    search: string,
+    currentPage: number,
+    pageSize: number,
+    helpers: { formatDateTime(value: unknown): string }
+  ) {
     const { formatDateTime } = helpers;
     const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
     const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -80,7 +109,11 @@
     };
   }
 
-  function projectCompetitionDetail(competition, canEditCompetition, helpers) {
+  function projectCompetitionDetail(
+    competition: Competition,
+    canEditCompetition: boolean,
+    helpers: { formatDate(value: unknown): string }
+  ) {
     const { formatDate } = helpers;
     const ageWeightLabel = [competition.ageCategory, competition.weightCategory]
       .filter(Boolean)
@@ -98,10 +131,20 @@
     };
   }
 
-  function projectCompetitionCombats(combats, helpers) {
+  function projectCompetitionCombats(
+    combats: CombatReadModel[] | null | undefined,
+    helpers: {
+      formatResultat(value: unknown): string;
+      normalizeDisplayName(value: unknown): string;
+      showJudoka: boolean;
+      canEdit: boolean;
+    }
+  ) {
     const { formatResultat, normalizeDisplayName } = helpers;
-    const projectedCombats = (combats || []).map((c) => ({
+    const projectedCombats: CompetitionCombatCard[] = (combats || []).map((c) => ({
       combatId: c.combatId || "",
+      judokaId: c.judokaId || "",
+      competitionId: c.competitionId || "",
       opponent: c.opponent || "Adversaire non renseigné",
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,

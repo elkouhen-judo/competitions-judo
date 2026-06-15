@@ -1,31 +1,46 @@
-/**
- * Ambient declarations for the cross-file `window.*` globals used by the
- * frontend scripts in `assets/`. This app has no build step: each script is
- * loaded via a plain `<script>` tag and communicates through globals attached
- * to `window` (see `Index.html`).
- *
- * Types are intentionally loose (`any`) for now; this file only exists so
- * that `npm run typecheck` can cover `assets/**` without each script needing
- * to redeclare every cross-file global it consumes. Tightening individual
- * signatures is left for later, once `assets/**` typechecking is established.
- */
+import type {
+  AdminsScreen,
+  AppScreens,
+  AuthApi,
+  ChildrenScreen,
+  CompetitionScreen,
+  HomeScreen,
+  JudokaProfile,
+  JudokaProfilePresentationHelpers,
+  JudokaProfileViewModel,
+  JudokaScreen,
+  KirokuApp,
+  KirokuUi,
+  LoginScreen,
+  NotificationsApi,
+  RuntimeConfig,
+  ScreenProjections,
+  VueLike
+} from "./types";
 
 declare global {
   interface Window {
-    Vue: any;
-    KIROKU_RUNTIME_CONFIG: any;
-    KirokuUI: any;
-    KirokuScreenProjections: any;
-    createKirokuApp: () => any;
-    createKirokuAuth: (...args: any[]) => any;
-    createKirokuNotifications: (...args: any[]) => any;
-    createJudokaProfileViewModel: (...args: any[]) => any;
-    createKirokuHomeScreen: (...args: any[]) => any;
-    createKirokuJudokaScreen: (...args: any[]) => any;
-    createKirokuCompetitionScreen: (...args: any[]) => any;
-    createKirokuChildrenScreen: (...args: any[]) => any;
-    createKirokuAdminsScreen: (...args: any[]) => any;
-    createKirokuLoginScreen: (...args: any[]) => any;
+    Vue: VueLike;
+    KIROKU_RUNTIME_CONFIG: RuntimeConfig;
+    KirokuUI: KirokuUi;
+    KirokuScreenProjections: ScreenProjections;
+    createKirokuApp: () => KirokuApp;
+    createKirokuAuth: (config: {
+      runtimeConfig: RuntimeConfig;
+      onInvitationRequired: () => void;
+      onError: (error: unknown) => void;
+    }) => AuthApi;
+    createKirokuNotifications: () => NotificationsApi;
+    createJudokaProfileViewModel: (
+      profile: JudokaProfile | null,
+      helpers: JudokaProfilePresentationHelpers
+    ) => JudokaProfileViewModel | null;
+    createKirokuHomeScreen: (app: KirokuApp) => HomeScreen;
+    createKirokuJudokaScreen: (app: KirokuApp) => JudokaScreen;
+    createKirokuCompetitionScreen: (app: KirokuApp) => CompetitionScreen;
+    createKirokuChildrenScreen: (app: KirokuApp) => ChildrenScreen;
+    createKirokuAdminsScreen: (app: KirokuApp) => AdminsScreen;
+    createKirokuLoginScreen: (app: KirokuApp) => LoginScreen;
   }
 }
 

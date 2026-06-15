@@ -1,4 +1,6 @@
 (() => {
+  type NotificationsApi = import("./types").NotificationsApi;
+
   interface Toast {
     id: string;
     type: "success" | "error";
@@ -8,9 +10,21 @@
     leaving: boolean;
   }
 
-  function createKirokuNotifications() {
+  function getErrorMessage(error: unknown): string {
+    if (typeof error === "string") {
+      return error;
+    }
+
+    if (error && typeof error === "object" && "message" in error) {
+      return String((error as { message?: unknown }).message || "");
+    }
+
+    return String(error || "");
+  }
+
+  function createKirokuNotifications(): NotificationsApi {
     let toastSequence = 0;
-    const activeToastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    const activeToastTimers = new Map<string, number>();
     const notificationsViewModel: { toasts: Toast[] } = window.Vue.reactive({
       toasts: []
     });
@@ -23,8 +37,8 @@
       showToast("success", message, 4000);
     }
 
-    function showError(error: any) {
-      showToast("error", error.message || error, 7000);
+    function showError(error: unknown) {
+      showToast("error", getErrorMessage(error), 7000);
     }
 
     function clearMessage() {
@@ -44,7 +58,7 @@
         leaving: false
       });
 
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         dismissToast(toastId);
       }, duration);
       activeToastTimers.set(toastId, timer);
@@ -58,12 +72,12 @@
 
       const timer = activeToastTimers.get(toastId);
       if (timer) {
-        clearTimeout(timer);
+        window.clearTimeout(timer);
         activeToastTimers.delete(toastId);
       }
 
       toast.leaving = true;
-      setTimeout(() => {
+      window.setTimeout(() => {
         notificationsViewModel.toasts = notificationsViewModel.toasts.filter(
           (item) => item.id !== toastId
         );
@@ -71,7 +85,7 @@
     }
 
     function clearToasts() {
-      activeToastTimers.forEach((timer) => clearTimeout(timer));
+      activeToastTimers.forEach((timer) => window.clearTimeout(timer));
       activeToastTimers.clear();
       notificationsViewModel.toasts = [];
     }
