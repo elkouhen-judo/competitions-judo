@@ -30,11 +30,19 @@
         editManagedChild,
         resetChildForm,
         saveManagedChild,
-        showHome: () => app.showHome()
+        showHome: () => app.showHome && app.showHome()
       });
     }
 
-    function showChildrenManagement(keepMessage) {
+    function getChildrenViewModel() {
+      ensureChildrenViewModel();
+      if (!childrenViewModel) {
+        throw new Error("Vue model des enfants non initialisé.");
+      }
+      return childrenViewModel;
+    }
+
+    function showChildrenManagement(keepMessage?: boolean) {
       if (!keepMessage) {
         clearMessage();
       }
@@ -54,9 +62,8 @@
     }
 
     function renderManagedChildren() {
-      ensureChildrenViewModel();
       Object.assign(
-        childrenViewModel,
+        getChildrenViewModel(),
         window.KirokuScreenProjections.projectManagedChildren(state.managedChildren, {
           getJudokaDisplayName: ui.getJudokaDisplayName,
           normalizeDisplayName: ui.normalizeDisplayName,
@@ -66,13 +73,13 @@
     }
 
     function resetChildForm() {
-      ensureChildrenViewModel();
-      Object.assign(childrenViewModel.childForm, defaultChildForm);
-      childrenViewModel.childFormTitle = "Ajouter un enfant";
-      childrenViewModel.saveChildButtonText = "Ajouter l'enfant";
+      const viewModel = getChildrenViewModel();
+      Object.assign(viewModel.childForm, defaultChildForm);
+      viewModel.childFormTitle = "Ajouter un enfant";
+      viewModel.saveChildButtonText = "Ajouter l'enfant";
     }
 
-    function editManagedChild(idJudoka) {
+    function editManagedChild(idJudoka: string) {
       const child = state.managedChildren.find(
         (item) => String(item.judokaId) === String(idJudoka)
       );
@@ -81,26 +88,26 @@
         return;
       }
 
-      ensureChildrenViewModel();
-      Object.assign(childrenViewModel.childForm, {
+      const viewModel = getChildrenViewModel();
+      Object.assign(viewModel.childForm, {
         judokaId: child.judokaId || "",
         firstName: child.firstName || "",
         lastName: child.lastName || "",
         accountEmail: child.accountEmail || ""
       });
-      childrenViewModel.childFormTitle = "Modifier l'enfant";
-      childrenViewModel.saveChildButtonText = "Enregistrer l'enfant";
+      viewModel.childFormTitle = "Modifier l'enfant";
+      viewModel.saveChildButtonText = "Enregistrer l'enfant";
       showView("childrenView");
       window.Vue.nextTick(() => $("child_prenom").focus());
     }
 
     function saveManagedChild() {
-      ensureChildrenViewModel();
+      const viewModel = getChildrenViewModel();
       const child = {
-        judokaId: childrenViewModel.childForm.judokaId,
-        firstName: childrenViewModel.childForm.firstName,
-        lastName: childrenViewModel.childForm.lastName,
-        accountEmail: childrenViewModel.childForm.accountEmail
+        judokaId: viewModel.childForm.judokaId,
+        firstName: viewModel.childForm.firstName,
+        lastName: viewModel.childForm.lastName,
+        accountEmail: viewModel.childForm.accountEmail
       };
 
       app.runServer(
@@ -114,7 +121,7 @@
       );
     }
 
-    function deleteManagedChild(idJudoka, name) {
+    function deleteManagedChild(idJudoka: string, name?: string) {
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
         message: `Supprimer l'enfant${label} ?`,

@@ -43,8 +43,8 @@ export interface Combat {
 export type CombatReadModel = Combat & { judokaDisplayName: string };
 
 export interface ManagedChild {
-  judokaId?: string;
-  accountEmail?: string;
+  judokaId?: string | undefined;
+  accountEmail?: string | undefined;
   firstName: string;
   lastName: string;
 }
@@ -248,7 +248,7 @@ export interface RpcMethods {
     idClubCompetition: string
   ) => Promise<ClubCompetitionDetail>;
   /** Crée ou met à jour une compétition de club. */
-  saveClubCompetition: (email: string, input: object) => Promise<OperationResult>;
+  saveClubCompetition: (email: string, input: Record<string, unknown>) => Promise<OperationResult>;
   /** Supprime une compétition personnelle. */
   deleteCompetition: (email: string, idCompetition: string) => Promise<OperationResult>;
   /** Enregistre le classement final d'une compétition. */
@@ -260,11 +260,11 @@ export interface RpcMethods {
   /** Détail d'une compétition personnelle (combats, droits, judokas accessibles). */
   getCompetitionDetail: (email: string, idCompetition: string) => Promise<CompetitionDetail>;
   /** Crée ou met à jour une compétition personnelle. */
-  saveCompetition: (email: string, competition: object) => Promise<OperationResult>;
+  saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
   /** Ajoute un combat à une compétition. */
-  ajouterCombat: (email: string, combat: object) => Promise<OperationResult>;
+  ajouterCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Supprime un combat. */
   deleteCombat: (email: string, idCombat: string) => Promise<OperationResult>;
   /** Met à jour un combat existant. */
-  updateCombat: (email: string, combat: object) => Promise<OperationResult>;
+  updateCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
 }

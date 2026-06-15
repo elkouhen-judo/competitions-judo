@@ -7,7 +7,7 @@ import {
 import { createJudokaId, createOptionalCompetitionId } from "../shared/identity";
 
 export interface ClubCompetitionInput extends CompetitionInput {
-  participantJudokaIds?: unknown[];
+  participantJudokaIds?: unknown[] | undefined;
 }
 
 export interface ClubCompetitionModel {

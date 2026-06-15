@@ -1,7 +1,24 @@
 (() => {
+  type RuntimeConfig = import("./types").RuntimeConfig;
+  type SessionLike = import("./types").SessionLike;
+
+  interface SupabaseAuthResponse {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  }
+
   const sessionStorageKey = "kiroku_supabase_session";
 
-  function createKirokuAuth({ runtimeConfig, onInvitationRequired, onError }) {
+  function createKirokuAuth({
+    runtimeConfig,
+    onInvitationRequired,
+    onError
+  }: {
+    runtimeConfig: RuntimeConfig;
+    onInvitationRequired: () => void;
+    onError: (error: unknown) => void;
+  }) {
     function getResponsePreview(body: unknown) {
       return String(body || "")
         .replace(/\s+/g, " ")
@@ -9,29 +26,32 @@
         .slice(0, 160);
     }
 
-    async function readJsonResponse(response: Response, invalidMessage: string) {
+    async function readJsonResponse(
+      response: Response,
+      invalidMessage: string
+    ): Promise<SupabaseAuthResponse | null> {
       const body = await response.text();
       if (!body) {
         return null;
       }
 
       try {
-        return JSON.parse(body);
+        return JSON.parse(body) as SupabaseAuthResponse;
       } catch (_error) {
         const preview = getResponsePreview(body);
         throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
       }
     }
 
-    function readVercelSession() {
+    function readVercelSession(): SessionLike | null {
       try {
-        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
+        return JSON.parse(localStorage.getItem(sessionStorageKey) || "null") as SessionLike | null;
       } catch (_error) {
         return null;
       }
     }
 
-    function saveVercelSession(session) {
+    function saveVercelSession(session: SessionLike) {
       localStorage.setItem(sessionStorageKey, JSON.stringify(session));
     }
 
@@ -44,7 +64,7 @@
       return new URL(window.location.pathname || "/", baseUrl).toString();
     }
 
-    function wait(delayMs) {
+    function wait(delayMs: number) {
       return new Promise((resolve) => window.setTimeout(resolve, delayMs));
     }
 
@@ -111,7 +131,7 @@
       return { handled: false, completedAuth: false };
     }
 
-    async function exchangeVercelAuthCode(authCode) {
+    async function exchangeVercelAuthCode(authCode: string) {
       const response = await fetch(
         `${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=authorization_code`,
         {
@@ -190,13 +210,13 @@
 
     function getSupabaseAnonymousAuthHeaders() {
       return {
-        apikey: runtimeConfig.supabaseAnonKey,
+        apikey: runtimeConfig.supabaseAnonKey || "",
         Authorization: "Bearer " + runtimeConfig.supabaseAnonKey,
         "Content-Type": "application/json"
       };
     }
 
-    async function waitForSupabaseSessionReadiness(accessToken) {
+    async function waitForSupabaseSessionReadiness(accessToken: string) {
       for (let attempt = 0; attempt < 4; attempt += 1) {
         const response = await fetch(`${runtimeConfig.supabaseUrl}/auth/v1/user`, {
           headers: {
@@ -220,14 +240,19 @@
       }
     }
 
-    async function readSupabaseAuthError(response) {
+    async function readSupabaseAuthError(response: Response): Promise<string> {
       const body = await response.text();
       if (!body) {
         return "";
       }
 
       try {
-        const payload = JSON.parse(body);
+        const payload = JSON.parse(body) as {
+          msg?: string;
+          message?: string;
+          error_description?: string;
+          error?: string;
+        };
         return payload.msg || payload.message || payload.error_description || payload.error || "";
       } catch (_error) {
         return getResponsePreview(body);

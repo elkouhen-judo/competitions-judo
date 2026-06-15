@@ -96,9 +96,10 @@ export default function createCompetitionsService(
       if (!visibleJudokaIds.length) {
         return [];
       }
+      const [onlyVisibleJudokaId] = visibleJudokaIds;
       records =
-        visibleJudokaIds.length === 1
-          ? await competitionsRepository.listByJudoka(visibleJudokaIds[0])
+        visibleJudokaIds.length === 1 && onlyVisibleJudokaId !== undefined
+          ? await competitionsRepository.listByJudoka(onlyVisibleJudokaId)
           : await competitionsRepository.listByJudokaIds(visibleJudokaIds);
     }
 
@@ -131,9 +132,10 @@ export default function createCompetitionsService(
       filtered = await combatsRepository.listByCompetition(idCompetition);
     } else {
       const visibleJudokaIds = access.visibleJudokaIds();
+      const [onlyVisibleJudokaId] = visibleJudokaIds;
       filtered =
-        visibleJudokaIds.length === 1
-          ? await combatsRepository.listByCompetitionAndJudoka(idCompetition, visibleJudokaIds[0])
+        visibleJudokaIds.length === 1 && onlyVisibleJudokaId !== undefined
+          ? await combatsRepository.listByCompetitionAndJudoka(idCompetition, onlyVisibleJudokaId)
           : await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, visibleJudokaIds);
     }
 

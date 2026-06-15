@@ -383,7 +383,7 @@ test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(client, /refreshCompetitionOwnerOptions\(""\)/);
   assert.match(
     client,
-    /window\.setTimeout\(\(\) => \{\s*homeViewModel\.showFilterOptions = false;/
+    /window\.setTimeout\(\(\) => \{\s*const homeViewModel = getHomeViewModel\(\);\s*homeViewModel\.showFilterOptions = false;/
   );
   assert.match(
     client,
