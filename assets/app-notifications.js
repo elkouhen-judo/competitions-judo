@@ -42,7 +42,7 @@
     }
 
     function dismissToast(toastId) {
-      const toast = notificationsViewModel.toasts.find(item => item.id === toastId);
+      const toast = notificationsViewModel.toasts.find((item) => item.id === toastId);
       if (!toast) {
         return;
       }
@@ -55,7 +55,9 @@
 
       toast.leaving = true;
       setTimeout(() => {
-        notificationsViewModel.toasts = notificationsViewModel.toasts.filter(item => item.id !== toastId);
+        notificationsViewModel.toasts = notificationsViewModel.toasts.filter(
+          (item) => item.id !== toastId
+        );
       }, 180);
     }
 

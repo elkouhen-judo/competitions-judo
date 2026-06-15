@@ -28,7 +28,9 @@ module.exports = function createChildrenService(deps) {
     return {
       user: toCanonicalJudoka(user),
       isParent: isParent(domainUser),
-      children: (await userContextService.getParentManagedJudokas(user.id_judoka)).map(toCanonicalJudoka)
+      children: (await userContextService.getParentManagedJudokas(user.id_judoka)).map(
+        toCanonicalJudoka
+      )
     };
   }
 

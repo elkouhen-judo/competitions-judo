@@ -2,9 +2,16 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const permissions = require("../core/domain/access/permission-policy");
-const { createJudoka, createManagedChild, decideManagedChildRemoval } = require("../core/domain/access/judoka");
+const {
+  createJudoka,
+  createManagedChild,
+  decideManagedChildRemoval
+} = require("../core/domain/access/judoka");
 const { createManagedJudokaScope } = require("../core/domain/access/managed-judoka-scope");
-const { createCompetition, createPersistedCompetition } = require("../core/domain/competitions/competition");
+const {
+  createCompetition,
+  createPersistedCompetition
+} = require("../core/domain/competitions/competition");
 const { createClubCompetition } = require("../core/domain/competitions/club-competition");
 const { updateCombat } = require("../core/domain/competitions/combat");
 const createChildrenService = require("../core/services/children.service");
@@ -22,15 +29,24 @@ test("children service fully removes an unlinked child with no sports data", asy
       existsForJudoka: async () => null
     },
     judokasRepository: {
-      remove: async idJudoka => calls.push(["removeJudoka", idJudoka])
+      remove: async (idJudoka) => calls.push(["removeJudoka", idJudoka])
     },
     parentLinksRepository: {
       getOtherByJudoka: async () => null,
       remove: async (idParent, idJudoka) => calls.push(["removeLink", idParent, idJudoka])
     },
     userContextService: {
-      getCurrentUser: async () => ({ id_judoka: "PARENT1", profile_type: "PARENT", role: "NORMAL" }),
-      getManagedChild: async () => ({ id_judoka: "CHILD1", email: null, profile_type: "JUDOKA", role: "NORMAL" })
+      getCurrentUser: async () => ({
+        id_judoka: "PARENT1",
+        profile_type: "PARENT",
+        role: "NORMAL"
+      }),
+      getManagedChild: async () => ({
+        id_judoka: "CHILD1",
+        email: null,
+        profile_type: "JUDOKA",
+        role: "NORMAL"
+      })
     },
     assertCanManageChildrenProfile: permissions.assertCanManageChildrenProfile,
     createJudoka,
@@ -52,7 +68,7 @@ test("combats service rejects a combat attached to another judoka competition", 
   const inserted = [];
   const service = createCombatsService({
     combatsRepository: {
-      insert: async payload => inserted.push(payload)
+      insert: async (payload) => inserted.push(payload)
     },
     competitionsRepository: {
       getById: async () => ({
@@ -65,7 +81,11 @@ test("combats service rejects a combat attached to another judoka competition", 
     userContextService: {
       getDomainUserContext: async () => ({
         user: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
-        domainUser: toCanonicalJudoka({ id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" }),
+        domainUser: toCanonicalJudoka({
+          id_judoka: "JUDO1",
+          profile_type: "JUDOKA",
+          role: "NORMAL"
+        }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
@@ -76,11 +96,12 @@ test("combats service rejects a combat attached to another judoka competition", 
   });
 
   await assert.rejects(
-    () => service.methods.ajouterCombat("judoka@example.com", {
-      id_competition: "COMP1",
-      id_judoka: "JUDO1",
-      resultat: "V"
-    }),
+    () =>
+      service.methods.ajouterCombat("judoka@example.com", {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        resultat: "V"
+      }),
     /judoka de la compétition/
   );
   assert.deepEqual(inserted, []);
@@ -91,20 +112,25 @@ test("coach creates a club competition with linked judoka participations", async
   const insertedCompetitions = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
-      insert: async event => insertedClubEvents.push(event),
+      insert: async (event) => insertedClubEvents.push(event),
       getById: async () => null
     },
     competitionsRepository: {
-      insert: async (competition, idCompetition) => insertedCompetitions.push([idCompetition, competition]),
+      insert: async (competition, idCompetition) =>
+        insertedCompetitions.push([idCompetition, competition]),
       listByClubCompetition: async () => []
     },
     judokasRepository: {
-      listByIds: async ids => ids.map(id => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST" }))
+      listByIds: async (ids) => ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST" }))
     },
     userContextService: {
       getDomainUserContext: async () => ({
         user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
-        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
@@ -124,7 +150,10 @@ test("coach creates a club competition with linked judoka participations", async
   assert.equal(result.clubCompetitionId, "CLUB1");
   assert.equal(insertedClubEvents.length, 1);
   assert.equal(insertedCompetitions.length, 2);
-  assert.deepEqual(insertedCompetitions.map(row => row[1].ownerJudokaId), ["J1", "J2"]);
+  assert.deepEqual(
+    insertedCompetitions.map((row) => row[1].ownerJudokaId),
+    ["J1", "J2"]
+  );
 });
 
 test("detaching a club participant keeps the individual competition", async () => {
@@ -141,19 +170,27 @@ test("detaching a club participant keeps the individual competition", async () =
         nom: "Tournoi",
         date: "2026-06-14"
       }),
-      detachFromClubCompetition: async id => calls.push(["detach", id])
+      detachFromClubCompetition: async (id) => calls.push(["detach", id])
     },
     userContextService: {
       getDomainUserContext: async () => ({
         user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
-        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition
   });
 
-  const result = await service.methods.detachClubCompetitionParticipant("coach@example.com", "CLUB1", "COMP1");
+  const result = await service.methods.detachClubCompetitionParticipant(
+    "coach@example.com",
+    "CLUB1",
+    "COMP1"
+  );
 
   assert.deepEqual(calls, [["detach", "COMP1"]]);
   assert.match(result.message, /sans supprimer ses résultats/);
@@ -164,19 +201,23 @@ test("deleting a club competition removes the linked individual competitions", a
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
       getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" }),
-      remove: async id => calls.push(["removeClub", id])
+      remove: async (id) => calls.push(["removeClub", id])
     },
     competitionsRepository: {
       listByClubCompetition: async () => [
         { id_competition: "COMP1", id_judoka: "J1" },
         { id_competition: "COMP2", id_judoka: "J2" }
       ],
-      remove: async id => calls.push(["removeCompetition", id])
+      remove: async (id) => calls.push(["removeCompetition", id])
     },
     userContextService: {
       getDomainUserContext: async () => ({
         user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
-        domainUser: toCanonicalJudoka({ id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" }),
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
         managedJudokaScope: createManagedJudokaScope([])
       })
     },

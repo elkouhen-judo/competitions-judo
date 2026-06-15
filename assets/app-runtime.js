@@ -36,16 +36,9 @@
     }
 
     const ui = window.KirokuUI;
-    const {
-      $,
-      viewIds
-    } = ui;
+    const { $, viewIds } = ui;
     const notifications = window.createKirokuNotifications();
-    const {
-      clearMessage,
-      showError,
-      showSuccess
-    } = notifications;
+    const { clearMessage, showError, showSuccess } = notifications;
 
     let loginScreen;
     const headerViewModel = window.Vue.reactive({
@@ -63,11 +56,7 @@
       onInvitationRequired: () => loginScreen && loginScreen.showInvitationRequired(),
       onError: showError
     });
-    const {
-      clearVercelSession,
-      getValidVercelSession,
-      logoutSupabaseSession
-    } = auth;
+    const { clearVercelSession, getValidVercelSession, logoutSupabaseSession } = auth;
 
     ui.showView = showView;
 
@@ -120,7 +109,7 @@
           const response = await fetch("/api/rpc", {
             method: "POST",
             headers: {
-              "Authorization": "Bearer " + session.access_token,
+              Authorization: "Bearer " + session.access_token,
               "Content-Type": "application/json"
             },
             body: JSON.stringify({ method, args })
@@ -135,7 +124,11 @@
           return;
         } catch (error) {
           const errorMessage = String(error.message || "");
-          if (options.retrySessionOnce && attempt < maxAttempts && isSessionAuthError(errorMessage)) {
+          if (
+            options.retrySessionOnce &&
+            attempt < maxAttempts &&
+            isSessionAuthError(errorMessage)
+          ) {
             await wait(600);
             continue;
           }
@@ -146,7 +139,10 @@
           } else if (method === "getInitialData" && errorMessage.includes("Invitation trouvée")) {
             loginScreen.showProfileRegistration();
             return;
-          } else if (method === "getInitialData" && errorMessage.includes("invitation est requise")) {
+          } else if (
+            method === "getInitialData" &&
+            errorMessage.includes("invitation est requise")
+          ) {
             clearVercelSession();
             loginScreen.showInvitationRequired();
             return;
@@ -158,11 +154,14 @@
     }
 
     function isSessionAuthError(message) {
-      return message.includes("Session Supabase invalide") || message.includes("Utilisateur non identifié");
+      return (
+        message.includes("Session Supabase invalide") ||
+        message.includes("Utilisateur non identifié")
+      );
     }
 
     function wait(delayMs) {
-      return new Promise(resolve => window.setTimeout(resolve, delayMs));
+      return new Promise((resolve) => window.setTimeout(resolve, delayMs));
     }
 
     function resetApplicationState() {
@@ -226,7 +225,7 @@
       runServer(
         "getInitialData",
         [],
-        data => {
+        (data) => {
           if (data.error) {
             showError({ message: data.error });
             return;
@@ -252,7 +251,7 @@
     }
 
     function showView(id) {
-      viewIds.forEach(viewId => {
+      viewIds.forEach((viewId) => {
         $(viewId).classList.add("hidden");
       });
 

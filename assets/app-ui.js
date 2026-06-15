@@ -18,7 +18,9 @@
   }
 
   function normalizeDisplayName(value) {
-    const cleaned = String(value || "").trim().toLocaleLowerCase("fr-FR");
+    const cleaned = String(value || "")
+      .trim()
+      .toLocaleLowerCase("fr-FR");
     if (!cleaned) {
       return "";
     }
@@ -33,7 +35,9 @@
   }
 
   function getJudokaDisplayName(j) {
-    return [normalizeDisplayName(j && j.firstName), normalizeLastName(j && j.lastName)].filter(Boolean).join(" ");
+    return [normalizeDisplayName(j && j.firstName), normalizeLastName(j && j.lastName)]
+      .filter(Boolean)
+      .join(" ");
   }
 
   function getCompactJudokaLabel(j) {

@@ -1,7 +1,7 @@
 function normalizeRows(rows) {
-  return rows.map(row => {
+  return rows.map((row) => {
     const normalized = {};
-    Object.keys(row).forEach(key => {
+    Object.keys(row).forEach((key) => {
       normalized[key] = row[key] === null || row[key] === undefined ? "" : row[key];
     });
     return normalized;
@@ -10,7 +10,9 @@ function normalizeRows(rows) {
 
 function createSupabaseRest({ supabaseRequest }) {
   async function supabaseSelect(table, query) {
-    return normalizeRows((await supabaseRequest(table, query || "select=*", { method: "get" })) || []);
+    return normalizeRows(
+      (await supabaseRequest(table, query || "select=*", { method: "get" })) || []
+    );
   }
 
   async function supabaseSelectOne(table, query) {

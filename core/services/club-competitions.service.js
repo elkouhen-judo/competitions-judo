@@ -21,8 +21,8 @@ module.exports = function createClubCompetitionsService(deps) {
 
   async function assertParticipantIdsExist(ids) {
     const rows = await judokasRepository.listByIds(ids);
-    const found = new Set(rows.map(row => String(row.id_judoka)));
-    const missing = ids.filter(id => !found.has(String(id)));
+    const found = new Set(rows.map((row) => String(row.id_judoka)));
+    const missing = ids.filter((id) => !found.has(String(id)));
     if (missing.length) {
       throw new Error("Judoka participant introuvable.");
     }
@@ -37,9 +37,10 @@ module.exports = function createClubCompetitionsService(deps) {
     const clubCompetitionId = input.clubCompetitionId || buildClubCompetitionId();
 
     // An empty array is truthy and would cause the domain to throw — normalize it to undefined
-    const participantJudokaIds = Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
-      ? input.participantJudokaIds
-      : undefined;
+    const participantJudokaIds =
+      Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
+        ? input.participantJudokaIds
+        : undefined;
 
     const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds });
 
@@ -59,17 +60,20 @@ module.exports = function createClubCompetitionsService(deps) {
     const existing = isEditing
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
-    const existingJudokaIds = new Set(existing.map(row => String(row.id_judoka)));
+    const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
 
     for (const judokaId of event.participantJudokaIds) {
       if (existingJudokaIds.has(String(judokaId))) continue;
-      const competition = createCompetition({
-        name: event.name,
-        competitionDate: event.competitionDate,
-        ageCategory: event.ageCategory,
-        weightCategory: event.weightCategory,
-        clubCompetitionId
-      }, judokaId);
+      const competition = createCompetition(
+        {
+          name: event.name,
+          competitionDate: event.competitionDate,
+          ageCategory: event.ageCategory,
+          weightCategory: event.weightCategory,
+          clubCompetitionId
+        },
+        judokaId
+      );
       await competitionsRepository.insert(competition, buildCompetitionId());
     }
 
@@ -86,7 +90,7 @@ module.exports = function createClubCompetitionsService(deps) {
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) throw new Error("Compétition club introuvable.");
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
-    const judokas = await judokasRepository.listByIds(participations.map(row => row.id_judoka));
+    const judokas = await judokasRepository.listByIds(participations.map((row) => row.id_judoka));
     return {
       clubCompetition: event,
       participations: participations.map(toCanonicalCompetition),
@@ -116,7 +120,10 @@ module.exports = function createClubCompetitionsService(deps) {
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) throw new Error("Compétition club introuvable.");
     const participation = await competitionsRepository.getById(idCompetition);
-    if (!participation || String(participation.club_competition_id || "") !== String(idClubCompetition)) {
+    if (
+      !participation ||
+      String(participation.club_competition_id || "") !== String(idClubCompetition)
+    ) {
       throw new Error("Participation introuvable.");
     }
     await competitionsRepository.detachFromClubCompetition(idCompetition);

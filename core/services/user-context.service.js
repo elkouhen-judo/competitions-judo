@@ -33,7 +33,7 @@ module.exports = function createUserContextService(deps) {
     const rows = await parentLinksRepository.listByParent(idParent);
     if (!rows.length) return [];
 
-    const ids = rows.map(row => row.id_judoka);
+    const ids = rows.map((row) => row.id_judoka);
     return judokasRepository.listByIds(ids);
   }
 
@@ -69,9 +69,9 @@ module.exports = function createUserContextService(deps) {
       judokas = await getJudokas();
     } else if (isParent(domainUser)) {
       const children = await getParentManagedJudokas(user.id_judoka);
-      const alreadyIncluded = children.some(j => String(j.id_judoka) === String(user.id_judoka));
+      const alreadyIncluded = children.some((j) => String(j.id_judoka) === String(user.id_judoka));
       judokas = alreadyIncluded ? children : [user, ...children];
-      const managedJudokaIds = judokas.map(j => String(j.id_judoka));
+      const managedJudokaIds = judokas.map((j) => String(j.id_judoka));
       managedJudokaScope = createManagedJudokaScope(managedJudokaIds);
     }
 
