@@ -260,7 +260,7 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionsService, /const domainCompetitionInput = toCanonicalCompetition\(competition\);/);
   assert.match(competitionsService, /const competitionDraft = createCompetition\(domainCompetitionInput,\s*ownerJudokaId\);/);
   assert.match(competitionsService, /const competitionId = domainCompetitionInput\.competitionId;/);
-  assert.match(competitionsService, /return records\.map\(toCompetitionReadModel\);/);
+  assert.match(competitionsService, /return records\.map\(toCanonicalCompetition\);/);
   assert.match(competitionsService, /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/);
   assert.match(competitionsService, /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/);
   assert.match(competitionsService, /async function finalizeCompetition\(email,\s*idCompetition,\s*result\)/);
@@ -303,7 +303,7 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(childrenService, /const updatedChild = updateManagedChild\(\{/);
   assert.match(childrenService, /const childInput = toCanonicalManagedChild\(child\);/);
   assert.match(childrenService, /const childJudokaId = childInput\.judokaId;/);
-  assert.match(childrenService, /children: \(await userContextService\.getParentManagedJudokas\(user\.id_judoka\)\)\.map\(toJudokaReadModel\)/);
+  assert.match(childrenService, /children: \(await userContextService\.getParentManagedJudokas\(user\.id_judoka\)\)\.map\(toCanonicalJudoka\)/);
   assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(updatedChild\.accountEmail,\s*childJudokaId\)/);
   assert.match(childrenService, /await userContextService\.assertJudokaEmailAvailable\(managedChild\.accountEmail,\s*idJudoka\)/);
   assert.match(childrenService, /const managedChild = createManagedChild\(\{/);
@@ -324,7 +324,7 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /function showAdminsManagement\(keepMessage\)/);
   assert.match(uiBundle, /id="accessInvitationsList"/);
   assert.match(uiBundle, /v-for="invitation in accessInvitations"/);
-  assert.match(uiBundle, /v-for="admin in admins"/);
+  assert.match(uiBundle, /v-for="admin in adminsPage"/);
   assert.doesNotMatch(uiBundle, /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/);
   assert.match(uiBundle, /id="accessInvitationFilter"/);
   assert.match(uiBundle, /id="invite_email"/);
@@ -472,7 +472,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(textHelpers, /function normalizeLastName\(value\)/);
   assert.match(adminService, /async function getAccessInvitation\(email\)/);
   assert.match(adminService, /async function getAccessInvitations\(\)/);
-  assert.match(coreIndex, /const domainUser = toCanonicalJudoka\(user\);/);
+  assert.match(coreIndex, /const \{ user, judokas, managedJudokaScope, domainUser \} = await userContextService\.getDomainUserContext\(email\);/);
   assert.match(coreIndex, /canManageChildren: permissions\.canManageChildrenProfile\(domainUser\)/);
   assert.match(client, /state\.isCoach\s*\?\s*`COACH · \$\{profileTypeLabel\}`/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);

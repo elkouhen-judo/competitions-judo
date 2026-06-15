@@ -1,4 +1,4 @@
-const { toCanonicalCombat, toCanonicalCompetition, toCanonicalJudoka } = require("./domain-adapters");
+const { toCanonicalCombat, toCanonicalCompetition } = require("./domain-adapters");
 
 module.exports = function createCombatsService(deps) {
   const {
@@ -12,10 +12,7 @@ module.exports = function createCombatsService(deps) {
   } = deps;
 
   async function ajouterCombat(email, combat) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     const domainCombat = toCanonicalCombat(combat);
     const judokaId = domainCombat.judokaId;
     const competitionId = domainCombat.competitionId;
@@ -33,10 +30,7 @@ module.exports = function createCombatsService(deps) {
   }
 
   async function updateCombat(email, combat) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     const domainCombat = toCanonicalCombat(combat);
     const combatId = domainCombat.combatId;
     const judokaId = domainCombat.judokaId;
@@ -63,10 +57,7 @@ module.exports = function createCombatsService(deps) {
   }
 
   async function deleteCombat(email, idCombat) {
-    const userContext = await userContextService.getCurrentUserContext(email);
-    const user = userContext.user;
-    const domainUser = toCanonicalJudoka(user);
-    const managedJudokaScope = userContext.managedJudokaScope;
+    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
 
     if (!idCombat) throw new Error("Combat obligatoire.");
 

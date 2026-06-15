@@ -4,6 +4,9 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
+    ignores: ["assets/vendor/**"]
+  },
+  {
     files: ["eslint.config.mjs"],
     plugins: { js },
     extends: ["js/recommended"],

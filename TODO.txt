@@ -33,14 +33,15 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 ## P1 - Simplifications importantes
 
-6. Factoriser le chargement du contexte utilisateur dans les services
+6. [FAIT] Factoriser le chargement du contexte utilisateur dans les services
    - Constat : `competitions.service.js`, `combats.service.js` et `children.service.js` repetent la sequence `getCurrentUserContext` ou `getCurrentUser`, conversion canonique, scope et verification.
-   - Simplification : ajouter des helpers de service comme `getDomainUserContext(email)` et `getRequiredCurrentUser(email)`.
-   - Critere de fin : les services lisent d'abord l'intention metier, pas la plomberie d'auth/contexte.
+   - Simplification : `getDomainUserContext(email)` ajoute dans `user-context.service.js`, utilise par `competitions.service.js`, `combats.service.js`, `club-competitions.service.js` et `core/index.js`.
+   - Reste ouvert : `getRequiredCurrentUser(email)` pour factoriser le pattern `if (!user) throw new Error("Acces refuse pour : ...")` repete dans `children.service.js` et `admin.service.js`.
 
-7. Clarifier les DTO par cas d'usage
+7. [PARTIEL] Clarifier les DTO par cas d'usage
    - Constat : `domain-adapters.js` convertit entre formats Supabase, domaine et UI, mais les noms restent generiques (`toCompetitionReadModel`, `toJudokaReadModel`).
-   - Simplification : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) ou documenter les champs attendus par methode RPC.
+   - Fait : alias morts (`toDomainCombat`, `toDomainCompetition`, `toDomainJudoka`, `toDomainManagedChild`) et doublons (`toJudokaReadModel`/`toCanonicalJudoka`, `toCompetitionReadModel`/`toCanonicalCompetition`) supprimes ; conversions factorisees via un helper `pick`.
+   - Reste ouvert : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) ou documenter les champs attendus par methode RPC.
    - Critere de fin : chaque reponse RPC complexe a un DTO explicite ou une entree de contrat.
 
 8. Extraire les templates HTML frontend en fonctions pures

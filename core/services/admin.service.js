@@ -1,4 +1,4 @@
-const { toCanonicalJudoka, toInvitationReadModel, toJudokaReadModel } = require("./domain-adapters");
+const { toCanonicalJudoka, toInvitationReadModel } = require("./domain-adapters");
 
 module.exports = function createAdminService(deps) {
   const {
@@ -42,8 +42,8 @@ module.exports = function createAdminService(deps) {
   async function getAdminsManagement(email) {
     const user = await requireAdminUser(email);
     return {
-      user: toJudokaReadModel(user),
-      admins: (await getAdmins()).map(toJudokaReadModel),
+      user: toCanonicalJudoka(user),
+      admins: (await getAdmins()).map(toCanonicalJudoka),
       accessInvitations: (await getAccessInvitations()).map(toInvitationReadModel)
     };
   }

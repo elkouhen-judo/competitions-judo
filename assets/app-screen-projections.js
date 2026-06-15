@@ -1,4 +1,20 @@
 (() => {
+  function paginateList(items, currentPage, pageSize) {
+    const totalItems = (items || []).length;
+    const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
+    const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+
+    return {
+      pageItems: (items || []).slice(startIndex, startIndex + pageSize),
+      totalItems,
+      totalPages,
+      currentPage: safeCurrentPage,
+      canShowPreviousPage: safeCurrentPage > 1,
+      canShowNextPage: safeCurrentPage < totalPages
+    };
+  }
+
   function projectManagedChildren(children, helpers) {
     const { getJudokaDisplayName, normalizeDisplayName, normalizeLastName } = helpers;
 
@@ -103,6 +119,7 @@
   }
 
   window.KirokuScreenProjections = {
+    paginateList,
     projectAccessInvitations,
     projectCompetitionCombats,
     projectCompetitionDetail,

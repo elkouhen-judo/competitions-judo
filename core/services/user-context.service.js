@@ -78,6 +78,14 @@ module.exports = function createUserContextService(deps) {
     return { user, judokas, managedJudokaScope };
   }
 
+  async function getDomainUserContext(email) {
+    const userContext = await getCurrentUserContext(email);
+    return {
+      ...userContext,
+      domainUser: toCanonicalJudoka(userContext.user)
+    };
+  }
+
   async function getAccessibleJudokaProfile(email, idJudoka) {
     const userContext = await getCurrentUserContext(email);
     const user = userContext.user;
@@ -97,6 +105,7 @@ module.exports = function createUserContextService(deps) {
     getAccessibleJudokaProfile,
     getCurrentUser,
     getCurrentUserContext,
+    getDomainUserContext,
     getJudokaById,
     getJudokas,
     getManagedChild,

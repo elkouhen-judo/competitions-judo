@@ -1,4 +1,4 @@
-const { toCanonicalJudoka, toCanonicalManagedChild, toJudokaReadModel } = require("./domain-adapters");
+const { toCanonicalJudoka, toCanonicalManagedChild } = require("./domain-adapters");
 
 module.exports = function createChildrenService(deps) {
   const {
@@ -26,9 +26,9 @@ module.exports = function createChildrenService(deps) {
     assertCanManageChildrenProfile(domainUser);
 
     return {
-      user: toJudokaReadModel(user),
+      user: toCanonicalJudoka(user),
       isParent: isParent(domainUser),
-      children: (await userContextService.getParentManagedJudokas(user.id_judoka)).map(toJudokaReadModel)
+      children: (await userContextService.getParentManagedJudokas(user.id_judoka)).map(toCanonicalJudoka)
     };
   }
 
