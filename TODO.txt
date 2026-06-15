@@ -26,9 +26,10 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
    - Simplification : creer `assets/app-autocomplete.js` avec une API explicite et sans dependance a l'ecran competition.
    - Critere de fin : l'ecran home ne depend plus de l'ecran competition pour choisir un judoka.
 
-5. Rendre explicite le registre RPC backend
+5. [PARTIEL] Rendre explicite le registre RPC backend
    - Constat : `core/index.js` compose la surface publique par spreads de services, ce qui masque la liste exacte des methodes exposees.
-   - Simplification : declarer une table RPC unique et explicite (`getInitialData`, `saveCompetition`, `ajouterCombat`, etc.) avec une courte intention par methode.
+   - Fait : `core/types.js` declare un typedef `RpcMethods` listant les 23 methodes (`getInitialData`, `saveCompetition`, `ajouterCombat`, etc.) avec leur signature ; `core/index.js` type `methods` avec `@type {import("./types").RpcMethods}` (verifie par `npm run typecheck`) ; `api/rpc.js` rejette les noms de methode qui ne sont pas une propriete propre de `methods` (`Object.hasOwn`).
+   - Reste ouvert : declarer une courte intention/documentation par methode, et une eventuelle validation runtime des arguments.
    - Critere de fin : renommer ou supprimer une methode publique impose une modification visible dans un seul registre.
 
 ## P1 - Simplifications importantes
@@ -40,8 +41,8 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 7. [PARTIEL] Clarifier les DTO par cas d'usage
    - Constat : `domain-adapters.js` convertit entre formats Supabase, domaine et UI, mais les noms restent generiques (`toCompetitionReadModel`, `toJudokaReadModel`).
-   - Fait : alias morts (`toDomainCombat`, `toDomainCompetition`, `toDomainJudoka`, `toDomainManagedChild`) et doublons (`toJudokaReadModel`/`toCanonicalJudoka`, `toCompetitionReadModel`/`toCanonicalCompetition`) supprimes ; conversions factorisees via un helper `pick`.
-   - Reste ouvert : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) ou documenter les champs attendus par methode RPC.
+   - Fait : alias morts (`toDomainCombat`, `toDomainCompetition`, `toDomainJudoka`, `toDomainManagedChild`) et doublons (`toJudokaReadModel`/`toCanonicalJudoka`, `toCompetitionReadModel`/`toCanonicalCompetition`) supprimes ; conversions factorisees via un helper `pick`. `core/types.js` documente desormais les formes canoniques (`Judoka`, `Competition`, `Combat`, `ManagedChild`, `AccessInvitation`) et les DTO composites par methode RPC (`InitialData`, `CompetitionDetail`, `ClubCompetitionDetail`, `ChildrenManagement`, `AdminsManagement`, `JudokaProfile`).
+   - Reste ouvert : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) si les noms generiques actuels deviennent ambigus ; detailler `JudokaProfile` (actuellement `[key: string]: any`).
    - Critere de fin : chaque reponse RPC complexe a un DTO explicite ou une entree de contrat.
 
 8. Extraire les templates HTML frontend en fonctions pures
@@ -85,6 +86,37 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
     - Constat : les specs utilisent `COMP-*`, `CBT-*`, `AUTH-*`, `CHD-*`, mais les tests ne les mentionnent pas systematiquement.
     - Simplification : inclure l'ID de regle dans le nom des tests quand le lien est direct.
     - Critere de fin : `rg "COMP-015"` ou `rg "AUTH-009a"` retrouve spec et tests associes.
+
+## Roadmap TypeScript / decoupage frontend (non demarre)
+
+16. Decouper `Index.html` en partials assembles par `api/app.js`
+    - Constat : `Index.html` contient les ~11 vues Vue inline (~1000+ lignes) dans un seul fichier,
+      ce qui rend les diffs larges et le fichier difficile a naviguer.
+    - Simplification : extraire chaque vue/template en fichier partiel sous `assets/views/`
+      (ou equivalent), assembles a la construction de la reponse par `api/app.js` (toujours
+      sans bundler/etape de build).
+    - Critere de fin : `Index.html` ne contient plus que la structure globale et les points
+      d'assemblage ; chaque vue est editable independamment.
+    - A planifier separement (chantier dedie, hors perimetre de l'introduction des types
+      JSDoc/`jsconfig` realisee en parallele).
+
+17. Etendre les types JSDoc / `jsconfig` a `assets/**`
+    - Constat : `jsconfig.json` couvre actuellement `core/**` et `api/**` ; le frontend
+      (`assets/`) n'est pas type-checke.
+    - Simplification : une fois le pattern valide cote `core/` (cf. `core/types.js`,
+      item 5 et 7), etendre `include` a `assets/**/*.js` et annoter progressivement
+      `assets/app-api.js` (futur client RPC, item 1) avec les types de `core/types.js`
+      (notamment `RpcMethods`, `Judoka`, `Competition`, `Combat`).
+    - Critere de fin : `npm run typecheck` couvre aussi `assets/`.
+
+18. Migration vers de vrais fichiers `.ts`
+    - Constat : l'app n'a pas d'etape de build (Vue 3 global build servi directement,
+      deploiement Vercel sans bundler) ; une migration `.ts` reelle impose d'en introduire une.
+    - Simplification : a reconsiderer apres le decoupage d'`Index.html` (item 16) et
+      l'extension des types a `assets/` (item 17), en evaluant l'impact d'un build step
+      sur le deploiement Vercel actuel.
+    - Critere de fin : decision documentee (go/no-go build step) avant toute conversion
+      `.js` -> `.ts`.
 
 ## Discipline de refacto
 

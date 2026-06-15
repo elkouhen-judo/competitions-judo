@@ -27,11 +27,12 @@ module.exports = async function handler(req, res) {
     const accessToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
     const email = await verifySupabaseUser(accessToken);
     const body = await readBody(req);
-    const method = methods[body.method];
 
-    if (!method) {
+    if (typeof body.method !== "string" || !Object.hasOwn(methods, body.method)) {
       throw new Error("Méthode inconnue.");
     }
+
+    const method = methods[body.method];
 
     const result = await method(email, ...(Array.isArray(body.args) ? body.args : []));
     res.status(200).json({ result });
