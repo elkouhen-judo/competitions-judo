@@ -17,14 +17,16 @@ module.exports = function handler(_req, res) {
     "app-runtime.js",
     "app.js"
   ];
-  // Compiled from assets/app-notifications.ts by `npm run build` (scripts/build-assets.js).
-  const builtClientFiles = ["app-notifications.js"];
-  const client = [
-    ...clientFiles.map((file) => fs.readFileSync(path.join(process.cwd(), "assets", file), "utf8")),
-    ...builtClientFiles.map((file) =>
-      fs.readFileSync(path.join(process.cwd(), "assets", "dist", file), "utf8")
-    )
-  ].join("\n\n");
+  // Compiled from assets/app-notifications.ts by `npm run build:assets` (scripts/build-assets.js).
+  const builtClientFiles = { "app-ui.js": ["app-notifications.js"] };
+  const client = clientFiles
+    .flatMap((file) => [
+      fs.readFileSync(path.join(process.cwd(), "assets", file), "utf8"),
+      ...(builtClientFiles[file] || []).map((builtFile) =>
+        fs.readFileSync(path.join(process.cwd(), "assets", "dist", builtFile), "utf8")
+      )
+    ])
+    .join("\n\n");
 
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");
   res.status(200).send(client);
