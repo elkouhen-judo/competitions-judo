@@ -99,16 +99,19 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 ## Roadmap TypeScript / decoupage frontend (non demarre)
 
-16. Decouper `Index.html` en partials assembles par `api/app.js`
-    - Constat : `Index.html` contient les ~11 vues Vue inline (~1000+ lignes) dans un seul fichier,
-      ce qui rend les diffs larges et le fichier difficile a naviguer.
-    - Simplification : extraire chaque vue/template en fichier partiel sous `assets/views/`
-      (ou equivalent), assembles a la construction de la reponse par `api/app.js` (toujours
-      sans bundler/etape de build).
+16. [FAIT] Decouper `Index.html` en partials assembles par `api/app.js`
+    - Constat : `Index.html` contenait les ~11 vues Vue inline (~1000+ lignes) dans un seul fichier,
+      ce qui rendait les diffs larges et le fichier difficile a naviguer.
+    - Fait : chaque vue (header, toasts, login, home, judoka, admins, children, competition,
+      club-competition-detail, club-competition-form, competition-form,
+      competition-finalization, combat-form) extraite en partiel sous `assets/views/*.html` ;
+      `Index.html` ne contient plus que la structure globale et des marqueurs `<!-- view:nom -->` ;
+      `api/app.js` expose `renderIndexHtml()` qui assemble le shell et les partiels (toujours
+      sans bundler/etape de build) et l'utilise pour la reponse HTTP ; `tests/mobile-first-index.test.js`
+      et `tests/vercel-deployment.test.js` utilisent desormais `renderIndexHtml()` au lieu de lire
+      `Index.html` brut.
     - Critere de fin : `Index.html` ne contient plus que la structure globale et les points
       d'assemblage ; chaque vue est editable independamment.
-    - A planifier separement (chantier dedie, hors perimetre de l'introduction des types
-      JSDoc/`jsconfig` realisee en parallele).
 
 17. [FAIT] Etendre les types JSDoc / `jsconfig` a `assets/**`
     - Constat : `jsconfig.json` couvre actuellement `core/**` et `api/**` ; le frontend

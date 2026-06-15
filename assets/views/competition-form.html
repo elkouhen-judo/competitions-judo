@@ -1,0 +1,78 @@
+    <section id="competitionFormView" class="panel hidden" v-cloak>
+      <div class="panel-header">
+        <div>
+          <h2 id="competitionFormTitle">{{ competitionFormTitle }}</h2>
+          <p class="subtitle">Nom, date et catégories</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <input type="hidden" id="competition_id" v-model="competitionForm.competitionId">
+
+        <div id="competitionOwnerBlock" class="full-row" :class="{ hidden: !showCompetitionOwnerBlock }">
+          <label>Judoka</label>
+          <div class="autocomplete-wrapper">
+            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="hideCompetitionOwnerOptions()">
+            <div class="autocomplete-dropdown" id="competition_judoka_dropdown" v-show="showOwnerOptions">
+              <div v-if="!ownerOptions.length" class="autocomplete-empty">Aucun résultat</div>
+              <div v-for="option in ownerOptions" :key="option.judokaId" class="autocomplete-option" @pointerdown.prevent="selectCompetitionOwner(option)">
+                <div class="autocomplete-option-copy">
+                  <strong>{{ option.name }}</strong>
+                  <span class="autocomplete-option-meta">{{ option.meta }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label for="competition_nom">Nom de la compétition</label>
+        <input type="text" id="competition_nom" v-model.trim="competitionForm.name">
+
+        <label for="competition_date">Date</label>
+        <input type="date" id="competition_date" v-model="competitionForm.competitionDate">
+
+        <div class="form-grid">
+          <div>
+            <label for="competition_categorie_age">Catégorie d'âge</label>
+            <select id="competition_categorie_age" v-model="competitionForm.ageCategory">
+              <option value="">Non renseignée</option>
+              <option value="Poussinet">Poussinet</option>
+              <option value="Poussin">Poussin</option>
+              <option value="Benjamin">Benjamin</option>
+              <option value="Minime">Minime</option>
+              <option value="Cadet">Cadet</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
+              <option value="Vétéran">Vétéran</option>
+            </select>
+          </div>
+          <div>
+            <label for="competition_categorie_poids">Catégorie de poids</label>
+            <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg" v-model.trim="competitionForm.weightCategory">
+          </div>
+        </div>
+
+        <div id="competitionResultBlock" :class="{ hidden: !showCompetitionResultBlock }">
+          <label for="competition_result">Classement / résultat</label>
+          <select id="competition_result" v-model="competitionForm.result">
+            <option value="">Non renseigné</option>
+            <option value="1er">1er</option>
+            <option value="2e">2e</option>
+            <option value="3e">3e</option>
+            <option value="5e">5e</option>
+            <option value="7e">7e</option>
+            <option value="Non classé">Non classé</option>
+          </select>
+        </div>
+
+        <div class="form-actions mobile-action-bar">
+          <button class="button-secondary" @click="cancelCompetitionForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+            Annuler
+          </button>
+          <button @click="saveCompetition()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </section>

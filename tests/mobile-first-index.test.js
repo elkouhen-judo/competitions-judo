@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const html = fs.readFileSync(path.join(__dirname, "..", "Index.html"), "utf8");
+const appHandler = require(path.join(__dirname, "..", "api", "app.js"));
+const html = appHandler.renderIndexHtml();
 const css = fs.readFileSync(path.join(__dirname, "..", "assets", "app.css"), "utf8");
 const notificationsClient = fs.readFileSync(
   path.join(__dirname, "..", "assets", "app-notifications.js"),

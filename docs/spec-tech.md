@@ -44,7 +44,7 @@ This specification does not redefine product behavior already described in `docs
 
 ### 3.1 Runtime surfaces
 
-- **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell.
+- **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell; each Vue view shall live in its own partial under `assets/views/*.html`, assembled into the shell by `api/app.js` (`renderIndexHtml`) without a build step.
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
 - **ARC-003**: `supabase/migrations/*` shall contain one canonical SQL schema file for a fresh deployment.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
@@ -58,7 +58,7 @@ This specification does not redefine product behavior already described in `docs
 
 - **VCL-001**: Vercel shall route `/api/rpc` directly to the RPC endpoint.
 - **VCL-002**: Vercel shall route all non-API paths to `/api/app`.
-- **VCL-003**: `/api/app` shall return `Index.html` with runtime config injected into the HTML.
+- **VCL-003**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
 
@@ -137,6 +137,7 @@ This specification does not redefine product behavior already described in `docs
 | Surface | Type | Purpose |
 |---|---|---|
 | `Index.html` | Frontend app shell | Browser UI |
+| `assets/views/*.html` | Frontend view partials | One Vue view per file, assembled into `Index.html` by `/api/app` |
 | `/api/app` | Vercel serverless endpoint | Returns HTML and injects runtime config |
 | `/api/rpc` | Vercel serverless endpoint | Executes authenticated business methods |
 | `api/_core.js` | Shared backend core | Shared auth, Supabase helpers, and method composition |
