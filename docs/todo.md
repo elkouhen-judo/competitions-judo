@@ -36,10 +36,10 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
    - Simplification : creer `assets/app-autocomplete.js` avec une API explicite et sans dependance a l'ecran competition.
    - Critere de fin : l'ecran home ne depend plus de l'ecran competition pour choisir un judoka.
 
-5. [PARTIEL] Rendre explicite le registre RPC backend
+5. [FAIT] Rendre explicite le registre RPC backend
    - Constat : `core/index.js` compose la surface publique par spreads de services, ce qui masque la liste exacte des methodes exposees.
-   - Fait : `core/types.js` declare un typedef `RpcMethods` listant les 23 methodes (`getInitialData`, `saveCompetition`, `ajouterCombat`, etc.) avec leur signature ; `core/index.js` type `methods` avec `@type {import("./types").RpcMethods}` (verifie par `npm run typecheck`) ; `api/rpc.js` rejette les noms de methode qui ne sont pas une propriete propre de `methods` (`Object.hasOwn`).
-   - Reste ouvert : declarer une courte intention/documentation par methode, et une eventuelle validation runtime des arguments.
+   - Fait : `core/types.js` declare un typedef `RpcMethods` listant les 23 methodes (`getInitialData`, `saveCompetition`, `ajouterCombat`, etc.) avec leur signature et une courte description de l'intention de chacune ; `core/index.js` type `methods` avec `@type {import("./types").RpcMethods}` (verifie par `npm run typecheck`) ; `api/rpc.js` rejette les noms de methode qui ne sont pas une propriete propre de `methods` (`Object.hasOwn`).
+   - Reste ouvert : une eventuelle validation runtime des arguments.
    - Critere de fin : renommer ou supprimer une methode publique impose une modification visible dans un seul registre.
 
 ## P1 - Simplifications importantes
@@ -51,8 +51,8 @@ Objectif : reduire le couplage entre UI, RPC, services et tests pour rendre les 
 
 7. [PARTIEL] Clarifier les DTO par cas d'usage
    - Constat : `domain-adapters.js` convertit entre formats Supabase, domaine et UI, mais les noms restent generiques (`toCompetitionReadModel`, `toJudokaReadModel`).
-   - Fait : alias morts (`toDomainCombat`, `toDomainCompetition`, `toDomainJudoka`, `toDomainManagedChild`) et doublons (`toJudokaReadModel`/`toCanonicalJudoka`, `toCompetitionReadModel`/`toCanonicalCompetition`) supprimes ; conversions factorisees via un helper `pick`. `core/types.js` documente desormais les formes canoniques (`Judoka`, `Competition`, `Combat`, `ManagedChild`, `AccessInvitation`) et les DTO composites par methode RPC (`InitialData`, `CompetitionDetail`, `ClubCompetitionDetail`, `ChildrenManagement`, `AdminsManagement`, `JudokaProfile`).
-   - Reste ouvert : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) si les noms generiques actuels deviennent ambigus ; detailler `JudokaProfile` (actuellement `[key: string]: any`).
+   - Fait : alias morts (`toDomainCombat`, `toDomainCompetition`, `toDomainJudoka`, `toDomainManagedChild`) et doublons (`toJudokaReadModel`/`toCanonicalJudoka`, `toCompetitionReadModel`/`toCanonicalCompetition`) supprimes ; conversions factorisees via un helper `pick`. `core/types.js` documente desormais les formes canoniques (`Judoka`, `Competition`, `Combat`, `ManagedChild`, `AccessInvitation`) et les DTO composites par methode RPC (`InitialData`, `CompetitionDetail`, `ClubCompetitionDetail`, `ChildrenManagement`, `AdminsManagement`, `JudokaProfile`) ; `JudokaProfile` est desormais entierement type (`SeasonBounds`, `CombatProfile`, `SeasonCompetitionResult`, etc.) au lieu de `[key: string]: any`.
+   - Reste ouvert : nommer les sorties selon leur usage (`CompetitionListItemDto`, `CompetitionDetailDto`, `JudokaProfileDto`) si les noms generiques actuels deviennent ambigus.
    - Critere de fin : chaque reponse RPC complexe a un DTO explicite ou une entree de contrat.
 
 8. Extraire les templates HTML frontend en fonctions pures
