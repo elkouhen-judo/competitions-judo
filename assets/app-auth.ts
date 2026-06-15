@@ -2,6 +2,27 @@
   const sessionStorageKey = "kiroku_supabase_session";
 
   function createKirokuAuth({ runtimeConfig, onInvitationRequired, onError }) {
+    function getResponsePreview(body: unknown) {
+      return String(body || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 160);
+    }
+
+    async function readJsonResponse(response: Response, invalidMessage: string) {
+      const body = await response.text();
+      if (!body) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(body);
+      } catch (_error) {
+        const preview = getResponsePreview(body);
+        throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
+      }
+    }
+
     function readVercelSession() {
       try {
         return JSON.parse(localStorage.getItem(sessionStorageKey) || "null");
@@ -108,7 +129,13 @@
         throw new Error("Connexion Google impossible : " + (authError || "code OAuth invalide."));
       }
 
-      const session = await response.json();
+      const session = await readJsonResponse(
+        response,
+        "Connexion Google impossible : réponse Supabase invalide."
+      );
+      if (!session || !session.access_token) {
+        throw new Error("Connexion Google impossible : session Supabase incomplète.");
+      }
       saveVercelSession({
         access_token: session.access_token,
         refresh_token: session.refresh_token || "",
@@ -145,7 +172,13 @@
         return null;
       }
 
-      const refreshed = await response.json();
+      const refreshed = await readJsonResponse(
+        response,
+        "Connexion Google impossible : réponse Supabase invalide."
+      );
+      if (!refreshed || !refreshed.access_token) {
+        throw new Error("Connexion Google impossible : session Supabase incomplète.");
+      }
       session = {
         access_token: refreshed.access_token,
         refresh_token: refreshed.refresh_token || session.refresh_token,
@@ -188,11 +221,16 @@
     }
 
     async function readSupabaseAuthError(response) {
+      const body = await response.text();
+      if (!body) {
+        return "";
+      }
+
       try {
-        const payload = await response.json();
+        const payload = JSON.parse(body);
         return payload.msg || payload.message || payload.error_description || payload.error || "";
       } catch (_error) {
-        return response.text();
+        return getResponsePreview(body);
       }
     }
 
