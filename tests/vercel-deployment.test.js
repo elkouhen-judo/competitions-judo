@@ -111,7 +111,7 @@ const supabaseClient = fs.readFileSync(
   path.join(root, "core", "infra", "supabase-client.js"),
   "utf8"
 );
-const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.js"), "utf8");
+const textHelpers = fs.readFileSync(path.join(root, "core", "shared", "text.ts"), "utf8");
 const sessionAuth = fs.readFileSync(path.join(root, "core", "auth", "session.js"), "utf8");
 const rpc = fs.readFileSync(path.join(root, "api", "rpc.js"), "utf8");
 const { CANONICAL_PRODUCTION_APP_URL, getCanonicalRedirectUrl, getRuntimeAppUrl } =

@@ -62,6 +62,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
 - **VCL-006**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
+- **VCL-006a**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
 
 ### 3.3 Data model constraints
 
@@ -148,6 +149,7 @@ This specification does not redefine product behavior already described in `docs
 | `supabase/migrations/*` | SQL migrations | Schema and DB-side logic |
 | `/api/client` | Vercel serverless endpoint | Concatenates frontend JS, including files compiled from `assets/*.ts` into `assets/dist/*` |
 | `assets/dist/*` | Build output (gitignored) | esbuild-transpiled `assets/*.ts` sources, produced by `npm run build:assets` (`scripts/build-assets.js`) |
+| `core-dist/*` | Build output (gitignored) | esbuild-transpiled `core/**/*.ts` sources, produced by `npm run build:core` (`scripts/build-core.js`) and required via thin `core/**/*.js` shims |
 
 ### 4.2 Vercel routing contract
 
