@@ -14,6 +14,38 @@ import type {
   ViewId
 } from "./types";
 
+function createInitialState(): KirokuAppState {
+  return {
+    currentUser: null,
+    isAdmin: false,
+    isCoach: false,
+    isParent: false,
+    canManageChildren: false,
+    competitions: [],
+    clubCompetitions: [],
+    currentCompetition: null,
+    judokas: [],
+    currentCombats: [],
+    currentJudokaProfile: null,
+    managedAdmins: [],
+    managedAccessInvitations: [],
+    managedChildren: [],
+    canEditCurrentCompetition: false,
+    isLoadingCompetition: false,
+    homeFilterJudokaId: "",
+    previousView: "homeView",
+    accessInvitationSearch: "",
+    accessInvitationCurrentPage: 1,
+    competitionsCurrentPage: 1,
+    clubCompetitionsCurrentPage: 1,
+    clubCompetitionParticipantsCurrentPage: 1,
+    clubCompetitionAvailableJudokasCurrentPage: 1,
+    clubCompetitionFormParticipantsCurrentPage: 1,
+    judokaCompetitionResultsCurrentPage: 1,
+    adminsCurrentPage: 1
+  };
+}
+
 (() => {
 
   window.createKirokuApp = function createKirokuApp() {
@@ -21,36 +53,6 @@ import type {
     const defaultAccessInvitationVisibleCount = 5;
     const defaultListPageSize = 10;
     const state = window.Vue.reactive(createInitialState());
-
-    function createInitialState(): KirokuAppState {
-      return {
-        currentUser: null,
-        isAdmin: false,
-        isCoach: false,
-        isParent: false,
-        canManageChildren: false,
-        competitions: [],
-        clubCompetitions: [],
-        currentCompetition: null,
-        judokas: [],
-        currentCombats: [],
-        currentJudokaProfile: null,
-        managedAdmins: [],
-        managedAccessInvitations: [],
-        managedChildren: [],
-        canEditCurrentCompetition: false,
-        previousView: "homeView",
-        accessInvitationSearch: "",
-        accessInvitationCurrentPage: 1,
-        competitionsCurrentPage: 1,
-        clubCompetitionsCurrentPage: 1,
-        clubCompetitionParticipantsCurrentPage: 1,
-        clubCompetitionAvailableJudokasCurrentPage: 1,
-        clubCompetitionFormParticipantsCurrentPage: 1,
-        judokaCompetitionResultsCurrentPage: 1,
-        adminsCurrentPage: 1
-      };
-    }
 
     const ui = window.KirokuUI;
     const { $, viewIds } = ui;
@@ -183,7 +185,7 @@ import type {
             throw new Error(payload.error || "Erreur serveur.");
           }
 
-          success && success(payload.result);
+          success?.(payload.result);
           return;
         } catch (error) {
           const errorMessage =

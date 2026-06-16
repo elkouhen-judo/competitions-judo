@@ -40,19 +40,7 @@
       showView
     } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
-    const defaultCompetitionDetailViewState = {
-      competitionTitle: "Compétition",
-      competitionSubtitle: "",
-      competitionDate: "",
-      ageWeightLabel: "",
-      competitionResult: "",
-      canEditCompetition: false,
-      canFinalizeCompetition: false,
-      combats: [] as CompetitionCombatCard[],
-      combatsEmptyMessage: "",
-      hasCombats: false,
-      isLoadingCombats: false
-    };
+    const defaultCompetitionDetailViewState = {};
     const defaultCompetitionForm = {
       competitionId: "",
       name: "",
@@ -74,13 +62,6 @@
     const defaultClubCompetitionFormViewState = {
       clubCompetitionFormTitle: "Nouvelle compétition club",
       clubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
-      filteredClubCompetitionParticipants: [] as ClubCompetitionJudokaOption[],
-      clubCompetitionFormParticipantsPage: [] as ClubCompetitionJudokaOption[],
-      clubCompetitionFormParticipantsTotalPages: 1,
-      clubCompetitionFormParticipantsCurrentPage: 1,
-      clubCompetitionFormParticipantsTotalCount: 0,
-      clubCompetitionFormParticipantsCanShowPreviousPage: false,
-      clubCompetitionFormParticipantsCanShowNextPage: false,
       judokaSearchText: "",
       clubCompetitionForm: {
         clubCompetitionId: "",
@@ -99,20 +80,7 @@
         weightCategory: ""
       },
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
-      clubCompetitionParticipantsPage: [] as ClubCompetitionParticipantCard[],
-      clubCompetitionParticipantsTotalPages: 1,
-      clubCompetitionParticipantsCurrentPage: 1,
-      clubCompetitionParticipantsTotalCount: 0,
-      clubCompetitionParticipantsCanShowPreviousPage: false,
-      clubCompetitionParticipantsCanShowNextPage: false,
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
-      filteredClubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
-      clubCompetitionAvailableJudokasPage: [] as ClubCompetitionJudokaOption[],
-      clubCompetitionAvailableJudokasTotalPages: 1,
-      clubCompetitionAvailableJudokasCurrentPage: 1,
-      clubCompetitionAvailableJudokasTotalCount: 0,
-      clubCompetitionAvailableJudokasCanShowPreviousPage: false,
-      clubCompetitionAvailableJudokasCanShowNextPage: false,
       judokaAvailableSearchText: "",
       clubCompetitionNewJudokaIds: [] as string[]
     };
@@ -134,25 +102,140 @@
       combatFormTitle: "Ajouter un combat",
       combatFormSubtitle: "Combat de la compétition en cours",
       saveCombatButtonText: "Ajouter le combat",
-      showCombatDecisionBlock: false,
-      combatDecisionOptions: [] as string[],
       combatForm: { ...defaultCombatForm }
     };
-    let competitionDetailViewModel = defaultCompetitionDetailViewState;
+    let competitionDetailMounted = false;
     let competitionFormViewModel = defaultCompetitionFormViewState;
-    let clubCompetitionFormViewModel = defaultClubCompetitionFormViewState;
-    let clubCompetitionDetailViewModel = defaultClubCompetitionDetailViewState;
+    let competitionFormMounted = false;
+    const clubCompetitionFormViewModel = window.Vue.reactive({
+      ...defaultClubCompetitionFormViewState,
+      clubCompetitionForm: { ...defaultClubCompetitionFormViewState.clubCompetitionForm, participantJudokaIds: [] as string[] }
+    });
+    let clubCompetitionFormMounted = false;
+    const clubCompetitionDetailViewModel = window.Vue.reactive({
+      ...defaultClubCompetitionDetailViewState,
+      clubCompetitionDetailForm: { ...defaultClubCompetitionDetailViewState.clubCompetitionDetailForm },
+      clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
+      clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
+      clubCompetitionNewJudokaIds: [] as string[]
+    });
+    let clubCompetitionDetailMounted = false;
     let competitionFinalizationViewModel = defaultCompetitionFinalizationViewState;
-    let combatFormViewModel = defaultCombatFormViewState;
+    let competitionFinalizationMounted = false;
+    const combatFormViewModel = window.Vue.reactive({
+      ...defaultCombatFormViewState,
+      combatForm: { ...defaultCombatForm }
+    });
+    let combatFormMounted = false;
     let hideOwnerOptionsTimer: number | null = null;
     let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" = "homeView";
 
+    const competitionDetailProjection = window.Vue.computed(() => {
+      if (!state.currentCompetition) return null;
+      return window.KirokuScreenProjections.projectCompetitionDetail(
+        state.currentCompetition,
+        state.canEditCurrentCompetition,
+        { formatDate }
+      );
+    });
+
+    const combatsProjection = window.Vue.computed(() =>
+      window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
+        formatResultat,
+        normalizeDisplayName,
+        showJudoka: state.isAdmin || state.isCoach,
+        canEdit: state.canEditCurrentCompetition
+      })
+    );
+
+    const competitionTitle = window.Vue.computed(() => {
+      if (state.isLoadingCompetition) return "Chargement...";
+      return competitionDetailProjection.value?.competitionTitle ?? "Compétition";
+    });
+    const competitionSubtitle = window.Vue.computed(() => competitionDetailProjection.value?.competitionSubtitle ?? "");
+    const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
+    const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
+    const competitionResult = window.Vue.computed(() => competitionDetailProjection.value?.competitionResult ?? "");
+    const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
+    const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
+    const combats = window.Vue.computed(() => {
+      if (state.isLoadingCompetition) return [];
+      return combatsProjection.value.combats;
+    });
+    const combatsEmptyMessage = window.Vue.computed(() => {
+      if (state.isLoadingCompetition) return "Chargement des combats...";
+      return combatsProjection.value.combatsEmptyMessage;
+    });
+    const hasCombats = window.Vue.computed(() => !state.isLoadingCompetition && combatsProjection.value.hasCombats);
+    const isLoadingCombats = window.Vue.computed(() => state.isLoadingCompetition);
+
+    const combatDecisionOptions = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result));
+    const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
+
+    const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
+      const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
+      const selectedIds = new Set(
+        clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.map(String)
+      );
+      return clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
+        (p) => selectedIds.has(String(p.judokaId)) || !query || p.name.toLowerCase().includes(query)
+      );
+    });
+    const clubCompetitionFormParticipantsPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        clubCompetitionFormParticipantsFiltered.value,
+        state.clubCompetitionFormParticipantsCurrentPage,
+        defaultListPageSize
+      )
+    );
+    const clubCompetitionFormParticipantsPage = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.pageItems);
+    const clubCompetitionFormParticipantsTotalPages = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.totalPages);
+    const clubCompetitionFormParticipantsCurrentPage = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.currentPage);
+    const clubCompetitionFormParticipantsTotalCount = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.totalItems);
+    const clubCompetitionFormParticipantsCanShowPreviousPage = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.canShowPreviousPage);
+    const clubCompetitionFormParticipantsCanShowNextPage = window.Vue.computed(() => clubCompetitionFormParticipantsPagination.value.canShowNextPage);
+
+    const clubCompetitionAvailableJudokasFiltered = window.Vue.computed(() => {
+      const query = cleanText(clubCompetitionDetailViewModel.judokaAvailableSearchText).toLowerCase();
+      const selectedIds = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
+      return clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(
+        (j) => selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query)
+      );
+    });
+    const clubCompetitionAvailableJudokasPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        clubCompetitionAvailableJudokasFiltered.value,
+        state.clubCompetitionAvailableJudokasCurrentPage,
+        defaultListPageSize
+      )
+    );
+    const clubCompetitionAvailableJudokasPage = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.pageItems);
+    const clubCompetitionAvailableJudokasTotalPages = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.totalPages);
+    const clubCompetitionAvailableJudokasCurrentPage = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.currentPage);
+    const clubCompetitionAvailableJudokasTotalCount = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.totalItems);
+    const clubCompetitionAvailableJudokasCanShowPreviousPage = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.canShowPreviousPage);
+    const clubCompetitionAvailableJudokasCanShowNextPage = window.Vue.computed(() => clubCompetitionAvailableJudokasPagination.value.canShowNextPage);
+
+    const clubCompetitionParticipantsPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants,
+        state.clubCompetitionParticipantsCurrentPage,
+        defaultListPageSize
+      )
+    );
+    const clubCompetitionParticipantsPage = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.pageItems);
+    const clubCompetitionParticipantsTotalPages = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.totalPages);
+    const clubCompetitionParticipantsCurrentPage = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.currentPage);
+    const clubCompetitionParticipantsTotalCount = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.totalItems);
+    const clubCompetitionParticipantsCanShowPreviousPage = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.canShowPreviousPage);
+    const clubCompetitionParticipantsCanShowNextPage = window.Vue.computed(() => clubCompetitionParticipantsPagination.value.canShowNextPage);
+
     function ensureCompetitionDetailViewModel() {
-      if (!window.Vue || competitionDetailViewModel !== defaultCompetitionDetailViewState) {
+      if (competitionDetailMounted) {
         return;
       }
-
-      competitionDetailViewModel = ui.createMountedViewModel(
+      competitionDetailMounted = true;
+      ui.createMountedViewModel(
         "competitionView",
         defaultCompetitionDetailViewState,
         {
@@ -162,15 +245,28 @@
           navigateBackFromCompetition,
           showCombatForm,
           showCompetitionFinalizationForm
+        },
+        {
+          competitionTitle,
+          competitionSubtitle,
+          competitionDate,
+          ageWeightLabel,
+          competitionResult,
+          canEditCompetition,
+          canFinalizeCompetition,
+          combats,
+          combatsEmptyMessage,
+          hasCombats,
+          isLoadingCombats
         }
       );
     }
 
     function ensureCompetitionFormViewModel() {
-      if (!window.Vue || competitionFormViewModel !== defaultCompetitionFormViewState) {
+      if (competitionFormMounted) {
         return;
       }
-
+      competitionFormMounted = true;
       competitionFormViewModel = ui.createMountedViewModel(
         "competitionFormView",
         defaultCompetitionFormViewState,
@@ -185,31 +281,39 @@
     }
 
     function ensureClubCompetitionFormViewModel() {
-      if (!window.Vue || clubCompetitionFormViewModel !== defaultClubCompetitionFormViewState) {
+      if (clubCompetitionFormMounted) {
         return;
       }
-
-      clubCompetitionFormViewModel = ui.createMountedViewModel(
+      clubCompetitionFormMounted = true;
+      ui.mountViewModel(
         "clubCompetitionFormView",
-        defaultClubCompetitionFormViewState,
+        clubCompetitionFormViewModel,
         {
           cancelClubCompetitionForm,
           saveClubCompetition,
           updateClubCompetitionJudokaSearch,
           showClubCompetitionFormParticipantsPreviousPage,
           showClubCompetitionFormParticipantsNextPage
+        },
+        {
+          clubCompetitionFormParticipantsPage,
+          clubCompetitionFormParticipantsTotalPages,
+          clubCompetitionFormParticipantsCurrentPage,
+          clubCompetitionFormParticipantsTotalCount,
+          clubCompetitionFormParticipantsCanShowPreviousPage,
+          clubCompetitionFormParticipantsCanShowNextPage
         }
       );
     }
 
     function ensureClubCompetitionDetailViewModel() {
-      if (!window.Vue || clubCompetitionDetailViewModel !== defaultClubCompetitionDetailViewState) {
+      if (clubCompetitionDetailMounted) {
         return;
       }
-
-      clubCompetitionDetailViewModel = ui.createMountedViewModel(
+      clubCompetitionDetailMounted = true;
+      ui.mountViewModel(
         "clubCompetitionDetailView",
-        defaultClubCompetitionDetailViewState,
+        clubCompetitionDetailViewModel,
         {
           cancelClubCompetitionDetail,
           confirmDeleteClubCompetition,
@@ -221,15 +325,29 @@
           showClubCompetitionParticipantsNextPage,
           showClubCompetitionAvailableJudokasPreviousPage,
           showClubCompetitionAvailableJudokasNextPage
+        },
+        {
+          clubCompetitionParticipantsPage,
+          clubCompetitionParticipantsTotalPages,
+          clubCompetitionParticipantsCurrentPage,
+          clubCompetitionParticipantsTotalCount,
+          clubCompetitionParticipantsCanShowPreviousPage,
+          clubCompetitionParticipantsCanShowNextPage,
+          clubCompetitionAvailableJudokasPage,
+          clubCompetitionAvailableJudokasTotalPages,
+          clubCompetitionAvailableJudokasCurrentPage,
+          clubCompetitionAvailableJudokasTotalCount,
+          clubCompetitionAvailableJudokasCanShowPreviousPage,
+          clubCompetitionAvailableJudokasCanShowNextPage
         }
       );
     }
 
     function ensureCompetitionFinalizationViewModel() {
-      if (!window.Vue || competitionFinalizationViewModel !== defaultCompetitionFinalizationViewState) {
+      if (competitionFinalizationMounted) {
         return;
       }
-
+      competitionFinalizationMounted = true;
       competitionFinalizationViewModel = ui.createMountedViewModel(
         "competitionFinalizationView",
         defaultCompetitionFinalizationViewState,
@@ -241,18 +359,19 @@
     }
 
     function ensureCombatFormViewModel() {
-      if (!window.Vue || combatFormViewModel !== defaultCombatFormViewState) {
+      if (combatFormMounted) {
         return;
       }
-
-      combatFormViewModel = ui.createMountedViewModel(
+      combatFormMounted = true;
+      ui.mountViewModel(
         "combatFormView",
-        defaultCombatFormViewState,
+        combatFormViewModel,
         {
           cancelCombatForm,
           saveCombat,
           syncCombatDecisionVisibility
-        }
+        },
+        { combatDecisionOptions, showCombatDecisionBlock }
       );
     }
 
@@ -282,19 +401,9 @@
         currentCompetitionReturnView = "homeView";
       }
       ensureCompetitionDetailViewModel();
-      Object.assign(competitionDetailViewModel, {
-        competitionTitle: "Chargement...",
-        competitionSubtitle: "",
-        competitionDate: "",
-        ageWeightLabel: "",
-        competitionResult: "",
-        canEditCompetition: false,
-        canFinalizeCompetition: false,
-        combats: [],
-        combatsEmptyMessage: "Chargement des combats...",
-        hasCombats: false,
-        isLoadingCombats: true
-      });
+      state.currentCompetition = null;
+      state.currentCombats = [];
+      state.isLoadingCompetition = true;
       showView("competitionView");
 
       app.runServer(
@@ -305,28 +414,12 @@
           state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
           state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
           state.canEditCurrentCompetition = Boolean(data.canEditCompetition);
-
-          renderCompetitionDetail();
-          renderCombats();
+          state.isLoadingCompetition = false;
         },
-        showError
-      );
-    }
-
-    function renderCompetitionDetail() {
-      ensureCompetitionDetailViewModel();
-      if (!state.currentCompetition) {
-        return;
-      }
-      Object.assign(
-        competitionDetailViewModel,
-        window.KirokuScreenProjections.projectCompetitionDetail(
-          state.currentCompetition,
-          state.canEditCurrentCompetition,
-          {
-            formatDate
-          }
-        )
+        (error) => {
+          state.isLoadingCompetition = false;
+          showError(error);
+        }
       );
     }
 
@@ -337,19 +430,6 @@
       }
 
       showCompetitionForm(state.currentCompetition.competitionId);
-    }
-
-    function renderCombats() {
-      ensureCompetitionDetailViewModel();
-      Object.assign(
-        competitionDetailViewModel,
-        window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
-          formatResultat,
-          normalizeDisplayName,
-          showJudoka: state.isAdmin || state.isCoach,
-          canEdit: state.canEditCurrentCompetition
-        })
-      );
     }
 
     function showCompetitionForm(id?: string) {
@@ -397,37 +477,7 @@
     }
 
     function updateClubCompetitionJudokaSearch() {
-      const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
-      const selectedIds = new Set(
-        clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.map(String)
-      );
-      clubCompetitionFormViewModel.filteredClubCompetitionParticipants =
-        clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
-          (p) =>
-            selectedIds.has(String(p.judokaId)) || !query || p.name.toLowerCase().includes(query)
-        );
       state.clubCompetitionFormParticipantsCurrentPage = 1;
-      renderClubCompetitionFormParticipantsPage();
-    }
-
-    function renderClubCompetitionFormParticipantsPage() {
-      const pagination = window.KirokuScreenProjections.paginateList(
-        clubCompetitionFormViewModel.filteredClubCompetitionParticipants,
-        state.clubCompetitionFormParticipantsCurrentPage,
-        defaultListPageSize
-      );
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsPage = pagination.pageItems;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalPages =
-        pagination.totalPages;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCurrentPage =
-        pagination.currentPage;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsTotalCount =
-        pagination.totalItems;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowPreviousPage =
-        pagination.canShowPreviousPage;
-      clubCompetitionFormViewModel.clubCompetitionFormParticipantsCanShowNextPage =
-        pagination.canShowNextPage;
-      state.clubCompetitionFormParticipantsCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionFormParticipantsPreviousPage() {
@@ -435,48 +485,14 @@
         state.clubCompetitionFormParticipantsCurrentPage - 1,
         1
       );
-      renderClubCompetitionFormParticipantsPage();
     }
 
     function showClubCompetitionFormParticipantsNextPage() {
       state.clubCompetitionFormParticipantsCurrentPage += 1;
-      renderClubCompetitionFormParticipantsPage();
     }
 
     function updateClubAvailableJudokaSearch() {
-      const query = cleanText(
-        clubCompetitionDetailViewModel.judokaAvailableSearchText
-      ).toLowerCase();
-      const selectedIds = new Set(
-        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String)
-      );
-      clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas =
-        clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(
-          (j) =>
-            selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query)
-        );
       state.clubCompetitionAvailableJudokasCurrentPage = 1;
-      renderClubCompetitionAvailableJudokasPage();
-    }
-
-    function renderClubCompetitionAvailableJudokasPage() {
-      const pagination = window.KirokuScreenProjections.paginateList(
-        clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas,
-        state.clubCompetitionAvailableJudokasCurrentPage,
-        defaultListPageSize
-      );
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasPage = pagination.pageItems;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalPages =
-        pagination.totalPages;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCurrentPage =
-        pagination.currentPage;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasTotalCount =
-        pagination.totalItems;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowPreviousPage =
-        pagination.canShowPreviousPage;
-      clubCompetitionDetailViewModel.clubCompetitionAvailableJudokasCanShowNextPage =
-        pagination.canShowNextPage;
-      state.clubCompetitionAvailableJudokasCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionAvailableJudokasPreviousPage() {
@@ -484,30 +500,10 @@
         state.clubCompetitionAvailableJudokasCurrentPage - 1,
         1
       );
-      renderClubCompetitionAvailableJudokasPage();
     }
 
     function showClubCompetitionAvailableJudokasNextPage() {
       state.clubCompetitionAvailableJudokasCurrentPage += 1;
-      renderClubCompetitionAvailableJudokasPage();
-    }
-
-    function renderClubCompetitionParticipantsPage() {
-      const pagination = window.KirokuScreenProjections.paginateList(
-        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants,
-        state.clubCompetitionParticipantsCurrentPage,
-        defaultListPageSize
-      );
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsPage = pagination.pageItems;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalPages = pagination.totalPages;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCurrentPage =
-        pagination.currentPage;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsTotalCount = pagination.totalItems;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowPreviousPage =
-        pagination.canShowPreviousPage;
-      clubCompetitionDetailViewModel.clubCompetitionParticipantsCanShowNextPage =
-        pagination.canShowNextPage;
-      state.clubCompetitionParticipantsCurrentPage = pagination.currentPage;
     }
 
     function showClubCompetitionParticipantsPreviousPage() {
@@ -515,12 +511,10 @@
         state.clubCompetitionParticipantsCurrentPage - 1,
         1
       );
-      renderClubCompetitionParticipantsPage();
     }
 
     function showClubCompetitionParticipantsNextPage() {
       state.clubCompetitionParticipantsCurrentPage += 1;
-      renderClubCompetitionParticipantsPage();
     }
 
     function showClubCompetitionForm() {
@@ -531,7 +525,6 @@
         name: getJudokaDisplayName(j) || "Judoka"
       }));
       clubCompetitionFormViewModel.clubCompetitionParticipants = allParticipants;
-      clubCompetitionFormViewModel.filteredClubCompetitionParticipants = allParticipants;
       clubCompetitionFormViewModel.judokaSearchText = "";
       Object.assign(clubCompetitionFormViewModel.clubCompetitionForm, {
         clubCompetitionId: "",
@@ -540,7 +533,6 @@
         participantJudokaIds: []
       });
       state.clubCompetitionFormParticipantsCurrentPage = 1;
-      renderClubCompetitionFormParticipantsPage();
       showView("clubCompetitionFormView");
     }
 
@@ -600,7 +592,6 @@
               };
             });
           state.clubCompetitionParticipantsCurrentPage = 1;
-          renderClubCompetitionParticipantsPage();
           const available = state.judokas
             .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
             .map((j) => ({
@@ -608,11 +599,9 @@
               name: getJudokaDisplayName(j) || "Judoka"
             }));
           clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = available;
-          clubCompetitionDetailViewModel.filteredClubCompetitionAvailableJudokas = available;
           clubCompetitionDetailViewModel.judokaAvailableSearchText = "";
           clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
           state.clubCompetitionAvailableJudokasCurrentPage = 1;
-          renderClubCompetitionAvailableJudokasPage();
         },
         showError
       );
@@ -674,18 +663,6 @@
         message: `Supprimer la compétition club "${name}" ? Les compétitions et combats individuels des judokas associés seront aussi supprimés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
-        onSuccess: (response) => {
-          showSuccess(response.message);
-          app.reloadInitialData();
-        }
-      });
-    }
-
-    function detachClubCompetitionParticipant(idClubCompetition: string, idCompetition: string) {
-      app.confirmAndRun({
-        message: "Retirer ce judoka de la compétition club sans supprimer ses résultats ?",
-        method: "detachClubCompetitionParticipant",
-        args: [idClubCompetition, idCompetition],
         onSuccess: (response) => {
           showSuccess(response.message);
           app.reloadInitialData();
@@ -1061,29 +1038,15 @@
       return [];
     }
 
-    function renderCombatDecisionOptions(result: string) {
-      ensureCombatFormViewModel();
-      const options = getCombatDecisionOptions(result);
-      const currentValue = combatFormViewModel.combatForm.victoryType;
-      combatFormViewModel.combatDecisionOptions = options;
-
-      if (options.includes(currentValue)) {
-        combatFormViewModel.combatForm.victoryType = currentValue;
-      } else if (result === "Egalité") {
-        combatFormViewModel.combatForm.victoryType = "Hiki wake";
-      } else {
-        combatFormViewModel.combatForm.victoryType = "";
-      }
-    }
-
     function syncCombatDecisionVisibility(clearValueWhenHidden: boolean) {
       ensureCombatFormViewModel();
       const result = combatFormViewModel.combatForm.result;
-      const shouldShow = getCombatDecisionOptions(result).length > 0;
-      renderCombatDecisionOptions(result);
-      combatFormViewModel.showCombatDecisionBlock = shouldShow;
-
-      if (!shouldShow && clearValueWhenHidden) {
+      const options = getCombatDecisionOptions(result);
+      if (result === "Egalité") {
+        combatFormViewModel.combatForm.victoryType = "Hiki wake";
+      } else if (!options.length && clearValueWhenHidden) {
+        combatFormViewModel.combatForm.victoryType = "";
+      } else if (!options.includes(combatFormViewModel.combatForm.victoryType)) {
         combatFormViewModel.combatForm.victoryType = "";
       }
     }
@@ -1118,7 +1081,6 @@
       deleteCombat,
       deleteCompetitionFromList,
       deleteCurrentCompetition,
-      detachClubCompetitionParticipant,
       editCurrentCompetition,
       finalizeCompetition,
       getCompetitionOwnerRequiredMessage,
@@ -1127,9 +1089,6 @@
       hideCompetitionOwnerOptions,
       openClubCompetition,
       openCompetition,
-      renderCombatDecisionOptions,
-      renderCombats,
-      renderCompetitionDetail,
       resolveCompetitionOwnerSelection,
       saveCombat,
       saveClubCompetition,

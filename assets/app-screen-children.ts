@@ -29,7 +29,7 @@
     const hasChildren = window.Vue.computed(() => state.managedChildren.length > 0);
 
     function ensureChildrenViewModel() {
-      if (!window.Vue || childrenViewModel) {
+      if (childrenViewModel) {
         return;
       }
 
