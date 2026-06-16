@@ -1,5 +1,6 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type JudokaProfileViewModel = import("./types").JudokaProfileViewModel;
 
   function createKirokuJudokaScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
@@ -11,7 +12,9 @@
       showView
     } = ui;
     const { clearMessage } = notifications;
-    const defaultJudokaViewState = {
+    let mounted = false;
+
+    const defaultJudokaProfile: JudokaProfileViewModel = {
       profileTitle: "Fiche judoka",
       profileSubtitle: "",
       heroAvatar: "JJ",
@@ -39,45 +42,112 @@
         forfeits: "0"
       },
       hasCompetitionResults: false,
-      competitionResults: [],
-      competitionResultsPage: [],
-      competitionResultsTotalPages: 1,
-      competitionResultsCurrentPage: 1,
-      competitionResultsTotalCount: 0,
-      competitionResultsCanShowPreviousPage: false,
-      competitionResultsCanShowNextPage: false
+      competitionResults: []
     };
-    let judokaViewModel: (typeof defaultJudokaViewState) | null = null;
 
-    function ensureJudokaViewModel() {
-      if (!window.Vue || judokaViewModel) {
-        return;
+    const judokaProfile = window.Vue.computed<JudokaProfileViewModel>(() => {
+      if (!state.currentJudokaProfile) {
+        return defaultJudokaProfile;
       }
+      return (
+        window.createJudokaProfileViewModel(state.currentJudokaProfile, {
+          formatDate,
+          getClassementBadgeClass,
+          getJudokaDisplayName,
+          getJudokaInitials
+        }) ?? defaultJudokaProfile
+      );
+    });
 
-      judokaViewModel = ui.createMountedViewModel("judokaView", defaultJudokaViewState, {
-        showHome: () => app.showHome && app.showHome(),
-        showCompetitionResultsPreviousPage,
-        showCompetitionResultsNextPage
-      });
-    }
-
-    function renderCompetitionResultsPage() {
-      if (!judokaViewModel) {
-        return;
-      }
-
-      const pagination = window.KirokuScreenProjections.paginateList(
-        judokaViewModel.competitionResults,
+    const competitionResultsPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        judokaProfile.value.competitionResults,
         state.judokaCompetitionResultsCurrentPage,
         defaultListPageSize
+      )
+    );
+
+    const profileTitle = window.Vue.computed(() => judokaProfile.value.profileTitle);
+    const profileSubtitle = window.Vue.computed(() => judokaProfile.value.profileSubtitle);
+    const heroAvatar = window.Vue.computed(() => judokaProfile.value.heroAvatar);
+    const heroName = window.Vue.computed(() => judokaProfile.value.heroName);
+    const heroSummary = window.Vue.computed(() => judokaProfile.value.heroSummary);
+    const heroCategory = window.Vue.computed(() => judokaProfile.value.heroCategory);
+    const heroSeason = window.Vue.computed(() => judokaProfile.value.heroSeason);
+    const seasonLabel = window.Vue.computed(() => judokaProfile.value.seasonLabel);
+    const seasonCompetitionCount = window.Vue.computed(
+      () => judokaProfile.value.seasonCompetitionCount
+    );
+    const seasonCombatCount = window.Vue.computed(() => judokaProfile.value.seasonCombatCount);
+    const seasonWins = window.Vue.computed(() => judokaProfile.value.seasonWins);
+    const seasonLosses = window.Vue.computed(() => judokaProfile.value.seasonLosses);
+    const seasonDraws = window.Vue.computed(() => judokaProfile.value.seasonDraws);
+    const victoryRate = window.Vue.computed(() => judokaProfile.value.victoryRate);
+    const hasCombatProfileExtras = window.Vue.computed(
+      () => judokaProfile.value.hasCombatProfileExtras
+    );
+    const combatProfile = window.Vue.computed(() => judokaProfile.value.combatProfile);
+    const hasCompetitionResults = window.Vue.computed(
+      () => judokaProfile.value.hasCompetitionResults
+    );
+    const competitionResultsPage = window.Vue.computed(
+      () => competitionResultsPagination.value.pageItems
+    );
+    const competitionResultsTotalPages = window.Vue.computed(
+      () => competitionResultsPagination.value.totalPages
+    );
+    const competitionResultsCurrentPage = window.Vue.computed(
+      () => competitionResultsPagination.value.currentPage
+    );
+    const competitionResultsTotalCount = window.Vue.computed(
+      () => competitionResultsPagination.value.totalItems
+    );
+    const competitionResultsCanShowPreviousPage = window.Vue.computed(
+      () => competitionResultsPagination.value.canShowPreviousPage
+    );
+    const competitionResultsCanShowNextPage = window.Vue.computed(
+      () => competitionResultsPagination.value.canShowNextPage
+    );
+
+    function ensureJudokaView() {
+      if (!window.Vue || mounted) {
+        return;
+      }
+      mounted = true;
+      ui.createMountedViewModel(
+        "judokaView",
+        {},
+        {
+          showHome: () => app.showHome && app.showHome(),
+          showCompetitionResultsPreviousPage,
+          showCompetitionResultsNextPage
+        },
+        {
+          profileTitle,
+          profileSubtitle,
+          heroAvatar,
+          heroName,
+          heroSummary,
+          heroCategory,
+          heroSeason,
+          seasonLabel,
+          seasonCompetitionCount,
+          seasonCombatCount,
+          seasonWins,
+          seasonLosses,
+          seasonDraws,
+          victoryRate,
+          hasCombatProfileExtras,
+          combatProfile,
+          hasCompetitionResults,
+          competitionResultsPage,
+          competitionResultsTotalPages,
+          competitionResultsCurrentPage,
+          competitionResultsTotalCount,
+          competitionResultsCanShowPreviousPage,
+          competitionResultsCanShowNextPage
+        }
       );
-      judokaViewModel.competitionResultsPage = pagination.pageItems;
-      judokaViewModel.competitionResultsTotalPages = pagination.totalPages;
-      judokaViewModel.competitionResultsCurrentPage = pagination.currentPage;
-      judokaViewModel.competitionResultsTotalCount = pagination.totalItems;
-      judokaViewModel.competitionResultsCanShowPreviousPage = pagination.canShowPreviousPage;
-      judokaViewModel.competitionResultsCanShowNextPage = pagination.canShowNextPage;
-      state.judokaCompetitionResultsCurrentPage = pagination.currentPage;
     }
 
     function showCompetitionResultsPreviousPage() {
@@ -85,12 +155,10 @@
         state.judokaCompetitionResultsCurrentPage - 1,
         1
       );
-      renderCompetitionResultsPage();
     }
 
     function showCompetitionResultsNextPage() {
       state.judokaCompetitionResultsCurrentPage += 1;
-      renderCompetitionResultsPage();
     }
 
     function showJudokaProfile(idJudoka: string, keepMessage?: boolean) {
@@ -102,37 +170,16 @@
         "getJudokaProfile",
         [idJudoka],
         (data) => {
+          ensureJudokaView();
           state.currentJudokaProfile = data;
-          renderJudokaProfile();
+          state.judokaCompetitionResultsCurrentPage = 1;
           showView("judokaView");
         },
         notifications.showError
       );
     }
 
-    function renderJudokaProfile() {
-      ensureJudokaViewModel();
-      if (!state.currentJudokaProfile) {
-        return;
-      }
-
-      const profileViewModel = window.createJudokaProfileViewModel(state.currentJudokaProfile, {
-        formatDate,
-        getClassementBadgeClass,
-        getJudokaDisplayName,
-        getJudokaInitials
-      });
-      if (!judokaViewModel || !profileViewModel) {
-        return;
-      }
-
-      Object.assign(judokaViewModel, profileViewModel);
-      state.judokaCompetitionResultsCurrentPage = 1;
-      renderCompetitionResultsPage();
-    }
-
     return {
-      renderJudokaProfile,
       showJudokaProfile
     };
   }

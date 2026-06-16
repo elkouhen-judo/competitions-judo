@@ -12,26 +12,39 @@
       accountEmail: ""
     };
     const defaultChildrenViewState = {
-      children: [],
-      hasChildren: false,
       childFormTitle: "Ajouter un enfant",
       saveChildButtonText: "Ajouter l'enfant",
       childForm: { ...defaultChildForm }
     };
     let childrenViewModel: (typeof defaultChildrenViewState) | null = null;
 
+    const children = window.Vue.computed(
+      () =>
+        window.KirokuScreenProjections.projectManagedChildren(state.managedChildren, {
+          getJudokaDisplayName: ui.getJudokaDisplayName,
+          normalizeDisplayName: ui.normalizeDisplayName,
+          normalizeLastName: ui.normalizeLastName
+        }).children
+    );
+    const hasChildren = window.Vue.computed(() => state.managedChildren.length > 0);
+
     function ensureChildrenViewModel() {
       if (!window.Vue || childrenViewModel) {
         return;
       }
 
-      childrenViewModel = ui.createMountedViewModel("childrenView", defaultChildrenViewState, {
-        deleteManagedChild,
-        editManagedChild,
-        resetChildForm,
-        saveManagedChild,
-        showHome: () => app.showHome && app.showHome()
-      });
+      childrenViewModel = ui.createMountedViewModel(
+        "childrenView",
+        defaultChildrenViewState,
+        {
+          deleteManagedChild,
+          editManagedChild,
+          resetChildForm,
+          saveManagedChild,
+          showHome: () => app.showHome && app.showHome()
+        },
+        { children, hasChildren }
+      );
     }
 
     function getChildrenViewModel() {
@@ -53,22 +66,10 @@
         (data) => {
           ensureChildrenViewModel();
           state.managedChildren = Array.isArray(data.children) ? data.children : [];
-          renderManagedChildren();
           resetChildForm();
           showView("childrenView");
         },
         showError
-      );
-    }
-
-    function renderManagedChildren() {
-      Object.assign(
-        getChildrenViewModel(),
-        window.KirokuScreenProjections.projectManagedChildren(state.managedChildren, {
-          getJudokaDisplayName: ui.getJudokaDisplayName,
-          normalizeDisplayName: ui.normalizeDisplayName,
-          normalizeLastName: ui.normalizeLastName
-        })
       );
     }
 
@@ -137,7 +138,6 @@
     return {
       deleteManagedChild,
       editManagedChild,
-      renderManagedChildren,
       resetChildForm,
       saveManagedChild,
       showChildrenManagement
