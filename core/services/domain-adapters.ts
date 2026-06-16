@@ -54,7 +54,9 @@ export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
     lastName: String(pick(user, "lastName", "nom") || ""),
     profileType: normalizeProfileType(pick(user, "profileType", "profile_type")),
     accessRole: normalizeAccessRole(pick(user, "accessRole", "role")),
-    ageCategory: String(pick(user, "ageCategory", "categorie_age") || "")
+    ageCategory: String(pick(user, "ageCategory", "categorie_age") || ""),
+    weightCategory: String(pick(user, "weightCategory", "categorie_poids") || ""),
+    beltColor: String(pick(user, "beltColor", "couleur_ceinture") || "")
   };
 }
 
@@ -70,7 +72,9 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
     ageCategory: String(pick(competition, "ageCategory", "categorie_age") || ""),
     weightCategory: String(pick(competition, "weightCategory", "categorie_poids") || ""),
     level: String(pick(competition, "level", "niveau") || ""),
-    result: (pick(competition, "result", "classement") || null) as string | null
+    result: (pick(competition, "result", "classement") || null) as string | null,
+    coachObjective: String(pick(competition, "coachObjective", "coach_objective") || ""),
+    coachReview: String(pick(competition, "coachReview", "coach_review") || "")
   };
 }
 

@@ -8,6 +8,14 @@
   },
   "rewrites": [
     {
+      "source": "/service-worker.js",
+      "destination": "/api/service-worker"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "/api/manifest"
+    },
+    {
       "source": "/api/rpc",
       "destination": "/api/rpc"
     },

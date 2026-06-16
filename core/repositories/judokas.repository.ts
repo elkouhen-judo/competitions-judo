@@ -24,7 +24,7 @@ export interface JudokasRepository {
   listByIds(ids: string[]): Promise<JudokaRow[]>;
   remove(idJudoka: string): Promise<void>;
   saveCoachNotes(idJudoka: string, notes: string): Promise<void>;
-  saveJudokaInfo(idJudoka: string, ageCategory: string): Promise<void>;
+  saveJudokaInfo(idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string): Promise<void>;
   update(idJudoka: string, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
   updateManagedChild(idJudoka: string, child: UpdateManagedChildResult): Promise<JudokaRow | null>;
 }
@@ -156,9 +156,11 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { notes_coach: notes });
   }
 
-  async function saveJudokaInfo(idJudoka: string, ageCategory: string): Promise<void> {
+  async function saveJudokaInfo(idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string): Promise<void> {
     await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
-      categorie_age: ageCategory
+      categorie_age: ageCategory,
+      categorie_poids: weightCategory,
+      couleur_ceinture: beltColor
     });
   }
 

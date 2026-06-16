@@ -2,7 +2,7 @@
 title: Kiroku Technical Specification
 version: 1.1
 date_created: 2026-06-11
-last_updated: 2026-06-14
+last_updated: 2026-06-16
 owner: competitions-judo
 tags:
   - architecture
@@ -57,12 +57,15 @@ This specification does not redefine product behavior already described in `docs
 ### 3.2 Vercel routing and runtime injection
 
 - **VCL-001**: Vercel shall route `/api/rpc` directly to the RPC endpoint.
-- **VCL-002**: Vercel shall route all non-API paths to `/api/app`.
+- **VCL-001a**: Vercel shall route `/service-worker.js` to `/api/service-worker` and `/manifest.webmanifest` to `/api/manifest` before the catch-all app shell route.
+- **VCL-002**: Vercel shall route all remaining non-API paths to `/api/app`.
 - **VCL-003**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
 - **VCL-006**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
 - **VCL-006a**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
+- **VCL-007**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
+- **VCL-008**: Browser RPC calls shall fail explicitly when offline and shall abort with a user-facing slow-network error when the mobile network does not answer in time.
 
 ### 3.3 Data model constraints
 
@@ -159,6 +162,8 @@ This specification does not redefine product behavior already described in `docs
 | Route | Destination | Behavior |
 |---|---|---|
 | `/api/rpc` | `/api/rpc` | Receives POST JSON requests for business actions |
+| `/service-worker.js` | `/api/service-worker` | Serves the root-scoped service worker that caches the app shell |
+| `/manifest.webmanifest` | `/api/manifest` | Serves the installable app manifest |
 | `/(.*)` | `/api/app` | Serves the application shell for all other paths |
 
 ### 4.3 `/api/app` response contract

@@ -29,6 +29,8 @@ export interface JudokaRow {
   role: string;
   notes_coach?: string;
   categorie_age?: string;
+  categorie_poids?: string;
+  couleur_ceinture?: string;
 }
 
 export interface CompetitionRow {
@@ -41,6 +43,8 @@ export interface CompetitionRow {
   categorie_poids: string;
   niveau: string;
   classement: string;
+  coach_objective: string;
+  coach_review: string;
 }
 
 export interface CombatRow {

@@ -33,8 +33,10 @@ function createInitialState(): KirokuAppState {
     managedChildren: [],
     canEditCurrentCompetition: false,
     isLoadingCompetition: false,
+    isSubmitting: false,
+    isOnline: typeof navigator === "undefined" ? true : navigator.onLine,
+    pendingRpcKeys: {},
     homeFilterJudokaId: "",
-    previousView: "homeView",
     accessInvitationSearch: "",
     accessInvitationCurrentPage: 1,
     competitionsCurrentPage: 1,
@@ -74,6 +76,9 @@ function createInitialState(): KirokuAppState {
       userName: "",
       roleLabel: ""
     });
+    const rpcTimeoutMs = 20000;
+    let currentViewId: ViewId = "loginView";
+    let hasNavigationState = false;
 
     ui.mountViewModel("appHeader", headerViewModel, {
       logoutUser
@@ -118,6 +123,8 @@ function createInitialState(): KirokuAppState {
     loginScreen = window.createKirokuLoginScreen(app);
     screens.login = loginScreen;
     app.loginScreen = loginScreen;
+    setupNetworkStatus();
+    setupHistoryNavigation();
 
     async function runServer<M extends RpcClientMethod>(
       method: M,
@@ -157,23 +164,34 @@ function createInitialState(): KirokuAppState {
       options: RunServerOptions = {}
     ) {
       const maxAttempts = options.retrySessionOnce ? 2 : 1;
+      const pendingKey = getPendingRpcKey(method, args, options);
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        try {
+      if (!state.isOnline) {
+        const offlineError = new Error("Connexion indisponible. Réessayez quand le réseau revient.");
+        failure ? failure(offlineError) : showError(offlineError);
+        return;
+      }
+
+      if (pendingKey && state.pendingRpcKeys[pendingKey]) {
+        showError({ message: "Action déjà en cours. Patientez quelques secondes avant de réessayer." });
+        return;
+      }
+
+      if (pendingKey) {
+        state.pendingRpcKeys[pendingKey] = true;
+        state.isSubmitting = true;
+      }
+
+      try {
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          try {
           const session = await getValidVercelSession();
           if (!session) {
             getLoginScreen().showVercelLogin();
             return;
           }
 
-          const response = await fetch("/api/rpc", {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + session.access_token,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ method, args })
-          });
+          const response = await fetchRpc(method, args, session.access_token);
           const payload = await readJsonResponse<{
             error?: string;
             result?: RpcClientResult<M>;
@@ -218,7 +236,57 @@ function createInitialState(): KirokuAppState {
           }
           failure ? failure(error) : showError(error);
           return;
+          }
         }
+      } finally {
+        if (pendingKey) {
+          delete state.pendingRpcKeys[pendingKey];
+          state.isSubmitting = Object.keys(state.pendingRpcKeys).length > 0;
+        }
+      }
+    }
+
+    function getPendingRpcKey<M extends RpcClientMethod>(
+      method: M,
+      args: RpcClientArgs<M>,
+      options: RunServerOptions
+    ) {
+      if (!isMutatingRpcMethod(String(method))) {
+        return "";
+      }
+
+      return options.actionKey || `${String(method)}:${JSON.stringify(args)}`;
+    }
+
+    function isMutatingRpcMethod(method: string) {
+      return !method.startsWith("get");
+    }
+
+    async function fetchRpc<M extends RpcClientMethod>(
+      method: M,
+      args: RpcClientArgs<M>,
+      accessToken: string
+    ) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), rpcTimeoutMs);
+      try {
+        return await fetch("/api/rpc", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + accessToken,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ method, args }),
+          signal: controller.signal
+        });
+      } catch (error) {
+        if (error && typeof error === "object" && "name" in error && error.name === "AbortError") {
+          throw new Error("Réseau trop lent. Vérifiez la connexion et réessayez.");
+        }
+
+        throw error;
+      } finally {
+        window.clearTimeout(timeout);
       }
     }
 
@@ -324,12 +392,89 @@ function createInitialState(): KirokuAppState {
       screens.home.showHome();
     }
 
-    function showView(id: ViewId) {
+    function setupNetworkStatus() {
+      window.addEventListener("online", () => {
+        state.isOnline = true;
+        showSuccess("Connexion rétablie.");
+      });
+      window.addEventListener("offline", () => {
+        state.isOnline = false;
+        showError({ message: "Connexion perdue. Les actions seront bloquées jusqu'au retour du réseau." });
+      });
+    }
+
+    function setupHistoryNavigation() {
+      window.addEventListener("popstate", (event) => {
+        const viewId = readHistoryViewId(event.state);
+        showView(viewId, { skipHistory: true, preserveScroll: true });
+      });
+    }
+
+    function readHistoryViewId(stateValue: unknown): ViewId {
+      if (stateValue && typeof stateValue === "object" && "kirokuView" in stateValue) {
+        const viewId = String((stateValue as { kirokuView?: unknown }).kirokuView || "");
+        if (isViewId(viewId)) {
+          return viewId;
+        }
+      }
+
+      const hashView = getViewFromHash(window.location.hash);
+      return hashView || currentViewId || "homeView";
+    }
+
+    function isViewId(value: string): value is ViewId {
+      return viewIds.includes(value as ViewId);
+    }
+
+    function getViewFromHash(hash: string): ViewId | "" {
+      const slug = String(hash || "").replace(/^#\/?/, "");
+      const found = viewIds.find((viewId) => viewId.replace(/View$/, "").toLowerCase() === slug);
+      return found || "";
+    }
+
+    function getViewHash(id: ViewId) {
+      return `#${id.replace(/View$/, "").toLowerCase()}`;
+    }
+
+    function syncHistory(id: ViewId, replace: boolean) {
+      const stateValue = { kirokuView: id };
+      const url = getViewHash(id);
+      if (replace || !hasNavigationState) {
+        window.history.replaceState(stateValue, "", url);
+        hasNavigationState = true;
+        return;
+      }
+
+      if (window.history.state && window.history.state.kirokuView === id) {
+        return;
+      }
+
+      window.history.pushState(stateValue, "", url);
+    }
+
+    function focusActiveView(id: ViewId, preserveScroll: boolean) {
+      const view = $(id);
+      if (!preserveScroll) {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      view.setAttribute("tabindex", "-1");
+      window.Vue.nextTick(() => view.focus({ preventScroll: true }));
+    }
+
+    function showView(
+      id: ViewId,
+      options: { replace?: boolean; skipHistory?: boolean; preserveScroll?: boolean } = {}
+    ) {
       viewIds.forEach((viewId) => {
         $(viewId).classList.add("hidden");
       });
 
       $(id).classList.remove("hidden");
+      currentViewId = id;
+      if (!options.skipHistory) {
+        syncHistory(id, Boolean(options.replace));
+      }
+      focusActiveView(id, Boolean(options.preserveScroll));
     }
 
     app.showHome = showHome;

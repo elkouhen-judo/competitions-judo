@@ -45,6 +45,22 @@ test("mobile action bars are available for primary form and detail actions", () 
   assert.match(bundle, /class="form-actions mobile-action-bar"/);
 });
 
+test("mobile navigation uses browser history and restores focus", () => {
+  assert.match(client, /window\.addEventListener\("popstate"/);
+  assert.match(client, /window\.history\.pushState/);
+  assert.match(client, /window\.history\.replaceState/);
+  assert.match(client, /view\.setAttribute\("tabindex", "-1"\)/);
+  assert.match(client, /view\.focus\(\{ preventScroll: true \}\)/);
+});
+
+test("mobile mutations are guarded against double taps and offline network", () => {
+  assert.match(client, /pendingRpcKeys/);
+  assert.match(client, /Action déjà en cours/);
+  assert.match(client, /Connexion indisponible/);
+  assert.match(client, /Réseau trop lent/);
+  assert.match(bundle, /:disabled="isSubmitting"/);
+});
+
 test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /id="toastLayer" class="toast-layer"/);
   assert.match(bundle, /\.toast-layer\s*\{/);
@@ -93,7 +109,7 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
   assert.match(
     bundle,
-    /id="competitionAdminActions" class="competition-management-actions" :class="\{ hidden: !canEditCompetition \}"/
+    /id="competitionAdminActions" class="competition-management-actions" v-show="canEditCompetition"/
   );
   assert.match(bundle, /id="editCompetitionButton"/);
   assert.match(bundle, /id="finalizeCompetitionButton"/);
@@ -286,7 +302,7 @@ test("children screen is mounted through Vue 3 for the progressive screen migrat
     bundle,
     /id="child_prenom" autocomplete="given-name" v-model\.trim="childForm\.firstName"/
   );
-  assert.match(bundle, /id="saveChildButton" @click="saveManagedChild\(\)"/);
+  assert.match(bundle, /id="saveChildButton" type="button" :disabled="isSubmitting" @click="saveManagedChild\(\)"/);
   assert.match(bundle, /function ensureChildrenViewModel\(\)/);
 });
 
@@ -306,7 +322,7 @@ test("admins screen is mounted through Vue 3 for the progressive screen migratio
     bundle,
     /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/
   );
-  assert.match(bundle, /id="saveAdminButton" @click="saveAdminRole\(\)"/);
+  assert.match(bundle, /id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole\(\)"/);
   assert.match(bundle, /function ensureAdminsViewModel\(\)/);
 });
 
@@ -317,7 +333,7 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
   assert.doesNotMatch(bundle, /combatsHtml/);
   assert.match(
     bundle,
-    /id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm\(\)"/
+    /id="finalizeCompetitionButton" class="button-secondary" type="button" v-show="canFinalizeCompetition" :disabled="isSubmitting" @click="showCompetitionFinalizationForm\(\)"/
   );
   assert.match(bundle, /function ensureCompetitionDetailViewModel\(\)/);
 });
@@ -388,8 +404,8 @@ test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /v-for="option in filterOptions"/);
   assert.match(bundle, /@blur="hideHomeFilterOptions\(\)"/);
   assert.match(bundle, /@blur="hideCompetitionOwnerOptions\(\)"/);
-  assert.match(bundle, /@pointerdown\.prevent="selectCompetitionOwner\(option\)"/);
-  assert.match(bundle, /@pointerdown\.prevent="selectFilterJudoka\(option\)"/);
+  assert.match(bundle, /@mousedown\.prevent="selectCompetitionOwner\(option\)"/);
+  assert.match(bundle, /@mousedown\.prevent="selectFilterJudoka\(option\)"/);
   assert.match(client, /function hideHomeFilterOptions\(\)/);
   assert.match(client, /function hideCompetitionOwnerOptions\(\)/);
   assert.match(client, /refreshHomeFilterOptions\(""\)/);
@@ -435,7 +451,7 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
     bundle,
     /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/
   );
-  assert.match(bundle, /id="saveCombatButton" @click="saveCombat\(\)"/);
+  assert.match(bundle, /id="saveCombatButton" type="button" :disabled="isSubmitting" @click="saveCombat\(\)"/);
   assert.match(bundle, /@click="showCombatForm\(\)"/);
   assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
   assert.match(bundle, /function ensureCombatFormViewModel\(\)/);

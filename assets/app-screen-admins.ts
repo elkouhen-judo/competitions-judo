@@ -12,7 +12,6 @@
     };
     const defaultAdminsViewState = {
       accessInvitationForm: { ...defaultAccessInvitationForm },
-      accessInvitationSearch: "",
       adminEmail: ""
     };
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
@@ -78,6 +77,8 @@
     const hasAccessInvitations = window.Vue.computed(
       () => adminsInvitationsProjection.value.hasAccessInvitations
     );
+    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+    const accessInvitationSearch = window.Vue.computed(() => state.accessInvitationSearch);
 
     function ensureAdminsViewModel() {
       if (adminsViewModel) {
@@ -112,12 +113,14 @@
           adminsCanShowPreviousPage,
           adminsCanShowNextPage,
           accessInvitations,
+          accessInvitationSearch,
           accessInvitationsSummary,
           accessInvitationsEmptyMessage,
           canResetAccessInvitationSearch,
           canShowPreviousAccessInvitationPage,
           canShowNextAccessInvitationPage,
-          hasAccessInvitations
+          hasAccessInvitations,
+          isSubmitting
         }
       );
     }
@@ -160,16 +163,12 @@
     }
 
     function updateAccessInvitationSearch(value: string) {
-      const viewModel = getAdminsViewModel();
       state.accessInvitationSearch = value || "";
-      viewModel.accessInvitationSearch = value || "";
       state.accessInvitationCurrentPage = 1;
     }
 
     function resetAccessInvitationSearch() {
-      const viewModel = getAdminsViewModel();
       state.accessInvitationSearch = "";
-      viewModel.accessInvitationSearch = "";
       state.accessInvitationCurrentPage = 1;
     }
 
@@ -197,8 +196,7 @@
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
           state.adminsCurrentPage = 1;
-          const viewModel = getAdminsViewModel();
-          viewModel.accessInvitationSearch = "";
+          ensureAdminsViewModel();
           resetAccessInvitationForm();
           resetAdminForm();
           showView("adminsView");

@@ -41,14 +41,16 @@
     } = profile;
     const highlightedCompetition =
       lastCompetition || (competitionResults && competitionResults[0]) || null;
-    const category =
-      highlightedCompetition && highlightedCompetition.category
-        ? highlightedCompetition.category
-        : "Catégorie à confirmer";
+    const ageCategory =
+      judoka.ageCategory ||
+      (highlightedCompetition && highlightedCompetition.category) ||
+      "";
     const weightCategory =
-      highlightedCompetition && highlightedCompetition.weightCategory
-        ? highlightedCompetition.weightCategory
-        : "Poids à confirmer";
+      judoka.weightCategory ||
+      (highlightedCompetition && highlightedCompetition.weightCategory) ||
+      "";
+    const heroCategoryParts = [ageCategory, weightCategory].filter(Boolean);
+    const beltColor = judoka.beltColor || "";
     const normalizedCombatProfile = combatProfile || emptyCombatProfile;
 
     return {
@@ -64,7 +66,8 @@
       heroAvatar: getJudokaInitials(judoka),
       heroName: getJudokaDisplayName(judoka) || "Judoka",
       heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
-      heroCategory: `${category} · ${weightCategory}`,
+      heroCategory: heroCategoryParts.length ? heroCategoryParts.join(" · ") : "Catégorie à renseigner",
+      heroBeltColor: beltColor,
       heroSeason: `Saison ${season.label}`,
       combatProfile: {
         victoryIppon: String(normalizedCombatProfile.victoryIppon || 0),

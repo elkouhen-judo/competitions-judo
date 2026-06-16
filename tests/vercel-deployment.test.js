@@ -130,10 +130,18 @@ test("vercel config routes the app shell and rpc endpoint", () => {
   assert.equal(vercel.version, 2);
   assert.equal(vercel.installCommand, "npm install --include=dev");
   assert.deepEqual(vercel.rewrites[0], {
+    source: "/service-worker.js",
+    destination: "/api/service-worker"
+  });
+  assert.deepEqual(vercel.rewrites[1], {
+    source: "/manifest.webmanifest",
+    destination: "/api/manifest"
+  });
+  assert.deepEqual(vercel.rewrites[2], {
     source: "/api/rpc",
     destination: "/api/rpc"
   });
-  assert.deepEqual(vercel.rewrites[1], {
+  assert.deepEqual(vercel.rewrites[3], {
     source: "/(.*)",
     destination: "/api/app"
   });
@@ -151,6 +159,8 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(appShell, /appUrl:/);
   assert.match(appShell, /html\.replace\("<\/head>",/);
   assert.match(html, /href="\/api\/styles"/);
+  assert.match(html, /viewport-fit=cover/);
+  assert.match(html, /rel="manifest" href="\/manifest\.webmanifest"/);
   assert.match(html, /src="\/api\/client" defer/);
   assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
   assert.match(client, /vue v3\./);
@@ -158,6 +168,9 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(uiBundle, /class="brand"/);
   assert.match(uiBundle, /async function runServer\(method,\s*args,\s*success,\s*failure\)/);
   assert.match(uiBundle, /fetch\("\/api\/rpc"/);
+  assert.match(uiBundle, /navigator\.serviceWorker\.register\("\/service-worker\.js"\)/);
+  assert.match(uiBundle, /Réseau trop lent/);
+  assert.match(uiBundle, /Connexion indisponible/);
   assert.match(uiBundle, /Authorization: "Bearer " \+ session\.access_token/);
   assert.doesNotMatch(uiBundle, /google\.script/);
 });
@@ -394,7 +407,7 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
   assert.match(
     uiBundle,
-    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary" :class="\{ hidden: !canFinalizeCompetition \}" @click="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/
+    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary" type="button" v-show="canFinalizeCompetition" :disabled="isSubmitting" @click="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/
   );
   assert.match(uiBundle, /function finalizeCompetition\(\)/);
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
@@ -503,7 +516,7 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.match(uiBundle, /id="accessInvitationFilter"/);
   assert.match(uiBundle, /id="invite_email"/);
   assert.match(uiBundle, /id="invite_profile_type"/);
-  assert.match(uiBundle, /id="saveInvitationButton" @click="saveAccessInvitation\(\)"/);
+  assert.match(uiBundle, /id="saveInvitationButton" type="button" :disabled="isSubmitting" @click="saveAccessInvitation\(\)"/);
   assert.match(uiBundle, /function saveAccessInvitation\(\)/);
   assert.match(uiBundle, /function deleteAccessInvitation\(email\)/);
   assert.match(uiBundle, /function updateAccessInvitationSearch\(value\)/);

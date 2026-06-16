@@ -28,6 +28,7 @@
         }).children
     );
     const hasChildren = window.Vue.computed(() => state.managedChildren.length > 0);
+    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
 
     function ensureChildrenViewModel() {
       if (childrenViewModel) {
@@ -44,7 +45,7 @@
           saveManagedChild,
           showHome: () => app.showHome && app.showHome()
         },
-        { children, hasChildren }
+        { children, hasChildren, isSubmitting }
       );
     }
 

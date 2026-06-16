@@ -170,13 +170,23 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
   async function saveJudokaInfo(
     email: string,
     idJudoka: string,
-    ageCategory: string
+    ageCategory: string,
+    weightCategory: string,
+    beltColor: string
   ) {
-    await requireCoachUser(email);
+    const user = await userContextService.getCurrentUser(email);
+    if (!user) throw new Error(`Accès refusé pour : ${email}`);
     if (!idJudoka) throw new Error("Judoka obligatoire.");
+    const domainUser = createJudoka(toCanonicalJudoka(user));
+    const isSelf = user.id_judoka === idJudoka;
+    if (!domainUser.isCoach() && !domainUser.isAdmin() && !isSelf) {
+      throw new Error("Modification de profil non autorisée.");
+    }
     await judokasRepository.saveJudokaInfo(
       idJudoka,
-      String(ageCategory || "")
+      String(ageCategory || ""),
+      String(weightCategory || ""),
+      String(beltColor || "")
     );
     return { success: true, message: "Profil mis à jour." };
   }
