@@ -36,14 +36,20 @@ export interface ToastErrorLike {
   message?: string;
 }
 
+export interface ComputedRef<T> {
+  readonly value: T;
+}
+
 export interface VueLike {
   reactive<T extends object>(value: T): T;
+  computed<T>(getter: () => T): ComputedRef<T>;
   createApp(options: { setup(): Record<string, unknown> }): { mount(selector: string): void };
   toRefs<T extends object>(value: T): { [K in keyof T]: { value: T[K] } };
   nextTick(callback: () => void): Promise<void>;
 }
 
 export type ActionMap = Record<string, (...args: never[]) => unknown>;
+export type ComputedRefMap = Record<string, ComputedRef<unknown>>;
 
 export type ViewId =
   | "loginView"
@@ -61,7 +67,12 @@ export type ViewId =
 export interface KirokuUi {
   $(id: string): HTMLElement;
   cleanText(value: unknown): string;
-  createMountedViewModel<T extends object>(id: string, defaultState: T, actions?: ActionMap): T;
+  createMountedViewModel<T extends object>(
+    id: string,
+    defaultState: T,
+    actions?: ActionMap,
+    computedRefs?: ComputedRefMap
+  ): T;
   formatDate(value: unknown): string;
   formatDateTime(value: unknown): string;
   formatResultat(value: unknown): string;
@@ -70,7 +81,12 @@ export interface KirokuUi {
   getCurrentLocalDate(): string;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
-  mountViewModel<T extends object>(id: string, viewModel: T, actions?: ActionMap): void;
+  mountViewModel<T extends object>(
+    id: string,
+    viewModel: T,
+    actions?: ActionMap,
+    computedRefs?: ComputedRefMap
+  ): void;
   normalizeDisplayName(value: unknown): string;
   normalizeLastName(value: unknown): string;
   showView(id: ViewId): void;
@@ -213,7 +229,6 @@ export interface HomeScreen {
 }
 
 export interface JudokaScreen {
-  renderJudokaProfile(): void;
   showJudokaProfile(idJudoka?: string, keepMessage?: boolean): void;
 }
 

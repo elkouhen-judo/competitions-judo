@@ -17,6 +17,7 @@
 
   type ViewId = (typeof viewIds)[number];
   type ActionMap = Record<string, (...args: never[]) => unknown>;
+  type ComputedRefMap = import("./types").ComputedRefMap;
 
   function $<TElement extends HTMLElement = HTMLElement>(id: string): TElement {
     const element = document.getElementById(id);
@@ -128,12 +129,14 @@
   function mountViewModel<TViewModel extends object>(
     id: string,
     viewModel: TViewModel,
-    actions: ActionMap = {}
+    actions: ActionMap = {},
+    computedRefs: ComputedRefMap = {}
   ): void {
     window.Vue.createApp({
       setup() {
         return {
           ...window.Vue.toRefs(viewModel),
+          ...computedRefs,
           ...actions
         };
       }
@@ -151,10 +154,11 @@
   function createMountedViewModel<TViewModel extends object>(
     id: string,
     defaultState: TViewModel,
-    actions: ActionMap = {}
+    actions: ActionMap = {},
+    computedRefs: ComputedRefMap = {}
   ): TViewModel {
     const viewModel = window.Vue.reactive(cloneDefaultState(defaultState));
-    mountViewModel(id, viewModel, actions);
+    mountViewModel(id, viewModel, actions, computedRefs);
     return viewModel;
   }
 

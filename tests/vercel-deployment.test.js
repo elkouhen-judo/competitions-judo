@@ -354,7 +354,10 @@ test("judoka home keeps competition creation available", () => {
   );
   assert.match(uiBundle, /v-for="competition in competitions"/);
   assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
-  assert.match(uiBundle, /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\}\)/);
+  assert.match(
+    uiBundle,
+    /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\},\s*computedRefs = \{\}\)/
+  );
   assert.match(uiBundle, /ui\.createMountedViewModel\("homeView", defaultHomeViewState,/);
   assert.doesNotMatch(
     uiBundle,
@@ -573,7 +576,6 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /rank-silver/);
   assert.match(uiBundle, /rank-bronze/);
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
-  assert.match(uiBundle, /function renderJudokaProfile\(\)/);
   assert.match(
     uiBundle,
     /return \[normalizeDisplayName\(j && j\.firstName\), normalizeLastName\(j && j\.lastName\)\]\s*\.filter\(Boolean\)\s*\.join\(" "\);/

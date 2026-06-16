@@ -13,45 +13,112 @@
     const defaultAdminsViewState = {
       accessInvitationForm: { ...defaultAccessInvitationForm },
       accessInvitationSearch: "",
-      accessInvitations: [],
-      accessInvitationsSummary: "",
-      accessInvitationsEmptyMessage: "Aucune invitation en attente.",
-      canResetAccessInvitationSearch: false,
-      canShowPreviousAccessInvitationPage: false,
-      canShowNextAccessInvitationPage: false,
-      hasAccessInvitations: false,
-      admins: [],
-      adminsPage: [],
-      adminsTotalPages: 1,
-      adminsCurrentPage: 1,
-      adminsTotalCount: 0,
-      adminsCanShowPreviousPage: false,
-      adminsCanShowNextPage: false,
-      hasAdmins: false,
       adminEmail: ""
     };
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
+
+    const adminsProjection = window.Vue.computed(() =>
+      window.KirokuScreenProjections.projectManagedAdmins(state.managedAdmins, state.currentUser, {
+        getJudokaDisplayName
+      })
+    );
+    const adminsPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        adminsProjection.value.admins,
+        state.adminsCurrentPage,
+        defaultListPageSize
+      )
+    );
+    const adminsInvitationsProjection = window.Vue.computed(() => {
+      const filteredInvitations = !state.accessInvitationSearch
+        ? state.managedAccessInvitations
+        : state.managedAccessInvitations.filter((invitation) =>
+            cleanText(invitation.email).toLowerCase().includes(state.accessInvitationSearch)
+          );
+      return window.KirokuScreenProjections.projectAccessInvitations(
+        filteredInvitations,
+        state.accessInvitationSearch,
+        state.accessInvitationCurrentPage,
+        defaultAccessInvitationVisibleCount,
+        { formatDateTime }
+      );
+    });
+
+    const admins = window.Vue.computed(() => adminsProjection.value.admins);
+    const hasAdmins = window.Vue.computed(() => adminsProjection.value.hasAdmins);
+    const adminsPage = window.Vue.computed(() => adminsPagination.value.pageItems);
+    const adminsTotalPages = window.Vue.computed(() => adminsPagination.value.totalPages);
+    const adminsCurrentPage = window.Vue.computed(() => adminsPagination.value.currentPage);
+    const adminsTotalCount = window.Vue.computed(() => adminsPagination.value.totalItems);
+    const adminsCanShowPreviousPage = window.Vue.computed(
+      () => adminsPagination.value.canShowPreviousPage
+    );
+    const adminsCanShowNextPage = window.Vue.computed(
+      () => adminsPagination.value.canShowNextPage
+    );
+    const accessInvitations = window.Vue.computed(
+      () => adminsInvitationsProjection.value.accessInvitations
+    );
+    const accessInvitationsSummary = window.Vue.computed(
+      () => adminsInvitationsProjection.value.accessInvitationsSummary
+    );
+    const accessInvitationsEmptyMessage = window.Vue.computed(
+      () => adminsInvitationsProjection.value.accessInvitationsEmptyMessage
+    );
+    const canResetAccessInvitationSearch = window.Vue.computed(
+      () => adminsInvitationsProjection.value.canResetAccessInvitationSearch
+    );
+    const canShowPreviousAccessInvitationPage = window.Vue.computed(
+      () => adminsInvitationsProjection.value.canShowPreviousAccessInvitationPage
+    );
+    const canShowNextAccessInvitationPage = window.Vue.computed(
+      () => adminsInvitationsProjection.value.canShowNextAccessInvitationPage
+    );
+    const hasAccessInvitations = window.Vue.computed(
+      () => adminsInvitationsProjection.value.hasAccessInvitations
+    );
 
     function ensureAdminsViewModel() {
       if (!window.Vue || adminsViewModel) {
         return;
       }
 
-      adminsViewModel = ui.createMountedViewModel("adminsView", defaultAdminsViewState, {
-        deleteAccessInvitation,
-        resetAccessInvitationSearch,
-        resetAccessInvitationForm,
-        resetAdminForm,
-        revokeAdminRole,
-        saveAccessInvitation,
-        saveAdminRole,
-        showNextAccessInvitationPage,
-        showPreviousAccessInvitationPage,
-        showAdminsPreviousPage,
-        showAdminsNextPage,
-        showHome: () => app.showHome && app.showHome(),
-        updateAccessInvitationSearch
-      });
+      adminsViewModel = ui.createMountedViewModel(
+        "adminsView",
+        defaultAdminsViewState,
+        {
+          deleteAccessInvitation,
+          resetAccessInvitationSearch,
+          resetAccessInvitationForm,
+          resetAdminForm,
+          revokeAdminRole,
+          saveAccessInvitation,
+          saveAdminRole,
+          showNextAccessInvitationPage,
+          showPreviousAccessInvitationPage,
+          showAdminsPreviousPage,
+          showAdminsNextPage,
+          showHome: () => app.showHome && app.showHome(),
+          updateAccessInvitationSearch
+        },
+        {
+          admins,
+          hasAdmins,
+          adminsPage,
+          adminsTotalPages,
+          adminsCurrentPage,
+          adminsTotalCount,
+          adminsCanShowPreviousPage,
+          adminsCanShowNextPage,
+          accessInvitations,
+          accessInvitationsSummary,
+          accessInvitationsEmptyMessage,
+          canResetAccessInvitationSearch,
+          canShowPreviousAccessInvitationPage,
+          canShowNextAccessInvitationPage,
+          hasAccessInvitations
+        }
+      );
     }
 
     function getAdminsViewModel() {
@@ -91,52 +158,11 @@
       });
     }
 
-    function renderManagedAccessInvitations() {
-      const viewModel = getAdminsViewModel();
-      if (!state.managedAccessInvitations.length) {
-        Object.assign(viewModel, {
-          accessInvitations: [],
-          accessInvitationsSummary: "",
-          accessInvitationsEmptyMessage: "Aucune invitation en attente.",
-          canResetAccessInvitationSearch: false,
-          canShowPreviousAccessInvitationPage: false,
-          canShowNextAccessInvitationPage: false,
-          hasAccessInvitations: false
-        });
-        return;
-      }
-      const filteredInvitations = getFilteredAccessInvitations();
-      const pageSize = defaultAccessInvitationVisibleCount;
-      Object.assign(
-        viewModel,
-        window.KirokuScreenProjections.projectAccessInvitations(
-          filteredInvitations,
-          state.accessInvitationSearch,
-          state.accessInvitationCurrentPage,
-          pageSize,
-          {
-            formatDateTime
-          }
-        )
-      );
-    }
-
-    function getFilteredAccessInvitations() {
-      if (!state.accessInvitationSearch) {
-        return state.managedAccessInvitations;
-      }
-
-      return state.managedAccessInvitations.filter((invitation) =>
-        cleanText(invitation.email).toLowerCase().includes(state.accessInvitationSearch)
-      );
-    }
-
     function updateAccessInvitationSearch(value: string) {
       const viewModel = getAdminsViewModel();
       state.accessInvitationSearch = cleanText(value).toLowerCase();
       viewModel.accessInvitationSearch = value || "";
       state.accessInvitationCurrentPage = 1;
-      renderManagedAccessInvitations();
     }
 
     function resetAccessInvitationSearch() {
@@ -144,17 +170,14 @@
       state.accessInvitationSearch = "";
       viewModel.accessInvitationSearch = "";
       state.accessInvitationCurrentPage = 1;
-      renderManagedAccessInvitations();
     }
 
     function showNextAccessInvitationPage() {
       state.accessInvitationCurrentPage += 1;
-      renderManagedAccessInvitations();
     }
 
     function showPreviousAccessInvitationPage() {
       state.accessInvitationCurrentPage = Math.max(state.accessInvitationCurrentPage - 1, 1);
-      renderManagedAccessInvitations();
     }
 
     function showAdminsManagement(keepMessage?: boolean) {
@@ -166,7 +189,6 @@
         "getAdminsManagement",
         [],
         (data) => {
-          const viewModel = getAdminsViewModel();
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
           state.managedAccessInvitations = Array.isArray(data.accessInvitations)
             ? data.accessInvitations
@@ -174,9 +196,8 @@
           state.accessInvitationSearch = "";
           state.accessInvitationCurrentPage = 1;
           state.adminsCurrentPage = 1;
+          const viewModel = getAdminsViewModel();
           viewModel.accessInvitationSearch = "";
-          renderManagedAdmins();
-          renderManagedAccessInvitations();
           resetAccessInvitationForm();
           resetAdminForm();
           showView("adminsView");
@@ -185,40 +206,12 @@
       );
     }
 
-    function renderManagedAdmins() {
-      const viewModel = getAdminsViewModel();
-      Object.assign(
-        viewModel,
-        window.KirokuScreenProjections.projectManagedAdmins(
-          state.managedAdmins,
-          state.currentUser,
-          {
-            getJudokaDisplayName
-          }
-        )
-      );
-      const pagination = window.KirokuScreenProjections.paginateList(
-        viewModel.admins,
-        state.adminsCurrentPage,
-        defaultListPageSize
-      );
-      viewModel.adminsPage = pagination.pageItems;
-      viewModel.adminsTotalPages = pagination.totalPages;
-      viewModel.adminsCurrentPage = pagination.currentPage;
-      viewModel.adminsTotalCount = pagination.totalItems;
-      viewModel.adminsCanShowPreviousPage = pagination.canShowPreviousPage;
-      viewModel.adminsCanShowNextPage = pagination.canShowNextPage;
-      state.adminsCurrentPage = pagination.currentPage;
-    }
-
     function showAdminsPreviousPage() {
       state.adminsCurrentPage = Math.max(state.adminsCurrentPage - 1, 1);
-      renderManagedAdmins();
     }
 
     function showAdminsNextPage() {
       state.adminsCurrentPage += 1;
-      renderManagedAdmins();
     }
 
     function resetAdminForm() {
@@ -258,8 +251,6 @@
 
     return {
       deleteAccessInvitation,
-      renderManagedAccessInvitations,
-      renderManagedAdmins,
       resetAccessInvitationForm,
       resetAccessInvitationSearch,
       resetAdminForm,

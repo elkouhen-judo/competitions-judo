@@ -228,8 +228,14 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
   assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
   assert.match(client, /vue v3\./);
   assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /function mountViewModel\(id, viewModel, actions = \{\}\)/);
-  assert.match(bundle, /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\}\)/);
+  assert.match(
+    bundle,
+    /function mountViewModel\(id, viewModel, actions = \{\}, computedRefs = \{\}\)/
+  );
+  assert.match(
+    bundle,
+    /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\},\s*computedRefs = \{\}\)/
+  );
   assert.match(bundle, /ui\.createMountedViewModel\("loginView", defaultLoginState,/);
   assert.match(bundle, /v-model\.trim="registration\.firstName"/);
   assert.match(bundle, /@submit\.prevent="submitProfileRegistration\(\)"/);
@@ -258,7 +264,7 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /v-for="result in competitionResultsPage"/);
   assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
   assert.doesNotMatch(bundle, /lastCompetitionHtml|bestResultsHtml/);
-  assert.match(bundle, /function ensureJudokaViewModel\(\)/);
+  assert.match(bundle, /function ensureJudokaView\(\)/);
 });
 
 test("judoka profile client script stays parseable", () => {

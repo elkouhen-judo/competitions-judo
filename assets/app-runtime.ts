@@ -20,7 +20,7 @@ import type {
     const runtimeConfig: RuntimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
     const defaultAccessInvitationVisibleCount = 5;
     const defaultListPageSize = 10;
-    const state = createInitialState();
+    const state = window.Vue.reactive(createInitialState());
 
     function createInitialState(): KirokuAppState {
       return {
