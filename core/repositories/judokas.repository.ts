@@ -18,11 +18,13 @@ export interface JudokaChangesInput {
 export interface JudokasRepository {
   getByEmail(email: string): Promise<JudokaRow | null>;
   getById(idJudoka: string): Promise<JudokaRow | null>;
-  insert(judoka: JudokaModel): Promise<JudokaRow | null>;
+  insert(judoka: JudokaModel, extras?: { categorie_age?: string }): Promise<JudokaRow | null>;
   listAdmins(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
   listByIds(ids: string[]): Promise<JudokaRow[]>;
   remove(idJudoka: string): Promise<void>;
+  saveCoachNotes(idJudoka: string, notes: string): Promise<void>;
+  saveJudokaInfo(idJudoka: string, ageCategory: string): Promise<void>;
   update(idJudoka: string, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
   updateManagedChild(idJudoka: string, child: UpdateManagedChildResult): Promise<JudokaRow | null>;
 }
@@ -75,7 +77,8 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return {
       email: child.accountEmail,
       prenom: child.name.firstName,
-      nom: child.name.lastName
+      nom: child.name.lastName,
+      categorie_age: child.ageCategory
     };
   }
 
@@ -112,8 +115,15 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return supabaseSelectOne<JudokaRow>("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
-  async function insert(judoka: JudokaModel): Promise<JudokaRow | null> {
-    return supabaseInsert<JudokaRow>("judokas", toJudokaRecord(judoka));
+  async function insert(
+    judoka: JudokaModel,
+    extras?: { categorie_age?: string }
+  ): Promise<JudokaRow | null> {
+    const record: Record<string, unknown> = { ...toJudokaRecord(judoka) };
+    if (extras) {
+      if (extras.categorie_age !== undefined) record["categorie_age"] = extras.categorie_age;
+    }
+    return supabaseInsert<JudokaRow>("judokas", record);
   }
 
   async function update(
@@ -131,11 +141,25 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     idJudoka: string,
     child: UpdateManagedChildResult
   ): Promise<JudokaRow | null> {
-    return update(idJudoka, toManagedChildUpdateRecord(child));
+    return supabasePatch<JudokaRow>(
+      "judokas",
+      eqFilter("id_judoka", idJudoka),
+      toManagedChildUpdateRecord(child)
+    );
   }
 
   async function remove(idJudoka: string): Promise<void> {
     return supabaseDelete("judokas", eqFilter("id_judoka", idJudoka));
+  }
+
+  async function saveCoachNotes(idJudoka: string, notes: string): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { notes_coach: notes });
+  }
+
+  async function saveJudokaInfo(idJudoka: string, ageCategory: string): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
+      categorie_age: ageCategory
+    });
   }
 
   return {
@@ -146,6 +170,8 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     listAll,
     listByIds,
     remove,
+    saveCoachNotes,
+    saveJudokaInfo,
     update,
     updateManagedChild
   };

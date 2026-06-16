@@ -341,11 +341,11 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
+  assert.match(uiBundle, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
   assert.match(uiBundle, /showHomeActions = window\.Vue\.computed\(/);
   assert.match(
     uiBundle,
-    /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/
+    /<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<div v-if="canManageAdmins" class="section club-access-section">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/
   );
   assert.match(uiBundle, /v-for="competition in competitions"/);
   assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
@@ -399,7 +399,7 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(uiBundle, /function finalizeCompetition\(\)/);
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
   assert.doesNotMatch(uiBundle, /id="competition_classement"/);
-  assert.match(uiBundle, /id="competition_result"/);
+  assert.doesNotMatch(uiBundle, /id="competition_result"/);
   assert.match(
     competitionDomain,
     /function createCompetitionDetailsDraft\(\s*competition: CompetitionInput = \{\}\s*\)/
@@ -467,7 +467,7 @@ test("connected parent can manage children from a dedicated screen", () => {
   assert.match(judokaDomain, /judokaId: createJudokaId\(judokaId\)/);
   assert.match(
     judokaDomain,
-    /function updateManagedChild\(\{\s*accountEmail,\s*name,\s*firstName,\s*lastName\s*\}: ManagedChildInput\)/
+    /function updateManagedChild\(\{\s*accountEmail,\s*name,\s*firstName,\s*lastName,\s*ageCategory\s*\}: ManagedChildInput\)/
   );
   assert.match(
     emailDomain,
@@ -488,8 +488,9 @@ test("connected parent can manage children from a dedicated screen", () => {
 test("admin can manage admins from a dedicated screen", () => {
   assert.match(
     uiBundle,
-    /id="manageAdminsButton" v-if="canManageAdmins" class="button-secondary" @click="showAdminsManagement\(\)"/
+    /id="manageAdminsButton" class="button-secondary club-access-action" @click="showAdminsManagement\(\)"/
   );
+  assert.match(uiBundle, /class="club-access-label">Accès club/);
   assert.match(uiBundle, /id="adminsView" class="panel hidden"/);
   assert.match(uiBundle, /function showAdminsManagement\(keepMessage\)/);
   assert.match(uiBundle, /id="accessInvitationsList"/);
@@ -557,7 +558,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     uiBundle,
     /Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche/
   );
-  assert.match(uiBundle, /Aucune compétition enregistrée pour votre périmètre/);
+  assert.match(uiBundle, /Aucun résultat enregistré pour votre périmètre/);
   assert.match(uiBundle, /Résumé performance/);
   assert.match(uiBundle, /Profil de combat/);
   assert.match(uiBundle, /Résultats compétition/);
@@ -595,7 +596,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(permissions, /throw new Error\("Accès refusé à cette fiche judoka\."\);/);
   assert.match(
     profileService,
-    /async function getJudokaProfile\(email: string,\s*idJudoka\?: string\): Promise<JudokaProfile>/
+    /async function getJudokaProfile\(email: string,\s*idJudoka\?: string,\s*seasonStartYear\?: number\): Promise<JudokaProfile>/
   );
   assert.match(
     seasonDomain,
@@ -636,14 +637,18 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(seasonStatisticsDomain, /combatProfile/);
 });
 
-test("admin owner selection is not restricted by parent-managed scope", () => {
+test("admin role does not inherit coach sports management permissions", () => {
   assert.match(
     permissions,
     /function getCompetitionOwnerJudokaId\(competition: CompetitionLike \| null \| undefined\): unknown \{\s*return competition && competition\.ownerJudokaId;\s*\}/
   );
   assert.match(
     permissions,
-    /function resolveCompetitionOwnerId\(\s*user: UserLike \| null \| undefined,\s*competition: CompetitionLike \| null \| undefined,\s*managedJudokaScope: ManagedJudokaScope \| null \| undefined\s*\): string \{\s*const ownerJudokaId = getCompetitionOwnerJudokaId\(competition\);[\s\S]*if \(isAdmin\(user\)\) \{/
+    /function canManageClubCompetition\(user: UserLike \| null \| undefined\): boolean \{\s*return isCoach\(user\);\s*\}/
+  );
+  assert.match(
+    permissions,
+    /if \(isAdmin\(user\)\) throw new Error\("Gestion des compétitions réservée aux coachs\."\);/
   );
   assert.match(
     permissions,

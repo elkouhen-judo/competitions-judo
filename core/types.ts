@@ -14,6 +14,7 @@ export interface Judoka {
   lastName: string;
   profileType: "JUDOKA" | "PARENT";
   accessRole: "NORMAL" | "COACH" | "ADMIN";
+  ageCategory: string;
 }
 
 export interface Competition {
@@ -24,6 +25,7 @@ export interface Competition {
   competitionDate: string;
   ageCategory: string;
   weightCategory: string;
+  level: string;
   result: string | null;
 }
 
@@ -47,6 +49,7 @@ export interface ManagedChild {
   accountEmail?: string | undefined;
   firstName: string;
   lastName: string;
+  ageCategory?: string;
 }
 
 export interface AccessInvitation {
@@ -190,6 +193,7 @@ export interface JudokaProfile {
   seasonLosses: number;
   seasonDraws: number;
   victoryRate: number;
+  coachNotes?: string;
 }
 
 export interface InitialData {
@@ -217,7 +221,7 @@ export interface RpcMethods {
   /** Supprime un enfant géré. */
   deleteManagedChild: (email: string, idJudoka: string) => Promise<OperationResult>;
   /** Calcule le profil saisonnier d'un judoka (soi-même par défaut, ou un profil accessible). */
-  getJudokaProfile: (email: string, idJudoka?: string) => Promise<JudokaProfile>;
+  getJudokaProfile: (email: string, idJudoka?: string, seasonStartYear?: number) => Promise<JudokaProfile>;
   /** Finalise l'inscription d'un compte après une invitation. */
   registerProfile: (email: string, profile: object) => Promise<object>;
   /** Annule une invitation d'accès en attente. */
@@ -261,6 +265,10 @@ export interface RpcMethods {
   getCompetitionDetail: (email: string, idCompetition: string) => Promise<CompetitionDetail>;
   /** Crée ou met à jour une compétition personnelle. */
   saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
+  /** Enregistre les notes privées du coach pour un judoka. */
+  saveCoachNotes: (email: string, idJudoka: string, notes: string) => Promise<OperationResult>;
+  /** Met à jour la catégorie d'âge d'un judoka (admin). */
+  saveJudokaInfo: (email: string, idJudoka: string, ageCategory: string) => Promise<OperationResult>;
   /** Ajoute un combat à une compétition. */
   ajouterCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Supprime un combat. */

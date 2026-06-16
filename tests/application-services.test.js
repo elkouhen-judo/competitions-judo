@@ -121,7 +121,8 @@ test("coach creates a club competition with linked judoka participations", async
       listByClubCompetition: async () => []
     },
     judokasRepository: {
-      listByIds: async (ids) => ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST" }))
+      listByIds: async (ids) =>
+        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime" }))
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -144,6 +145,7 @@ test("coach creates a club competition with linked judoka participations", async
   const result = await service.methods.saveClubCompetition("coach@example.com", {
     name: "Tournoi Nantes",
     competitionDate: "2026-06-14",
+    ageCategory: "Minime",
     participantJudokaIds: ["J1", "J2"]
   });
 
@@ -153,6 +155,110 @@ test("coach creates a club competition with linked judoka participations", async
   assert.deepEqual(
     insertedCompetitions.map((row) => row[1].ownerJudokaId),
     ["J1", "J2"]
+  );
+  assert.deepEqual(
+    insertedCompetitions.map((row) => row[1].ageCategory),
+    ["Minime", "Minime"]
+  );
+});
+
+test("admin cannot create a club competition", async () => {
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      insert: async () => {
+        throw new Error("Unexpected insert");
+      },
+      getById: async () => null
+    },
+    competitionsRepository: {
+      insert: async () => {
+        throw new Error("Unexpected insert");
+      },
+      listByClubCompetition: async () => []
+    },
+    judokasRepository: {
+      listByIds: async () => []
+    },
+    userContextService: {
+      getDomainUserContext: async () => ({
+        user: { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN" },
+        domainUser: toCanonicalJudoka({
+          id_judoka: "ADMIN1",
+          profile_type: "JUDOKA",
+          role: "ADMIN"
+        }),
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    buildClubCompetitionId: () => "CLUB1",
+    buildCompetitionId: () => "COMP1",
+    createClubCompetition,
+    createCompetition
+  });
+
+  await assert.rejects(
+    () =>
+      service.methods.saveClubCompetition("admin@example.com", {
+        name: "Tournoi Nantes",
+        competitionDate: "2026-06-14",
+        ageCategory: "Minime",
+        participantJudokaIds: ["J1"]
+      }),
+    /réservée aux coachs/
+  );
+});
+
+test("coach cannot add a judoka outside the club competition age category", async () => {
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      insert: async () => {
+        throw new Error("Unexpected insert");
+      },
+      getById: async () => null
+    },
+    competitionsRepository: {
+      insert: async () => {
+        throw new Error("Unexpected insert");
+      },
+      listByClubCompetition: async () => []
+    },
+    judokasRepository: {
+      listByIds: async (ids) =>
+        ids.map((id) => ({
+          id_judoka: id,
+          prenom: `P${id}`,
+          nom: "TEST",
+          categorie_age: id === "J1" ? "Minime" : "Cadet"
+        }))
+    },
+    userContextService: {
+      getDomainUserContext: async () => ({
+        user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    buildClubCompetitionId: () => "CLUB1",
+    buildCompetitionId: () => "COMP1",
+    createClubCompetition,
+    createCompetition
+  });
+
+  await assert.rejects(
+    () =>
+      service.methods.saveClubCompetition("coach@example.com", {
+        name: "Tournoi Nantes",
+        competitionDate: "2026-06-14",
+        ageCategory: "Minime",
+        participantJudokaIds: ["J1", "J2"]
+      }),
+    /catégorie d'âge/
   );
 });
 

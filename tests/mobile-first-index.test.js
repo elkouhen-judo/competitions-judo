@@ -140,6 +140,9 @@ test("parent home keeps visible competitions when no judoka is selected", () => 
 
 test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="manageAdminsButton"/);
+  assert.match(bundle, /class="section club-access-section"/);
+  assert.match(bundle, /Accès club/);
+  assert.match(bundle, /Gérer les accès/);
   assert.match(bundle, /id="adminsView" class="panel hidden"/);
   assert.match(bundle, /id="adminsList"/);
   assert.match(bundle, /id="accessInvitationsList"/);
@@ -159,7 +162,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
   assert.match(bundle, /id="judokaHeroRecord" class="result-badge"/);
   assert.match(bundle, /Judoka actif/);
-  assert.match(bundle, /Compétitions du judoka actif/);
+  assert.match(bundle, /Résultats du judoka actif/);
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /Résumé performance/);
   assert.match(bundle, /Profil de combat/);
@@ -179,6 +182,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
 
 test("home action buttons share one stable height", () => {
   assert.match(bundle, /#homeAdminActions button\s*\{[\s\S]*?min-height:\s*64px;/);
+  assert.match(bundle, /\.club-access-card\s*\{[\s\S]*?border-left:\s*6px solid var\(--primary\);/);
 });
 
 test("competition header actions share one aligned action row", () => {
@@ -197,7 +201,7 @@ test("competition list exposes direct delete actions without nesting buttons", (
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.match(bundle, /Ouvrir les combats/);
-  assert.match(client, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
+  assert.match(client, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
   assert.match(
     bundle,
     /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/
@@ -327,13 +331,13 @@ test("competition form keeps age and weight categories without place or actual w
     bundle,
     /id="competition_categorie_poids" placeholder="ex: -73kg" v-model\.trim="competitionForm\.weightCategory"/
   );
-  assert.match(
+  assert.doesNotMatch(
     bundle,
     /id="competitionResultBlock" :class="\{ hidden: !showCompetitionResultBlock \}"/
   );
-  assert.match(bundle, /id="competition_result" v-model="competitionForm\.result"/);
-  assert.match(bundle, /competitionFormViewModel\.showCompetitionResultBlock = true;/);
-  assert.match(bundle, /competitionFormViewModel\.showCompetitionResultBlock = false;/);
+  assert.doesNotMatch(bundle, /id="competition_result" v-model="competitionForm\.result"/);
+  assert.doesNotMatch(bundle, /competitionFormViewModel\.showCompetitionResultBlock = true;/);
+  assert.doesNotMatch(bundle, /competitionFormViewModel\.showCompetitionResultBlock = false;/);
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
   assert.match(bundle, /<span id="competitionAgePoids"/);
@@ -355,9 +359,12 @@ test("competition form screen is mounted through Vue 3 for the progressive scree
 test("coach can open club competition creation and participant management UI", () => {
   assert.match(bundle, /id="addClubCompetitionButton"/);
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/);
+  assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
   assert.match(client, /function showClubCompetitionForm\(\)/);
+  assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);
 });

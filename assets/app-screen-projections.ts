@@ -45,7 +45,8 @@
         firstName: normalizeDisplayName(child.firstName || ""),
         lastName: normalizeLastName(child.lastName || ""),
         accountEmail: child.accountEmail || "Non renseigné",
-        directAccessState: child.accountEmail ? "Activée" : "Non activée"
+        directAccessState: child.accountEmail ? "Activée" : "Non activée",
+        ageCategory: child.ageCategory || ""
       };
     });
 

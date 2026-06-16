@@ -48,8 +48,8 @@ This specification does not define:
 | Kiroku | The application described by this specification. |
 | Judoka | A club member profile that owns competitions and combats. |
 | Parent | A user profile allowed to manage linked child judokas (read/write). |
-| Coach | A user profile with read-only access to all club judokas and global event dashboards. |
-| Admin | A user profile with full access to club data and user access invitation management. |
+| Coach | A user profile with sports access to all club judokas, competitions, combats, and global event dashboards. |
+| Admin | A user profile responsible for access governance: invitations and structural role management. |
 | Competition | An event that can be shared at the club level, containing combats for one or more judokas. |
 | Combat | A single match linked to one competition and one judoka. |
 | Mobile first | Design approach where the small-screen layout is the base layout. |
@@ -68,7 +68,7 @@ This specification does not define:
 - **ROL-001**: A `JUDOKA` profile can access only its own competitions, combats, and statistics.
 - **ROL-002**: A `PARENT` profile can access and edit data of linked child judokas.
 - **ROL-003**: A `COACH` profile has read access to all judokas, competitions, and stats within the club, and can manage club competition events and their linked sports data. They cannot manage invitations.
-- **ROL-004**: An `ADMIN` profile inherits all `COACH` rights and has write access to invitations and system configurations.
+- **ROL-004**: An `ADMIN` profile manages invitations and structural roles only. Admin rights do not include coach sports permissions and shall not allow creating, updating, finalizing, or deleting competitions or combats.
 - **ROL-005**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
 - **ROL-006**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
 
@@ -76,7 +76,7 @@ This specification does not define:
 
 - **COMP-001**: A `JUDOKA` or `PARENT` can create, update, and delete only competitions linked to their scope.
 - **COMP-002**: When a `PARENT` or `JUDOKA` creates a competition, the system shall check if a competition with the same name and date already exists in the club to prevent duplicates.
-- **COMP-003**: `COACH` and `ADMIN` profiles can view a global "Competition Dashboard" aggregating all judokas who participated in the same event.
+- **COMP-003**: `COACH` profiles can view a global "Competition Dashboard" aggregating all judokas who participated in the same event.
 - **COMP-004**: Competition lists shall be sorted by date descending.
 - **COMP-005**: A competition must include a name and a date.
 - **COMP-006**: A competition shall expose an age category chosen from the fixed list: `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, and a weight category.
@@ -85,15 +85,17 @@ This specification does not define:
 - **COMP-009**: Deleting a competition from a judoka profile shall remove all linked combats for that specific judoka.
 - **COMP-013**: When opening the competition creation form, the date field shall be initialized to the current day by default.
 - **COMP-014**: Competition creation shall not ask for the final ranking.
-- **COMP-015**: Final ranking shall be entered from a dedicated competition finalization action while empty, then can be edited from the competition edit form.
+- **COMP-015**: Final ranking shall be entered and updated exclusively from a dedicated competition finalization screen. The competition edit form shall not expose a ranking field.
 - **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé`.
-- **COMP-017**: A `COACH` or `ADMIN` can create a club competition event and assign one or more judokas as participants.
+- **COMP-024**: A competition shall expose a level field chosen from: `Départemental`, `Régional`, `National`, `International`. The field is optional (empty by default).
+- **COMP-017**: A `COACH` can create a club competition event and assign one or more judokas as participants.
 - **COMP-018**: Assigning a judoka to a club competition creates an individual competition participation for that judoka.
 - **COMP-019**: A linked participation remains visible and editable in the judoka's individual competition history.
 - **COMP-020**: Removing a judoka from a club competition detaches only the club link and shall not delete the individual competition, combats, or final ranking.
 - **COMP-021**: A `JUDOKA` or `PARENT` can still create individual competitions outside a club competition.
 - **COMP-022**: Deleting a club competition shall also delete every linked individual competition participation and its combats.
-- **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` or `ADMIN` can see standings at a glance.
+- **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
+- **COMP-025**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
 
 ### 3.4 Combat rules
 
@@ -113,6 +115,8 @@ This specification does not define:
 - **CHD-006**: If a removed child has no direct account, no other parent link, and no sports data, the child profile shall be fully removed.
 - **CHD-007**: Otherwise only the parent-child link shall be removed.
 - **CHD-008**: Non-admin users may assign or update an optional child email to let that child log in with Google and access only their own judoka data.
+- **CHD-009**: When creating or editing a child, a parent shall be able to set an age category chosen from the standard age category list.
+- **CHD-010**: A coach shall be able to set or update the age category of any judoka from the judoka profile view.
 
 ### 3.6 Judoka season statistics rules
 
@@ -128,7 +132,7 @@ This specification does not define:
 - **STA-007c**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
 - **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
 - **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
-- **STA-010**: `COACH` and `ADMIN` profiles shall be able to open the judoka profile of any judoka in the club.
+- **STA-010**: `COACH` profiles shall be able to open the judoka profile of any judoka in the club.
 
 ### 3.7 Authentication behavior
 
@@ -159,7 +163,7 @@ This specification does not define:
 - **UIX-008**: Desktop-specific layout shall be a progressive enhancement over the small-screen baseline.
 - **UIX-009**: The judoka profile view shall remain readable and actionable on mobile.
 - **UIX-010**: For `PARENT`, the home screen shall be organized around an active child judoka context.
-- **UIX-011**: For `COACH` and `ADMIN`, the home screen shall default to the global Club Competition Dashboard to easily review weekend results.
+- **UIX-011**: For `COACH`, the home screen shall expose the global Club Competition Dashboard to easily review weekend results. For `ADMIN`, the home screen shall expose access governance without sports management actions.
 - **UIX-011a**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
 - **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
 - **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
@@ -188,10 +192,12 @@ This specification does not define:
 - **AC-019**: Given an admin or coach role change, when the request succeeds, then the user's underlying `JUDOKA` or `PARENT` profile type remains unchanged.
 - **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
 - **AC-021**: Given a user opens the competition creation form, when the form is displayed, then the competition date is prefilled with the current day.
-- **AC-022**: Given a user creates a competition, when the form is displayed, then no ranking field is shown.
-- **AC-023**: Given a user edits a competition, when the form is displayed, then the ranking/result can be modified with the other competition details.
+- **AC-022**: Given a user creates or edits a competition, when the form is displayed, then no ranking field is shown.
+- **AC-023**: Given a user wants to set a final ranking, when they open the finalization screen, then only the ranking field is available (not accessible from the edit form).
 - **AC-024**: Given a user typing combat details, when saving the combat, then they can optionally write any text in the notes field (e.g., "Perdu par Ippon sur Uchi-Mata").
 - **AC-025**: Given a connected `COACH`, when they create a club competition with selected judokas, then one club event and one linked individual competition per selected judoka are created.
+- **AC-025a**: Given a connected `COACH` selects `Minime` on the club competition creation form, when they choose participants, then only judokas with the `Minime` age category are selectable.
+- **AC-025b**: Given a connected `ADMIN`, when they use the application, then competition, combat, ranking, and club competition management actions are not available and server-side mutations are rejected.
 - **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
 - **AC-027**: Given a coach removes a participant from a club competition, when the operation succeeds, then the individual competition and sports data remain available outside the club event.
 - **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").

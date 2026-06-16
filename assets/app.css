@@ -492,6 +492,44 @@
       min-height: 64px;
     }
 
+    .club-access-section {
+      border-top: 0;
+      margin-top: 16px;
+      padding-top: 0;
+    }
+
+    .club-access-card {
+      display: grid;
+      gap: 14px;
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--primary);
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--accent-soft), #ffffff 42%);
+      padding: 14px;
+    }
+
+    .club-access-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .club-access-label {
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .club-access-card h3 {
+      margin-bottom: 0;
+    }
+
+    .club-access-action {
+      justify-self: stretch;
+    }
+
     .list {
       display: grid;
       gap: 12px;
@@ -780,6 +818,65 @@
       margin-top: 12px;
     }
 
+    .season-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .this-weekend-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--warning-soft);
+      color: var(--warning);
+      border: 1px solid #f5d9a0;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .coach-notes-section textarea {
+      width: 100%;
+      resize: vertical;
+    }
+
+    .mode-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--line);
+      margin: 0 0 20px;
+      gap: 0;
+    }
+
+    .mode-tab {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 160ms, border-color 160ms;
+      text-align: center;
+    }
+
+    .mode-tab:hover {
+      color: var(--text);
+    }
+
+    .mode-tab-active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
     .performance-result-card {
       display: grid;
       gap: 12px;
@@ -978,6 +1075,15 @@
       .list-summary-actions {
         display: flex;
         justify-content: flex-end;
+      }
+
+      .club-access-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .club-access-action {
+        justify-self: end;
       }
 
       .card-actions {

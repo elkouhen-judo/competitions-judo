@@ -9,7 +9,8 @@
       judokaId: "",
       firstName: "",
       lastName: "",
-      accountEmail: ""
+      accountEmail: "",
+      ageCategory: ""
     };
     const defaultChildrenViewState = {
       childFormTitle: "Ajouter un enfant",
@@ -94,7 +95,8 @@
         judokaId: child.judokaId || "",
         firstName: child.firstName || "",
         lastName: child.lastName || "",
-        accountEmail: child.accountEmail || ""
+        accountEmail: child.accountEmail || "",
+        ageCategory: child.ageCategory || ""
       });
       viewModel.childFormTitle = "Modifier l'enfant";
       viewModel.saveChildButtonText = "Enregistrer l'enfant";
@@ -108,7 +110,8 @@
         judokaId: viewModel.childForm.judokaId,
         firstName: viewModel.childForm.firstName,
         lastName: viewModel.childForm.lastName,
-        accountEmail: viewModel.childForm.accountEmail
+        accountEmail: viewModel.childForm.accountEmail,
+        ageCategory: viewModel.childForm.ageCategory || ""
       };
 
       app.runServer(

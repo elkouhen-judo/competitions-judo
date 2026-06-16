@@ -21,6 +21,20 @@
             <label for="club_competition_date">Date</label>
             <input id="club_competition_date" type="date" v-model="clubCompetitionForm.competitionDate">
           </div>
+          <div>
+            <label for="club_competition_categorie_age">Catégorie d'âge</label>
+            <select id="club_competition_categorie_age" v-model="clubCompetitionForm.ageCategory" @change="updateClubCompetitionAgeCategory()">
+              <option value="">Sélectionnez une catégorie</option>
+              <option value="Poussinet">Poussinet</option>
+              <option value="Poussin">Poussin</option>
+              <option value="Benjamin">Benjamin</option>
+              <option value="Minime">Minime</option>
+              <option value="Cadet">Cadet</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
+              <option value="Vétéran">Vétéran</option>
+            </select>
+          </div>
         </div>
 
         <div class="section">
@@ -29,15 +43,16 @@
               <h3>Judokas concernés
                 <span v-if="clubCompetitionForm.participantJudokaIds.length" class="result-badge">{{ clubCompetitionForm.participantJudokaIds.length }} sélectionné(s)</span>
               </h3>
-              <p class="subtitle">Recherchez un nom et cochez les judokas concernés.</p>
+              <p class="subtitle">Choisissez une catégorie puis cochez les judokas concernés.</p>
             </div>
           </div>
-          <div class="filter-bar">
+          <div v-if="hasClubCompetitionFormAgeCategory" class="filter-bar">
             <label for="clubFormJudokaSearch">Rechercher</label>
             <input type="search" id="clubFormJudokaSearch" placeholder="Nom du judoka..." autocomplete="off" v-model="judokaSearchText" @input="updateClubCompetitionJudokaSearch()">
           </div>
           <div id="clubCompetitionParticipants">
-            <div v-if="!filteredClubCompetitionParticipants.length" class="empty-state">Aucun résultat.</div>
+            <div v-if="!hasClubCompetitionFormAgeCategory" class="empty-state">Sélectionnez une catégorie pour afficher les judokas.</div>
+            <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">Aucun résultat.</div>
             <div v-else class="list">
               <label v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" class="checkbox-row">
                 <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds">

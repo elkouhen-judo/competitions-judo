@@ -109,7 +109,9 @@ export default function createChildrenService(deps: ChildrenServiceDeps): Childr
       lastName
     });
     await userContextService.assertJudokaEmailAvailable(managedChild.accountEmail, idJudoka);
-    await judokasRepository.insert(managedChild);
+    await judokasRepository.insert(managedChild, {
+      categorie_age: childInput.ageCategory ?? ""
+    });
     await parentLinksRepository.insert({
       id_parent: user.id_judoka,
       id_judoka: idJudoka

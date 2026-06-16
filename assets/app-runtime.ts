@@ -20,6 +20,7 @@ function createInitialState(): KirokuAppState {
     isAdmin: false,
     isCoach: false,
     isParent: false,
+    homeMode: "judoka",
     canManageChildren: false,
     competitions: [],
     clubCompetitions: [],

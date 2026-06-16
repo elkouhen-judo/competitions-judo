@@ -33,11 +33,13 @@ export interface ManagedChildInput {
   name?: PersonName;
   firstName?: unknown;
   lastName?: unknown;
+  ageCategory?: unknown;
 }
 
 export interface UpdateManagedChildResult {
   accountEmail: string | null;
   name: PersonName;
+  ageCategory: string;
 }
 
 export interface DecideManagedChildRemovalInput {
@@ -117,14 +119,16 @@ export function updateManagedChild({
   accountEmail,
   name,
   firstName,
-  lastName
+  lastName,
+  ageCategory
 }: ManagedChildInput): UpdateManagedChildResult {
   const childName = name || createPersonName({ firstName, lastName });
   const normalizedAccountEmail = normalizeOptionalEmail(accountEmail);
 
   return {
     accountEmail: normalizedAccountEmail,
-    name: childName
+    name: childName,
+    ageCategory: String(ageCategory || "")
   };
 }
 
