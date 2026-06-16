@@ -110,11 +110,11 @@
     );
 
     function ensureJudokaView() {
-      if (!window.Vue || mounted) {
+      if (mounted) {
         return;
       }
       mounted = true;
-      ui.createMountedViewModel(
+      ui.mountViewModel(
         "judokaView",
         {},
         {

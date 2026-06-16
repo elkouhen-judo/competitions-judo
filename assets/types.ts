@@ -224,7 +224,9 @@ export interface AuthApi {
 export interface HomeScreen {
   applyInitialData(): void;
   getHomeActiveJudokaId(): string;
+  hideHomeFilterOptions(): void;
   showHome(): void;
+  showHomeFilterOptions(): void;
   showChildrenManagement?(keepMessage?: boolean): void;
 }
 
@@ -284,6 +286,8 @@ export interface KirokuAppState {
   managedAccessInvitations: AdminsManagement["accessInvitations"];
   managedChildren: ChildrenManagement["children"];
   canEditCurrentCompetition: boolean;
+  isLoadingCompetition: boolean;
+  homeFilterJudokaId: string;
   previousView: ViewId;
   accessInvitationSearch: string;
   accessInvitationCurrentPage: number;

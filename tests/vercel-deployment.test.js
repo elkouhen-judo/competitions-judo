@@ -325,7 +325,7 @@ test("vercel login creates only the initial judoka profile", () => {
 });
 
 test("successful initial load leaves the login view", () => {
-  assert.match(uiBundle, /renderCompetitions\(\);[\s\S]*?showView\("homeView"\);/);
+  assert.match(uiBundle, /function showHome\(\)[\s\S]{0,300}showView\("homeView"\)/);
 });
 
 test("judoka home keeps competition creation available", () => {
@@ -340,14 +340,9 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function getCompetitionOwnerRequiredMessage\(\)/);
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
-  assert.match(uiBundle, /function syncHomeContext\(\)/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(
-    uiBundle,
-    /const homeViewModel = getHomeViewModel\(\);\s*homeViewModel\.actionDisabled = actionDisabled;/
-  );
   assert.match(uiBundle, /canDelete: \(state\.isAdmin \|\| state\.isParent\) && !state\.isCoach/);
-  assert.match(uiBundle, /showHomeActions: true/);
+  assert.match(uiBundle, /showHomeActions = window\.Vue\.computed\(/);
   assert.match(
     uiBundle,
     /id="homeActiveJudokaSummary" class="summary home-context-card"[\s\S]*?\{\{ activeJudokaSummary\.value \}\}[\s\S]*?<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/

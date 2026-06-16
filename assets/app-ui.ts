@@ -134,8 +134,15 @@
   ): void {
     window.Vue.createApp({
       setup() {
+        const vmRefs = window.Vue.toRefs(viewModel);
+        const conflicts = Object.keys(computedRefs).filter((k) => k in vmRefs);
+        if (conflicts.length) {
+          console.warn(
+            `[KirokuUI] mountViewModel "${id}": computed refs écrasent les refs viewModel : ${conflicts.join(", ")}`
+          );
+        }
         return {
-          ...window.Vue.toRefs(viewModel),
+          ...vmRefs,
           ...computedRefs,
           ...actions
         };
@@ -144,11 +151,7 @@
   }
 
   function cloneDefaultState<TValue>(defaultState: TValue): TValue {
-    if (typeof structuredClone === "function") {
-      return structuredClone(defaultState);
-    }
-
-    return JSON.parse(JSON.stringify(defaultState)) as TValue;
+    return structuredClone(defaultState);
   }
 
   function createMountedViewModel<TViewModel extends object>(

@@ -30,14 +30,15 @@
       )
     );
     const adminsInvitationsProjection = window.Vue.computed(() => {
-      const filteredInvitations = !state.accessInvitationSearch
+      const search = cleanText(state.accessInvitationSearch).toLowerCase();
+      const filteredInvitations = !search
         ? state.managedAccessInvitations
         : state.managedAccessInvitations.filter((invitation) =>
-            cleanText(invitation.email).toLowerCase().includes(state.accessInvitationSearch)
+            cleanText(invitation.email).toLowerCase().includes(search)
           );
       return window.KirokuScreenProjections.projectAccessInvitations(
         filteredInvitations,
-        state.accessInvitationSearch,
+        search,
         state.accessInvitationCurrentPage,
         defaultAccessInvitationVisibleCount,
         { formatDateTime }
@@ -79,7 +80,7 @@
     );
 
     function ensureAdminsViewModel() {
-      if (!window.Vue || adminsViewModel) {
+      if (adminsViewModel) {
         return;
       }
 
@@ -160,7 +161,7 @@
 
     function updateAccessInvitationSearch(value: string) {
       const viewModel = getAdminsViewModel();
-      state.accessInvitationSearch = cleanText(value).toLowerCase();
+      state.accessInvitationSearch = value || "";
       viewModel.accessInvitationSearch = value || "";
       state.accessInvitationCurrentPage = 1;
     }
