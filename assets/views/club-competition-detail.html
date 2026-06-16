@@ -78,7 +78,7 @@
             <input type="search" id="clubDetailJudokaSearch" placeholder="Nom du judoka..." autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
           </div>
           <div id="clubDetailAvailableJudokas">
-            <div v-if="!filteredClubCompetitionAvailableJudokas.length" class="empty-state">Aucun résultat.</div>
+            <div v-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">Aucun résultat.</div>
             <div v-else class="list">
               <label v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" class="checkbox-row">
                 <input type="checkbox" :value="j.judokaId" v-model="clubCompetitionNewJudokaIds">

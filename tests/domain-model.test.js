@@ -132,11 +132,18 @@ test("competition domain carries optional club competition link", () => {
 
 test("permission policy grants coach sports management without admin invitations", () => {
   const coach = { judokaId: "C1", profileType: "JUDOKA", accessRole: "COACH" };
+  const admin = { judokaId: "A1", profileType: "JUDOKA", accessRole: "ADMIN" };
   assert.equal(permissions.canManageClubCompetition(coach), true);
   assert.equal(
     permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope([])),
     true
   );
+  assert.equal(permissions.canManageClubCompetition(admin), false);
+  assert.equal(
+    permissions.canManageCompetition(admin, { ownerJudokaId: "J1" }, createManagedJudokaScope([])),
+    false
+  );
+  assert.equal(permissions.canManageCombatFor(admin, "J1", createManagedJudokaScope([])), false);
   assert.equal(permissions.canManageChildrenProfile(coach), false);
 });
 

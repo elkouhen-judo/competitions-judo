@@ -31,6 +31,10 @@
             <span class="meta-label">Catégories</span>
             <span id="competitionAgePoids" class="meta-value">{{ ageWeightLabel }}</span>
           </div>
+          <div class="meta-row" id="row_competitionNiveau" v-show="competitionLevel">
+            <span class="meta-label">Niveau</span>
+            <span id="competitionNiveau" class="meta-value">{{ competitionLevel }}</span>
+          </div>
           <div class="meta-row" id="row_competitionClassement" v-show="competitionResult">
             <span class="meta-label">Classement</span>
             <span id="competitionClassement" class="meta-value">{{ competitionResult }}</span>

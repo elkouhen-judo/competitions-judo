@@ -27,6 +27,8 @@ export interface JudokaRow {
   nom: string;
   profile_type: string;
   role: string;
+  notes_coach?: string;
+  categorie_age?: string;
 }
 
 export interface CompetitionRow {
@@ -37,6 +39,7 @@ export interface CompetitionRow {
   date: string;
   categorie_age: string;
   categorie_poids: string;
+  niveau: string;
   classement: string;
 }
 

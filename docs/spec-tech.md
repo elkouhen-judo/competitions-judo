@@ -83,6 +83,9 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-014**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
+- **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
+- **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
+- **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 - **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
@@ -97,7 +100,7 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
 - **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
 - **AUTH-006**: The backend shall resolve the verified email from Supabase before applying business permissions.
-- **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` and `ADMIN` profiles grant structural read visibility over all club data.
+- **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
 - **AUTH-008**: Password-based login shall remain unsupported.
 - **AUTH-009**: Magic-link login shall remain unsupported.
 - **AUTH-010**: Backend profile registration shall create only the initial invited profile.

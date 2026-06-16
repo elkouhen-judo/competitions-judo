@@ -37,6 +37,10 @@
                     <span class="meta-label">Email</span>
                     <span class="meta-value">{{ child.accountEmail }}</span>
                   </div>
+                  <div v-if="child.ageCategory" class="meta-row">
+                    <span class="meta-label">Catégorie</span>
+                    <span class="meta-value">{{ child.ageCategory }}</span>
+                  </div>
                   <div class="meta-row">
                     <span class="meta-label">Connexion autonome</span>
                     <span class="meta-value">{{ child.directAccessState }}</span>
@@ -75,6 +79,19 @@
 
           <label for="child_email">Email de connexion (optionnel)</label>
           <input type="email" id="child_email" autocomplete="email" placeholder="email@gmail.com" v-model.trim="childForm.accountEmail">
+
+          <label for="child_categorie_age">Catégorie d'âge</label>
+          <select id="child_categorie_age" v-model="childForm.ageCategory">
+            <option value="">Non renseignée</option>
+            <option value="Poussinet">Poussinet</option>
+            <option value="Poussin">Poussin</option>
+            <option value="Benjamin">Benjamin</option>
+            <option value="Minime">Minime</option>
+            <option value="Cadet">Cadet</option>
+            <option value="Junior">Junior</option>
+            <option value="Senior">Senior</option>
+            <option value="Vétéran">Vétéran</option>
+          </select>
 
           <div class="form-actions mobile-action-bar">
             <button class="button-secondary" @click="resetChildForm()">

@@ -6,6 +6,16 @@
         </div>
       </div>
       <div class="panel-body">
+        <nav v-if="showModeTabs" class="mode-tabs" aria-label="Changer de mode">
+          <button
+            v-for="mode in availableModes"
+            :key="mode.key"
+            type="button"
+            :class="['mode-tab', { 'mode-tab-active': mode.key === currentHomeMode }]"
+            @click="setHomeMode(mode.key)">
+            {{ mode.label }}
+          </button>
+        </nav>
         <div id="homeFilters" class="filter-bar" :class="{ hidden: !canFilterByJudoka }">
           <label id="homeFilterLabel" for="filterJudokaText">Judoka actif</label>
           <div class="autocomplete-wrapper">
@@ -22,7 +32,7 @@
             </div>
           </div>
         </div>
-        <div id="homeActiveJudokaSummary" class="summary home-context-card">
+        <div v-if="showActiveJudokaSummary" id="homeActiveJudokaSummary" class="summary home-context-card">
           <div class="home-context-copy">
             <span class="home-context-label">{{ activeJudokaSummary.label }}</span>
             <span class="home-context-value">{{ activeJudokaSummary.value }}</span>
@@ -51,20 +61,57 @@
               <span id="openHomeJudokaProfileButtonMeta" class="button-meta">{{ profileButtonMeta }}</span>
             </span>
           </button>
-          <button id="manageAdminsButton" v-if="canManageAdmins" class="button-secondary" @click="showAdminsManagement()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M12 10v4"></path><path d="M10 12h4"></path></svg>
-            Invitations et admins
-          </button>
           <button id="manageChildrenButton" v-if="canManageChildren" class="button-secondary" @click="showChildrenManagement()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M17 11h6"></path></svg>
             Gérer les enfants
           </button>
         </div>
+        <div v-if="canManageAdmins" class="section club-access-section">
+          <div class="club-access-card">
+            <div class="club-access-copy">
+              <span class="club-access-label">Accès club</span>
+              <h3>Invitations et rôles administrateur</h3>
+              <p class="subtitle">Gérez qui peut entrer dans l'application et qui peut administrer le club.</p>
+            </div>
+            <button id="manageAdminsButton" class="button-secondary club-access-action" @click="showAdminsManagement()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M12 10v4"></path><path d="M10 12h4"></path></svg>
+              Gérer les accès
+            </button>
+          </div>
+        </div>
+        <div v-if="showHomeActions" class="section">
+          <div class="section-heading">
+            <div>
+              <h3>À venir</h3>
+              <p class="subtitle">Prochains tournois planifiés.</p>
+            </div>
+          </div>
+          <div v-if="!hasUpcomingEvents" class="empty-state">Aucune compétition à venir.</div>
+          <div v-else class="list">
+            <article v-for="ev in upcomingEvents" :key="ev.id" class="card competition-card">
+              <button class="card-button competition-open-button" type="button" @click="openUpcomingEvent(ev.id, ev.isClub)">
+                <span class="competition-card-button-copy">
+                  <span class="card-title">
+                    {{ ev.name }}
+                    <span v-if="ev.isThisWeekend" class="this-weekend-badge">Ce weekend</span>
+                  </span>
+                  <span class="card-meta">
+                    <span class="meta-row">
+                      <span class="meta-label">Date</span>
+                      <span class="meta-value">{{ ev.date }}</span>
+                    </span>
+                  </span>
+                  <span class="card-open-hint">Ouvrir</span>
+                </span>
+              </button>
+            </article>
+          </div>
+        </div>
         <div v-if="showClubCompetitionsSection" class="section">
           <div class="section-heading">
             <div>
-              <h3>Compétitions club</h3>
-              <p class="subtitle">Compétitions créées pour le groupe.</p>
+              <h3>Historique club</h3>
+              <p class="subtitle">Compétitions passées, de la plus récente à la plus ancienne.</p>
             </div>
           </div>
           <div id="clubCompetitionsList">

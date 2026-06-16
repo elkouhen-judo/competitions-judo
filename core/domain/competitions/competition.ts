@@ -27,6 +27,7 @@ export interface CompetitionInput {
   competitionDate?: unknown;
   ageCategory?: unknown;
   weightCategory?: unknown;
+  level?: unknown;
   result?: unknown;
 }
 
@@ -35,6 +36,7 @@ export interface CompetitionDraft {
   competitionDate: string;
   ageCategory: AgeCategory | "";
   weightCategory: string;
+  level: string;
 }
 
 export interface CombatLike {
@@ -51,6 +53,7 @@ export interface CompetitionModel {
   competitionDate: string;
   ageCategory: AgeCategory | "";
   weightCategory: string;
+  level: string;
   result: string;
   changeDetails(details?: CompetitionInput): CompetitionModel;
   finalize(finalResult: unknown): {
@@ -128,7 +131,8 @@ export function createCompetitionDetailsDraft(
     name,
     competitionDate,
     ageCategory: createCompetitionAgeCategory(competition.ageCategory),
-    weightCategory: cleanCompetitionText(competition.weightCategory)
+    weightCategory: cleanCompetitionText(competition.weightCategory),
+    level: cleanCompetitionText(competition.level)
   };
 }
 
@@ -157,6 +161,7 @@ export function createCompetition(
     competitionDate: draft.competitionDate,
     ageCategory: draft.ageCategory,
     weightCategory: draft.weightCategory,
+    level: draft.level,
     result
   };
 
@@ -168,6 +173,7 @@ export function createCompetition(
           ...details,
           competitionId: record.competitionId,
           clubCompetitionId: record.clubCompetitionId,
+          level: details.level !== undefined ? details.level : record.level,
           result: details.result !== undefined ? details.result : record.result
         },
         record.ownerJudokaId

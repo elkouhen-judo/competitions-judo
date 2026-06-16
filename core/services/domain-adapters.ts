@@ -53,7 +53,8 @@ export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
     firstName: String(pick(user, "firstName", "prenom") || ""),
     lastName: String(pick(user, "lastName", "nom") || ""),
     profileType: normalizeProfileType(pick(user, "profileType", "profile_type")),
-    accessRole: normalizeAccessRole(pick(user, "accessRole", "role"))
+    accessRole: normalizeAccessRole(pick(user, "accessRole", "role")),
+    ageCategory: String(pick(user, "ageCategory", "categorie_age") || "")
   };
 }
 
@@ -68,6 +69,7 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
     competitionDate: String(pick(competition, "competitionDate", "date") || ""),
     ageCategory: String(pick(competition, "ageCategory", "categorie_age") || ""),
     weightCategory: String(pick(competition, "weightCategory", "categorie_poids") || ""),
+    level: String(pick(competition, "level", "niveau") || ""),
     result: (pick(competition, "result", "classement") || null) as string | null
   };
 }
@@ -92,7 +94,8 @@ export function toCanonicalManagedChild(child: SourceRecord = {}): ManagedChild 
     judokaId: judokaId ? String(judokaId) : undefined,
     accountEmail: accountEmail ? String(accountEmail) : undefined,
     firstName: String(pick(child, "firstName", "prenom") || ""),
-    lastName: String(pick(child, "lastName", "nom") || "")
+    lastName: String(pick(child, "lastName", "nom") || ""),
+    ageCategory: String(pick(child, "ageCategory", "categorie_age") || "")
   };
 }
 

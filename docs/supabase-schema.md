@@ -18,7 +18,7 @@ Projet cible :
 
 Le schéma initial est dans :
 
-`supabase/migrations/20260610000000_initial_schema.sql`
+`supabase/migrations/20260612000000_initial_schema.sql`
 
 Il crée les tables :
 
@@ -46,11 +46,11 @@ La suppression ou le détachement d'une compétition club conserve les compétit
 
 ## Exécution
 
-Option recommandée pour l'instant :
+```
+npx supabase db push
+```
 
-1. Ouvrir le SQL Editor du projet Supabase.
-2. Coller le contenu de `supabase/migrations/20260610000000_initial_schema.sql`.
-3. Exécuter le script.
+En l'absence du CLI Supabase, ouvrir le SQL Editor du projet Supabase et coller le contenu de `supabase/migrations/20260612000000_initial_schema.sql`.
 
 Une fois le schéma créé, l'étape suivante sera de préparer les exports CSV des onglets Google Sheets dans cet ordre :
 

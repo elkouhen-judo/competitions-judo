@@ -101,6 +101,7 @@ export interface ManagedChildCard {
   lastName: string;
   accountEmail: string;
   directAccessState: string;
+  ageCategory: string;
 }
 
 export interface ManagedAdminCard {
@@ -239,7 +240,8 @@ export interface CompetitionScreen {
   confirmDeleteClubCompetitionById(idClubCompetition: string, name?: string): void;
   deleteCompetitionFromList(idCompetition: string, name?: string): void;
   openClubCompetition(idClubCompetition: string): void;
-  openCompetition(idCompetition: string, keepMessage?: boolean): void;
+  openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
+  openCompetitionFromJudokaProfile(idCompetition: string): void;
   showClubCompetitionForm(idClubCompetition?: string): void;
   showCompetitionForm(idCompetition?: string): void;
 }
@@ -275,6 +277,7 @@ export interface KirokuAppState {
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
+  homeMode: "judoka" | "coach" | "family" | "admin";
   canManageChildren: boolean;
   competitions: Competition[];
   clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string }>;

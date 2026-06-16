@@ -48,6 +48,7 @@ export default function createCompetitionsRepository(
       date: draft.competitionDate,
       categorie_age: draft.ageCategory,
       categorie_poids: draft.weightCategory,
+      niveau: draft.level || "",
       classement: competition.result || ""
     };
   }

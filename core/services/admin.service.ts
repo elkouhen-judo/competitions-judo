@@ -15,6 +15,7 @@ type AdminMethods = Pick<
   | "grantAdminRole"
   | "revokeAdminRole"
   | "saveAccessInvitation"
+  | "saveJudokaInfo"
 >;
 
 export interface AdminServiceDeps {
@@ -50,6 +51,17 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     }
     if (!createJudoka(toCanonicalJudoka(user)).isAdmin()) {
       throw new Error("Gestion des admins réservée aux admins.");
+    }
+    return user;
+  }
+
+  async function requireCoachUser(email: string): Promise<JudokaRow> {
+    const user = await userContextService.getCurrentUser(email);
+    if (!user) {
+      throw new Error(`Accès refusé pour : ${email}`);
+    }
+    if (!createJudoka(toCanonicalJudoka(user)).isCoach()) {
+      throw new Error("Gestion du profil sportif réservée aux coachs.");
     }
     return user;
   }
@@ -155,6 +167,20 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     return { success: true, message: "Droits admin retirés." };
   }
 
+  async function saveJudokaInfo(
+    email: string,
+    idJudoka: string,
+    ageCategory: string
+  ) {
+    await requireCoachUser(email);
+    if (!idJudoka) throw new Error("Judoka obligatoire.");
+    await judokasRepository.saveJudokaInfo(
+      idJudoka,
+      String(ageCategory || "")
+    );
+    return { success: true, message: "Profil mis à jour." };
+  }
+
   async function deleteAccessInvitation(email: string, invitedEmail: string) {
     await requireAdminUser(email);
     const normalizedEmail = normalizeEmail(invitedEmail);
@@ -178,7 +204,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       getAdminsManagement,
       grantAdminRole,
       revokeAdminRole,
-      saveAccessInvitation
+      saveAccessInvitation,
+      saveJudokaInfo
     }
   };
 }

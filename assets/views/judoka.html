@@ -30,6 +30,16 @@
               <h3>Résumé performance</h3>
               <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
             </div>
+            <div class="season-nav">
+              <button v-if="canShowPreviousSeason" class="button-secondary" type="button" @click="showPreviousSeason()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Précédente
+              </button>
+              <button v-if="canShowNextSeason" class="button-secondary" type="button" @click="showNextSeason()">
+                Suivante
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+            </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-highlight">
@@ -108,6 +118,12 @@
                     <span class="meta-value">{{ result.combatRecord }}</span>
                   </div>
                 </div>
+                <div v-if="result.competitionId" class="card-actions">
+                  <button class="button-secondary" type="button" @click="openCompetitionFromProfile(result.competitionId)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Voir les combats
+                  </button>
+                </div>
               </article>
             </div>
             <div v-if="competitionResultsTotalPages > 1" class="list-summary">
@@ -117,6 +133,52 @@
                 <button v-if="competitionResultsCanShowNextPage" class="button-secondary" type="button" @click="showCompetitionResultsNextPage()">Page suivante</button>
               </div>
             </div>
+          </div>
+        </div>
+        <div v-if="canEditJudokaInfo" class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Profil judoka</h3>
+              <p class="subtitle">Catégorie d'âge visible par tous.</p>
+            </div>
+          </div>
+          <label for="judoka_categorie_age">Catégorie d'âge</label>
+          <select id="judoka_categorie_age" v-model="ageCategoryEditing">
+            <option value="">Non renseignée</option>
+            <option value="Poussinet">Poussinet</option>
+            <option value="Poussin">Poussin</option>
+            <option value="Benjamin">Benjamin</option>
+            <option value="Minime">Minime</option>
+            <option value="Cadet">Cadet</option>
+            <option value="Junior">Junior</option>
+            <option value="Senior">Senior</option>
+            <option value="Vétéran">Vétéran</option>
+          </select>
+          <div class="form-actions">
+            <button type="button" @click="saveJudokaInfo()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              Enregistrer le profil
+            </button>
+          </div>
+        </div>
+        <div v-if="canEditCoachNotes" class="section coach-notes-section">
+          <div class="section-heading">
+            <div>
+              <h3>Notes coach</h3>
+              <p class="subtitle">Observations privées, visibles uniquement par les coaches et administrateurs.</p>
+            </div>
+          </div>
+          <textarea
+            id="coachNotesTextarea"
+            rows="4"
+            placeholder="Technique, tactique, axes de travail, niveau de compétition..."
+            v-model="coachNotesEditing"
+          ></textarea>
+          <div class="form-actions">
+            <button type="button" @click="saveCoachNotes()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              Enregistrer les notes
+            </button>
           </div>
         </div>
       </div>

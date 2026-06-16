@@ -63,6 +63,17 @@ export default function createClubCompetitionsService(
     return rows;
   }
 
+  function assertParticipantsMatchAgeCategory(rows: JudokaRow[], ageCategory: string): void {
+    if (!ageCategory) {
+      return;
+    }
+
+    const invalid = rows.filter((row) => String(row.categorie_age || "") !== ageCategory);
+    if (invalid.length) {
+      throw new Error("Tous les judokas sélectionnés doivent appartenir à la catégorie d'âge de la compétition.");
+    }
+  }
+
   async function saveClubCompetition(email: string, input: ClubCompetitionInput) {
     const { domainUser } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
@@ -81,7 +92,8 @@ export default function createClubCompetitionsService(
       throw new Error("Au moins un judoka doit être sélectionné.");
     }
     if (event.participantJudokaIds.length) {
-      await assertParticipantIdsExist(event.participantJudokaIds);
+      const participantRows = await assertParticipantIdsExist(event.participantJudokaIds);
+      assertParticipantsMatchAgeCategory(participantRows, event.ageCategory);
     }
 
     if (isEditing) {

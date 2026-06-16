@@ -13,6 +13,21 @@
     } = ui;
     const { clearMessage } = notifications;
     let mounted = false;
+    let currentJudokaId = "";
+    const judokaLocalState = window.Vue.reactive({
+      coachNotesEditing: "",
+      ageCategoryEditing: ""
+    });
+
+    function getCurrentSeasonStartYear() {
+      const now = new Date();
+      return now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    }
+
+    function getDisplayedSeasonStartYear(): number | null {
+      if (!state.currentJudokaProfile) return null;
+      return parseInt(state.currentJudokaProfile.season.start.slice(0, 4), 10);
+    }
 
     const defaultJudokaProfile: JudokaProfileViewModel = {
       profileTitle: "Fiche judoka",
@@ -109,6 +124,69 @@
       () => competitionResultsPagination.value.canShowNextPage
     );
 
+    const canEditCoachNotes = window.Vue.computed(() => state.isCoach);
+    const canEditJudokaInfo = window.Vue.computed(() => state.isCoach);
+
+    const canShowPreviousSeason = window.Vue.computed(() => Boolean(state.currentJudokaProfile));
+    const canShowNextSeason = window.Vue.computed(() => {
+      const displayed = getDisplayedSeasonStartYear();
+      if (displayed === null) return false;
+      return displayed < getCurrentSeasonStartYear();
+    });
+
+    function loadJudokaProfile(idJudoka: string, seasonStartYear?: number) {
+      app.runServer(
+        "getJudokaProfile",
+        [idJudoka, seasonStartYear],
+        (data) => {
+          ensureJudokaView();
+          state.currentJudokaProfile = data;
+          judokaLocalState.coachNotesEditing = data.coachNotes ?? "";
+          judokaLocalState.ageCategoryEditing = data.judoka?.ageCategory || "";
+          state.judokaCompetitionResultsCurrentPage = 1;
+          showView("judokaView");
+        },
+        notifications.showError
+      );
+    }
+
+    function showPreviousSeason() {
+      const displayed = getDisplayedSeasonStartYear();
+      if (!currentJudokaId || displayed === null) return;
+      loadJudokaProfile(currentJudokaId, displayed - 1);
+    }
+
+    function showNextSeason() {
+      const displayed = getDisplayedSeasonStartYear();
+      if (!currentJudokaId || displayed === null) return;
+      loadJudokaProfile(currentJudokaId, displayed + 1);
+    }
+
+    function openCompetitionFromProfile(competitionId: string) {
+      app.screens.competition.openCompetitionFromJudokaProfile(competitionId);
+    }
+
+    function saveCoachNotes() {
+      if (!currentJudokaId) return;
+      app.runServer(
+        "saveCoachNotes",
+        [currentJudokaId, judokaLocalState.coachNotesEditing],
+        (response) => notifications.showSuccess(response.message),
+        notifications.showError
+      );
+    }
+
+    function saveJudokaInfo() {
+      if (!currentJudokaId) return;
+      const ageCategory = judokaLocalState.ageCategoryEditing || "";
+      app.runServer(
+        "saveJudokaInfo",
+        [currentJudokaId, ageCategory],
+        (response) => notifications.showSuccess(response.message),
+        notifications.showError
+      );
+    }
+
     function ensureJudokaView() {
       if (mounted) {
         return;
@@ -116,9 +194,14 @@
       mounted = true;
       ui.mountViewModel(
         "judokaView",
-        {},
+        judokaLocalState,
         {
           showHome: () => app.showHome && app.showHome(),
+          openCompetitionFromProfile,
+          saveCoachNotes,
+          saveJudokaInfo,
+          showPreviousSeason,
+          showNextSeason,
           showCompetitionResultsPreviousPage,
           showCompetitionResultsNextPage
         },
@@ -145,7 +228,11 @@
           competitionResultsCurrentPage,
           competitionResultsTotalCount,
           competitionResultsCanShowPreviousPage,
-          competitionResultsCanShowNextPage
+          competitionResultsCanShowNextPage,
+          canShowPreviousSeason,
+          canShowNextSeason,
+          canEditCoachNotes,
+          canEditJudokaInfo
         }
       );
     }
@@ -165,18 +252,8 @@
       if (!keepMessage) {
         clearMessage();
       }
-
-      app.runServer(
-        "getJudokaProfile",
-        [idJudoka],
-        (data) => {
-          ensureJudokaView();
-          state.currentJudokaProfile = data;
-          state.judokaCompetitionResultsCurrentPage = 1;
-          showView("judokaView");
-        },
-        notifications.showError
-      );
+      currentJudokaId = idJudoka;
+      loadJudokaProfile(idJudoka);
     }
 
     return {

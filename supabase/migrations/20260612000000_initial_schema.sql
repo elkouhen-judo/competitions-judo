@@ -121,6 +121,15 @@ alter table public.competitions
   on delete set null;
 
 alter table public.judokas
+  add column if not exists notes_coach text not null default '';
+
+alter table public.judokas
+  add column if not exists categorie_age text not null default '';
+
+alter table public.competitions
+  add column if not exists niveau text not null default '';
+
+alter table public.judokas
   drop constraint if exists judokas_role_check;
 
 alter table public.judokas

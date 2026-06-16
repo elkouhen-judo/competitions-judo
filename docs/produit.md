@@ -76,7 +76,7 @@ Le produit s'articule autour de deux vues majeures :
 - **Espace Parent / Judoka :** Accès en lecture/écriture uniquement sur le profil du judoka (ou des enfants de la fratrie).
 
 ### Saisie Sportive (Périmètre Parent)
-- Création d'une compétition (Nom, Date, Lieu, Catégorie d'âge/poids).
+- Création d'une compétition (Nom, Date, Niveau, Catégorie d'âge/poids).
 - Saisie des combats avec la granularité stricte suivante :
   - **Statut :** Victoire (V) / Défaite (D) / Égalité (E).
   - **Déroulé :** Zone de commentaire libre optionnelle (ex: *"Perdu par Ippon sur Uchi-Mata"*, *"Gagné aux pénalités au Golden Score"*).

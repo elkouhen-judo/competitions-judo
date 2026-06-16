@@ -173,6 +173,7 @@ const childrenService = createChildrenService({
 const profileService = createProfileService({
   combatsRepository,
   competitionsRepository,
+  judokasRepository,
   buildJudokaProfileSnapshot,
   userContextService,
   getCompetitionCategoryLabel,
@@ -203,7 +204,7 @@ async function getInitialData(email) {
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
 
-  const clubCompetitionsRaw = admin || coach ? await clubCompetitionsRepository.listAll() : [];
+  const clubCompetitionsRaw = coach ? await clubCompetitionsRepository.listAll() : [];
   const clubCompetitions = clubCompetitionsRaw.map((cc) => ({
     clubCompetitionId: cc.id_club_competition,
     name: cc.nom,

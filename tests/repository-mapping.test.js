@@ -49,7 +49,8 @@ test("repositories map domain objects to supabase records", async () => {
     name: {
       firstName: "Aya",
       lastName: "Martin"
-    }
+    },
+    ageCategory: ""
   });
   await competitionsRepository.insert(
     {
@@ -59,6 +60,7 @@ test("repositories map domain objects to supabase records", async () => {
         competitionDate: "2026-06-11",
         ageCategory: "",
         weightCategory: "",
+        level: "",
         result: ""
       }
     },
@@ -103,7 +105,8 @@ test("repositories map domain objects to supabase records", async () => {
       {
         email: null,
         prenom: "Aya",
-        nom: "Martin"
+        nom: "Martin",
+        categorie_age: ""
       }
     ],
     [
@@ -117,6 +120,7 @@ test("repositories map domain objects to supabase records", async () => {
         date: "2026-06-11",
         categorie_age: "",
         categorie_poids: "",
+        niveau: "",
         classement: ""
       }
     ],
