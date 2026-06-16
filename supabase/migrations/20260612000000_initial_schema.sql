@@ -126,8 +126,18 @@ alter table public.judokas
 alter table public.judokas
   add column if not exists categorie_age text not null default '';
 
+alter table public.judokas
+  add column if not exists categorie_poids text not null default '';
+
+alter table public.judokas
+  add column if not exists couleur_ceinture text not null default '';
+
 alter table public.competitions
   add column if not exists niveau text not null default '';
+
+alter table public.competitions
+  add column if not exists coach_objective text not null default '',
+  add column if not exists coach_review text not null default '';
 
 alter table public.judokas
   drop constraint if exists judokas_role_check;
@@ -458,28 +468,11 @@ set
 
 insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
 values (
-  'JUDO_RAYANE_EL_KOUHEN',
-  'rayane.elkouhen@gmail.com',
-  'Rayane',
-  'EL KOUHEN',
-  'NORMAL',
-  'JUDOKA'
-)
-on conflict (email) do update
-set
-  prenom = excluded.prenom,
-  nom = excluded.nom,
-  role = excluded.role,
-  profile_type = excluded.profile_type,
-  updated_at = now();
-
-insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
-values (
   'JUDO_ADRIEN_HOUSSAIS',
   'adrien.houssais.judo@gmail.com',
   'Adrien',
   'HOUSSAIS',
-  'ADMIN',
+  'COACH',
   'JUDOKA'
 )
 on conflict (email) do update

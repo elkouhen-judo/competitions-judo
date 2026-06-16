@@ -2,7 +2,6 @@
       <div class="panel-header">
         <div>
           <h2>{{ clubCompetitionFormTitle }}</h2>
-          <p class="subtitle">Créer un événement partagé et sélectionner les judokas concernés.</p>
         </div>
         <div class="competition-header-actions">
           <button class="button-secondary" type="button" @click="cancelClubCompetitionForm()">
@@ -43,7 +42,6 @@
               <h3>Judokas concernés
                 <span v-if="clubCompetitionForm.participantJudokaIds.length" class="result-badge">{{ clubCompetitionForm.participantJudokaIds.length }} sélectionné(s)</span>
               </h3>
-              <p class="subtitle">Choisissez une catégorie puis cochez les judokas concernés.</p>
             </div>
           </div>
           <div v-if="hasClubCompetitionFormAgeCategory" class="filter-bar">
@@ -71,7 +69,7 @@
 
         <div class="form-actions mobile-action-bar">
           <button class="button-secondary" type="button" @click="cancelClubCompetitionForm()">Annuler</button>
-          <button id="saveClubCompetitionButton" type="button" @click="saveClubCompetition()">Créer la compétition club</button>
+          <button id="saveClubCompetitionButton" type="button" :disabled="isSubmitting" @click="saveClubCompetition()">Créer la compétition club</button>
         </div>
       </div>
     </section>

@@ -5,16 +5,16 @@
           <p id="competitionSubtitle" class="subtitle">{{ competitionSubtitle }}</p>
         </div>
         <div class="competition-header-actions">
-          <button class="button-secondary" @click="navigateBackFromCompetition()">
+          <button class="button-secondary" type="button" @click="navigateBackFromCompetition()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             Retour
           </button>
-          <div id="competitionAdminActions" class="competition-management-actions" :class="{ hidden: !canEditCompetition }">
-            <button id="editCompetitionButton" class="button-secondary" @click="editCurrentCompetition()">
+          <div id="competitionAdminActions" class="competition-management-actions" v-show="canEditCompetition">
+            <button id="editCompetitionButton" class="button-secondary" type="button" :disabled="isSubmitting" @click="editCurrentCompetition()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               Modifier
             </button>
-            <button id="deleteCompetitionButton" class="button-danger" @click="deleteCurrentCompetition()">
+            <button id="deleteCompetitionButton" class="button-danger" type="button" :disabled="isSubmitting" @click="deleteCurrentCompetition()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
               Supprimer
             </button>
@@ -44,18 +44,43 @@
           <div class="section-heading">
             <div>
               <h3>Combats</h3>
-              <p class="subtitle">Liste des combats de cette compétition</p>
             </div>
           </div>
           <div id="combatsList">
-            <div v-if="!hasCombats" class="empty-state">{{ combatsEmptyMessage }}</div>
+            <div v-if="isLoadingCombats" class="list" aria-label="Chargement des combats" aria-busy="true">
+              <div class="sk-card">
+                <div class="sk-row">
+                  <div class="sk-line sk-title"></div>
+                  <div class="sk-line sk-badge"></div>
+                </div>
+                <div class="sk-line sk-meta"></div>
+              </div>
+              <div class="sk-card">
+                <div class="sk-row">
+                  <div class="sk-line sk-title" style="width:70%"></div>
+                  <div class="sk-line sk-badge"></div>
+                </div>
+              </div>
+              <div class="sk-card">
+                <div class="sk-row">
+                  <div class="sk-line sk-title" style="width:45%"></div>
+                  <div class="sk-line sk-badge"></div>
+                </div>
+                <div class="sk-line sk-meta" style="width:40%"></div>
+              </div>
+            </div>
+            <div v-else-if="!hasCombats" class="empty-action">
+              <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              <p class="empty-action-title">Aucun combat</p>
+              <p class="empty-action-body">{{ combatsEmptyMessage }}</p>
+            </div>
             <div v-else class="list">
               <article v-for="combat in combats" :key="combat.combatId" class="card combat-card">
                 <div class="combat-header">
                   <p class="card-title">{{ combat.opponent }}</p>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
                     <span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span>
-                    <span v-if="combat.victoryType" class="result-badge" style="background: var(--line); border-color: var(--muted);">{{ combat.victoryType }}</span>
+                    <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
                   </div>
                 </div>
                 <div v-if="combat.showJudoka" class="meta-row">
@@ -64,11 +89,11 @@
                 </div>
                 <p class="combat-comment">{{ combat.notes }}</p>
                 <div v-if="combat.canEdit" class="card-actions">
-                  <button class="button-secondary" type="button" @click="showCombatForm(combat.combatId)">
+                  <button class="button-secondary" type="button" :disabled="isSubmitting" @click="showCombatForm(combat.combatId)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     Modifier
                   </button>
-                  <button class="button-danger" type="button" @click="deleteCombat(combat.combatId)">
+                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="deleteCombat(combat.combatId)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     Supprimer
                   </button>
@@ -77,14 +102,35 @@
             </div>
           </div>
           <div class="mobile-action-bar primary-action">
-            <button id="finalizeCompetitionButton" class="button-secondary" :class="{ hidden: !canFinalizeCompetition }" @click="showCompetitionFinalizationForm()">
+            <button id="finalizeCompetitionButton" class="button-secondary" type="button" v-show="canFinalizeCompetition" :disabled="isSubmitting" @click="showCompetitionFinalizationForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
               Finaliser
             </button>
-            <button :class="{ hidden: !canEditCompetition }" @click="showCombatForm()">
+            <button type="button" v-show="canEditCompetition" :disabled="isSubmitting" @click="showCombatForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
               Ajouter un combat
             </button>
+          </div>
+        </div>
+        <div v-if="showCoachAssessment" class="section coach-assessment-section">
+          <div class="section-heading">
+            <div>
+              <h3>Suivi coach</h3>
+            </div>
+          </div>
+          <div class="coach-assessment-block">
+            <label class="coach-assessment-label">Objectif</label>
+            <p v-if="!canEditCoachAssessment && !coachObjectiveText" class="coach-assessment-empty">Aucun objectif défini.</p>
+            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachObjectiveText" placeholder="Objectif défini par le coach avant la compétition…" rows="3"></textarea>
+            <p v-else-if="coachObjectiveText" class="coach-assessment-text">{{ coachObjectiveText }}</p>
+            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachObjective()">Enregistrer l'objectif</button>
+          </div>
+          <div class="coach-assessment-block">
+            <label class="coach-assessment-label">Bilan</label>
+            <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Aucun bilan rédigé.</p>
+            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachReviewText" placeholder="Bilan post-compétition rédigé par le coach…" rows="3"></textarea>
+            <p v-else-if="coachReviewText" class="coach-assessment-text">{{ coachReviewText }}</p>
+            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview()">Enregistrer le bilan</button>
           </div>
         </div>
       </div>

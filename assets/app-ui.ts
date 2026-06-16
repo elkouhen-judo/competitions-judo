@@ -69,14 +69,23 @@
 
   function formatDate(value: unknown) {
     if (!value) return "";
-    const d = new Date(value as string | number | Date);
-    return isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("fr-FR");
+    const str = String(value);
+    // "YYYY-MM-DD" strings are parsed as UTC by spec; replace dashes to force local-time parsing
+    const src = /^\d{4}-\d{2}-\d{2}$/.test(str) ? str.replace(/-/g, "/") : str;
+    const d = new Date(src);
+    return isNaN(d.getTime()) ? str : d.toLocaleDateString("fr-FR");
   }
 
   function toInputDate(value: unknown) {
     if (!value) return "";
-    const d = new Date(value as string | number | Date);
-    return isNaN(d.getTime()) ? String(value) : d.toISOString().slice(0, 10);
+    const str = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return str;
+    const year = String(d.getFullYear());
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   function getCurrentLocalDate() {
@@ -151,7 +160,7 @@
   }
 
   function cloneDefaultState<TValue>(defaultState: TValue): TValue {
-    return structuredClone(defaultState);
+    return JSON.parse(JSON.stringify(defaultState));
   }
 
   function createMountedViewModel<TViewModel extends object>(

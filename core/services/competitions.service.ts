@@ -19,7 +19,7 @@ interface JudokaDataAccess {
 
 type CompetitionMethods = Pick<
   RpcMethods,
-  "deleteCompetition" | "finalizeCompetition" | "getCompetitionDetail" | "saveCompetition"
+  "deleteCompetition" | "finalizeCompetition" | "getCompetitionDetail" | "saveCompetition" | "saveCoachObjective" | "saveCoachReview"
 >;
 
 export interface CompetitionsServiceDeps {
@@ -233,6 +233,32 @@ export default function createCompetitionsService(
     };
   }
 
+  async function saveCoachObjective(email: string, idCompetition: string, objective: string) {
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    if (domainUser.accessRole !== "COACH" && domainUser.accessRole !== "ADMIN") {
+      throw new Error("Seul un coach ou administrateur peut définir un objectif.");
+    }
+    const competition = await competitionsRepository.getById(idCompetition);
+    if (!competition) {
+      throw new Error("Compétition introuvable.");
+    }
+    await competitionsRepository.updateCoachObjective(idCompetition, objective || "");
+    return { success: true, competitionId: idCompetition, message: "Objectif enregistré." };
+  }
+
+  async function saveCoachReview(email: string, idCompetition: string, review: string) {
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    if (domainUser.accessRole !== "COACH" && domainUser.accessRole !== "ADMIN") {
+      throw new Error("Seul un coach ou administrateur peut rédiger un bilan.");
+    }
+    const competition = await competitionsRepository.getById(idCompetition);
+    if (!competition) {
+      throw new Error("Compétition introuvable.");
+    }
+    await competitionsRepository.updateCoachReview(idCompetition, review || "");
+    return { success: true, competitionId: idCompetition, message: "Bilan enregistré." };
+  }
+
   async function deleteCompetition(email: string, idCompetition: string) {
     const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
 
@@ -261,7 +287,9 @@ export default function createCompetitionsService(
       deleteCompetition,
       finalizeCompetition,
       getCompetitionDetail,
-      saveCompetition
+      saveCompetition,
+      saveCoachObjective,
+      saveCoachReview
     }
   };
 }

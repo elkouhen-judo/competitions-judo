@@ -15,6 +15,8 @@ export interface Judoka {
   profileType: "JUDOKA" | "PARENT";
   accessRole: "NORMAL" | "COACH" | "ADMIN";
   ageCategory: string;
+  weightCategory: string;
+  beltColor: string;
 }
 
 export interface Competition {
@@ -27,6 +29,8 @@ export interface Competition {
   weightCategory: string;
   level: string;
   result: string | null;
+  coachObjective: string;
+  coachReview: string;
 }
 
 export interface Combat {
@@ -267,8 +271,12 @@ export interface RpcMethods {
   saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
   /** Enregistre les notes privées du coach pour un judoka. */
   saveCoachNotes: (email: string, idJudoka: string, notes: string) => Promise<OperationResult>;
+  /** Enregistre l'objectif pré-compétition défini par le coach. */
+  saveCoachObjective: (email: string, idCompetition: string, objective: string) => Promise<OperationResult>;
+  /** Enregistre le bilan post-compétition rédigé par le coach. */
+  saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
   /** Met à jour la catégorie d'âge d'un judoka (admin). */
-  saveJudokaInfo: (email: string, idJudoka: string, ageCategory: string) => Promise<OperationResult>;
+  saveJudokaInfo: (email: string, idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string) => Promise<OperationResult>;
   /** Ajoute un combat à une compétition. */
   ajouterCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Supprime un combat. */

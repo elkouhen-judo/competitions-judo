@@ -23,6 +23,7 @@
     judokaName: string;
     showJudoka: boolean;
     canDelete: boolean;
+    hasCoachReview: boolean;
   }
 
   function createKirokuHomeScreen(app: KirokuApp) {
@@ -46,7 +47,13 @@
     }
 
     function getCurrentMode(): HomeMode {
-      return state.homeMode || "judoka";
+      return state.homeMode;
+    }
+
+    function getTodayStr() {
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     }
 
     function getAccessibleHomeJudokas() {
@@ -115,6 +122,8 @@
     const showClubCompetitionsSection = window.Vue.computed(() => getCurrentMode() === "coach");
     const showActiveJudokaSummary = window.Vue.computed(() => getCurrentMode() !== "judoka" && getCurrentMode() !== "admin");
     const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser) && getCurrentMode() !== "admin");
+    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+    const judokasById = window.Vue.computed(() => new Map(state.judokas.map((j) => [String(j.judokaId), j])));
 
     const actionDisabled = window.Vue.computed(() => {
       const mode = getCurrentMode();
@@ -139,7 +148,7 @@
           profileButtonMeta: selfLabel,
           addCompetitionButtonText: "Nouvelle compétition",
           addCompetitionButtonMeta: selfLabel,
-          competitionsTitle: "Mes résultats",
+          competitionsTitle: "Derniers résultats",
           competitionsSubtitle: "Compétitions passées, de la plus récente à la plus ancienne.",
           showCompetitionsSection: true,
           activeJudokaSummary: { label: "", value: "", meta: "" }
@@ -155,7 +164,7 @@
           filterPlaceholder: "Choisir un judoka...",
           profileButtonText: "Voir la fiche",
           profileButtonMeta: activeLabel || "Choisir un judoka",
-          addCompetitionButtonText: "Nouvelle compétition club",
+          addCompetitionButtonText: "Nouvelle compétition",
           addCompetitionButtonMeta: "Affecter plusieurs judokas",
           competitionsTitle: activeJudoka
             ? `Résultats de ${activeName}`
@@ -201,7 +210,7 @@
         profileButtonMeta: activeLabel || "Moi ou un enfant",
         addCompetitionButtonText: "Nouvelle compétition",
         addCompetitionButtonMeta: activeLabel || "Moi ou un enfant",
-        competitionsTitle: activeJudoka ? `Résultats de ${activeName}` : "Résultats",
+        competitionsTitle: "Derniers résultats",
         competitionsSubtitle: activeJudoka
           ? "Compétitions passées, de la plus récente à la plus ancienne."
           : "Sélectionnez un profil pour voir l'historique.",
@@ -230,8 +239,7 @@
     const filterJudokaId = window.Vue.computed(() => state.homeFilterJudokaId);
 
     const competitionsProjection = window.Vue.computed(() => {
-      const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const today = getTodayStr();
       const mode = getCurrentMode();
       const activeJudokaId = getHomeActiveJudokaId();
 
@@ -266,7 +274,7 @@
         const emptyMsg = mode === "family"
           ? "Aucun résultat enregistré pour votre périmètre."
           : isFirstTimer
-            ? "Bienvenue ! Tapez « Nouvelle compétition » pour enregistrer votre premier résultat."
+            ? "Bienvenue ! Appuyez sur « Nouvelle compétition » pour enregistrer votre premier résultat."
             : "Vos compétitions à venir apparaissent dans « À venir ».";
         return {
           competitions: [] as HomeCompetitionCard[],
@@ -276,16 +284,17 @@
         };
       }
 
-      const judokasById = new Map(state.judokas.map((j) => [String(j.judokaId), j]));
+      const byId = judokasById.value;
       const allCompetitions = pastComps.map((c) => {
-        const judoka = judokasById.get(String(c.ownerJudokaId));
+        const judoka = byId.get(String(c.ownerJudokaId));
         return {
           competitionId: c.competitionId || "",
           name: c.name || "Compétition",
           date: formatDate(c.competitionDate),
           judokaName: judoka ? getJudokaDisplayName(judoka) : "",
           showJudoka: false,
-          canDelete: state.isParent && !state.isCoach && !state.isAdmin
+          canDelete: state.isParent && !state.isCoach && !state.isAdmin,
+          hasCoachReview: Boolean(c.coachReview)
         };
       });
       return {
@@ -306,8 +315,7 @@
     const competitionsCanShowNextPage = window.Vue.computed(() => competitionsProjection.value.page.canShowNextPage);
 
     const clubCompetitionsProjection = window.Vue.computed(() => {
-      const now = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const today = getTodayStr();
       const past = state.clubCompetitions.filter((cc) => cc.competitionDate < today);
       if (!past.length) {
         return {
@@ -340,11 +348,10 @@
     const clubCompetitionsCanShowNextPage = window.Vue.computed(() => clubCompetitionsProjection.value.page.canShowNextPage);
 
     const upcomingEvents = window.Vue.computed(() => {
-      const now = new Date();
+      const today = getTodayStr();
+      const weekLater = new Date();
+      weekLater.setDate(weekLater.getDate() + 7);
       const pad = (n: number) => String(n).padStart(2, "0");
-      const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-      const weekLater = new Date(now);
-      weekLater.setDate(now.getDate() + 7);
       const weekLaterStr = `${weekLater.getFullYear()}-${pad(weekLater.getMonth() + 1)}-${pad(weekLater.getDate())}`;
 
       const mode = getCurrentMode();
@@ -415,6 +422,7 @@
         showClubCompetitionsSection,
         showActiveJudokaSummary,
         showHomeActions,
+        isSubmitting,
         actionDisabled,
         homeTitle,
         homeSubtitle,

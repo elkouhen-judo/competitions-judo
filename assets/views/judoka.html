@@ -5,7 +5,7 @@
           <p id="judokaProfileSubtitle" class="subtitle">{{ profileSubtitle }}</p>
         </div>
         <div class="competition-header-actions">
-          <button class="button-secondary" @click="showHome()">
+          <button class="button-secondary" type="button" @click="showHome()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             Retour
           </button>
@@ -20,6 +20,7 @@
             <p id="judokaHeroSummary" class="hero-highlight">{{ heroSummary }}</p>
             <div class="hero-badges">
               <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
+              <span v-if="heroBeltColor" id="judokaHeroBeltColor" class="result-badge">{{ heroBeltColor }}</span>
               <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
             </div>
           </div>
@@ -65,7 +66,6 @@
           <div class="section-heading">
             <div>
               <h3>Profil de combat</h3>
-              <p class="subtitle">Modes de victoire et de défaite sur la saison affichée.</p>
             </div>
           </div>
           <div class="combat-profile-grid">
@@ -97,11 +97,14 @@
           <div class="section-heading">
             <div>
               <h3>Résultats compétition</h3>
-              <p class="subtitle">Liste courte des compétitions de la saison affichée.</p>
             </div>
           </div>
           <div id="judokaCompetitionResults">
-            <div v-if="!hasCompetitionResults" class="empty-state">Aucune compétition enregistrée pour cette saison.</div>
+            <div v-if="!hasCompetitionResults" class="empty-action">
+              <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+              <p class="empty-action-title">Aucune compétition cette saison</p>
+              <p class="empty-action-body">Les résultats de la saison sélectionnée apparaîtront ici.</p>
+            </div>
             <div v-else class="list">
               <article v-for="result in competitionResultsPage" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
                 <div class="performance-result-header">
@@ -139,7 +142,6 @@
           <div class="section-heading">
             <div>
               <h3>Profil judoka</h3>
-              <p class="subtitle">Catégorie d'âge visible par tous.</p>
             </div>
           </div>
           <label for="judoka_categorie_age">Catégorie d'âge</label>
@@ -154,8 +156,30 @@
             <option value="Senior">Senior</option>
             <option value="Vétéran">Vétéran</option>
           </select>
+          <label for="judoka_categorie_poids">Catégorie de poids</label>
+          <input type="text" id="judoka_categorie_poids" placeholder="ex: -73kg" v-model.trim="weightCategoryEditing">
+          <label for="judoka_couleur_ceinture">Couleur de ceinture</label>
+          <select id="judoka_couleur_ceinture" v-model="beltColorEditing">
+            <option value="">Non renseignée</option>
+            <option value="Blanc">Blanc</option>
+            <option value="Blanc-Jaune">Blanc-Jaune</option>
+            <option value="Jaune">Jaune</option>
+            <option value="Jaune-Orange">Jaune-Orange</option>
+            <option value="Orange">Orange</option>
+            <option value="Orange-Vert">Orange-Vert</option>
+            <option value="Vert">Vert</option>
+            <option value="Vert-Bleu">Vert-Bleu</option>
+            <option value="Bleu">Bleu</option>
+            <option value="Bleu-Marron">Bleu-Marron</option>
+            <option value="Marron">Marron</option>
+            <option value="Noir 1er Dan">Noir 1er Dan</option>
+            <option value="Noir 2e Dan">Noir 2e Dan</option>
+            <option value="Noir 3e Dan">Noir 3e Dan</option>
+            <option value="Noir 4e Dan">Noir 4e Dan</option>
+            <option value="Noir 5e Dan">Noir 5e Dan</option>
+          </select>
           <div class="form-actions">
-            <button type="button" @click="saveJudokaInfo()">
+            <button type="button" :disabled="isSubmitting" @click="saveJudokaInfo()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               Enregistrer le profil
             </button>
@@ -165,7 +189,6 @@
           <div class="section-heading">
             <div>
               <h3>Notes coach</h3>
-              <p class="subtitle">Observations privées, visibles uniquement par les coaches et administrateurs.</p>
             </div>
           </div>
           <textarea
@@ -175,7 +198,7 @@
             v-model="coachNotesEditing"
           ></textarea>
           <div class="form-actions">
-            <button type="button" @click="saveCoachNotes()">
+            <button type="button" :disabled="isSubmitting" @click="saveCoachNotes()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               Enregistrer les notes
             </button>

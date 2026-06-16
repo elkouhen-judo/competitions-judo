@@ -2,10 +2,9 @@
       <div class="panel-header">
         <div>
           <h2>Invitations et admins</h2>
-          <p class="subtitle">Invitez d'abord les nouveaux accès, puis gérez les admins déjà inscrits.</p>
         </div>
         <div class="competition-header-actions">
-          <button class="button-secondary" @click="showHome()">
+          <button class="button-secondary" type="button" @click="showHome()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             Retour
           </button>
@@ -16,12 +15,12 @@
           <div class="section-heading">
             <div>
               <h3>Inviter un utilisateur</h3>
-              <p class="subtitle">Ajoutez l'email Google autorisé et définissez le type de profil à créer dès la première connexion. Les droits admin se gèrent séparément.</p>
             </div>
           </div>
 
           <label for="invite_email">Email invité</label>
           <input type="email" id="invite_email" autocomplete="email" placeholder="email@gmail.com" v-model.trim="accessInvitationForm.email">
+          <p class="field-hint">Email Google — le type de profil sera créé à la première connexion</p>
 
           <label for="invite_profile_type">Type de profil</label>
           <select id="invite_profile_type" v-model="accessInvitationForm.profileType">
@@ -30,11 +29,11 @@
           </select>
 
           <div class="form-actions mobile-action-bar">
-            <button class="button-secondary" @click="resetAccessInvitationForm()">
+            <button class="button-secondary" type="button" @click="resetAccessInvitationForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
               Réinitialiser
             </button>
-            <button id="saveInvitationButton" @click="saveAccessInvitation()">
+            <button id="saveInvitationButton" type="button" :disabled="isSubmitting" @click="saveAccessInvitation()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
               Enregistrer l'invitation
             </button>
@@ -45,12 +44,11 @@
           <div class="section-heading">
             <div>
               <h3>Invitations d'accès</h3>
-              <p class="subtitle">Les nouveaux comptes Google doivent être invités ici avant de pouvoir créer leur profil. Recherchez un email si la liste devient longue.</p>
             </div>
           </div>
           <div class="filter-bar">
             <label for="accessInvitationFilter">Rechercher un email invité</label>
-            <input type="search" id="accessInvitationFilter" autocomplete="off" placeholder="email@gmail.com" v-model="accessInvitationSearch" @input="updateAccessInvitationSearch($event.target.value)">
+            <input type="search" id="accessInvitationFilter" autocomplete="off" placeholder="email@gmail.com" :value="accessInvitationSearch" @input="updateAccessInvitationSearch($event.target.value)">
           </div>
           <div id="accessInvitationsSummary">
             <div v-if="accessInvitationsSummary" class="list-summary">
@@ -78,7 +76,7 @@
                   </div>
                 </div>
                 <div class="card-actions">
-                  <button class="button-danger" type="button" @click="deleteAccessInvitation(invitation.email)">
+                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="deleteAccessInvitation(invitation.email)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     Retirer l'invitation
                   </button>
@@ -92,7 +90,6 @@
           <div class="section-heading">
             <div>
               <h3>Admins</h3>
-              <p class="subtitle">Consultez les admins actuels et retirez leurs droits si nécessaire.</p>
             </div>
           </div>
           <div id="adminsList">
@@ -108,7 +105,7 @@
                 </div>
                 <div class="card-actions">
                   <span v-if="admin.isCurrentAdmin" class="current-admin-note">Vous</span>
-                  <button v-else class="button-danger" type="button" @click="revokeAdminRole(admin.judokaId, admin.fullName)">
+                  <button v-else class="button-danger" type="button" :disabled="isSubmitting" @click="revokeAdminRole(admin.judokaId, admin.fullName)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7 2.5-2.5"></path><path d="M16 16l6 6"></path><path d="M22 16l-6 6"></path></svg>
                     Révoquer
                   </button>
@@ -129,19 +126,19 @@
           <div class="section-heading">
             <div>
               <h3>Ajouter un admin</h3>
-              <p class="subtitle">Saisissez l'email exact d'un judoka déjà autorisé et déjà inscrit.</p>
             </div>
           </div>
 
           <label for="admin_email">Email</label>
           <input type="email" id="admin_email" autocomplete="email" placeholder="email@gmail.com" v-model.trim="adminEmail">
+          <p class="field-hint">Judoka déjà inscrit dans l'application</p>
 
           <div class="form-actions mobile-action-bar">
-            <button class="button-secondary" @click="resetAdminForm()">
+            <button class="button-secondary" type="button" @click="resetAdminForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
               Réinitialiser
             </button>
-            <button id="saveAdminButton" @click="saveAdminRole()">
+            <button id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
               Ajouter l'admin
             </button>

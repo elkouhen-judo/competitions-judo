@@ -89,7 +89,7 @@ export interface KirokuUi {
   ): void;
   normalizeDisplayName(value: unknown): string;
   normalizeLastName(value: unknown): string;
-  showView(id: ViewId): void;
+  showView(id: ViewId, options?: { replace?: boolean; skipHistory?: boolean; preserveScroll?: boolean }): void;
   toInputDate(value: unknown): string;
   viewIds: readonly ViewId[];
 }
@@ -290,8 +290,10 @@ export interface KirokuAppState {
   managedChildren: ChildrenManagement["children"];
   canEditCurrentCompetition: boolean;
   isLoadingCompetition: boolean;
+  isSubmitting: boolean;
+  isOnline: boolean;
+  pendingRpcKeys: Record<string, boolean>;
   homeFilterJudokaId: string;
-  previousView: ViewId;
   accessInvitationSearch: string;
   accessInvitationCurrentPage: number;
   competitionsCurrentPage: number;
@@ -304,6 +306,7 @@ export interface KirokuAppState {
 }
 
 export interface RunServerOptions {
+  actionKey?: string;
   retrySessionOnce?: boolean;
 }
 
@@ -376,6 +379,7 @@ export interface JudokaProfileViewModel {
   heroName: string;
   heroSummary: string;
   heroCategory: string;
+  heroBeltColor: string;
   heroSeason: string;
   combatProfile: Record<string, string>;
   hasCombatProfileExtras: boolean;
