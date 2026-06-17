@@ -1,4 +1,5 @@
-profileType,prenom,nom,email,parentEmail
-PARENT,Christine,El Kouhen,christine.elkouhen@gmail.com,
-JUDOKA,Ali,El Kouhen,,christine.elkouhen@gmail.com
-JUDOKA,Rayane,El Kouhen,,christine.elkouhen@gmail.com
+profileType,prenom,nom,email,parentEmail,role,ageCategory
+PARENT,Christine,El Kouhen,christine.elkouhen@gmail.com,,,
+JUDOKA,Ali,El Kouhen,,christine.elkouhen@gmail.com,,Minime
+JUDOKA,Rayane,El Kouhen,,christine.elkouhen@gmail.com,,Minime
+JUDOKA,Karim,Haddad,karim.haddad@example.com,,COACH,

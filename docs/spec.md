@@ -148,6 +148,11 @@ This specification does not define:
 - **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
 - **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
 - **AUTH-011**: CSV-imported profiles with an account email shall be able to connect with Google without re-entering first name or last name.
+- **AUTH-011a**: A CSV-imported `JUDOKA` with an account email may also provide `parentEmail` to be linked to that parent.
+- **AUTH-011b**: A CSV-imported `JUDOKA` row may set a `role` column of `COACH` to grant coach rights at import time; this requires an account email and is not available for `PARENT` rows.
+- **AUTH-011c**: A CSV-imported `JUDOKA` row may set an `ageCategory` column to assign the judoka's age category (e.g. `Minime`) at import time.
+- **AUTH-011d**: Re-importing a CSV row that matches an existing `JUDOKA` (by account email, or by first and last name when no email is given) shall not be treated as an import error; it shall update that judoka's `role` and `ageCategory` from the row instead of failing the row.
+- **AUTH-011e**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
