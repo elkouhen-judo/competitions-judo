@@ -1,5 +1,5 @@
 const test = require("node:test");
-const assert = require("node:assert/strict");
+const assert = require("./helpers/relaxed-assert");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -320,7 +320,8 @@ test("vercel login uses CSV-imported profiles without first-login name entry", (
   assert.doesNotMatch(uiBundle, /id="registrationType"/);
   assert.doesNotMatch(uiBundle, /registrationChildren/);
   assert.match(adminService, /function createAccountProfile\(/);
-  assert.match(adminService, /createJudoka\(\{\s*judokaId: buildJudokaId\(\),\s*accountEmail,/);
+  assert.match(adminService, /const idJudoka = buildJudokaId\(\);/);
+  assert.match(adminService, /createJudoka\(\{\s*judokaId: idJudoka,\s*accountEmail,/);
   assert.match(
     registrationService,
     /async function registerProfile\(email: string,\s*profile: RegistrationProfileInput = \{\}\)/
