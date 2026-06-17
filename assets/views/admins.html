@@ -1,7 +1,7 @@
     <section id="adminsView" class="panel hidden" v-cloak>
       <div class="panel-header">
         <div>
-          <h2>Invitations et admins</h2>
+          <h2>Gestion des utilisateurs</h2>
         </div>
         <div class="competition-header-actions">
           <button class="button-secondary" type="button" @click="showHome()">
@@ -14,71 +14,90 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Inviter un utilisateur</h3>
+              <h3>Importer des profils (CSV)</h3>
             </div>
           </div>
+          <p class="field-hint">Colonnes attendues : profileType (JUDOKA ou PARENT), prenom, nom, email (facultatif pour un judoka mineur), parentEmail (pour rattacher un judoka sans email à un parent).</p>
+          <p class="field-hint">Si le parent référencé par parentEmail n'a pas encore de compte actif (invitation en attente), le judoka est créé et rattaché automatiquement dès que ce parent se connecte pour la première fois.</p>
+          <a href="/sample-users-import.csv" download class="button-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Télécharger un exemple
+          </a>
 
-          <label for="invite_email">Email invité</label>
-          <input type="email" id="invite_email" autocomplete="email" placeholder="email@gmail.com" v-model.trim="accessInvitationForm.email">
-          <p class="field-hint">Email Google — le type de profil sera créé à la première connexion</p>
-
-          <label for="invite_profile_type">Type de profil</label>
-          <select id="invite_profile_type" v-model="accessInvitationForm.profileType">
-            <option value="JUDOKA">Judoka</option>
-            <option value="PARENT">Parent</option>
-          </select>
+          <label for="importUsersFile">Fichier CSV</label>
+          <input type="file" id="importUsersFile" accept=".csv,text/csv" @change="handleImportUsersFileChange($event)">
+          <p v-if="importUsersFileName" class="field-hint">Fichier sélectionné : {{ importUsersFileName }}</p>
 
           <div class="form-actions mobile-action-bar">
-            <button class="button-secondary" type="button" @click="resetAccessInvitationForm()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
-              Réinitialiser
+            <button id="importUsersButton" type="button" :disabled="isSubmitting || !importUsersFileName" @click="importUsersCsv()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Importer
             </button>
-            <button id="saveInvitationButton" type="button" :disabled="isSubmitting" @click="saveAccessInvitation()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
-              Enregistrer l'invitation
-            </button>
+          </div>
+
+          <div v-if="importUsersResults.length" id="importUsersResults" class="list">
+            <p class="list-summary-text">{{ importUsersSummary }}</p>
+            <article v-for="entry in importUsersResults" :key="entry.row" class="card admin-card">
+              <p class="card-title">Ligne {{ entry.row }} — {{ entry.name }}</p>
+              <div class="card-meta">
+                <div class="meta-row">
+                  <span class="meta-label">Statut</span>
+                  <span class="meta-value">{{ entry.success ? 'OK' : 'Erreur' }}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Détail</span>
+                  <span class="meta-value">{{ entry.message }}</span>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
 
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Invitations d'accès</h3>
+              <h3>Utilisateurs</h3>
             </div>
           </div>
           <div class="filter-bar">
-            <label for="accessInvitationFilter">Rechercher un email invité</label>
-            <input type="search" id="accessInvitationFilter" autocomplete="off" placeholder="email@gmail.com" :value="accessInvitationSearch" @input="updateAccessInvitationSearch($event.target.value)">
+            <label for="usersFilter">Rechercher un utilisateur</label>
+            <input type="search" id="usersFilter" autocomplete="off" placeholder="Nom ou email" :value="usersSearch" @input="updateUsersSearch($event.target.value)">
           </div>
-          <div id="accessInvitationsSummary">
-            <div v-if="accessInvitationsSummary" class="list-summary">
-              <p class="list-summary-text">{{ accessInvitationsSummary }}</p>
+          <div id="usersSummary">
+            <div v-if="usersSummary" class="list-summary">
+              <p class="list-summary-text">{{ usersSummary }}</p>
               <div class="list-summary-actions">
-                <button v-if="canResetAccessInvitationSearch" class="button-secondary" type="button" @click="resetAccessInvitationSearch()">Effacer le filtre</button>
-                <button v-if="canShowPreviousAccessInvitationPage" class="button-secondary" type="button" @click="showPreviousAccessInvitationPage()">Page précédente</button>
-                <button v-if="canShowNextAccessInvitationPage" class="button-secondary" type="button" @click="showNextAccessInvitationPage()">Page suivante</button>
+                <button v-if="canResetUsersSearch" class="button-secondary" type="button" @click="resetUsersSearch()">Effacer le filtre</button>
+                <button v-if="canShowPreviousUsersPage" class="button-secondary" type="button" @click="showPreviousUsersPage()">Page précédente</button>
+                <button v-if="canShowNextUsersPage" class="button-secondary" type="button" @click="showNextUsersPage()">Page suivante</button>
               </div>
             </div>
           </div>
-          <div id="accessInvitationsList">
-            <div v-if="!hasAccessInvitations" class="empty-state">{{ accessInvitationsEmptyMessage }}</div>
+          <div id="usersList">
+            <div v-if="!hasUsers" class="empty-state">{{ usersEmptyMessage }}</div>
             <div v-else class="list">
-              <article v-for="invitation in accessInvitations" :key="invitation.email" class="card admin-card">
-                <p class="card-title">{{ invitation.email }}</p>
+              <article v-for="managedUser in managedUsersPage" :key="managedUser.judokaId || managedUser.accountEmail" class="card admin-card">
+                <p class="card-title">{{ managedUser.fullName }}</p>
                 <div class="card-meta">
                   <div class="meta-row">
-                    <span class="meta-label">Profil</span>
-                    <span class="meta-value">{{ invitation.invitedProfileType }}</span>
+                    <span class="meta-label">Email</span>
+                    <span class="meta-value">{{ managedUser.accountEmail }}</span>
                   </div>
                   <div class="meta-row">
-                    <span class="meta-label">Créée le</span>
-                    <span class="meta-value">{{ invitation.createdAt }}</span>
+                    <span class="meta-label">Rôle</span>
+                    <span class="meta-value">{{ managedUser.roleLabel }}</span>
                   </div>
                 </div>
                 <div class="card-actions">
-                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="deleteAccessInvitation(invitation.email)">
+                  <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
+                  <button v-else-if="managedUser.isPending" class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(managedUser.accountEmail, managedUser.fullName)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Retirer l'invitation
+                    Annuler l'invitation
+                  </button>
+                  <span v-else-if="managedUser.isAdmin" class="field-hint">Retirez d'abord les droits admin pour supprimer ce compte.</span>
+                  <button v-else class="button-danger" type="button" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Supprimer
                   </button>
                 </div>
               </article>

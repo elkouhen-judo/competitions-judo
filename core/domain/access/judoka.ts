@@ -33,25 +33,6 @@ export interface ManagedChildInput {
   name?: PersonName;
   firstName?: unknown;
   lastName?: unknown;
-  ageCategory?: unknown;
-}
-
-export interface UpdateManagedChildResult {
-  accountEmail: string | null;
-  name: PersonName;
-  ageCategory: string;
-}
-
-export interface DecideManagedChildRemovalInput {
-  child: JudokaInput;
-  hasCompetitions: unknown;
-  hasCombats: unknown;
-  hasOtherParentLink: unknown;
-}
-
-export interface ManagedChildRemovalDecision {
-  removeJudoka: boolean;
-  message: string;
 }
 
 function normalizeOptionalEmail(email: unknown): string | null {
@@ -115,41 +96,3 @@ export function createManagedChild({
   });
 }
 
-export function updateManagedChild({
-  accountEmail,
-  name,
-  firstName,
-  lastName,
-  ageCategory
-}: ManagedChildInput): UpdateManagedChildResult {
-  const childName = name || createPersonName({ firstName, lastName });
-  const normalizedAccountEmail = normalizeOptionalEmail(accountEmail);
-
-  return {
-    accountEmail: normalizedAccountEmail,
-    name: childName,
-    ageCategory: String(ageCategory || "")
-  };
-}
-
-export function decideManagedChildRemoval({
-  child,
-  hasCompetitions,
-  hasCombats,
-  hasOtherParentLink
-}: DecideManagedChildRemovalInput): ManagedChildRemovalDecision {
-  const managedChild = createJudoka(child);
-
-  if (hasCompetitions) {
-    throw new Error("Impossible de supprimer cet enfant tant qu'il possède des compétitions.");
-  }
-  if (hasCombats) {
-    throw new Error("Impossible de supprimer cet enfant tant qu'il possède des combats.");
-  }
-
-  const removeJudoka = !hasOtherParentLink && !managedChild.hasDirectAccount();
-  return {
-    removeJudoka,
-    message: removeJudoka ? "Enfant supprimé." : "Enfant retiré."
-  };
-}

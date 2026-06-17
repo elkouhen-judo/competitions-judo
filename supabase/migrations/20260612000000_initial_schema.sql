@@ -132,6 +132,13 @@ alter table public.judokas
 alter table public.judokas
   add column if not exists couleur_ceinture text not null default '';
 
+alter table public.judokas
+  add column if not exists pending_parent_email text;
+
+create index if not exists judokas_pending_parent_email_idx
+  on public.judokas (lower(pending_parent_email))
+  where pending_parent_email is not null;
+
 alter table public.competitions
   add column if not exists niveau text not null default '';
 
@@ -354,6 +361,20 @@ begin
   delete from public.access_invitations
   where lower(email) = v_email;
 
+  if v_profile_type = 'PARENT' then
+    insert into public.parent_judokas (id_parent, id_judoka)
+    select v_user_id, id_judoka
+    from public.judokas
+    where pending_parent_email is not null
+      and lower(pending_parent_email) = v_email
+    on conflict (id_parent, id_judoka) do nothing;
+
+    update public.judokas
+    set pending_parent_email = null
+    where pending_parent_email is not null
+      and lower(pending_parent_email) = v_email;
+  end if;
+
   return jsonb_build_object(
     'success', true,
     'user', to_jsonb(v_user),
@@ -439,40 +460,6 @@ values (
   'Mehdi',
   'EL KOUHEN',
   'ADMIN',
-  'JUDOKA'
-)
-on conflict (email) do update
-set
-  prenom = excluded.prenom,
-  nom = excluded.nom,
-  role = excluded.role,
-  profile_type = excluded.profile_type,
-  updated_at = now();
-
-insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
-values (
-  'JUDO_CHRISTINE_EL_KOUHEN',
-  'christine.elkouhen@gmail.com',
-  'Christine',
-  'EL KOUHEN',
-  'NORMAL',
-  'PARENT'
-)
-on conflict (email) do update
-set
-  prenom = excluded.prenom,
-  nom = excluded.nom,
-  role = excluded.role,
-  profile_type = excluded.profile_type,
-  updated_at = now();
-
-insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
-values (
-  'JUDO_ADRIEN_HOUSSAIS',
-  'adrien.houssais.judo@gmail.com',
-  'Adrien',
-  'HOUSSAIS',
-  'COACH',
   'JUDOKA'
 )
 on conflict (email) do update

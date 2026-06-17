@@ -46,11 +46,18 @@ except json.JSONDecodeError:
 endef
 export PY_SUPABASE_QUERY
 
-.PHONY: deploy db-pull-env db-deploy db-status db-check db-reset
+.PHONY: deploy dev db-pull-env db-deploy db-status db-check db-reset
 
 # ── Application ──────────────────────────────────────────────────────────────
 
-deploy:
+app-test:
+	npm test
+
+# Lance l'application en local sur http://localhost:3100
+dev:
+	$(VERCEL) dev --listen 3100
+
+app-deploy:
 	npm test
 	npm run build:assets
 	$(VERCEL) --prod

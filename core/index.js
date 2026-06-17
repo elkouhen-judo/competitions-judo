@@ -50,9 +50,6 @@ const createCompetitionsService =
 const createCombatsService = /** @type {typeof import("./services/combats.service").default} */ (
   /** @type {unknown} */ (require("../core-dist/services/combats.service.js").default)
 );
-const createChildrenService = /** @type {typeof import("./services/children.service").default} */ (
-  /** @type {unknown} */ (require("../core-dist/services/children.service.js").default)
-);
 const createProfileService = /** @type {typeof import("./services/profile.service").default} */ (
   /** @type {unknown} */ (require("../core-dist/services/profile.service.js").default)
 );
@@ -62,13 +59,9 @@ const createRegistrationService =
   );
 const { getCompetitionCategoryLabel } = require("./domain/competition-results.js");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.js");
-const {
-  createJudoka,
-  createManagedChild,
-  decideManagedChildRemoval,
-  updateManagedChild
-} = require("./domain/access/judoka.js");
+const { createJudoka, createManagedChild } = require("./domain/access/judoka.js");
 const { createEmail } = require("./domain/access/email.js");
+const { createProfileType } = require("./domain/access/profile-type.js");
 const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope.js");
 const { createAccessInvitation } = require("./domain/access/access-invitation.js");
 const { createClubCompetition } = require("./domain/competitions/club-competition.js");
@@ -108,12 +101,18 @@ const userContextService = createUserContextService({
 });
 
 const adminService = createAdminService({
+  competitionsRepository,
   invitationsRepository,
   judokasRepository,
+  parentLinksRepository,
   userContextService,
+  buildJudokaId: ids.buildJudokaId,
+  cleanText: text.cleanText,
   createAccessInvitation,
   createEmail,
   createJudoka,
+  createManagedChild,
+  createProfileType,
   normalizeEmail: text.normalizeEmail
 });
 
@@ -152,22 +151,6 @@ const combatsService = createCombatsService({
   createCombatUpdate: updateCombat,
   createPersistedCompetition,
   buildCombatId: ids.buildCombatId
-});
-
-const childrenService = createChildrenService({
-  combatsRepository,
-  competitionsRepository,
-  judokasRepository,
-  parentLinksRepository,
-  userContextService,
-  assertCanManageChildrenProfile: permissions.assertCanManageChildrenProfile,
-  buildJudokaId: ids.buildJudokaId,
-  cleanText: text.cleanText,
-  createJudoka,
-  createManagedChild,
-  decideManagedChildRemoval,
-  isParent: permissions.isParent,
-  updateManagedChild
 });
 
 const profileService = createProfileService({
@@ -216,7 +199,6 @@ async function getInitialData(email) {
     isAdmin: admin,
     isCoach: coach,
     isParent: parent,
-    canManageChildren: permissions.canManageChildrenProfile(domainUser),
     competitions: await competitionsService.getCompetitionsForUser(user, managedJudokaScope),
     clubCompetitions,
     judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : []
@@ -226,7 +208,6 @@ async function getInitialData(email) {
 /** @type {import("./types").RpcMethods} */
 const methods = {
   getInitialData,
-  ...childrenService.methods,
   ...profileService.methods,
   ...registrationService.methods,
   ...adminService.methods,

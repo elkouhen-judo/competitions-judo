@@ -1,25 +1,28 @@
     :root {
-      --bg: #ffffff;
+      --bg: #fbfbfa;
       --panel: #ffffff;
-      --text: #0b1020;
-      --muted: #4c5870;
-      --line: #dbe3ef;
-      --primary: #002fa7;
-      --primary-hover: #00258a;
-      --accent: #002fa7;
-      --accent-soft: #edf3ff;
-      --danger: #bc002d;
-      --success: #027a48;
-      --warning: #b54708;
-      --warning-soft: #f8fafc;
+      --text: #111111;
+      --muted: #787774;
+      --line: #eaeaea;
+      --primary: #111111;
+      --primary-hover: #333333;
+      --accent: #1f6c9f;
+      --accent-soft: #e1f3fe;
+      --danger: #9f2f2d;
+      --danger-hover: #7d2422;
+      --danger-soft: #fdebec;
+      --success: #346538;
+      --success-soft: #edf3ec;
+      --warning: #956400;
+      --warning-soft: #fbf3db;
       --gold: #9c7a13;
       --gold-soft: #fdf6e3;
       --silver: #6b7280;
       --silver-soft: #f4f5f7;
       --bronze: #9c6532;
       --bronze-soft: #f9efe6;
-      --soft: #f8fafc;
-      --shadow: 0 8px 18px rgba(0, 47, 167, 0.10);
+      --soft: #f7f6f3;
+      --shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
     }
 
     * {
@@ -95,27 +98,30 @@
     h1,
     h2,
     h3,
-    .hero-title,
+    .hero-title {
+      font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      font-weight: 600;
+    }
+
     .card-title {
-      font-family: 'Barlow Condensed', system-ui, sans-serif;
-      letter-spacing: -0.01em;
       font-weight: 700;
     }
 
     h1 {
       margin-bottom: 4px;
-      font-size: 24px;
-      line-height: 1.15;
+      font-size: 26px;
     }
 
     h2 {
       margin-bottom: 0;
-      font-size: 22px;
+      font-size: 23px;
     }
 
     h3 {
       margin-bottom: 4px;
-      font-size: 20px;
+      font-size: 21px;
     }
 
     .subtitle {
@@ -201,7 +207,7 @@
     }
 
     .toast-close:hover {
-      background: rgba(0, 47, 167, 0.08);
+      background: rgba(17, 17, 17, 0.06);
     }
 
     .toast-close:focus-visible {
@@ -228,6 +234,11 @@
       background: var(--panel);
       box-shadow: none;
       overflow: hidden;
+    }
+
+    .panel:focus-visible {
+      outline: 3px solid rgba(17, 17, 17, 0.14);
+      outline-offset: -3px;
     }
 
     .panel-header {
@@ -279,7 +290,33 @@
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      outline: 3px solid rgba(0, 47, 167, 0.18);
+      outline: 3px solid rgba(17, 17, 17, 0.14);
+    }
+
+    input[type="file"] {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 12px;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-weight: bold;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: background-color 160ms ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: var(--soft);
     }
 
     label {
@@ -307,7 +344,7 @@
       padding: 13px 15px;
       cursor: pointer;
       font-weight: bold;
-      border-radius: 8px;
+      border-radius: 6px;
       text-decoration: none;
       touch-action: manipulation;
       transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
@@ -341,7 +378,7 @@
     }
 
     .button-secondary:hover {
-      background: #f2f6ff;
+      background: var(--soft);
     }
 
     .button-secondary:disabled:hover,
@@ -356,8 +393,8 @@
     }
 
     .button-danger:hover {
-      background: #a0001e;
-      border-color: #a0001e;
+      background: var(--danger-hover);
+      border-color: var(--danger-hover);
     }
 
     .autocomplete-wrapper {
@@ -372,7 +409,7 @@
       max-height: 220px;
       overflow-y: auto;
       width: 100%;
-      box-shadow: 0 8px 14px rgba(17, 17, 17, 0.06);
+      box-shadow: 0 4px 12px rgba(17, 17, 17, 0.05);
       top: calc(100% - 10px);
     }
     .autocomplete-option {
@@ -386,7 +423,7 @@
       touch-action: manipulation;
     }
     .autocomplete-option:last-child { border-bottom: none; }
-    .autocomplete-option:hover { background: #f2f6ff; }
+    .autocomplete-option:hover { background: var(--soft); }
     .autocomplete-empty {
       padding: 12px 14px;
       color: var(--muted);
@@ -417,7 +454,7 @@
       font-size: 14px;
     }
     .data-table tr:hover td {
-      background: #f2f6ff;
+      background: var(--soft);
     }
     .data-table td {
       cursor: pointer;
@@ -508,44 +545,6 @@
       min-height: 64px;
     }
 
-    .club-access-section {
-      border-top: 0;
-      margin-top: 16px;
-      padding-top: 0;
-    }
-
-    .club-access-card {
-      display: grid;
-      gap: 14px;
-      border: 1px solid var(--line);
-      border-left: 6px solid var(--primary);
-      border-radius: 6px;
-      background: linear-gradient(90deg, var(--accent-soft), #ffffff 42%);
-      padding: 14px;
-    }
-
-    .club-access-copy {
-      display: grid;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .club-access-label {
-      color: var(--primary);
-      font-size: 12px;
-      font-weight: bold;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .club-access-card h3 {
-      margin-bottom: 0;
-    }
-
-    .club-access-action {
-      justify-self: stretch;
-    }
-
     .list {
       display: grid;
       gap: 12px;
@@ -577,11 +576,11 @@
     }
 
     .card {
-      border: none;
+      border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(11,16,32,0.07), 0 0 0 1px rgba(11,16,32,0.05);
+      box-shadow: none;
       transition: transform 180ms ease, box-shadow 180ms ease;
     }
 
@@ -592,9 +591,8 @@
 
     /* Upcoming competition this weekend — warm highlight */
     .competition-card:has(.this-weekend-badge) {
-      border-left: 4px solid #e8a800;
-      background: #fffef5;
-      box-shadow: 0 2px 8px rgba(232, 168, 0, 0.15), 0 0 0 1px rgba(232, 168, 0, 0.25);
+      border-left: 4px solid var(--warning);
+      background: var(--warning-soft);
     }
 
     .card-button {
@@ -619,12 +617,12 @@
 
     .card-button:hover {
       background: #fff;
-      border-color: var(--accent);
+      border-color: var(--text);
     }
 
     .card-button:focus-visible {
-      border-color: var(--accent);
-      outline: 3px solid rgba(0, 47, 167, 0.18);
+      border-color: var(--text);
+      outline: 3px solid rgba(17, 17, 17, 0.14);
       outline-offset: 2px;
     }
 
@@ -684,7 +682,7 @@
     }
 
     .card-open-hint {
-      color: var(--primary);
+      color: var(--text);
       font-size: 14px;
       font-weight: bold;
     }
@@ -723,7 +721,7 @@
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
       border-top: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.98);
-      box-shadow: 0 -6px 14px rgba(0, 47, 167, 0.08);
+      box-shadow: 0 -4px 12px rgba(17, 17, 17, 0.04);
     }
 
     .admin-actions {
@@ -757,7 +755,7 @@
     .result-badge {
       flex: 0 0 auto;
       min-width: 72px;
-      border: 1.5px solid #9fb4f7;
+      border: 1px solid var(--line);
       border-radius: 999px;
       background: #fff;
       color: var(--text);
@@ -771,29 +769,29 @@
 
     /* ── Combat results ── */
 
-    /* Victoire : pill plein bleu — signal positif décisif */
+    /* Victoire : pastel vert — signal positif */
     .result-v {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
+      background: var(--success-soft);
+      border-color: var(--success);
+      color: var(--success);
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
-    /* Défaite : pill plein rouge — miroir de la victoire */
+    /* Défaite : pastel rouge — miroir de la victoire */
     .result-d {
-      background: var(--danger);
+      background: var(--danger-soft);
       border-color: var(--danger);
-      color: #fff;
+      color: var(--danger);
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
-    /* Égalité : ambré chaud — rare en judo */
+    /* Égalité : pastel jaune — rare en judo */
     .result-e {
-      background: #fffbeb;
-      border-color: #d97706;
-      color: #92400e;
+      background: var(--warning-soft);
+      border-color: var(--warning);
+      color: var(--warning);
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
@@ -830,9 +828,9 @@
 
     /* Top 5 — finaliste digne */
     .rank-top5 {
-      background: #eef2ff;
-      border-color: #9fb4f7;
-      color: #3049c7;
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     /* Non classé */
@@ -978,44 +976,47 @@
 
     .mode-tabs {
       display: flex;
-      border-bottom: 0;
+      border-bottom: 1px solid var(--line);
       margin: 0;
-      gap: 3px;
-      background: rgba(0, 47, 167, 0.08);
-      border-radius: 8px;
-      padding: 3px;
+      gap: 4px;
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      overflow-x: auto;
     }
 
     .mode-tab {
       flex: 1;
-      padding: 8px 6px;
+      padding: 10px 6px 9px;
       border: none;
+      border-bottom: 2px solid transparent;
       background: transparent;
       color: var(--muted);
       font-weight: 600;
       font-size: 0.875rem;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 0;
       min-height: 36px;
-      transition: color 160ms, background-color 160ms;
+      transition: color 160ms, border-color 160ms;
       text-align: center;
       touch-action: manipulation;
+      white-space: nowrap;
     }
 
     .mode-tab:hover {
       color: var(--text);
-      background: rgba(0, 47, 167, 0.05);
+      background: transparent;
     }
 
     .mode-tabs .mode-tab-active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 1px 3px rgba(0, 47, 167, 0.25);
+      background: transparent;
+      color: var(--text);
+      border-bottom-color: var(--text);
     }
 
     .mode-tabs .mode-tab-active:hover {
-      background: var(--primary-hover);
-      color: #fff;
+      background: transparent;
+      color: var(--text);
     }
 
     .performance-result-card {
@@ -1036,7 +1037,7 @@
     }
 
     .empty-state {
-      border: 1px dashed #9fb4f7;
+      border: 1px dashed var(--line);
       border-radius: 6px;
       color: var(--muted);
       padding: 24px 18px;
@@ -1099,8 +1100,8 @@
       width: 64px;
       height: 64px;
       border-radius: 50%;
-      background: rgba(0, 47, 167, 0.07);
-      color: var(--primary);
+      background: rgba(17, 17, 17, 0.05);
+      color: var(--text);
     }
 
     .empty-action-title {
@@ -1151,15 +1152,15 @@
     }
 
     .success {
-      border-color: var(--accent);
-      background: #fff;
-      color: var(--accent);
+      border-color: var(--success);
+      background: var(--success-soft);
+      color: var(--success);
     }
 
     .error {
-      border-color: #9fb4f7;
-      background: #fff;
-      color: var(--text);
+      border-color: var(--danger);
+      background: var(--danger-soft);
+      color: var(--danger);
     }
 
     .hidden {
@@ -1291,15 +1292,6 @@
         justify-content: flex-end;
       }
 
-      .club-access-card {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-      }
-
-      .club-access-action {
-        justify-self: end;
-      }
-
       .card-actions {
         display: flex;
       }
@@ -1330,7 +1322,7 @@
       .summary:hover,
       .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(11,16,32,0.10), 0 0 0 1px rgba(11,16,32,0.05);
+        box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
       }
 
       button:hover,
@@ -1390,7 +1382,7 @@
     }
     .login-container svg {
       margin-bottom: 20px;
-      color: var(--primary);
+      color: var(--text);
     }
     .login-container h2 {
       margin-bottom: 12px;
@@ -1421,7 +1413,7 @@
       color: var(--text);
     }
     .button-google:hover {
-      background: #dde8ff;
+      background: var(--soft);
     }
     .user-actions {
       display: flex;
@@ -1469,17 +1461,17 @@
     }
 
     .stat-card-highlight {
-      border-color: #dbe3ef;
+      border-color: var(--line);
       background: #ffffff;
     }
 
     .stat-card-success {
-      border-color: #dbe3ef;
+      border-color: var(--line);
       background: #fff;
     }
 
     .stat-card-danger {
-      border-color: #dbe3ef;
+      border-color: var(--line);
       background: #fff;
     }
 
@@ -1489,7 +1481,7 @@
       margin-bottom: 18px;
       padding: 18px;
       border-radius: 6px;
-      border: 1px solid #dbe3ef;
+      border: 1px solid var(--line);
       border-left: 4px solid var(--accent);
       background: #ffffff;
       box-shadow: none;
@@ -1574,9 +1566,9 @@
 
     /* Finaliste 5e/7e — digne, pas punitif */
     .rank-finalist {
-      background: #eef2ff;
-      border-color: #9fb4f7;
-      color: #3049c7;
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     /* Coach assessment */
@@ -1646,7 +1638,7 @@
       padding: 2px 7px;
       border-radius: 10px;
       background: var(--accent-soft);
-      color: var(--primary);
-      border: 1px solid var(--primary);
+      color: var(--accent);
+      border: 1px solid var(--accent);
       margin-bottom: 4px;
     }

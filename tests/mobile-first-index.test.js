@@ -26,7 +26,6 @@ const client = [
     "app-judoka-presentation.js",
     "app-screen-judoka.js",
     "app-screen-competition.js",
-    "app-screen-children.js",
     "app-screen-admins.js",
     "app-runtime.js",
     "app.js"
@@ -127,16 +126,6 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
-test("child management screen is available in the mobile action flow", () => {
-  assert.match(bundle, /id="manageChildrenButton"/);
-  assert.match(bundle, /id="childrenView" class="panel hidden"/);
-  assert.match(bundle, /id="childrenList"/);
-  assert.match(bundle, /id="child_prenom"/);
-  assert.match(bundle, /id="child_nom"/);
-  assert.match(bundle, /id="child_email"/);
-  assert.match(bundle, /id="saveChildButton"/);
-});
-
 test("club competition creation keeps only the shared event basics", () => {
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="club_competition_name"/);
@@ -155,17 +144,13 @@ test("parent home keeps visible competitions when no judoka is selected", () => 
 });
 
 test("admin management screen is available in the mobile action flow", () => {
-  assert.match(bundle, /id="manageAdminsButton"/);
-  assert.match(bundle, /class="section club-access-section"/);
+  assert.match(bundle, /@click="handleModeTabClick\(mode\.key\)"/);
   assert.match(bundle, /Accès club/);
-  assert.match(bundle, /Gérer les accès/);
   assert.match(bundle, /id="adminsView" class="panel hidden"/);
   assert.match(bundle, /id="adminsList"/);
-  assert.match(bundle, /id="accessInvitationsList"/);
-  assert.match(bundle, /id="accessInvitationFilter"/);
-  assert.match(bundle, /id="invite_email"/);
-  assert.match(bundle, /id="invite_profile_type"/);
-  assert.match(bundle, /id="saveInvitationButton"/);
+  assert.match(bundle, /id="usersList"/);
+  assert.match(bundle, /id="usersFilter"/);
+  assert.match(bundle, /id="importUsersFile"/);
   assert.match(bundle, /id="admin_email"/);
   assert.match(bundle, /id="saveAdminButton"/);
 });
@@ -187,6 +172,12 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaSeasonBalance"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
+  assert.match(bundle, /id="judoka_couleur_ceinture"/);
+  assert.match(judokaScreenClient, /const isManagedProfile = /);
+  assert.match(
+    judokaScreenClient,
+    /\(\) => state\.isCoach \|\| state\.isAdmin \|\| isOwnProfile\.value \|\| isManagedProfile\.value/
+  );
   assert.match(bundle, /Taux de victoire/);
   assert.match(bundle, /Victoires ippon/);
   assert.match(bundle, /v-if="Number\(combatProfile\.penalties\)"/);
@@ -196,9 +187,14 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.doesNotMatch(bundle, /id="competition_classement"/);
 });
 
+test("judoka forms do not expose birth year fields", () => {
+  assert.doesNotMatch(bundle, /ann[eé]e[_ -]?naissance/i);
+  assert.doesNotMatch(bundle, /naissance/i);
+  assert.doesNotMatch(bundle, /birthYear|birth_year/i);
+});
+
 test("home action buttons share one stable height", () => {
   assert.match(bundle, /#homeAdminActions button\s*\{[\s\S]*?min-height:\s*64px;/);
-  assert.match(bundle, /\.club-access-card\s*\{[\s\S]*?border-left:\s*6px solid var\(--primary\);/);
 });
 
 test("competition header actions share one aligned action row", () => {
@@ -291,38 +287,20 @@ test("judoka profile client script stays parseable", () => {
   assert.doesNotThrow(() => new Function(judokaScreenClient));
 });
 
-test("children screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="childrenView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="childrenList"/);
-  assert.match(bundle, /v-for="child in children"/);
-  assert.match(bundle, /@click="editManagedChild\(child\.judokaId\)"/);
-  assert.match(bundle, /@click="deleteManagedChild\(child\.judokaId, child\.fullName\)"/);
-  assert.doesNotMatch(bundle, /childrenListHtml/);
-  assert.match(
-    bundle,
-    /id="child_prenom" autocomplete="given-name" v-model\.trim="childForm\.firstName"/
-  );
-  assert.match(bundle, /id="saveChildButton" type="button" :disabled="isSubmitting" @click="saveManagedChild\(\)"/);
-  assert.match(bundle, /function ensureChildrenViewModel\(\)/);
-});
-
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
-  assert.match(
-    bundle,
-    /id="invite_email" autocomplete="email" placeholder="email@gmail.com" v-model\.trim="accessInvitationForm\.email"/
-  );
-  assert.match(bundle, /id="accessInvitationsList"/);
-  assert.match(bundle, /v-for="invitation in accessInvitations"/);
-  assert.match(bundle, /@click="deleteAccessInvitation\(invitation\.email\)"/);
+  assert.match(bundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
+  assert.match(bundle, /id="usersList"/);
+  assert.match(bundle, /v-for="managedUser in managedUsersPage"/);
+  assert.match(bundle, /@click="deleteUser\(managedUser\.judokaId, managedUser\.fullName\)"/);
   assert.match(bundle, /id="adminsList"/);
   assert.match(bundle, /v-for="admin in adminsPage"/);
   assert.match(bundle, /@click="revokeAdminRole\(admin\.judokaId, admin\.fullName\)"/);
-  assert.doesNotMatch(
+  assert.doesNotMatch(bundle, /usersSummaryHtml|usersListHtml|adminsListHtml/);
+  assert.match(
     bundle,
-    /accessInvitationsSummaryHtml|accessInvitationsListHtml|adminsListHtml/
+    /id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole\(\)"/
   );
-  assert.match(bundle, /id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole\(\)"/);
   assert.match(bundle, /function ensureAdminsViewModel\(\)/);
 });
 
@@ -375,7 +353,10 @@ test("competition form screen is mounted through Vue 3 for the progressive scree
 test("coach can open club competition creation and participant management UI", () => {
   assert.match(bundle, /id="addClubCompetitionButton"/);
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/);
+  assert.match(
+    bundle,
+    /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/
+  );
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
@@ -451,7 +432,10 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
     bundle,
     /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/
   );
-  assert.match(bundle, /id="saveCombatButton" type="button" :disabled="isSubmitting" @click="saveCombat\(\)"/);
+  assert.match(
+    bundle,
+    /id="saveCombatButton" type="button" :disabled="isSubmitting" @click="saveCombat\(\)"/
+  );
   assert.match(bundle, /@click="showCombatForm\(\)"/);
   assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
   assert.match(bundle, /function ensureCombatFormViewModel\(\)/);

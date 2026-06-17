@@ -2,12 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const permissions = require("../core/domain/access/permission-policy");
-const {
-  createJudoka,
-  createManagedChild,
-  decideManagedChildRemoval,
-  updateManagedChild
-} = require("../core/domain/access/judoka");
+const { createJudoka, createManagedChild } = require("../core/domain/access/judoka");
 const { createEmail, createOptionalEmail } = require("../core/domain/access/email");
 const { createManagedJudokaScope } = require("../core/domain/access/managed-judoka-scope");
 const { createAccessInvitation } = require("../core/domain/access/access-invitation");
@@ -28,10 +23,6 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(permissions.isParent({ profileType: "PARENT", accessRole: "NORMAL" }), true);
   assert.equal(permissions.isAdmin({ profileType: "JUDOKA", accessRole: "ADMIN" }), true);
   assert.equal(permissions.isCoach({ profileType: "JUDOKA", accessRole: "COACH" }), true);
-  assert.equal(
-    permissions.canManageChildrenProfile({ profileType: "JUDOKA", accessRole: "ADMIN" }),
-    false
-  );
   const parentAccess = permissions.resolveJudokaDataAccess(
     { judokaId: "PARENT1", profileType: "PARENT", accessRole: "NORMAL" },
     scope
@@ -144,7 +135,6 @@ test("permission policy grants coach sports management without admin invitations
     false
   );
   assert.equal(permissions.canManageCombatFor(admin, "J1", createManagedJudokaScope([])), false);
-  assert.equal(permissions.canManageChildrenProfile(coach), false);
 });
 
 test("email value object normalizes and validates addresses", () => {
@@ -161,7 +151,7 @@ test("email value object normalizes and validates addresses", () => {
   );
 });
 
-test("judoka domain creates and updates managed child records with invariants", () => {
+test("judoka domain creates managed child records with invariants", () => {
   const child = createManagedChild({
     judokaId: "JUDO123",
     accountEmail: "child@example.com",
@@ -180,23 +170,10 @@ test("judoka domain creates and updates managed child records with invariants", 
   assert.equal("profile_type" in child, false);
   assert.equal("role" in child, false);
 
-  const updatedChild = updateManagedChild({
-    accountEmail: "",
-    firstName: "Aya",
-    lastName: "Martin"
-  });
-
-  assert.equal(updatedChild.accountEmail, null);
-  assert.equal(updatedChild.name.firstName, "Aya");
-  assert.equal(updatedChild.name.lastName, "Martin");
-  assert.equal("email" in updatedChild, false);
-  assert.equal("prenom" in updatedChild, false);
-  assert.equal("nom" in updatedChild, false);
-
   assert.throws(() => createManagedChild({ firstName: "", lastName: "Martin" }), /Prénom et nom/);
 });
 
-test("judoka domain handles admin role lifecycle and child removal decisions", () => {
+test("judoka domain handles admin role lifecycle", () => {
   const admin = createJudoka({
     judokaId: "JUDOADMIN",
     accountEmail: "admin@example.com",
@@ -214,42 +191,6 @@ test("judoka domain handles admin role lifecycle and child removal decisions", (
   assert.deepEqual(admin.revokeAdminRole("JUDOOTHER"), { accessRole: "NORMAL" });
   assert.throws(() => admin.revokeAdminRole("JUDOADMIN"), /retirer vos propres droits/);
   assert.throws(() => admin.grantAdminRole(), /déjà admin/);
-
-  assert.deepEqual(
-    decideManagedChildRemoval({
-      child: {
-        judokaId: "JUDO123",
-        accountEmail: null,
-        profileType: "JUDOKA",
-        accessRole: "NORMAL"
-      },
-      hasCompetitions: false,
-      hasCombats: false,
-      hasOtherParentLink: false
-    }),
-    {
-      removeJudoka: true,
-      message: "Enfant supprimé."
-    }
-  );
-
-  assert.deepEqual(
-    decideManagedChildRemoval({
-      child: {
-        judokaId: "JUDO123",
-        accountEmail: "child@example.com",
-        profileType: "JUDOKA",
-        accessRole: "NORMAL"
-      },
-      hasCompetitions: false,
-      hasCombats: false,
-      hasOtherParentLink: false
-    }),
-    {
-      removeJudoka: false,
-      message: "Enfant retiré."
-    }
-  );
 });
 
 test("judoka domain accepts coach as a structural role without changing profile type", () => {

@@ -134,8 +134,15 @@
       Boolean(judokaLocalState.viewedJudokaId && state.currentUser &&
         String(judokaLocalState.viewedJudokaId) === String(state.currentUser.judokaId))
     );
+    const isManagedProfile = window.Vue.computed(() =>
+      Boolean(
+        judokaLocalState.viewedJudokaId &&
+          state.isParent &&
+          state.judokas.some((j) => String(j.judokaId) === String(judokaLocalState.viewedJudokaId))
+      )
+    );
     const canEditJudokaInfo = window.Vue.computed(
-      () => state.isCoach || state.isAdmin || isOwnProfile.value
+      () => state.isCoach || state.isAdmin || isOwnProfile.value || isManagedProfile.value
     );
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
 
@@ -199,7 +206,11 @@
       app.runServer(
         "saveJudokaInfo",
         [currentJudokaId, ageCategory, weightCategory, beltColor],
-        (response) => notifications.showSuccess(response.message),
+        (response) => {
+          notifications.showSuccess(response.message);
+          const displayed = getDisplayedSeasonStartYear();
+          loadJudokaProfile(currentJudokaId, displayed === null ? undefined : displayed);
+        },
         notifications.showError
       );
     }
@@ -251,6 +262,7 @@
           canShowNextSeason,
           canEditCoachNotes,
           canEditJudokaInfo,
+          isManagedProfile,
           isSubmitting
         }
       );

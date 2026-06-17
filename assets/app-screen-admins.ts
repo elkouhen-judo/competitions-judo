@@ -1,18 +1,17 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type UserImportRowResult = import("./types").UserImportRowResult;
 
   function createKirokuAdminsScreen(app: KirokuApp) {
-    const { defaultAccessInvitationVisibleCount, defaultListPageSize, state, ui, notifications } =
-      app;
-    const { cleanText, formatDateTime, getJudokaDisplayName, showView } = ui;
+    const { defaultListPageSize, state, ui, notifications } = app;
+    const { cleanText, getJudokaDisplayName, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
-    const defaultAccessInvitationForm = {
-      email: "",
-      profileType: "JUDOKA"
-    };
     const defaultAdminsViewState = {
-      accessInvitationForm: { ...defaultAccessInvitationForm },
-      adminEmail: ""
+      adminEmail: "",
+      importUsersFileName: "",
+      importUsersCsvContent: "",
+      importUsersSummary: "",
+      importUsersResults: [] as UserImportRowResult[]
     };
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
 
@@ -28,21 +27,17 @@
         defaultListPageSize
       )
     );
-    const adminsInvitationsProjection = window.Vue.computed(() => {
-      const search = cleanText(state.accessInvitationSearch).toLowerCase();
-      const filteredInvitations = !search
-        ? state.managedAccessInvitations
-        : state.managedAccessInvitations.filter((invitation) =>
-            cleanText(invitation.email).toLowerCase().includes(search)
-          );
-      return window.KirokuScreenProjections.projectAccessInvitations(
-        filteredInvitations,
-        search,
-        state.accessInvitationCurrentPage,
-        defaultAccessInvitationVisibleCount,
-        { formatDateTime }
-      );
-    });
+    const usersProjection = window.Vue.computed(() =>
+      window.KirokuScreenProjections.projectManagedUsers(
+        state.managedUsers,
+        state.managedAccessInvitations,
+        cleanText(state.usersSearch),
+        state.usersCurrentPage,
+        defaultListPageSize,
+        state.currentUser,
+        { getJudokaDisplayName }
+      )
+    );
 
     const admins = window.Vue.computed(() => adminsProjection.value.admins);
     const hasAdmins = window.Vue.computed(() => adminsProjection.value.hasAdmins);
@@ -56,29 +51,19 @@
     const adminsCanShowNextPage = window.Vue.computed(
       () => adminsPagination.value.canShowNextPage
     );
-    const accessInvitations = window.Vue.computed(
-      () => adminsInvitationsProjection.value.accessInvitations
-    );
-    const accessInvitationsSummary = window.Vue.computed(
-      () => adminsInvitationsProjection.value.accessInvitationsSummary
-    );
-    const accessInvitationsEmptyMessage = window.Vue.computed(
-      () => adminsInvitationsProjection.value.accessInvitationsEmptyMessage
-    );
-    const canResetAccessInvitationSearch = window.Vue.computed(
-      () => adminsInvitationsProjection.value.canResetAccessInvitationSearch
-    );
-    const canShowPreviousAccessInvitationPage = window.Vue.computed(
-      () => adminsInvitationsProjection.value.canShowPreviousAccessInvitationPage
-    );
-    const canShowNextAccessInvitationPage = window.Vue.computed(
-      () => adminsInvitationsProjection.value.canShowNextAccessInvitationPage
-    );
-    const hasAccessInvitations = window.Vue.computed(
-      () => adminsInvitationsProjection.value.hasAccessInvitations
-    );
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
-    const accessInvitationSearch = window.Vue.computed(() => state.accessInvitationSearch);
+    const managedUsersPage = window.Vue.computed(() => usersProjection.value.users);
+    const usersSearch = window.Vue.computed(() => state.usersSearch);
+    const usersSummary = window.Vue.computed(() => usersProjection.value.usersSummary);
+    const usersEmptyMessage = window.Vue.computed(() => usersProjection.value.usersEmptyMessage);
+    const canResetUsersSearch = window.Vue.computed(() => usersProjection.value.canResetUsersSearch);
+    const canShowPreviousUsersPage = window.Vue.computed(
+      () => usersProjection.value.canShowPreviousUsersPage
+    );
+    const canShowNextUsersPage = window.Vue.computed(
+      () => usersProjection.value.canShowNextUsersPage
+    );
+    const hasUsers = window.Vue.computed(() => usersProjection.value.hasUsers);
 
     function ensureAdminsViewModel() {
       if (adminsViewModel) {
@@ -89,19 +74,20 @@
         "adminsView",
         defaultAdminsViewState,
         {
-          deleteAccessInvitation,
-          resetAccessInvitationSearch,
-          resetAccessInvitationForm,
+          cancelInvitation,
+          deleteUser,
+          handleImportUsersFileChange,
+          importUsersCsv,
           resetAdminForm,
+          resetUsersSearch,
           revokeAdminRole,
-          saveAccessInvitation,
           saveAdminRole,
-          showNextAccessInvitationPage,
-          showPreviousAccessInvitationPage,
           showAdminsPreviousPage,
           showAdminsNextPage,
+          showNextUsersPage,
+          showPreviousUsersPage,
           showHome: () => app.showHome && app.showHome(),
-          updateAccessInvitationSearch
+          updateUsersSearch
         },
         {
           admins,
@@ -112,14 +98,14 @@
           adminsTotalCount,
           adminsCanShowPreviousPage,
           adminsCanShowNextPage,
-          accessInvitations,
-          accessInvitationSearch,
-          accessInvitationsSummary,
-          accessInvitationsEmptyMessage,
-          canResetAccessInvitationSearch,
-          canShowPreviousAccessInvitationPage,
-          canShowNextAccessInvitationPage,
-          hasAccessInvitations,
+          managedUsersPage,
+          usersSearch,
+          usersSummary,
+          usersEmptyMessage,
+          canResetUsersSearch,
+          canShowPreviousUsersPage,
+          canShowNextUsersPage,
+          hasUsers,
           isSubmitting
         }
       );
@@ -133,51 +119,59 @@
       return adminsViewModel;
     }
 
-    function saveAccessInvitation() {
+    function handleImportUsersFileChange(event: Event) {
+      const input = event.target as HTMLInputElement;
+      const file = input.files && input.files[0];
       const viewModel = getAdminsViewModel();
-      const email = viewModel.accessInvitationForm.email;
-      const profileType = viewModel.accessInvitationForm.profileType;
+      viewModel.importUsersResults = [];
+      viewModel.importUsersSummary = "";
+
+      if (!file) {
+        viewModel.importUsersFileName = "";
+        viewModel.importUsersCsvContent = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        viewModel.importUsersFileName = file.name;
+        viewModel.importUsersCsvContent = String(reader.result || "");
+      };
+      reader.onerror = () => {
+        showError({ message: "Impossible de lire le fichier sélectionné." });
+      };
+      reader.readAsText(file);
+    }
+
+    function importUsersCsv() {
+      const viewModel = getAdminsViewModel();
+      if (!viewModel.importUsersCsvContent) {
+        showError({ message: "Sélectionnez un fichier CSV à importer." });
+        return;
+      }
 
       app.runServer(
-        "saveAccessInvitation",
-        [email, profileType],
+        "importUsersCsv",
+        [viewModel.importUsersCsvContent],
         (response) => {
-          showSuccess(response.message);
+          viewModel.importUsersResults = response.results;
+          viewModel.importUsersSummary = `${response.imported} profil(s) importé(s), ${response.failed} échec(s).`;
+          viewModel.importUsersFileName = "";
+          viewModel.importUsersCsvContent = "";
+          const fileInput = document.getElementById("importUsersFile") as HTMLInputElement | null;
+          if (fileInput) {
+            fileInput.value = "";
+          }
+
+          if (response.success) {
+            showSuccess(viewModel.importUsersSummary);
+          } else {
+            showError({ message: viewModel.importUsersSummary });
+          }
           app.reloadInitialDataAndShowAdmins();
         },
         showError
       );
-    }
-
-    function deleteAccessInvitation(email: string) {
-      const label = email ? ` pour "${email}"` : "";
-      app.confirmAndRun({
-        message: `Supprimer l'invitation${label} ?`,
-        method: "deleteAccessInvitation",
-        args: [email],
-        onSuccess: (response) => {
-          showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
-        }
-      });
-    }
-
-    function updateAccessInvitationSearch(value: string) {
-      state.accessInvitationSearch = value || "";
-      state.accessInvitationCurrentPage = 1;
-    }
-
-    function resetAccessInvitationSearch() {
-      state.accessInvitationSearch = "";
-      state.accessInvitationCurrentPage = 1;
-    }
-
-    function showNextAccessInvitationPage() {
-      state.accessInvitationCurrentPage += 1;
-    }
-
-    function showPreviousAccessInvitationPage() {
-      state.accessInvitationCurrentPage = Math.max(state.accessInvitationCurrentPage - 1, 1);
     }
 
     function showAdminsManagement(keepMessage?: boolean) {
@@ -190,19 +184,63 @@
         [],
         (data) => {
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
+          state.managedUsers = Array.isArray(data.users) ? data.users : [];
           state.managedAccessInvitations = Array.isArray(data.accessInvitations)
             ? data.accessInvitations
             : [];
-          state.accessInvitationSearch = "";
-          state.accessInvitationCurrentPage = 1;
           state.adminsCurrentPage = 1;
+          state.usersSearch = "";
+          state.usersCurrentPage = 1;
           ensureAdminsViewModel();
-          resetAccessInvitationForm();
           resetAdminForm();
           showView("adminsView");
         },
         showError
       );
+    }
+
+    function updateUsersSearch(value: string) {
+      state.usersSearch = value || "";
+      state.usersCurrentPage = 1;
+    }
+
+    function resetUsersSearch() {
+      state.usersSearch = "";
+      state.usersCurrentPage = 1;
+    }
+
+    function showNextUsersPage() {
+      state.usersCurrentPage += 1;
+    }
+
+    function showPreviousUsersPage() {
+      state.usersCurrentPage = Math.max(state.usersCurrentPage - 1, 1);
+    }
+
+    function cancelInvitation(email: string, name?: string) {
+      const label = name ? ` "${name}"` : "";
+      app.confirmAndRun({
+        message: `Annuler l'invitation${label} ?`,
+        method: "deleteAccessInvitation",
+        args: [email],
+        onSuccess: (response) => {
+          showSuccess(response.message);
+          app.reloadInitialDataAndShowAdmins();
+        }
+      });
+    }
+
+    function deleteUser(idJudoka: string, name?: string) {
+      const label = name ? ` "${name}"` : "";
+      app.confirmAndRun({
+        message: `Supprimer définitivement${label} ? Ses compétitions et combats seront aussi supprimés.`,
+        method: "deleteUser",
+        args: [idJudoka],
+        onSuccess: (response) => {
+          showSuccess(response.message);
+          app.reloadInitialDataAndShowAdmins();
+        }
+      });
     }
 
     function showAdminsPreviousPage() {
@@ -215,10 +253,6 @@
 
     function resetAdminForm() {
       getAdminsViewModel().adminEmail = "";
-    }
-
-    function resetAccessInvitationForm() {
-      Object.assign(getAdminsViewModel().accessInvitationForm, defaultAccessInvitationForm);
     }
 
     function saveAdminRole() {
@@ -249,19 +283,18 @@
     }
 
     return {
-      deleteAccessInvitation,
-      resetAccessInvitationForm,
-      resetAccessInvitationSearch,
+      cancelInvitation,
+      deleteUser,
       resetAdminForm,
+      resetUsersSearch,
       revokeAdminRole,
-      saveAccessInvitation,
       saveAdminRole,
       showAdminsManagement,
       showAdminsNextPage,
       showAdminsPreviousPage,
-      showNextAccessInvitationPage,
-      showPreviousAccessInvitationPage,
-      updateAccessInvitationSearch
+      showNextUsersPage,
+      showPreviousUsersPage,
+      updateUsersSearch
     };
   }
 

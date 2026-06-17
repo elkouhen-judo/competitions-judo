@@ -4,8 +4,7 @@ import type {
   Combat,
   CombatReadModel,
   Competition,
-  Judoka,
-  ManagedChild
+  Judoka
 } from "../types";
 
 type SourceRecord = object;
@@ -87,19 +86,6 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     result: normalizeCanonicalCombatResult(pick(combat, "result", "resultat")),
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
     notes: String(pick(combat, "notes", "deroule") || "")
-  };
-}
-
-export function toCanonicalManagedChild(child: SourceRecord = {}): ManagedChild {
-  const judokaId = pick(child, "judokaId", "id_judoka");
-  const accountEmail = pick(child, "accountEmail", "email");
-
-  return {
-    judokaId: judokaId ? String(judokaId) : undefined,
-    accountEmail: accountEmail ? String(accountEmail) : undefined,
-    firstName: String(pick(child, "firstName", "prenom") || ""),
-    lastName: String(pick(child, "lastName", "nom") || ""),
-    ageCategory: String(pick(child, "ageCategory", "categorie_age") || "")
   };
 }
 

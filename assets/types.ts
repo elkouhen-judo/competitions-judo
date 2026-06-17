@@ -1,7 +1,6 @@
 import type {
   AccessInvitation,
   AdminsManagement,
-  ChildrenManagement,
   ClubCompetitionDetail,
   CombatReadModel,
   Competition,
@@ -9,9 +8,9 @@ import type {
   InitialData,
   Judoka,
   JudokaProfile,
-  ManagedChild,
   OperationResult,
-  RpcMethods
+  RpcMethods,
+  UserImportRowResult
 } from "../core/types";
 
 export interface RuntimeConfig {
@@ -56,7 +55,6 @@ export type ViewId =
   | "homeView"
   | "judokaView"
   | "adminsView"
-  | "childrenView"
   | "competitionView"
   | "clubCompetitionFormView"
   | "clubCompetitionDetailView"
@@ -94,16 +92,6 @@ export interface KirokuUi {
   viewIds: readonly ViewId[];
 }
 
-export interface ManagedChildCard {
-  judokaId: string;
-  fullName: string;
-  firstName: string;
-  lastName: string;
-  accountEmail: string;
-  directAccessState: string;
-  ageCategory: string;
-}
-
 export interface ManagedAdminCard {
   judokaId: string;
   fullName: string;
@@ -111,10 +99,14 @@ export interface ManagedAdminCard {
   isCurrentAdmin: boolean;
 }
 
-export interface AccessInvitationCard {
-  email: string;
-  invitedProfileType: string;
-  createdAt: string;
+export interface ManagedUserCard {
+  judokaId: string;
+  fullName: string;
+  accountEmail: string;
+  roleLabel: string;
+  isAdmin: boolean;
+  isCurrentUser: boolean;
+  isPending: boolean;
 }
 
 export interface CompetitionCombatCard {
@@ -143,21 +135,6 @@ export interface ScreenProjections {
     currentPage: number;
     canShowPreviousPage: boolean;
     canShowNextPage: boolean;
-  };
-  projectAccessInvitations(
-    filteredInvitations: AccessInvitation[],
-    search: string,
-    currentPage: number,
-    pageSize: number,
-    helpers: { formatDateTime(value: unknown): string }
-  ): {
-    accessInvitations: AccessInvitationCard[];
-    accessInvitationsSummary: string;
-    accessInvitationsEmptyMessage: string;
-    canResetAccessInvitationSearch: boolean;
-    canShowPreviousAccessInvitationPage: boolean;
-    canShowNextAccessInvitationPage: boolean;
-    hasAccessInvitations: boolean;
   };
   projectCompetitionCombats(
     combats: CombatReadModel[],
@@ -194,16 +171,22 @@ export interface ScreenProjections {
     admins: ManagedAdminCard[];
     hasAdmins: boolean;
   };
-  projectManagedChildren(
-    children: Judoka[],
-    helpers: {
-      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
-      normalizeDisplayName(value: unknown): string;
-      normalizeLastName(value: unknown): string;
-    }
+  projectManagedUsers(
+    users: Judoka[],
+    pendingInvitations: AccessInvitation[],
+    search: string,
+    currentPage: number,
+    pageSize: number,
+    currentUser: Judoka | null,
+    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string }
   ): {
-    children: ManagedChildCard[];
-    hasChildren: boolean;
+    users: ManagedUserCard[];
+    usersSummary: string;
+    usersEmptyMessage: string;
+    canResetUsersSearch: boolean;
+    canShowPreviousUsersPage: boolean;
+    canShowNextUsersPage: boolean;
+    hasUsers: boolean;
   };
 }
 
@@ -228,7 +211,6 @@ export interface HomeScreen {
   hideHomeFilterOptions(): void;
   showHome(): void;
   showHomeFilterOptions(): void;
-  showChildrenManagement?(keepMessage?: boolean): void;
 }
 
 export interface JudokaScreen {
@@ -246,10 +228,6 @@ export interface CompetitionScreen {
   showCompetitionForm(idCompetition?: string): void;
 }
 
-export interface ChildrenScreen {
-  showChildrenManagement(keepMessage?: boolean): void;
-}
-
 export interface AdminsScreen {
   showAdminsManagement(keepMessage?: boolean): void;
 }
@@ -265,7 +243,6 @@ export interface LoginScreen {
 
 export interface AppScreens {
   admins: AdminsScreen;
-  children: ChildrenScreen;
   competition: CompetitionScreen;
   home: HomeScreen;
   judoka: JudokaScreen;
@@ -277,8 +254,7 @@ export interface KirokuAppState {
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
-  homeMode: "judoka" | "coach" | "family" | "admin";
-  canManageChildren: boolean;
+  homeMode: "judoka" | "coach" | "family";
   competitions: Competition[];
   clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string }>;
   currentCompetition: CompetitionDetail["competition"] | null;
@@ -286,16 +262,14 @@ export interface KirokuAppState {
   currentCombats: CompetitionDetail["combats"];
   currentJudokaProfile: JudokaProfile | null;
   managedAdmins: AdminsManagement["admins"];
+  managedUsers: AdminsManagement["users"];
   managedAccessInvitations: AdminsManagement["accessInvitations"];
-  managedChildren: ChildrenManagement["children"];
   canEditCurrentCompetition: boolean;
   isLoadingCompetition: boolean;
   isSubmitting: boolean;
   isOnline: boolean;
   pendingRpcKeys: Record<string, boolean>;
   homeFilterJudokaId: string;
-  accessInvitationSearch: string;
-  accessInvitationCurrentPage: number;
   competitionsCurrentPage: number;
   clubCompetitionsCurrentPage: number;
   clubCompetitionParticipantsCurrentPage: number;
@@ -303,6 +277,8 @@ export interface KirokuAppState {
   clubCompetitionFormParticipantsCurrentPage: number;
   judokaCompetitionResultsCurrentPage: number;
   adminsCurrentPage: number;
+  usersSearch: string;
+  usersCurrentPage: number;
 }
 
 export interface RunServerOptions {
@@ -328,13 +304,11 @@ export interface KirokuApp {
     args: RpcClientArgs<M>;
     onSuccess?: (response: RpcClientResult<M>) => void;
   }): void;
-  defaultAccessInvitationVisibleCount: number;
   defaultListPageSize: number;
   loginScreen?: LoginScreen;
   notifications: NotificationsApi;
   reloadInitialData(openCompetitionId?: string): void;
   reloadInitialDataAndShowAdmins(): void;
-  reloadInitialDataAndShowChildren(): void;
   reloadInitialDataThen(afterReload: () => void): void;
   resetApplicationState(): void;
   runServer<M extends RpcClientMethod>(
@@ -398,7 +372,6 @@ export interface JudokaProfileViewModel {
 export type {
   AccessInvitation,
   AdminsManagement,
-  ChildrenManagement,
   ClubCompetitionDetail,
   CombatReadModel,
   Competition,
@@ -406,6 +379,6 @@ export type {
   InitialData,
   Judoka,
   JudokaProfile,
-  ManagedChild,
-  OperationResult
+  OperationResult,
+  UserImportRowResult
 };

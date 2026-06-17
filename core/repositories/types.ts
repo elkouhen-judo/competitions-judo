@@ -31,6 +31,7 @@ export interface JudokaRow {
   categorie_age?: string;
   categorie_poids?: string;
   couleur_ceinture?: string;
+  pending_parent_email?: string | null;
 }
 
 export interface CompetitionRow {

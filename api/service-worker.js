@@ -1,10 +1,12 @@
-const CACHE_NAME = "kiroku-app-shell-v1";
+const CACHE_NAME = "kiroku-app-shell-v4";
 const APP_SHELL_URLS = ["/", "/api/styles", "/api/client", "/manifest.webmanifest"];
+const BYPASS_URLS = ["/sample-users-import.csv"];
 
 function renderServiceWorker() {
   return `
 const CACHE_NAME = ${JSON.stringify(CACHE_NAME)};
 const APP_SHELL_URLS = ${JSON.stringify(APP_SHELL_URLS)};
+const BYPASS_URLS = ${JSON.stringify(BYPASS_URLS)};
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -26,7 +28,11 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  if (request.method !== "GET" || url.pathname === "/api/rpc") {
+  if (
+    request.method !== "GET" ||
+    url.pathname === "/api/rpc" ||
+    BYPASS_URLS.includes(url.pathname)
+  ) {
     return;
   }
 
@@ -37,17 +43,14 @@ self.addEventListener("fetch", (event) => {
 
   if (APP_SHELL_URLS.includes(url.pathname)) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        cache.match(request).then((cached) => {
-          const network = fetch(request).then((response) => {
-            if (response.ok) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          });
-          return cached || network;
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+          }
+          return response;
         })
-      )
+        .catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(request)))
     );
   }
 });

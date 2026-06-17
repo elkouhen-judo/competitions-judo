@@ -13,7 +13,6 @@ const entryPoints = [
   "assets/app-judoka-presentation.ts",
   "assets/app-screen-judoka.ts",
   "assets/app-screen-competition.ts",
-  "assets/app-screen-children.ts",
   "assets/app-screen-admins.ts",
   "assets/app-runtime.ts",
   "assets/app.ts"
