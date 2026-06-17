@@ -81,7 +81,7 @@
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
                     <span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span>
                     <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
-                    <span v-if="combat.techniqueCategory" class="result-badge badge-technique">{{ combat.techniqueCategory }}</span>
+                    <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-technique">{{ scoreLabel }}</span>
                   </div>
                 </div>
                 <div v-if="combat.showJudoka" class="meta-row">

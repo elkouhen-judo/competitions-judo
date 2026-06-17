@@ -1,6 +1,6 @@
 ---
 title: Kiroku Documentation Index
-last_updated: 2026-06-15
+last_updated: 2026-06-17
 owner: competitions-judo
 tags:
   - index
@@ -16,3 +16,4 @@ Index court des documents de ce dossier. Voir `AGENTS.md` à la racine pour le w
 | `spec.md` | Règles fonctionnelles, rôles, écrans, critères d'acceptation (`REQ-*`, `COMP-*`, `CBT-*`, ...) | Tout changement de comportement métier ou d'écran |
 | `spec-tech.md` | Architecture, modèle de données, auth, sécurité, configuration, déploiement | Changement touchant l'architecture, les données, l'auth, la sécurité ou le déploiement |
 | `supabase-schema.md` | Schéma Supabase, tables, relations, migration initiale | Travail sur le schéma ou les migrations |
+| `ddd.md` | Modèle DDD : langage ubiquitaire, bounded contexts, agrégats, value objects, context map | Comprendre les frontières et invariants du domaine avant une évolution structurelle |

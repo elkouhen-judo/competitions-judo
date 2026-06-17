@@ -49,9 +49,30 @@ test("supabase schema includes role and result constraints", () => {
   );
 });
 
-test("supabase schema stores opponent stance and winning technique category on combats", () => {
+test("supabase schema stores opponent stance on combats", () => {
   assert.match(schema, /add column if not exists garde_adversaire text not null default ''/i);
-  assert.match(schema, /add column if not exists categorie_technique text not null default ''/i);
+});
+
+test("supabase schema stores combat scores in a dedicated table", () => {
+  assert.match(schema, /create table if not exists public\.combat_scores/i);
+  assert.match(schema, /id_combat_score text primary key/i);
+  assert.match(
+    schema,
+    /combat_scores_id_combat_fkey[\s\S]*references public\.combats \(id_combat\)[\s\S]*on delete cascade/i
+  );
+  assert.match(
+    schema,
+    /combat_scores_categorie_check[\s\S]*categorie in \('Tachi-waza', 'Ne-waza'\)/i
+  );
+  assert.match(
+    schema,
+    /combat_scores_valeur_check[\s\S]*valeur in \('Ippon', 'Waza-ari', 'Yuko'\)/i
+  );
+  assert.match(schema, /alter table public\.combat_scores enable row level security/i);
+  assert.match(
+    schema,
+    /grant select,\s*insert,\s*update,\s*delete on table public\.combat_scores to service_role/i
+  );
 });
 
 test("supabase schema stores club competitions and linked participations", () => {

@@ -162,11 +162,6 @@ What Kiroku is not:
 ## Implementation Decisions
 
 - The frontend is a mobile-first single-page app shell, with views progressively migrated to Vue 3, served without a build step at runtime and assembled from per-view partials.
-- The backend is a serverless RPC surface: a single endpoint executes authenticated business methods; app-shell serving and routing are handled separately from that RPC endpoint.
-- Backend code separates shared auth/runtime composition, the domain model (entities, value objects, business policies), application services (use-case orchestration), and repositories (persistence adapters), so business rules don't leak into persistence or transport code.
-- Domain objects never serialize themselves to persistence records; translating between domain objects and stored records is a repository responsibility.
-- Business identifiers are text-based, to support import from the club's pre-existing spreadsheet records. Core data covers judokas, parent-child links, club competitions, individual competitions, combats, and access invitations.
-- A judoka's profile type (JUDOKA/PARENT) is immutable after creation; a structural role (NORMAL/COACH/ADMIN) is layered on top and fully reversible without affecting profile type.
 - Authentication is Google-only via a managed auth provider; the browser persists the session and sends bearer tokens to the backend, which verifies them against the auth provider and resolves permissions from the stored role and profile type, never from the Google account itself.
 - Registration is gated by an invitation list: a server-side hook rejects signups for emails without an existing judoka record or a pending invitation, except for pre-seeded admin accounts.
 - Business data is reachable only through a privileged server-side role; public and authenticated client-side roles have no direct table access, and server secrets never reach the browser.

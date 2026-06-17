@@ -733,6 +733,28 @@
       gap: 12px;
     }
 
+    .combat-score-rows {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .combat-score-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .combat-score-row select {
+      min-width: 0;
+    }
+
+    .combat-score-row .button-danger {
+      padding: 8px;
+      min-width: 0;
+    }
+
     .combat-header {
       display: flex;
       align-items: center;

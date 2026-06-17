@@ -1,8 +1,8 @@
 ---
 title: Kiroku Functional Specification
-version: 1.1
+version: 1.2
 date_created: 2026-06-11
-last_updated: 2026-06-14
+last_updated: 2026-06-17
 owner: competitions-judo
 tags:
   - design
@@ -106,7 +106,8 @@ This specification does not define:
 - **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, or `Egalité`.
 - **CBT-005b**: To maintain simplicity, no complex judo scoring fields (Shido, Ippon counters) are structural dropdowns; technical details are typed in the free text match notes (e.g., "Perdu par Ippon sur Uchi-Mata", "Gagné aux pénalités au Golden Score").
 - **CBT-005c**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
-- **CBT-005d**: A combat may optionally record the winning technique category (`Technique Avant`, `Technique Arrière`, `Contre`, or `Ne waza`), regardless of the combat result.
+- **CBT-005d**: A combat may optionally record a list of scoring techniques ("prises marquées"), one entry per point scored during the combat, regardless of the combat result.
+- **CBT-005e**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`) and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall also record the throw name from a fixed practical list of common club throws (selected from a dropdown). When the category is `Ne-waza`, the entry shall also record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
 
 ### 3.5 Child management rules

@@ -164,8 +164,31 @@ alter table public.combats
   check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'));
 
 alter table public.combats
-  add column if not exists garde_adversaire text not null default '',
-  add column if not exists categorie_technique text not null default '';
+  add column if not exists garde_adversaire text not null default '';
+
+alter table public.combats
+  drop column if exists categorie_technique;
+
+create table if not exists public.combat_scores (
+  id_combat_score text primary key,
+  id_combat text not null,
+  categorie text not null,
+  technique text not null default '',
+  type_ne_waza text not null default '',
+  valeur text not null,
+  ordre integer not null default 0,
+  created_at timestamptz not null default now(),
+  constraint combat_scores_id_combat_fkey
+    foreign key (id_combat)
+    references public.combats (id_combat)
+    on update cascade
+    on delete cascade,
+  constraint combat_scores_categorie_check check (categorie in ('Tachi-waza', 'Ne-waza')),
+  constraint combat_scores_valeur_check check (valeur in ('Ippon', 'Waza-ari', 'Yuko'))
+);
+
+create index if not exists combat_scores_id_combat_idx
+  on public.combat_scores (id_combat);
 
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
@@ -236,6 +259,7 @@ alter table public.judokas enable row level security;
 alter table public.club_competitions enable row level security;
 alter table public.competitions enable row level security;
 alter table public.combats enable row level security;
+alter table public.combat_scores enable row level security;
 alter table public.parent_judokas enable row level security;
 alter table public.access_invitations enable row level security;
 
@@ -278,6 +302,14 @@ to service_role
 using (true)
 with check (true);
 
+drop policy if exists "Service role access on combat_scores" on public.combat_scores;
+create policy "Service role access on combat_scores"
+on public.combat_scores
+for all
+to service_role
+using (true)
+with check (true);
+
 drop policy if exists "Service role access on parent_judokas" on public.parent_judokas;
 create policy "Service role access on parent_judokas"
 on public.parent_judokas
@@ -299,6 +331,7 @@ revoke all on table public.club_competitions from anon, authenticated;
 revoke all on table public.access_invitations from anon, authenticated;
 revoke all on table public.competitions from anon, authenticated;
 revoke all on table public.combats from anon, authenticated;
+revoke all on table public.combat_scores from anon, authenticated;
 revoke all on table public.parent_judokas from anon, authenticated;
 
 grant select, insert, update, delete on table public.judokas to service_role;
@@ -306,6 +339,7 @@ grant select, insert, update, delete on table public.club_competitions to servic
 grant select, insert, update, delete on table public.access_invitations to service_role;
 grant select, insert, update, delete on table public.competitions to service_role;
 grant select, insert, update, delete on table public.combats to service_role;
+grant select, insert, update, delete on table public.combat_scores to service_role;
 grant select, insert, update, delete on table public.parent_judokas to service_role;
 
 create or replace function public.register_profile(

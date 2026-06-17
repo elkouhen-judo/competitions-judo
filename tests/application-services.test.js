@@ -312,6 +312,7 @@ test("deleting a club competition removes the linked individual competitions", a
 function createTestCompetitionsService({
   competitionsByCompetitionId = {},
   combatsByCompetitionId = {},
+  combatScoresByCombatId = {},
   getDomainUserContext,
   generateCompetitionAnalysis = async () => null
 } = {}) {
@@ -336,6 +337,10 @@ function createTestCompetitionsService({
         (combatsByCompetitionId[id] || []).filter((combat) =>
           ids.map(String).includes(String(combat.id_judoka))
         )
+    },
+    combatScoresRepository: {
+      listByCombatIds: async (ids) =>
+        ids.flatMap((idCombat) => combatScoresByCombatId[idCombat] || [])
     },
     competitionsRepository: {
       listAll: async () => Object.values(competitionsByCompetitionId),
@@ -542,6 +547,7 @@ test("saveCoachReview rejects a normal judoka", async () => {
 function createTestAiAnalysisService({
   competitionsByCompetitionId = {},
   combatsByCompetitionId = {},
+  combatScoresByCombatId = {},
   groqResponse = "Analyse générée."
 } = {}) {
   const calls = { prompts: [], persisted: [] };
@@ -549,6 +555,10 @@ function createTestAiAnalysisService({
   const service = createAiAnalysisService({
     combatsRepository: {
       listByCompetition: async (id) => combatsByCompetitionId[id] || []
+    },
+    combatScoresRepository: {
+      listByCombatIds: async (ids) =>
+        ids.flatMap((idCombat) => combatScoresByCombatId[idCombat] || [])
     },
     competitionsRepository: {
       getById: async (id) => competitionsByCompetitionId[id] || null,
@@ -592,9 +602,13 @@ test("generateCompetitionAnalysis builds a French prompt from the competition an
           garde_adversaire: "Gaucher",
           resultat: "Victoire",
           type_victoire: "Ippon",
-          categorie_technique: "Technique Avant",
           deroule: "Bon Seoi-nage"
         }
+      ]
+    },
+    combatScoresByCombatId: {
+      CMB1: [
+        { id_combat: "CMB1", categorie: "Tachi-waza", technique: "Seoi-nage", valeur: "Ippon" }
       ]
     }
   });
@@ -609,6 +623,7 @@ test("generateCompetitionAnalysis builds a French prompt from the competition an
   assert.match(calls.prompts[0][1].content, /Tournoi de Nantes/);
   assert.match(calls.prompts[0][1].content, /Léo Dupont/);
   assert.match(calls.prompts[0][1].content, /Gaucher/);
+  assert.match(calls.prompts[0][1].content, /Seoi-nage \(Ippon\)/);
   assert.deepEqual(calls.persisted, [{ idCompetition: "COMP1", analysis: "Analyse générée." }]);
 });
 
@@ -685,13 +700,16 @@ test("getCompetitionsForUser returns every competition for a coach but only owne
   );
 });
 
-test("getCompetitionDetail enriches combats with judoka display names and exposes management flags", async () => {
+test("getCompetitionDetail enriches combats with judoka display names, scores, and exposes management flags", async () => {
   const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi", date: "2026-06-14" }
     },
     combatsByCompetitionId: {
       COMP1: [{ id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "V" }]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Tachi-waza", technique: "Seoi-nage", valeur: "Ippon" }]
     },
     getDomainUserContext: domainContextFor("COACH1", "COACH", {
       judokas: [{ id_judoka: "JUDO1", prenom: "Ali", nom: "el kouhen" }]
@@ -701,6 +719,9 @@ test("getCompetitionDetail enriches combats with judoka display names and expose
   const detail = await service.methods.getCompetitionDetail("coach@example.com", "COMP1");
 
   assert.equal(detail.combats[0].judokaDisplayName, "Ali EL KOUHEN");
+  assert.deepEqual(detail.combats[0].scores, [
+    { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Ippon" }
+  ]);
   assert.equal(detail.isCoach, true);
   assert.equal(detail.canManageCompetition, true);
 });
@@ -710,7 +731,7 @@ function createTestCombatsService({
   combatsById = {},
   getDomainUserContext
 } = {}) {
-  const calls = { inserted: [], updated: [], removed: [] };
+  const calls = { inserted: [], updated: [], removed: [], scores: [] };
 
   const service = createCombatsService({
     combatsRepository: {
@@ -724,6 +745,12 @@ function createTestCombatsService({
         return draft;
       },
       remove: async (idCombat) => calls.removed.push(idCombat)
+    },
+    combatScoresRepository: {
+      replaceForCombat: async (idCombat, scores) => {
+        calls.scores.push({ idCombat, scores });
+        return scores;
+      }
     },
     competitionsRepository: {
       getById: async (id) => competitionsByCompetitionId[id] || null
@@ -752,7 +779,7 @@ test("ajouterCombat records a combat the judoka is allowed to manage", async () 
     resultat: "V",
     adversaire: "Lee",
     garde_adversaire: "gaucher",
-    categorie_technique: "ne waza"
+    scores: [{ category: "ne waza", neWazaType: "osaekomi", value: "ippon" }]
   });
 
   assert.equal(result.success, true);
@@ -761,7 +788,15 @@ test("ajouterCombat records a combat the judoka is allowed to manage", async () 
   assert.equal(calls.inserted[0].draft.opponent, "Lee");
   assert.equal(calls.inserted[0].draft.opponentStance, "Gaucher");
   assert.equal(calls.inserted[0].draft.result, "Victoire");
-  assert.equal(calls.inserted[0].draft.techniqueCategory, "Ne waza");
+  assert.deepEqual(calls.inserted[0].draft.scores, [
+    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }
+  ]);
+  assert.deepEqual(calls.scores, [
+    {
+      idCombat: "CB_NEW",
+      scores: [{ category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }]
+    }
+  ]);
 });
 
 test("updateCombat re-validates ownership of both the existing and the incoming combat", async () => {

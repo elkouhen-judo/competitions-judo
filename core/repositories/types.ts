@@ -59,6 +59,16 @@ export interface CombatRow {
   deroule: string;
 }
 
+export interface CombatScoreRow {
+  id_combat_score: string;
+  id_combat: string;
+  categorie: string;
+  technique: string;
+  type_ne_waza: string;
+  valeur: string;
+  ordre: number;
+}
+
 export interface ClubCompetitionRow {
   id_club_competition: string;
   nom: string;

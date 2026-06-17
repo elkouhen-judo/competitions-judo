@@ -142,6 +142,11 @@
     };
   }
 
+  function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
+    const detail = score.category === "Tachi-waza" ? score.technique : score.neWazaType;
+    return [detail, score.value].filter(Boolean).join(" · ");
+  }
+
   function projectCompetitionCombats(
     combats: CombatReadModel[] | null | undefined,
     helpers: {
@@ -161,7 +166,7 @@
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
       victoryType: c.victoryType || "",
-      techniqueCategory: c.techniqueCategory || "",
+      scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),

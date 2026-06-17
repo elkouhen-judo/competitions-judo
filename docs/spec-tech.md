@@ -1,6 +1,6 @@
 ---
 title: Kiroku Technical Specification
-version: 1.2
+version: 1.3
 date_created: 2026-06-11
 last_updated: 2026-06-17
 owner: competitions-judo
@@ -63,6 +63,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
 - **VCL-005a**: The canonical local development URL shall be `http://localhost:3100`, served via `vercel dev --listen 3100`.
+- **VCL-005b**: A separate Vercel project (`competitions-judo-dev`, production URL `https://competitions-judo-dev.vercel.app/`) shall provide a dev deployment environment, backed by its own Supabase project (independent schema and auth configuration from production), deployed from the `dev` git branch. Every bare npm script (`dev`, `db:pull-env`, `app:deploy`, `redeploy`) targets production, matching their pre-existing documented behavior; the `:dev`-suffixed variants (`dev:dev`, `db:pull-env:dev`, `app:deploy:dev`, `redeploy:dev`) target the dev project explicitly (via `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` overrides), so no script silently mixes environments.
 - **VCL-006**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
 - **VCL-006a**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
 - **VCL-007**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
@@ -91,6 +92,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
 - **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
 - **DAT-025**: `competitions.ai_analysis` shall store the latest AI-generated competition analysis text, defaulting to an empty string when none has been generated yet.
+- **DAT-026**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 - **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
@@ -143,6 +145,7 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
 - **CFG-009**: `GROQ_API_KEY` is optional. When absent, AI competition analysis generation shall be skipped silently (no error raised, no analysis stored) rather than failing the calling operation.
 - **CFG-010**: `GROQ_MODEL` is optional and defaults to a fixed Groq chat-completion model id when unset.
+- **CFG-011**: Each deployment environment (production, dev) shall use its own dedicated Supabase project (own `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, own Google OAuth redirect URI, own copy of the schema migration); environment variables and data shall never be shared across Supabase projects.
 
 ## 4. Interfaces & Data Contracts
 

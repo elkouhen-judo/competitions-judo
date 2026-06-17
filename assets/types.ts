@@ -3,6 +3,7 @@ import type {
   AdminsManagement,
   ClubCompetitionDetail,
   CombatReadModel,
+  CombatScore,
   Competition,
   CompetitionDetail,
   InitialData,
@@ -117,7 +118,7 @@ export interface CompetitionCombatCard {
   opponentStance: string;
   result: string;
   victoryType?: string;
-  techniqueCategory?: string;
+  scoreLabels: string[];
   resultClass: string;
   judokaDisplayName: string;
   showJudoka: boolean;
@@ -377,6 +378,7 @@ export type {
   AdminsManagement,
   ClubCompetitionDetail,
   CombatReadModel,
+  CombatScore,
   Competition,
   CompetitionDetail,
   InitialData,

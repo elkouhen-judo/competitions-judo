@@ -2,6 +2,7 @@ import { toCanonicalCombat, toCanonicalCompetition, toCanonicalJudoka } from "./
 import type { createPersistedCompetition } from "../domain/competitions/competition";
 import type { updateCombat } from "../domain/competitions/combat";
 import type { CombatsRepository } from "../repositories/combats.repository";
+import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { ManagedJudokaScope, RpcMethods } from "../types";
 import type { UserContextService } from "./user-context.service";
@@ -10,6 +11,7 @@ type CombatMethods = Pick<RpcMethods, "ajouterCombat" | "deleteCombat" | "update
 
 export interface CombatsServiceDeps {
   combatsRepository: CombatsRepository;
+  combatScoresRepository: CombatScoresRepository;
   competitionsRepository: CompetitionsRepository;
   userContextService: UserContextService;
   assertCanManageCombatFor: (
@@ -30,6 +32,7 @@ export interface CombatsService {
 export default function createCombatsService(deps: CombatsServiceDeps): CombatsService {
   const {
     combatsRepository,
+    combatScoresRepository,
     competitionsRepository,
     userContextService,
     assertCanManageCombatFor,
@@ -58,7 +61,9 @@ export default function createCombatsService(deps: CombatsServiceDeps): CombatsS
     const competition = createPersistedCompetition(toCanonicalCompetition(competitionRecord));
     const combatDraft = competition.recordCombat(domainCombat);
 
-    await combatsRepository.insert(combatDraft, buildCombatId());
+    const idCombat = buildCombatId();
+    await combatsRepository.insert(combatDraft, idCombat);
+    await combatScoresRepository.replaceForCombat(idCombat, combatDraft.scores);
 
     return { success: true, message: "Combat ajouté." };
   }
@@ -95,6 +100,7 @@ export default function createCombatsService(deps: CombatsServiceDeps): CombatsS
     const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.update(combatId, combatDraft);
+    await combatScoresRepository.replaceForCombat(combatId, combatDraft.scores);
 
     return { success: true, message: "Combat modifié." };
   }

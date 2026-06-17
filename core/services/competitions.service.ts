@@ -5,6 +5,7 @@ import {
 } from "./domain-adapters";
 import type { createCompetition, createPersistedCompetition } from "../domain/competitions/competition";
 import type { CombatsRepository } from "../repositories/combats.repository";
+import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokaRow } from "../repositories/types";
 import type { Competition, CompetitionDetail, ManagedJudokaScope, RpcMethods } from "../types";
@@ -24,6 +25,7 @@ type CompetitionMethods = Pick<
 
 export interface CompetitionsServiceDeps {
   combatsRepository: CombatsRepository;
+  combatScoresRepository: CombatScoresRepository;
   competitionsRepository: CompetitionsRepository;
   userContextService: UserContextService;
   normalizeLastName: (value: unknown) => string;
@@ -69,6 +71,7 @@ export default function createCompetitionsService(
 ): CompetitionsService {
   const {
     combatsRepository,
+    combatScoresRepository,
     competitionsRepository,
     userContextService,
     normalizeLastName,
@@ -140,6 +143,19 @@ export default function createCompetitionsService(
           ? await combatsRepository.listByCompetitionAndJudoka(idCompetition, onlyVisibleJudokaId)
           : await combatsRepository.listByCompetitionAndJudokaIds(idCompetition, visibleJudokaIds);
     }
+
+    const combatScores = await combatScoresRepository.listByCombatIds(
+      filtered.map((combat) => combat.id_combat)
+    );
+    const scoresByCombatId = new Map<string, typeof combatScores>();
+    combatScores.forEach((score) => {
+      const idCombat = String(score.id_combat);
+      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
+    });
+    filtered = filtered.map((combat) => ({
+      ...combat,
+      scores: scoresByCombatId.get(String(combat.id_combat)) || []
+    }));
 
     const judokas = access.isOwn() ? [] : contextJudokas.map(toCanonicalJudoka);
     const enriched = toCombatReadModelsWithJudokas(filtered, judokas, {
