@@ -131,14 +131,17 @@ test("supabase schema auto-links pending children when their parent registers", 
   );
 });
 
-test("supabase schema provides an invitation-only signup hook for auth", () => {
+test("supabase schema lets imported profiles sign up through the auth hook", () => {
   assert.match(
     schema,
     /create or replace function public\.hook_check_invited_signup\(event jsonb\)/i
   );
   assert.match(schema, /from public\.judokas[\s\S]*lower\(email\) = normalized_email/i);
+  assert.doesNotMatch(schema, /lower\(email\) = normalized_email\s+and role = 'ADMIN'/i);
   assert.match(schema, /from public\.access_invitations[\s\S]*lower\(email\) = normalized_email/i);
   assert.match(schema, /'Accès non autorisé\. Une invitation est requise\.'/i);
+  assert.match(schema, /v_email_name text := replace\(split_part\(v_email, '@', 1\), '\.', ' '\)/i);
+  assert.doesNotMatch(schema, /raise exception 'Prénom et nom obligatoires\.'/i);
   assert.match(schema, /grant usage on schema public to supabase_auth_admin/i);
   assert.match(
     schema,

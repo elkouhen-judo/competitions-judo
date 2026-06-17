@@ -235,7 +235,6 @@ test("mobile actions stay explicit instead of icon-only", () => {
     bundle,
     /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/
   );
-  assert.match(bundle, /Créer mon profil/);
   assert.doesNotMatch(bundle, /title="Éditer"/);
   assert.doesNotMatch(bundle, /title="Supprimer"/);
 });
@@ -253,8 +252,9 @@ test("login screen is mounted through Vue 3 for the progressive screen migration
     /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\},\s*computedRefs = \{\}\)/
   );
   assert.match(bundle, /ui\.createMountedViewModel\("loginView", defaultLoginState,/);
-  assert.match(bundle, /v-model\.trim="registration\.firstName"/);
-  assert.match(bundle, /@submit\.prevent="submitProfileRegistration\(\)"/);
+  assert.doesNotMatch(bundle, /id="profileRegistrationForm"/);
+  assert.doesNotMatch(bundle, /id="registrationPrenom"|id="registrationNom"/);
+  assert.doesNotMatch(bundle, /submitProfileRegistration/);
 });
 
 test("home screen is mounted through Vue 3 for the progressive screen migration", () => {

@@ -103,6 +103,7 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-003**: The browser shall persist the Supabase session locally.
 - **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
 - **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
+- **AUTH-006**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
 - **AUTH-006**: The backend shall resolve the verified email from Supabase before applying business permissions.
 - **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
 - **AUTH-008**: Password-based login shall remain unsupported.

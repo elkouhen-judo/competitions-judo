@@ -63,7 +63,6 @@ const { createJudoka, createManagedChild } = require("./domain/access/judoka.js"
 const { createEmail } = require("./domain/access/email.js");
 const { createProfileType } = require("./domain/access/profile-type.js");
 const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope.js");
-const { createAccessInvitation } = require("./domain/access/access-invitation.js");
 const { createClubCompetition } = require("./domain/competitions/club-competition.js");
 const {
   createCompetition,
@@ -108,7 +107,6 @@ const adminService = createAdminService({
   userContextService,
   buildJudokaId: ids.buildJudokaId,
   cleanText: text.cleanText,
-  createAccessInvitation,
   createEmail,
   createJudoka,
   createManagedChild,
@@ -171,14 +169,18 @@ const registrationService = createRegistrationService({
 });
 
 async function getInitialData(email) {
-  const currentUser = await userContextService.getCurrentUser(email);
+  let currentUser = await userContextService.getCurrentUser(email);
   if (!currentUser) {
     const invitation = await adminService.getAccessInvitation(email);
     if (invitation) {
-      throw new Error("Invitation trouvée. Finalisez votre profil.");
+      await registrationService.methods.registerProfile(email, {});
+      currentUser = await userContextService.getCurrentUser(email);
+      if (!currentUser) {
+        throw new Error("Profil introuvable après activation de l'invitation.");
+      }
+    } else {
+      throw new Error("Accès non autorisé. Une invitation est requise.");
     }
-
-    throw new Error("Accès non autorisé. Une invitation est requise.");
   }
 
   const { user, judokas, managedJudokaScope, domainUser } =

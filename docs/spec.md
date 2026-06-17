@@ -147,7 +147,7 @@ This specification does not define:
 - **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
 - **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
 - **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
-- **AUTH-011**: The initial profile created after invitation shall use the invited profile type.
+- **AUTH-011**: CSV-imported profiles with an account email shall be able to connect with Google without re-entering first name or last name.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
