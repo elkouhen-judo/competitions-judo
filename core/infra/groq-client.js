@@ -17,7 +17,7 @@ function createGroqClient({ getGroqApiKey, getGroqModel }) {
         model: getGroqModel(),
         messages,
         temperature: 0.4,
-        max_tokens: 700
+        max_tokens: 350
       })
     });
     const body = await response.text();
