@@ -589,12 +589,6 @@
       gap: 12px;
     }
 
-    /* Upcoming competition this weekend — warm highlight */
-    .competition-card:has(.this-weekend-badge) {
-      border-left: 4px solid var(--warning);
-      background: var(--warning-soft);
-    }
-
     .card-button {
       display: block;
       width: 100%;
@@ -895,11 +889,10 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: #fff8e6;
-      color: #9a5700;
-      border: 1px solid #f0c060;
-      border-radius: 4px;
-      padding: 2px 7px;
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-radius: 9999px;
+      padding: 2px 9px;
       font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
