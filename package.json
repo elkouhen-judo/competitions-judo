@@ -8,7 +8,15 @@
     "test:coverage": "npm run build:assets && npm run build:core && node --test --experimental-test-coverage tests/*.test.js",
     "format": "prettier --write \"**/*.js\"",
     "format:check": "prettier --check \"**/*.js\"",
-    "typecheck": "tsc -p jsconfig.json"
+    "typecheck": "tsc -p jsconfig.json",
+    "dev": "vercel dev --listen 3100",
+    "app:deploy": "npm test && npm run build:assets && vercel --prod",
+    "db:pull-env": "vercel env pull --environment=production .env.local",
+    "db:deploy": "node scripts/db-deploy.js",
+    "db:status": "node scripts/db-status.js",
+    "db:check": "node scripts/db-check.js",
+    "db:reset": "node scripts/db-reset.js",
+    "redeploy": "npm run db:reset && npm run db:deploy && npm run app:deploy"
   },
   "engines": {
     "node": ">=20"
