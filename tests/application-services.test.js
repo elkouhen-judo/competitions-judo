@@ -612,14 +612,18 @@ test("ajouterCombat records a combat the judoka is allowed to manage", async () 
     id_competition: "COMP1",
     id_judoka: "JUDO1",
     resultat: "V",
-    adversaire: "Lee"
+    adversaire: "Lee",
+    garde_adversaire: "gaucher",
+    categorie_technique: "ne waza"
   });
 
   assert.equal(result.success, true);
   assert.equal(calls.inserted.length, 1);
   assert.equal(calls.inserted[0].idCombat, "CB_NEW");
   assert.equal(calls.inserted[0].draft.opponent, "Lee");
+  assert.equal(calls.inserted[0].draft.opponentStance, "Gaucher");
   assert.equal(calls.inserted[0].draft.result, "Victoire");
+  assert.equal(calls.inserted[0].draft.techniqueCategory, "Ne waza");
 });
 
 test("updateCombat re-validates ownership of both the existing and the incoming combat", async () => {

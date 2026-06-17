@@ -104,6 +104,8 @@ This specification does not define:
 - **CBT-005**: A combat may include an opponent name and match notes (free text for technical feedback).
 - **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, or `Egalité`.
 - **CBT-005b**: To maintain simplicity, no complex judo scoring fields (Shido, Ippon counters) are structural dropdowns; technical details are typed in the free text match notes (e.g., "Perdu par Ippon sur Uchi-Mata", "Gagné aux pénalités au Golden Score").
+- **CBT-005c**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
+- **CBT-005d**: A combat may optionally record the winning technique category (`Technique Avant`, `Technique Arrière`, `Contre`, or `Ne waza`), regardless of the combat result.
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
 
 ### 3.5 Child management rules

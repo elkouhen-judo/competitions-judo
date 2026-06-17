@@ -114,8 +114,10 @@ export interface CompetitionCombatCard {
   judokaId: string;
   competitionId: string;
   opponent: string;
+  opponentStance: string;
   result: string;
   victoryType?: string;
+  techniqueCategory?: string;
   resultClass: string;
   judokaDisplayName: string;
   showJudoka: boolean;

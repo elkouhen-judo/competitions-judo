@@ -83,8 +83,10 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     judokaId: String(pick(combat, "judokaId", "id_judoka") || ""),
     competitionId: String(pick(combat, "competitionId", "id_competition") || ""),
     opponent: String(pick(combat, "opponent", "adversaire") || ""),
+    opponentStance: String(pick(combat, "opponentStance", "garde_adversaire") || ""),
     result: normalizeCanonicalCombatResult(pick(combat, "result", "resultat")),
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
+    techniqueCategory: String(pick(combat, "techniqueCategory", "categorie_technique") || ""),
     notes: String(pick(combat, "notes", "deroule") || "")
   };
 }

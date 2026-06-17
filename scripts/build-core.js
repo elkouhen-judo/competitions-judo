@@ -18,6 +18,8 @@ const entryPoints = [
   "core/domain/access/permission-policy.ts",
   "core/domain/competitions/combat-result.ts",
   "core/domain/competitions/combat-decision-type.ts",
+  "core/domain/competitions/opponent-stance.ts",
+  "core/domain/competitions/combat-technique-category.ts",
   "core/domain/competitions/combat.ts",
   "core/domain/competition-results.ts",
   "core/domain/competitions/competition.ts",

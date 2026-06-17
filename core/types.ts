@@ -38,8 +38,10 @@ export interface Combat {
   judokaId: string;
   competitionId: string;
   opponent: string;
+  opponentStance?: string;
   result: "Victoire" | "Défaite" | "Egalité";
   victoryType?: string;
+  techniqueCategory?: string;
   notes?: string;
 }
 

@@ -49,6 +49,11 @@ test("supabase schema includes role and result constraints", () => {
   );
 });
 
+test("supabase schema stores opponent stance and winning technique category on combats", () => {
+  assert.match(schema, /add column if not exists garde_adversaire text not null default ''/i);
+  assert.match(schema, /add column if not exists categorie_technique text not null default ''/i);
+});
+
 test("supabase schema stores club competitions and linked participations", () => {
   assert.match(schema, /create table if not exists public\.club_competitions/i);
   assert.match(schema, /id_club_competition text primary key/i);

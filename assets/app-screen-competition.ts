@@ -99,8 +99,10 @@
     const defaultCombatForm = {
       combatId: "",
       opponent: "",
+      opponentStance: "",
       result: "",
       victoryType: "",
+      techniqueCategory: "",
       notes: ""
     };
     const defaultCombatFormViewState = {
@@ -882,8 +884,10 @@
         Object.assign(combatFormViewModel.combatForm, {
           combatId: combat.combatId || "",
           opponent: combat.opponent || "",
+          opponentStance: combat.opponentStance || "",
           result: combat.result || "",
           victoryType: combat.victoryType || "",
+          techniqueCategory: combat.techniqueCategory || "",
           notes: combat.notes || ""
         });
         syncCombatDecisionVisibility(false);
@@ -961,9 +965,11 @@
         competitionId: competition.competitionId,
         judokaId: competition.ownerJudokaId,
         opponent: combatFormViewModel.combatForm.opponent,
+        opponentStance: combatFormViewModel.combatForm.opponentStance,
         result,
         victoryType:
           result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
+        techniqueCategory: combatFormViewModel.combatForm.techniqueCategory,
         notes: combatFormViewModel.combatForm.notes,
         combatId: undefined as string | undefined
       };

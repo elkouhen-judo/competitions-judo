@@ -160,6 +160,10 @@ alter table public.combats
   add constraint combats_resultat_check
   check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'));
 
+alter table public.combats
+  add column if not exists garde_adversaire text not null default '',
+  add column if not exists categorie_technique text not null default '';
+
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
   where email is not null;

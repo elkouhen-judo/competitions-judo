@@ -72,8 +72,10 @@ test("repositories map domain objects to supabase records", async () => {
       competitionId: "COMP1",
       draft: {
         opponent: "",
+        opponentStance: "",
         result: "V",
         victoryType: "",
+        techniqueCategory: "",
         notes: ""
       }
     },
@@ -121,8 +123,10 @@ test("repositories map domain objects to supabase records", async () => {
         id_judoka: "JUDO1",
         id_competition: "COMP1",
         adversaire: "",
+        garde_adversaire: "",
         resultat: "V",
         type_victoire: "",
+        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -175,8 +179,10 @@ test("combats repository retries legacy result codes when the remote constraint 
       competitionId: "COMP1",
       draft: {
         opponent: "Lee",
+        opponentStance: "",
         result: "Victoire",
         victoryType: "Ippon",
+        techniqueCategory: "",
         notes: ""
       }
     },
@@ -188,8 +194,10 @@ test("combats repository retries legacy result codes when the remote constraint 
     competitionId: "COMP1",
     draft: {
       opponent: "Lee",
+      opponentStance: "",
       result: "Défaite",
       victoryType: "Décision",
+      techniqueCategory: "",
       notes: ""
     }
   });
@@ -203,8 +211,10 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_judoka: "JUDO1",
         id_competition: "COMP1",
         adversaire: "Lee",
+        garde_adversaire: "",
         resultat: "Victoire",
         type_victoire: "Ippon",
+        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -216,8 +226,10 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_judoka: "JUDO1",
         id_competition: "COMP1",
         adversaire: "Lee",
+        garde_adversaire: "",
         resultat: "V",
         type_victoire: "Ippon",
+        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -229,8 +241,10 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_judoka: "JUDO1",
         id_competition: "COMP1",
         adversaire: "Lee",
+        garde_adversaire: "",
         resultat: "Défaite",
         type_victoire: "Décision",
+        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -242,8 +256,10 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_judoka: "JUDO1",
         id_competition: "COMP1",
         adversaire: "Lee",
+        garde_adversaire: "",
         resultat: "D",
         type_victoire: "Décision",
+        categorie_technique: "",
         deroule: ""
       }
     ]
