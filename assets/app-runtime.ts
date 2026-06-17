@@ -21,7 +21,6 @@ function createInitialState(): KirokuAppState {
     isCoach: false,
     isParent: false,
     homeMode: "judoka",
-    canManageChildren: false,
     competitions: [],
     clubCompetitions: [],
     currentCompetition: null,
@@ -29,23 +28,23 @@ function createInitialState(): KirokuAppState {
     currentCombats: [],
     currentJudokaProfile: null,
     managedAdmins: [],
+    managedUsers: [],
     managedAccessInvitations: [],
-    managedChildren: [],
     canEditCurrentCompetition: false,
     isLoadingCompetition: false,
     isSubmitting: false,
     isOnline: typeof navigator === "undefined" ? true : navigator.onLine,
     pendingRpcKeys: {},
     homeFilterJudokaId: "",
-    accessInvitationSearch: "",
-    accessInvitationCurrentPage: 1,
     competitionsCurrentPage: 1,
     clubCompetitionsCurrentPage: 1,
     clubCompetitionParticipantsCurrentPage: 1,
     clubCompetitionAvailableJudokasCurrentPage: 1,
     clubCompetitionFormParticipantsCurrentPage: 1,
     judokaCompetitionResultsCurrentPage: 1,
-    adminsCurrentPage: 1
+    adminsCurrentPage: 1,
+    usersSearch: "",
+    usersCurrentPage: 1
   };
 }
 
@@ -53,7 +52,6 @@ function createInitialState(): KirokuAppState {
 
   window.createKirokuApp = function createKirokuApp() {
     const runtimeConfig: RuntimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-    const defaultAccessInvitationVisibleCount = 5;
     const defaultListPageSize = 10;
     const state = window.Vue.reactive(createInitialState());
 
@@ -98,12 +96,10 @@ function createInitialState(): KirokuAppState {
       applyInitialData,
       auth,
       confirmAndRun,
-      defaultAccessInvitationVisibleCount,
       defaultListPageSize,
       notifications,
       reloadInitialData,
       reloadInitialDataAndShowAdmins,
-      reloadInitialDataAndShowChildren,
       reloadInitialDataThen,
       resetApplicationState,
       runtimeConfig,
@@ -118,7 +114,6 @@ function createInitialState(): KirokuAppState {
     screens.home = window.createKirokuHomeScreen(app);
     screens.judoka = window.createKirokuJudokaScreen(app);
     screens.competition = window.createKirokuCompetitionScreen(app);
-    screens.children = window.createKirokuChildrenScreen(app);
     screens.admins = window.createKirokuAdminsScreen(app);
     loginScreen = window.createKirokuLoginScreen(app);
     screens.login = loginScreen;
@@ -318,7 +313,6 @@ function createInitialState(): KirokuAppState {
       state.isAdmin = Boolean(data.isAdmin);
       state.isCoach = Boolean(data.isCoach);
       state.isParent = Boolean(data.isParent);
-      state.canManageChildren = Boolean(data.canManageChildren);
       state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
       state.clubCompetitions = Array.isArray(data.clubCompetitions) ? data.clubCompetitions : [];
       state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
@@ -378,10 +372,6 @@ function createInitialState(): KirokuAppState {
         },
         showError
       );
-    }
-
-    function reloadInitialDataAndShowChildren() {
-      reloadInitialDataThen(() => screens.children.showChildrenManagement(true));
     }
 
     function reloadInitialDataAndShowAdmins() {

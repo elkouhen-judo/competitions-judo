@@ -7,7 +7,7 @@
             :key="mode.key"
             type="button"
             :class="['mode-tab', { 'mode-tab-active': mode.key === currentHomeMode }]"
-            @click="setHomeMode(mode.key)">
+            @click="handleModeTabClick(mode.key)">
             {{ mode.label }}
           </button>
         </nav>
@@ -63,22 +63,6 @@
                 <span id="openHomeJudokaProfileButtonText">{{ profileButtonText }}</span>
                 <span id="openHomeJudokaProfileButtonMeta" class="button-meta">{{ profileButtonMeta }}</span>
               </span>
-            </button>
-            <button id="manageChildrenButton" v-if="canManageChildren" class="button-secondary" @click="showChildrenManagement()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M17 11h6"></path></svg>
-              Gérer les enfants
-            </button>
-          </div>
-        </div>
-        <div v-if="canManageAdmins" class="section club-access-section">
-          <div class="club-access-card">
-            <div class="club-access-copy">
-              <span class="club-access-label">Accès club</span>
-              <h3>Invitations et rôles administrateur</h3>
-            </div>
-            <button id="manageAdminsButton" class="button-secondary club-access-action" @click="showAdminsManagement()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4z"></path><path d="M12 10v4"></path><path d="M10 12h4"></path></svg>
-              Gérer les accès
             </button>
           </div>
         </div>

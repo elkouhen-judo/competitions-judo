@@ -17,6 +17,7 @@ export interface CompetitionsRepository {
   listByJudoka(idJudoka: string): Promise<CompetitionRow[]>;
   listByJudokaIds(ids: string[]): Promise<CompetitionRow[]>;
   remove(idCompetition: string): Promise<void>;
+  removeByJudoka(idJudoka: string): Promise<void>;
   update(idCompetition: string, competition: CompetitionModel): Promise<CompetitionRow | null>;
   updateCoachObjective(idCompetition: string, objective: string): Promise<CompetitionRow | null>;
   updateCoachReview(idCompetition: string, review: string): Promise<CompetitionRow | null>;
@@ -167,6 +168,10 @@ export default function createCompetitionsRepository(
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
 
+  async function removeByJudoka(idJudoka: string): Promise<void> {
+    return supabaseDelete("competitions", eqFilter("id_judoka", idJudoka));
+  }
+
   return {
     detachFromClubCompetition,
     existsForJudoka,
@@ -177,6 +182,7 @@ export default function createCompetitionsRepository(
     listByJudoka,
     listByJudokaIds,
     remove,
+    removeByJudoka,
     update,
     updateCoachObjective,
     updateCoachReview,

@@ -1,0 +1,4 @@
+profileType,prenom,nom,email,parentEmail
+PARENT,Claire,Durand,parent@example.com,
+JUDOKA,Hugo,Durand,,parent@example.com
+JUDOKA,Nina,Durand,,parent@example.com

@@ -20,7 +20,6 @@ export interface UserContextServiceDeps {
 }
 
 export interface UserContextService {
-  assertJudokaEmailAvailable(email: string | null | undefined, currentIdJudoka?: unknown): Promise<void>;
   getAccessibleJudokaProfile(
     email: string,
     idJudoka?: string
@@ -30,7 +29,6 @@ export interface UserContextService {
   getDomainUserContext(email: string): Promise<DomainUserContext>;
   getJudokaById(idJudoka: string): Promise<JudokaRow | null>;
   getJudokas(): Promise<JudokaRow[]>;
-  getManagedChild(idParent: string, idJudoka: string): Promise<JudokaRow | null>;
   getParentManagedJudokas(idParent: string): Promise<JudokaRow[]>;
 }
 
@@ -73,29 +71,6 @@ export default function createUserContextService(
 
     const ids = rows.map((row) => row.id_judoka);
     return judokasRepository.listByIds(ids);
-  }
-
-  async function getManagedChild(idParent: string, idJudoka: string): Promise<JudokaRow | null> {
-    const link = await parentLinksRepository.getLink(idParent, idJudoka);
-    if (!link) {
-      return null;
-    }
-
-    return getJudokaById(idJudoka);
-  }
-
-  async function assertJudokaEmailAvailable(
-    email: string | null | undefined,
-    currentIdJudoka?: unknown
-  ): Promise<void> {
-    if (!email) {
-      return;
-    }
-
-    const existingUser = await getCurrentUser(email);
-    if (existingUser && String(existingUser.id_judoka) !== String(currentIdJudoka || "")) {
-      throw new Error("Un autre profil utilise déjà cet email.");
-    }
   }
 
   async function getCurrentUserContext(email: string): Promise<UserContext> {
@@ -149,14 +124,12 @@ export default function createUserContextService(
   }
 
   return {
-    assertJudokaEmailAvailable,
     getAccessibleJudokaProfile,
     getCurrentUser,
     getCurrentUserContext,
     getDomainUserContext,
     getJudokaById,
     getJudokas,
-    getManagedChild,
     getParentManagedJudokas
   };
 }

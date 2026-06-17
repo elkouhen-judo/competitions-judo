@@ -48,14 +48,6 @@ export interface Combat {
  */
 export type CombatReadModel = Combat & { judokaDisplayName: string };
 
-export interface ManagedChild {
-  judokaId?: string | undefined;
-  accountEmail?: string | undefined;
-  firstName: string;
-  lastName: string;
-  ageCategory?: string;
-}
-
 export interface AccessInvitation {
   email: string;
   invitedProfileType: "JUDOKA" | "PARENT";
@@ -95,20 +87,28 @@ export interface OperationResult {
   competitionId?: string;
   judokaId?: string;
   clubCompetitionId?: string;
-  email?: string;
-  invitedProfileType?: string;
-}
-
-export interface ChildrenManagement {
-  user: Judoka;
-  isParent: boolean;
-  children: Judoka[];
 }
 
 export interface AdminsManagement {
   user: Judoka;
   admins: Judoka[];
+  users: Judoka[];
   accessInvitations: AccessInvitation[];
+}
+
+export interface UserImportRowResult {
+  row: number;
+  name: string;
+  email: string | null;
+  success: boolean;
+  message: string;
+}
+
+export interface UserImportSummary {
+  success: boolean;
+  imported: number;
+  failed: number;
+  results: UserImportRowResult[];
 }
 
 export interface CompetitionDetail {
@@ -205,7 +205,6 @@ export interface InitialData {
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
-  canManageChildren: boolean;
   competitions: Competition[];
   clubCompetitions: { clubCompetitionId: string; name: string; competitionDate: string }[];
   judokas: Judoka[];
@@ -218,30 +217,22 @@ export interface InitialData {
 export interface RpcMethods {
   /** Charge le contexte de l'utilisateur courant, ses compétitions et celles du club. */
   getInitialData: (email: string) => Promise<InitialData>;
-  /** Liste les enfants gérés par l'utilisateur (profil parent). */
-  getChildrenManagement: (email: string) => Promise<ChildrenManagement>;
-  /** Crée ou met à jour un enfant géré. */
-  saveManagedChild: (email: string, child: ManagedChild) => Promise<OperationResult>;
-  /** Supprime un enfant géré. */
-  deleteManagedChild: (email: string, idJudoka: string) => Promise<OperationResult>;
   /** Calcule le profil saisonnier d'un judoka (soi-même par défaut, ou un profil accessible). */
   getJudokaProfile: (email: string, idJudoka?: string, seasonStartYear?: number) => Promise<JudokaProfile>;
   /** Finalise l'inscription d'un compte après une invitation. */
   registerProfile: (email: string, profile: object) => Promise<object>;
+  /** Supprime définitivement un utilisateur et ses compétitions/combats. */
+  deleteUser: (email: string, idJudoka: string) => Promise<OperationResult>;
   /** Annule une invitation d'accès en attente. */
   deleteAccessInvitation: (email: string, invitedEmail: string) => Promise<OperationResult>;
-  /** Liste les administrateurs et les invitations d'accès en attente. */
+  /** Liste les administrateurs, les utilisateurs et les invitations d'accès en attente. */
   getAdminsManagement: (email: string) => Promise<AdminsManagement>;
   /** Promeut un judoka au rôle administrateur. */
   grantAdminRole: (email: string, targetEmail: string) => Promise<OperationResult>;
   /** Retire le rôle administrateur d'un judoka. */
   revokeAdminRole: (email: string, idJudoka: string) => Promise<OperationResult>;
-  /** Crée ou met à jour une invitation d'accès. */
-  saveAccessInvitation: (
-    email: string,
-    targetEmail: string,
-    targetProfileType: string
-  ) => Promise<OperationResult>;
+  /** Importe des profils JUDOKA/PARENT en masse depuis un fichier CSV. */
+  importUsersCsv: (email: string, csvContent: string) => Promise<UserImportSummary>;
   /** Supprime une compétition de club. */
   deleteClubCompetition: (email: string, idClubCompetition: string) => Promise<OperationResult>;
   /** Détache une participation personnelle d'une compétition de club. */

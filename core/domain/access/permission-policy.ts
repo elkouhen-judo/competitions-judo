@@ -42,18 +42,8 @@ export function isParent(user: UserLike | null | undefined): boolean {
   return isParentProfileType(user && user.profileType);
 }
 
-export function canManageChildrenProfile(user: UserLike | null | undefined): boolean {
-  return isParent(user);
-}
-
 export function canManageClubCompetition(user: UserLike | null | undefined): boolean {
   return isCoach(user);
-}
-
-export function assertCanManageChildrenProfile(user: UserLike | null | undefined): void {
-  if (!canManageChildrenProfile(user)) {
-    throw new Error("Gestion des enfants non disponible pour ce profil.");
-  }
 }
 
 function getUserJudokaId(user: UserLike | null | undefined): unknown {

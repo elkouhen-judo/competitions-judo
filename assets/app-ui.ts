@@ -6,7 +6,6 @@
     "homeView",
     "judokaView",
     "adminsView",
-    "childrenView",
     "competitionView",
     "clubCompetitionFormView",
     "clubCompetitionDetailView",

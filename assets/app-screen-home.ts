@@ -1,7 +1,7 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
   type Judoka = import("../core/types").Judoka;
-  type HomeMode = "judoka" | "coach" | "family" | "admin";
+  type HomeMode = "judoka" | "coach" | "family";
 
   interface HomeFilterOption {
     judokaId: string;
@@ -84,7 +84,7 @@
     // --- Computed refs ---
 
     const availableModes = window.Vue.computed(() => {
-      const modes: Array<{ key: HomeMode; label: string }> = [
+      const modes: Array<{ key: string; label: string }> = [
         { key: "judoka", label: "Mon espace" }
       ];
       if (state.isCoach) {
@@ -107,21 +107,15 @@
       return (mode === "coach" || mode === "family") && state.judokas.length > 0;
     });
 
-    const canManageAdmins = window.Vue.computed(
-      () => state.isAdmin && getCurrentMode() === "admin"
-    );
-    const canManageChildren = window.Vue.computed(
-      () => state.canManageChildren && getCurrentMode() === "family"
-    );
     const canCreateCompetition = window.Vue.computed(
-      () => !state.isAdmin && getCurrentMode() !== "coach" && getCurrentMode() !== "admin"
+      () => !state.isAdmin && getCurrentMode() !== "coach"
     );
     const canCreateClubCompetition = window.Vue.computed(
       () => getCurrentMode() === "coach" && state.isCoach
     );
     const showClubCompetitionsSection = window.Vue.computed(() => getCurrentMode() === "coach");
-    const showActiveJudokaSummary = window.Vue.computed(() => getCurrentMode() !== "judoka" && getCurrentMode() !== "admin");
-    const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser) && getCurrentMode() !== "admin");
+    const showActiveJudokaSummary = window.Vue.computed(() => getCurrentMode() !== "judoka");
+    const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser));
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const judokasById = window.Vue.computed(() => new Map(state.judokas.map((j) => [String(j.judokaId), j])));
 
@@ -180,22 +174,6 @@
               ? "Cliquez sur « Voir la fiche » pour accéder au profil complet."
               : "Choisissez un judoka dans la liste pour travailler dans son contexte."
           }
-        };
-      }
-
-      if (mode === "admin") {
-        return {
-          homeTitle: "Accès club",
-          homeSubtitle: "Invitations, rôles et accès à l'application.",
-          filterPlaceholder: "",
-          profileButtonText: "Voir la fiche",
-          profileButtonMeta: "",
-          addCompetitionButtonText: "Nouvelle compétition",
-          addCompetitionButtonMeta: "",
-          competitionsTitle: "Compétitions",
-          competitionsSubtitle: "",
-          showCompetitionsSection: false,
-          activeJudokaSummary: { label: "", value: "", meta: "" }
         };
       }
 
@@ -399,8 +377,7 @@
         openHomeJudokaProfile,
         selectFilterJudoka,
         setHomeMode,
-        showAdminsManagement: screens.admins.showAdminsManagement,
-        showChildrenManagement: screens.children.showChildrenManagement,
+        handleModeTabClick,
         showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
@@ -415,8 +392,6 @@
         showModeTabs,
         currentHomeMode,
         canFilterByJudoka,
-        canManageAdmins,
-        canManageChildren,
         canCreateCompetition,
         canCreateClubCompetition,
         showClubCompetitionsSection,
@@ -540,9 +515,17 @@
       ensureHomeActiveJudokaSelection();
     }
 
+    function handleModeTabClick(modeKey: string) {
+      if (modeKey === "admin") {
+        screens.admins.showAdminsManagement();
+        return;
+      }
+      setHomeMode(modeKey as HomeMode);
+    }
+
     function ensureHomeActiveJudokaSelection() {
       const mode = getCurrentMode();
-      if (mode === "judoka" || mode === "admin") return;
+      if (mode === "judoka") return;
 
       const viewModel = getHomeViewModel();
       const accessibleJudokas = getAccessibleHomeJudokas();

@@ -1,11 +1,11 @@
 (() => {
-  type AccessInvitation = import("./types").AccessInvitation;
   type Competition = import("./types").Competition;
   type CompetitionCombatCard = import("./types").CompetitionCombatCard;
   type CombatReadModel = import("./types").CombatReadModel;
+  type AccessInvitation = import("./types").AccessInvitation;
   type Judoka = import("./types").Judoka;
   type ManagedAdminCard = import("./types").ManagedAdminCard;
-  type ManagedChildCard = import("./types").ManagedChildCard;
+  type ManagedUserCard = import("./types").ManagedUserCard;
 
   function paginateList<TItem>(
     items: TItem[] | null | undefined,
@@ -24,35 +24,6 @@
       currentPage: safeCurrentPage,
       canShowPreviousPage: safeCurrentPage > 1,
       canShowNextPage: safeCurrentPage < totalPages
-    };
-  }
-
-  function projectManagedChildren(
-    children: Judoka[] | null | undefined,
-    helpers: {
-      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
-      normalizeDisplayName(value: unknown): string;
-      normalizeLastName(value: unknown): string;
-    }
-  ) {
-    const { getJudokaDisplayName, normalizeDisplayName, normalizeLastName } = helpers;
-
-    const projectedChildren: ManagedChildCard[] = (children || []).map((child) => {
-      const fullName = getJudokaDisplayName(child) || "Enfant";
-      return {
-        judokaId: child.judokaId || "",
-        fullName,
-        firstName: normalizeDisplayName(child.firstName || ""),
-        lastName: normalizeLastName(child.lastName || ""),
-        accountEmail: child.accountEmail || "Non renseigné",
-        directAccessState: child.accountEmail ? "Activée" : "Non activée",
-        ageCategory: child.ageCategory || ""
-      };
-    });
-
-    return {
-      children: projectedChildren,
-      hasChildren: projectedChildren.length > 0
     };
   }
 
@@ -82,33 +53,69 @@
     };
   }
 
-  function projectAccessInvitations(
-    filteredInvitations: AccessInvitation[],
+  function getUserRoleLabel(user: Judoka): string {
+    const profileTypeLabel = user.profileType === "PARENT" ? "Parent" : "Judoka";
+    if (user.accessRole === "ADMIN") return `Admin · ${profileTypeLabel}`;
+    if (user.accessRole === "COACH") return `Coach · ${profileTypeLabel}`;
+    return profileTypeLabel;
+  }
+
+  function projectManagedUsers(
+    users: Judoka[] | null | undefined,
+    pendingInvitations: AccessInvitation[] | null | undefined,
     search: string,
     currentPage: number,
     pageSize: number,
-    helpers: { formatDateTime(value: unknown): string }
+    currentUser: Judoka | null | undefined,
+    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string }
   ) {
-    const { formatDateTime } = helpers;
-    const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
-    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const { getJudokaDisplayName } = helpers;
+
+    const registeredCards: ManagedUserCard[] = (users || []).map((user) => ({
+      judokaId: user.judokaId || "",
+      fullName: getJudokaDisplayName(user) || user.accountEmail || "Utilisateur",
+      accountEmail: user.accountEmail || "Non renseigné",
+      roleLabel: getUserRoleLabel(user),
+      isAdmin: user.accessRole === "ADMIN",
+      isCurrentUser: Boolean(
+        currentUser && String(currentUser.judokaId) === String(user.judokaId)
+      ),
+      isPending: false
+    }));
+
+    const pendingCards: ManagedUserCard[] = (pendingInvitations || []).map((invitation) => ({
+      judokaId: "",
+      fullName: invitation.email || "Invitation",
+      accountEmail: invitation.email || "Non renseigné",
+      roleLabel: `En attente d'inscription · ${invitation.invitedProfileType === "PARENT" ? "Parent" : "Judoka"}`,
+      isAdmin: false,
+      isCurrentUser: false,
+      isPending: true
+    }));
+
+    const allCards = [...registeredCards, ...pendingCards];
+    const normalizedSearch = (search || "").toLowerCase();
+    const filteredUsers = !normalizedSearch
+      ? allCards
+      : allCards.filter((card) =>
+          `${card.fullName} ${card.accountEmail}`.toLowerCase().includes(normalizedSearch)
+        );
+
+    const totalPages = Math.max(Math.ceil(filteredUsers.length / pageSize), 1);
+    const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
     const startIndex = (safeCurrentPage - 1) * pageSize;
-    const visibleInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
+    const projectedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
 
     return {
-      accessInvitations: visibleInvitations.map((invitation) => ({
-        email: invitation.email || "Invitation",
-        invitedProfileType: invitation.invitedProfileType || "JUDOKA",
-        createdAt: formatDateTime(invitation.createdAt)
-      })),
-      accessInvitationsSummary: `${filteredInvitations.length} invitation(s)${search ? " trouvée(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
-      accessInvitationsEmptyMessage: search
-        ? `Aucune invitation trouvée pour "${search}".`
-        : "Aucune invitation en attente.",
-      canResetAccessInvitationSearch: Boolean(search),
-      canShowPreviousAccessInvitationPage: safeCurrentPage > 1,
-      canShowNextAccessInvitationPage: safeCurrentPage < totalPages,
-      hasAccessInvitations: Boolean(filteredInvitations.length)
+      users: projectedUsers,
+      usersSummary: `${filteredUsers.length} utilisateur(s)${search ? " trouvé(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      usersEmptyMessage: search
+        ? `Aucun utilisateur trouvé pour "${search}".`
+        : "Aucun utilisateur trouvé.",
+      canResetUsersSearch: Boolean(search),
+      canShowPreviousUsersPage: safeCurrentPage > 1,
+      canShowNextUsersPage: safeCurrentPage < totalPages,
+      hasUsers: Boolean(filteredUsers.length)
     };
   }
 
@@ -168,10 +175,9 @@
 
   window.KirokuScreenProjections = {
     paginateList,
-    projectAccessInvitations,
     projectCompetitionCombats,
     projectCompetitionDetail,
     projectManagedAdmins,
-    projectManagedChildren
+    projectManagedUsers
   };
 })();

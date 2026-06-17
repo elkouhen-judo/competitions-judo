@@ -115,6 +115,22 @@ test("supabase schema blocks direct client table access", () => {
   );
 });
 
+test("supabase schema auto-links pending children when their parent registers", () => {
+  assert.match(schema, /add column if not exists pending_parent_email text/i);
+  assert.match(
+    schema,
+    /create index if not exists judokas_pending_parent_email_idx[\s\S]*on public\.judokas \(lower\(pending_parent_email\)\)/i
+  );
+  assert.match(
+    schema,
+    /insert into public\.parent_judokas \(id_parent, id_judoka\)\s*select v_user_id, id_judoka\s*from public\.judokas\s*where pending_parent_email is not null\s*and lower\(pending_parent_email\) = v_email/i
+  );
+  assert.match(
+    schema,
+    /update public\.judokas\s*set pending_parent_email = null\s*where pending_parent_email is not null\s*and lower\(pending_parent_email\) = v_email/i
+  );
+});
+
 test("supabase schema provides an invitation-only signup hook for auth", () => {
   assert.match(
     schema,

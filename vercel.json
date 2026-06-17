@@ -16,6 +16,10 @@
       "destination": "/api/manifest"
     },
     {
+      "source": "/sample-users-import.csv",
+      "destination": "/api/sample-users-import"
+    },
+    {
       "source": "/api/rpc",
       "destination": "/api/rpc"
     },

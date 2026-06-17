@@ -1,4 +1,4 @@
-import type { JudokaModel, UpdateManagedChildResult } from "../domain/access/judoka";
+import type { JudokaModel } from "../domain/access/judoka";
 import type { AccessRole } from "../domain/access/role";
 import type { PersonName } from "../domain/access/person-name";
 import type { JudokaRow, SupabaseRestDeps } from "./types";
@@ -13,12 +13,17 @@ export interface JudokaChangesInput {
   profile_type?: string;
   accessRole?: AccessRole;
   role?: string;
+  pendingParentEmail?: string;
 }
 
 export interface JudokasRepository {
   getByEmail(email: string): Promise<JudokaRow | null>;
   getById(idJudoka: string): Promise<JudokaRow | null>;
-  insert(judoka: JudokaModel, extras?: { categorie_age?: string }): Promise<JudokaRow | null>;
+  getByName(prenom: string, nom: string): Promise<JudokaRow | null>;
+  insert(
+    judoka: JudokaModel,
+    extras?: { categorie_age?: string; pending_parent_email?: string }
+  ): Promise<JudokaRow | null>;
   listAdmins(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
   listByIds(ids: string[]): Promise<JudokaRow[]>;
@@ -26,7 +31,6 @@ export interface JudokasRepository {
   saveCoachNotes(idJudoka: string, notes: string): Promise<void>;
   saveJudokaInfo(idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string): Promise<void>;
   update(idJudoka: string, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
-  updateManagedChild(idJudoka: string, child: UpdateManagedChildResult): Promise<JudokaRow | null>;
 }
 
 export default function createJudokasRepository(deps: SupabaseRestDeps): JudokasRepository {
@@ -69,21 +73,19 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     if (changes.accessRole !== undefined || changes.role !== undefined) {
       record.role = changes.accessRole !== undefined ? changes.accessRole : changes.role;
     }
+    if (changes.pendingParentEmail !== undefined) {
+      record.pending_parent_email = changes.pendingParentEmail;
+    }
 
     return record;
   }
 
-  function toManagedChildUpdateRecord(child: UpdateManagedChildResult): Record<string, unknown> {
-    return {
-      email: child.accountEmail,
-      prenom: child.name.firstName,
-      nom: child.name.lastName,
-      categorie_age: child.ageCategory
-    };
-  }
-
   function findEmailQueryValue(email: string): string {
     return encodeURIComponent(String(email || "").trim());
+  }
+
+  function findNameQueryValue(name: string): string {
+    return encodeURIComponent(String(name || "").trim());
   }
 
   async function listAll(): Promise<JudokaRow[]> {
@@ -111,17 +113,27 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     );
   }
 
+  async function getByName(prenom: string, nom: string): Promise<JudokaRow | null> {
+    return supabaseSelectOne<JudokaRow>(
+      "judokas",
+      `select=*&prenom=ilike.${findNameQueryValue(prenom)}&nom=ilike.${findNameQueryValue(nom)}`
+    );
+  }
+
   async function getById(idJudoka: string): Promise<JudokaRow | null> {
     return supabaseSelectOne<JudokaRow>("judokas", `select=*&${eqFilter("id_judoka", idJudoka)}`);
   }
 
   async function insert(
     judoka: JudokaModel,
-    extras?: { categorie_age?: string }
+    extras?: { categorie_age?: string; pending_parent_email?: string }
   ): Promise<JudokaRow | null> {
     const record: Record<string, unknown> = { ...toJudokaRecord(judoka) };
     if (extras) {
       if (extras.categorie_age !== undefined) record["categorie_age"] = extras.categorie_age;
+      if (extras.pending_parent_email !== undefined) {
+        record["pending_parent_email"] = extras.pending_parent_email;
+      }
     }
     return supabaseInsert<JudokaRow>("judokas", record);
   }
@@ -134,17 +146,6 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
       "judokas",
       eqFilter("id_judoka", idJudoka),
       toJudokaChangesRecord(judokaChanges)
-    );
-  }
-
-  async function updateManagedChild(
-    idJudoka: string,
-    child: UpdateManagedChildResult
-  ): Promise<JudokaRow | null> {
-    return supabasePatch<JudokaRow>(
-      "judokas",
-      eqFilter("id_judoka", idJudoka),
-      toManagedChildUpdateRecord(child)
     );
   }
 
@@ -167,6 +168,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   return {
     getByEmail,
     getById,
+    getByName,
     insert,
     listAdmins,
     listAll,
@@ -174,7 +176,6 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     remove,
     saveCoachNotes,
     saveJudokaInfo,
-    update,
-    updateManagedChild
+    update
   };
 }

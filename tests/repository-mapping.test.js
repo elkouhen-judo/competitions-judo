@@ -44,14 +44,6 @@ test("repositories map domain objects to supabase records", async () => {
     accessRole: "NORMAL",
     hasDirectAccount: () => true
   });
-  await judokasRepository.updateManagedChild("JUDO1", {
-    accountEmail: null,
-    name: {
-      firstName: "Aya",
-      lastName: "Martin"
-    },
-    ageCategory: ""
-  });
   await competitionsRepository.insert(
     {
       ownerJudokaId: "JUDO1",
@@ -96,17 +88,6 @@ test("repositories map domain objects to supabase records", async () => {
         nom: "Martin",
         profile_type: "JUDOKA",
         role: "NORMAL"
-      }
-    ],
-    [
-      "patch",
-      "judokas",
-      "id_judoka=eq.JUDO1",
-      {
-        email: null,
-        prenom: "Aya",
-        nom: "Martin",
-        categorie_age: ""
       }
     ],
     [

@@ -6,6 +6,7 @@ const root = path.join(__dirname, "..");
 const entryPoints = [
   "core/shared/ids.ts",
   "core/shared/text.ts",
+  "core/shared/csv.ts",
   "core/domain/shared/identity.ts",
   "core/domain/access/email.ts",
   "core/domain/access/person-name.ts",
@@ -32,7 +33,6 @@ const entryPoints = [
   "core/services/domain-adapters.ts",
   "core/services/user-context.service.ts",
   "core/services/admin.service.ts",
-  "core/services/children.service.ts",
   "core/services/combats.service.ts",
   "core/services/club-competitions.service.ts",
   "core/services/competitions.service.ts",

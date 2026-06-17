@@ -1,8 +1,8 @@
 ---
 title: Kiroku Technical Specification
-version: 1.1
+version: 1.2
 date_created: 2026-06-11
-last_updated: 2026-06-16
+last_updated: 2026-06-17
 owner: competitions-judo
 tags:
   - architecture
@@ -62,6 +62,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-003**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
 - **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
 - **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
+- **VCL-005a**: The canonical local development URL shall be `http://localhost:3100`, served via `vercel dev --listen 3100`.
 - **VCL-006**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
 - **VCL-006a**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
 - **VCL-007**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
@@ -135,6 +136,7 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-005**: Google OAuth callback `https://<project-ref>.supabase.co/auth/v1/callback` must be allowed in Google configuration.
 - **CFG-006**: The public Vercel URL must be allowed in Supabase redirect URLs.
 - **CFG-006a**: The public Vercel URL is `https://competitions-judo.vercel.app/`.
+- **CFG-006b**: `http://localhost:3100` must also be allowed in Supabase redirect URLs to support local development.
 - **CFG-007**: Supabase Auth must configure the `before-user-created` hook to call `public.hook_check_invited_signup`.
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
 
