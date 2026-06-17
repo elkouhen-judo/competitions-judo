@@ -96,6 +96,7 @@ This specification does not define:
 - **COMP-022**: Deleting a club competition shall also delete every linked individual competition participation and its combats.
 - **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
 - **COMP-025**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
+- **COMP-026**: When a competition is finalized, the system shall attempt to generate a short AI-written analysis (overall performance versus the final ranking, tactical patterns across the recorded combats, and a confidence score reflecting how much combat data was available) and store it for display in a dedicated read-only section of the competition view. A failure to generate this analysis shall not block the finalization itself.
 
 ### 3.4 Combat rules
 
@@ -208,6 +209,7 @@ This specification does not define:
 - **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
 - **AC-027**: Given a coach removes a participant from a club competition, when the operation succeeds, then the individual competition and sports data remain available outside the club event.
 - **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
+- **AC-029**: Given a competition finalization request, when the final ranking is saved successfully, then the system attempts to generate and store an AI analysis without failing the finalization if that generation errors (e.g. the AI provider is unavailable or not configured).
 
 ## 5. Examples & Edge Cases
 

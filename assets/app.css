@@ -1570,6 +1570,25 @@
       color: var(--accent);
     }
 
+    /* AI analysis */
+    .ai-analysis-section {
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .ai-analysis-disclaimer {
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+
+    .ai-analysis-text {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
     /* Coach assessment */
     .coach-assessment-section {
       border-top: 1px solid var(--line);

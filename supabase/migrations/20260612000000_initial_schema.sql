@@ -146,6 +146,9 @@ alter table public.competitions
   add column if not exists coach_objective text not null default '',
   add column if not exists coach_review text not null default '';
 
+alter table public.competitions
+  add column if not exists ai_analysis text not null default '';
+
 alter table public.judokas
   drop constraint if exists judokas_role_check;
 

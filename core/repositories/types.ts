@@ -46,6 +46,7 @@ export interface CompetitionRow {
   classement: string;
   coach_objective: string;
   coach_review: string;
+  ai_analysis: string;
 }
 
 export interface CombatRow {

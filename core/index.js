@@ -1,6 +1,7 @@
-const { getSupabaseConfig } = require("./config/env.js");
+const { getSupabaseConfig, getGroqApiKey, getGroqModel } = require("./config/env.js");
 const { createSupabaseClient } = require("./infra/supabase-client.js");
 const { createSupabaseRest } = require("./infra/supabase-rest.js");
+const { createGroqClient } = require("./infra/groq-client.js");
 const createSessionAuth = require("./auth/session.js");
 const permissions = require("./auth/permissions.js");
 const text = require("./shared/text.js");
@@ -47,6 +48,10 @@ const createCompetitionsService =
   /** @type {typeof import("./services/competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/competitions.service.js").default)
   );
+const createAiAnalysisService =
+  /** @type {typeof import("./services/ai-analysis.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/ai-analysis.service.js").default)
+  );
 const createCombatsService = /** @type {typeof import("./services/combats.service").default} */ (
   /** @type {unknown} */ (require("../core-dist/services/combats.service.js").default)
 );
@@ -75,6 +80,7 @@ const { toCanonicalJudoka } = require("./services/domain-adapters.js");
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
 const sessionAuth = createSessionAuth({ getSupabaseConfig });
+const groqClient = createGroqClient({ getGroqApiKey, getGroqModel });
 
 const repositoryDeps = {
   ...supabaseRest,
@@ -126,6 +132,12 @@ const clubCompetitionsService = createClubCompetitionsService({
   createCompetition
 });
 
+const aiAnalysisService = createAiAnalysisService({
+  combatsRepository,
+  competitionsRepository,
+  groqClient
+});
+
 const competitionsService = createCompetitionsService({
   combatsRepository,
   competitionsRepository,
@@ -138,7 +150,8 @@ const competitionsService = createCompetitionsService({
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
   buildCompetitionId: ids.buildCompetitionId,
   createCompetition,
-  createPersistedCompetition
+  createPersistedCompetition,
+  generateCompetitionAnalysis: aiAnalysisService.generateCompetitionAnalysis
 });
 
 const combatsService = createCombatsService({

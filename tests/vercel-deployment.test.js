@@ -459,7 +459,10 @@ test("admin can manage admins from a dedicated screen", () => {
   assert.doesNotMatch(uiBundle, /usersSummaryHtml|usersListHtml|adminsListHtml/);
   assert.match(uiBundle, /id="usersFilter"/);
   assert.match(uiBundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
-  assert.doesNotMatch(uiBundle, /id="invite_email"|id="invite_profile_type"|id="saveInvitationButton"/);
+  assert.doesNotMatch(
+    uiBundle,
+    /id="invite_email"|id="invite_profile_type"|id="saveInvitationButton"/
+  );
   assert.match(uiBundle, /function saveAdminRole\(\)/);
   assert.match(uiBundle, /function revokeAdminRole\(idJudoka,\s*name\)/);
   assert.match(adminService, /async function getAdminsManagement\(email: string\)/);
@@ -492,18 +495,12 @@ test("admin can manage admins from a dedicated screen", () => {
 test("admin can delete a user and their competitions from a dedicated section", () => {
   assert.match(uiBundle, /id="usersFilter"/);
   assert.match(uiBundle, /v-for="managedUser in managedUsersPage"/);
-  assert.match(
-    uiBundle,
-    /@click="deleteUser\(managedUser\.judokaId,\s*managedUser\.fullName\)"/
-  );
+  assert.match(uiBundle, /@click="deleteUser\(managedUser\.judokaId,\s*managedUser\.fullName\)"/);
   assert.match(uiBundle, /function updateUsersSearch\(value\)/);
   assert.match(uiBundle, /function deleteUser\(idJudoka,\s*name\)/);
   assert.match(adminService, /async function deleteUser\(email: string,\s*idJudoka: string\)/);
   assert.match(adminService, /Vous ne pouvez pas supprimer votre propre compte/);
-  assert.match(
-    adminService,
-    /Retirez d'abord les droits admin avant de supprimer ce compte/
-  );
+  assert.match(adminService, /Retirez d'abord les droits admin avant de supprimer ce compte/);
   assert.match(adminService, /competitionsRepository\.removeByJudoka\(idJudoka\)/);
   assert.match(adminService, /judokasRepository\.remove\(idJudoka\)/);
   assert.match(
@@ -521,14 +518,20 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   assert.doesNotMatch(adminService, /async function saveAccessInvitation\(/);
   assert.doesNotMatch(adminService, /"saveAccessInvitation"/);
   assert.match(uiBundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
-  assert.match(adminService, /async function importUsersCsv\(email: string,\s*csvContent: string\)/);
+  assert.match(
+    adminService,
+    /async function importUsersCsv\(email: string,\s*csvContent: string\)/
+  );
 });
 
 test("pending invitations stay visible merged into the users list instead of a separate screen", () => {
   assert.match(uiBundle, /isPending/);
   assert.match(uiBundle, /Annuler l'invitation/);
   assert.match(uiBundle, /function cancelInvitation\(email,\s*name\)/);
-  assert.match(adminService, /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/);
+  assert.match(
+    adminService,
+    /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/
+  );
   assert.match(
     adminService,
     /accessInvitations: \(await invitationsRepository\.listAll\(\)\)\.map\(toInvitationReadModel\)/
@@ -745,6 +748,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createClubCompetitionsService/);
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
+  assert.match(coreIndex, /createAiAnalysisService/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/competitions\.repository\.js/);
@@ -754,12 +758,14 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /core-dist\/services\/admin\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/competitions\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/combats\.service\.js/);
+  assert.match(coreIndex, /core-dist\/services\/ai-analysis\.service\.js/);
   assert.deepEqual(
     [...coreIndex.matchAll(/require\("(\.\/[^"]+)"\)/g)].map((match) => match[1]),
     [
       "./config/env.js",
       "./infra/supabase-client.js",
       "./infra/supabase-rest.js",
+      "./infra/groq-client.js",
       "./auth/session.js",
       "./auth/permissions.js",
       "./shared/text.js",

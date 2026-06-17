@@ -73,7 +73,8 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
     level: String(pick(competition, "level", "niveau") || ""),
     result: (pick(competition, "result", "classement") || null) as string | null,
     coachObjective: String(pick(competition, "coachObjective", "coach_objective") || ""),
-    coachReview: String(pick(competition, "coachReview", "coach_review") || "")
+    coachReview: String(pick(competition, "coachReview", "coach_review") || ""),
+    aiAnalysis: String(pick(competition, "aiAnalysis", "ai_analysis") || "")
   };
 }
 

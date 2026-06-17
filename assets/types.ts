@@ -162,6 +162,7 @@ export interface ScreenProjections {
     competitionDate: string;
     ageWeightLabel: string;
     competitionResult: string;
+    competitionAiAnalysis: string;
     canEditCompetition: boolean;
     canFinalizeCompetition: boolean;
   };
