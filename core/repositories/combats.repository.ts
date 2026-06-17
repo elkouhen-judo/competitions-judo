@@ -48,8 +48,10 @@ function toCombatRecord(combat: CombatModel): Record<string, unknown> {
     id_judoka: combat.judokaId,
     id_competition: combat.competitionId,
     adversaire: draft.opponent,
+    garde_adversaire: draft.opponentStance,
     resultat: draft.result,
     type_victoire: draft.victoryType,
+    categorie_technique: draft.techniqueCategory,
     deroule: draft.notes
   };
 }

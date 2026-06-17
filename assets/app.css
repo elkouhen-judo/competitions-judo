@@ -745,6 +745,12 @@
       min-width: 0;
     }
 
+    .opponent-stance {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
     /* ── Badge system base ── */
     .result-badge {
       flex: 0 0 auto;

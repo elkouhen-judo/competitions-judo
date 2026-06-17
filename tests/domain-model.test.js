@@ -15,6 +15,14 @@ const {
   createClubCompetitionParticipantIds
 } = require("../core/domain/competitions/club-competition");
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
+const {
+  createOpponentStance,
+  normalizeOpponentStance
+} = require("../core/domain/competitions/opponent-stance");
+const {
+  createCombatTechniqueCategory,
+  normalizeCombatTechniqueCategory
+} = require("../core/domain/competitions/combat-technique-category");
 const { createCompetitionRanking } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("../core/domain/season");
@@ -356,23 +364,29 @@ test("combat domain enforces allowed results and required identifiers", () => {
     judokaId: "JUDO123",
     competitionId: "COMP123",
     opponent: "Lee",
+    opponentStance: "gaucher",
     result: "v",
     victoryType: "Ippon",
+    techniqueCategory: "ne waza",
     notes: "Bon rythme"
   });
 
   assert.equal(combat.judokaId, "JUDO123");
   assert.equal(combat.competitionId, "COMP123");
   assert.equal(combat.opponent, "Lee");
+  assert.equal(combat.opponentStance, "Gaucher");
   assert.equal(combat.result, "Victoire");
   assert.equal(combat.draft.result, "Victoire");
   assert.equal(combat.victoryType, "Ippon");
+  assert.equal(combat.techniqueCategory, "Ne waza");
   assert.equal(combat.notes, "Bon rythme");
   assert.equal("id_judoka" in combat, false);
   assert.equal("id_competition" in combat, false);
   assert.equal("adversaire" in combat, false);
+  assert.equal("garde_adversaire" in combat, false);
   assert.equal("resultat" in combat, false);
   assert.equal("type_victoire" in combat, false);
+  assert.equal("categorie_technique" in combat, false);
   assert.equal("deroule" in combat, false);
 
   const updatedCombat = updateCombat({
@@ -385,8 +399,10 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.judokaId, "JUDO123");
   assert.equal(updatedCombat.competitionId, "COMP123");
   assert.equal(updatedCombat.opponent, "");
+  assert.equal(updatedCombat.opponentStance, "");
   assert.equal(updatedCombat.result, "Défaite");
   assert.equal(updatedCombat.victoryType, "");
+  assert.equal(updatedCombat.techniqueCategory, "");
   assert.equal(updatedCombat.notes, "");
 
   assert.equal(
@@ -495,6 +511,38 @@ test("combat domain enforces allowed results and required identifiers", () => {
         victoryType: "Hiki wake"
       }),
     /Type de décision incompatible/
+  );
+});
+
+test("opponent stance domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeOpponentStance("droitier"), "Droitier");
+  assert.equal(normalizeOpponentStance("Droite"), "Droitier");
+  assert.equal(normalizeOpponentStance("gaucher"), "Gaucher");
+  assert.equal(normalizeOpponentStance("Gauche"), "Gaucher");
+  assert.equal(normalizeOpponentStance("inconnu"), "");
+
+  assert.equal(createOpponentStance(""), "");
+  assert.equal(createOpponentStance(undefined), "");
+  assert.equal(createOpponentStance("Gaucher"), "Gaucher");
+  assert.throws(() => createOpponentStance("ambidextre"), /Garde de l'adversaire invalide/);
+});
+
+test("combat technique category domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeCombatTechniqueCategory("technique avant"), "Technique Avant");
+  assert.equal(normalizeCombatTechniqueCategory("Avant"), "Technique Avant");
+  assert.equal(normalizeCombatTechniqueCategory("technique arriere"), "Technique Arrière");
+  assert.equal(normalizeCombatTechniqueCategory("Arrière"), "Technique Arrière");
+  assert.equal(normalizeCombatTechniqueCategory("contre"), "Contre");
+  assert.equal(normalizeCombatTechniqueCategory("ne waza"), "Ne waza");
+  assert.equal(normalizeCombatTechniqueCategory("newaza"), "Ne waza");
+  assert.equal(normalizeCombatTechniqueCategory("inconnu"), "");
+
+  assert.equal(createCombatTechniqueCategory(""), "");
+  assert.equal(createCombatTechniqueCategory(undefined), "");
+  assert.equal(createCombatTechniqueCategory("Contre"), "Contre");
+  assert.throws(
+    () => createCombatTechniqueCategory("uchi mata"),
+    /Catégorie de technique invalide/
   );
 });
 

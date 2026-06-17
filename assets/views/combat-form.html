@@ -15,6 +15,15 @@
           </div>
 
           <div>
+            <label for="combat_garde_adversaire">Garde de l'adversaire</label>
+            <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
+              <option value="">Non spécifié</option>
+              <option value="Droitier">Droitier</option>
+              <option value="Gaucher">Gaucher</option>
+            </select>
+          </div>
+
+          <div>
             <label for="combat_resultat">Résultat</label>
             <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
               <option value="">Choisir</option>
@@ -29,6 +38,17 @@
             <select id="combat_type_victoire" v-model="combatForm.victoryType">
               <option value="">Non spécifié</option>
               <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="combat_categorie_technique">Catégorie de technique</label>
+            <select id="combat_categorie_technique" v-model="combatForm.techniqueCategory">
+              <option value="">Non spécifié</option>
+              <option value="Technique Avant">Technique Avant</option>
+              <option value="Technique Arrière">Technique Arrière</option>
+              <option value="Contre">Contre</option>
+              <option value="Ne waza">Ne waza</option>
             </select>
           </div>
 
