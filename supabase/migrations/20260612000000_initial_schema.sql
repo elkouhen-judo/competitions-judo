@@ -318,6 +318,7 @@ declare
   v_requested_profile_type text := upper(btrim(coalesce(p_type, '')));
   v_prenom text := btrim(coalesce(p_prenom, ''));
   v_nom text := btrim(coalesce(p_nom, ''));
+  v_email_name text := replace(split_part(v_email, '@', 1), '.', ' ');
   v_profile_type text;
   v_user_id text;
   v_user judokas%rowtype;
@@ -348,8 +349,12 @@ begin
     raise exception 'Le type de profil ne correspond pas à l''invitation.';
   end if;
 
-  if v_prenom = '' or v_nom = '' then
-    raise exception 'Prénom et nom obligatoires.';
+  if v_prenom = '' then
+    v_prenom := initcap(coalesce(nullif(split_part(v_email_name, ' ', 1), ''), 'Utilisateur'));
+  end if;
+
+  if v_nom = '' then
+    v_nom := initcap(coalesce(nullif(btrim(regexp_replace(v_email_name, '^[^ ]+ ?', '')), ''), 'Kiroku'));
   end if;
 
   v_user_id := 'JUDO' || replace(gen_random_uuid()::text, '-', '');
@@ -410,7 +415,6 @@ begin
     from public.judokas
     where email is not null
       and lower(email) = normalized_email
-      and role = 'ADMIN'
   ) then
     return '{}'::jsonb;
   end if;

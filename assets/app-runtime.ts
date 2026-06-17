@@ -219,6 +219,7 @@ function createInitialState(): KirokuAppState {
             clearVercelSession();
             getLoginScreen().showVercelLogin();
           } else if (method === "getInitialData" && errorMessage.includes("Invitation trouvée")) {
+            clearVercelSession();
             getLoginScreen().showProfileRegistration();
             return;
           } else if (

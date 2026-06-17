@@ -309,15 +309,21 @@ test("screen projections are extracted into a shared helper module", () => {
   assert.doesNotThrow(() => new Function(screenProjectionsClient));
 });
 
-test("vercel login creates only the initial judoka profile", () => {
-  assert.match(uiBundle, /id="profileRegistrationForm"/);
-  assert.match(uiBundle, /"registerProfile",\s*\[\s*profile\s*\]/);
-  assert.match(uiBundle, /Votre invitation est validée/);
+test("vercel login uses CSV-imported profiles without first-login name entry", () => {
+  assert.doesNotMatch(uiBundle, /id="profileRegistrationForm"/);
+  assert.doesNotMatch(uiBundle, /id="registrationPrenom"|id="registrationNom"/);
+  assert.doesNotMatch(uiBundle, /"registerProfile",\s*\[\s*profile\s*\]/);
+  assert.doesNotMatch(uiBundle, /Demandez à un admin d'importer votre profil via le fichier CSV/);
+  assert.match(uiBundle, /Activation du profil en cours/);
+  assert.match(coreIndex, /await registrationService\.methods\.registerProfile\(email, \{\}\);/);
+  assert.doesNotMatch(coreIndex, /Invitation trouvée\. Finalisez votre profil/);
   assert.doesNotMatch(uiBundle, /id="registrationType"/);
   assert.doesNotMatch(uiBundle, /registrationChildren/);
+  assert.match(adminService, /function createAccountProfile\(/);
+  assert.match(adminService, /createJudoka\(\{\s*judokaId: buildJudokaId\(\),\s*accountEmail,/);
   assert.match(
     registrationService,
-    /async function registerProfile\(email: string,\s*profile: RegistrationProfileInput\)/
+    /async function registerProfile\(email: string,\s*profile: RegistrationProfileInput = \{\}\)/
   );
   assert.match(
     registrationService,
@@ -326,6 +332,8 @@ test("vercel login creates only the initial judoka profile", () => {
   assert.match(registrationService, /Accès non autorisé\. Une invitation est requise\./);
   assert.match(registrationService, /supabaseRpc\("register_profile"/);
   assert.match(registrationService, /p_type: invitation\.invited_profile_type \|\| "JUDOKA"/);
+  assert.match(registrationService, /p_prenom: profile\.firstName/);
+  assert.match(registrationService, /p_nom: profile\.lastName/);
   assert.match(registrationService, /p_children: \[\]/);
   assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
   assert.equal(migrationFiles.length, 1);
@@ -459,7 +467,7 @@ test("admin can manage admins from a dedicated screen", () => {
     /users: \(await judokasRepository\.listAll\(\)\)\.map\(toCanonicalJudoka\)/
   );
   assert.doesNotMatch(adminService, /async function saveAccessInvitation\(/);
-  assert.match(adminService, /const invitation = createAccessInvitation\(\{/);
+  assert.doesNotMatch(adminService, /createAccessInvitation/);
   assert.match(
     accessInvitationDomain,
     /invited_profile_type: createProfileType\(invited_profile_type\)/
@@ -762,7 +770,6 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./domain/access/email.js",
       "./domain/access/profile-type.js",
       "./domain/access/managed-judoka-scope.js",
-      "./domain/access/access-invitation.js",
       "./domain/competitions/club-competition.js",
       "./domain/competitions/competition.js",
       "./domain/competitions/combat.js",

@@ -1,4 +1,4 @@
-const CACHE_NAME = "kiroku-app-shell-v4";
+const CACHE_NAME = "kiroku-app-shell-v6";
 const APP_SHELL_URLS = ["/", "/api/styles", "/api/client", "/manifest.webmanifest"];
 const BYPASS_URLS = ["/sample-users-import.csv"];
 

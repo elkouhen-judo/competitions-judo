@@ -13,7 +13,6 @@ const { updateCombat } = require("../core/domain/competitions/combat");
 const createCombatsService = require("../core/services/combats.service");
 const createClubCompetitionsService = require("../core/services/club-competitions.service");
 const createAdminService = require("../core/services/admin.service");
-const { createAccessInvitation } = require("../core/domain/access/access-invitation");
 const { createEmail } = require("../core/domain/access/email");
 const { createProfileType } = require("../core/domain/access/profile-type");
 const { toCanonicalJudoka } = require("../core/services/domain-adapters");
@@ -324,6 +323,19 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         judokasByName[`${prenom}|${nom}`.toLowerCase()] || null,
       insert: async (judoka, extras) => {
         calls.inserted.push({ judoka, extras });
+        const row = {
+          id_judoka: String(judoka.judokaId || ""),
+          email: judoka.accountEmail || "",
+          prenom: judoka.name.firstName,
+          nom: judoka.name.lastName,
+          profile_type: judoka.profileType,
+          role: judoka.accessRole,
+          pending_parent_email: extras && extras.pending_parent_email
+        };
+        if (row.email) {
+          judokasByEmail[String(row.email).toLowerCase()] = row;
+        }
+        judokasByName[`${row.prenom}|${row.nom}`.toLowerCase()] = row;
         return judoka;
       },
       listAll: async () => Object.values(judokasByEmail),
@@ -349,7 +361,6 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
     },
     buildJudokaId: buildTestJudokaIdGenerator(),
     cleanText,
-    createAccessInvitation,
     createEmail,
     createJudoka,
     createManagedChild,
@@ -426,7 +437,6 @@ test("parent can update category and belt color for a linked child profile", asy
     },
     buildJudokaId: buildTestJudokaIdGenerator(),
     cleanText,
-    createAccessInvitation,
     createEmail,
     createJudoka,
     createManagedChild,
@@ -469,7 +479,6 @@ test("parent cannot update an unrelated judoka profile", async () => {
     },
     buildJudokaId: buildTestJudokaIdGenerator(),
     cleanText,
-    createAccessInvitation,
     createEmail,
     createJudoka,
     createManagedChild,
@@ -605,7 +614,7 @@ test("importUsersCsv re-importing the same name twice does not create a duplicat
   assert.match(second.results[0].message, /aucune modification/);
 });
 
-test("importUsersCsv creates an access invitation for a PARENT row", async () => {
+test("importUsersCsv creates a direct parent account profile from an email row", async () => {
   const { service, calls } = createTestAdminService({});
 
   const csv =
@@ -615,9 +624,42 @@ test("importUsersCsv creates an access invitation for a PARENT row", async () =>
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 
   assert.equal(summary.success, true);
-  assert.equal(calls.invitations.length, 1);
-  assert.equal(calls.invitations[0].email, "christine.elkouhen@gmail.com");
-  assert.equal(calls.invitations[0].invited_profile_type, "PARENT");
+  assert.equal(calls.invitations.length, 0);
+  assert.equal(calls.inserted.length, 1);
+  assert.equal(calls.inserted[0].judoka.accountEmail, "christine.elkouhen@gmail.com");
+  assert.equal(calls.inserted[0].judoka.profileType, "PARENT");
+});
+
+test("importUsersCsv creates a direct judoka account profile from an email row", async () => {
+  const { service, calls } = createTestAdminService({});
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail\n" +
+    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.equal(calls.invitations.length, 0);
+  assert.equal(calls.inserted.length, 1);
+  assert.equal(calls.inserted[0].judoka.accountEmail, "ali.elkouhen@gmail.com");
+  assert.equal(calls.inserted[0].judoka.profileType, "JUDOKA");
+});
+
+test("importUsersCsv links children to a parent created earlier in the same CSV", async () => {
+  const { service, calls } = createTestAdminService({});
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail\n" +
+    "PARENT,Christine,El Kouhen,christine.elkouhen@gmail.com,\n" +
+    "JUDOKA,Ali,El Kouhen,,christine.elkouhen@gmail.com\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.equal(summary.imported, 2);
+  assert.equal(calls.links.length, 1);
+  assert.equal(calls.links[0].id_parent, calls.inserted[0].judoka.judokaId);
 });
 
 test("importUsersCsv processes the bundled sample file: children link, the already-registered parent is rejected", async () => {

@@ -1,5 +1,4 @@
 import { toCanonicalJudoka, toInvitationReadModel } from "./domain-adapters";
-import type { AccessInvitationRecord } from "../domain/access/access-invitation";
 import type { AccessInvitationRow, JudokaRow } from "../repositories/types";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { InvitationsRepository } from "../repositories/invitations.repository";
@@ -7,7 +6,6 @@ import type { JudokasRepository } from "../repositories/judokas.repository";
 import type { ParentLinksRepository } from "../repositories/parent-links.repository";
 import type { RpcMethods, UserImportRowResult } from "../types";
 import type { UserContextService } from "./user-context.service";
-import type { createAccessInvitation } from "../domain/access/access-invitation";
 import type { createEmail } from "../domain/access/email";
 import type { createJudoka, createManagedChild } from "../domain/access/judoka";
 import type { createProfileType } from "../domain/access/profile-type";
@@ -32,7 +30,6 @@ export interface AdminServiceDeps {
   userContextService: UserContextService;
   buildJudokaId: () => string;
   cleanText: (value: unknown) => string;
-  createAccessInvitation: typeof createAccessInvitation;
   createEmail: typeof createEmail;
   createJudoka: typeof createJudoka;
   createManagedChild: typeof createManagedChild;
@@ -54,7 +51,6 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     userContextService,
     buildJudokaId,
     cleanText,
-    createAccessInvitation,
     createEmail,
     createJudoka,
     createManagedChild,
@@ -128,33 +124,52 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     };
   }
 
-  async function inviteUser(
-    actingUser: JudokaRow,
-    targetEmail: string,
-    targetProfileType: string
-  ): Promise<AccessInvitationRecord> {
-    const invitation = createAccessInvitation({
-      email: targetEmail,
-      invited_profile_type: targetProfileType,
-      invited_by: actingUser.id_judoka
-    });
-
-    const existingUser = await userContextService.getCurrentUser(invitation.email);
+  async function createAccountProfile(
+    profileType: "JUDOKA" | "PARENT",
+    prenom: string,
+    nom: string,
+    rawEmail: string
+  ): Promise<{ email: string; message: string }> {
+    const accountEmail = createEmail(rawEmail);
+    const existingUser = await userContextService.getCurrentUser(accountEmail);
     if (existingUser) {
       throw new Error("Ce compte dispose déjà d'un accès.");
     }
 
-    const existingInvitation = await getAccessInvitation(invitation.email);
-    if (existingInvitation) {
-      throw new Error("Cette adresse est déjà invitée.");
+    const existingByName = await judokasRepository.getByName(prenom, nom);
+    if (existingByName) {
+      if (existingByName.profile_type !== profileType) {
+        throw new Error(`${prenom} ${nom} existe déjà avec un autre type de profil.`);
+      }
+      if (existingByName.email) {
+        throw new Error("Ce profil dispose déjà d'un email de connexion.");
+      }
+
+      await judokasRepository.update(existingByName.id_judoka, {
+        accountEmail,
+        profileType
+      });
+      return { email: accountEmail, message: "Profil existant activé avec son email." };
     }
 
-    await invitationsRepository.insert(invitation);
-    return invitation;
+    await judokasRepository.insert(
+      createJudoka({
+        judokaId: buildJudokaId(),
+        accountEmail,
+        firstName: prenom,
+        lastName: nom,
+        profileType,
+        accessRole: "NORMAL"
+      })
+    );
+
+    return {
+      email: accountEmail,
+      message: profileType === "PARENT" ? "Profil parent créé." : "Profil judoka créé."
+    };
   }
 
   async function importUserRow(
-    actingUser: JudokaRow,
     row: Record<string, string>
   ): Promise<{ email: string | null; message: string }> {
     const profileType = createProfileType(row.profiletype);
@@ -174,8 +189,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       if (!rawEmail) {
         throw new Error("Email obligatoire pour un profil PARENT.");
       }
-      const invitation = await inviteUser(actingUser, rawEmail, "PARENT");
-      return { email: invitation.email, message: "Invitation parent créée." };
+      return createAccountProfile("PARENT", prenom, nom, rawEmail);
     }
 
     if (rawEmail) {
@@ -184,8 +198,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
           "Un judoka avec son propre email ne peut pas être rattaché via parentEmail."
         );
       }
-      const invitation = await inviteUser(actingUser, rawEmail, "JUDOKA");
-      return { email: invitation.email, message: "Invitation judoka créée." };
+      return createAccountProfile("JUDOKA", prenom, nom, rawEmail);
     }
 
     let parent: JudokaRow | null = null;
@@ -269,7 +282,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
   }
 
   async function importUsersCsv(email: string, csvContent: string) {
-    const user = await requireAdminUser(email);
+    await requireAdminUser(email);
     const rows = parseCsv(String(csvContent || ""));
     if (!rows.length) {
       throw new Error("Fichier CSV vide.");
@@ -281,7 +294,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       const row = rows[index];
       const label = `${cleanText(row.prenom)} ${cleanText(row.nom)}`.trim() || `ligne ${rowNumber}`;
       try {
-        const outcome = await importUserRow(user, row);
+        const outcome = await importUserRow(row);
         results.push({
           row: rowNumber,
           name: label,

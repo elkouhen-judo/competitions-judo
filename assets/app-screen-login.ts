@@ -2,49 +2,22 @@
   type KirokuApp = import("./types").KirokuApp;
 
   function createKirokuLoginScreen(app: KirokuApp) {
-    const { runtimeConfig, auth, applyInitialData, runServer, screens, ui, notifications } = app;
+    const { runtimeConfig, auth, applyInitialData, screens, ui, notifications } = app;
     const { showView } = ui;
-    const { clearMessage, showError, showSuccess } = notifications;
+    const { clearMessage, showError } = notifications;
     const { clearVercelSession, parseVercelAuthCallback } = auth;
     const defaultLoginState = {
       text: "Connectez-vous avec le compte Google associé à votre fiche judoka ou enfant.",
       hint: "",
       showHint: false,
       showOAuth: false,
-      showRegistration: false,
-      registration: {
-        firstName: "",
-        lastName: ""
-      }
+      showRegistration: false
     };
     let loginViewModel: (typeof defaultLoginState) | null = null;
 
     function startGoogleLogin() {
       clearMessage();
       auth.startGoogleLogin();
-    }
-
-    function submitProfileRegistration() {
-      clearMessage();
-
-      const profile = {
-        firstName: loginViewModel ? loginViewModel.registration.firstName : "",
-        lastName: loginViewModel ? loginViewModel.registration.lastName : ""
-      };
-
-      runServer(
-        "registerProfile",
-        [profile],
-        (response) => {
-          showSuccess(
-            response && typeof response === "object" && "message" in response
-              ? String((response as { message?: unknown }).message || "Profil créé.")
-              : "Profil créé."
-          );
-          init();
-        },
-        showError
-      );
     }
 
     function showVercelLogin() {
@@ -69,11 +42,11 @@
 
     function showProfileRegistration() {
       showLoginState({
-        text: "Votre invitation est validée. Créez maintenant votre profil judoka.",
-        hint: "Si vous avez déjà une fiche enfant, un parent doit d'abord y renseigner cet email au lieu de créer un nouveau profil.",
+        text: "Activation du profil en cours.",
+        hint: "Reconnectez-vous avec le compte Google indiqué dans l'import CSV.",
         showHint: true,
-        showOAuth: false,
-        showRegistration: true
+        showOAuth: true,
+        showRegistration: false
       });
     }
 
@@ -109,8 +82,7 @@
       }
 
       loginViewModel = ui.createMountedViewModel("loginView", defaultLoginState, {
-        startGoogleLogin,
-        submitProfileRegistration
+        startGoogleLogin
       });
     }
 
