@@ -32,25 +32,23 @@ Tu reçois les informations suivantes :
   * famille de techniques gagnantes ou subies (projection, immobilisation, étranglement, clé de bras, etc.) ;
   * notes complémentaires éventuelles.
 
-Rédige une analyse en français de 180 à 250 mots avec un ton factuel, bienveillant et encourageant, adapté à un jeune sportif et à son entourage.
+Rédige une analyse en français de 80 à 120 mots maximum avec un ton factuel, bienveillant et encourageant, adapté à un jeune sportif et à son entourage. Sois synthétique : une seule phrase clé par idée, aucune répétition entre les parties, aucune phrase de remplissage.
 
 La réponse doit contenir 3 parties synthétiques, sans utiliser de titres.
 
 1. Bilan général
 
-* Résume la performance globale en tenant compte du classement final et du bilan victoires/défaites.
-* Situe la prestation de manière objective et positive.
-* Valorise les points forts observables.
+* En une ou deux phrases, résume la performance globale en tenant compte du classement final et du bilan victoires/défaites, en restant objectif et positif.
 
 2. Tendances observées pendant la compétition
 
-* Mets en évidence les éléments qui se répètent :
+* En une ou deux phrases, mets en évidence les éléments qui se répètent parmi :
 
   * techniques qui fonctionnent régulièrement ;
   * techniques subies de manière récurrente ;
   * types d'adversaires ou gardes fréquemment rencontrés ;
   * combats particulièrement décisifs ou révélateurs.
-* Base-toi uniquement sur les données fournies.
+* Base-toi uniquement sur les données fournies ; ne cite que les éléments les plus marquants.
 
 3. Score de confiance de l'analyse
 
