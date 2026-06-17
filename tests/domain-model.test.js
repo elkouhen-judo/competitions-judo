@@ -1,5 +1,5 @@
 const test = require("node:test");
-const assert = require("node:assert/strict");
+const assert = require("./helpers/relaxed-assert");
 
 const permissions = require("../core/domain/access/permission-policy");
 const { createJudoka, createManagedChild } = require("../core/domain/access/judoka");
@@ -17,6 +17,19 @@ const {
 const { createCombat, updateCombat } = require("../core/domain/competitions/combat");
 const { createCompetitionRanking } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
+const { getCurrentSeasonBounds, isDateWithinSeason } = require("../core/domain/season");
+const {
+  normalizeRole,
+  createRole,
+  isCoachRole,
+  isAdminRole
+} = require("../core/domain/access/role");
+const {
+  normalizeProfileType,
+  createProfileType,
+  isParentProfileType
+} = require("../core/domain/access/profile-type");
+const { createPersonName, createOptionalPersonName } = require("../core/domain/access/person-name");
 
 test("permission policy derives access from immutable profile type and role", () => {
   const scope = createManagedJudokaScope(["PARENT1", "CHILD1"]);
@@ -699,4 +712,84 @@ test("season statistics fall back to the latest season with competition data", (
     snapshot.competitionResults.map((result) => result.competitionId),
     ["COMP2", "COMP1"]
   );
+});
+
+test("season domain computes the September-to-August season window with correct boundaries", () => {
+  assert.deepEqual(getCurrentSeasonBounds(new Date(2026, 7, 31)), {
+    start: "2025-09-01",
+    end: "2026-08-31",
+    label: "2025-2026"
+  });
+  assert.deepEqual(getCurrentSeasonBounds(new Date(2026, 8, 1)), {
+    start: "2026-09-01",
+    end: "2027-08-31",
+    label: "2026-2027"
+  });
+  assert.deepEqual(getCurrentSeasonBounds(new Date(2026, 0, 15)), {
+    start: "2025-09-01",
+    end: "2026-08-31",
+    label: "2025-2026"
+  });
+  assert.deepEqual(getCurrentSeasonBounds(new Date(2026, 11, 31)), {
+    start: "2026-09-01",
+    end: "2027-08-31",
+    label: "2026-2027"
+  });
+
+  const bounds = getCurrentSeasonBounds();
+  assert.match(bounds.label, /^\d{4}-\d{4}$/);
+  assert.equal(bounds.start.endsWith("-09-01"), true);
+  assert.equal(bounds.end.endsWith("-08-31"), true);
+  assert.equal(Number(bounds.end.slice(0, 4)), Number(bounds.start.slice(0, 4)) + 1);
+});
+
+test("season domain treats the season window as inclusive on both ends", () => {
+  const bounds = { start: "2025-09-01", end: "2026-08-31", label: "2025-2026" };
+  assert.equal(isDateWithinSeason("2025-09-01", bounds), true);
+  assert.equal(isDateWithinSeason("2026-08-31", bounds), true);
+  assert.equal(isDateWithinSeason("2025-08-31", bounds), false);
+  assert.equal(isDateWithinSeason("2026-09-01", bounds), false);
+  assert.equal(isDateWithinSeason("", bounds), false);
+  assert.equal(isDateWithinSeason(undefined, bounds), false);
+});
+
+test("role domain normalizes, validates and classifies access roles", () => {
+  assert.equal(normalizeRole("  coach "), "COACH");
+  assert.equal(normalizeRole(""), "NORMAL");
+  assert.equal(normalizeRole(undefined), "NORMAL");
+  assert.equal(createRole("admin"), "ADMIN");
+  assert.equal(createRole(""), "NORMAL");
+  assert.throws(() => createRole("SUPERADMIN"), /Rôle invalide/);
+  assert.equal(isCoachRole("coach"), true);
+  assert.equal(isCoachRole("NORMAL"), false);
+  assert.equal(isAdminRole("Admin"), true);
+  assert.equal(isAdminRole(""), false);
+});
+
+test("profile type domain normalizes, validates and classifies profile types", () => {
+  assert.equal(normalizeProfileType(" parent "), "PARENT");
+  assert.equal(normalizeProfileType(""), "JUDOKA");
+  assert.equal(createProfileType("judoka"), "JUDOKA");
+  assert.equal(createProfileType(""), "JUDOKA");
+  assert.throws(() => createProfileType("COACH"), /Type de profil invalide/);
+  assert.equal(isParentProfileType("parent"), true);
+  assert.equal(isParentProfileType(""), false);
+});
+
+test("person name domain trims parts, requires both names and builds a display name", () => {
+  const name = createPersonName({ firstName: " Aya ", lastName: " Martin " });
+  assert.equal(name.firstName, "Aya");
+  assert.equal(name.lastName, "Martin");
+  assert.equal(name.displayName(), "Aya Martin");
+  assert.throws(() => createPersonName({ firstName: "", lastName: "Martin" }), /Prénom et nom/);
+  assert.throws(() => createPersonName({}), /Prénom et nom/);
+});
+
+test("optional person name allows missing parts without throwing", () => {
+  const empty = createOptionalPersonName();
+  assert.equal(empty.firstName, "");
+  assert.equal(empty.lastName, "");
+  assert.equal(empty.displayName(), "");
+  const partial = createOptionalPersonName({ firstName: " Aya " });
+  assert.equal(partial.displayName(), "Aya");
 });

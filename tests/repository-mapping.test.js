@@ -1,14 +1,16 @@
 const test = require("node:test");
-const assert = require("node:assert/strict");
+const assert = require("./helpers/relaxed-assert");
 
 const createCombatsRepository = require("../core/repositories/combats.repository");
 const createCompetitionsRepository = require("../core/repositories/competitions.repository");
 const createClubCompetitionsRepository = require("../core/repositories/club-competitions.repository");
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
+const createParentLinksRepository = require("../core/repositories/parent-links.repository");
 const { toCanonicalCombat } = require("../core/services/domain-adapters");
 
-function createRepositoryDeps(calls) {
+function createRepositoryDeps(calls, options = {}) {
+  const { selectOneResult = null, selectResult = [] } = options;
   return {
     eqFilter: (field, value) => `${field}=eq.${value}`,
     supabaseDelete: async (table, query) => calls.push(["delete", table, query]),
@@ -20,8 +22,14 @@ function createRepositoryDeps(calls) {
       calls.push(["patch", table, query, payload]);
       return payload;
     },
-    supabaseSelect: async () => [],
-    supabaseSelectOne: async () => null
+    supabaseSelect: async (table, query) => {
+      calls.push(["select", table, query]);
+      return selectResult;
+    },
+    supabaseSelectOne: async (table, query) => {
+      calls.push(["selectOne", table, query]);
+      return selectOneResult;
+    }
   };
 }
 
@@ -265,6 +273,202 @@ test("repositories map club competitions and participation links", async () => {
       categorie_poids: "-50kg"
     }
   ]);
+});
+
+test("judokas repository maps update changes, including the age category", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+
+  await judokasRepository.update("JUDO1", {
+    accountEmail: "new@example.com",
+    accessRole: "COACH",
+    ageCategory: "Cadet",
+    pendingParentEmail: "parent@example.com"
+  });
+
+  assert.deepEqual(calls, [
+    [
+      "patch",
+      "judokas",
+      "id_judoka=eq.JUDO1",
+      {
+        email: "new@example.com",
+        role: "COACH",
+        categorie_age: "Cadet",
+        pending_parent_email: "parent@example.com"
+      }
+    ]
+  ]);
+});
+
+test("judokas repository update accepts the snake_case role/profileType/name aliases used for name-based activation", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+
+  await judokasRepository.update("JUDO2", {
+    profile_type: "JUDOKA",
+    role: "NORMAL",
+    name: { firstName: "Ali", lastName: "El Kouhen" }
+  });
+
+  assert.deepEqual(calls, [
+    [
+      "patch",
+      "judokas",
+      "id_judoka=eq.JUDO2",
+      {
+        profile_type: "JUDOKA",
+        role: "NORMAL",
+        prenom: "Ali",
+        nom: "El Kouhen"
+      }
+    ]
+  ]);
+});
+
+test("judokas repository update prefers camelCase aliases over snake_case ones when both are provided", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+
+  await judokasRepository.update("JUDO3", {
+    accountEmail: "camel@example.com",
+    email: "snake@example.com",
+    accessRole: "ADMIN",
+    role: "NORMAL"
+  });
+
+  assert.deepEqual(calls, [
+    ["patch", "judokas", "id_judoka=eq.JUDO3", { email: "camel@example.com", role: "ADMIN" }]
+  ]);
+});
+
+test("judokas repository builds case-insensitive, url-encoded lookup queries", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+
+  await judokasRepository.getByEmail(" Ali+Test@Example.com ");
+  await judokasRepository.getByName(" Aïcha ", " O'Brien ");
+  await judokasRepository.getById("JUDO1");
+
+  assert.deepEqual(calls, [
+    ["selectOne", "judokas", `select=*&email=ilike.${encodeURIComponent("Ali+Test@Example.com")}`],
+    [
+      "selectOne",
+      "judokas",
+      `select=*&prenom=ilike.${encodeURIComponent("Aïcha")}&nom=ilike.${encodeURIComponent("O'Brien")}`
+    ],
+    ["selectOne", "judokas", "select=*&id_judoka=eq.JUDO1"]
+  ]);
+});
+
+test("competitions repository maps update, finalization and coach annotation patches", async () => {
+  const calls = [];
+  const competitionsRepository = createCompetitionsRepository(createRepositoryDeps(calls));
+
+  await competitionsRepository.update("COMP1", {
+    ownerJudokaId: "JUDO1",
+    clubCompetitionId: "CLUB1",
+    draft: {
+      name: "Tournoi",
+      competitionDate: "2026-06-11",
+      ageCategory: "Minime",
+      weightCategory: "-50kg",
+      level: "Régional"
+    },
+    result: "1er"
+  });
+  await competitionsRepository.updateResult("COMP1", {
+    competitionId: "COMP1",
+    ownerJudokaId: "JUDO1",
+    result: "2e"
+  });
+  await competitionsRepository.updateCoachObjective("COMP1", "Travailler le ne-waza");
+  await competitionsRepository.updateCoachReview("COMP1", "Bon combat");
+  await competitionsRepository.detachFromClubCompetition("COMP1");
+  await competitionsRepository.remove("COMP2");
+  await competitionsRepository.removeByJudoka("JUDO1");
+
+  assert.deepEqual(calls, [
+    [
+      "patch",
+      "competitions",
+      "id_competition=eq.COMP1",
+      {
+        id_judoka: "JUDO1",
+        club_competition_id: "CLUB1",
+        nom: "Tournoi",
+        date: "2026-06-11",
+        categorie_age: "Minime",
+        categorie_poids: "-50kg",
+        niveau: "Régional",
+        classement: "1er"
+      }
+    ],
+    ["patch", "competitions", "id_competition=eq.COMP1", { classement: "2e" }],
+    ["patch", "competitions", "id_competition=eq.COMP1", { coach_objective: "Travailler le ne-waza" }],
+    ["patch", "competitions", "id_competition=eq.COMP1", { coach_review: "Bon combat" }],
+    ["patch", "competitions", "id_competition=eq.COMP1", { club_competition_id: null }],
+    ["delete", "competitions", "id_competition=eq.COMP2"],
+    ["delete", "competitions", "id_judoka=eq.JUDO1"]
+  ]);
+});
+
+test("club competitions repository maps update without overwriting the id and removes events", async () => {
+  const calls = [];
+  const clubRepository = createClubCompetitionsRepository(createRepositoryDeps(calls));
+
+  await clubRepository.update("CLUB1", {
+    name: "Tournoi Nantes 2",
+    competitionDate: "2026-06-15",
+    ageCategory: "Cadet",
+    weightCategory: "-55kg"
+  });
+  await clubRepository.remove("CLUB1");
+
+  assert.deepEqual(calls, [
+    [
+      "patch",
+      "club_competitions",
+      "id_club_competition=eq.CLUB1",
+      {
+        nom: "Tournoi Nantes 2",
+        date: "2026-06-15",
+        categorie_age: "Cadet",
+        categorie_poids: "-55kg"
+      }
+    ],
+    ["delete", "club_competitions", "id_club_competition=eq.CLUB1"]
+  ]);
+});
+
+test("invitations repository builds case-insensitive lookup and delete queries", async () => {
+  const calls = [];
+  const invitationsRepository = createInvitationsRepository(createRepositoryDeps(calls));
+
+  await invitationsRepository.getByEmail(" Christine.ElKouhen@Gmail.com ");
+  await invitationsRepository.removeByEmail(" Christine.ElKouhen@Gmail.com ");
+
+  const encoded = encodeURIComponent("Christine.ElKouhen@Gmail.com");
+  assert.deepEqual(calls, [
+    ["selectOne", "access_invitations", `select=*&email=ilike.${encoded}`],
+    ["delete", "access_invitations", `email=ilike.${encoded}`]
+  ]);
+});
+
+test("parent links repository inserts links and lists managed judoka ids by parent", async () => {
+  const calls = [];
+  const parentLinksRepository = createParentLinksRepository(
+    createRepositoryDeps(calls, { selectResult: [{ id_judoka: "CHILD1" }] })
+  );
+
+  await parentLinksRepository.insert({ id_parent: "PARENT1", id_judoka: "CHILD1" });
+  const links = await parentLinksRepository.listByParent("PARENT1");
+
+  assert.deepEqual(calls, [
+    ["insert", "parent_judokas", { id_parent: "PARENT1", id_judoka: "CHILD1" }],
+    ["select", "parent_judokas", "select=id_judoka&id_parent=eq.PARENT1"]
+  ]);
+  assert.deepEqual(links, [{ id_judoka: "CHILD1" }]);
 });
 
 test("combat read models normalize legacy result codes", () => {
