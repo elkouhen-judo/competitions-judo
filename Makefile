@@ -46,7 +46,13 @@ except json.JSONDecodeError:
 endef
 export PY_SUPABASE_QUERY
 
-.PHONY: deploy dev db-pull-env db-deploy db-status db-check db-reset
+.PHONY: deploy dev db-pull-env db-deploy db-status db-check db-reset all
+
+# Reset la base (données), recrée les tables puis déploie l'app — nécessite CONFIRM=yes
+all:
+	$(MAKE) db-reset CONFIRM=$(CONFIRM)
+	$(MAKE) db-deploy
+	$(MAKE) app-deploy
 
 # ── Application ──────────────────────────────────────────────────────────────
 
