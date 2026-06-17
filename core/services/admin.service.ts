@@ -9,6 +9,7 @@ import type { UserContextService } from "./user-context.service";
 import type { createEmail } from "../domain/access/email";
 import type { createJudoka, createManagedChild } from "../domain/access/judoka";
 import type { createProfileType } from "../domain/access/profile-type";
+import type { AccessRole } from "../domain/access/role";
 import { parseCsv } from "../shared/csv";
 
 type AdminMethods = Pick<
@@ -128,12 +129,42 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     profileType: "JUDOKA" | "PARENT",
     prenom: string,
     nom: string,
-    rawEmail: string
-  ): Promise<{ email: string; message: string }> {
+    rawEmail: string,
+    options: { accessRole?: AccessRole; ageCategory?: string } = {}
+  ): Promise<{ idJudoka: string; email: string; message: string }> {
     const accountEmail = createEmail(rawEmail);
     const existingUser = await userContextService.getCurrentUser(accountEmail);
     if (existingUser) {
-      throw new Error("Ce compte dispose déjà d'un accès.");
+      const profileLabel = profileType === "JUDOKA" ? "judoka" : "parent";
+      if (existingUser.profile_type !== profileType) {
+        throw new Error(`${accountEmail} n'est pas un profil ${profileType}.`);
+      }
+      const sameFirstName = cleanText(existingUser.prenom).toLowerCase() === prenom.toLowerCase();
+      const sameLastName = cleanText(existingUser.nom).toLowerCase() === nom.toLowerCase();
+      if (!sameFirstName || !sameLastName) {
+        throw new Error(`${accountEmail} correspond déjà à un autre profil ${profileLabel}.`);
+      }
+
+      const updates: { accessRole?: AccessRole; ageCategory?: string } = {};
+      if (profileType === "JUDOKA") {
+        if (options.accessRole && options.accessRole !== existingUser.role) {
+          updates.accessRole = options.accessRole;
+        }
+        if (options.ageCategory && options.ageCategory !== existingUser.categorie_age) {
+          updates.ageCategory = options.ageCategory;
+        }
+        if (Object.keys(updates).length) {
+          await judokasRepository.update(existingUser.id_judoka, updates);
+        }
+      }
+
+      return {
+        idJudoka: existingUser.id_judoka,
+        email: accountEmail,
+        message: Object.keys(updates).length
+          ? `Profil ${profileLabel} existant mis à jour.`
+          : `Profil ${profileLabel} existant, aucune modification.`
+      };
     }
 
     const existingByName = await judokasRepository.getByName(prenom, nom);
@@ -147,26 +178,45 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
       await judokasRepository.update(existingByName.id_judoka, {
         accountEmail,
-        profileType
+        profileType,
+        ...(options.accessRole ? { role: options.accessRole } : {})
       });
-      return { email: accountEmail, message: "Profil existant activé avec son email." };
+      return {
+        idJudoka: existingByName.id_judoka,
+        email: accountEmail,
+        message: "Profil existant activé avec son email."
+      };
     }
 
+    const idJudoka = buildJudokaId();
     await judokasRepository.insert(
       createJudoka({
-        judokaId: buildJudokaId(),
+        judokaId: idJudoka,
         accountEmail,
         firstName: prenom,
         lastName: nom,
         profileType,
-        accessRole: "NORMAL"
-      })
+        accessRole: options.accessRole || "NORMAL"
+      }),
+      options.ageCategory ? { categorie_age: options.ageCategory } : undefined
     );
 
     return {
+      idJudoka,
       email: accountEmail,
       message: profileType === "PARENT" ? "Profil parent créé." : "Profil judoka créé."
     };
+  }
+
+  async function linkChildToParent(parent: JudokaRow, idJudoka: string): Promise<boolean> {
+    const links = await parentLinksRepository.listByParent(parent.id_judoka);
+    const alreadyLinked = links.some((link) => String(link.id_judoka) === String(idJudoka));
+    if (alreadyLinked) {
+      return false;
+    }
+
+    await parentLinksRepository.insert({ id_parent: parent.id_judoka, id_judoka: idJudoka });
+    return true;
   }
 
   async function importUserRow(
@@ -181,8 +231,16 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
     const rawEmail = cleanText(row.email);
     const rawParentEmail = cleanText(row.parentemail);
+    const ageCategory = cleanText(row.agecategory);
+    const rawRole = cleanText(row.role).toUpperCase();
+    if (rawRole && rawRole !== "NORMAL" && rawRole !== "COACH") {
+      throw new Error("Rôle invalide pour l'import (NORMAL ou COACH).");
+    }
 
     if (profileType === "PARENT") {
+      if (rawRole === "COACH") {
+        throw new Error("Un profil PARENT ne peut pas être COACH.");
+      }
       if (rawParentEmail) {
         throw new Error("Un profil PARENT ne peut pas avoir de parentEmail.");
       }
@@ -192,13 +250,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       return createAccountProfile("PARENT", prenom, nom, rawEmail);
     }
 
-    if (rawEmail) {
-      if (rawParentEmail) {
-        throw new Error(
-          "Un judoka avec son propre email ne peut pas être rattaché via parentEmail."
-        );
-      }
-      return createAccountProfile("JUDOKA", prenom, nom, rawEmail);
+    if (rawRole === "COACH" && !rawEmail) {
+      throw new Error("Un coach doit avoir un email pour se connecter.");
     }
 
     let parent: JudokaRow | null = null;
@@ -220,6 +273,32 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       }
     }
 
+    if (rawEmail) {
+      const accountProfile = await createAccountProfile("JUDOKA", prenom, nom, rawEmail, {
+        ...(rawRole ? { accessRole: rawRole as AccessRole } : {}),
+        ageCategory
+      });
+      if (parent) {
+        const linked = await linkChildToParent(parent, accountProfile.idJudoka);
+        return {
+          email: accountProfile.email,
+          message: linked
+            ? "Profil judoka avec email rattaché au parent."
+            : "Profil déjà rattaché à ce parent, aucune modification."
+        };
+      }
+
+      if (pendingParentEmail) {
+        await judokasRepository.update(accountProfile.idJudoka, { pendingParentEmail });
+        return {
+          email: accountProfile.email,
+          message: `Profil judoka créé avec son email, en attente de la première connexion de ${pendingParentEmail}.`
+        };
+      }
+
+      return accountProfile;
+    }
+
     const existingChild = await judokasRepository.getByName(prenom, nom);
     if (existingChild) {
       if (existingChild.profile_type !== "JUDOKA") {
@@ -227,16 +306,21 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       }
 
       const existingId = existingChild.id_judoka;
+      const ageCategoryChanged = Boolean(ageCategory) && ageCategory !== existingChild.categorie_age;
+      if (ageCategoryChanged) {
+        await judokasRepository.update(existingId, { ageCategory });
+      }
 
       if (parent) {
-        const links = await parentLinksRepository.listByParent(parent.id_judoka);
-        const alreadyLinked = links.some(
-          (link) => String(link.id_judoka) === String(existingId)
-        );
-        if (alreadyLinked) {
-          return { email: null, message: "Profil déjà rattaché à ce parent, aucune modification." };
+        const linked = await linkChildToParent(parent, existingId);
+        if (!linked) {
+          return {
+            email: null,
+            message: ageCategoryChanged
+              ? "Profil existant mis à jour, déjà rattaché à ce parent."
+              : "Profil déjà rattaché à ce parent, aucune modification."
+          };
         }
-        await parentLinksRepository.insert({ id_parent: parent.id_judoka, id_judoka: existingId });
         return { email: null, message: "Profil existant rattaché au parent." };
       }
 
@@ -252,7 +336,12 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         };
       }
 
-      return { email: null, message: "Profil déjà existant, aucune modification." };
+      return {
+        email: null,
+        message: ageCategoryChanged
+          ? "Profil judoka existant mis à jour."
+          : "Profil déjà existant, aucune modification."
+      };
     }
 
     const idJudoka = buildJudokaId();
@@ -261,10 +350,10 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       firstName: prenom,
       lastName: nom
     });
-    await judokasRepository.insert(
-      managedChild,
-      pendingParentEmail ? { pending_parent_email: pendingParentEmail } : undefined
-    );
+    await judokasRepository.insert(managedChild, {
+      ...(ageCategory ? { categorie_age: ageCategory } : {}),
+      ...(pendingParentEmail ? { pending_parent_email: pendingParentEmail } : {})
+    });
 
     if (parent) {
       await parentLinksRepository.insert({ id_parent: parent.id_judoka, id_judoka: idJudoka });

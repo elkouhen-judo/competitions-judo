@@ -17,8 +17,9 @@
               <h3>Importer des profils (CSV)</h3>
             </div>
           </div>
-          <p class="field-hint">Colonnes attendues : profileType (JUDOKA ou PARENT), prenom, nom, email (facultatif pour un judoka mineur), parentEmail (pour rattacher un judoka sans email à un parent).</p>
+          <p class="field-hint">Colonnes attendues : profileType (JUDOKA ou PARENT), prenom, nom, email (facultatif pour un judoka mineur), parentEmail (pour rattacher un judoka, avec ou sans email, à un parent), role (facultatif, COACH pour un judoka avec email), ageCategory (facultatif, ex : Minime).</p>
           <p class="field-hint">Si le parent référencé par parentEmail n'a pas encore de compte actif (invitation en attente), le judoka est créé et rattaché automatiquement dès que ce parent se connecte pour la première fois.</p>
+          <p class="field-hint">Réimporter un profil déjà existant (même email pour un judoka ou un parent, ou même prénom/nom sans email pour un judoka) n'est pas une erreur : ses informations (rôle et catégorie d'âge pour un judoka) sont alors mises à jour.</p>
           <a href="/sample-users-import.csv" download class="button-secondary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Télécharger un exemple

@@ -14,6 +14,7 @@ export interface JudokaChangesInput {
   accessRole?: AccessRole;
   role?: string;
   pendingParentEmail?: string;
+  ageCategory?: string;
 }
 
 export interface JudokasRepository {
@@ -75,6 +76,9 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     }
     if (changes.pendingParentEmail !== undefined) {
       record.pending_parent_email = changes.pendingParentEmail;
+    }
+    if (changes.ageCategory !== undefined) {
+      record.categorie_age = changes.ageCategory;
     }
 
     return record;
