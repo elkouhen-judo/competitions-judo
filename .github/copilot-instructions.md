@@ -38,7 +38,7 @@ Le dépôt est une application JavaScript sans bundler:
 
 - Tests complets: `npm test`
 - Lint si nécessaire: `npx eslint .`
-- Déploiement de production: `make deploy` lance `npm test`, puis `vercel --prod`.
+- Déploiement de production: `npm run app:deploy` lance `npm test`, `npm run build:assets`, puis `vercel --prod`.
 
 Node.js doit rester en version `>=20` selon `package.json` et `docs/spec-tech.md`.
 
