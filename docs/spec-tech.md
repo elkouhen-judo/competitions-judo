@@ -90,6 +90,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
 - **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
 - **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
+- **DAT-025**: `competitions.ai_analysis` shall store the latest AI-generated competition analysis text, defaulting to an empty string when none has been generated yet.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 - **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
@@ -140,6 +141,8 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-006b**: `http://localhost:3100` must also be allowed in Supabase redirect URLs to support local development.
 - **CFG-007**: Supabase Auth must configure the `before-user-created` hook to call `public.hook_check_invited_signup`.
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
+- **CFG-009**: `GROQ_API_KEY` is optional. When absent, AI competition analysis generation shall be skipped silently (no error raised, no analysis stored) rather than failing the calling operation.
+- **CFG-010**: `GROQ_MODEL` is optional and defaults to a fixed Groq chat-completion model id when unset.
 
 ## 4. Interfaces & Data Contracts
 

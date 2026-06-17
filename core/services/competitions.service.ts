@@ -56,6 +56,7 @@ export interface CompetitionsServiceDeps {
   buildCompetitionId: () => string;
   createCompetition: typeof createCompetition;
   createPersistedCompetition: typeof createPersistedCompetition;
+  generateCompetitionAnalysis: (idCompetition: string) => Promise<string | null>;
 }
 
 export interface CompetitionsService {
@@ -78,7 +79,8 @@ export default function createCompetitionsService(
     resolveCompetitionOwnerId,
     buildCompetitionId,
     createCompetition,
-    createPersistedCompetition
+    createPersistedCompetition,
+    generateCompetitionAnalysis
   } = deps;
 
   async function getCompetitionsForUser(
@@ -226,6 +228,13 @@ export default function createCompetitionsService(
       result
     );
     await competitionsRepository.updateResult(idCompetition, finalization);
+
+    try {
+      await generateCompetitionAnalysis(idCompetition);
+    } catch (error) {
+      console.error("Échec de la génération de l'analyse IA :", error);
+    }
+
     return {
       success: true,
       competitionId: idCompetition,

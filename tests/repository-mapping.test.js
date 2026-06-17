@@ -400,6 +400,7 @@ test("competitions repository maps update, finalization and coach annotation pat
   });
   await competitionsRepository.updateCoachObjective("COMP1", "Travailler le ne-waza");
   await competitionsRepository.updateCoachReview("COMP1", "Bon combat");
+  await competitionsRepository.updateAiAnalysis("COMP1", "Bonne performance globale.");
   await competitionsRepository.detachFromClubCompetition("COMP1");
   await competitionsRepository.remove("COMP2");
   await competitionsRepository.removeByJudoka("JUDO1");
@@ -421,8 +422,19 @@ test("competitions repository maps update, finalization and coach annotation pat
       }
     ],
     ["patch", "competitions", "id_competition=eq.COMP1", { classement: "2e" }],
-    ["patch", "competitions", "id_competition=eq.COMP1", { coach_objective: "Travailler le ne-waza" }],
+    [
+      "patch",
+      "competitions",
+      "id_competition=eq.COMP1",
+      { coach_objective: "Travailler le ne-waza" }
+    ],
     ["patch", "competitions", "id_competition=eq.COMP1", { coach_review: "Bon combat" }],
+    [
+      "patch",
+      "competitions",
+      "id_competition=eq.COMP1",
+      { ai_analysis: "Bonne performance globale." }
+    ],
     ["patch", "competitions", "id_competition=eq.COMP1", { club_competition_id: null }],
     ["delete", "competitions", "id_competition=eq.COMP2"],
     ["delete", "competitions", "id_judoka=eq.JUDO1"]

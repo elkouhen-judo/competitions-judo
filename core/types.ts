@@ -31,6 +31,7 @@ export interface Competition {
   result: string | null;
   coachObjective: string;
   coachReview: string;
+  aiAnalysis: string;
 }
 
 export interface Combat {

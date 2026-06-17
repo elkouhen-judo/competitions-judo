@@ -13,6 +13,7 @@ const { updateCombat } = require("../core/domain/competitions/combat");
 const createCombatsService = require("../core/services/combats.service");
 const createClubCompetitionsService = require("../core/services/club-competitions.service");
 const createCompetitionsService = require("../core/services/competitions.service");
+const createAiAnalysisService = require("../core/services/ai-analysis.service");
 const createProfileService = require("../core/services/profile.service");
 const createRegistrationService = require("../core/services/registration.service");
 const createUserContextService = require("../core/services/user-context.service");
@@ -311,9 +312,18 @@ test("deleting a club competition removes the linked individual competitions", a
 function createTestCompetitionsService({
   competitionsByCompetitionId = {},
   combatsByCompetitionId = {},
-  getDomainUserContext
+  getDomainUserContext,
+  generateCompetitionAnalysis = async () => null
 } = {}) {
-  const calls = { inserted: [], updated: [], updatedResult: [], coachObjective: [], coachReview: [], removed: [] };
+  const calls = {
+    inserted: [],
+    updated: [],
+    updatedResult: [],
+    coachObjective: [],
+    coachReview: [],
+    removed: [],
+    aiAnalysis: []
+  };
 
   const service = createCompetitionsService({
     combatsRepository: {
@@ -371,7 +381,11 @@ function createTestCompetitionsService({
     resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
     buildCompetitionId: () => "COMP_NEW",
     createCompetition,
-    createPersistedCompetition
+    createPersistedCompetition,
+    generateCompetitionAnalysis: async (idCompetition) => {
+      calls.aiAnalysis.push(idCompetition);
+      return generateCompetitionAnalysis(idCompetition);
+    }
   });
 
   return { service, calls };
@@ -454,8 +468,30 @@ test("finalizeCompetition records the final ranking for the competition owner", 
 
   assert.equal(result.success, true);
   assert.deepEqual(calls.updatedResult, [
-    { idCompetition: "COMP1", finalization: { competitionId: "COMP1", ownerJudokaId: "JUDO1", result: "1er" } }
+    {
+      idCompetition: "COMP1",
+      finalization: { competitionId: "COMP1", ownerJudokaId: "JUDO1", result: "1er" }
+    }
   ]);
+  assert.deepEqual(calls.aiAnalysis, ["COMP1"]);
+});
+
+test("finalizeCompetition still succeeds when AI analysis generation fails", async () => {
+  const { service, calls } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi", date: "2026-06-14" }
+    },
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL"),
+    generateCompetitionAnalysis: async () => {
+      throw new Error("Erreur Groq 500 : indisponible");
+    }
+  });
+
+  const result = await service.methods.finalizeCompetition("judoka@example.com", "COMP1", "1er");
+
+  assert.equal(result.success, true);
+  assert.equal(result.message, "Classement enregistré.");
+  assert.deepEqual(calls.aiAnalysis, ["COMP1"]);
 });
 
 test("finalizeCompetition requires a competition id", async () => {
@@ -484,7 +520,9 @@ test("saveCoachObjective lets a coach record an objective", async () => {
   );
 
   assert.equal(result.success, true);
-  assert.deepEqual(calls.coachObjective, [{ idCompetition: "COMP1", objective: "Travailler le ne-waza" }]);
+  assert.deepEqual(calls.coachObjective, [
+    { idCompetition: "COMP1", objective: "Travailler le ne-waza" }
+  ]);
 });
 
 test("saveCoachReview rejects a normal judoka", async () => {
@@ -499,6 +537,103 @@ test("saveCoachReview rejects a normal judoka", async () => {
     () => service.methods.saveCoachReview("judoka@example.com", "COMP1", "Bilan"),
     /Seul un coach ou administrateur/
   );
+});
+
+function createTestAiAnalysisService({
+  competitionsByCompetitionId = {},
+  combatsByCompetitionId = {},
+  groqResponse = "Analyse générée."
+} = {}) {
+  const calls = { prompts: [], persisted: [] };
+
+  const service = createAiAnalysisService({
+    combatsRepository: {
+      listByCompetition: async (id) => combatsByCompetitionId[id] || []
+    },
+    competitionsRepository: {
+      getById: async (id) => competitionsByCompetitionId[id] || null,
+      updateAiAnalysis: async (idCompetition, analysis) => {
+        calls.persisted.push({ idCompetition, analysis });
+        return null;
+      }
+    },
+    groqClient: {
+      generateChatCompletion: async (messages) => {
+        calls.prompts.push(messages);
+        return groqResponse;
+      }
+    }
+  });
+
+  return { service, calls };
+}
+
+test("generateCompetitionAnalysis builds a French prompt from the competition and its combats, then persists the result", async () => {
+  const { service, calls } = createTestAiAnalysisService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        nom: "Tournoi de Nantes",
+        date: "2026-06-14",
+        categorie_age: "Minime",
+        categorie_poids: "-50kg",
+        niveau: "Régional",
+        classement: "1er"
+      }
+    },
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CMB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          garde_adversaire: "Gaucher",
+          resultat: "Victoire",
+          type_victoire: "Ippon",
+          categorie_technique: "Technique Avant",
+          deroule: "Bon Seoi-nage"
+        }
+      ]
+    }
+  });
+
+  const analysis = await service.generateCompetitionAnalysis("COMP1");
+
+  assert.equal(analysis, "Analyse générée.");
+  assert.equal(calls.prompts.length, 1);
+  assert.equal(calls.prompts[0][0].role, "system");
+  assert.match(calls.prompts[0][0].content, /analyste technique spécialisé en judo jeunesse/);
+  assert.equal(calls.prompts[0][1].role, "user");
+  assert.match(calls.prompts[0][1].content, /Tournoi de Nantes/);
+  assert.match(calls.prompts[0][1].content, /Léo Dupont/);
+  assert.match(calls.prompts[0][1].content, /Gaucher/);
+  assert.deepEqual(calls.persisted, [{ idCompetition: "COMP1", analysis: "Analyse générée." }]);
+});
+
+test("generateCompetitionAnalysis does nothing for an unknown competition", async () => {
+  const { service, calls } = createTestAiAnalysisService();
+
+  const analysis = await service.generateCompetitionAnalysis("MISSING");
+
+  assert.equal(analysis, null);
+  assert.equal(calls.prompts.length, 0);
+  assert.equal(calls.persisted.length, 0);
+});
+
+test("generateCompetitionAnalysis skips persistence when Groq returns an empty response", async () => {
+  const { service, calls } = createTestAiAnalysisService({
+    competitionsByCompetitionId: {
+      COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi", date: "2026-06-14" }
+    },
+    groqResponse: ""
+  });
+
+  const analysis = await service.generateCompetitionAnalysis("COMP1");
+
+  assert.equal(analysis, null);
+  assert.equal(calls.persisted.length, 0);
 });
 
 test("deleteCompetition removes the competition when authorized", async () => {
@@ -544,7 +679,10 @@ test("getCompetitionsForUser returns every competition for a coach but only owne
     { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
     createManagedJudokaScope([])
   );
-  assert.deepEqual(judokaResults.map((competition) => competition.competitionId), ["COMP1"]);
+  assert.deepEqual(
+    judokaResults.map((competition) => competition.competitionId),
+    ["COMP1"]
+  );
 });
 
 test("getCompetitionDetail enriches combats with judoka display names and exposes management flags", async () => {
@@ -787,7 +925,11 @@ test("saveCoachNotes persists notes when the requester is a coach", async () => 
     })
   });
 
-  const result = await service.methods.saveCoachNotes("coach@example.com", "JUDO1", "Bon potentiel");
+  const result = await service.methods.saveCoachNotes(
+    "coach@example.com",
+    "JUDO1",
+    "Bon potentiel"
+  );
 
   assert.equal(result.success, true);
   assert.deepEqual(calls.savedNotes, [{ idJudoka: "JUDO1", notes: "Bon potentiel" }]);
@@ -879,7 +1021,11 @@ test("registerProfile defaults to JUDOKA and empty names when the invitation/pro
   });
 });
 
-function createTestUserContextService(judokasByEmail = {}, judokasById = {}, parentLinksByParent = {}) {
+function createTestUserContextService(
+  judokasByEmail = {},
+  judokasById = {},
+  parentLinksByParent = {}
+) {
   return createUserContextService({
     judokasRepository: {
       getByEmail: async (email) => judokasByEmail[String(email || "").toLowerCase()] || null,
@@ -944,10 +1090,7 @@ test("getCurrentUserContext gives a coach visibility into every judoka", async (
 
   const context = await service.getCurrentUserContext("coach@example.com");
 
-  assert.deepEqual(
-    context.judokas.map((judoka) => judoka.id_judoka).sort(),
-    ["COACH1", "JUDO1"]
-  );
+  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka).sort(), ["COACH1", "JUDO1"]);
 });
 
 test("getCurrentUserContext builds a managed scope for a parent including themself and their children", async () => {
@@ -966,7 +1109,10 @@ test("getCurrentUserContext builds a managed scope for a parent including themse
 
   const context = await service.getCurrentUserContext("parent@example.com");
 
-  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka), ["PARENT1", "CHILD1"]);
+  assert.deepEqual(
+    context.judokas.map((judoka) => judoka.id_judoka),
+    ["PARENT1", "CHILD1"]
+  );
   assert.deepEqual(context.managedJudokaScope.toIds(), ["PARENT1", "CHILD1"]);
 });
 
@@ -989,7 +1135,10 @@ test("getCurrentUserContext does not duplicate the parent when the link query al
 
   const context = await service.getCurrentUserContext("parent@example.com");
 
-  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka), ["PARENT1", "CHILD1"]);
+  assert.deepEqual(
+    context.judokas.map((judoka) => judoka.id_judoka),
+    ["PARENT1", "CHILD1"]
+  );
 });
 
 test("getAccessibleJudokaProfile lets a parent access a managed child's profile", async () => {
@@ -1075,8 +1224,7 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
     },
     judokasRepository: {
       getByEmail: async (email) => judokasByEmail[String(email || "").toLowerCase()] || null,
-      getByName: async (prenom, nom) =>
-        judokasByName[`${prenom}|${nom}`.toLowerCase()] || null,
+      getByName: async (prenom, nom) => judokasByName[`${prenom}|${nom}`.toLowerCase()] || null,
       insert: async (judoka, extras) => {
         calls.inserted.push({ judoka, extras });
         const row = {
@@ -1133,7 +1281,12 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
 test("getAdminsManagement lists pending invitations alongside registered users so invited parents stay visible", async () => {
   const { service } = createTestAdminService(
     {
-      "admin@example.com": { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN", email: "admin@example.com" }
+      "admin@example.com": {
+        id_judoka: "ADMIN1",
+        profile_type: "JUDOKA",
+        role: "ADMIN",
+        email: "admin@example.com"
+      }
     },
     {
       "christine.elkouhen@gmail.com": {
@@ -1154,7 +1307,12 @@ test("getAdminsManagement lists pending invitations alongside registered users s
 test("deleteAccessInvitation cancels a pending invitation", async () => {
   const { service, calls } = createTestAdminService(
     {
-      "admin@example.com": { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN", email: "admin@example.com" }
+      "admin@example.com": {
+        id_judoka: "ADMIN1",
+        profile_type: "JUDOKA",
+        role: "ADMIN",
+        email: "admin@example.com"
+      }
     },
     {
       "christine.elkouhen@gmail.com": {
@@ -1384,7 +1542,12 @@ test("importUsersCsv reuses an existing judoka identified by first and last name
     },
     {},
     {
-      "ali|el kouhen": { id_judoka: "JUDO_EXISTING", profile_type: "JUDOKA", nom: "El Kouhen", prenom: "Ali" }
+      "ali|el kouhen": {
+        id_judoka: "JUDO_EXISTING",
+        profile_type: "JUDOKA",
+        nom: "El Kouhen",
+        prenom: "Ali"
+      }
     }
   );
 
@@ -1404,8 +1567,7 @@ test("importUsersCsv re-importing the same name twice does not create a duplicat
   const judokasByName = {};
   const { service, calls } = createTestAdminService({}, {}, judokasByName);
 
-  const csv =
-    "profileType,prenom,nom,email,parentEmail\n" + "JUDOKA,Ali,El Kouhen,,\n";
+  const csv = "profileType,prenom,nom,email,parentEmail\n" + "JUDOKA,Ali,El Kouhen,,\n";
 
   const first = await service.methods.importUsersCsv("admin@example.com", csv);
   assert.equal(calls.inserted.length, 1);
@@ -1444,8 +1606,7 @@ test("importUsersCsv creates a direct judoka account profile from an email row",
   const { service, calls } = createTestAdminService({});
 
   const csv =
-    "profileType,prenom,nom,email,parentEmail\n" +
-    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,\n";
+    "profileType,prenom,nom,email,parentEmail\n" + "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,\n";
 
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 
@@ -1489,8 +1650,7 @@ test("importUsersCsv grants the COACH role to a judoka row with an account email
 test("importUsersCsv rejects a COACH role without an account email", async () => {
   const { service, calls } = createTestAdminService({});
 
-  const csv =
-    "profileType,prenom,nom,email,parentEmail,role\n" + "JUDOKA,Karim,Haddad,,,COACH\n";
+  const csv = "profileType,prenom,nom,email,parentEmail,role\n" + "JUDOKA,Karim,Haddad,,,COACH\n";
 
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 
@@ -1581,8 +1741,7 @@ test("importUsersCsv re-importing an existing judoka without changes leaves thei
   });
 
   const csv =
-    "profileType,prenom,nom,email,parentEmail\n" +
-    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,\n";
+    "profileType,prenom,nom,email,parentEmail\n" + "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,\n";
 
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 

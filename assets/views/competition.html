@@ -113,6 +113,15 @@
             </button>
           </div>
         </div>
+        <div v-if="competitionAiAnalysis" class="section ai-analysis-section">
+          <div class="section-heading">
+            <div>
+              <h3>Analyse IA</h3>
+              <p class="subtitle ai-analysis-disclaimer">Texte généré automatiquement par une intelligence artificielle à partir des combats enregistrés.</p>
+            </div>
+          </div>
+          <p class="ai-analysis-text">{{ competitionAiAnalysis }}</p>
+        </div>
         <div v-if="showCoachAssessment" class="section coach-assessment-section">
           <div class="section-heading">
             <div>

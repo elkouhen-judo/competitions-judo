@@ -171,6 +171,7 @@
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
     const competitionResult = window.Vue.computed(() => competitionDetailProjection.value?.competitionResult ?? "");
+    const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
     const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
@@ -290,6 +291,7 @@
           ageWeightLabel,
           competitionLevel,
           competitionResult,
+          competitionAiAnalysis,
           canEditCompetition,
           canFinalizeCompetition,
           isSubmitting,

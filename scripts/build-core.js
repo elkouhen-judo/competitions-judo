@@ -38,6 +38,7 @@ const entryPoints = [
   "core/services/combats.service.ts",
   "core/services/club-competitions.service.ts",
   "core/services/competitions.service.ts",
+  "core/services/ai-analysis.service.ts",
   "core/services/profile.service.ts",
   "core/services/registration.service.ts"
 ];
