@@ -20,9 +20,25 @@ const {
   normalizeOpponentStance
 } = require("../core/domain/competitions/opponent-stance");
 const {
-  createCombatTechniqueCategory,
-  normalizeCombatTechniqueCategory
-} = require("../core/domain/competitions/combat-technique-category");
+  createCombatScoreCategory,
+  normalizeCombatScoreCategory
+} = require("../core/domain/competitions/combat-score-category");
+const {
+  createTachiWazaTechnique,
+  normalizeTachiWazaTechnique
+} = require("../core/domain/competitions/tachi-waza-technique");
+const {
+  createNeWazaType,
+  normalizeNeWazaType
+} = require("../core/domain/competitions/ne-waza-type");
+const {
+  createCombatScoreValue,
+  normalizeCombatScoreValue
+} = require("../core/domain/competitions/combat-score-value");
+const {
+  createCombatScore,
+  createCombatScores
+} = require("../core/domain/competitions/combat-score");
 const { createCompetitionRanking } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("../core/domain/season");
@@ -367,7 +383,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
     opponentStance: "gaucher",
     result: "v",
     victoryType: "Ippon",
-    techniqueCategory: "ne waza",
+    scores: [{ category: "ne waza", neWazaType: "osaekomi", value: "ippon" }],
     notes: "Bon rythme"
   });
 
@@ -378,7 +394,9 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(combat.result, "Victoire");
   assert.equal(combat.draft.result, "Victoire");
   assert.equal(combat.victoryType, "Ippon");
-  assert.equal(combat.techniqueCategory, "Ne waza");
+  assert.deepEqual(combat.scores, [
+    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }
+  ]);
   assert.equal(combat.notes, "Bon rythme");
   assert.equal("id_judoka" in combat, false);
   assert.equal("id_competition" in combat, false);
@@ -402,7 +420,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.opponentStance, "");
   assert.equal(updatedCombat.result, "Défaite");
   assert.equal(updatedCombat.victoryType, "");
-  assert.equal(updatedCombat.techniqueCategory, "");
+  assert.deepEqual(updatedCombat.scores, []);
   assert.equal(updatedCombat.notes, "");
 
   assert.equal(
@@ -527,22 +545,91 @@ test("opponent stance domain normalizes aliases and rejects unknown values", () 
   assert.throws(() => createOpponentStance("ambidextre"), /Garde de l'adversaire invalide/);
 });
 
-test("combat technique category domain normalizes aliases and rejects unknown values", () => {
-  assert.equal(normalizeCombatTechniqueCategory("technique avant"), "Technique Avant");
-  assert.equal(normalizeCombatTechniqueCategory("Avant"), "Technique Avant");
-  assert.equal(normalizeCombatTechniqueCategory("technique arriere"), "Technique Arrière");
-  assert.equal(normalizeCombatTechniqueCategory("Arrière"), "Technique Arrière");
-  assert.equal(normalizeCombatTechniqueCategory("contre"), "Contre");
-  assert.equal(normalizeCombatTechniqueCategory("ne waza"), "Ne waza");
-  assert.equal(normalizeCombatTechniqueCategory("newaza"), "Ne waza");
-  assert.equal(normalizeCombatTechniqueCategory("inconnu"), "");
+test("combat score category domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeCombatScoreCategory("tachi waza"), "Tachi-waza");
+  assert.equal(normalizeCombatScoreCategory("TachiWaza"), "Tachi-waza");
+  assert.equal(normalizeCombatScoreCategory("ne waza"), "Ne-waza");
+  assert.equal(normalizeCombatScoreCategory("newaza"), "Ne-waza");
+  assert.equal(normalizeCombatScoreCategory("inconnu"), "");
 
-  assert.equal(createCombatTechniqueCategory(""), "");
-  assert.equal(createCombatTechniqueCategory(undefined), "");
-  assert.equal(createCombatTechniqueCategory("Contre"), "Contre");
+  assert.equal(createCombatScoreCategory("Tachi-waza"), "Tachi-waza");
+  assert.throws(() => createCombatScoreCategory(""), /Catégorie de prise invalide/);
+  assert.throws(() => createCombatScoreCategory("inconnu"), /Catégorie de prise invalide/);
+});
+
+test("tachi-waza technique domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeTachiWazaTechnique("seoi-nage"), "Seoi-nage");
+  assert.equal(normalizeTachiWazaTechnique("O Soto Gari"), "O-soto-gari");
+  assert.equal(normalizeTachiWazaTechnique("inconnu"), "");
+
+  assert.equal(createTachiWazaTechnique(""), "");
+  assert.equal(createTachiWazaTechnique(undefined), "");
+  assert.equal(createTachiWazaTechnique("uchi-mata"), "Uchi-mata");
   assert.throws(
-    () => createCombatTechniqueCategory("uchi mata"),
-    /Catégorie de technique invalide/
+    () => createTachiWazaTechnique("uchi mata inconnu"),
+    /Nom de la prise Tachi-waza invalide/
+  );
+});
+
+test("ne-waza type domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeNeWazaType("cle"), "Clé");
+  assert.equal(normalizeNeWazaType("Étranglement"), "Étranglement");
+  assert.equal(normalizeNeWazaType("osaekomi"), "Osaekomi");
+  assert.equal(normalizeNeWazaType("inconnu"), "");
+
+  assert.equal(createNeWazaType(""), "");
+  assert.equal(createNeWazaType(undefined), "");
+  assert.equal(createNeWazaType("Clé"), "Clé");
+  assert.throws(() => createNeWazaType("inconnu"), /Type de prise Ne-waza invalide/);
+});
+
+test("combat score value domain normalizes aliases and rejects unknown values", () => {
+  assert.equal(normalizeCombatScoreValue("ippon"), "Ippon");
+  assert.equal(normalizeCombatScoreValue("waza ari"), "Waza-ari");
+  assert.equal(normalizeCombatScoreValue("yuko"), "Yuko");
+  assert.equal(normalizeCombatScoreValue("inconnu"), "");
+
+  assert.equal(createCombatScoreValue("Ippon"), "Ippon");
+  assert.throws(() => createCombatScoreValue("inconnu"), /Valeur de la prise invalide/);
+});
+
+test("combat score domain enforces the conditional sub-field per category", () => {
+  assert.deepEqual(
+    createCombatScore({ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }),
+    {
+      category: "Tachi-waza",
+      technique: "Seoi-nage",
+      neWazaType: "",
+      value: "Ippon"
+    }
+  );
+  assert.deepEqual(
+    createCombatScore({ category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" }),
+    {
+      category: "Ne-waza",
+      technique: "",
+      neWazaType: "Osaekomi",
+      value: "Waza-ari"
+    }
+  );
+
+  assert.throws(
+    () => createCombatScore({ category: "Tachi-waza", value: "Ippon" }),
+    /Nom de la prise obligatoire pour une prise Tachi-waza/
+  );
+  assert.throws(
+    () => createCombatScore({ category: "Ne-waza", value: "Ippon" }),
+    /Type de prise obligatoire pour une prise Ne-waza/
+  );
+
+  assert.deepEqual(createCombatScores("not-an-array"), []);
+  assert.deepEqual(createCombatScores(undefined), []);
+  assert.equal(
+    createCombatScores([
+      { category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" },
+      { category: "Ne-waza", neWazaType: "Clé", value: "Ippon" }
+    ]).length,
+    2
   );
 });
 

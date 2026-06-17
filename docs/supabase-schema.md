@@ -1,7 +1,7 @@
 ---
 title: Kiroku Supabase Schema Notes
 date_created: 2026-06-10
-last_updated: 2026-06-14
+last_updated: 2026-06-17
 owner: competitions-judo
 tags:
   - database
@@ -26,6 +26,7 @@ Il crée les tables :
 - `public.club_competitions`
 - `public.competitions`
 - `public.combats`
+- `public.combat_scores`
 
 Les identifiants existants sont conservés en `text` pour simplifier l'import depuis Google Sheets :
 
@@ -40,8 +41,9 @@ Les identifiants existants sont conservés en `text` pour simplifier l'import de
 - `competitions.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_competition` référence `competitions.id_competition` avec `on delete cascade`.
+- `combat_scores.id_combat` référence `combats.id_combat` avec `on delete cascade` (une ligne par prise marquée, ordre préservé par la colonne `ordre`).
 
-La cascade permet de supprimer automatiquement les combats d'une compétition supprimée.
+La cascade permet de supprimer automatiquement les combats d'une compétition supprimée, et les prises marquées d'un combat supprimé.
 La suppression ou le détachement d'une compétition club conserve les compétitions individuelles via `club_competition_id = null`.
 
 ## Exécution

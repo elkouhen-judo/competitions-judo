@@ -26,6 +26,45 @@
     resultClass: string;
   }
 
+  interface CombatScoreFormRow {
+    category: string;
+    technique: string;
+    neWazaType: string;
+    value: string;
+  }
+
+  const TACHI_WAZA_TECHNIQUES = [
+    "Seoi-nage",
+    "Ippon Seoi-nage",
+    "O-soto-gari",
+    "O-uchi-gari",
+    "Ko-uchi-gari",
+    "Ko-soto-gari",
+    "Uchi-mata",
+    "Harai-goshi",
+    "Tai-otoshi",
+    "Tomoe-nage",
+    "Sumi-gaeshi",
+    "Kata-guruma",
+    "De-ashi-barai",
+    "Hiza-guruma",
+    "Sasae-tsurikomi-goshi",
+    "Okuri-ashi-barai",
+    "Ura-nage",
+    "Yoko-tomoe-nage"
+  ];
+
+  function createEmptyCombatScoreRow(): CombatScoreFormRow {
+    return { category: "", technique: "", neWazaType: "", value: "" };
+  }
+
+  function isCombatScoreRowComplete(score: CombatScoreFormRow): boolean {
+    if (!score.category || !score.value) return false;
+    if (score.category === "Tachi-waza") return Boolean(score.technique);
+    if (score.category === "Ne-waza") return Boolean(score.neWazaType);
+    return false;
+  }
+
   function createKirokuCompetitionScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
     const {
@@ -102,7 +141,7 @@
       opponentStance: "",
       result: "",
       victoryType: "",
-      techniqueCategory: "",
+      scores: [] as CombatScoreFormRow[],
       notes: ""
     };
     const defaultCombatFormViewState = {
@@ -138,7 +177,7 @@
     let competitionFinalizationMounted = false;
     const combatFormViewModel = window.Vue.reactive({
       ...defaultCombatFormViewState,
-      combatForm: { ...defaultCombatForm }
+      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[] }
     });
     let combatFormMounted = false;
     let hideOwnerOptionsTimer: number | null = null;
@@ -194,6 +233,7 @@
 
     const combatDecisionOptions = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result));
     const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
+    const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
 
     const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
       const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
@@ -419,11 +459,14 @@
         "combatFormView",
         combatFormViewModel,
         {
+          addCombatScoreRow,
           cancelCombatForm,
+          onCombatScoreCategoryChange,
+          removeCombatScoreRow,
           saveCombat,
           syncCombatDecisionVisibility
         },
-        { combatDecisionOptions, isSubmitting, showCombatDecisionBlock }
+        { combatDecisionOptions, isSubmitting, showCombatDecisionBlock, tachiWazaTechniques }
       );
     }
 
@@ -889,7 +932,12 @@
           opponentStance: combat.opponentStance || "",
           result: combat.result || "",
           victoryType: combat.victoryType || "",
-          techniqueCategory: combat.techniqueCategory || "",
+          scores: (combat.scores || []).map((score) => ({
+            category: score.category || "",
+            technique: score.technique || "",
+            neWazaType: score.neWazaType || "",
+            value: score.value || ""
+          })),
           notes: combat.notes || ""
         });
         syncCombatDecisionVisibility(false);
@@ -971,7 +1019,7 @@
         result,
         victoryType:
           result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
-        techniqueCategory: combatFormViewModel.combatForm.techniqueCategory,
+        scores: combatFormViewModel.combatForm.scores.filter(isCombatScoreRowComplete),
         notes: combatFormViewModel.combatForm.notes,
         combatId: undefined as string | undefined
       };
@@ -1175,9 +1223,29 @@
       }
     }
 
+    function addCombatScoreRow() {
+      ensureCombatFormViewModel();
+      combatFormViewModel.combatForm.scores.push(createEmptyCombatScoreRow());
+    }
+
+    function removeCombatScoreRow(index: number) {
+      ensureCombatFormViewModel();
+      combatFormViewModel.combatForm.scores.splice(index, 1);
+    }
+
+    function onCombatScoreCategoryChange(index: number) {
+      ensureCombatFormViewModel();
+      const score = combatFormViewModel.combatForm.scores[index];
+      if (!score) return;
+      if (score.category !== "Tachi-waza") score.technique = "";
+      if (score.category !== "Ne-waza") score.neWazaType = "";
+    }
+
     function resetCombatForm() {
       ensureCombatFormViewModel();
-      Object.assign(combatFormViewModel.combatForm, defaultCombatForm);
+      Object.assign(combatFormViewModel.combatForm, defaultCombatForm, {
+        scores: [] as CombatScoreFormRow[]
+      });
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",
         combatFormSubtitle: "Combat de la compétition en cours",

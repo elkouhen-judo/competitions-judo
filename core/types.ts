@@ -34,6 +34,13 @@ export interface Competition {
   aiAnalysis: string;
 }
 
+export interface CombatScore {
+  category: string;
+  technique?: string;
+  neWazaType?: string;
+  value: string;
+}
+
 export interface Combat {
   combatId: string;
   judokaId: string;
@@ -42,7 +49,7 @@ export interface Combat {
   opponentStance?: string;
   result: "Victoire" | "Défaite" | "Egalité";
   victoryType?: string;
-  techniqueCategory?: string;
+  scores: CombatScore[];
   notes?: string;
 }
 

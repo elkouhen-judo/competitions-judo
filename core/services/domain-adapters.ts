@@ -3,6 +3,7 @@ import type {
   AccessInvitation,
   Combat,
   CombatReadModel,
+  CombatScore,
   Competition,
   Judoka
 } from "../types";
@@ -78,7 +79,18 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
   };
 }
 
+export function toCanonicalCombatScore(score: SourceRecord = {}): CombatScore {
+  return {
+    category: String(pick(score, "category", "categorie") || ""),
+    technique: String(pick(score, "technique", "technique") || ""),
+    neWazaType: String(pick(score, "neWazaType", "type_ne_waza") || ""),
+    value: String(pick(score, "value", "valeur") || "")
+  };
+}
+
 export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
+  const rawScores = pick<SourceRecord[]>(combat, "scores", "scores");
+
   return {
     combatId: String(pick(combat, "combatId", "id_combat") || ""),
     judokaId: String(pick(combat, "judokaId", "id_judoka") || ""),
@@ -87,7 +99,7 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     opponentStance: String(pick(combat, "opponentStance", "garde_adversaire") || ""),
     result: normalizeCanonicalCombatResult(pick(combat, "result", "resultat")),
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
-    techniqueCategory: String(pick(combat, "techniqueCategory", "categorie_technique") || ""),
+    scores: Array.isArray(rawScores) ? rawScores.map(toCanonicalCombatScore) : [],
     notes: String(pick(combat, "notes", "deroule") || "")
   };
 }

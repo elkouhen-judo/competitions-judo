@@ -25,6 +25,12 @@ const createCombatsRepository =
   /** @type {typeof import("./repositories/combats.repository").default} */ (
     /** @type {unknown} */ (require("../core-dist/repositories/combats.repository.js").default)
   );
+const createCombatScoresRepository =
+  /** @type {typeof import("./repositories/combat-scores.repository").default} */ (
+    /** @type {unknown} */ (
+      require("../core-dist/repositories/combat-scores.repository.js").default
+    )
+  );
 const createInvitationsRepository =
   /** @type {typeof import("./repositories/invitations.repository").default} */ (
     /** @type {unknown} */ (require("../core-dist/repositories/invitations.repository.js").default)
@@ -91,6 +97,7 @@ const judokasRepository = createJudokasRepository(repositoryDeps);
 const clubCompetitionsRepository = createClubCompetitionsRepository(repositoryDeps);
 const competitionsRepository = createCompetitionsRepository(repositoryDeps);
 const combatsRepository = createCombatsRepository(repositoryDeps);
+const combatScoresRepository = createCombatScoresRepository(repositoryDeps);
 const invitationsRepository = createInvitationsRepository(repositoryDeps);
 const parentLinksRepository = createParentLinksRepository(repositoryDeps);
 
@@ -134,12 +141,14 @@ const clubCompetitionsService = createClubCompetitionsService({
 
 const aiAnalysisService = createAiAnalysisService({
   combatsRepository,
+  combatScoresRepository,
   competitionsRepository,
   groqClient
 });
 
 const competitionsService = createCompetitionsService({
   combatsRepository,
+  combatScoresRepository,
   competitionsRepository,
   userContextService,
   normalizeLastName: text.normalizeLastName,
@@ -156,6 +165,7 @@ const competitionsService = createCompetitionsService({
 
 const combatsService = createCombatsService({
   combatsRepository,
+  combatScoresRepository,
   competitionsRepository,
   userContextService,
   assertCanManageCombatFor: permissions.assertCanManageCombatFor,

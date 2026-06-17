@@ -1,7 +1,8 @@
 import { toCanonicalCombat, toCanonicalCompetition } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
+import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
-import type { Combat, Competition } from "../types";
+import type { Combat, CombatScore, Competition } from "../types";
 
 export interface GroqClient {
   generateChatCompletion(messages: { role: string; content: string }[]): Promise<string>;
@@ -9,6 +10,7 @@ export interface GroqClient {
 
 export interface AiAnalysisServiceDeps {
   combatsRepository: CombatsRepository;
+  combatScoresRepository: CombatScoresRepository;
   competitionsRepository: CompetitionsRepository;
   groqClient: GroqClient;
 }
@@ -71,6 +73,14 @@ Règles importantes :
 * Ne mentionne pas les limites des données si cela n'impacte pas directement l'analyse.
 * L'objectif est de produire un retour utile, motivant et facile à comprendre.`;
 
+function describeCombatScore(score: CombatScore): string {
+  const detail =
+    score.category === "Tachi-waza"
+      ? score.technique || "technique non précisée"
+      : score.neWazaType || "ne-waza";
+  return `${detail} (${score.value || "valeur non précisée"})`;
+}
+
 function describeCombat(combat: Combat, index: number): string {
   const parts = [`Résultat : ${combat.result || "inconnu"}`];
   if (combat.opponentStance) {
@@ -79,8 +89,8 @@ function describeCombat(combat: Combat, index: number): string {
   if (combat.victoryType) {
     parts.push(`décision : ${combat.victoryType}`);
   }
-  if (combat.techniqueCategory) {
-    parts.push(`technique : ${combat.techniqueCategory}`);
+  if (combat.scores && combat.scores.length) {
+    parts.push(`prises marquées : ${combat.scores.map(describeCombatScore).join(", ")}`);
   }
   if (combat.notes) {
     parts.push(`notes : ${combat.notes}`);
@@ -107,7 +117,7 @@ function buildUserPrompt(competition: Competition, combats: Combat[]): string {
 }
 
 export default function createAiAnalysisService(deps: AiAnalysisServiceDeps): AiAnalysisService {
-  const { combatsRepository, competitionsRepository, groqClient } = deps;
+  const { combatsRepository, combatScoresRepository, competitionsRepository, groqClient } = deps;
 
   async function generateCompetitionAnalysis(idCompetition: string): Promise<string | null> {
     const competitionRow = await competitionsRepository.getById(idCompetition);
@@ -117,7 +127,20 @@ export default function createAiAnalysisService(deps: AiAnalysisServiceDeps): Ai
 
     const competition = toCanonicalCompetition(competitionRow);
     const combatRows = await combatsRepository.listByCompetition(idCompetition);
-    const combats = combatRows.map(toCanonicalCombat);
+    const combatScores = await combatScoresRepository.listByCombatIds(
+      combatRows.map((combat) => combat.id_combat)
+    );
+    const scoresByCombatId = new Map<string, typeof combatScores>();
+    combatScores.forEach((score) => {
+      const idCombat = String(score.id_combat);
+      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
+    });
+    const combats = combatRows.map((combat) =>
+      toCanonicalCombat({
+        ...combat,
+        scores: scoresByCombatId.get(String(combat.id_combat)) || []
+      })
+    );
 
     const analysis = await groqClient.generateChatCompletion([
       { role: "system", content: SYSTEM_PROMPT },

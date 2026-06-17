@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("./helpers/relaxed-assert");
 
 const createCombatsRepository = require("../core/repositories/combats.repository");
+const createCombatScoresRepository = require("../core/repositories/combat-scores.repository");
 const createCompetitionsRepository = require("../core/repositories/competitions.repository");
 const createClubCompetitionsRepository = require("../core/repositories/club-competitions.repository");
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
@@ -75,7 +76,7 @@ test("repositories map domain objects to supabase records", async () => {
         opponentStance: "",
         result: "V",
         victoryType: "",
-        techniqueCategory: "",
+        scores: [],
         notes: ""
       }
     },
@@ -126,7 +127,6 @@ test("repositories map domain objects to supabase records", async () => {
         garde_adversaire: "",
         resultat: "V",
         type_victoire: "",
-        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -182,7 +182,7 @@ test("combats repository retries legacy result codes when the remote constraint 
         opponentStance: "",
         result: "Victoire",
         victoryType: "Ippon",
-        techniqueCategory: "",
+        scores: [],
         notes: ""
       }
     },
@@ -197,7 +197,7 @@ test("combats repository retries legacy result codes when the remote constraint 
       opponentStance: "",
       result: "Défaite",
       victoryType: "Décision",
-      techniqueCategory: "",
+      scores: [],
       notes: ""
     }
   });
@@ -214,7 +214,6 @@ test("combats repository retries legacy result codes when the remote constraint 
         garde_adversaire: "",
         resultat: "Victoire",
         type_victoire: "Ippon",
-        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -229,7 +228,6 @@ test("combats repository retries legacy result codes when the remote constraint 
         garde_adversaire: "",
         resultat: "V",
         type_victoire: "Ippon",
-        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -244,7 +242,6 @@ test("combats repository retries legacy result codes when the remote constraint 
         garde_adversaire: "",
         resultat: "Défaite",
         type_victoire: "Décision",
-        categorie_technique: "",
         deroule: ""
       }
     ],
@@ -259,8 +256,47 @@ test("combats repository retries legacy result codes when the remote constraint 
         garde_adversaire: "",
         resultat: "D",
         type_victoire: "Décision",
-        categorie_technique: "",
         deroule: ""
+      }
+    ]
+  ]);
+});
+
+test("combat scores repository replaces a combat's scores with deterministic ids and preserves order", async () => {
+  const calls = [];
+  const combatScoresRepository = createCombatScoresRepository(createRepositoryDeps(calls));
+
+  await combatScoresRepository.replaceForCombat("CB1", [
+    { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Ippon" },
+    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Waza-ari" }
+  ]);
+
+  assert.deepEqual(calls, [
+    ["delete", "combat_scores", "id_combat=eq.CB1"],
+    [
+      "insert",
+      "combat_scores",
+      {
+        id_combat_score: "CB1_S0",
+        id_combat: "CB1",
+        categorie: "Tachi-waza",
+        technique: "Seoi-nage",
+        type_ne_waza: "",
+        valeur: "Ippon",
+        ordre: 0
+      }
+    ],
+    [
+      "insert",
+      "combat_scores",
+      {
+        id_combat_score: "CB1_S1",
+        id_combat: "CB1",
+        categorie: "Ne-waza",
+        technique: "",
+        type_ne_waza: "Osaekomi",
+        valeur: "Waza-ari",
+        ordre: 1
       }
     ]
   ]);
