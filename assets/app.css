@@ -895,6 +895,12 @@
       margin-bottom: 12px;
     }
 
+    .dashboard-subsection {
+      margin-top: 18px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line);
+    }
+
     .section-heading h3 {
       padding-left: 10px;
       border-left: 4px solid var(--primary);
