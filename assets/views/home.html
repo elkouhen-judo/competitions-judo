@@ -19,7 +19,7 @@
           </div>
         </div>
         <div v-if="canFilterByJudoka" id="homeFilters" class="filter-bar">
-          <label id="homeFilterLabel" for="filterJudokaText">Judoka actif</label>
+          <label id="homeFilterLabel" for="filterJudokaText">{{ homeFilterLabel }}</label>
           <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">

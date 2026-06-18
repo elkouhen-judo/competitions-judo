@@ -95,6 +95,13 @@
     }
 
     function fetchCoachDashboardStats() {
+      const dateFrom = coachDashboardViewModel.coachDashboardForm.dateFrom;
+      const dateTo = coachDashboardViewModel.coachDashboardForm.dateTo;
+      if (dateFrom && dateTo && dateFrom > dateTo) {
+        showError({ message: "La date de début doit être antérieure ou égale à la date de fin." });
+        return;
+      }
+
       coachDashboardViewModel.isLoadingCoachDashboardStats = true;
 
       app.runServer(

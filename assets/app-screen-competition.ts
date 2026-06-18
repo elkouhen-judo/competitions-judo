@@ -903,7 +903,7 @@
 
     function confirmDeleteClubCompetitionById(clubCompetitionId: string, name?: string) {
       app.confirmAndRun({
-        message: `Supprimer la compétition club "${name}" ? Les compétitions et combats individuels des judokas associés seront aussi supprimés.`,
+        message: `Supprimer la compétition club "${name}" ? Les participations individuelles seront détachées et leurs combats seront conservés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
         onSuccess: (response) => {

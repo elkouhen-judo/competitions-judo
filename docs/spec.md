@@ -161,6 +161,7 @@ This specification does not define:
 - **AUTH-011e**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
 - **AUTH-011f**: A CSV-imported `JUDOKA` row may set a `genre` column (`Homme` or `Femme`) and an `anneeCategorie` column (the year within the age category, e.g. Cadet 1 / Cadet 2 / Cadet 3 — see **CHD-012** for valid values per category) at import time; re-importing an existing judoka updates both fields the same way `ageCategory` is updated.
 - **AUTH-011g**: A CSV-imported `JUDOKA` row may set a `lateralite` column for the judoka's garde (`Droitier` or `Gaucher`) at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
+- **AUTH-011h**: A CSV-imported `JUDOKA` row may set a `couleur_ceinture` column for the judoka's belt color at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
@@ -192,7 +193,7 @@ This specification does not define:
 ### 3.9 Coach dashboard rules
 
 - **DASH-001**: `COACH` users shall have access to a dedicated dashboard screen aggregating statistics across one or more competitions. `ADMIN` users shall not have sports dashboard access.
-- **DASH-002**: The dashboard shall allow filtering by one or more competitions (multi-select), by an optional exact date or date range using start/end date fields, by age category, by year within the age category (e.g. Cadet 1 / Cadet 2), by gender (`Homme` / `Femme`), and by judoka garde (`Droitier` / `Gaucher`). All filters are optional; when none is set, the dashboard aggregates every competition and judoka.
+- **DASH-002**: The dashboard shall allow filtering by one or more competitions (multi-select), by an optional exact date or date range using start/end date fields, by age category, by year within the age category (e.g. Cadet 1 / Cadet 2), by gender (`Homme` / `Femme`), and by judoka garde (`Droitier` / `Gaucher`). All filters are optional; when none is set, the dashboard aggregates every competition and judoka. When both dates are set, the start date must be before or equal to the end date.
 - **DASH-003**: The "year within category" filter shall only be shown once an age category with valid years has been chosen, offering exactly the years valid for that category per **CHD-012** (hidden entirely for Senior/Vétéran).
 - **DASH-004**: The dashboard shall display the victory rate (% of combats won) over the combats matching the active filters, alongside the raw win count and the total combat count (e.g. "8/12 (67%)").
 - **DASH-005**: The dashboard shall display the Tachi-waza victory rate (% of combats won where at least one scoring technique recorded on the combat was a `Tachi-waza` technique) and, symmetrically, the Ne-waza victory rate, each alongside its win count and the total combat count.
