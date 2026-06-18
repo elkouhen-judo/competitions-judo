@@ -111,6 +111,7 @@
         name: "",
         competitionDate: "",
         ageCategory: "",
+        weightCategory: "",
         participantJudokaIds: [] as string[]
       }
     };
@@ -218,6 +219,16 @@
     const competitionWeightCategoryOptions = window.Vue.computed(() =>
       window.KirokuScreenProjections.getWeightCategoryOptions(
         competitionFormViewModel.competitionForm.ageCategory
+      )
+    );
+    const clubCompetitionWeightCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getWeightCategoryOptions(
+        clubCompetitionFormViewModel.clubCompetitionForm.ageCategory
+      )
+    );
+    const clubCompetitionDetailWeightCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getWeightCategoryOptions(
+        clubCompetitionDetailViewModel.clubCompetitionDetailForm.ageCategory
       )
     );
     const combats = window.Vue.computed(() => {
@@ -389,6 +400,7 @@
         },
         {
           isSubmitting,
+          clubCompetitionWeightCategoryOptions,
           clubCompetitionFormParticipantsFiltered,
           clubCompetitionFormParticipantsPage,
           clubCompetitionFormParticipantsTotalPages,
@@ -415,6 +427,7 @@
           confirmDetachClubParticipant,
           openCompetitionFromClubDetail,
           saveClubCompetitionDetails,
+          updateClubCompetitionDetailAgeCategory,
           updateClubAvailableJudokaSearch,
           showClubCompetitionParticipantsPreviousPage,
           showClubCompetitionParticipantsNextPage,
@@ -423,6 +436,7 @@
         },
         {
           isSubmitting,
+          clubCompetitionDetailWeightCategoryOptions,
           clubCompetitionParticipantsPage,
           clubCompetitionParticipantsTotalPages,
           clubCompetitionParticipantsCurrentPage,
@@ -622,10 +636,11 @@
     }
 
     function onCompetitionFormAgeCategoryChange() {
-      if (
-        !competitionWeightCategoryOptions.value.includes(
-          competitionFormViewModel.competitionForm.weightCategory
-        )
+      if (!competitionFormViewModel.competitionForm.ageCategory) {
+        competitionFormViewModel.competitionForm.weightCategory = "";
+      } else if (
+        competitionWeightCategoryOptions.value.length &&
+        !competitionWeightCategoryOptions.value.includes(competitionFormViewModel.competitionForm.weightCategory)
       ) {
         competitionFormViewModel.competitionForm.weightCategory = "";
       }
@@ -637,6 +652,16 @@
 
     function updateClubCompetitionAgeCategory() {
       const ageCategory = cleanText(clubCompetitionFormViewModel.clubCompetitionForm.ageCategory);
+      if (!ageCategory) {
+        clubCompetitionFormViewModel.clubCompetitionForm.weightCategory = "";
+      } else if (
+        clubCompetitionWeightCategoryOptions.value.length &&
+        !clubCompetitionWeightCategoryOptions.value.includes(
+          clubCompetitionFormViewModel.clubCompetitionForm.weightCategory
+        )
+      ) {
+        clubCompetitionFormViewModel.clubCompetitionForm.weightCategory = "";
+      }
       const allowedIds = new Set(
         clubCompetitionFormViewModel.clubCompetitionParticipants
           .filter((participant) => !ageCategory || participant.ageCategory === ageCategory)
@@ -645,8 +670,32 @@
       clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds =
         clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.filter((id) =>
           allowedIds.has(String(id))
-        );
+      );
       state.clubCompetitionFormParticipantsCurrentPage = 1;
+    }
+
+    function updateClubCompetitionDetailAgeCategory() {
+      const ageCategory = cleanText(clubCompetitionDetailViewModel.clubCompetitionDetailForm.ageCategory);
+      if (!ageCategory) {
+        clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory = "";
+      } else if (
+        clubCompetitionDetailWeightCategoryOptions.value.length &&
+        !clubCompetitionDetailWeightCategoryOptions.value.includes(
+          clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory
+        )
+      ) {
+        clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory = "";
+      }
+      const allowedIds = new Set(
+        clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas
+          .filter((judoka) => !ageCategory || judoka.ageCategory === ageCategory)
+          .map((judoka) => String(judoka.judokaId))
+      );
+      clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds =
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.filter((id) =>
+          allowedIds.has(String(id))
+        );
+      state.clubCompetitionAvailableJudokasCurrentPage = 1;
     }
 
     function showClubCompetitionFormParticipantsPreviousPage() {
@@ -701,6 +750,7 @@
         name: "",
         competitionDate: getCurrentLocalDate(),
         ageCategory: "",
+        weightCategory: "",
         participantJudokaIds: []
       });
       state.clubCompetitionFormParticipantsCurrentPage = 1;

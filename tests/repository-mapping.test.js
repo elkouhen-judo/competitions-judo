@@ -335,6 +335,7 @@ test("judokas repository maps update changes, including the age category", async
     accountEmail: "new@example.com",
     accessRole: "COACH",
     ageCategory: "Cadet",
+    weightCategory: "-55kg",
     pendingParentEmail: "parent@example.com"
   });
 
@@ -347,13 +348,14 @@ test("judokas repository maps update changes, including the age category", async
         email: "new@example.com",
         role: "COACH",
         categorie_age: "Cadet",
+        categorie_poids: "-55kg",
         pending_parent_email: "parent@example.com"
       }
     ]
   ]);
 });
 
-test("judokas repository maps gender and year-in-category on insert extras and update changes", async () => {
+test("judokas repository maps gender, year-in-category and handedness on insert extras and update changes", async () => {
   const calls = [];
   const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
 
@@ -365,12 +367,13 @@ test("judokas repository maps gender and year-in-category on insert extras and u
       profileType: "JUDOKA",
       accessRole: "NORMAL"
     },
-    { genre: "Homme", annee_categorie: "1" }
+    { genre: "Homme", annee_categorie: "1", lateralite: "Droitier" }
   );
 
   await judokasRepository.update("JUDO1", {
     gender: "Femme",
-    yearInCategory: "2"
+    yearInCategory: "2",
+    handedness: "Gaucher"
   });
 
   assert.deepEqual(calls, [
@@ -385,7 +388,8 @@ test("judokas repository maps gender and year-in-category on insert extras and u
         profile_type: "JUDOKA",
         role: "NORMAL",
         genre: "Homme",
-        annee_categorie: "1"
+        annee_categorie: "1",
+        lateralite: "Droitier"
       }
     ],
     [
@@ -394,7 +398,8 @@ test("judokas repository maps gender and year-in-category on insert extras and u
       "id_judoka=eq.JUDO1",
       {
         genre: "Femme",
-        annee_categorie: "2"
+        annee_categorie: "2",
+        lateralite: "Gaucher"
       }
     ]
   ]);
