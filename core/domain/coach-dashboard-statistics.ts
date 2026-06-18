@@ -1,10 +1,11 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
 import { getAllowedDecisionTypesForCombatResult } from "./competitions/combat-decision-type";
-import { GENDERS } from "./category-reference";
+import { GENDERS, HANDEDNESSES } from "./category-reference";
 import type {
   Combat,
   CoachDashboardDecisionBreakdownEntry,
   CoachDashboardGenderBreakdownEntry,
+  CoachDashboardHandednessBreakdownEntry,
   CoachDashboardLevelBreakdownEntry,
   CoachDashboardStanceBreakdownEntry,
   CoachDashboardStats
@@ -13,7 +14,11 @@ import type {
 const OPPONENT_STANCES = ["Droitier", "Gaucher"];
 const COMPETITION_LEVELS = ["Départemental", "Régional", "National", "International"];
 
-export type CoachDashboardCombat = Combat & { competitionLevel?: string; judokaGender?: string };
+export type CoachDashboardCombat = Combat & {
+  competitionLevel?: string;
+  judokaGender?: string;
+  judokaHandedness?: string;
+};
 
 function computeRate(count: number, total: number): number {
   return total ? Math.round((count / total) * 100) : 0;
@@ -40,6 +45,23 @@ function computeJudokaCountByGender(
       combats.filter((combat) => combat.judokaGender === gender).map((combat) => combat.judokaId)
     );
     return { gender, judokaCount: judokaIds.size };
+  });
+}
+
+function computeJudokaStatsByHandedness(
+  combats: CoachDashboardCombat[]
+): CoachDashboardHandednessBreakdownEntry[] {
+  return HANDEDNESSES.map((handedness) => {
+    const handednessCombats = combats.filter((combat) => combat.judokaHandedness === handedness);
+    const judokaIds = new Set(handednessCombats.map((combat) => combat.judokaId));
+    const victories = handednessCombats.filter((combat) => isVictoryCombatResult(combat.result)).length;
+    return {
+      handedness,
+      judokaCount: judokaIds.size,
+      combats: handednessCombats.length,
+      victories,
+      victoryRate: computeRate(victories, handednessCombats.length)
+    };
   });
 }
 
@@ -106,6 +128,7 @@ export function computeCoachDashboardStats(combats: CoachDashboardCombat[]): Coa
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
     byOpponentStance: computeStanceBreakdown(combats),
     byCompetitionLevel: computeLevelBreakdown(combats),
-    judokasByGender: computeJudokaCountByGender(combats)
+    judokasByGender: computeJudokaCountByGender(combats),
+    judokasByHandedness: computeJudokaStatsByHandedness(combats)
   };
 }

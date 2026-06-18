@@ -3,6 +3,9 @@ import { createCompetitionAgeCategory, type AgeCategory } from "./competitions/c
 export const GENDERS = ["Homme", "Femme"] as const;
 export type Gender = (typeof GENDERS)[number];
 
+export const HANDEDNESSES = ["Droitier", "Gaucher"] as const;
+export type Handedness = (typeof HANDEDNESSES)[number];
+
 /**
  * FFJDA weight categories (2025-2026 season). Poussinet and Poussin compete
  * without official weight divisions, so they are intentionally absent here
@@ -123,4 +126,15 @@ export function createYearInCategory(value: unknown, ageCategory: unknown): stri
     throw new Error("Année dans la catégorie invalide pour cette catégorie d'âge.");
   }
   return yearInCategory;
+}
+
+export function createHandedness(value: unknown): string {
+  const handedness = typeof value === "string" ? value.trim() : "";
+  if (!handedness) {
+    return "";
+  }
+  if (!(HANDEDNESSES as readonly string[]).includes(handedness)) {
+    throw new Error("Latéralité invalide pour un judoka.");
+  }
+  return handedness;
 }

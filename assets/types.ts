@@ -368,6 +368,7 @@ export interface JudokaProfileViewModel {
   heroBeltColor: string;
   heroGender: string;
   heroYearInCategory: string;
+  heroHandedness: string;
   heroSeason: string;
   combatProfile: Record<string, string>;
   hasCombatProfileExtras: boolean;

@@ -23,6 +23,7 @@
               <span v-if="heroBeltColor" id="judokaHeroBeltColor" class="result-badge">{{ heroBeltColor }}</span>
               <span v-if="heroGender" id="judokaHeroGender" class="result-badge">{{ heroGender }}</span>
               <span v-if="heroYearInCategory" id="judokaHeroYearInCategory" class="result-badge">{{ heroYearInCategory }}</span>
+              <span v-if="heroHandedness" id="judokaHeroHandedness" class="result-badge">{{ heroHandedness }}</span>
               <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
             </div>
           </div>
@@ -164,11 +165,18 @@
             <option value="Homme">Homme</option>
             <option value="Femme">Femme</option>
           </select>
+          <label for="judoka_lateralite">Latéralité</label>
+          <select id="judoka_lateralite" v-model="handednessEditing">
+            <option value="">Non renseignée</option>
+            <option value="Droitier">Droitier</option>
+            <option value="Gaucher">Gaucher</option>
+          </select>
           <label for="judoka_categorie_poids">Catégorie de poids</label>
-          <select id="judoka_categorie_poids" v-model="weightCategoryEditing" :disabled="!weightCategoryOptions.length">
-            <option value="">{{ weightCategoryOptions.length ? "Non renseignée" : "Sélectionnez une catégorie d'âge" }}</option>
+          <select v-if="weightCategoryOptions.length" id="judoka_categorie_poids" v-model="weightCategoryEditing">
+            <option value="">Non renseignée</option>
             <option v-for="weightOption in weightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
           </select>
+          <input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing" :placeholder="ageCategoryEditing ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
           <template v-if="yearInCategoryOptions.length">
             <label for="judoka_annee_categorie">Année dans la catégorie</label>
             <select id="judoka_annee_categorie" v-model="yearInCategoryEditing">

@@ -45,6 +45,7 @@ const { computeCoachDashboardStats } = require("../core/domain/coach-dashboard-s
 const {
   createWeightCategory,
   createYearInCategory,
+  createHandedness,
   getValidYearsInCategory,
   getWeightCategoriesFor
 } = require("../core/domain/category-reference");
@@ -672,6 +673,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     {
       judokaId: "JUDO1",
       judokaGender: "Homme",
+      judokaHandedness: "Droitier",
       result: "Victoire",
       victoryType: "Ippon",
       scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }],
@@ -681,6 +683,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     {
       judokaId: "JUDO2",
       judokaGender: "Femme",
+      judokaHandedness: "Gaucher",
       result: "Victoire",
       victoryType: "Ippon",
       scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }],
@@ -690,6 +693,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     {
       judokaId: "JUDO1",
       judokaGender: "Homme",
+      judokaHandedness: "Droitier",
       result: "Défaite",
       victoryType: "Hansoku-make",
       scores: [],
@@ -699,6 +703,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     {
       judokaId: "JUDO3",
       judokaGender: "",
+      judokaHandedness: "",
       result: "Défaite",
       victoryType: "Ippon",
       scores: [],
@@ -746,6 +751,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     judokasByGender: [
       { gender: "Homme", judokaCount: 1 },
       { gender: "Femme", judokaCount: 1 }
+    ],
+    judokasByHandedness: [
+      { handedness: "Droitier", judokaCount: 1, combats: 2, victories: 1, victoryRate: 50 },
+      { handedness: "Gaucher", judokaCount: 1, combats: 1, victories: 1, victoryRate: 100 }
     ]
   });
 
@@ -788,8 +797,19 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     judokasByGender: [
       { gender: "Homme", judokaCount: 0 },
       { gender: "Femme", judokaCount: 0 }
+    ],
+    judokasByHandedness: [
+      { handedness: "Droitier", judokaCount: 0, combats: 0, victories: 0, victoryRate: 0 },
+      { handedness: "Gaucher", judokaCount: 0, combats: 0, victories: 0, victoryRate: 0 }
     ]
   });
+});
+
+test("category reference domain validates judoka handedness", () => {
+  assert.equal(createHandedness("Droitier"), "Droitier");
+  assert.equal(createHandedness(" Gaucher "), "Gaucher");
+  assert.equal(createHandedness(""), "");
+  assert.throws(() => createHandedness("Ambidextre"), /Latéralité invalide/);
 });
 
 test("category reference domain reuses the Senior weight scale for Vétéran", () => {

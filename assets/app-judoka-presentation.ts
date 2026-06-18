@@ -53,6 +53,7 @@
     const beltColor = judoka.beltColor || "";
     const gender = judoka.gender || "";
     const yearInCategory = judoka.yearInCategory ? `${judoka.yearInCategory}e année` : "";
+    const handedness = judoka.handedness || "";
     const normalizedCombatProfile = combatProfile || emptyCombatProfile;
 
     return {
@@ -72,6 +73,7 @@
       heroBeltColor: beltColor,
       heroGender: gender,
       heroYearInCategory: yearInCategory,
+      heroHandedness: handedness,
       heroSeason: `Saison ${season.label}`,
       combatProfile: {
         victoryIppon: String(normalizedCombatProfile.victoryIppon || 0),

@@ -19,6 +19,7 @@ export interface Judoka {
   beltColor: string;
   gender: string;
   yearInCategory: string;
+  handedness: string;
 }
 
 export interface Competition {
@@ -171,6 +172,7 @@ export interface CoachDashboardFilters {
   ageCategory?: string;
   categoryYear?: string;
   gender?: string;
+  handedness?: string;
 }
 
 export interface CoachDashboardDecisionBreakdownEntry {
@@ -199,6 +201,14 @@ export interface CoachDashboardGenderBreakdownEntry {
   judokaCount: number;
 }
 
+export interface CoachDashboardHandednessBreakdownEntry {
+  handedness: string;
+  judokaCount: number;
+  combats: number;
+  victories: number;
+  victoryRate: number;
+}
+
 export interface CoachDashboardStats {
   totalCombats: number;
   victories: number;
@@ -214,6 +224,7 @@ export interface CoachDashboardStats {
   byOpponentStance: CoachDashboardStanceBreakdownEntry[];
   byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];
+  judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
 }
 
 export interface CoachDashboard {
@@ -329,7 +340,7 @@ export interface RpcMethods {
   saveCoachObjective: (email: string, idCompetition: string, objective: string) => Promise<OperationResult>;
   /** Enregistre le bilan post-compétition rédigé par le coach. */
   saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
-  /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre et l'année dans la catégorie d'un judoka. */
+  /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre, l'année dans la catégorie et la latéralité d'un judoka. */
   saveJudokaInfo: (
     email: string,
     idJudoka: string,
@@ -337,7 +348,8 @@ export interface RpcMethods {
     weightCategory: string,
     beltColor: string,
     gender: string,
-    yearInCategory: string
+    yearInCategory: string,
+    handedness: string
   ) => Promise<OperationResult>;
   /** Ajoute un combat à une compétition. */
   ajouterCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
