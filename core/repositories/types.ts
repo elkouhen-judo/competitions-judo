@@ -27,10 +27,11 @@ export interface JudokaRow {
   nom: string;
   profile_type: string;
   role: string;
-  notes_coach?: string;
   categorie_age?: string;
   categorie_poids?: string;
   couleur_ceinture?: string;
+  genre?: string;
+  annee_categorie?: string;
   pending_parent_email?: string | null;
 }
 

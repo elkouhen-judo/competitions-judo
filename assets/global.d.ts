@@ -2,6 +2,7 @@ import type {
   AdminsScreen,
   AppScreens,
   AuthApi,
+  CoachDashboardScreen,
   CompetitionScreen,
   HomeScreen,
   JudokaProfile,
@@ -38,6 +39,7 @@ declare global {
     createKirokuJudokaScreen: (app: KirokuApp) => JudokaScreen;
     createKirokuCompetitionScreen: (app: KirokuApp) => CompetitionScreen;
     createKirokuAdminsScreen: (app: KirokuApp) => AdminsScreen;
+    createKirokuCoachDashboardScreen: (app: KirokuApp) => CoachDashboardScreen;
     createKirokuLoginScreen: (app: KirokuApp) => LoginScreen;
   }
 }

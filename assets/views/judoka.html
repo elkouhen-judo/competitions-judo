@@ -21,6 +21,8 @@
             <div class="hero-badges">
               <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
               <span v-if="heroBeltColor" id="judokaHeroBeltColor" class="result-badge">{{ heroBeltColor }}</span>
+              <span v-if="heroGender" id="judokaHeroGender" class="result-badge">{{ heroGender }}</span>
+              <span v-if="heroYearInCategory" id="judokaHeroYearInCategory" class="result-badge">{{ heroYearInCategory }}</span>
               <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
             </div>
           </div>
@@ -145,7 +147,7 @@
             </div>
           </div>
           <label for="judoka_categorie_age">Catégorie d'âge</label>
-          <select id="judoka_categorie_age" v-model="ageCategoryEditing">
+          <select id="judoka_categorie_age" v-model="ageCategoryEditing" @change="onJudokaInfoAgeOrGenderChange()">
             <option value="">Non renseignée</option>
             <option value="Poussinet">Poussinet</option>
             <option value="Poussin">Poussin</option>
@@ -156,8 +158,24 @@
             <option value="Senior">Senior</option>
             <option value="Vétéran">Vétéran</option>
           </select>
+          <label for="judoka_genre">Genre</label>
+          <select id="judoka_genre" v-model="genderEditing" @change="onJudokaInfoAgeOrGenderChange()">
+            <option value="">Non renseigné</option>
+            <option value="Homme">Homme</option>
+            <option value="Femme">Femme</option>
+          </select>
           <label for="judoka_categorie_poids">Catégorie de poids</label>
-          <input type="text" id="judoka_categorie_poids" placeholder="ex: -73kg" v-model.trim="weightCategoryEditing">
+          <select id="judoka_categorie_poids" v-model="weightCategoryEditing" :disabled="!weightCategoryOptions.length">
+            <option value="">{{ weightCategoryOptions.length ? "Non renseignée" : "Sélectionnez une catégorie d'âge" }}</option>
+            <option v-for="weightOption in weightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
+          </select>
+          <template v-if="yearInCategoryOptions.length">
+            <label for="judoka_annee_categorie">Année dans la catégorie</label>
+            <select id="judoka_annee_categorie" v-model="yearInCategoryEditing">
+              <option value="">Non renseignée</option>
+              <option v-for="yearOption in yearInCategoryOptions" :key="yearOption" :value="yearOption">{{ yearOption === "1" ? "1ère année" : yearOption + "e année" }}</option>
+            </select>
+          </template>
           <label for="judoka_couleur_ceinture">Couleur de ceinture</label>
           <select id="judoka_couleur_ceinture" v-model="beltColorEditing">
             <option value="">Non renseignée</option>
@@ -182,25 +200,6 @@
             <button type="button" :disabled="isSubmitting" @click="saveJudokaInfo()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               Enregistrer le profil
-            </button>
-          </div>
-        </div>
-        <div v-if="canEditCoachNotes" class="section coach-notes-section">
-          <div class="section-heading">
-            <div>
-              <h3>Notes coach</h3>
-            </div>
-          </div>
-          <textarea
-            id="coachNotesTextarea"
-            rows="4"
-            placeholder="Technique, tactique, axes de travail, niveau de compétition..."
-            v-model="coachNotesEditing"
-          ></textarea>
-          <div class="form-actions">
-            <button type="button" :disabled="isSubmitting" @click="saveCoachNotes()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              Enregistrer les notes
             </button>
           </div>
         </div>

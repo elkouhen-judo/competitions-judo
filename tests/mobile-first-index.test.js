@@ -27,6 +27,7 @@ const client = [
     "app-screen-judoka.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
+    "app-screen-coach-dashboard.js",
     "app-runtime.js",
     "app.js"
   ].map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", "dist", file), "utf8"))
@@ -281,10 +282,78 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
   assert.doesNotMatch(bundle, /lastCompetitionHtml|bestResultsHtml/);
   assert.match(bundle, /function ensureJudokaView\(\)/);
+  assert.match(bundle, /\{\{ heroGender \}\}/);
+  assert.match(bundle, /\{\{ heroYearInCategory \}\}/);
+  assert.match(bundle, /heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroSeason,/);
+  assert.match(
+    bundle,
+    /select id="judoka_categorie_poids" v-model="weightCategoryEditing" :disabled="!weightCategoryOptions\.length"/
+  );
+  assert.match(bundle, /v-for="weightOption in weightCategoryOptions"/);
+  assert.match(bundle, /v-if="yearInCategoryOptions\.length"/);
+  assert.match(bundle, /v-for="yearOption in yearInCategoryOptions"/);
+  assert.match(bundle, /function onJudokaInfoAgeOrGenderChange\(\)/);
+  assert.doesNotMatch(bundle, /id="judoka_categorie_poids" type="text"/);
 });
 
 test("judoka profile client script stays parseable", () => {
   assert.doesNotThrow(() => new Function(judokaScreenClient));
+});
+
+test("coach dashboard screen is mounted through Vue 3 for the progressive screen migration", () => {
+  assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak/);
+  assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
+  assert.match(bundle, /v-if="coachDashboardYearOptions\.length"/);
+  assert.match(
+    bundle,
+    /v-model="coachDashboardForm\.categoryYear"[\s\S]*v-for="yearOption in coachDashboardYearOptions"/
+  );
+  assert.match(bundle, /v-model="coachDashboardForm\.gender"/);
+  assert.match(
+    bundle,
+    /v-for="competition in competitionOptions"[\s\S]*v-model="coachDashboardForm\.competitionIds"/
+  );
+  assert.match(bundle, /@click="applyCoachDashboardFilters\(\)"/);
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardJudokasByGender" :key="entry\.gender" class="stat-card"/
+  );
+  assert.match(bundle, /Judokas \{\{ entry\.gender \}\}[\s\S]*entry\.judokaCount/);
+  assert.match(
+    bundle,
+    /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /\{\{ coachDashboardStats\.tachiWazaVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.tachiWazaVictoryRate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /\{\{ coachDashboardStats\.neWazaVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.neWazaVictoryRate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /\{\{ coachDashboardStats\.hansokuMakeLosses \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.hansokuMakeLossRate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardVictoriesByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardDefeatsByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardByOpponentStance" :key="entry\.opponentStance" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
+  );
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardByCompetitionLevel" :key="entry\.level" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
+  );
+  assert.doesNotMatch(bundle, /breakdown-row/);
+  assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
+  assert.match(bundle, /key: "coachDashboard", label: "Tableau de bord"/);
 });
 
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
@@ -319,12 +388,14 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(
     bundle,
-    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
+    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory" @change="onCompetitionFormAgeCategoryChange\(\)">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
   );
   assert.match(
     bundle,
-    /id="competition_categorie_poids" placeholder="ex: -73kg" v-model\.trim="competitionForm\.weightCategory"/
+    /select id="competition_categorie_poids" v-model="competitionForm\.weightCategory" :disabled="!competitionWeightCategoryOptions\.length"/
   );
+  assert.match(bundle, /v-for="weightOption in competitionWeightCategoryOptions"/);
+  assert.doesNotMatch(bundle, /id="competition_categorie_poids" type="text"/);
   assert.doesNotMatch(
     bundle,
     /id="competitionResultBlock" :class="\{ hidden: !showCompetitionResultBlock \}"/

@@ -215,6 +215,11 @@
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+    const competitionWeightCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getWeightCategoryOptions(
+        competitionFormViewModel.competitionForm.ageCategory
+      )
+    );
     const combats = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return [];
       return combatsProjection.value.combats;
@@ -355,13 +360,14 @@
         competitionFormViewModel,
         {
           cancelCompetitionForm,
+          onCompetitionFormAgeCategoryChange,
           saveCompetition,
           selectCompetitionOwner,
           showCompetitionOwnerOptions,
           updateCompetitionOwnerText,
           hideCompetitionOwnerOptions
         },
-        { isSubmitting }
+        { isSubmitting, competitionWeightCategoryOptions }
       );
     }
 
@@ -613,6 +619,16 @@
 
     function cancelCompetitionForm() {
       showView(previousCompetitionFormView);
+    }
+
+    function onCompetitionFormAgeCategoryChange() {
+      if (
+        !competitionWeightCategoryOptions.value.includes(
+          competitionFormViewModel.competitionForm.weightCategory
+        )
+      ) {
+        competitionFormViewModel.competitionForm.weightCategory = "";
+      }
     }
 
     function updateClubCompetitionJudokaSearch() {

@@ -24,6 +24,7 @@ const client = [
     "app-screen-judoka.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
+    "app-screen-coach-dashboard.js",
     "app-runtime.js",
     "app.js"
   ].map((file) => fs.readFileSync(path.join(root, "assets", "dist", file), "utf8"))
@@ -309,6 +310,16 @@ test("screen projections are extracted into a shared helper module", () => {
   assert.doesNotThrow(() => new Function(screenProjectionsClient));
 });
 
+test("frontend weight category options reuse the Senior scale for Vétéran", () => {
+  assert.match(screenProjectionsClient, /Senior: SENIOR_WEIGHT_CATEGORIES/);
+  assert.match(screenProjectionsClient, /"Vétéran": SENIOR_WEIGHT_CATEGORIES/);
+  assert.match(
+    screenProjectionsClient,
+    /function getWeightCategoryOptions\(ageCategory,\s*gender\)/
+  );
+  assert.match(screenProjectionsClient, /function getYearInCategoryOptions\(ageCategory\)/);
+});
+
 test("vercel login uses CSV-imported profiles without first-login name entry", () => {
   assert.doesNotMatch(uiBundle, /id="profileRegistrationForm"/);
   assert.doesNotMatch(uiBundle, /id="registrationPrenom"|id="registrationNom"/);
@@ -433,11 +444,11 @@ test("competition persistence keeps categories and omits removed place and actua
   assert.match(competitionDomain, /function createCompetitionAgeCategory\(value: unknown\)/);
   assert.match(
     competitionDomain,
-    /ageCategory: createCompetitionAgeCategory\(competition\.ageCategory\)/
+    /const ageCategory = createCompetitionAgeCategory\(competition\.ageCategory\);/
   );
   assert.match(
     competitionDomain,
-    /weightCategory: cleanCompetitionText\(competition\.weightCategory\)/
+    /weightCategory: createWeightCategory\(competition\.weightCategory,\s*ageCategory\)/
   );
   assert.doesNotMatch(competitionDomain, /nom:\s*name/);
   assert.doesNotMatch(competitionDomain, /categorie_age:/);
@@ -749,6 +760,8 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
   assert.match(coreIndex, /createAiAnalysisService/);
+  assert.match(coreIndex, /createCoachDashboardService/);
+  assert.match(coreIndex, /core-dist\/services\/coach-dashboard\.service\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/competitions\.repository\.js/);
@@ -776,6 +789,7 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./domain/access/judoka.js",
       "./domain/access/email.js",
       "./domain/access/profile-type.js",
+      "./domain/category-reference.js",
       "./domain/access/managed-judoka-scope.js",
       "./domain/competitions/club-competition.js",
       "./domain/competitions/competition.js",
@@ -790,6 +804,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /\.\.\.clubCompetitionsService\.methods/);
   assert.match(coreIndex, /\.\.\.competitionsService\.methods/);
   assert.match(coreIndex, /\.\.\.combatsService\.methods/);
+  assert.match(coreIndex, /\.\.\.coachDashboardService\.methods/);
   assert.match(supabaseClient, /function isJwtLikeToken\(value\)/);
   assert.match(supabaseClient, /function createSupabaseHeaders\(apiKey,\s*options = \{\}\)/);
   assert.match(textHelpers, /function normalizeLastName\(value: unknown\): string/);

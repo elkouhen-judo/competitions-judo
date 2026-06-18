@@ -15,10 +15,11 @@
     let mounted = false;
     let currentJudokaId = "";
     const judokaLocalState = window.Vue.reactive({
-      coachNotesEditing: "",
       ageCategoryEditing: "",
       weightCategoryEditing: "",
       beltColorEditing: "",
+      genderEditing: "",
+      yearInCategoryEditing: "",
       viewedJudokaId: ""
     });
 
@@ -40,6 +41,8 @@
       heroSummary: "",
       heroCategory: "",
       heroBeltColor: "",
+      heroGender: "",
+      heroYearInCategory: "",
       heroSeason: "",
       seasonLabel: "",
       seasonCompetitionCount: "0",
@@ -93,6 +96,8 @@
     const heroSummary = window.Vue.computed(() => judokaProfile.value.heroSummary);
     const heroCategory = window.Vue.computed(() => judokaProfile.value.heroCategory);
     const heroBeltColor = window.Vue.computed(() => judokaProfile.value.heroBeltColor);
+    const heroGender = window.Vue.computed(() => judokaProfile.value.heroGender);
+    const heroYearInCategory = window.Vue.computed(() => judokaProfile.value.heroYearInCategory);
     const heroSeason = window.Vue.computed(() => judokaProfile.value.heroSeason);
     const seasonLabel = window.Vue.computed(() => judokaProfile.value.seasonLabel);
     const seasonCompetitionCount = window.Vue.computed(
@@ -129,7 +134,15 @@
       () => competitionResultsPagination.value.canShowNextPage
     );
 
-    const canEditCoachNotes = window.Vue.computed(() => state.isCoach || state.isAdmin);
+    const weightCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getWeightCategoryOptions(
+        judokaLocalState.ageCategoryEditing,
+        judokaLocalState.genderEditing
+      )
+    );
+    const yearInCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getYearInCategoryOptions(judokaLocalState.ageCategoryEditing)
+    );
     const isOwnProfile = window.Vue.computed(() =>
       Boolean(judokaLocalState.viewedJudokaId && state.currentUser &&
         String(judokaLocalState.viewedJudokaId) === String(state.currentUser.judokaId))
@@ -160,10 +173,11 @@
         (data) => {
           ensureJudokaView();
           state.currentJudokaProfile = data;
-          judokaLocalState.coachNotesEditing = data.coachNotes ?? "";
           judokaLocalState.ageCategoryEditing = data.judoka?.ageCategory || "";
           judokaLocalState.weightCategoryEditing = data.judoka?.weightCategory || "";
           judokaLocalState.beltColorEditing = data.judoka?.beltColor || "";
+          judokaLocalState.genderEditing = data.judoka?.gender || "";
+          judokaLocalState.yearInCategoryEditing = data.judoka?.yearInCategory || "";
           judokaLocalState.viewedJudokaId = data.judoka?.judokaId || "";
           state.judokaCompetitionResultsCurrentPage = 1;
           showView("judokaView");
@@ -188,14 +202,13 @@
       app.screens.competition.openCompetitionFromJudokaProfile(competitionId);
     }
 
-    function saveCoachNotes() {
-      if (!currentJudokaId) return;
-      app.runServer(
-        "saveCoachNotes",
-        [currentJudokaId, judokaLocalState.coachNotesEditing],
-        (response) => notifications.showSuccess(response.message),
-        notifications.showError
-      );
+    function onJudokaInfoAgeOrGenderChange() {
+      if (!weightCategoryOptions.value.includes(judokaLocalState.weightCategoryEditing)) {
+        judokaLocalState.weightCategoryEditing = "";
+      }
+      if (!yearInCategoryOptions.value.includes(judokaLocalState.yearInCategoryEditing)) {
+        judokaLocalState.yearInCategoryEditing = "";
+      }
     }
 
     function saveJudokaInfo() {
@@ -203,9 +216,11 @@
       const ageCategory = judokaLocalState.ageCategoryEditing || "";
       const weightCategory = judokaLocalState.weightCategoryEditing || "";
       const beltColor = judokaLocalState.beltColorEditing || "";
+      const gender = judokaLocalState.genderEditing || "";
+      const yearInCategory = judokaLocalState.yearInCategoryEditing || "";
       app.runServer(
         "saveJudokaInfo",
-        [currentJudokaId, ageCategory, weightCategory, beltColor],
+        [currentJudokaId, ageCategory, weightCategory, beltColor, gender, yearInCategory],
         (response) => {
           notifications.showSuccess(response.message);
           const displayed = getDisplayedSeasonStartYear();
@@ -226,7 +241,7 @@
         {
           showHome: () => app.showHome && app.showHome(),
           openCompetitionFromProfile,
-          saveCoachNotes,
+          onJudokaInfoAgeOrGenderChange,
           saveJudokaInfo,
           showPreviousSeason,
           showNextSeason,
@@ -241,6 +256,8 @@
           heroSummary,
           heroCategory,
           heroBeltColor,
+          heroGender,
+          heroYearInCategory,
           heroSeason,
           seasonLabel,
           seasonCompetitionCount,
@@ -260,10 +277,11 @@
           competitionResultsCanShowNextPage,
           canShowPreviousSeason,
           canShowNextSeason,
-          canEditCoachNotes,
           canEditJudokaInfo,
           isManagedProfile,
-          isSubmitting
+          isSubmitting,
+          weightCategoryOptions,
+          yearInCategoryOptions
         }
       );
     }

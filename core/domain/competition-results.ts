@@ -2,8 +2,11 @@ const RESULT_RANKS: Record<string, number> = {
   "1er": 1,
   "2e": 2,
   "3e": 3,
+  "4e": 4,
   "5e": 5,
+  "6e": 6,
   "7e": 7,
+  "8e": 8,
   "non classé": 99
 };
 

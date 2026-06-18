@@ -45,6 +45,7 @@
             <label>Prises marquées</label>
             <div class="combat-score-rows">
               <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
+                <span class="combat-score-row-title">Prise {{ index + 1 }}</span>
                 <select v-model="score.category" @change="onCombatScoreCategoryChange(index)">
                   <option value="">Catégorie</option>
                   <option value="Tachi-waza">Tachi-waza</option>
@@ -71,6 +72,7 @@
                 </select>
                 <button class="button-danger" type="button" @click="removeCombatScoreRow(index)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  Retirer cette prise
                 </button>
               </div>
             </div>

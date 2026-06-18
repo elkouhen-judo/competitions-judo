@@ -1,5 +1,4 @@
 import {
-  createCompetitionAgeCategory,
   createCompetitionDetailsDraft,
   type AgeCategory,
   type CompetitionInput
@@ -14,13 +13,9 @@ export interface ClubCompetitionModel {
   clubCompetitionId: string | null;
   name: string;
   competitionDate: string;
-  ageCategory: AgeCategory | "";
+  ageCategory: AgeCategory;
   weightCategory: string;
   participantJudokaIds: string[];
-}
-
-function cleanText(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
 }
 
 export function createClubCompetitionParticipantIds(values: unknown[] | undefined): string[] {
@@ -41,8 +36,8 @@ export function createClubCompetition(event: ClubCompetitionInput = {}): ClubCom
     clubCompetitionId: createOptionalCompetitionId(event.clubCompetitionId),
     name: details.name,
     competitionDate: details.competitionDate,
-    ageCategory: createCompetitionAgeCategory(details.ageCategory),
-    weightCategory: cleanText(details.weightCategory),
+    ageCategory: details.ageCategory,
+    weightCategory: details.weightCategory,
     participantJudokaIds: event.participantJudokaIds
       ? createClubCompetitionParticipantIds(event.participantJudokaIds)
       : []

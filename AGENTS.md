@@ -41,6 +41,15 @@ Patterns verrouillés connus :
 - `function showHome()` doit rester court (< 300 caractères jusqu'à `showView("homeView")`).
 - `ui.createMountedViewModel("homeView", defaultHomeViewState, homeActions, homeComputedRefs)` — arguments extraits en variables nommées pour tenir sur une ligne.
 
+## Contrainte critique — `core/*.ts` nécessite un rebuild avant test
+
+Les tests font `require("../core/...")`, qui résout vers un shim committé `core/**/*.js` (`module.exports = require("../../core-dist/...").default`). `core-dist/` est gitignoré et n'est régénéré que par `npm run build:core` (esbuild, aucune vérification de type).
+
+Règle impérative :
+
+- Après toute modification d'un fichier `core/**/*.ts`, lancer `npm run build:core` avant `node --test` ou `npm test`.
+- Sans ce rebuild, les tests utilisent silencieusement l'ancien `core-dist/` compilé — pas d'erreur, juste des résultats incohérents avec le code source actuel.
+
 ## Workflow
 
 Avant de modifier :

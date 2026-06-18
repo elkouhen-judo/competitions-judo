@@ -74,7 +74,7 @@ create table if not exists public.combats (
     references public.competitions (id_competition)
     on update cascade
     on delete cascade,
-  constraint combats_resultat_check check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'))
+  constraint combats_resultat_check check (resultat in ('Victoire', 'Défaite', 'Egalité'))
 );
 
 create table if not exists public.parent_judokas (
@@ -121,9 +121,6 @@ alter table public.competitions
   on delete set null;
 
 alter table public.judokas
-  add column if not exists notes_coach text not null default '';
-
-alter table public.judokas
   add column if not exists categorie_age text not null default '';
 
 alter table public.judokas
@@ -131,6 +128,12 @@ alter table public.judokas
 
 alter table public.judokas
   add column if not exists couleur_ceinture text not null default '';
+
+alter table public.judokas
+  add column if not exists genre text not null default '';
+
+alter table public.judokas
+  add column if not exists annee_categorie text not null default '';
 
 alter table public.judokas
   add column if not exists pending_parent_email text;
@@ -161,13 +164,16 @@ alter table public.combats
 
 alter table public.combats
   add constraint combats_resultat_check
-  check (resultat in ('Victoire', 'Défaite', 'Egalité', 'V', 'D', 'E'));
+  check (resultat in ('Victoire', 'Défaite', 'Egalité'));
 
 alter table public.combats
   add column if not exists garde_adversaire text not null default '';
 
 alter table public.combats
   drop column if exists categorie_technique;
+
+alter table public.judokas
+  drop column if exists notes_coach;
 
 create table if not exists public.combat_scores (
   id_combat_score text primary key,

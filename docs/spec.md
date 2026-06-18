@@ -121,6 +121,8 @@ This specification does not define:
 - **CHD-008**: Non-admin users may assign or update an optional child email to let that child log in with Google and access only their own judoka data.
 - **CHD-009**: When creating or editing a child, a parent shall be able to set an age category chosen from the standard age category list.
 - **CHD-010**: A coach shall be able to set or update the age category of any judoka from the judoka profile view.
+- **CHD-011**: The weight category field (judoka profile and competition form) shall be selected from a dropdown of the official FFJDA weight categories for the chosen age category (and gender, for the judoka profile), instead of free text. The list is empty for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
+- **CHD-012**: The "année dans la catégorie" field shall only offer the years that actually exist for the selected age category: 2 years for Poussinet/Poussin/Benjamin/Minime, 3 years for Cadet/Junior, and no field at all for Senior/Vétéran (open/age-banded categories where the concept doesn't apply).
 
 ### 3.6 Judoka season statistics rules
 
@@ -157,6 +159,7 @@ This specification does not define:
 - **AUTH-011c**: A CSV-imported `JUDOKA` row may set an `ageCategory` column to assign the judoka's age category (e.g. `Minime`) at import time.
 - **AUTH-011d**: Re-importing a CSV row that matches an existing `JUDOKA` (by account email, or by first and last name when no email is given) shall not be treated as an import error; it shall update that judoka's `role` and `ageCategory` from the row instead of failing the row.
 - **AUTH-011e**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
+- **AUTH-011f**: A CSV-imported `JUDOKA` row may set a `genre` column (`Homme` or `Femme`) and an `anneeCategorie` column (the year within the age category, e.g. Cadet 1 / Cadet 2 / Cadet 3 — see **CHD-012** for valid values per category) at import time; re-importing an existing judoka updates both fields the same way `ageCategory` is updated.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
@@ -177,6 +180,19 @@ This specification does not define:
 - **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
 - **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
 - **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
+
+### 3.9 Coach dashboard rules
+
+- **DASH-001**: `COACH` and `ADMIN` users shall have access to a dedicated dashboard screen aggregating statistics across one or more competitions.
+- **DASH-002**: The dashboard shall allow filtering by one or more competitions (multi-select), by age category, by year within the age category (e.g. Cadet 1 / Cadet 2), and by gender (`Homme` / `Femme`). All filters are optional; when none is set, the dashboard aggregates every competition and judoka.
+- **DASH-003**: The "year within category" filter shall only be shown once an age category with valid years has been chosen, offering exactly the years valid for that category per **CHD-012** (hidden entirely for Senior/Vétéran).
+- **DASH-004**: The dashboard shall display the victory rate (% of combats won) over the combats matching the active filters, alongside the raw win count and the total combat count (e.g. "8/12 (67%)").
+- **DASH-005**: The dashboard shall display the Tachi-waza victory rate (% of combats won where at least one scoring technique recorded on the combat was a `Tachi-waza` technique) and, symmetrically, the Ne-waza victory rate, each alongside its win count and the total combat count.
+- **DASH-006**: The dashboard shall display the shido defeat rate (% of combats lost by `Hansoku-make`, reusing the existing combat result/victory-type fields per **CBT-005b** rather than tracking individual shido counts), alongside the raw loss count and the total combat count.
+- **DASH-007**: The dashboard shall display a breakdown of victories and of defeats by decision type (`Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`), each as a count, the total count for that result (all victories or all defeats), and a percentage of that total.
+- **DASH-008**: The dashboard shall display the victory rate against right-handed (`Droitier`) and left-handed (`Gaucher`) opponents, alongside the win count and the combat count for that stance.
+- **DASH-009**: The dashboard shall display the victory rate per competition level (`Départemental`, `Régional`, `National`, `International`), alongside the win count and the combat count for that level.
+- **DASH-010**: The dashboard shall display the number of distinct judokas matching the active filters who have at least one combat in scope, broken down by gender (`Homme` / `Femme`).
 
 ## 4. Acceptance Criteria
 

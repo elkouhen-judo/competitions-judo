@@ -58,6 +58,10 @@ const createAiAnalysisService =
   /** @type {typeof import("./services/ai-analysis.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/ai-analysis.service.js").default)
   );
+const createCoachDashboardService =
+  /** @type {typeof import("./services/coach-dashboard.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/coach-dashboard.service.js").default)
+  );
 const createCombatsService = /** @type {typeof import("./services/combats.service").default} */ (
   /** @type {unknown} */ (require("../core-dist/services/combats.service.js").default)
 );
@@ -73,6 +77,7 @@ const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.
 const { createJudoka, createManagedChild } = require("./domain/access/judoka.js");
 const { createEmail } = require("./domain/access/email.js");
 const { createProfileType } = require("./domain/access/profile-type.js");
+const { createWeightCategory, createYearInCategory } = require("./domain/category-reference.js");
 const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope.js");
 const { createClubCompetition } = require("./domain/competitions/club-competition.js");
 const {
@@ -124,6 +129,8 @@ const adminService = createAdminService({
   createJudoka,
   createManagedChild,
   createProfileType,
+  createWeightCategory,
+  createYearInCategory,
   normalizeEmail: text.normalizeEmail
 });
 
@@ -144,6 +151,14 @@ const aiAnalysisService = createAiAnalysisService({
   combatScoresRepository,
   competitionsRepository,
   groqClient
+});
+
+const coachDashboardService = createCoachDashboardService({
+  combatsRepository,
+  combatScoresRepository,
+  competitionsRepository,
+  judokasRepository,
+  userContextService
 });
 
 const competitionsService = createCompetitionsService({
@@ -177,7 +192,6 @@ const combatsService = createCombatsService({
 const profileService = createProfileService({
   combatsRepository,
   competitionsRepository,
-  judokasRepository,
   buildJudokaProfileSnapshot,
   userContextService,
   getCompetitionCategoryLabel,
@@ -238,7 +252,8 @@ const methods = {
   ...adminService.methods,
   ...clubCompetitionsService.methods,
   ...competitionsService.methods,
-  ...combatsService.methods
+  ...combatsService.methods,
+  ...coachDashboardService.methods
 };
 
 module.exports = {

@@ -18,6 +18,7 @@ module.exports = function handler(_req, res) {
     "app-screen-judoka.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
+    "app-screen-coach-dashboard.js",
     "app-runtime.js",
     "app.js"
   ];

@@ -353,6 +353,53 @@ test("judokas repository maps update changes, including the age category", async
   ]);
 });
 
+test("judokas repository maps gender and year-in-category on insert extras and update changes", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+
+  await judokasRepository.insert(
+    {
+      judokaId: "JUDO1",
+      accountEmail: "",
+      name: { firstName: "Ali", lastName: "El Kouhen" },
+      profileType: "JUDOKA",
+      accessRole: "NORMAL"
+    },
+    { genre: "Homme", annee_categorie: "1" }
+  );
+
+  await judokasRepository.update("JUDO1", {
+    gender: "Femme",
+    yearInCategory: "2"
+  });
+
+  assert.deepEqual(calls, [
+    [
+      "insert",
+      "judokas",
+      {
+        id_judoka: "JUDO1",
+        email: "",
+        prenom: "Ali",
+        nom: "El Kouhen",
+        profile_type: "JUDOKA",
+        role: "NORMAL",
+        genre: "Homme",
+        annee_categorie: "1"
+      }
+    ],
+    [
+      "patch",
+      "judokas",
+      "id_judoka=eq.JUDO1",
+      {
+        genre: "Femme",
+        annee_categorie: "2"
+      }
+    ]
+  ]);
+});
+
 test("judokas repository update accepts the snake_case role/profileType/name aliases used for name-based activation", async () => {
   const calls = [];
   const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));

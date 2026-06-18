@@ -56,7 +56,9 @@ export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
     accessRole: normalizeAccessRole(pick(user, "accessRole", "role")),
     ageCategory: String(pick(user, "ageCategory", "categorie_age") || ""),
     weightCategory: String(pick(user, "weightCategory", "categorie_poids") || ""),
-    beltColor: String(pick(user, "beltColor", "couleur_ceinture") || "")
+    beltColor: String(pick(user, "beltColor", "couleur_ceinture") || ""),
+    gender: String(pick(user, "gender", "genre") || ""),
+    yearInCategory: String(pick(user, "yearInCategory", "annee_categorie") || "")
   };
 }
 

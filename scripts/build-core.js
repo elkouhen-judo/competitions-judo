@@ -26,10 +26,12 @@ const entryPoints = [
   "core/domain/competitions/combat-score.ts",
   "core/domain/competitions/combat.ts",
   "core/domain/competition-results.ts",
+  "core/domain/category-reference.ts",
   "core/domain/competitions/competition.ts",
   "core/domain/competitions/club-competition.ts",
   "core/domain/season.ts",
   "core/domain/season-statistics.ts",
+  "core/domain/coach-dashboard-statistics.ts",
   "core/repositories/judokas.repository.ts",
   "core/repositories/competitions.repository.ts",
   "core/repositories/combats.repository.ts",
@@ -44,6 +46,7 @@ const entryPoints = [
   "core/services/club-competitions.service.ts",
   "core/services/competitions.service.ts",
   "core/services/ai-analysis.service.ts",
+  "core/services/coach-dashboard.service.ts",
   "core/services/profile.service.ts",
   "core/services/registration.service.ts"
 ];
