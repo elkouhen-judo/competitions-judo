@@ -148,6 +148,7 @@
       combatFormTitle: "Ajouter un combat",
       combatFormSubtitle: "Combat de la compétition en cours",
       saveCombatButtonText: "Ajouter le combat",
+      combatQuickMode: true,
       combatForm: { ...defaultCombatForm }
     };
     let competitionDetailRef: { coachObjectiveText: string; coachReviewText: string } | null = null;
@@ -240,6 +241,24 @@
     });
     const hasCombats = window.Vue.computed(() => !state.isLoadingCompetition && combatsProjection.value.hasCombats);
     const isLoadingCombats = window.Vue.computed(() => state.isLoadingCompetition);
+    const competitionSportSummary = window.Vue.computed(() => {
+      const total = state.currentCombats.length;
+      const wins = state.currentCombats.filter((combat) => combat.result === "Victoire").length;
+      const losses = state.currentCombats.filter((combat) => combat.result === "Défaite").length;
+      const draws = state.currentCombats.filter((combat) => combat.result === "Egalité").length;
+      const scoredCombats = state.currentCombats.filter((combat) => (combat.scores || []).length > 0).length;
+      const victoryRate = total ? Math.round((wins / total) * 100) : 0;
+      const finalizationStatus = state.currentCompetition?.result
+        ? `Classement ${state.currentCompetition.result}`
+        : "À finaliser";
+      return {
+        total,
+        record: `${wins}V · ${losses}D · ${draws}N`,
+        victoryRate: `${victoryRate}%`,
+        scoredCombats,
+        finalizationStatus
+      };
+    });
 
     const showCoachAssessment = window.Vue.computed(() =>
       Boolean(state.isCoach || state.currentCompetition?.coachObjective || state.currentCompetition?.coachReview)
@@ -354,6 +373,7 @@
           combatsEmptyMessage,
           hasCombats,
           isLoadingCombats,
+          competitionSportSummary,
           showCoachAssessment,
           canEditCoachAssessment
         }
@@ -483,6 +503,8 @@
           onCombatScoreCategoryChange,
           removeCombatScoreRow,
           saveCombat,
+          setCombatQuickMode,
+          setCombatQuickResult,
           syncCombatDecisionVisibility
         },
         { combatDecisionOptions, isSubmitting, showCombatDecisionBlock, tachiWazaTechniques }
@@ -994,7 +1016,8 @@
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Modifier le combat",
           combatFormSubtitle: competitionName || "",
-          saveCombatButtonText: "Enregistrer le combat"
+          saveCombatButtonText: "Enregistrer le combat",
+          combatQuickMode: false
         });
         Object.assign(combatFormViewModel.combatForm, {
           combatId: combat.combatId || "",
@@ -1014,13 +1037,23 @@
       } else {
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Ajouter un combat",
-          combatFormSubtitle: competitionName || ""
+          combatFormSubtitle: competitionName || "",
+          combatQuickMode: true
         });
         syncCombatDecisionVisibility(true);
       }
 
       showView("combatFormView");
       window.Vue.nextTick(() => $("combat_adversaire").focus());
+    }
+
+    function setCombatQuickMode(value: boolean) {
+      combatFormViewModel.combatQuickMode = value;
+    }
+
+    function setCombatQuickResult(result: string) {
+      combatFormViewModel.combatForm.result = result;
+      syncCombatDecisionVisibility(true);
     }
 
     function cancelCombatForm() {
@@ -1319,7 +1352,8 @@
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",
         combatFormSubtitle: "Combat de la compétition en cours",
-        saveCombatButtonText: "Ajouter le combat"
+        saveCombatButtonText: "Ajouter le combat",
+        combatQuickMode: true
       });
       syncCombatDecisionVisibility(true);
     }

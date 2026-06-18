@@ -40,6 +40,52 @@
             <span id="competitionClassement" class="meta-value">{{ competitionResult }}</span>
           </div>
         </div>
+        <div class="section coach-performance-summary">
+          <div class="section-heading">
+            <div>
+              <h3>Synthèse sportive</h3>
+            </div>
+          </div>
+          <div class="stats-grid compact-stats-grid">
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Bilan</span>
+              <span class="stat-value">{{ competitionSportSummary.record }}</span>
+            </div>
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Taux de victoire</span>
+              <span class="stat-value">{{ competitionSportSummary.victoryRate }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Combats détaillés</span>
+              <span class="stat-value">{{ competitionSportSummary.scoredCombats }}/{{ competitionSportSummary.total }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Statut</span>
+              <span class="stat-value">{{ competitionSportSummary.finalizationStatus }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="showCoachAssessment" class="section coach-assessment-section">
+          <div class="section-heading">
+            <div>
+              <h3>Suivi coach</h3>
+            </div>
+          </div>
+          <div class="coach-assessment-block">
+            <label class="coach-assessment-label">Objectif</label>
+            <p v-if="!canEditCoachAssessment && !coachObjectiveText" class="coach-assessment-empty">Aucun objectif défini.</p>
+            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachObjectiveText" placeholder="Objectif défini par le coach avant la compétition…" rows="3"></textarea>
+            <p v-else-if="coachObjectiveText" class="coach-assessment-text">{{ coachObjectiveText }}</p>
+            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachObjective()">Enregistrer l'objectif</button>
+          </div>
+          <div class="coach-assessment-block">
+            <label class="coach-assessment-label">Bilan</label>
+            <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Aucun bilan rédigé.</p>
+            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachReviewText" placeholder="Bilan post-compétition rédigé par le coach…" rows="3"></textarea>
+            <p v-else-if="coachReviewText" class="coach-assessment-text">{{ coachReviewText }}</p>
+            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview()">Enregistrer le bilan</button>
+          </div>
+        </div>
         <div class="section">
           <div class="section-heading">
             <div>
@@ -121,27 +167,6 @@
             </div>
           </div>
           <p class="ai-analysis-text">{{ competitionAiAnalysis }}</p>
-        </div>
-        <div v-if="showCoachAssessment" class="section coach-assessment-section">
-          <div class="section-heading">
-            <div>
-              <h3>Suivi coach</h3>
-            </div>
-          </div>
-          <div class="coach-assessment-block">
-            <label class="coach-assessment-label">Objectif</label>
-            <p v-if="!canEditCoachAssessment && !coachObjectiveText" class="coach-assessment-empty">Aucun objectif défini.</p>
-            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachObjectiveText" placeholder="Objectif défini par le coach avant la compétition…" rows="3"></textarea>
-            <p v-else-if="coachObjectiveText" class="coach-assessment-text">{{ coachObjectiveText }}</p>
-            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachObjective()">Enregistrer l'objectif</button>
-          </div>
-          <div class="coach-assessment-block">
-            <label class="coach-assessment-label">Bilan</label>
-            <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Aucun bilan rédigé.</p>
-            <textarea v-if="canEditCoachAssessment" class="coach-assessment-textarea" v-model="coachReviewText" placeholder="Bilan post-compétition rédigé par le coach…" rows="3"></textarea>
-            <p v-else-if="coachReviewText" class="coach-assessment-text">{{ coachReviewText }}</p>
-            <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview()">Enregistrer le bilan</button>
-          </div>
         </div>
       </div>
     </section>

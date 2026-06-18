@@ -112,13 +112,18 @@
                 <button class="card-button competition-open-button" type="button" @click="openClubCompetition(cc.clubCompetitionId)">
                   <span class="competition-card-button-copy">
                     <span class="card-title">{{ cc.name }}</span>
-                    <span class="card-meta">
-                      <span class="meta-row">
-                        <span class="meta-label">Date</span>
-                        <span class="meta-value">{{ cc.date }}</span>
-                      </span>
+                  <span class="card-meta">
+                    <span class="meta-row">
+                      <span class="meta-label">Date</span>
+                      <span class="meta-value">{{ cc.date }}</span>
                     </span>
-                    <span class="card-open-hint">Modifier</span>
+                  </span>
+                    <span class="coach-club-summary">
+                      <span>{{ cc.summary }}</span>
+                      <span v-if="cc.missingCoachReviewCount" class="coach-summary-warning">{{ cc.missingCoachReviewCount }} bilan(s) coach manquant(s)</span>
+                    </span>
+                    <span class="coach-card-status">{{ cc.statusLabel }}</span>
+                    <span class="card-open-hint">Ouvrir le suivi</span>
                   </span>
                 </button>
                 <div class="card-actions">
