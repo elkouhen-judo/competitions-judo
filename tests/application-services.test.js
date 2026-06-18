@@ -1894,8 +1894,8 @@ test("importUsersCsv activates an existing named judoka with imported sports pro
   );
 
   const csv =
-    "profileType,prenom,nom,email,parentEmail,role,ageCategory,genre,anneeCategorie,lateralite\n" +
-    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,,,Minime,Homme,1,Droitier\n";
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture,genre,anneeCategorie,lateralite\n" +
+    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,,,Minime,Orange,Homme,1,Droitier\n";
 
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 
@@ -1907,6 +1907,7 @@ test("importUsersCsv activates an existing named judoka with imported sports pro
         accountEmail: "ali.elkouhen@gmail.com",
         profileType: "JUDOKA",
         ageCategory: "Minime",
+        beltColor: "Orange",
         gender: "Homme",
         yearInCategory: "1",
         handedness: "Droitier"
@@ -2142,6 +2143,19 @@ test("importUsersCsv assigns an age category to a judoka created with an account
   assert.equal(calls.inserted[0].extras.categorie_age, "Minime");
 });
 
+test("importUsersCsv assigns a belt color to a judoka created with an account email", async () => {
+  const { service, calls } = createTestAdminService({});
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture\n" +
+    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,,,Minime,Orange\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.equal(calls.inserted[0].extras.couleur_ceinture, "Orange");
+});
+
 test("importUsersCsv assigns an age category to a managed judoka without an account email", async () => {
   const { service, calls } = createTestAdminService({});
 
@@ -2153,6 +2167,19 @@ test("importUsersCsv assigns an age category to a managed judoka without an acco
 
   assert.equal(summary.success, true);
   assert.equal(calls.inserted[0].extras.categorie_age, "Minime");
+});
+
+test("importUsersCsv assigns a belt color to a managed judoka without an account email", async () => {
+  const { service, calls } = createTestAdminService({});
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture\n" +
+    "JUDOKA,Rayane,El Kouhen,,,,Minime,Jaune\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.equal(calls.inserted[0].extras.couleur_ceinture, "Jaune");
 });
 
 test("importUsersCsv assigns gender and year in category to a judoka created with an account email", async () => {
@@ -2249,6 +2276,30 @@ test("importUsersCsv updates an existing judoka's gender and year in category", 
   assert.deepEqual(calls.updated, [
     { idJudoka: "CHILD1", changes: { gender: "Homme", yearInCategory: "2" } }
   ]);
+  assert.match(summary.results[0].message, /mis à jour/);
+});
+
+test("importUsersCsv updates an existing judoka's belt color", async () => {
+  const { service, calls } = createTestAdminService({
+    "ali.elkouhen@gmail.com": {
+      id_judoka: "CHILD1",
+      profile_type: "JUDOKA",
+      role: "NORMAL",
+      email: "ali.elkouhen@gmail.com",
+      prenom: "Ali",
+      nom: "El Kouhen",
+      couleur_ceinture: ""
+    }
+  });
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture\n" +
+    "JUDOKA,Ali,El Kouhen,ali.elkouhen@gmail.com,,,,Marron\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.deepEqual(calls.updated, [{ idJudoka: "CHILD1", changes: { beltColor: "Marron" } }]);
   assert.match(summary.results[0].message, /mis à jour/);
 });
 
@@ -2355,6 +2406,32 @@ test("importUsersCsv updates an existing managed judoka's gender and year in cat
   assert.match(summary.results[0].message, /mis à jour/);
 });
 
+test("importUsersCsv updates an existing managed judoka's belt color when re-imported by name", async () => {
+  const { service, calls } = createTestAdminService(
+    {},
+    {},
+    {
+      "rayane|el kouhen": {
+        id_judoka: "CHILD2",
+        profile_type: "JUDOKA",
+        prenom: "Rayane",
+        nom: "El Kouhen",
+        couleur_ceinture: ""
+      }
+    }
+  );
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture\n" +
+    "JUDOKA,Rayane,El Kouhen,,,,,Jaune\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.deepEqual(calls.updated, [{ idJudoka: "CHILD2", changes: { beltColor: "Jaune" } }]);
+  assert.match(summary.results[0].message, /mis à jour/);
+});
+
 test("importUsersCsv updates an existing PARENT row instead of failing it", async () => {
   const { service, calls } = createTestAdminService({
     "christine.elkouhen@gmail.com": {
@@ -2447,4 +2524,8 @@ test("importUsersCsv processes the bundled sample file: children link, the alrea
   assert.equal(summary.failed, 0);
   assert.equal(calls.links.length, 2);
   assert.ok(calls.links.every((link) => link.id_parent === "PARENT1"));
+  assert.deepEqual(
+    calls.inserted.map((call) => call.extras && call.extras.couleur_ceinture),
+    ["Orange", "Jaune", "Marron"]
+  );
 });

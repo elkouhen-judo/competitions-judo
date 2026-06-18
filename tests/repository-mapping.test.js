@@ -355,7 +355,7 @@ test("judokas repository maps update changes, including the age category", async
   ]);
 });
 
-test("judokas repository maps gender, year-in-category and handedness on insert extras and update changes", async () => {
+test("judokas repository maps sports profile extras and update changes", async () => {
   const calls = [];
   const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
 
@@ -367,10 +367,11 @@ test("judokas repository maps gender, year-in-category and handedness on insert 
       profileType: "JUDOKA",
       accessRole: "NORMAL"
     },
-    { genre: "Homme", annee_categorie: "1", lateralite: "Droitier" }
+    { couleur_ceinture: "Orange", genre: "Homme", annee_categorie: "1", lateralite: "Droitier" }
   );
 
   await judokasRepository.update("JUDO1", {
+    beltColor: "Marron",
     gender: "Femme",
     yearInCategory: "2",
     handedness: "Gaucher"
@@ -387,6 +388,7 @@ test("judokas repository maps gender, year-in-category and handedness on insert 
         nom: "El Kouhen",
         profile_type: "JUDOKA",
         role: "NORMAL",
+        couleur_ceinture: "Orange",
         genre: "Homme",
         annee_categorie: "1",
         lateralite: "Droitier"
@@ -397,6 +399,7 @@ test("judokas repository maps gender, year-in-category and handedness on insert 
       "judokas",
       "id_judoka=eq.JUDO1",
       {
+        couleur_ceinture: "Marron",
         genre: "Femme",
         annee_categorie: "2",
         lateralite: "Gaucher"

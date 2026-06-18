@@ -16,6 +16,7 @@ export interface JudokaChangesInput {
   pendingParentEmail?: string;
   ageCategory?: string;
   weightCategory?: string;
+  beltColor?: string;
   gender?: string;
   yearInCategory?: string;
   handedness?: string;
@@ -29,6 +30,7 @@ export interface JudokasRepository {
     judoka: JudokaModel,
     extras?: {
       categorie_age?: string;
+      couleur_ceinture?: string;
       pending_parent_email?: string;
       genre?: string;
       annee_categorie?: string;
@@ -100,6 +102,9 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     if (changes.weightCategory !== undefined) {
       record.categorie_poids = changes.weightCategory;
     }
+    if (changes.beltColor !== undefined) {
+      record.couleur_ceinture = changes.beltColor;
+    }
     if (changes.gender !== undefined) {
       record.genre = changes.gender;
     }
@@ -170,6 +175,9 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     const record: Record<string, unknown> = { ...toJudokaRecord(judoka) };
     if (extras) {
       if (extras.categorie_age !== undefined) record["categorie_age"] = extras.categorie_age;
+      if (extras.couleur_ceinture !== undefined) {
+        record["couleur_ceinture"] = extras.couleur_ceinture;
+      }
       if (extras.pending_parent_email !== undefined) {
         record["pending_parent_email"] = extras.pending_parent_email;
       }

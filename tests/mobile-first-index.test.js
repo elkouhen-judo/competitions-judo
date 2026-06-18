@@ -153,6 +153,7 @@ test("family home keeps the active judoka competition context", () => {
   assert.match(bundle, /return \(mode === "coachJudoka" \|\| mode === "family"\) && state\.judokas\.length > 0;/);
   assert.match(bundle, /filterPlaceholder: "Choisir un judoka\.\.\."/);
   assert.match(bundle, /label: "Judoka actif"/);
+  assert.match(bundle, /getCurrentMode\(\) === "coachJudoka" \? "Judoka consulté" : "Judoka actif"/);
   assert.match(bundle, /Sélectionnez un judoka pour voir ses résultats\./);
   assert.doesNotMatch(bundle, /Moi ou mes enfants/);
 });
@@ -175,11 +176,12 @@ test("coach judoka view shows the selected judoka competition history", () => {
   assert.match(bundle, /const emptyMsg = mode === "coachJudoka"/);
   assert.match(bundle, /Aucune compétition enregistrée pour ce judoka\./);
   assert.match(bundle, /Aucune compétition planifiée pour ce judoka\./);
+  assert.match(bundle, /Sélectionnez un judoka pour voir ses compétitions à venir\./);
 });
 
 test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /@click="handleModeTabClick\(mode\.key\)"/);
-  assert.match(bundle, /Accès club/);
+  assert.match(bundle, /Gestion des accès/);
   assert.match(bundle, /id="adminsView" class="panel hidden"/);
   assert.match(bundle, /id="adminsList"/);
   assert.match(bundle, /id="usersList"/);
@@ -355,6 +357,8 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm\.dateTo"/);
   assert.match(client, /dateFrom: coachDashboardViewModel\.coachDashboardForm\.dateFrom/);
   assert.match(client, /dateTo: coachDashboardViewModel\.coachDashboardForm\.dateTo/);
+  assert.match(client, /if \(dateFrom && dateTo && dateFrom > dateTo\) \{/);
+  assert.match(client, /La date de début doit être antérieure ou égale à la date de fin\./);
   assert.match(bundle, /v-if="coachDashboardYearOptions\.length"/);
   assert.match(
     bundle,
@@ -432,6 +436,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
+  assert.match(bundle, /couleur_ceinture \(facultatif, ex : Orange\)/);
   assert.match(bundle, /id="usersList"/);
   assert.match(bundle, /v-for="managedUser in managedUsersPage"/);
   assert.match(bundle, /@click="deleteUser\(managedUser\.judokaId, managedUser\.fullName\)"/);
@@ -514,6 +519,8 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);
+  assert.match(bundle, /Aucun judoka disponible dans cette catégorie\./);
+  assert.match(bundle, /v-else-if="!clubCompetitionAvailableJudokasFiltered\.length"/);
 });
 
 test("competition finalization screen is mounted through Vue 3 for the progressive screen migration", () => {

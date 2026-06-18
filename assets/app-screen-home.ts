@@ -100,7 +100,7 @@
         modes.push({ key: "coachDashboard", label: "Tableau de bord" });
       }
       if (state.isAdmin) {
-        modes.push({ key: "admin", label: "Accès club" });
+        modes.push({ key: "admin", label: "Gestion des accès" });
       }
       if (state.isParent) {
         modes.push({ key: "family", label: "Ma famille" });
@@ -241,6 +241,9 @@
 
     const homeTitle = window.Vue.computed(() => homeContext.value.homeTitle);
     const homeSubtitle = window.Vue.computed(() => homeContext.value.homeSubtitle);
+    const homeFilterLabel = window.Vue.computed(() =>
+      getCurrentMode() === "coachJudoka" ? "Judoka consulté" : "Judoka actif"
+    );
     const filterPlaceholder = window.Vue.computed(() => homeContext.value.filterPlaceholder);
     const profileButtonText = window.Vue.computed(() => homeContext.value.profileButtonText);
     const profileButtonMeta = window.Vue.computed(() => homeContext.value.profileButtonMeta);
@@ -418,6 +421,9 @@
       if (getCurrentMode() === "coachJudoka" && getHomeActiveJudokaId()) {
         return "Aucune compétition planifiée pour ce judoka.";
       }
+      if (getCurrentMode() === "coachJudoka") {
+        return "Sélectionnez un judoka pour voir ses compétitions à venir.";
+      }
       return "Aucun tournoi planifié — ajoutez une compétition pour la voir ici.";
     });
 
@@ -461,6 +467,7 @@
         actionDisabled,
         homeTitle,
         homeSubtitle,
+        homeFilterLabel,
         filterPlaceholder,
         profileButtonText,
         profileButtonMeta,

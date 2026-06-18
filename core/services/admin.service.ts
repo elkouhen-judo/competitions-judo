@@ -133,6 +133,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     options: {
       accessRole?: AccessRole;
       ageCategory?: string;
+      beltColor?: string;
       gender?: string;
       yearInCategory?: string;
       handedness?: string;
@@ -154,6 +155,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       const updates: {
         accessRole?: AccessRole;
         ageCategory?: string;
+        beltColor?: string;
         gender?: string;
         yearInCategory?: string;
         handedness?: string;
@@ -164,6 +166,9 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         }
         if (options.ageCategory && options.ageCategory !== existingUser.categorie_age) {
           updates.ageCategory = options.ageCategory;
+        }
+        if (options.beltColor && options.beltColor !== existingUser.couleur_ceinture) {
+          updates.beltColor = options.beltColor;
         }
         if (options.gender && options.gender !== existingUser.genre) {
           updates.gender = options.gender;
@@ -202,6 +207,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         profileType,
         ...(options.accessRole ? { role: options.accessRole } : {}),
         ...(options.ageCategory ? { ageCategory: options.ageCategory } : {}),
+        ...(options.beltColor ? { beltColor: options.beltColor } : {}),
         ...(options.gender ? { gender: options.gender } : {}),
         ...(options.yearInCategory ? { yearInCategory: options.yearInCategory } : {}),
         ...(options.handedness ? { handedness: options.handedness } : {})
@@ -225,6 +231,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       }),
       {
         ...(options.ageCategory ? { categorie_age: options.ageCategory } : {}),
+        ...(options.beltColor ? { couleur_ceinture: options.beltColor } : {}),
         ...(options.gender ? { genre: options.gender } : {}),
         ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {}),
         ...(options.handedness ? { lateralite: options.handedness } : {})
@@ -262,6 +269,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     const rawEmail = cleanText(row.email);
     const rawParentEmail = cleanText(row.parentemail);
     const ageCategory = cleanText(row.agecategory);
+    const beltColor = cleanText(row.couleur_ceinture);
     const gender = cleanText(row.genre);
     const yearInCategory = createYearInCategory(cleanText(row.anneecategorie), ageCategory);
     const handedness = createHandedness(cleanText(row.lateralite));
@@ -310,6 +318,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       const accountProfile = await createAccountProfile("JUDOKA", prenom, nom, rawEmail, {
         ...(rawRole ? { accessRole: rawRole as AccessRole } : {}),
         ageCategory,
+        beltColor,
         gender,
         yearInCategory,
         handedness
@@ -343,15 +352,21 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
       const existingId = existingChild.id_judoka;
       const ageCategoryChanged = Boolean(ageCategory) && ageCategory !== existingChild.categorie_age;
+      const beltColorChanged = Boolean(beltColor) && beltColor !== existingChild.couleur_ceinture;
       const genderChanged = Boolean(gender) && gender !== existingChild.genre;
       const yearInCategoryChanged =
         Boolean(yearInCategory) && yearInCategory !== existingChild.annee_categorie;
       const handednessChanged = Boolean(handedness) && handedness !== existingChild.lateralite;
       const profileInfoChanged =
-        ageCategoryChanged || genderChanged || yearInCategoryChanged || handednessChanged;
+        ageCategoryChanged ||
+        beltColorChanged ||
+        genderChanged ||
+        yearInCategoryChanged ||
+        handednessChanged;
       if (profileInfoChanged) {
         await judokasRepository.update(existingId, {
           ...(ageCategoryChanged ? { ageCategory } : {}),
+          ...(beltColorChanged ? { beltColor } : {}),
           ...(genderChanged ? { gender } : {}),
           ...(yearInCategoryChanged ? { yearInCategory } : {}),
           ...(handednessChanged ? { handedness } : {})
@@ -399,6 +414,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     });
     await judokasRepository.insert(managedChild, {
       ...(ageCategory ? { categorie_age: ageCategory } : {}),
+      ...(beltColor ? { couleur_ceinture: beltColor } : {}),
       ...(gender ? { genre: gender } : {}),
       ...(yearInCategory ? { annee_categorie: yearInCategory } : {}),
       ...(handedness ? { lateralite: handedness } : {}),
