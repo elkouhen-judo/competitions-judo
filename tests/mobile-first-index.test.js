@@ -328,6 +328,8 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     /v-for="competition in competitionOptions"[\s\S]*v-model="coachDashboardForm\.competitionIds"/
   );
   assert.match(bundle, /@click="applyCoachDashboardFilters\(\)"/);
+  assert.match(bundle, /<h3>Volumes<\/h3>/);
+  assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
   assert.match(
     bundle,
     /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Genre<\/span>/
@@ -337,7 +339,14 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité<\/span>/);
   assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
-  assert.match(bundle, /Performance par latéralité judoka/);
+  assert.match(bundle, /<h3>Performance globale<\/h3>/);
+  assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
+  assert.match(bundle, /class="section-heading dashboard-subsection"/);
+  assert.match(bundle, /\.dashboard-subsection\s*\{/);
+  assert.match(bundle, /Performance selon la garde de l'adversaire/);
+  assert.match(bundle, /Taux de victoire selon que l'adversaire est droitier ou gaucher\./);
+  assert.match(bundle, /Performance selon la latéralité du judoka/);
+  assert.match(bundle, /Taux de victoire des judokas droitiers vs gauchers dans le périmètre filtré\./);
   assert.match(
     bundle,
     /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
@@ -373,6 +382,10 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(
     bundle,
     /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité judoka<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victoryRate \|\| 0/
+  );
+  assert.match(
+    bundle,
+    /Performance selon la garde de l'adversaire[\s\S]*<\/div>\s*<\/div>\s*<div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">[\s\S]*Performance selon la latéralité du judoka/
   );
   assert.match(bundle, /\.stat-card-split\s*\{/);
   assert.match(bundle, /\.split-stat-grid\s*\{/);
