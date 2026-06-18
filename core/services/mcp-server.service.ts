@@ -115,7 +115,7 @@ const COACH_DASHBOARD_FILTERS_SCHEMA: JsonSchema = {
     ageCategory: { type: "string", enum: AGE_CATEGORIES, description: "Filtre par catégorie d'âge." },
     categoryYear: { type: "string", description: "Filtre par année dans la catégorie (ex. \"1\", \"2\", \"3\")." },
     gender: { type: "string", enum: GENDERS, description: "Filtre par genre." },
-    handedness: { type: "string", enum: HANDEDNESSES, description: "Filtre par latéralité." }
+    handedness: { type: "string", enum: HANDEDNESSES, description: "Filtre par garde du judoka." }
   }
 };
 

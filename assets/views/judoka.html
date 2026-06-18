@@ -19,12 +19,13 @@
             <h3 id="judokaHeroName" class="hero-title">{{ heroName }}</h3>
             <p id="judokaHeroSummary" class="hero-highlight">{{ heroSummary }}</p>
             <div class="hero-badges">
-              <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
-              <span v-if="heroBeltColor" id="judokaHeroBeltColor" class="result-badge">{{ heroBeltColor }}</span>
-              <span v-if="heroGender" id="judokaHeroGender" class="result-badge">{{ heroGender }}</span>
-              <span v-if="heroYearInCategory" id="judokaHeroYearInCategory" class="result-badge">{{ heroYearInCategory }}</span>
-              <span v-if="heroHandedness" id="judokaHeroHandedness" class="result-badge">{{ heroHandedness }}</span>
               <span id="judokaHeroRecord" class="result-badge">{{ heroSeason }}</span>
+              <span id="judokaHeroCategory" class="result-badge">{{ heroCategory }}</span>
+              <span v-if="heroYearInCategory" id="judokaHeroYearInCategory" class="result-badge">{{ heroYearInCategory }}</span>
+              <span v-if="heroWeightCategory" id="judokaHeroWeightCategory" class="result-badge">{{ heroWeightCategory }}</span>
+              <span v-if="heroGender" id="judokaHeroGender" class="result-badge">{{ heroGender }}</span>
+              <span v-if="heroHandedness" id="judokaHeroHandedness" class="result-badge">{{ heroHandedness }}</span>
+              <span v-if="heroBeltColor" id="judokaHeroBeltColor" class="result-badge">{{ heroBeltColor }}</span>
             </div>
           </div>
         </div>
@@ -69,6 +70,7 @@
           <div class="section-heading">
             <div>
               <h3>Profil de combat</h3>
+              <p class="subtitle">Tendances sur la saison sélectionnée.</p>
             </div>
           </div>
           <div class="combat-profile-grid">
@@ -100,6 +102,7 @@
           <div class="section-heading">
             <div>
               <h3>Résultats compétition</h3>
+              <p class="subtitle">Classements et bilans par tournoi.</p>
             </div>
           </div>
           <div id="judokaCompetitionResults">
@@ -165,7 +168,7 @@
             <option value="Homme">Homme</option>
             <option value="Femme">Femme</option>
           </select>
-          <label for="judoka_lateralite">Latéralité</label>
+          <label for="judoka_lateralite">Garde</label>
           <select id="judoka_lateralite" v-model="handednessEditing">
             <option value="">Non renseignée</option>
             <option value="Droitier">Droitier</option>

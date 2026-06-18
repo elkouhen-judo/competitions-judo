@@ -2,6 +2,7 @@
       <div class="panel-header">
         <div>
           <h2>{{ clubCompetitionDetailTitle }}</h2>
+          <p class="subtitle">Participants, résultats et informations de l'événement club</p>
         </div>
         <div class="competition-header-actions">
           <button class="button-secondary" type="button" @click="cancelClubCompetitionDetail()">
@@ -52,6 +53,7 @@
           <div class="section-heading">
             <div>
               <h3>Participants ({{ clubCompetitionCurrentParticipants.length }})</h3>
+              <p class="subtitle">Ouvrez une participation pour saisir combats et classement.</p>
             </div>
           </div>
           <div id="clubDetailParticipantsList">
@@ -90,6 +92,7 @@
               <h3>Ajouter des judokas
                 <span v-if="clubCompetitionNewJudokaIds.length" class="result-badge">{{ clubCompetitionNewJudokaIds.length }} à ajouter</span>
               </h3>
+              <p class="subtitle">Ajoutez les judokas manquants de la même catégorie.</p>
             </div>
           </div>
           <div class="filter-bar">

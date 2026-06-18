@@ -10,6 +10,8 @@
     const defaultCoachDashboardForm = {
       ageCategory: "",
       categoryYear: "",
+      dateFrom: "",
+      dateTo: "",
       gender: "",
       handedness: "",
       competitionIds: [] as string[]
@@ -48,6 +50,9 @@
     const coachDashboardByOpponentStance = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.byOpponentStance || []
     );
+    const coachDashboardByLateralMatchup = window.Vue.computed(
+      () => coachDashboardViewModel.coachDashboardStats?.byLateralMatchup || []
+    );
     const coachDashboardByCompetitionLevel = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.byCompetitionLevel || []
     );
@@ -81,6 +86,7 @@
           coachDashboardVictoriesByType,
           coachDashboardDefeatsByType,
           coachDashboardByOpponentStance,
+          coachDashboardByLateralMatchup,
           coachDashboardByCompetitionLevel,
           coachDashboardJudokasByGender,
           coachDashboardJudokasByHandedness
@@ -96,6 +102,8 @@
         [
           {
             competitionIds: coachDashboardViewModel.coachDashboardForm.competitionIds,
+            dateFrom: coachDashboardViewModel.coachDashboardForm.dateFrom,
+            dateTo: coachDashboardViewModel.coachDashboardForm.dateTo,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
             categoryYear: coachDashboardViewModel.coachDashboardForm.categoryYear,
             gender: coachDashboardViewModel.coachDashboardForm.gender,

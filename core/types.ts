@@ -169,6 +169,8 @@ export interface CompetitionResultBadge {
 
 export interface CoachDashboardFilters {
   competitionIds?: string[];
+  dateFrom?: string;
+  dateTo?: string;
   ageCategory?: string;
   categoryYear?: string;
   gender?: string;
@@ -184,6 +186,14 @@ export interface CoachDashboardDecisionBreakdownEntry {
 
 export interface CoachDashboardStanceBreakdownEntry {
   opponentStance: string;
+  combats: number;
+  victories: number;
+  victoryRate: number;
+}
+
+export interface CoachDashboardLateralMatchupBreakdownEntry {
+  matchup: "same" | "opposite";
+  label: string;
   combats: number;
   victories: number;
   victoryRate: number;
@@ -222,6 +232,7 @@ export interface CoachDashboardStats {
   victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   byOpponentStance: CoachDashboardStanceBreakdownEntry[];
+  byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
   byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
@@ -381,7 +392,7 @@ export interface RpcMethods {
   saveCoachObjective: (email: string, idCompetition: string, objective: string) => Promise<OperationResult>;
   /** Enregistre le bilan post-compétition rédigé par le coach. */
   saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
-  /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre, l'année dans la catégorie et la latéralité d'un judoka. */
+  /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre, l'année dans la catégorie et la garde d'un judoka. */
   saveJudokaInfo: (
     email: string,
     idJudoka: string,

@@ -41,6 +41,7 @@
       heroName: "Judoka",
       heroSummary: "",
       heroCategory: "",
+      heroWeightCategory: "",
       heroBeltColor: "",
       heroGender: "",
       heroYearInCategory: "",
@@ -97,6 +98,7 @@
     const heroName = window.Vue.computed(() => judokaProfile.value.heroName);
     const heroSummary = window.Vue.computed(() => judokaProfile.value.heroSummary);
     const heroCategory = window.Vue.computed(() => judokaProfile.value.heroCategory);
+    const heroWeightCategory = window.Vue.computed(() => judokaProfile.value.heroWeightCategory);
     const heroBeltColor = window.Vue.computed(() => judokaProfile.value.heroBeltColor);
     const heroGender = window.Vue.computed(() => judokaProfile.value.heroGender);
     const heroYearInCategory = window.Vue.computed(() => judokaProfile.value.heroYearInCategory);
@@ -265,6 +267,7 @@
           heroName,
           heroSummary,
           heroCategory,
+          heroWeightCategory,
           heroBeltColor,
           heroGender,
           heroYearInCategory,

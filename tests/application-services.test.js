@@ -860,8 +860,8 @@ function createTestCoachDashboardService({
 test("getCoachDashboard computes stats filtered by competition, age category, gender and year in category", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [
-      { id_competition: "COMP1", categorie_age: "Cadet", niveau: "Départemental" },
-      { id_competition: "COMP2", categorie_age: "Minime", niveau: "National" }
+      { id_competition: "COMP1", date: "2026-02-10", categorie_age: "Cadet", niveau: "Départemental" },
+      { id_competition: "COMP2", date: "2026-03-15", categorie_age: "Minime", niveau: "National" }
     ],
     combatsByCompetitionId: {
       COMP1: [
@@ -914,6 +914,18 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
     [
       { opponentStance: "Droitier", combats: 2, victories: 2 },
       { opponentStance: "Gaucher", combats: 1, victories: 0 }
+    ]
+  );
+  assert.deepEqual(
+    allResult.stats.byLateralMatchup.map(({ matchup, combats, victories, victoryRate }) => ({
+      matchup,
+      combats,
+      victories,
+      victoryRate
+    })),
+    [
+      { matchup: "opposite", combats: 0, victories: 0, victoryRate: 0 },
+      { matchup: "same", combats: 3, victories: 2, victoryRate: 67 }
     ]
   );
   assert.deepEqual(
@@ -973,6 +985,20 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
   });
   assert.equal(competitionFiltered.stats.totalCombats, 1);
   assert.equal(competitionFiltered.stats.victories, 1);
+
+  const exactDateFiltered = await service.methods.getCoachDashboard("coach@example.com", {
+    dateFrom: "2026-03-15",
+    dateTo: "2026-03-15"
+  });
+  assert.equal(exactDateFiltered.stats.totalCombats, 1);
+  assert.equal(exactDateFiltered.stats.victories, 1);
+
+  const dateRangeFiltered = await service.methods.getCoachDashboard("coach@example.com", {
+    dateFrom: "2026-02-01",
+    dateTo: "2026-02-28"
+  });
+  assert.equal(dateRangeFiltered.stats.totalCombats, 2);
+  assert.equal(dateRangeFiltered.stats.hansokuMakeLosses, 1);
 });
 
 test("getCoachDashboard rejects a non-coach requester", async () => {

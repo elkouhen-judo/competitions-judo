@@ -742,6 +742,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { opponentStance: "Droitier", combats: 2, victories: 1, victoryRate: 50 },
       { opponentStance: "Gaucher", combats: 1, victories: 1, victoryRate: 100 }
     ],
+    byLateralMatchup: [
+      { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
+      { matchup: "same", label: "Même garde", combats: 3, victories: 2, victoryRate: 67 }
+    ],
     byCompetitionLevel: [
       { level: "Départemental", combats: 2, victories: 1, victoryRate: 50 },
       { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
@@ -788,6 +792,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { opponentStance: "Droitier", combats: 0, victories: 0, victoryRate: 0 },
       { opponentStance: "Gaucher", combats: 0, victories: 0, victoryRate: 0 }
     ],
+    byLateralMatchup: [
+      { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
+      { matchup: "same", label: "Même garde", combats: 0, victories: 0, victoryRate: 0 }
+    ],
     byCompetitionLevel: [
       { level: "Départemental", combats: 0, victories: 0, victoryRate: 0 },
       { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
@@ -809,7 +817,7 @@ test("category reference domain validates judoka handedness", () => {
   assert.equal(createHandedness("Droitier"), "Droitier");
   assert.equal(createHandedness(" Gaucher "), "Gaucher");
   assert.equal(createHandedness(""), "");
-  assert.throws(() => createHandedness("Ambidextre"), /Latéralité invalide/);
+  assert.throws(() => createHandedness("Ambidextre"), /Garde invalide/);
 });
 
 test("category reference domain reuses the Senior weight scale for Vétéran", () => {

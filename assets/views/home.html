@@ -23,7 +23,6 @@
           <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">
-              <div class="autocomplete-option" @mousedown.prevent="selectFilterJudoka(null)">— Tous —</div>
               <div v-if="!filterOptions.length" class="autocomplete-empty">Aucun résultat</div>
               <div v-for="option in filterOptions" :key="option.judokaId" class="autocomplete-option" @mousedown.prevent="selectFilterJudoka(option)">
                 <div class="autocomplete-option-copy">
@@ -56,8 +55,8 @@
               <span class="button-meta">Affecter plusieurs judokas</span>
             </span>
           </button>
-          <div class="dash-secondary-row">
-            <button id="openHomeJudokaProfileButton" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile()">
+          <div v-if="canOpenJudokaProfile" class="dash-secondary-row">
+            <button id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span class="button-copy">
                 <span id="openHomeJudokaProfileButtonText">{{ profileButtonText }}</span>
@@ -70,11 +69,12 @@
           <div class="section-heading">
             <div>
               <h3>À venir</h3>
+              <p class="subtitle">Les prochains rendez-vous à préparer.</p>
             </div>
           </div>
           <div v-if="!hasUpcomingEvents" class="empty-action">
             <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <p class="empty-action-body">Aucun tournoi planifié — ajoutez une compétition pour la voir ici.</p>
+            <p class="empty-action-body">{{ upcomingEmptyMessage }}</p>
           </div>
           <div v-else class="list">
             <article v-for="ev in upcomingEvents" :key="ev.id" class="card competition-card">
@@ -100,6 +100,7 @@
           <div class="section-heading">
             <div>
               <h3>Derniers résultats</h3>
+              <p class="subtitle">Suivi club et bilans à compléter.</p>
             </div>
           </div>
           <div id="clubCompetitionsList">
@@ -148,6 +149,7 @@
           <div class="section-heading">
             <div>
               <h3 id="homeCompetitionsTitle">{{ competitionsTitle }}</h3>
+              <p class="subtitle">Historique du judoka actif.</p>
             </div>
           </div>
           <div id="competitionsList">

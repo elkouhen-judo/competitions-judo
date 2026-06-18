@@ -2,6 +2,7 @@
       <div class="panel-header">
         <div>
           <h2>{{ clubCompetitionFormTitle }}</h2>
+          <p class="subtitle">Créez un événement commun et sélectionnez les participants.</p>
         </div>
         <div class="competition-header-actions">
           <button class="button-secondary" type="button" @click="cancelClubCompetitionForm()">
@@ -50,6 +51,7 @@
               <h3>Judokas concernés
                 <span v-if="clubCompetitionForm.participantJudokaIds.length" class="result-badge">{{ clubCompetitionForm.participantJudokaIds.length }} sélectionné(s)</span>
               </h3>
+              <p class="subtitle">La liste dépend de la catégorie sélectionnée.</p>
             </div>
           </div>
           <div v-if="hasClubCompetitionFormAgeCategory" class="filter-bar">

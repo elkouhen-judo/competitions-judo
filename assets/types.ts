@@ -266,7 +266,7 @@ export interface KirokuAppState {
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
-  homeMode: "judoka" | "coach" | "family";
+  homeMode: "judoka" | "coach" | "coachJudoka" | "family";
   competitions: Competition[];
   clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string }>;
   currentCompetition: CompetitionDetail["competition"] | null;
@@ -365,6 +365,7 @@ export interface JudokaProfileViewModel {
   heroName: string;
   heroSummary: string;
   heroCategory: string;
+  heroWeightCategory: string;
   heroBeltColor: string;
   heroGender: string;
   heroYearInCategory: string;

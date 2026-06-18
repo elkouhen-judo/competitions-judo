@@ -137,7 +137,7 @@ export function createHandedness(value: unknown): string {
     return "";
   }
   if (!(HANDEDNESSES as readonly string[]).includes(handedness)) {
-    throw new Error("Latéralité invalide pour un judoka.");
+    throw new Error("Garde invalide pour un judoka.");
   }
   return handedness;
 }
