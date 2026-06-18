@@ -1,5 +1,7 @@
 export type CombatScoreValue = "Ippon" | "Waza-ari" | "Yuko";
 
+export const SCORE_VALUES: CombatScoreValue[] = ["Ippon", "Waza-ari", "Yuko"];
+
 const SCORE_VALUE_ALIASES = new Map<string, CombatScoreValue>([
   ["ippon", "Ippon"],
   ["waza-ari", "Waza-ari"],

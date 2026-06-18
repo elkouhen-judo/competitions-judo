@@ -15,7 +15,6 @@
     "combatFormView"
   ] as const;
 
-  type ViewId = (typeof viewIds)[number];
   type ActionMap = Record<string, (...args: never[]) => unknown>;
   type ComputedRefMap = import("./types").ComputedRefMap;
 

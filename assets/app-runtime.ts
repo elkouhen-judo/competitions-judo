@@ -5,7 +5,6 @@ import type {
   KirokuApp,
   KirokuAppState,
   NotificationsApi,
-  OperationResult,
   RpcClientArgs,
   RpcClientMethod,
   RpcClientResult,
@@ -60,6 +59,9 @@ function createInitialState(): KirokuAppState {
     const notifications: NotificationsApi = window.createKirokuNotifications();
     const { clearMessage, showError, showSuccess } = notifications;
 
+    // Assigned once below, but must stay `let`: closures defined here (getLoginScreen,
+    // onInvitationRequired) capture it by reference before that assignment runs.
+    // eslint-disable-next-line prefer-const
     let loginScreen: AppScreens["login"] | undefined;
 
     function getLoginScreen(): AppScreens["login"] {

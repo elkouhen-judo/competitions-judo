@@ -47,6 +47,8 @@ const entryPoints = [
   "core/services/competitions.service.ts",
   "core/services/ai-analysis.service.ts",
   "core/services/coach-dashboard.service.ts",
+  "core/services/mcp-auth.service.ts",
+  "core/services/mcp-server.service.ts",
   "core/services/profile.service.ts",
   "core/services/registration.service.ts"
 ];

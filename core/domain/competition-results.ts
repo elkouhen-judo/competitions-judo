@@ -10,6 +10,8 @@ const RESULT_RANKS: Record<string, number> = {
   "non classé": 99
 };
 
+export const COMPETITION_RESULTS: string[] = Object.keys(RESULT_RANKS);
+
 export function createCompetitionRanking(value: unknown): string {
   const ranking = typeof value === "string" ? value.trim() : "";
   if (!ranking) {

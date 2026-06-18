@@ -14,6 +14,13 @@
     "types": ["node"],
 
     // Other Outputs
+    // noEmit is REQUIRED: Vercel's zero-config build auto-detects this file and
+    // runs its own implicit tsc step. Without noEmit, that step emits ESM .js
+    // files next to core/**/*.ts, overwriting the committed CommonJS require()
+    // shims and crashing /api/rpc at runtime (see commit 622fd1c). This file is
+    // not used by any npm script — `npm run typecheck` uses jsconfig.json
+    // instead (looser settings, covers .js + .ts together). Keep both: this one
+    // exists to keep Vercel's implicit build harmless, not to drive local typecheck.
     "noEmit": true,
     "sourceMap": true,
     "declaration": true,

@@ -144,9 +144,44 @@ test("vercel config routes the app shell and rpc endpoint", () => {
     destination: "/api/rpc"
   });
   assert.deepEqual(vercel.rewrites[4], {
+    source: "/mcp",
+    destination: "/api/mcp"
+  });
+  assert.deepEqual(vercel.rewrites[5], {
+    source: "/mcp/authorize",
+    destination: "/api/mcp-oauth"
+  });
+  assert.deepEqual(vercel.rewrites[6], {
+    source: "/mcp/register",
+    destination: "/api/mcp-oauth"
+  });
+  assert.deepEqual(vercel.rewrites[7], {
+    source: "/mcp/token",
+    destination: "/api/mcp-oauth"
+  });
+  assert.deepEqual(vercel.rewrites[8], {
+    source: "/.well-known/oauth-authorization-server",
+    destination: "/api/mcp-oauth"
+  });
+  assert.deepEqual(vercel.rewrites[9], {
+    source: "/.well-known/oauth-protected-resource",
+    destination: "/api/mcp-oauth"
+  });
+  assert.deepEqual(vercel.rewrites[10], {
     source: "/(.*)",
     destination: "/api/app"
   });
+});
+
+test("vercel deployment stays within the Hobby plan serverless function limit", () => {
+  const apiDir = path.join(root, "api");
+  const functionFiles = fs
+    .readdirSync(apiDir)
+    .filter((file) => file.endsWith(".js") && !file.startsWith("_"));
+  assert.ok(
+    functionFiles.length <= 12,
+    `Expected at most 12 serverless functions under api/, found ${functionFiles.length}: ${functionFiles.join(", ")}`
+  );
 });
 
 test("vercel runtime calls the rpc endpoint directly", () => {
@@ -780,6 +815,7 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./infra/supabase-rest.js",
       "./infra/groq-client.js",
       "./auth/session.js",
+      "./auth/mcp-token.js",
       "./auth/permissions.js",
       "./shared/text.js",
       "./shared/filters.js",

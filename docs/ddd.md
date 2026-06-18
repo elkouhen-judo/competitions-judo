@@ -28,7 +28,7 @@ This classification drives where to invest modeling effort: the **Competition Tr
 
 ## 2. Ubiquitous Language
 
-The language below is the vocabulary actually used in code (function names, types, error messages) and in `docs/prd.md` user stories. Business terms stay in French where the product already uses French (matching club vocabulary and Supabase column names); structural/technical terms stay in English.
+The language below is the vocabulary actually used in code (function names, types, error messages) and in `docs/spec.md`'s functional rules. Business terms stay in French where the product already uses French (matching club vocabulary and Supabase column names); structural/technical terms stay in English.
 
 | Term | Meaning | Bounded context |
 |---|---|---|
@@ -73,7 +73,7 @@ Kiroku is a single deployable (a modular monolith on Vercel + Supabase), so thes
 - **Shared Kernel**: `core/types.ts` defines canonical DTOs (`Judoka`, `Competition`, `Combat`, …) that all three contexts agree on. This is a deliberate, small shared kernel — acceptable because one team owns all three contexts.
 - **Domain policy as a thin bridge**: `core/domain/access/permission-policy.ts` is the only module that knows about *both* a `Judoka` (Access & Membership) and a `Competition` (Competition Tracking). It is kept as pure, side-effect-free predicate functions (`canManageCompetition`, `canAccessCompetition`, `assertCan*`) precisely so neither context has to import the other's aggregates — only this policy crosses the boundary.
 - **Anti-corruption / translation layer**: `core/services/domain-adapters.ts` translates Supabase's historical French snake_case rows (`id_judoka`, `categorie_age`, `garde_adversaire`, …) into the canonical camelCase domain language (`judokaId`, `ageCategory`, `opponentStance`, …) and back. This isolates every other module — domain, services, even the frontend — from the persistence model's accidental complexity.
-- **Open host / single endpoint**: `/api/rpc` is the only door into all three contexts from the outside (browser). It does no business logic itself; it dispatches by method name into the appropriate application service.
+- **Open host / single endpoint**: `/api/rpc` is the only door into all three contexts from the browser. It does no business logic itself; it dispatches by method name into the appropriate application service. A second open host, `/api/mcp` (plus its OAuth surface in `/api/mcp-oauth.js`), exposes a subset of the same application services to external MCP clients (Claude Desktop, Claude.ai connectors); it reuses the RPC method registry as its tool implementations (`core/services/mcp-server.service.ts`) rather than duplicating business logic, and layers its own scope-based authorization (`core/services/mcp-auth.service.ts`) on top of the existing `permission-policy.ts` role checks.
 - **Downstream, read-only dependency**: Performance Insights never mutates Competition or Combat; it only reads them (via `competitionsRepository` / `combatsRepository`) to compute statistics or to build the Groq prompt.
 
 ## 4. Bounded Context: Access & Membership
@@ -103,7 +103,7 @@ A stateless policy module, not an aggregate: `isAdmin`, `isCoach`, `isParent`, `
 
 ### Invariants
 
-- A judoka's `profileType` never changes after creation (`AUTH-012`, `AUTH-067` in `docs/prd.md`).
+- A judoka's `profileType` never changes after creation (`ROL-005`, `AUTH-012` in `docs/spec.md`).
 - An admin cannot grant themselves admin twice, nor revoke their own admin rights (`judoka.ts`).
 - A parent's visibility is strictly bounded by their `ManagedJudokaScope`; a `JUDOKA` without elevated roles only ever sees `OWN`.
 
@@ -184,7 +184,7 @@ These are intentional simplifications appropriate for a single-club, single-proc
 
 ## 9. Related Reading
 
-- `docs/prd.md` — product vision and user stories (the source of the ubiquitous language above).
-- `docs/spec.md` — ID-tagged functional rules (`REQ-*`, `COMP-*`, `CBT-*`, `STA-*`, `AUTH-*`, `AC-*`) that this document's invariants summarize.
+- `docs/prd.md` — product vision: problem, solution, and principles behind the domain modeled here.
+- `docs/spec.md` — ID-tagged functional rules (`REQ-*`, `COMP-*`, `CBT-*`, `STA-*`, `AUTH-*`, `AC-*`), the source of the ubiquitous language above, that this document's invariants summarize.
 - `docs/spec-tech.md` — architecture, data model, security; in particular `ARC-005`–`ARC-008` already describe the domain/service/repository layering this document explains in DDD terms.
 - `docs/supabase-schema.md` — the persistence model the anti-corruption layer (`domain-adapters.ts`) translates to and from.

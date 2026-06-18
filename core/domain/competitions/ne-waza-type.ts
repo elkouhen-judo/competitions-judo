@@ -1,5 +1,7 @@
 export type NeWazaType = "Clé" | "Étranglement" | "Osaekomi";
 
+export const NE_WAZA_TYPES: NeWazaType[] = ["Clé", "Étranglement", "Osaekomi"];
+
 const NE_WAZA_TYPE_ALIASES = new Map<string, NeWazaType>([
   ["cle", "Clé"],
   ["cle de bras", "Clé"],

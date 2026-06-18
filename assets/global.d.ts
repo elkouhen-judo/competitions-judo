@@ -1,6 +1,5 @@
 import type {
   AdminsScreen,
-  AppScreens,
   AuthApi,
   CoachDashboardScreen,
   CompetitionScreen,

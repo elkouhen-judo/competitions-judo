@@ -1,6 +1,7 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
 import { getAllowedDecisionTypesForCombatResult } from "./competitions/combat-decision-type";
-import { GENDERS, HANDEDNESSES } from "./category-reference";
+import { OPPONENT_STANCES } from "./competitions/opponent-stance";
+import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
 import type {
   Combat,
   CoachDashboardDecisionBreakdownEntry,
@@ -10,9 +11,6 @@ import type {
   CoachDashboardStanceBreakdownEntry,
   CoachDashboardStats
 } from "../types";
-
-const OPPONENT_STANCES = ["Droitier", "Gaucher"];
-const COMPETITION_LEVELS = ["Départemental", "Régional", "National", "International"];
 
 export type CoachDashboardCombat = Combat & {
   competitionLevel?: string;
