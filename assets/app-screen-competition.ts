@@ -910,6 +910,11 @@
         ownerJudokaId: undefined as string | undefined
       };
 
+      if (!competition.ageCategory) {
+        showError({ message: "Sélectionnez une catégorie d'âge avant d'enregistrer la compétition." });
+        return;
+      }
+
       if (state.isParent) {
         competition.ownerJudokaId = resolveCompetitionOwnerSelection();
         if (!competition.ownerJudokaId) {

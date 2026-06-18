@@ -542,6 +542,37 @@ test("saveCompetition lets the owner edit their own competition", async () => {
   assert.equal(calls.updated[0].draft.name, "Tournoi Nantes 2");
 });
 
+test("saveCompetition lets the owner add age and weight categories to a legacy competition", async () => {
+  const { service, calls } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        nom: "Tournoi",
+        date: "2026-06-14",
+        categorie_age: "",
+        categorie_poids: ""
+      }
+    },
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  const result = await service.methods.saveCompetition("judoka@example.com", {
+    competitionId: "COMP1",
+    name: "Tournoi Nantes 2",
+    competitionDate: "2026-06-15",
+    ageCategory: "Cadet",
+    weightCategory: "-50kg"
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.message, "Compétition modifiée.");
+  assert.equal(calls.updated.length, 1);
+  assert.equal(calls.updated[0].idCompetition, "COMP1");
+  assert.equal(calls.updated[0].draft.ageCategory, "Cadet");
+  assert.equal(calls.updated[0].draft.weightCategory, "-50kg");
+});
+
 test("saveCompetition rejects editing a competition owned by another judoka", async () => {
   const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {

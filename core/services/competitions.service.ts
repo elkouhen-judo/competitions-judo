@@ -199,10 +199,24 @@ export default function createCompetitionsService(
       );
 
       const existingDomainCompetition = toCanonicalCompetition(existingCompetition);
-      const competitionDraft = createPersistedCompetition(existingDomainCompetition).changeDetails({
-        ...domainCompetitionInput,
+      const competitionDraft = createCompetition(
+        {
+          ...existingDomainCompetition,
+          ...domainCompetitionInput,
+          competitionId,
+          clubCompetitionId:
+            domainCompetitionInput.clubCompetitionId !== null &&
+            domainCompetitionInput.clubCompetitionId !== undefined
+              ? domainCompetitionInput.clubCompetitionId
+              : existingDomainCompetition.clubCompetitionId,
+          ownerJudokaId,
+          result:
+            domainCompetitionInput.result !== null && domainCompetitionInput.result !== undefined
+              ? domainCompetitionInput.result
+              : existingDomainCompetition.result
+        },
         ownerJudokaId
-      });
+      );
       await competitionsRepository.update(competitionId, competitionDraft);
       return {
         success: true,
