@@ -14,6 +14,12 @@
     clubCompetitionId: string;
     name: string;
     date: string;
+    participantCount: number;
+    rankedCount: number;
+    podiumCount: number;
+    missingCoachReviewCount: number;
+    summary: string;
+    statusLabel: string;
   }
 
   interface HomeCompetitionCard {
@@ -304,11 +310,35 @@
           page: window.KirokuScreenProjections.paginateList([] as HomeClubCompetitionCard[], 1, defaultListPageSize)
         };
       }
-      const all = past.map((cc) => ({
-        clubCompetitionId: cc.clubCompetitionId || "",
-        name: cc.name || "Compétition",
-        date: formatDate(cc.competitionDate)
-      }));
+      const all = past.map((cc) => {
+        const linkedCompetitions = state.competitions.filter(
+          (competition) => String(competition.clubCompetitionId || "") === String(cc.clubCompetitionId || "")
+        );
+        const rankedCount = linkedCompetitions.filter((competition) =>
+          cleanText(competition.result || "")
+        ).length;
+        const podiumCount = linkedCompetitions.filter((competition) =>
+          ["1er", "2e", "3e"].includes(cleanText(competition.result || ""))
+        ).length;
+        const missingCoachReviewCount = linkedCompetitions.filter((competition) =>
+          !cleanText(competition.coachReview || "")
+        ).length;
+        const participantCount = linkedCompetitions.length;
+        const statusLabel = participantCount && rankedCount >= participantCount
+          ? "Classements complets"
+          : "À compléter";
+        return {
+          clubCompetitionId: cc.clubCompetitionId || "",
+          name: cc.name || "Compétition",
+          date: formatDate(cc.competitionDate),
+          participantCount,
+          rankedCount,
+          podiumCount,
+          missingCoachReviewCount,
+          summary: `${participantCount} participant(s) · ${rankedCount} classement(s) · ${podiumCount} podium(s)`,
+          statusLabel
+        };
+      });
       return {
         clubCompetitionsList: all,
         hasClubCompetitions: true,
