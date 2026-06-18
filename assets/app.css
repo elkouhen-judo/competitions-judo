@@ -4,10 +4,15 @@
       --text: #111111;
       --muted: #787774;
       --line: #eaeaea;
-      --primary: #111111;
-      --primary-hover: #333333;
-      --accent: #1f6c9f;
-      --accent-soft: #e1f3fe;
+      --primary: #173d36;
+      --primary-hover: #0f2d28;
+      --accent: #0f6d5c;
+      --accent-soft: #e4f4ef;
+      --tatami: #eef2e8;
+      --tatami-line: #d9e1d1;
+      --surface: #fbfcfa;
+      --radius: 6px;
+      --radius-card: 8px;
       --danger: #9f2f2d;
       --danger-hover: #7d2422;
       --danger-soft: #fdebec;
@@ -36,9 +41,9 @@
     body {
       min-height: 100vh;
       margin: 0;
-      background: var(--bg);
+      background: #f6f7f4;
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, Helvetica, sans-serif;
+      font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, Helvetica, sans-serif;
       font-size: 16px;
       line-height: 1.45;
     }
@@ -99,10 +104,10 @@
     h2,
     h3,
     .hero-title {
-      font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
-      letter-spacing: -0.02em;
+      font-family: inherit;
+      letter-spacing: 0;
       line-height: 1.1;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .card-title {
@@ -245,8 +250,19 @@
       display: grid;
       gap: 12px;
       padding: 20px 16px;
-      background: var(--soft);
+      background: var(--tatami);
       border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header > div:first-child {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .panel-header h2,
+    .section-heading h3 {
+      overflow-wrap: anywhere;
     }
 
     .panel-body {
@@ -566,7 +582,7 @@
     .checkbox-row:active,
     .checkbox-row:focus-within {
       border-color: var(--accent);
-      background: #f4f7ff;
+      background: var(--accent-soft);
     }
 
     .checkbox-row input[type="checkbox"] {
@@ -577,7 +593,7 @@
 
     .card {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius-card);
       background: #ffffff;
       padding: 16px;
       box-shadow: none;
@@ -586,7 +602,9 @@
 
     .competition-card {
       display: grid;
-      gap: 12px;
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
     }
 
     .card-button {
@@ -601,12 +619,13 @@
 
     .competition-open-button {
       border: 0;
-      padding: 0;
+      padding: 15px;
+      border-radius: 0;
     }
 
     .competition-card-button-copy {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .card-button:hover {
@@ -671,12 +690,17 @@
       margin-top: 16px;
     }
 
+    .competition-card .card-actions {
+      margin-top: 0;
+      padding: 0 15px 15px;
+    }
+
     .card-actions button {
       min-width: 0;
     }
 
     .card-open-hint {
-      color: var(--text);
+      color: var(--accent);
       font-size: 14px;
       font-weight: bold;
     }
@@ -687,17 +711,26 @@
 
     .summary {
       display: grid;
-      gap: 4px;
+      gap: 2px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fff;
-      padding: 12px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 14px;
       transition: transform 180ms ease, border-color 180ms ease;
+    }
+
+    .competition-summary {
+      border-left: 4px solid var(--accent);
     }
 
     .form-grid {
       display: grid;
       gap: 0;
+    }
+
+    .form-grid > div,
+    .full-row {
+      min-width: 0;
     }
 
     .form-actions {
@@ -770,8 +803,8 @@
       gap: 8px;
       padding: 12px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fff;
+      border-radius: var(--radius);
+      background: var(--surface);
     }
 
     .combat-score-row-title {
@@ -910,14 +943,25 @@
 
     .section {
       border-top: 1px solid var(--line);
-      margin-top: 20px;
-      padding-top: 20px;
+      margin-top: 24px;
+      padding-top: 22px;
+    }
+
+    .panel-body > .section:first-child {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
     }
 
     .section-heading {
       display: grid;
       gap: 8px;
       margin-bottom: 12px;
+    }
+
+    .section-heading .subtitle {
+      margin-top: 2px;
+      max-width: 42rem;
     }
 
     .coach-filter-heading {
@@ -943,6 +987,21 @@
       gap: 8px;
     }
 
+    .dashboard-date-range {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 12px;
+      align-items: end;
+    }
+
+    .dashboard-date-range label {
+      grid-row: 1;
+    }
+
+    .dashboard-date-range input {
+      grid-row: 2;
+    }
+
     .dashboard-filter-summary span,
     .coach-card-status,
     .coach-summary-warning {
@@ -951,7 +1010,7 @@
       min-height: 28px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: #ffffff;
+      background: var(--surface);
       color: var(--text);
       padding: 4px 9px;
       font-size: 13px;
@@ -989,7 +1048,7 @@
 
     .section-heading h3 {
       padding-left: 10px;
-      border-left: 4px solid var(--primary);
+      border-left: 4px solid var(--accent);
     }
 
     .combat-profile-grid {
@@ -1053,7 +1112,7 @@
     .dash-hero {
       padding: 14px;
       border-bottom: 1px solid var(--line);
-      background: var(--soft);
+      background: linear-gradient(180deg, #f7f9f4 0%, #eef2e8 100%);
       display: grid;
       gap: 12px;
     }
@@ -1159,11 +1218,11 @@
 
     .empty-state {
       border: 1px dashed var(--line);
-      border-radius: 6px;
+      border-radius: var(--radius);
       color: var(--muted);
       padding: 24px 18px;
       text-align: center;
-      background: #fff;
+      background: var(--surface);
     }
 
     /* Skeleton loading cards */
@@ -1208,10 +1267,10 @@
       gap: 10px;
       justify-items: center;
       border: 1.5px dashed var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius-card);
       padding: 36px 20px;
       text-align: center;
-      background: var(--soft);
+      background: var(--surface);
     }
 
     .empty-action-icon {
@@ -1244,8 +1303,9 @@
       gap: 10px;
       margin-bottom: 12px;
       padding: 10px 12px;
-      border-radius: 6px;
-      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
     }
 
     .list-summary-text {
@@ -1266,7 +1326,7 @@
       align-items: center;
       gap: 10px;
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: var(--radius);
       padding: 12px 14px;
       background: #fff;
       box-shadow: none;
@@ -1565,14 +1625,14 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
       gap: 12px;
     }
 
     .stat-card {
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fff;
+      border-radius: var(--radius);
+      background: var(--surface);
       padding: 14px;
       box-shadow: none;
       transition: transform 180ms ease, border-color 180ms ease;
@@ -1626,17 +1686,17 @@
 
     .stat-card-highlight {
       border-color: var(--line);
-      background: #ffffff;
+      background: var(--surface);
     }
 
     .stat-card-success {
       border-color: var(--line);
-      background: #fff;
+      background: var(--surface);
     }
 
     .stat-card-danger {
       border-color: var(--line);
-      background: #fff;
+      background: var(--surface);
     }
 
     .judoka-hero {
@@ -1644,10 +1704,10 @@
       gap: 14px;
       margin-bottom: 18px;
       padding: 18px;
-      border-radius: 6px;
+      border-radius: var(--radius);
       border: 1px solid var(--line);
       border-left: 4px solid var(--accent);
-      background: #ffffff;
+      background: var(--surface);
       box-shadow: none;
     }
 

@@ -7,6 +7,7 @@ import type {
   CoachDashboardDecisionBreakdownEntry,
   CoachDashboardGenderBreakdownEntry,
   CoachDashboardHandednessBreakdownEntry,
+  CoachDashboardLateralMatchupBreakdownEntry,
   CoachDashboardLevelBreakdownEntry,
   CoachDashboardStanceBreakdownEntry,
   CoachDashboardStats
@@ -80,6 +81,37 @@ function computeStanceBreakdown(
   });
 }
 
+function computeLateralMatchupBreakdown(
+  combats: CoachDashboardCombat[]
+): CoachDashboardLateralMatchupBreakdownEntry[] {
+  const decidedCombats = combats.filter(
+    (combat) =>
+      (isVictoryCombatResult(combat.result) || isLossCombatResult(combat.result)) &&
+      Boolean(combat.judokaHandedness) &&
+      Boolean(combat.opponentStance)
+  );
+
+  return [
+    { matchup: "opposite" as const, label: "Garde opposée" },
+    { matchup: "same" as const, label: "Même garde" }
+  ].map((entry) => {
+    const matchupCombats = decidedCombats.filter((combat) =>
+      entry.matchup === "opposite"
+        ? combat.judokaHandedness !== combat.opponentStance
+        : combat.judokaHandedness === combat.opponentStance
+    );
+    const victories = matchupCombats.filter((combat) =>
+      isVictoryCombatResult(combat.result)
+    ).length;
+    return {
+      ...entry,
+      combats: matchupCombats.length,
+      victories,
+      victoryRate: computeRate(victories, matchupCombats.length)
+    };
+  });
+}
+
 function computeLevelBreakdown(
   combats: CoachDashboardCombat[]
 ): CoachDashboardLevelBreakdownEntry[] {
@@ -125,6 +157,7 @@ export function computeCoachDashboardStats(combats: CoachDashboardCombat[]): Coa
     victoriesByDecisionType: computeDecisionBreakdown(combats, "Victoire"),
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
     byOpponentStance: computeStanceBreakdown(combats),
+    byLateralMatchup: computeLateralMatchupBreakdown(combats),
     byCompetitionLevel: computeLevelBreakdown(combats),
     judokasByGender: computeJudokaCountByGender(combats),
     judokasByHandedness: computeJudokaStatsByHandedness(combats)

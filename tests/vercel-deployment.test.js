@@ -587,7 +587,7 @@ test("pending invitations stay visible merged into the users list instead of a s
 test("judoka profile exposes season statistics through a dedicated screen", () => {
   assert.match(
     uiBundle,
-    /id="openHomeJudokaProfileButton" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile\(\)"/
+    /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile\(\)"/
   );
   assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
   assert.match(uiBundle, /id="judokaView" class="panel hidden"/);

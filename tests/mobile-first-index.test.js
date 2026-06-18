@@ -143,13 +143,38 @@ test("club competition creation keeps the shared age and weight categories", () 
   assert.match(bundle, /v-for="weightOption in clubCompetitionWeightCategoryOptions"/);
 });
 
-test("parent home keeps visible competitions when no judoka is selected", () => {
+test("family home keeps the active judoka competition context", () => {
   assert.doesNotMatch(bundle, /if \(\(state\.isAdmin \|\| state\.isParent\) && !activeJudoka\) \{/);
   assert.match(bundle, /let filteredComps = state\.competitions;/);
   assert.match(
     bundle,
     /if \(activeJudokaId\) \{\s*filteredComps = state\.competitions\.filter\(\s*\(?c\)? => String\(c\.ownerJudokaId\) === String\(activeJudokaId\)\s*\);/
   );
+  assert.match(bundle, /return \(mode === "coachJudoka" \|\| mode === "family"\) && state\.judokas\.length > 0;/);
+  assert.match(bundle, /filterPlaceholder: "Choisir un judoka\.\.\."/);
+  assert.match(bundle, /label: "Judoka actif"/);
+  assert.match(bundle, /Sélectionnez un judoka pour voir ses résultats\./);
+  assert.doesNotMatch(bundle, /Moi ou mes enfants/);
+});
+
+test("coach home stays club-centered and separate from judoka consultation", () => {
+  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Espace coach" \}\);/);
+  assert.match(bundle, /modes\.push\(\{ key: "coachJudoka", label: "Vue judoka" \}\);/);
+  assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
+  assert.match(bundle, /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/);
+  assert.match(bundle, /homeTitle: "Espace coach"[\s\S]*showCompetitionsSection: false/);
+  assert.match(bundle, /canOpenJudokaProfile = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) !== "coach"\s*\)/);
+  assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
+  assert.doesNotMatch(bundle, /const firstCoachJudoka = mode === "coach"/);
+});
+
+test("coach judoka view shows the selected judoka competition history", () => {
+  assert.match(bundle, /homeTitle: "Vue judoka"/);
+  assert.match(bundle, /if \(mode === "coachJudoka"\) \{/);
+  assert.match(bundle, /if \(\(mode === "coachJudoka" \|\| mode === "family"\) && !activeJudokaId\) \{/);
+  assert.match(bundle, /const emptyMsg = mode === "coachJudoka"/);
+  assert.match(bundle, /Aucune compétition enregistrée pour ce judoka\./);
+  assert.match(bundle, /Aucune compétition planifiée pour ce judoka\./);
 });
 
 test("admin management screen is available in the mobile action flow", () => {
@@ -182,6 +207,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaSeasonBalance"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
   assert.match(bundle, /id="judoka_couleur_ceinture"/);
+  assert.match(bundle, /<label for="judoka_lateralite">Garde<\/label>/);
   assert.match(judokaScreenClient, /const isManagedProfile = /);
   assert.match(
     judokaScreenClient,
@@ -292,9 +318,14 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /function ensureJudokaView\(\)/);
   assert.match(bundle, /\{\{ heroGender \}\}/);
   assert.match(bundle, /\{\{ heroYearInCategory \}\}/);
+  assert.match(bundle, /\{\{ heroWeightCategory \}\}/);
   assert.match(bundle, /\{\{ heroHandedness \}\}/);
   assert.match(bundle, /v-model="handednessEditing"/);
-  assert.match(bundle, /heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroHandedness,\s*heroSeason,/);
+  assert.match(
+    bundle,
+    /id="judokaHeroRecord"[\s\S]*id="judokaHeroCategory"[\s\S]*id="judokaHeroYearInCategory"[\s\S]*id="judokaHeroWeightCategory"[\s\S]*id="judokaHeroGender"[\s\S]*id="judokaHeroHandedness"[\s\S]*id="judokaHeroBeltColor"/
+  );
+  assert.match(bundle, /heroCategory,\s*heroWeightCategory,\s*heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroHandedness,\s*heroSeason,/);
   assert.match(
     bundle,
     /select v-if="weightCategoryOptions\.length" id="judoka_categorie_poids" v-model="weightCategoryEditing"/
@@ -320,6 +351,10 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     /const viewIds = \[\s*"loginView",\s*"homeView",\s*"judokaView",\s*"adminsView",\s*"coachDashboardView",\s*"competitionView"/
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
+  assert.match(bundle, /id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm\.dateFrom"/);
+  assert.match(bundle, /id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm\.dateTo"/);
+  assert.match(client, /dateFrom: coachDashboardViewModel\.coachDashboardForm\.dateFrom/);
+  assert.match(client, /dateTo: coachDashboardViewModel\.coachDashboardForm\.dateTo/);
   assert.match(bundle, /v-if="coachDashboardYearOptions\.length"/);
   assert.match(
     bundle,
@@ -340,17 +375,18 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(bundle, /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/);
-  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité<\/span>/);
+  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde<\/span>/);
   assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<h3>Performance globale<\/h3>/);
   assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
   assert.match(bundle, /class="section-heading dashboard-subsection"/);
   assert.match(bundle, /\.dashboard-subsection\s*\{/);
-  assert.match(bundle, /Performance selon la garde de l'adversaire/);
-  assert.match(bundle, /Taux de victoire selon que l'adversaire est droitier ou gaucher\./);
-  assert.match(bundle, /Performance selon la latéralité du judoka/);
-  assert.match(bundle, /Taux de victoire des judokas droitiers vs gauchers dans le périmètre filtré\./);
+  assert.match(bundle, /<h3>Garde<\/h3>/);
+  assert.match(
+    bundle,
+    /Taux de victoire quand judoka et adversaire ont une garde opposée ou identique\./
+  );
   assert.match(
     bundle,
     /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
@@ -377,20 +413,14 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde adverse<\/span>[\s\S]*coachDashboardByOpponentStance\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByOpponentStance\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByOpponentStance\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.victoryRate \|\| 0/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
   assert.match(
     bundle,
     /v-for="entry in coachDashboardByCompetitionLevel" :key="entry\.level" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
   );
-  assert.match(
-    bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité judoka<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victoryRate \|\| 0/
-  );
-  assert.match(
-    bundle,
-    /Performance selon la garde de l'adversaire[\s\S]*<\/div>\s*<\/div>\s*<div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">[\s\S]*Performance selon la latéralité du judoka/
-  );
+  assert.doesNotMatch(bundle, /Performance selon la garde de l'adversaire/);
+  assert.doesNotMatch(bundle, /Performance selon la garde historique du judoka/);
   assert.match(bundle, /\.stat-card-split\s*\{/);
   assert.match(bundle, /\.split-stat-grid\s*\{/);
   assert.match(bundle, /\.split-stat-label\s*\{/);

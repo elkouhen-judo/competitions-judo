@@ -44,6 +44,8 @@ export default function createCoachDashboardService(
 
     const ageCategory = String(filters.ageCategory || "").trim();
     const categoryYear = String(filters.categoryYear || "").trim();
+    const dateFrom = String(filters.dateFrom || "").trim();
+    const dateTo = String(filters.dateTo || "").trim();
     const gender = String(filters.gender || "").trim();
     const handedness = String(filters.handedness || "").trim();
     const selectedCompetitionIds =
@@ -54,6 +56,13 @@ export default function createCoachDashboardService(
     const allCompetitionRows = await competitionsRepository.listAll();
     const competitionRows = allCompetitionRows.filter((competition) => {
       if (selectedCompetitionIds && !selectedCompetitionIds.has(String(competition.id_competition))) {
+        return false;
+      }
+      const competitionDate = String(competition.date || "");
+      if (dateFrom && competitionDate < dateFrom) {
+        return false;
+      }
+      if (dateTo && competitionDate > dateTo) {
         return false;
       }
       if (ageCategory && String(competition.categorie_age || "") !== ageCategory) {
