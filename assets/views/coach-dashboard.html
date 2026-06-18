@@ -13,12 +13,15 @@
       </div>
       <div class="panel-body">
         <div class="section">
-          <div class="section-heading">
+          <div class="section-heading coach-filter-heading">
             <div>
               <h3>Filtres</h3>
             </div>
+            <button class="button-secondary compact-button" type="button" @click="toggleCoachDashboardFilters()">
+              {{ filtersExpanded ? 'Masquer' : 'Afficher' }}
+            </button>
           </div>
-          <div class="form-grid">
+          <div v-show="filtersExpanded" class="form-grid">
             <div>
               <label for="coachDashboard_categorie_age">Catégorie d'âge</label>
               <select id="coachDashboard_categorie_age" v-model="coachDashboardForm.ageCategory" @change="onCoachDashboardAgeCategoryChange()">
@@ -58,7 +61,7 @@
             </div>
           </div>
 
-          <div class="section-heading">
+          <div v-show="filtersExpanded" class="section-heading">
             <div>
               <h3>Compétitions
                 <span v-if="coachDashboardForm.competitionIds.length" class="result-badge">{{ coachDashboardForm.competitionIds.length }} sélectionnée(s)</span>
@@ -66,17 +69,28 @@
               </h3>
             </div>
           </div>
-          <div v-if="!competitionOptions.length" class="empty-state">Aucune compétition disponible.</div>
-          <div v-else class="list">
+          <div v-show="filtersExpanded" class="filter-bar">
+            <label for="coachDashboardCompetitionSearch">Rechercher une compétition</label>
+            <input type="search" id="coachDashboardCompetitionSearch" placeholder="Nom ou date..." autocomplete="off" v-model="competitionSearchText" @input="updateCoachDashboardCompetitionSearch()">
+          </div>
+          <div v-show="filtersExpanded && !competitionOptions.length" class="empty-state">Aucune compétition disponible.</div>
+          <div v-show="filtersExpanded && competitionOptions.length" class="list dashboard-competition-list">
             <label v-for="competition in competitionOptions" :key="competition.competitionId" class="checkbox-row">
               <input type="checkbox" :value="competition.competitionId" v-model="coachDashboardForm.competitionIds">
-              <span>{{ competition.name }}</span>
+              <span>{{ competition.name }} · {{ competition.competitionDate }}</span>
             </label>
           </div>
 
-          <div class="form-actions mobile-action-bar">
+          <div v-show="filtersExpanded" class="form-actions mobile-action-bar">
             <button class="button-secondary" type="button" @click="resetCoachDashboardFilters()">Réinitialiser</button>
             <button id="applyCoachDashboardFiltersButton" type="button" :disabled="isSubmitting" @click="applyCoachDashboardFilters()">Actualiser</button>
+          </div>
+          <div v-show="!filtersExpanded" class="dashboard-filter-summary">
+            <span v-if="coachDashboardForm.competitionIds.length">{{ coachDashboardForm.competitionIds.length }} compétition(s)</span>
+            <span v-else>Toutes compétitions</span>
+            <span v-if="coachDashboardForm.ageCategory">{{ coachDashboardForm.ageCategory }}</span>
+            <span v-if="coachDashboardForm.gender">{{ coachDashboardForm.gender }}</span>
+            <span v-if="coachDashboardForm.handedness">{{ coachDashboardForm.handedness }}</span>
           </div>
         </div>
 
