@@ -127,12 +127,20 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
-test("club competition creation keeps only the shared event basics", () => {
+test("club competition creation keeps the shared age and weight categories", () => {
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="club_competition_name"/);
   assert.match(bundle, /id="club_competition_date"/);
-  assert.doesNotMatch(bundle, /id="club_competition_age"/);
-  assert.doesNotMatch(bundle, /id="club_competition_weight"/);
+  assert.match(bundle, /id="club_competition_categorie_age"/);
+  assert.match(
+    bundle,
+    /select v-if="clubCompetitionWeightCategoryOptions\.length" id="club_competition_categorie_poids" v-model="clubCompetitionForm\.weightCategory"/
+  );
+  assert.match(
+    bundle,
+    /input v-else id="club_competition_categorie_poids" v-model="clubCompetitionForm\.weightCategory" type="text" :disabled="!clubCompetitionForm\.ageCategory"/
+  );
+  assert.match(bundle, /v-for="weightOption in clubCompetitionWeightCategoryOptions"/);
 });
 
 test("parent home keeps visible competitions when no judoka is selected", () => {
@@ -284,16 +292,21 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /function ensureJudokaView\(\)/);
   assert.match(bundle, /\{\{ heroGender \}\}/);
   assert.match(bundle, /\{\{ heroYearInCategory \}\}/);
-  assert.match(bundle, /heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroSeason,/);
+  assert.match(bundle, /\{\{ heroHandedness \}\}/);
+  assert.match(bundle, /v-model="handednessEditing"/);
+  assert.match(bundle, /heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroHandedness,\s*heroSeason,/);
   assert.match(
     bundle,
-    /select id="judoka_categorie_poids" v-model="weightCategoryEditing" :disabled="!weightCategoryOptions\.length"/
+    /select v-if="weightCategoryOptions\.length" id="judoka_categorie_poids" v-model="weightCategoryEditing"/
+  );
+  assert.match(
+    bundle,
+    /input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing"/
   );
   assert.match(bundle, /v-for="weightOption in weightCategoryOptions"/);
   assert.match(bundle, /v-if="yearInCategoryOptions\.length"/);
   assert.match(bundle, /v-for="yearOption in yearInCategoryOptions"/);
   assert.match(bundle, /function onJudokaInfoAgeOrGenderChange\(\)/);
-  assert.doesNotMatch(bundle, /id="judoka_categorie_poids" type="text"/);
 });
 
 test("judoka profile client script stays parseable", () => {
@@ -309,6 +322,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     /v-model="coachDashboardForm\.categoryYear"[\s\S]*v-for="yearOption in coachDashboardYearOptions"/
   );
   assert.match(bundle, /v-model="coachDashboardForm\.gender"/);
+  assert.match(bundle, /v-model="coachDashboardForm\.handedness"/);
   assert.match(
     bundle,
     /v-for="competition in competitionOptions"[\s\S]*v-model="coachDashboardForm\.competitionIds"/
@@ -319,6 +333,8 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     /v-for="entry in coachDashboardJudokasByGender" :key="entry\.gender" class="stat-card"/
   );
   assert.match(bundle, /Judokas \{\{ entry\.gender \}\}[\s\S]*entry\.judokaCount/);
+  assert.match(bundle, /v-for="entry in coachDashboardJudokasByHandedness"/);
+  assert.match(bundle, /Performance par latéralité judoka/);
   assert.match(
     bundle,
     /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
@@ -392,10 +408,13 @@ test("competition form keeps age and weight categories without place or actual w
   );
   assert.match(
     bundle,
-    /select id="competition_categorie_poids" v-model="competitionForm\.weightCategory" :disabled="!competitionWeightCategoryOptions\.length"/
+    /select v-if="competitionWeightCategoryOptions\.length" id="competition_categorie_poids" v-model="competitionForm\.weightCategory"/
+  );
+  assert.match(
+    bundle,
+    /input v-else id="competition_categorie_poids" v-model="competitionForm\.weightCategory" type="text" :disabled="!competitionForm\.ageCategory"/
   );
   assert.match(bundle, /v-for="weightOption in competitionWeightCategoryOptions"/);
-  assert.doesNotMatch(bundle, /id="competition_categorie_poids" type="text"/);
   assert.doesNotMatch(
     bundle,
     /id="competitionResultBlock" :class="\{ hidden: !showCompetitionResultBlock \}"/
@@ -428,9 +447,11 @@ test("coach can open club competition creation and participant management UI", (
     bundle,
     /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/
   );
+  assert.match(bundle, /id="club_competition_categorie_poids"/);
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
+  assert.match(client, /const clubCompetitionWeightCategoryOptions = window\.Vue\.computed\(/);
   assert.match(client, /function showClubCompetitionForm\(\)/);
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);

@@ -76,6 +76,10 @@ export default function createClubCompetitionsService(
 
     const isEditing = Boolean(input.clubCompetitionId);
     const clubCompetitionId = String(input.clubCompetitionId || buildClubCompetitionId());
+    const existing = isEditing
+      ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
+      : [];
+    const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
 
     const participantJudokaIds =
       Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
@@ -87,8 +91,11 @@ export default function createClubCompetitionsService(
     if (!isEditing && !event.participantJudokaIds.length) {
       throw new Error("Au moins un judoka doit être sélectionné.");
     }
-    if (event.participantJudokaIds.length) {
-      const participantRows = await assertParticipantIdsExist(event.participantJudokaIds);
+    const allParticipantJudokaIds = [
+      ...new Set([...existing.map((row) => String(row.id_judoka)), ...event.participantJudokaIds.map(String)])
+    ];
+    if (allParticipantJudokaIds.length) {
+      const participantRows = await assertParticipantIdsExist(allParticipantJudokaIds);
       assertParticipantsMatchAgeCategory(participantRows, event.ageCategory);
     }
 
@@ -98,10 +105,22 @@ export default function createClubCompetitionsService(
       await clubCompetitionsRepository.insert(event);
     }
 
-    const existing = isEditing
-      ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
-      : [];
-    const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
+    for (const participation of existing) {
+      const competition = createCompetition(
+        {
+          competitionId: participation.id_competition,
+          clubCompetitionId,
+          name: event.name,
+          competitionDate: event.competitionDate,
+          ageCategory: event.ageCategory,
+          weightCategory: event.weightCategory,
+          level: participation.niveau || "",
+          result: participation.classement || ""
+        },
+        participation.id_judoka
+      );
+      await competitionsRepository.update(participation.id_competition, competition);
+    }
 
     for (const judokaId of event.participantJudokaIds) {
       if (existingJudokaIds.has(String(judokaId))) {

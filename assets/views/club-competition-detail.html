@@ -24,6 +24,28 @@
             <label for="club_detail_date">Date</label>
             <input id="club_detail_date" type="date" v-model="clubCompetitionDetailForm.competitionDate">
           </div>
+          <div>
+            <label for="club_detail_categorie_age">Catégorie d'âge</label>
+            <select id="club_detail_categorie_age" v-model="clubCompetitionDetailForm.ageCategory" @change="updateClubCompetitionDetailAgeCategory()">
+              <option value="">Sélectionnez une catégorie</option>
+              <option value="Poussinet">Poussinet</option>
+              <option value="Poussin">Poussin</option>
+              <option value="Benjamin">Benjamin</option>
+              <option value="Minime">Minime</option>
+              <option value="Cadet">Cadet</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
+              <option value="Vétéran">Vétéran</option>
+            </select>
+          </div>
+          <div>
+            <label for="club_detail_categorie_poids">Catégorie de poids</label>
+            <select v-if="clubCompetitionDetailWeightCategoryOptions.length" id="club_detail_categorie_poids" v-model="clubCompetitionDetailForm.weightCategory">
+              <option value="">Non renseignée</option>
+              <option v-for="weightOption in clubCompetitionDetailWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
+            </select>
+            <input v-else id="club_detail_categorie_poids" v-model="clubCompetitionDetailForm.weightCategory" type="text" :disabled="!clubCompetitionDetailForm.ageCategory" :placeholder="clubCompetitionDetailForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
+          </div>
         </div>
 
         <div class="section">
