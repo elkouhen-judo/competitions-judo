@@ -363,7 +363,7 @@ test("detaching a club participant keeps the individual competition", async () =
   assert.match(result.message, /sans supprimer ses résultats/);
 });
 
-test("deleting a club competition removes the linked individual competitions", async () => {
+test("deleting a club competition detaches linked individual competitions", async () => {
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
@@ -375,7 +375,7 @@ test("deleting a club competition removes the linked individual competitions", a
         { id_competition: "COMP1", id_judoka: "J1" },
         { id_competition: "COMP2", id_judoka: "J2" }
       ],
-      remove: async (id) => calls.push(["removeCompetition", id])
+      detachFromClubCompetition: async (id) => calls.push(["detach", id])
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -394,11 +394,22 @@ test("deleting a club competition removes the linked individual competitions", a
   const result = await service.methods.deleteClubCompetition("coach@example.com", "CLUB1");
 
   assert.deepEqual(calls, [
-    ["removeCompetition", "COMP1"],
-    ["removeCompetition", "COMP2"],
+    ["detach", "COMP1"],
+    ["detach", "COMP2"],
     ["removeClub", "CLUB1"]
   ]);
-  assert.match(result.message, /compétitions et combats des judokas associés/);
+  assert.match(result.message, /sans supprimer les compétitions et combats/);
+});
+
+test("getCoachDashboard rejects an admin requester", async () => {
+  const { service } = createTestCoachDashboardService({
+    getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+  });
+
+  await assert.rejects(
+    () => service.methods.getCoachDashboard("admin@example.com", {}),
+    /réservé aux coachs/
+  );
 });
 
 function createTestCompetitionsService({
@@ -689,7 +700,27 @@ test("saveCoachReview rejects a normal judoka", async () => {
 
   await assert.rejects(
     () => service.methods.saveCoachReview("judoka@example.com", "COMP1", "Bilan"),
-    /Seul un coach ou administrateur/
+    /Seul un coach/
+  );
+});
+
+test("saveCoachReview rejects an admin", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        nom: "Tournoi",
+        date: "2026-06-14",
+        categorie_age: "Cadet"
+      }
+    },
+    getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+  });
+
+  await assert.rejects(
+    () => service.methods.saveCoachReview("admin@example.com", "COMP1", "Bilan"),
+    /Seul un coach/
   );
 });
 
@@ -1729,6 +1760,43 @@ test("parent cannot update an unrelated judoka profile", async () => {
 
   await assert.rejects(
     () => service.methods.saveJudokaInfo("parent@example.com", "OTHER", "Minime", "", "Orange"),
+    /Modification de profil non autorisée/
+  );
+});
+
+test("admin cannot update an unrelated judoka sports profile", async () => {
+  const service = createAdminService({
+    invitationsRepository: {},
+    judokasRepository: {
+      saveJudokaInfo: async () => {
+        throw new Error("Unexpected save");
+      }
+    },
+    parentLinksRepository: {},
+    userContextService: {
+      getCurrentUserContext: async () => ({
+        user: { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN" },
+        judokas: [],
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    buildJudokaId: buildTestJudokaIdGenerator(),
+    cleanText,
+    createEmail,
+    createJudoka,
+    createManagedChild,
+    createProfileType,
+    createHandedness,
+    createWeightCategory,
+    createYearInCategory,
+    normalizeEmail: (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+  });
+
+  await assert.rejects(
+    () => service.methods.saveJudokaInfo("admin@example.com", "OTHER", "Minime", "", "Orange"),
     /Modification de profil non autorisée/
   );
 });

@@ -274,8 +274,8 @@ export default function createCompetitionsService(
 
   async function saveCoachObjective(email: string, idCompetition: string, objective: string) {
     const { domainUser } = await userContextService.getDomainUserContext(email);
-    if (domainUser.accessRole !== "COACH" && domainUser.accessRole !== "ADMIN") {
-      throw new Error("Seul un coach ou administrateur peut définir un objectif.");
+    if (domainUser.accessRole !== "COACH") {
+      throw new Error("Seul un coach peut définir un objectif.");
     }
     const competition = await competitionsRepository.getById(idCompetition);
     if (!competition) {
@@ -287,8 +287,8 @@ export default function createCompetitionsService(
 
   async function saveCoachReview(email: string, idCompetition: string, review: string) {
     const { domainUser } = await userContextService.getDomainUserContext(email);
-    if (domainUser.accessRole !== "COACH" && domainUser.accessRole !== "ADMIN") {
-      throw new Error("Seul un coach ou administrateur peut rédiger un bilan.");
+    if (domainUser.accessRole !== "COACH") {
+      throw new Error("Seul un coach peut rédiger un bilan.");
     }
     const competition = await competitionsRepository.getById(idCompetition);
     if (!competition) {

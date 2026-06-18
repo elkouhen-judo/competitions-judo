@@ -115,7 +115,7 @@ test("mcp auth service allows coaches to mint read/write sports scopes", async (
   ]);
 });
 
-test("mcp auth service grants admins read-only club-wide scopes (no sports write access)", async () => {
+test("mcp auth service grants admins access-governance scopes without sports scopes", async () => {
   const service = createMcpAuthService({
     userContextService: {
       async getCurrentUser() {
@@ -131,7 +131,7 @@ test("mcp auth service grants admins read-only club-wide scopes (no sports write
   const result = await service.issueTokenForUser("admin@example.com");
   assert.equal(result.email, "admin@example.com");
   assert.equal(result.role, "ADMIN");
-  assert.deepEqual(result.scopes, ["judokas:read", "competitions:read", "combats:read"]);
+  assert.deepEqual(result.scopes, ["access:read"]);
 });
 
 test("mcp auth service grants parents a scoped read/write subset limited to their own perimeter", async () => {

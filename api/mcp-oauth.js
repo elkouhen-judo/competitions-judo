@@ -11,7 +11,7 @@ const {
 const { getRuntimeAppUrl } = require("./app.js").__internal;
 const { readRawBody } = require("./_read-body");
 
-const MCP_SCOPES = ["judokas:read", "competitions:read", "competitions:write", "combats:read", "combats:write"];
+const MCP_SCOPES = ["access:read", "judokas:read", "competitions:read", "competitions:write", "combats:read", "combats:write"];
 
 function getPathname(req) {
   return new URL(req.url, "http://localhost").pathname;
