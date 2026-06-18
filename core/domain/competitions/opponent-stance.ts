@@ -1,5 +1,7 @@
 export type OpponentStance = "" | "Droitier" | "Gaucher";
 
+export const OPPONENT_STANCES: Exclude<OpponentStance, "">[] = ["Droitier", "Gaucher"];
+
 const OPPONENT_STANCE_ALIASES = new Map<string, OpponentStance>([
   ["droitier", "Droitier"],
   ["droite", "Droitier"],

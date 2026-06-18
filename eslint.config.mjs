@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 import globals from "globals";
 import { defineConfig } from "eslint/config";
 
@@ -44,5 +45,33 @@ export default defineConfig([
         caughtErrorsIgnorePattern: "^_"
       }]
     }
-  }
+  },
+  ...tseslint.config({
+    files: ["core/**/*.ts"],
+    extends: [tseslint.configs.recommended],
+    languageOptions: {
+      globals: globals.node
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", {
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_"
+      }],
+      "@typescript-eslint/no-unused-expressions": ["error", { allowTernary: true, allowShortCircuit: true }]
+    }
+  }),
+  ...tseslint.config({
+    files: ["assets/**/*.ts"],
+    extends: [tseslint.configs.recommended],
+    languageOptions: {
+      globals: globals.browser
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", {
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_"
+      }],
+      "@typescript-eslint/no-unused-expressions": ["error", { allowTernary: true, allowShortCircuit: true }]
+    }
+  })
 ]);

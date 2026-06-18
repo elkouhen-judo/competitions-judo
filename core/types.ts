@@ -286,6 +286,46 @@ export interface InitialData {
   judokas: Judoka[];
 }
 
+export type McpScope =
+  | "judokas:read"
+  | "competitions:read"
+  | "competitions:write"
+  | "combats:read"
+  | "combats:write";
+
+export interface McpTokenClaims {
+  sub: string;
+  email: string;
+  role: string;
+  scopes: McpScope[];
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+}
+
+export interface McpAuthorizationCodeClaims {
+  email: string;
+  role: string;
+  scopes: McpScope[];
+  clientId: string;
+  redirectUri: string;
+  codeChallenge: string;
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+}
+
+export interface McpRegisteredClientClaims {
+  redirectUris: string[];
+  clientName: string;
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+}
+
 /**
  * The full backend RPC registry exposed via `/api/rpc`. Each property is a
  * method name dispatched by `body.method` in `api/rpc.js`.

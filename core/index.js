@@ -1,8 +1,15 @@
-const { getSupabaseConfig, getGroqApiKey, getGroqModel } = require("./config/env.js");
+const {
+  getSupabaseConfig,
+  getGroqApiKey,
+  getGroqModel,
+  getMcpJwtSecret,
+  getMcpTokenTtlSeconds
+} = require("./config/env.js");
 const { createSupabaseClient } = require("./infra/supabase-client.js");
 const { createSupabaseRest } = require("./infra/supabase-rest.js");
 const { createGroqClient } = require("./infra/groq-client.js");
 const createSessionAuth = require("./auth/session.js");
+const { createMcpTokenAuth, sha256Base64Url } = require("./auth/mcp-token.js");
 const permissions = require("./auth/permissions.js");
 const text = require("./shared/text.js");
 const { eqFilter } = require("./shared/filters.js");
@@ -72,6 +79,14 @@ const createRegistrationService =
   /** @type {typeof import("./services/registration.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/registration.service.js").default)
   );
+const createMcpAuthService =
+  /** @type {typeof import("./services/mcp-auth.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/mcp-auth.service.js").default)
+  );
+const createMcpServerService =
+  /** @type {typeof import("./services/mcp-server.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/mcp-server.service.js").default)
+  );
 const { getCompetitionCategoryLabel } = require("./domain/competition-results.js");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.js");
 const { createJudoka, createManagedChild } = require("./domain/access/judoka.js");
@@ -95,6 +110,24 @@ const { toCanonicalJudoka } = require("./services/domain-adapters.js");
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
 const sessionAuth = createSessionAuth({ getSupabaseConfig });
+const mcpTokenAuth = createMcpTokenAuth({
+  getSecret: getMcpJwtSecret,
+  getIssuer: () => "kiroku",
+  getAudience: () => "kiroku-mcp",
+  getTtlSeconds: getMcpTokenTtlSeconds
+});
+const mcpCodeAuth = createMcpTokenAuth({
+  getSecret: getMcpJwtSecret,
+  getIssuer: () => "kiroku",
+  getAudience: () => "kiroku-mcp-code",
+  getTtlSeconds: () => 120
+});
+const mcpClientAuth = createMcpTokenAuth({
+  getSecret: getMcpJwtSecret,
+  getIssuer: () => "kiroku",
+  getAudience: () => "kiroku-mcp-client",
+  getTtlSeconds: () => 60 * 60 * 24 * 365 * 50
+});
 const groqClient = createGroqClient({ getGroqApiKey, getGroqModel });
 
 const repositoryDeps = {
@@ -210,6 +243,14 @@ const registrationService = createRegistrationService({
   supabaseRpc: supabaseClient.supabaseRpc
 });
 
+const mcpAuthService = createMcpAuthService({
+  userContextService,
+  isCoach: permissions.isCoach,
+  isAdmin: permissions.isAdmin,
+  signMcpToken: mcpTokenAuth.signToken,
+  signAuthorizationCode: mcpCodeAuth.signToken
+});
+
 async function getInitialData(email) {
   let currentUser = await userContextService.getCurrentUser(email);
   if (!currentUser) {
@@ -261,8 +302,25 @@ const methods = {
   ...coachDashboardService.methods
 };
 
+const mcpServerService = createMcpServerService({
+  methods,
+  getJudokas: async (email) => {
+    const { judokas } = await userContextService.getCurrentUserContext(email);
+    return judokas;
+  }
+});
+
 module.exports = {
   getSupabaseConfig,
   methods,
+  mcpAuthService,
+  mcpServerService,
+  signMcpToken: mcpTokenAuth.signToken,
+  verifyMcpToken: mcpTokenAuth.verifyToken,
+  verifyMcpAuthorizationCode: mcpCodeAuth.verifyToken,
+  verifyMcpClient: mcpClientAuth.verifyToken,
+  signMcpClient: mcpClientAuth.signToken,
+  getMcpTokenTtlSeconds,
+  sha256Base64Url,
   verifySupabaseUser: sessionAuth.verifySupabaseUser
 };

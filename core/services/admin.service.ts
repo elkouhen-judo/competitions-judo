@@ -81,17 +81,6 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     return user;
   }
 
-  async function requireCoachUser(email: string): Promise<JudokaRow> {
-    const user = await userContextService.getCurrentUser(email);
-    if (!user) {
-      throw new Error(`Accès refusé pour : ${email}`);
-    }
-    if (!createJudoka(toCanonicalJudoka(user)).isCoach()) {
-      throw new Error("Gestion du profil sportif réservée aux coachs.");
-    }
-    return user;
-  }
-
   async function getAdmins(): Promise<JudokaRow[]> {
     return judokasRepository.listAdmins();
   }

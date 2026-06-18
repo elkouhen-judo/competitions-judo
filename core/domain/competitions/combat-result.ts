@@ -1,5 +1,7 @@
 export type CombatResult = "Victoire" | "Défaite" | "Egalité";
 
+export const COMBAT_RESULTS: CombatResult[] = ["Victoire", "Défaite", "Egalité"];
+
 const RESULT_ALIASES = new Map<string, CombatResult>([
   ["v", "Victoire"],
   ["victoire", "Victoire"],

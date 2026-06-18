@@ -8,7 +8,7 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 
 Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'index complet :
 
-- `docs/prd.md` : PRD (problème, solution, user stories, décisions d'implémentation/tests, hors périmètre) — vision produit.
+- `docs/prd.md` : PRD (problème, solution, principes produit, décisions d'implémentation/tests, hors périmètre) — vision produit.
 - `docs/spec.md` : règles fonctionnelles (rôles, écrans, critères d'acceptation).
 - `docs/spec-tech.md` : architecture, données, auth, sécurité, déploiement.
 - `docs/supabase-schema.md` : schéma Supabase.

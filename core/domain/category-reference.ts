@@ -6,6 +6,9 @@ export type Gender = (typeof GENDERS)[number];
 export const HANDEDNESSES = ["Droitier", "Gaucher"] as const;
 export type Handedness = (typeof HANDEDNESSES)[number];
 
+export const COMPETITION_LEVELS = ["Départemental", "Régional", "National", "International"] as const;
+export type CompetitionLevel = (typeof COMPETITION_LEVELS)[number];
+
 /**
  * FFJDA weight categories (2025-2026 season). Poussinet and Poussin compete
  * without official weight divisions, so they are intentionally absent here

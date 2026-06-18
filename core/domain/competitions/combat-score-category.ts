@@ -1,5 +1,7 @@
 export type CombatScoreCategory = "Tachi-waza" | "Ne-waza";
 
+export const SCORE_CATEGORIES: CombatScoreCategory[] = ["Tachi-waza", "Ne-waza"];
+
 const SCORE_CATEGORY_ALIASES = new Map<string, CombatScoreCategory>([
   ["tachi-waza", "Tachi-waza"],
   ["tachi waza", "Tachi-waza"],

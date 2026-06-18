@@ -200,11 +200,13 @@ This specification does not define:
 
 ### 3.10 Internal MCP access rules
 
-- **MCP-001**: The application shall provide an internal MCP access flow for `COACH` and `ADMIN` users only.
-- **MCP-002**: The internal MCP access flow shall require an already authenticated Google/Supabase session.
-- **MCP-003**: The backend shall mint a short-lived Kiroku MCP token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
-- **MCP-004**: The MCP token shall expire after a short duration and shall encode only the scopes explicitly allowed for the caller's Kiroku role.
-- **MCP-005**: The remote MCP endpoint shall reject `JUDOKA` and `PARENT` callers even if they hold a valid web session.
+- **MCP-001**: The application shall expose a remote MCP server usable by standard MCP clients (e.g. Claude Desktop, Claude.ai connectors), open to any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, `JUDOKA`).
+- **MCP-002**: MCP clients shall authenticate via an OAuth 2.1 authorization-code flow with mandatory PKCE (S256); the authorization step shall delegate to the existing Google/Supabase login rather than a separate credential.
+- **MCP-003**: The OAuth authorization server shall support unauthenticated discovery (`/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`) and Dynamic Client Registration so that MCP clients can connect without manual configuration.
+- **MCP-004**: The backend shall mint a short-lived Kiroku-signed JWT MCP access token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
+- **MCP-005**: The JWT MCP access token shall expire after a short duration and shall encode only scopes from the fixed Kiroku MCP scope vocabulary assigned at mint time for the caller's Kiroku role: full read/write sports scopes for `COACH`, read-only club-wide scopes for `ADMIN`, and read/write scopes limited to the caller's own perimeter (no club-wide dashboard access) for `PARENT` and `JUDOKA`.
+- **MCP-006**: The remote MCP endpoint shall enforce the minted JWT MCP access token scopes on each request, so a `PARENT` or `JUDOKA` caller can only read or write competitions/combats within their own managed scope and cannot reach the club-wide coach dashboard.
+- **MCP-007**: The remote MCP endpoint shall implement the MCP JSON-RPC 2.0 wire protocol, including the `initialize` handshake, so that standard MCP clients can connect without bespoke client code.
 
 ## 4. Acceptance Criteria
 

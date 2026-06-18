@@ -53,8 +53,8 @@ This specification does not redefine product behavior already described in `docs
 - **ARC-007**: Domain code should express business concepts through value objects and aggregate language such as `PersonName`, domain identifiers, competition/combat drafts, `ManagedJudokaScope`, and competition combat recording behavior.
 - **ARC-008**: Application services may normalize inbound and persistence records into canonical DTOs, but business invariants shall be enforced by domain factories, value objects, aggregate commands, and access scopes.
 - **ARC-009**: Browser screens may be migrated progressively to Vue 3 while preserving existing screen IDs and global action entry points until the full frontend migration is complete. The Vue 3 browser runtime shall be vendored locally and served through `/api/client` before screen scripts.
-- **ARC-010**: `api/mcp-token.js` shall mint short-lived Kiroku-signed MCP tokens for already authenticated internal users.
-- **ARC-011**: `api/mcp.js` shall expose a remote HTTP MCP server secured by Kiroku-issued bearer tokens, independent from Supabase access tokens.
+- **ARC-010**: `api/mcp-oauth.js` shall implement the OAuth 2.1 authorization endpoint (`/mcp/authorize`, delegating end-user authentication to the existing Google/Supabase login), the token endpoint (`/mcp/token`, exchanging a PKCE-verified authorization code for a short-lived Kiroku-signed JWT MCP access token), Dynamic Client Registration (RFC 7591, `/mcp/register`, returning a self-contained signed `client_id` rather than persisting registrations server-side), and the unauthenticated `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` discovery metadata — consolidated into a single Vercel function to stay within the Hobby plan serverless function limit (see `tests/vercel-deployment.test.js`).
+- **ARC-011**: `api/mcp.js` shall expose a remote MCP server speaking JSON-RPC 2.0 over HTTP, secured by Kiroku-issued JWT MCP access tokens, independent from Supabase access tokens.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -126,8 +126,11 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is not present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
 - **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
 - **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
-- **AUTH-019**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then Kiroku MCP token issuance.
-- **AUTH-020**: Only `ADMIN` and `COACH` users may mint MCP tokens; `PARENT` and `JUDOKA` users shall be rejected.
+- **AUTH-019**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then OAuth 2.1 authorization-code issuance, then Kiroku-signed JWT MCP access token exchange.
+- **AUTH-020**: Any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
+- **AUTH-021**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, read-only club-wide for `ADMIN`, read/write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request.
+- **AUTH-022**: The MCP token endpoint shall require PKCE (`code_verifier` matching the `code_challenge` bound to the authorization code via SHA-256) before issuing an access token; requests without a valid verifier shall be rejected with `invalid_grant`.
+- **AUTH-023**: The MCP authorization endpoint shall verify that the requested `redirect_uri` exactly matches one of the URIs registered for the `client_id`, and shall never redirect to an unregistered URI.
 
 ### 3.5 Security and secrets
 
@@ -137,7 +140,7 @@ This specification does not redefine product behavior already described in `docs
 - **SEC-004**: `SUPABASE_SERVICE_ROLE_KEY` shall never be sent to the browser.
 - **SEC-005**: When the service role key is an `sb_secret_...` key, it shall be sent only in the `apikey` header and not as `Authorization: Bearer`.
 - **SEC-006**: Missing or invalid bearer tokens shall cause explicit request rejection.
-- **SEC-007**: MCP signing shall use a dedicated server-side secret distinct from Supabase and Google credentials.
+- **SEC-007**: MCP JWT signing (access tokens, authorization codes, and registered client identifiers) shall use a dedicated server-side secret (`MCP_JWT_SECRET`) distinct from Supabase and Google credentials, with each token kind segregated by a distinct `aud` claim.
 
 ### 3.6 Platform and configuration
 

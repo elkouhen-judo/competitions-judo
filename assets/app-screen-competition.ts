@@ -4,7 +4,6 @@
   type Competition = import("../core/types").Competition;
   type CompetitionDetail = import("../core/types").CompetitionDetail;
   type ClubCompetitionDetail = import("../core/types").ClubCompetitionDetail;
-  type CompetitionCombatCard = import("./types").CompetitionCombatCard;
 
   interface CompetitionOwnerOption {
     judokaId: string;
