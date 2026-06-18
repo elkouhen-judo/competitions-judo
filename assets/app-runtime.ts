@@ -115,6 +115,7 @@ function createInitialState(): KirokuAppState {
     screens.judoka = window.createKirokuJudokaScreen(app);
     screens.competition = window.createKirokuCompetitionScreen(app);
     screens.admins = window.createKirokuAdminsScreen(app);
+    screens.coachDashboard = window.createKirokuCoachDashboardScreen(app);
     loginScreen = window.createKirokuLoginScreen(app);
     screens.login = loginScreen;
     app.loginScreen = loginScreen;

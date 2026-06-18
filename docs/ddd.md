@@ -158,7 +158,7 @@ All four enum-like value objects share the same shape: a `create*` factory that 
 
 ### Application services (use cases)
 
-`profile.service.ts` (`getJudokaProfile`, `saveCoachNotes`), `ai-analysis.service.ts` (`generateCompetitionAnalysis`).
+`profile.service.ts` (`getJudokaProfile`), `ai-analysis.service.ts` (`generateCompetitionAnalysis`).
 
 ### A note on coupling: this context is triggered, not subscribed
 

@@ -64,10 +64,6 @@ export default function createClubCompetitionsService(
   }
 
   function assertParticipantsMatchAgeCategory(rows: JudokaRow[], ageCategory: string): void {
-    if (!ageCategory) {
-      return;
-    }
-
     const invalid = rows.filter((row) => String(row.categorie_age || "") !== ageCategory);
     if (invalid.length) {
       throw new Error("Tous les judokas sélectionnés doivent appartenir à la catégorie d'âge de la compétition.");

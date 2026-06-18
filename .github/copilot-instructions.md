@@ -38,8 +38,8 @@ Le dépôt est une application JavaScript sans bundler:
 
 - Tests complets: `npm test`
 - Lint si nécessaire: `npx eslint .`
-- Déploiement de production: `npm run app:deploy` lance `npm test`, `npm run build:assets`, puis `vercel --prod`.
-- Déploiement dev: `npm run app:deploy:dev` fait la même chose sur le projet Vercel `competitions-judo-dev`. Tout script bare cible la prod ; le suffixe `:dev` (`dev:dev`, `db:pull-env:dev`, `app:deploy:dev`, `redeploy:dev`) cible explicitement le dev.
+- Déploiement de production: `npm run app:deploy:prod` lance `npm test`, `npm run build:assets`, puis `vercel --prod`.
+- Déploiement dev: `npm run app:deploy:dev` fait la même chose sur le projet Vercel `competitions-judo-dev`. Chaque script à double environnement porte un suffixe explicite : `:prod` (`dev:prod`, `db:pull-env:prod`, `app:deploy:prod`, `redeploy:prod`) cible la prod, `:dev` (`dev:dev`, `db:pull-env:dev`, `app:deploy:dev`, `redeploy:dev`) cible le dev.
 
 Node.js doit rester en version `>=20` selon `package.json` et `docs/spec-tech.md`.
 

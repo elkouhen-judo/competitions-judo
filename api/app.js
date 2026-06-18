@@ -32,6 +32,7 @@ const VIEW_PARTIAL_FILES = {
   home: "home.html",
   judoka: "judoka.html",
   admins: "admins.html",
+  "coach-dashboard": "coach-dashboard.html",
   competition: "competition.html",
   "club-competition-detail": "club-competition-detail.html",
   "club-competition-form": "club-competition-form.html",

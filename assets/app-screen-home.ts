@@ -89,6 +89,7 @@
       ];
       if (state.isCoach) {
         modes.push({ key: "coach", label: "Espace coach" });
+        modes.push({ key: "coachDashboard", label: "Tableau de bord" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Accès club" });
@@ -518,6 +519,10 @@
     function handleModeTabClick(modeKey: string) {
       if (modeKey === "admin") {
         screens.admins.showAdminsManagement();
+        return;
+      }
+      if (modeKey === "coachDashboard") {
+        screens.coachDashboard.showCoachDashboard();
         return;
       }
       setHomeMode(modeKey as HomeMode);

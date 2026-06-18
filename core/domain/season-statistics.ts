@@ -146,11 +146,13 @@ function getCompetitionCombatRecord(
   };
 }
 
+const RANKED_FINALIST_BADGE: CompetitionResultBadge = { label: "classé", className: "rank-top5" };
+
 function getCompetitionResultBadge(result: unknown): CompetitionResultBadge {
   const normalized = String(result || "").trim();
   if (normalized === "1er") return { label: "podium", className: "rank-gold" };
   if (normalized === "2e") return { label: "podium", className: "rank-silver" };
   if (normalized === "3e") return { label: "podium", className: "rank-bronze" };
-  if (normalized === "5e") return { label: "top 5", className: "rank-top5" };
+  if (["4e", "5e", "6e", "7e", "8e"].includes(normalized)) return RANKED_FINALIST_BADGE;
   return { label: "non classé", className: "rank-unclassified" };
 }

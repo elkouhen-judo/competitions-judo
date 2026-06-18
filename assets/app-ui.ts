@@ -108,7 +108,7 @@
     if (normalized === "1er") return "rank-1";
     if (normalized === "2e") return "rank-2";
     if (normalized === "3e") return "rank-3";
-    if (normalized === "5e" || normalized === "7e") return "rank-finalist";
+    if (["4e", "5e", "6e", "7e", "8e"].includes(normalized)) return "rank-finalist";
     return "";
   }
 

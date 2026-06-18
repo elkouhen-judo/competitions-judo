@@ -7,6 +7,71 @@
   type ManagedAdminCard = import("./types").ManagedAdminCard;
   type ManagedUserCard = import("./types").ManagedUserCard;
 
+  /**
+   * FFJDA weight categories (2025-2026 season), mirroring
+   * core/domain/category-reference.ts (frontend code cannot import core/).
+   * Poussinet and Poussin compete without official weight divisions. Vétéran
+   * reuses the Senior weight scale (the body division doesn't change past
+   * Senior, only the age band).
+   */
+  const SENIOR_WEIGHT_CATEGORIES: Record<string, string[]> = {
+    "Homme": ["-60kg", "-66kg", "-73kg", "-81kg", "-90kg", "-100kg", "+100kg"],
+    "Femme": ["-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "-78kg", "+78kg"]
+  };
+
+  const WEIGHT_CATEGORIES_BY_AGE_AND_GENDER: Record<string, Record<string, string[]>> = {
+    Benjamin: {
+      "Homme": ["-30kg", "-34kg", "-38kg", "-42kg", "-46kg", "-50kg", "-55kg", "-60kg", "-66kg", "+66kg"],
+      "Femme": ["-32kg", "-36kg", "-40kg", "-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "+63kg"]
+    },
+    Minime: {
+      "Homme": ["-34kg", "-38kg", "-42kg", "-46kg", "-50kg", "-55kg", "-60kg", "-66kg", "-73kg", "+73kg"],
+      "Femme": ["-36kg", "-40kg", "-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "+70kg"]
+    },
+    Cadet: {
+      "Homme": ["-46kg", "-50kg", "-55kg", "-60kg", "-66kg", "-73kg", "-81kg", "-90kg", "+90kg"],
+      "Femme": ["-40kg", "-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "+70kg"]
+    },
+    Junior: {
+      "Homme": ["-55kg", "-60kg", "-66kg", "-73kg", "-81kg", "-90kg", "-100kg", "+100kg"],
+      "Femme": ["-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "-78kg", "+78kg"]
+    },
+    Senior: SENIOR_WEIGHT_CATEGORIES,
+    "Vétéran": SENIOR_WEIGHT_CATEGORIES
+  };
+
+  function getWeightCategoryOptions(ageCategory: string, gender?: string): string[] {
+    const byGender = WEIGHT_CATEGORIES_BY_AGE_AND_GENDER[ageCategory];
+    if (!byGender) {
+      return [];
+    }
+    if (gender && byGender[gender]) {
+      return byGender[gender];
+    }
+    return [...new Set([...byGender["Homme"], ...byGender["Femme"]])];
+  }
+
+  /**
+   * Number of valid "année dans la catégorie" values. Senior and Vétéran are
+   * open/age-banded categories where this concept doesn't apply.
+   */
+  const YEARS_IN_CATEGORY_COUNT: Record<string, number> = {
+    Poussinet: 2,
+    Poussin: 2,
+    Benjamin: 2,
+    Minime: 2,
+    Cadet: 3,
+    Junior: 3
+  };
+
+  function getYearInCategoryOptions(ageCategory: string): string[] {
+    const count = YEARS_IN_CATEGORY_COUNT[ageCategory];
+    if (!count) {
+      return [];
+    }
+    return Array.from({ length: count }, (_, index) => String(index + 1));
+  }
+
   function paginateList<TItem>(
     items: TItem[] | null | undefined,
     currentPage: number,
@@ -182,6 +247,8 @@
   }
 
   window.KirokuScreenProjections = {
+    getWeightCategoryOptions,
+    getYearInCategoryOptions,
     paginateList,
     projectCompetitionCombats,
     projectCompetitionDetail,

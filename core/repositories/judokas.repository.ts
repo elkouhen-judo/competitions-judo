@@ -15,6 +15,8 @@ export interface JudokaChangesInput {
   role?: string;
   pendingParentEmail?: string;
   ageCategory?: string;
+  gender?: string;
+  yearInCategory?: string;
 }
 
 export interface JudokasRepository {
@@ -23,14 +25,25 @@ export interface JudokasRepository {
   getByName(prenom: string, nom: string): Promise<JudokaRow | null>;
   insert(
     judoka: JudokaModel,
-    extras?: { categorie_age?: string; pending_parent_email?: string }
+    extras?: {
+      categorie_age?: string;
+      pending_parent_email?: string;
+      genre?: string;
+      annee_categorie?: string;
+    }
   ): Promise<JudokaRow | null>;
   listAdmins(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
   listByIds(ids: string[]): Promise<JudokaRow[]>;
   remove(idJudoka: string): Promise<void>;
-  saveCoachNotes(idJudoka: string, notes: string): Promise<void>;
-  saveJudokaInfo(idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string): Promise<void>;
+  saveJudokaInfo(
+    idJudoka: string,
+    ageCategory: string,
+    weightCategory: string,
+    beltColor: string,
+    gender: string,
+    yearInCategory: string
+  ): Promise<void>;
   update(idJudoka: string, judokaChanges: JudokaChangesInput): Promise<JudokaRow | null>;
 }
 
@@ -79,6 +92,12 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     }
     if (changes.ageCategory !== undefined) {
       record.categorie_age = changes.ageCategory;
+    }
+    if (changes.gender !== undefined) {
+      record.genre = changes.gender;
+    }
+    if (changes.yearInCategory !== undefined) {
+      record.annee_categorie = changes.yearInCategory;
     }
 
     return record;
@@ -130,7 +149,12 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
 
   async function insert(
     judoka: JudokaModel,
-    extras?: { categorie_age?: string; pending_parent_email?: string }
+    extras?: {
+      categorie_age?: string;
+      pending_parent_email?: string;
+      genre?: string;
+      annee_categorie?: string;
+    }
   ): Promise<JudokaRow | null> {
     const record: Record<string, unknown> = { ...toJudokaRecord(judoka) };
     if (extras) {
@@ -138,6 +162,8 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
       if (extras.pending_parent_email !== undefined) {
         record["pending_parent_email"] = extras.pending_parent_email;
       }
+      if (extras.genre !== undefined) record["genre"] = extras.genre;
+      if (extras.annee_categorie !== undefined) record["annee_categorie"] = extras.annee_categorie;
     }
     return supabaseInsert<JudokaRow>("judokas", record);
   }
@@ -157,15 +183,20 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return supabaseDelete("judokas", eqFilter("id_judoka", idJudoka));
   }
 
-  async function saveCoachNotes(idJudoka: string, notes: string): Promise<void> {
-    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { notes_coach: notes });
-  }
-
-  async function saveJudokaInfo(idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string): Promise<void> {
+  async function saveJudokaInfo(
+    idJudoka: string,
+    ageCategory: string,
+    weightCategory: string,
+    beltColor: string,
+    gender: string,
+    yearInCategory: string
+  ): Promise<void> {
     await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
       categorie_age: ageCategory,
       categorie_poids: weightCategory,
-      couleur_ceinture: beltColor
+      couleur_ceinture: beltColor,
+      genre: gender,
+      annee_categorie: yearInCategory
     });
   }
 
@@ -178,7 +209,6 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     listAll,
     listByIds,
     remove,
-    saveCoachNotes,
     saveJudokaInfo,
     update
   };

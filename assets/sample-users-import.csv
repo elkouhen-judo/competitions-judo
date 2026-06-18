@@ -1,5 +1,5 @@
-profileType,prenom,nom,email,parentEmail,role,ageCategory
-PARENT,Claire,Durand,parent@example.com,,,
-JUDOKA,Hugo,Durand,,parent@example.com,,Minime
-JUDOKA,Nina,Durand,,parent@example.com,,Minime
-JUDOKA,Karim,Haddad,karim.haddad@example.com,,COACH,
+profileType,prenom,nom,email,parentEmail,role,ageCategory,genre,anneeCategorie
+PARENT,Claire,Durand,parent@example.com,,,,,
+JUDOKA,Hugo,Durand,,parent@example.com,,Minime,Homme,1
+JUDOKA,Nina,Durand,,parent@example.com,,Minime,Homme,2
+JUDOKA,Karim,Haddad,karim.haddad@example.com,,COACH,,Homme,

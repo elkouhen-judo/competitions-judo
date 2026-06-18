@@ -32,7 +32,7 @@
         <div class="form-grid">
           <div>
             <label for="competition_categorie_age">Catégorie d'âge</label>
-            <select id="competition_categorie_age" v-model="competitionForm.ageCategory">
+            <select id="competition_categorie_age" v-model="competitionForm.ageCategory" @change="onCompetitionFormAgeCategoryChange()">
               <option value="">Non renseignée</option>
               <option value="Poussinet">Poussinet</option>
               <option value="Poussin">Poussin</option>
@@ -46,7 +46,10 @@
           </div>
           <div>
             <label for="competition_categorie_poids">Catégorie de poids</label>
-            <input type="text" id="competition_categorie_poids" placeholder="ex: -73kg" v-model.trim="competitionForm.weightCategory">
+            <select id="competition_categorie_poids" v-model="competitionForm.weightCategory" :disabled="!competitionWeightCategoryOptions.length">
+              <option value="">{{ competitionWeightCategoryOptions.length ? "Non renseignée" : "Sélectionnez une catégorie d'âge" }}</option>
+              <option v-for="weightOption in competitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
+            </select>
           </div>
         </div>
 

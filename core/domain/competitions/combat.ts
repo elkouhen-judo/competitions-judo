@@ -42,12 +42,17 @@ export function createCombatDraft(combat: CombatInput = {}): CombatDraft {
   const result = createCombatResult(combat.result);
   const victoryTypeValue =
     result === "Egalité" ? combat.victoryType || "Hiki wake" : combat.victoryType;
+  const victoryType = createCombatDecisionType(victoryTypeValue, result);
+
+  if (result !== "Egalité" && !victoryType) {
+    throw new Error("Le type de décision est obligatoire pour une victoire ou une défaite.");
+  }
 
   return {
     opponent: String(combat.opponent || ""),
     opponentStance: createOpponentStance(combat.opponentStance),
     result,
-    victoryType: createCombatDecisionType(victoryTypeValue, result),
+    victoryType,
     scores: createCombatScores(combat.scores),
     notes: String(combat.notes || "")
   };

@@ -4,6 +4,7 @@ import {
   createOptionalCompetitionId
 } from "../shared/identity";
 import { createCompetitionRanking } from "../competition-results";
+import { createWeightCategory } from "../category-reference";
 import { createCombat, type CombatInput, type CombatModel } from "./combat";
 
 export const AGE_CATEGORIES = [
@@ -34,7 +35,7 @@ export interface CompetitionInput {
 export interface CompetitionDraft {
   name: string;
   competitionDate: string;
-  ageCategory: AgeCategory | "";
+  ageCategory: AgeCategory;
   weightCategory: string;
   level: string;
 }
@@ -51,7 +52,7 @@ export interface CompetitionModel {
   draft: CompetitionDraft;
   name: string;
   competitionDate: string;
-  ageCategory: AgeCategory | "";
+  ageCategory: AgeCategory;
   weightCategory: string;
   level: string;
   result: string;
@@ -127,11 +128,16 @@ export function createCompetitionDetailsDraft(
     throw new Error("Nom et date obligatoires.");
   }
 
+  const ageCategory = createCompetitionAgeCategory(competition.ageCategory);
+  if (!ageCategory) {
+    throw new Error("Catégorie d'âge obligatoire.");
+  }
+
   return {
     name,
     competitionDate,
-    ageCategory: createCompetitionAgeCategory(competition.ageCategory),
-    weightCategory: cleanCompetitionText(competition.weightCategory),
+    ageCategory,
+    weightCategory: createWeightCategory(competition.weightCategory, ageCategory),
     level: cleanCompetitionText(competition.level)
   };
 }
@@ -173,6 +179,9 @@ export function createCompetition(
           ...details,
           competitionId: record.competitionId,
           clubCompetitionId: record.clubCompetitionId,
+          ageCategory: details.ageCategory !== undefined ? details.ageCategory : record.ageCategory,
+          weightCategory:
+            details.weightCategory !== undefined ? details.weightCategory : record.weightCategory,
           level: details.level !== undefined ? details.level : record.level,
           result: details.result !== undefined ? details.result : record.result
         },

@@ -41,6 +41,13 @@ const {
 } = require("../core/domain/competitions/combat-score");
 const { createCompetitionRanking } = require("../core/domain/competition-results");
 const { buildJudokaProfileSnapshot } = require("../core/domain/season-statistics");
+const { computeCoachDashboardStats } = require("../core/domain/coach-dashboard-statistics");
+const {
+  createWeightCategory,
+  createYearInCategory,
+  getValidYearsInCategory,
+  getWeightCategoriesFor
+} = require("../core/domain/category-reference");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("../core/domain/season");
 const {
   normalizeRole,
@@ -145,7 +152,8 @@ test("competition domain carries optional club competition link", () => {
     {
       name: "Tournoi Nantes",
       competitionDate: "2026-06-14",
-      clubCompetitionId: "CLUB1"
+      clubCompetitionId: "CLUB1",
+      ageCategory: "Cadet"
     },
     "J1"
   );
@@ -287,7 +295,7 @@ test("competition domain builds a normalized entity", () => {
   assert.equal(competition.draft.competitionDate, "2026-06-11");
   assert.equal("result" in competition.draft, false);
   assert.equal(competition.ageCategory, "Cadet");
-  assert.equal(competition.weightCategory, "-55 kg");
+  assert.equal(competition.weightCategory, "-55kg");
   assert.equal(competition.result, "3e");
   assert.deepEqual(competition.finalize(" 2e "), {
     competitionId: null,
@@ -311,13 +319,16 @@ test("competition domain builds a normalized entity", () => {
   assert.equal("classement" in competition, false);
   assert.equal(typeof competition.assertCanContainCombat, "function");
 
-  const defaultCompetition = createCompetition(
-    { name: "Tournoi regional", competitionDate: "2026-06-11" },
+  const minimalCompetition = createCompetition(
+    { name: "Tournoi regional", competitionDate: "2026-06-11", ageCategory: "Cadet" },
     "JUDO123"
   );
-  assert.equal(defaultCompetition.ageCategory, "");
-  assert.equal(defaultCompetition.weightCategory, "");
-  assert.equal(defaultCompetition.result, "");
+  assert.equal(minimalCompetition.weightCategory, "");
+  assert.equal(minimalCompetition.result, "");
+  assert.throws(
+    () => createCompetition({ name: "Tournoi regional", competitionDate: "2026-06-11" }, "JUDO123"),
+    /Catégorie d'âge obligatoire/
+  );
 
   const veteranCompetition = createCompetition(
     { name: "Tournoi veteran", competitionDate: "2026-06-11", ageCategory: " veteran " },
@@ -345,6 +356,19 @@ test("competition domain builds a normalized entity", () => {
       ),
     /Catégorie d'âge invalide/
   );
+  assert.throws(
+    () =>
+      createCompetition(
+        {
+          name: "Tournoi",
+          competitionDate: "2026-06-11",
+          ageCategory: "Cadet",
+          weightCategory: "-23kg"
+        },
+        "JUDO123"
+      ),
+    /Catégorie de poids invalide/
+  );
   assert.equal(createCompetitionRanking(" Non classé "), "Non classé");
 });
 
@@ -353,7 +377,8 @@ test("competition domain enforces combat ownership", () => {
     competitionId: "COMP123",
     ownerJudokaId: "JUDO123",
     name: "Tournoi regional",
-    competitionDate: "2026-06-11"
+    competitionDate: "2026-06-11",
+    ageCategory: "Cadet"
   };
 
   assert.doesNotThrow(() =>
@@ -411,7 +436,8 @@ test("combat domain enforces allowed results and required identifiers", () => {
     combatId: "CB123",
     judokaId: "JUDO123",
     competitionId: "COMP123",
-    result: "D"
+    result: "D",
+    victoryType: "Ippon"
   });
   assert.equal(updatedCombat.combatId, "CB123");
   assert.equal(updatedCombat.judokaId, "JUDO123");
@@ -419,7 +445,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(updatedCombat.opponent, "");
   assert.equal(updatedCombat.opponentStance, "");
   assert.equal(updatedCombat.result, "Défaite");
-  assert.equal(updatedCombat.victoryType, "");
+  assert.equal(updatedCombat.victoryType, "Ippon");
   assert.deepEqual(updatedCombat.scores, []);
   assert.equal(updatedCombat.notes, "");
 
@@ -519,6 +545,14 @@ test("combat domain enforces allowed results and required identifiers", () => {
         victoryType: "Hansoku-make"
       }),
     /Résultat invalide/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Victoire" }),
+    /Le type de décision est obligatoire/
+  );
+  assert.throws(
+    () => createCombat({ judokaId: "JUDO123", competitionId: "COMP123", result: "Défaite" }),
+    /Le type de décision est obligatoire/
   );
   assert.throws(
     () =>
@@ -631,6 +665,162 @@ test("combat score domain enforces the conditional sub-field per category", () =
     ]).length,
     2
   );
+});
+
+test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, hansoku-make and breakdown rates", () => {
+  const combats = [
+    {
+      judokaId: "JUDO1",
+      judokaGender: "Homme",
+      result: "Victoire",
+      victoryType: "Ippon",
+      scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }],
+      opponentStance: "Droitier",
+      competitionLevel: "Départemental"
+    },
+    {
+      judokaId: "JUDO2",
+      judokaGender: "Femme",
+      result: "Victoire",
+      victoryType: "Ippon",
+      scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }],
+      opponentStance: "Gaucher",
+      competitionLevel: "National"
+    },
+    {
+      judokaId: "JUDO1",
+      judokaGender: "Homme",
+      result: "Défaite",
+      victoryType: "Hansoku-make",
+      scores: [],
+      opponentStance: "Droitier",
+      competitionLevel: "Départemental"
+    },
+    {
+      judokaId: "JUDO3",
+      judokaGender: "",
+      result: "Défaite",
+      victoryType: "Ippon",
+      scores: [],
+      opponentStance: "",
+      competitionLevel: ""
+    }
+  ];
+
+  assert.deepEqual(computeCoachDashboardStats(combats), {
+    totalCombats: 4,
+    victories: 2,
+    victoryRate: 50,
+    tachiWazaVictories: 1,
+    tachiWazaVictoryRate: 25,
+    neWazaVictories: 1,
+    neWazaVictoryRate: 25,
+    hansokuMakeLosses: 1,
+    hansokuMakeLossRate: 25,
+    victoriesByDecisionType: [
+      { decisionType: "Ippon", count: 2, total: 2, rate: 100 },
+      { decisionType: "Waza-ari", count: 0, total: 2, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 2, rate: 0 },
+      { decisionType: "Décision", count: 0, total: 2, rate: 0 },
+      { decisionType: "Hansoku-make", count: 0, total: 2, rate: 0 },
+      { decisionType: "Forfait", count: 0, total: 2, rate: 0 }
+    ],
+    defeatsByDecisionType: [
+      { decisionType: "Ippon", count: 1, total: 2, rate: 50 },
+      { decisionType: "Waza-ari", count: 0, total: 2, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 2, rate: 0 },
+      { decisionType: "Décision", count: 0, total: 2, rate: 0 },
+      { decisionType: "Hansoku-make", count: 1, total: 2, rate: 50 },
+      { decisionType: "Forfait", count: 0, total: 2, rate: 0 }
+    ],
+    byOpponentStance: [
+      { opponentStance: "Droitier", combats: 2, victories: 1, victoryRate: 50 },
+      { opponentStance: "Gaucher", combats: 1, victories: 1, victoryRate: 100 }
+    ],
+    byCompetitionLevel: [
+      { level: "Départemental", combats: 2, victories: 1, victoryRate: 50 },
+      { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
+      { level: "National", combats: 1, victories: 1, victoryRate: 100 },
+      { level: "International", combats: 0, victories: 0, victoryRate: 0 }
+    ],
+    judokasByGender: [
+      { gender: "Homme", judokaCount: 1 },
+      { gender: "Femme", judokaCount: 1 }
+    ]
+  });
+
+  assert.deepEqual(computeCoachDashboardStats([]), {
+    totalCombats: 0,
+    victories: 0,
+    victoryRate: 0,
+    tachiWazaVictories: 0,
+    tachiWazaVictoryRate: 0,
+    neWazaVictories: 0,
+    neWazaVictoryRate: 0,
+    hansokuMakeLosses: 0,
+    hansokuMakeLossRate: 0,
+    victoriesByDecisionType: [
+      { decisionType: "Ippon", count: 0, total: 0, rate: 0 },
+      { decisionType: "Waza-ari", count: 0, total: 0, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 0, rate: 0 },
+      { decisionType: "Décision", count: 0, total: 0, rate: 0 },
+      { decisionType: "Hansoku-make", count: 0, total: 0, rate: 0 },
+      { decisionType: "Forfait", count: 0, total: 0, rate: 0 }
+    ],
+    defeatsByDecisionType: [
+      { decisionType: "Ippon", count: 0, total: 0, rate: 0 },
+      { decisionType: "Waza-ari", count: 0, total: 0, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 0, rate: 0 },
+      { decisionType: "Décision", count: 0, total: 0, rate: 0 },
+      { decisionType: "Hansoku-make", count: 0, total: 0, rate: 0 },
+      { decisionType: "Forfait", count: 0, total: 0, rate: 0 }
+    ],
+    byOpponentStance: [
+      { opponentStance: "Droitier", combats: 0, victories: 0, victoryRate: 0 },
+      { opponentStance: "Gaucher", combats: 0, victories: 0, victoryRate: 0 }
+    ],
+    byCompetitionLevel: [
+      { level: "Départemental", combats: 0, victories: 0, victoryRate: 0 },
+      { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
+      { level: "National", combats: 0, victories: 0, victoryRate: 0 },
+      { level: "International", combats: 0, victories: 0, victoryRate: 0 }
+    ],
+    judokasByGender: [
+      { gender: "Homme", judokaCount: 0 },
+      { gender: "Femme", judokaCount: 0 }
+    ]
+  });
+});
+
+test("category reference domain reuses the Senior weight scale for Vétéran", () => {
+  assert.deepEqual(
+    getWeightCategoriesFor("Vétéran", "Homme"),
+    getWeightCategoriesFor("Senior", "Homme")
+  );
+  assert.deepEqual(
+    getWeightCategoriesFor("Vétéran", "Femme"),
+    getWeightCategoriesFor("Senior", "Femme")
+  );
+  assert.equal(createWeightCategory("-90kg", "Vétéran", "Homme"), "-90kg");
+  assert.throws(
+    () => createWeightCategory("-999kg", "Vétéran", "Homme"),
+    /Catégorie de poids invalide/
+  );
+});
+
+test("category reference domain has no official weight divisions for Poussinet/Poussin", () => {
+  assert.equal(getWeightCategoriesFor("Poussinet"), null);
+  assert.equal(getWeightCategoriesFor("Poussin"), null);
+  assert.equal(createWeightCategory("-30kg", "Poussinet", "Homme"), "-30kg");
+});
+
+test("category reference domain limits année dans la catégorie per age category", () => {
+  assert.deepEqual(getValidYearsInCategory("Minime"), ["1", "2"]);
+  assert.deepEqual(getValidYearsInCategory("Cadet"), ["1", "2", "3"]);
+  assert.equal(getValidYearsInCategory("Senior"), null);
+  assert.equal(getValidYearsInCategory("Vétéran"), null);
+  assert.equal(createYearInCategory("3", "Cadet"), "3");
+  assert.throws(() => createYearInCategory("3", "Minime"), /Année dans la catégorie invalide/);
 });
 
 test("season statistics domain computes current season snapshot", () => {

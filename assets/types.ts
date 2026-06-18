@@ -61,7 +61,8 @@ export type ViewId =
   | "clubCompetitionDetailView"
   | "competitionFormView"
   | "competitionFinalizationView"
-  | "combatFormView";
+  | "combatFormView"
+  | "coachDashboardView";
 
 export interface KirokuUi {
   $(id: string): HTMLElement;
@@ -127,6 +128,8 @@ export interface CompetitionCombatCard {
 }
 
 export interface ScreenProjections {
+  getWeightCategoryOptions(ageCategory: string, gender?: string): string[];
+  getYearInCategoryOptions(ageCategory: string): string[];
   paginateList<T>(
     items: T[] | null | undefined,
     currentPage: number,
@@ -236,6 +239,10 @@ export interface AdminsScreen {
   showAdminsManagement(keepMessage?: boolean): void;
 }
 
+export interface CoachDashboardScreen {
+  showCoachDashboard(): void;
+}
+
 export interface LoginScreen {
   bindEvents(): void;
   init(): Promise<void>;
@@ -247,6 +254,7 @@ export interface LoginScreen {
 
 export interface AppScreens {
   admins: AdminsScreen;
+  coachDashboard: CoachDashboardScreen;
   competition: CompetitionScreen;
   home: HomeScreen;
   judoka: JudokaScreen;
@@ -358,6 +366,8 @@ export interface JudokaProfileViewModel {
   heroSummary: string;
   heroCategory: string;
   heroBeltColor: string;
+  heroGender: string;
+  heroYearInCategory: string;
   heroSeason: string;
   combatProfile: Record<string, string>;
   hasCombatProfileExtras: boolean;

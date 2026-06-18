@@ -17,6 +17,8 @@ export interface Judoka {
   ageCategory: string;
   weightCategory: string;
   beltColor: string;
+  gender: string;
+  yearInCategory: string;
 }
 
 export interface Competition {
@@ -164,6 +166,60 @@ export interface CompetitionResultBadge {
   className: string;
 }
 
+export interface CoachDashboardFilters {
+  competitionIds?: string[];
+  ageCategory?: string;
+  categoryYear?: string;
+  gender?: string;
+}
+
+export interface CoachDashboardDecisionBreakdownEntry {
+  decisionType: string;
+  count: number;
+  total: number;
+  rate: number;
+}
+
+export interface CoachDashboardStanceBreakdownEntry {
+  opponentStance: string;
+  combats: number;
+  victories: number;
+  victoryRate: number;
+}
+
+export interface CoachDashboardLevelBreakdownEntry {
+  level: string;
+  combats: number;
+  victories: number;
+  victoryRate: number;
+}
+
+export interface CoachDashboardGenderBreakdownEntry {
+  gender: string;
+  judokaCount: number;
+}
+
+export interface CoachDashboardStats {
+  totalCombats: number;
+  victories: number;
+  victoryRate: number;
+  tachiWazaVictories: number;
+  tachiWazaVictoryRate: number;
+  neWazaVictories: number;
+  neWazaVictoryRate: number;
+  hansokuMakeLosses: number;
+  hansokuMakeLossRate: number;
+  victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
+  defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
+  byOpponentStance: CoachDashboardStanceBreakdownEntry[];
+  byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
+  judokasByGender: CoachDashboardGenderBreakdownEntry[];
+}
+
+export interface CoachDashboard {
+  stats: CoachDashboardStats;
+}
+
 export interface CompetitionCombatRecord {
   total: number;
   wins: number;
@@ -207,7 +263,6 @@ export interface JudokaProfile {
   seasonLosses: number;
   seasonDraws: number;
   victoryRate: number;
-  coachNotes?: string;
 }
 
 export interface InitialData {
@@ -270,18 +325,26 @@ export interface RpcMethods {
   getCompetitionDetail: (email: string, idCompetition: string) => Promise<CompetitionDetail>;
   /** Crée ou met à jour une compétition personnelle. */
   saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
-  /** Enregistre les notes privées du coach pour un judoka. */
-  saveCoachNotes: (email: string, idJudoka: string, notes: string) => Promise<OperationResult>;
   /** Enregistre l'objectif pré-compétition défini par le coach. */
   saveCoachObjective: (email: string, idCompetition: string, objective: string) => Promise<OperationResult>;
   /** Enregistre le bilan post-compétition rédigé par le coach. */
   saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
-  /** Met à jour la catégorie d'âge d'un judoka (admin). */
-  saveJudokaInfo: (email: string, idJudoka: string, ageCategory: string, weightCategory: string, beltColor: string) => Promise<OperationResult>;
+  /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre et l'année dans la catégorie d'un judoka. */
+  saveJudokaInfo: (
+    email: string,
+    idJudoka: string,
+    ageCategory: string,
+    weightCategory: string,
+    beltColor: string,
+    gender: string,
+    yearInCategory: string
+  ) => Promise<OperationResult>;
   /** Ajoute un combat à une compétition. */
   ajouterCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Supprime un combat. */
   deleteCombat: (email: string, idCombat: string) => Promise<OperationResult>;
   /** Met à jour un combat existant. */
   updateCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
+  /** Calcule les statistiques agrégées du tableau de bord coach selon les filtres fournis. */
+  getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
 }

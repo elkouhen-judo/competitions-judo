@@ -735,24 +735,33 @@
 
     .combat-score-rows {
       display: grid;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     .combat-score-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 6px;
-      align-items: center;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .combat-score-row-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--muted);
     }
 
     .combat-score-row select {
+      margin: 0;
       min-width: 0;
     }
 
     .combat-score-row .button-danger {
-      padding: 8px;
-      min-width: 0;
+      margin: 0;
     }
 
     .combat-header {
@@ -943,11 +952,6 @@
     @keyframes badge-live {
       0%, 100% { opacity: 1; transform: scale(1); }
       50%       { opacity: 0.3; transform: scale(0.75); }
-    }
-
-    .coach-notes-section textarea {
-      width: 100%;
-      resize: vertical;
     }
 
     .dash-hero {
@@ -1329,6 +1333,18 @@
       .form-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 14px;
+      }
+
+      .combat-score-row {
+        grid-template-columns: auto 1fr 1fr 1fr auto;
+        align-items: center;
+        padding: 8px 12px;
+      }
+
+      .combat-score-row .button-danger {
+        width: auto;
+        min-height: 40px;
+        padding: 8px 12px;
       }
 
       .full-row {

@@ -51,6 +51,8 @@
       "";
     const heroCategoryParts = [ageCategory, weightCategory].filter(Boolean);
     const beltColor = judoka.beltColor || "";
+    const gender = judoka.gender || "";
+    const yearInCategory = judoka.yearInCategory ? `${judoka.yearInCategory}e année` : "";
     const normalizedCombatProfile = combatProfile || emptyCombatProfile;
 
     return {
@@ -68,6 +70,8 @@
       heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
       heroCategory: heroCategoryParts.length ? heroCategoryParts.join(" · ") : "Catégorie à renseigner",
       heroBeltColor: beltColor,
+      heroGender: gender,
+      heroYearInCategory: yearInCategory,
       heroSeason: `Saison ${season.label}`,
       combatProfile: {
         victoryIppon: String(normalizedCombatProfile.victoryIppon || 0),
