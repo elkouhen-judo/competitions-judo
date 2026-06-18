@@ -32,6 +32,7 @@ export interface JudokaRow {
   couleur_ceinture?: string;
   genre?: string;
   annee_categorie?: string;
+  lateralite?: string;
   pending_parent_email?: string | null;
 }
 

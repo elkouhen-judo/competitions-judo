@@ -75,9 +75,10 @@ test("supabase schema stores combat scores in a dedicated table", () => {
   );
 });
 
-test("supabase schema stores judoka gender and year-in-category for the coach dashboard", () => {
+test("supabase schema stores judoka gender, year-in-category and handedness for the coach dashboard", () => {
   assert.match(schema, /add column if not exists genre text not null default ''/i);
   assert.match(schema, /add column if not exists annee_categorie text not null default ''/i);
+  assert.match(schema, /add column if not exists lateralite text not null default ''/i);
 });
 
 test("supabase schema stores club competitions and linked participations", () => {

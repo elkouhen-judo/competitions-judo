@@ -136,6 +136,9 @@ alter table public.judokas
   add column if not exists annee_categorie text not null default '';
 
 alter table public.judokas
+  add column if not exists lateralite text not null default '';
+
+alter table public.judokas
   add column if not exists pending_parent_email text;
 
 create index if not exists judokas_pending_parent_email_idx

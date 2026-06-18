@@ -46,7 +46,7 @@ Les identifiants existants sont conservés en `text` pour simplifier l'import de
 La cascade permet de supprimer automatiquement les combats d'une compétition supprimée, et les prises marquées d'un combat supprimé.
 La suppression ou le détachement d'une compétition club conserve les compétitions individuelles via `club_competition_id = null`.
 
-`public.judokas` stocke aussi `genre` (`Homme`, `Femme`, ou vide) et `annee_categorie` (l'année dans la catégorie d'âge — `1`/`2` pour Poussinet à Minime, `1`/`2`/`3` pour Cadet/Junior, ou vide), utilisés pour filtrer le tableau de bord coach.
+`public.judokas` stocke aussi `genre` (`Homme`, `Femme`, ou vide), `annee_categorie` (l'année dans la catégorie d'âge — `1`/`2` pour Poussinet à Minime, `1`/`2`/`3` pour Cadet/Junior, ou vide) et `lateralite` (`Droitier`, `Gaucher`, ou vide), utilisés pour filtrer et ventiler le tableau de bord coach.
 
 ## Exécution
 

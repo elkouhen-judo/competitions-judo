@@ -77,7 +77,11 @@ const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.
 const { createJudoka, createManagedChild } = require("./domain/access/judoka.js");
 const { createEmail } = require("./domain/access/email.js");
 const { createProfileType } = require("./domain/access/profile-type.js");
-const { createWeightCategory, createYearInCategory } = require("./domain/category-reference.js");
+const {
+  createHandedness,
+  createWeightCategory,
+  createYearInCategory
+} = require("./domain/category-reference.js");
 const { createManagedJudokaScope } = require("./domain/access/managed-judoka-scope.js");
 const { createClubCompetition } = require("./domain/competitions/club-competition.js");
 const {
@@ -129,6 +133,7 @@ const adminService = createAdminService({
   createJudoka,
   createManagedChild,
   createProfileType,
+  createHandedness,
   createWeightCategory,
   createYearInCategory,
   normalizeEmail: text.normalizeEmail

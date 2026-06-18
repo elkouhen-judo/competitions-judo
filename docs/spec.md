@@ -123,6 +123,7 @@ This specification does not define:
 - **CHD-010**: A coach shall be able to set or update the age category of any judoka from the judoka profile view.
 - **CHD-011**: The weight category field (judoka profile and competition form) shall be selected from a dropdown of the official FFJDA weight categories for the chosen age category (and gender, for the judoka profile), instead of free text. The list is empty for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
 - **CHD-012**: The "année dans la catégorie" field shall only offer the years that actually exist for the selected age category: 2 years for Poussinet/Poussin/Benjamin/Minime, 3 years for Cadet/Junior, and no field at all for Senior/Vétéran (open/age-banded categories where the concept doesn't apply).
+- **CHD-013**: A judoka profile may store the judoka's handedness (`Droitier` or `Gaucher`) from the judoka profile form.
 
 ### 3.6 Judoka season statistics rules
 
@@ -136,6 +137,7 @@ This specification does not define:
 - **STA-007a**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
 - **STA-007b**: The judoka profile shall display a combat profile summary for the displayed season based on global Victory/Loss/Equality ratios and notes insights.
 - **STA-007c**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
+- **STA-007d**: The judoka profile hero shall display the judoka's handedness when it is known.
 - **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
 - **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
 - **STA-010**: `COACH` profiles shall be able to open the judoka profile of any judoka in the club.
@@ -160,6 +162,7 @@ This specification does not define:
 - **AUTH-011d**: Re-importing a CSV row that matches an existing `JUDOKA` (by account email, or by first and last name when no email is given) shall not be treated as an import error; it shall update that judoka's `role` and `ageCategory` from the row instead of failing the row.
 - **AUTH-011e**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
 - **AUTH-011f**: A CSV-imported `JUDOKA` row may set a `genre` column (`Homme` or `Femme`) and an `anneeCategorie` column (the year within the age category, e.g. Cadet 1 / Cadet 2 / Cadet 3 — see **CHD-012** for valid values per category) at import time; re-importing an existing judoka updates both fields the same way `ageCategory` is updated.
+- **AUTH-011g**: A CSV-imported `JUDOKA` row may set a `lateralite` column (`Droitier` or `Gaucher`) at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
 - **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
@@ -184,7 +187,7 @@ This specification does not define:
 ### 3.9 Coach dashboard rules
 
 - **DASH-001**: `COACH` and `ADMIN` users shall have access to a dedicated dashboard screen aggregating statistics across one or more competitions.
-- **DASH-002**: The dashboard shall allow filtering by one or more competitions (multi-select), by age category, by year within the age category (e.g. Cadet 1 / Cadet 2), and by gender (`Homme` / `Femme`). All filters are optional; when none is set, the dashboard aggregates every competition and judoka.
+- **DASH-002**: The dashboard shall allow filtering by one or more competitions (multi-select), by age category, by year within the age category (e.g. Cadet 1 / Cadet 2), by gender (`Homme` / `Femme`), and by judoka handedness (`Droitier` / `Gaucher`). All filters are optional; when none is set, the dashboard aggregates every competition and judoka.
 - **DASH-003**: The "year within category" filter shall only be shown once an age category with valid years has been chosen, offering exactly the years valid for that category per **CHD-012** (hidden entirely for Senior/Vétéran).
 - **DASH-004**: The dashboard shall display the victory rate (% of combats won) over the combats matching the active filters, alongside the raw win count and the total combat count (e.g. "8/12 (67%)").
 - **DASH-005**: The dashboard shall display the Tachi-waza victory rate (% of combats won where at least one scoring technique recorded on the combat was a `Tachi-waza` technique) and, symmetrically, the Ne-waza victory rate, each alongside its win count and the total combat count.
@@ -193,6 +196,15 @@ This specification does not define:
 - **DASH-008**: The dashboard shall display the victory rate against right-handed (`Droitier`) and left-handed (`Gaucher`) opponents, alongside the win count and the combat count for that stance.
 - **DASH-009**: The dashboard shall display the victory rate per competition level (`Départemental`, `Régional`, `National`, `International`), alongside the win count and the combat count for that level.
 - **DASH-010**: The dashboard shall display the number of distinct judokas matching the active filters who have at least one combat in scope, broken down by gender (`Homme` / `Femme`).
+- **DASH-011**: The dashboard shall display distinct judoka counts and victory rates broken down by judoka handedness (`Droitier` / `Gaucher`).
+
+### 3.10 Internal MCP access rules
+
+- **MCP-001**: The application shall provide an internal MCP access flow for `COACH` and `ADMIN` users only.
+- **MCP-002**: The internal MCP access flow shall require an already authenticated Google/Supabase session.
+- **MCP-003**: The backend shall mint a short-lived Kiroku MCP token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
+- **MCP-004**: The MCP token shall expire after a short duration and shall encode only the scopes explicitly allowed for the caller's Kiroku role.
+- **MCP-005**: The remote MCP endpoint shall reject `JUDOKA` and `PARENT` callers even if they hold a valid web session.
 
 ## 4. Acceptance Criteria
 

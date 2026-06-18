@@ -11,6 +11,7 @@
       ageCategory: "",
       categoryYear: "",
       gender: "",
+      handedness: "",
       competitionIds: [] as string[]
     };
 
@@ -47,6 +48,9 @@
     const coachDashboardJudokasByGender = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.judokasByGender || []
     );
+    const coachDashboardJudokasByHandedness = window.Vue.computed(
+      () => coachDashboardViewModel.coachDashboardStats?.judokasByHandedness || []
+    );
 
     function ensureCoachDashboardViewModel() {
       if (coachDashboardMounted) {
@@ -70,7 +74,8 @@
           coachDashboardDefeatsByType,
           coachDashboardByOpponentStance,
           coachDashboardByCompetitionLevel,
-          coachDashboardJudokasByGender
+          coachDashboardJudokasByGender,
+          coachDashboardJudokasByHandedness
         }
       );
     }
@@ -85,7 +90,8 @@
             competitionIds: coachDashboardViewModel.coachDashboardForm.competitionIds,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
             categoryYear: coachDashboardViewModel.coachDashboardForm.categoryYear,
-            gender: coachDashboardViewModel.coachDashboardForm.gender
+            gender: coachDashboardViewModel.coachDashboardForm.gender,
+            handedness: coachDashboardViewModel.coachDashboardForm.handedness
           }
         ],
         (response) => {

@@ -53,6 +53,8 @@ This specification does not redefine product behavior already described in `docs
 - **ARC-007**: Domain code should express business concepts through value objects and aggregate language such as `PersonName`, domain identifiers, competition/combat drafts, `ManagedJudokaScope`, and competition combat recording behavior.
 - **ARC-008**: Application services may normalize inbound and persistence records into canonical DTOs, but business invariants shall be enforced by domain factories, value objects, aggregate commands, and access scopes.
 - **ARC-009**: Browser screens may be migrated progressively to Vue 3 while preserving existing screen IDs and global action entry points until the full frontend migration is complete. The Vue 3 browser runtime shall be vendored locally and served through `/api/client` before screen scripts.
+- **ARC-010**: `api/mcp-token.js` shall mint short-lived Kiroku-signed MCP tokens for already authenticated internal users.
+- **ARC-011**: `api/mcp.js` shall expose a remote HTTP MCP server secured by Kiroku-issued bearer tokens, independent from Supabase access tokens.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -101,6 +103,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-027**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
 - **DAT-028**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
 - **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`, falling back to free text for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
+- **DAT-030**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
 
 ### 3.4 Authentication and authorization
 
@@ -123,6 +126,8 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is not present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
 - **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
 - **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
+- **AUTH-019**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then Kiroku MCP token issuance.
+- **AUTH-020**: Only `ADMIN` and `COACH` users may mint MCP tokens; `PARENT` and `JUDOKA` users shall be rejected.
 
 ### 3.5 Security and secrets
 
@@ -132,6 +137,7 @@ This specification does not redefine product behavior already described in `docs
 - **SEC-004**: `SUPABASE_SERVICE_ROLE_KEY` shall never be sent to the browser.
 - **SEC-005**: When the service role key is an `sb_secret_...` key, it shall be sent only in the `apikey` header and not as `Authorization: Bearer`.
 - **SEC-006**: Missing or invalid bearer tokens shall cause explicit request rejection.
+- **SEC-007**: MCP signing shall use a dedicated server-side secret distinct from Supabase and Google credentials.
 
 ### 3.6 Platform and configuration
 
@@ -149,6 +155,7 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-009**: `GROQ_API_KEY` is optional. When absent, AI competition analysis generation shall be skipped silently (no error raised, no analysis stored) rather than failing the calling operation.
 - **CFG-010**: `GROQ_MODEL` is optional and defaults to a fixed Groq chat-completion model id when unset.
 - **CFG-011**: Each deployment environment (production, dev) shall use its own dedicated Supabase project (own `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, own Google OAuth redirect URI, own copy of the schema migration); environment variables and data shall never be shared across Supabase projects.
+- **CFG-012**: Environment configuration shall provide `MCP_JWT_SECRET`; `MCP_TOKEN_TTL_SECONDS` is optional and configures the MCP token lifetime when set.
 
 ## 4. Interfaces & Data Contracts
 

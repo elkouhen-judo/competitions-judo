@@ -9,7 +9,11 @@ import type { UserContextService } from "./user-context.service";
 import type { createEmail } from "../domain/access/email";
 import type { createJudoka, createManagedChild } from "../domain/access/judoka";
 import type { createProfileType } from "../domain/access/profile-type";
-import type { createWeightCategory, createYearInCategory } from "../domain/category-reference";
+import type {
+  createHandedness,
+  createWeightCategory,
+  createYearInCategory
+} from "../domain/category-reference";
 import type { AccessRole } from "../domain/access/role";
 import { parseCsv } from "../shared/csv";
 
@@ -36,6 +40,7 @@ export interface AdminServiceDeps {
   createJudoka: typeof createJudoka;
   createManagedChild: typeof createManagedChild;
   createProfileType: typeof createProfileType;
+  createHandedness: typeof createHandedness;
   createWeightCategory: typeof createWeightCategory;
   createYearInCategory: typeof createYearInCategory;
   normalizeEmail: (value: unknown) => string;
@@ -59,6 +64,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     createJudoka,
     createManagedChild,
     createProfileType,
+    createHandedness,
     createWeightCategory,
     createYearInCategory,
     normalizeEmail
@@ -135,7 +141,13 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     prenom: string,
     nom: string,
     rawEmail: string,
-    options: { accessRole?: AccessRole; ageCategory?: string; gender?: string; yearInCategory?: string } = {}
+    options: {
+      accessRole?: AccessRole;
+      ageCategory?: string;
+      gender?: string;
+      yearInCategory?: string;
+      handedness?: string;
+    } = {}
   ): Promise<{ idJudoka: string; email: string; message: string }> {
     const accountEmail = createEmail(rawEmail);
     const existingUser = await userContextService.getCurrentUser(accountEmail);
@@ -155,6 +167,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         ageCategory?: string;
         gender?: string;
         yearInCategory?: string;
+        handedness?: string;
       } = {};
       if (profileType === "JUDOKA") {
         if (options.accessRole && options.accessRole !== existingUser.role) {
@@ -168,6 +181,9 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         }
         if (options.yearInCategory && options.yearInCategory !== existingUser.annee_categorie) {
           updates.yearInCategory = options.yearInCategory;
+        }
+        if (options.handedness && options.handedness !== existingUser.lateralite) {
+          updates.handedness = options.handedness;
         }
         if (Object.keys(updates).length) {
           await judokasRepository.update(existingUser.id_judoka, updates);
@@ -195,7 +211,11 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       await judokasRepository.update(existingByName.id_judoka, {
         accountEmail,
         profileType,
-        ...(options.accessRole ? { role: options.accessRole } : {})
+        ...(options.accessRole ? { role: options.accessRole } : {}),
+        ...(options.ageCategory ? { ageCategory: options.ageCategory } : {}),
+        ...(options.gender ? { gender: options.gender } : {}),
+        ...(options.yearInCategory ? { yearInCategory: options.yearInCategory } : {}),
+        ...(options.handedness ? { handedness: options.handedness } : {})
       });
       return {
         idJudoka: existingByName.id_judoka,
@@ -217,7 +237,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       {
         ...(options.ageCategory ? { categorie_age: options.ageCategory } : {}),
         ...(options.gender ? { genre: options.gender } : {}),
-        ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {})
+        ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {}),
+        ...(options.handedness ? { lateralite: options.handedness } : {})
       }
     );
 
@@ -254,6 +275,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     const ageCategory = cleanText(row.agecategory);
     const gender = cleanText(row.genre);
     const yearInCategory = createYearInCategory(cleanText(row.anneecategorie), ageCategory);
+    const handedness = createHandedness(cleanText(row.lateralite));
     const rawRole = cleanText(row.role).toUpperCase();
     if (rawRole && rawRole !== "NORMAL" && rawRole !== "COACH") {
       throw new Error("Rôle invalide pour l'import (NORMAL ou COACH).");
@@ -300,7 +322,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         ...(rawRole ? { accessRole: rawRole as AccessRole } : {}),
         ageCategory,
         gender,
-        yearInCategory
+        yearInCategory,
+        handedness
       });
       if (parent) {
         const linked = await linkChildToParent(parent, accountProfile.idJudoka);
@@ -334,12 +357,15 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       const genderChanged = Boolean(gender) && gender !== existingChild.genre;
       const yearInCategoryChanged =
         Boolean(yearInCategory) && yearInCategory !== existingChild.annee_categorie;
-      const profileInfoChanged = ageCategoryChanged || genderChanged || yearInCategoryChanged;
+      const handednessChanged = Boolean(handedness) && handedness !== existingChild.lateralite;
+      const profileInfoChanged =
+        ageCategoryChanged || genderChanged || yearInCategoryChanged || handednessChanged;
       if (profileInfoChanged) {
         await judokasRepository.update(existingId, {
           ...(ageCategoryChanged ? { ageCategory } : {}),
           ...(genderChanged ? { gender } : {}),
-          ...(yearInCategoryChanged ? { yearInCategory } : {})
+          ...(yearInCategoryChanged ? { yearInCategory } : {}),
+          ...(handednessChanged ? { handedness } : {})
         });
       }
 
@@ -386,6 +412,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       ...(ageCategory ? { categorie_age: ageCategory } : {}),
       ...(gender ? { genre: gender } : {}),
       ...(yearInCategory ? { annee_categorie: yearInCategory } : {}),
+      ...(handedness ? { lateralite: handedness } : {}),
       ...(pendingParentEmail ? { pending_parent_email: pendingParentEmail } : {})
     });
 
@@ -473,7 +500,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     weightCategory: string,
     beltColor: string,
     gender: string,
-    yearInCategory: string
+    yearInCategory: string,
+    handedness: string
   ) {
     const userContext = await userContextService.getCurrentUserContext(email);
     const { user, managedJudokaScope } = userContext;
@@ -491,13 +519,15 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       gender || (targetJudoka && targetJudoka.genre)
     );
     const validatedYearInCategory = createYearInCategory(yearInCategory, ageCategory);
+    const validatedHandedness = createHandedness(handedness);
     await judokasRepository.saveJudokaInfo(
       idJudoka,
       String(ageCategory || ""),
       validatedWeightCategory,
       String(beltColor || ""),
       String(gender || ""),
-      validatedYearInCategory
+      validatedYearInCategory,
+      validatedHandedness
     );
     return { success: true, message: "Profil mis à jour." };
   }

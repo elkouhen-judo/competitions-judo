@@ -45,6 +45,7 @@ export default function createCoachDashboardService(
     const ageCategory = String(filters.ageCategory || "").trim();
     const categoryYear = String(filters.categoryYear || "").trim();
     const gender = String(filters.gender || "").trim();
+    const handedness = String(filters.handedness || "").trim();
     const selectedCompetitionIds =
       Array.isArray(filters.competitionIds) && filters.competitionIds.length
         ? new Set(filters.competitionIds.map(String))
@@ -85,7 +86,7 @@ export default function createCoachDashboardService(
     });
 
     const filteredCombatRows = combatRows.filter((combat) => {
-      if (!gender && !categoryYear) {
+      if (!gender && !categoryYear && !handedness) {
         return true;
       }
       const judoka = judokasById.get(String(combat.id_judoka));
@@ -93,6 +94,9 @@ export default function createCoachDashboardService(
         return false;
       }
       if (categoryYear && (!judoka || judoka.yearInCategory !== categoryYear)) {
+        return false;
+      }
+      if (handedness && (!judoka || judoka.handedness !== handedness)) {
         return false;
       }
       return true;
@@ -104,7 +108,8 @@ export default function createCoachDashboardService(
         scores: scoresByCombatId.get(String(combat.id_combat)) || []
       }),
       competitionLevel: competitionLevelById.get(String(combat.id_competition)) || "",
-      judokaGender: judokasById.get(String(combat.id_judoka))?.gender || ""
+      judokaGender: judokasById.get(String(combat.id_judoka))?.gender || "",
+      judokaHandedness: judokasById.get(String(combat.id_judoka))?.handedness || ""
     }));
 
     return { stats: computeCoachDashboardStats(combats) };
