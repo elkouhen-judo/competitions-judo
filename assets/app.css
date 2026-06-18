@@ -728,6 +728,31 @@
       margin-top: 16px;
     }
 
+    .segmented-control {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .segment-active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .quick-result-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: -8px 0 18px;
+    }
+
+    .quick-result-row button {
+      min-height: 44px;
+      padding: 10px 8px;
+    }
+
     .combat-card {
       display: grid;
       gap: 12px;
@@ -895,6 +920,67 @@
       margin-bottom: 12px;
     }
 
+    .coach-filter-heading {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    .compact-button {
+      width: auto;
+      min-height: 40px;
+      padding: 9px 12px;
+    }
+
+    .dashboard-competition-list {
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .dashboard-filter-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .dashboard-filter-summary span,
+    .coach-card-status,
+    .coach-summary-warning {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--text);
+      padding: 4px 9px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .coach-club-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .coach-summary-warning {
+      border-color: var(--warning);
+      background: var(--warning-soft);
+      color: #6f4b00;
+    }
+
+    .coach-card-status {
+      justify-self: start;
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
     .dashboard-subsection {
       margin-top: 18px;
       padding-top: 6px;
@@ -910,6 +996,10 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+    }
+
+    .compact-stats-grid .stat-value {
+      font-size: 20px;
     }
 
     .profile-extra-row {

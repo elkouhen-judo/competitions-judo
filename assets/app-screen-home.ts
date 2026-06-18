@@ -130,6 +130,7 @@
       const mode = getCurrentMode();
       if (mode === "judoka") return false;
       if (mode === "coach") return !getHomeActiveJudokaId();
+      if (mode === "family") return !getHomeActiveJudokaId();
       return false;
     });
 
@@ -466,6 +467,9 @@
 
     function applyInitialData() {
       ensureHomeViewModel();
+      if (state.isParent && getCurrentMode() === "judoka") {
+        state.homeMode = "family";
+      }
       if (getCurrentMode() === "judoka") {
         getHomeViewModel().filterJudokaText = "";
       }
@@ -570,8 +574,12 @@
         return;
       }
 
-      // In family mode, auto-select self if JUDOKA type
-      const autoId = mode === "family" ? getDefaultHomeJudokaId() : "";
+      const firstChild = mode === "family"
+        ? accessibleJudokas.find((j) => String(j.judokaId) !== String(state.currentUser?.judokaId || ""))
+        : null;
+      const autoId = mode === "family"
+        ? getDefaultHomeJudokaId() || String(firstChild?.judokaId || "")
+        : "";
       const autoJudoka = autoId
         ? accessibleJudokas.find((j) => String(j.judokaId) === String(autoId))
         : null;
@@ -616,6 +624,12 @@
       if (getCurrentMode() === "coach") {
         showError({
           message: "Passez sur « Mon espace » pour enregistrer vos propres compétitions."
+        });
+        return;
+      }
+      if (getCurrentMode() === "family" && !getHomeActiveJudokaId()) {
+        showError({
+          message: "Sélectionnez votre profil ou l'un de vos enfants avant d'ajouter une compétition."
         });
         return;
       }
