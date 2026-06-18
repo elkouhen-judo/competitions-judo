@@ -330,10 +330,13 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /@click="applyCoachDashboardFilters\(\)"/);
   assert.match(
     bundle,
-    /v-for="entry in coachDashboardJudokasByGender" :key="entry\.gender" class="stat-card"/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Genre<\/span>/
   );
-  assert.match(bundle, /Judokas \{\{ entry\.gender \}\}[\s\S]*entry\.judokaCount/);
-  assert.match(bundle, /v-for="entry in coachDashboardJudokasByHandedness"/);
+  assert.match(bundle, /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/);
+  assert.match(bundle, /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/);
+  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité<\/span>/);
+  assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
+  assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /Performance par latéralité judoka/);
   assert.match(
     bundle,
@@ -361,12 +364,19 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(
     bundle,
-    /v-for="entry in coachDashboardByOpponentStance" :key="entry\.opponentStance" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde adverse<\/span>[\s\S]*coachDashboardByOpponentStance\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByOpponentStance\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByOpponentStance\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByOpponentStance\[1\]\?\.victoryRate \|\| 0/
   );
   assert.match(
     bundle,
     /v-for="entry in coachDashboardByCompetitionLevel" :key="entry\.level" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
   );
+  assert.match(
+    bundle,
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Latéralité judoka<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.victoryRate \|\| 0/
+  );
+  assert.match(bundle, /\.stat-card-split\s*\{/);
+  assert.match(bundle, /\.split-stat-grid\s*\{/);
+  assert.match(bundle, /\.split-stat-label\s*\{/);
   assert.doesNotMatch(bundle, /breakdown-row/);
   assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
   assert.match(bundle, /key: "coachDashboard", label: "Tableau de bord"/);
@@ -404,7 +414,7 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(
     bundle,
-    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory" @change="onCompetitionFormAgeCategoryChange\(\)">[\s\S]*<option value="">Non renseignée<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
+    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory" @change="onCompetitionFormAgeCategoryChange\(\)">[\s\S]*<option value="">Sélectionnez une catégorie<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
   );
   assert.match(
     bundle,
@@ -425,6 +435,7 @@ test("competition form keeps age and weight categories without place or actual w
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
   assert.match(bundle, /<span id="competitionAgePoids"/);
+  assert.match(client, /if \(!competition\.ageCategory\) \{\s*showError\(\{ message: "Sélectionnez une catégorie d'âge avant d'enregistrer la compétition\." \}\);\s*return;\s*\}/);
 });
 
 test("new competition form defaults the date to today", () => {

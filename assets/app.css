@@ -1497,6 +1497,37 @@
       line-height: 1.1;
     }
 
+    .stat-card-split {
+      display: grid;
+      gap: 12px;
+    }
+
+    .split-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+
+    .split-stat-item {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .split-stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .split-stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1.1;
+    }
+
     .stat-card-highlight {
       border-color: var(--line);
       background: #ffffff;
