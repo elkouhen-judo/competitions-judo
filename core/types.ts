@@ -287,6 +287,7 @@ export interface InitialData {
 }
 
 export type McpScope =
+  | "access:read"
   | "judokas:read"
   | "competitions:read"
   | "competitions:write"

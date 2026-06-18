@@ -45,7 +45,7 @@ const COMPETITION_SCHEMA: JsonSchema = {
     weightCategory: {
       type: "string",
       description:
-        "Catégorie de poids (ex. \"-60kg\", \"+100kg\"), dépendante de ageCategory et du genre du judoka. Texte libre pour Poussinet/Poussin (pas de catégories officielles)."
+        "Catégorie de poids (ex. \"-60kg\", \"+100kg\"), dépendante de ageCategory et du genre du judoka. Vide pour Poussinet/Poussin (pas de catégories officielles)."
     },
     level: { type: "string", enum: COMPETITION_LEVELS, description: "Niveau de la compétition." },
     ownerJudokaId: {

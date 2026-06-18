@@ -76,7 +76,7 @@ What Kiroku is not:
 - A messaging/communication system between users.
 - Offline support — the MVP requires network connectivity; offline handling is deferred entirely.
 - Competition location and actual weigh-in fields.
-- Structured scoring detail (Shido counters, Ippon counters) — captured as free text instead.
+- Detailed referee scoring counters (Shido counters, scoreboard timelines, penalty counts). The MVP may still capture lightweight structured decision types and scoring techniques when useful for coach statistics.
 - Storing judoka birth years (a deliberate privacy decision).
 - Password-based and magic-link authentication.
 

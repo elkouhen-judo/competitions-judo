@@ -831,7 +831,11 @@ test("category reference domain reuses the Senior weight scale for Vétéran", (
 test("category reference domain has no official weight divisions for Poussinet/Poussin", () => {
   assert.equal(getWeightCategoriesFor("Poussinet"), null);
   assert.equal(getWeightCategoriesFor("Poussin"), null);
-  assert.equal(createWeightCategory("-30kg", "Poussinet", "Homme"), "-30kg");
+  assert.equal(createWeightCategory("", "Poussinet", "Homme"), "");
+  assert.throws(
+    () => createWeightCategory("-30kg", "Poussinet", "Homme"),
+    /Catégorie de poids indisponible/
+  );
 });
 
 test("category reference domain limits année dans la catégorie per age category", () => {

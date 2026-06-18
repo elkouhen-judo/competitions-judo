@@ -12,7 +12,7 @@ export type CompetitionLevel = (typeof COMPETITION_LEVELS)[number];
 /**
  * FFJDA weight categories (2025-2026 season). Poussinet and Poussin compete
  * without official weight divisions, so they are intentionally absent here
- * (free text for those age categories). Vétéran reuses the Senior weight
+ * (empty weight value for those age categories). Vétéran reuses the Senior weight
  * scale (the body division doesn't change past Senior, only the age band).
  */
 const SENIOR_WEIGHT_CATEGORIES: Record<Gender, string[]> = {
@@ -95,7 +95,7 @@ export function createWeightCategory(value: unknown, ageCategory: unknown, gende
 
   const allowed = getWeightCategoriesFor(ageCategory, gender);
   if (!allowed) {
-    return raw;
+    throw new Error("Catégorie de poids indisponible pour cette catégorie d'âge.");
   }
 
   const normalizedRaw = normalizeWeightCategoryKey(raw);

@@ -498,7 +498,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     const domainUser = createJudoka(toCanonicalJudoka(user));
     const isSelf = user.id_judoka === idJudoka;
     const isManagedJudoka = managedJudokaScope.includes(idJudoka);
-    if (!domainUser.isCoach() && !domainUser.isAdmin() && !isSelf && !isManagedJudoka) {
+    if (!domainUser.isCoach() && !isSelf && !isManagedJudoka) {
       throw new Error("Modification de profil non autorisée.");
     }
     const targetJudoka = await judokasRepository.getById(idJudoka);

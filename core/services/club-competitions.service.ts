@@ -171,12 +171,12 @@ export default function createClubCompetitionsService(
     }
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
     for (const participation of participations) {
-      await competitionsRepository.remove(participation.id_competition);
+      await competitionsRepository.detachFromClubCompetition(participation.id_competition);
     }
     await clubCompetitionsRepository.remove(idClubCompetition);
     return {
       success: true,
-      message: "Compétition club supprimée avec les compétitions et combats des judokas associés."
+      message: "Compétition club supprimée sans supprimer les compétitions et combats des judokas associés."
     };
   }
 

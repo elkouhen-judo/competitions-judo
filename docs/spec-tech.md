@@ -2,7 +2,7 @@
 title: Kiroku Technical Specification
 version: 1.3
 date_created: 2026-06-11
-last_updated: 2026-06-17
+last_updated: 2026-06-18
 owner: competitions-judo
 tags:
   - architecture
@@ -99,10 +99,10 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 - **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
 - **DAT-020**: `competitions.club_competition_id` optionally links an individual competition participation to a club competition.
-- **DAT-021**: Deleting or detaching a club competition link shall not delete combats or rankings for individual competitions.
+- **DAT-021**: Deleting a club competition or detaching a club competition link shall preserve individual competitions, combats, and rankings by clearing `competitions.club_competition_id` instead of deleting linked participations.
 - **DAT-027**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
 - **DAT-028**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
-- **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`, falling back to free text for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
+- **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`. Age categories without official weight divisions (Poussinet, Poussin) shall use an empty value rather than free text. Vétéran reuses the Senior weight scale.
 - **DAT-030**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
 
 ### 3.4 Authentication and authorization
@@ -123,12 +123,12 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-013**: Backend profile registration shall create the initial profile type from `access_invitations.invited_profile_type`.
 - **AUTH-014**: Backend profile registration shall always create the initial access role as `NORMAL`.
 - **AUTH-015**: Child management mutations shall be restricted to users whose immutable `profile_type` is `PARENT`.
-- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is not present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
+- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither linked to an existing imported profile nor present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
 - **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
 - **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
 - **AUTH-019**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then OAuth 2.1 authorization-code issuance, then Kiroku-signed JWT MCP access token exchange.
 - **AUTH-020**: Any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
-- **AUTH-021**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, read-only club-wide for `ADMIN`, read/write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request.
+- **AUTH-021**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, access-governance scopes only and no sports scopes for `ADMIN`, read/write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request.
 - **AUTH-022**: The MCP token endpoint shall require PKCE (`code_verifier` matching the `code_challenge` bound to the authorization code via SHA-256) before issuing an access token; requests without a valid verifier shall be rejected with `invalid_grant`.
 - **AUTH-023**: The MCP authorization endpoint shall verify that the requested `redirect_uri` exactly matches one of the URIs registered for the `client_id`, and shall never redirect to an unregistered URI.
 

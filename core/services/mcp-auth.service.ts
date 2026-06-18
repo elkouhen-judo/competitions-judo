@@ -44,7 +44,7 @@ function createCoachScopes(): McpScope[] {
 }
 
 function createAdminScopes(): McpScope[] {
-  return ["judokas:read", "competitions:read", "combats:read"];
+  return ["access:read"];
 }
 
 /**

@@ -38,7 +38,7 @@ export default function createCoachDashboardService(
     filters: CoachDashboardFilters = {}
   ): Promise<CoachDashboard> {
     const { domainUser } = await userContextService.getDomainUserContext(email);
-    if (domainUser.accessRole !== "COACH" && domainUser.accessRole !== "ADMIN") {
+    if (domainUser.accessRole !== "COACH") {
       throw new Error("Tableau de bord réservé aux coachs.");
     }
 
