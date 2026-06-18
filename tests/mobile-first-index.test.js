@@ -315,6 +315,10 @@ test("judoka profile client script stays parseable", () => {
 
 test("coach dashboard screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak/);
+  assert.match(
+    bundle,
+    /const viewIds = \[\s*"loginView",\s*"homeView",\s*"judokaView",\s*"adminsView",\s*"coachDashboardView",\s*"competitionView"/
+  );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
   assert.match(bundle, /v-if="coachDashboardYearOptions\.length"/);
   assert.match(
