@@ -22,6 +22,7 @@ const client = [
     "app-screen-home.js",
     "app-judoka-presentation.js",
     "app-screen-judoka.js",
+    "app-competition-form-helpers.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
     "app-screen-coach-dashboard.js",

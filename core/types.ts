@@ -183,13 +183,6 @@ export interface CoachDashboardDecisionBreakdownEntry {
   rate: number;
 }
 
-export interface CoachDashboardStanceBreakdownEntry {
-  opponentStance: string;
-  combats: number;
-  victories: number;
-  victoryRate: number;
-}
-
 export interface CoachDashboardLateralMatchupBreakdownEntry {
   matchup: "same" | "opposite";
   label: string;
@@ -213,9 +206,6 @@ export interface CoachDashboardGenderBreakdownEntry {
 export interface CoachDashboardHandednessBreakdownEntry {
   handedness: string;
   judokaCount: number;
-  combats: number;
-  victories: number;
-  victoryRate: number;
 }
 
 export interface CoachDashboardStats {
@@ -230,7 +220,6 @@ export interface CoachDashboardStats {
   hansokuMakeLossRate: number;
   victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
-  byOpponentStance: CoachDashboardStanceBreakdownEntry[];
   byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
   byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];

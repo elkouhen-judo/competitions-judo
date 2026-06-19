@@ -112,7 +112,7 @@ This specification does not define:
 - **CBT-005e**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`) and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall autocomplete known throw names while still accepting a free-text throw name typed by the user. When the category is `Ne-waza`, the entry shall record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
 - **CBT-005f**: A combat with result `Victoire` or `Défaite` shall record a decision type among `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, or `Forfait`. A combat with result `Egalité` shall use `Hiki wake`. Scoring technique entries remain optional and shall not replace the decision type.
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
-- **CBT-007**: The combat form shall provide a quick entry mode for coaches to record the core result first, while keeping detailed fields (opponent stance, scoring techniques, notes) available in an expanded detail mode.
+- **CBT-007**: The combat form shall always show the detailed fields for opponent stance, scoring techniques, and notes.
 
 ### 3.5 Imported child link and judoka profile rules
 

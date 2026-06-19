@@ -802,17 +802,6 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
   const allResult = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(allResult.stats.totalCombats, 3);
   assert.deepEqual(
-    allResult.stats.byOpponentStance.map(({ opponentStance, combats, victories }) => ({
-      opponentStance,
-      combats,
-      victories
-    })),
-    [
-      { opponentStance: "Droitier", combats: 2, victories: 2 },
-      { opponentStance: "Gaucher", combats: 1, victories: 0 }
-    ]
-  );
-  assert.deepEqual(
     allResult.stats.byLateralMatchup.map(({ matchup, combats, victories, victoryRate }) => ({
       matchup,
       combats,
@@ -842,8 +831,8 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
     { gender: "Femme", judokaCount: 1 }
   ]);
   assert.deepEqual(allResult.stats.judokasByHandedness, [
-    { handedness: "Droitier", judokaCount: 1, combats: 2, victories: 2, victoryRate: 100 },
-    { handedness: "Gaucher", judokaCount: 1, combats: 1, victories: 0, victoryRate: 0 }
+    { handedness: "Droitier", judokaCount: 1 },
+    { handedness: "Gaucher", judokaCount: 1 }
   ]);
   assert.deepEqual(
     allResult.stats.victoriesByDecisionType.find((entry) => entry.decisionType === "Ippon"),

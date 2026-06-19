@@ -94,7 +94,7 @@
         { key: "judoka", label: "Mon espace" }
       ];
       if (state.isCoach) {
-        modes.push({ key: "coach", label: "Compétition" });
+        modes.push({ key: "coach", label: "Compétitions club" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Gestion des accès" });
@@ -107,10 +107,10 @@
 
     const coachSubModes: Array<{ key: string; label: string }> = [
       { key: "judoka", label: "Mon espace" },
-      { key: "coach", label: "Compétition" },
+      { key: "coach", label: "Compétitions club" },
       { key: "coachJudoka", label: "Judoka" },
-      { key: "coachChat", label: "Chat" },
-      { key: "coachDashboard", label: "Tableau de bord" }
+      { key: "coachDashboard", label: "Tableau de bord" },
+      { key: "coachChat", label: "Chat" }
     ];
 
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);

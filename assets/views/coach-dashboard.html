@@ -1,11 +1,11 @@
     <section id="coachDashboardView" class="panel hidden" v-cloak>
       <div class="dash-hero">
-        <nav class="mode-tabs coach-sub-tabs coach-dashboard-tabs" aria-label="Navigation coach">
+        <nav class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
           <button type="button" class="mode-tab" @click="showPersonalSpace()">Mon espace</button>
-          <button type="button" class="mode-tab" @click="showCoachCompetitions()">Compétition</button>
+          <button type="button" class="mode-tab" @click="showCoachCompetitions()">Compétitions club</button>
           <button type="button" class="mode-tab" @click="showCoachJudoka()">Judoka</button>
-          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'chat' }]" @click="showCoachChat()">Chat</button>
           <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'stats' }]" @click="showCoachDashboard()">Tableau de bord</button>
+          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'chat' }]" @click="showCoachChat()">Chat</button>
         </nav>
       </div>
       <div class="panel-body">
@@ -95,33 +95,11 @@
             </div>
           </div>
 
-          <div v-show="filtersExpanded" class="section-heading">
-            <div>
-              <h3>Compétitions
-                <span v-if="coachDashboardForm.competitionIds.length" class="result-badge">{{ coachDashboardForm.competitionIds.length }} sélectionnée(s)</span>
-                <span v-else class="result-badge">Toutes</span>
-              </h3>
-            </div>
-          </div>
-          <div v-show="filtersExpanded" class="filter-bar">
-            <label for="coachDashboardCompetitionSearch">Rechercher une compétition</label>
-            <input type="search" id="coachDashboardCompetitionSearch" placeholder="Nom ou date..." autocomplete="off" v-model="competitionSearchText" @input="updateCoachDashboardCompetitionSearch()">
-          </div>
-          <div v-show="filtersExpanded && !competitionOptions.length" class="empty-state">Aucune compétition disponible.</div>
-          <div v-show="filtersExpanded && competitionOptions.length" class="list dashboard-competition-list">
-            <label v-for="competition in competitionOptions" :key="competition.competitionId" class="checkbox-row">
-              <input type="checkbox" :value="competition.competitionId" v-model="coachDashboardForm.competitionIds">
-              <span>{{ competition.name }} · {{ competition.competitionDate }}</span>
-            </label>
-          </div>
-
           <div v-show="filtersExpanded" class="form-actions mobile-action-bar">
             <button class="button-secondary" type="button" @click="resetCoachDashboardFilters()">Réinitialiser</button>
             <button id="applyCoachDashboardFiltersButton" type="button" :disabled="isSubmitting" @click="applyCoachDashboardFilters()">Actualiser</button>
           </div>
           <div v-show="!filtersExpanded" class="dashboard-filter-summary">
-            <span v-if="coachDashboardForm.competitionIds.length">{{ coachDashboardForm.competitionIds.length }} compétition(s)</span>
-            <span v-else>Toutes compétitions</span>
             <span v-if="coachDashboardForm.dateFrom">Depuis {{ coachDashboardForm.dateFrom }}</span>
             <span v-if="coachDashboardForm.dateTo">Jusqu'au {{ coachDashboardForm.dateTo }}</span>
             <span v-if="coachDashboardForm.ageCategory">{{ coachDashboardForm.ageCategory }}</span>
@@ -155,7 +133,7 @@
                 <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
               </div>
               <div class="stat-card stat-card-split">
-                <span class="stat-label">Genre</span>
+                <span class="stat-label">Genre Judoka</span>
                 <div class="split-stat-grid">
                   <div class="split-stat-item">
                     <span class="split-stat-label">Homme</span>
@@ -168,7 +146,7 @@
                 </div>
               </div>
               <div class="stat-card stat-card-split">
-                <span class="stat-label">Garde</span>
+                <span class="stat-label">Garde Judoka</span>
                 <div class="split-stat-grid">
                   <div class="split-stat-item">
                     <span class="split-stat-label">Droitier</span>
@@ -202,7 +180,7 @@
                 <span class="stat-value">{{ coachDashboardStats.neWazaVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.neWazaVictoryRate }}%)</span>
               </div>
               <div class="stat-card stat-card-danger">
-                <span class="stat-label">Défaites hansoku-make</span>
+                <span class="stat-label">hansoku-make</span>
                 <span class="stat-value">{{ coachDashboardStats.hansokuMakeLosses }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.hansokuMakeLossRate }}%)</span>
               </div>
             </div>
@@ -231,7 +209,7 @@
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-split">
-              <span class="stat-label">Garde</span>
+              <span class="stat-label">Garde adversaire</span>
               <div class="split-stat-grid">
                 <div class="split-stat-item">
                   <span class="split-stat-label">Opposée</span>

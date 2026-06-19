@@ -1,5 +1,5 @@
-import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
 import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics";
+import { loadCoachDashboardCombats } from "./coach-dashboard-loader";
 import {
   COACH_CHAT_MCP_ROUTER_PROMPT,
   COACH_CHAT_STRUCTURED_JSON_PROMPT
@@ -105,87 +105,10 @@ export default function createCoachDashboardService(
       throw new Error("Tableau de bord réservé aux coachs.");
     }
 
-    const ageCategory = String(filters.ageCategory || "").trim();
-    const categoryYear = String(filters.categoryYear || "").trim();
-    const dateFrom = String(filters.dateFrom || "").trim();
-    const dateTo = String(filters.dateTo || "").trim();
-    const gender = String(filters.gender || "").trim();
-    const handedness = String(filters.handedness || "").trim();
-    if (dateFrom && dateTo && dateFrom > dateTo) {
-      throw new Error("La date de début doit être antérieure ou égale à la date de fin.");
-    }
-    const selectedCompetitionIds =
-      Array.isArray(filters.competitionIds) && filters.competitionIds.length
-        ? new Set(filters.competitionIds.map(String))
-        : null;
-
-    const allCompetitionRows = await competitionsRepository.listAll();
-    const competitionRows = allCompetitionRows.filter((competition) => {
-      if (selectedCompetitionIds && !selectedCompetitionIds.has(String(competition.id_competition))) {
-        return false;
-      }
-      const competitionDate = String(competition.date || "");
-      if (dateFrom && competitionDate < dateFrom) {
-        return false;
-      }
-      if (dateTo && competitionDate > dateTo) {
-        return false;
-      }
-      if (ageCategory && String(competition.categorie_age || "") !== ageCategory) {
-        return false;
-      }
-      return true;
-    });
-
-    const judokaRows = await judokasRepository.listAll();
-    const judokasById = new Map(judokaRows.map((row) => [String(row.id_judoka), toCanonicalJudoka(row)]));
-    const competitionLevelById = new Map(
-      competitionRows.map((competition) => [
-        String(competition.id_competition),
-        String(competition.niveau || "")
-      ])
+    const combats = await loadCoachDashboardCombats(
+      { combatsRepository, combatScoresRepository, competitionsRepository, judokasRepository },
+      filters
     );
-
-    const combatRowsByCompetition = await Promise.all(
-      competitionRows.map((competition) => combatsRepository.listByCompetition(competition.id_competition))
-    );
-    const combatRows = combatRowsByCompetition.flat();
-
-    const scoreRows = await combatScoresRepository.listByCombatIds(
-      combatRows.map((combat) => combat.id_combat)
-    );
-    const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-    scoreRows.forEach((score) => {
-      const idCombat = String(score.id_combat);
-      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
-    });
-
-    const filteredCombatRows = combatRows.filter((combat) => {
-      if (!gender && !categoryYear && !handedness) {
-        return true;
-      }
-      const judoka = judokasById.get(String(combat.id_judoka));
-      if (gender && (!judoka || judoka.gender !== gender)) {
-        return false;
-      }
-      if (categoryYear && (!judoka || judoka.yearInCategory !== categoryYear)) {
-        return false;
-      }
-      if (handedness && (!judoka || judoka.handedness !== handedness)) {
-        return false;
-      }
-      return true;
-    });
-
-    const combats = filteredCombatRows.map((combat) => ({
-      ...toCanonicalCombat({
-        ...combat,
-        scores: scoresByCombatId.get(String(combat.id_combat)) || []
-      }),
-      competitionLevel: competitionLevelById.get(String(combat.id_competition)) || "",
-      judokaGender: judokasById.get(String(combat.id_judoka))?.gender || "",
-      judokaHandedness: judokasById.get(String(combat.id_judoka))?.handedness || ""
-    }));
 
     return { stats: computeCoachDashboardStats(combats) };
   }
@@ -216,7 +139,13 @@ export default function createCoachDashboardService(
 
     const groqQuery = await parseCoachChatQueryWithGroq(question);
     if (groqQuery) {
-      const groqResult = executeCoachChatQuery(groqQuery, judokaRows, competitionRows, combatRows, scoresByCombatId);
+      const groqResult = executeCoachChatQuery(
+        groqQuery,
+        judokaRows as unknown as Array<Record<string, unknown>>,
+        competitionRows as unknown as Array<Record<string, unknown>>,
+        combatRows as unknown as Array<Record<string, unknown>>,
+        scoresByCombatId
+      );
       if (groqResult.matches.length) {
         return groqResult;
       }
@@ -311,7 +240,15 @@ export default function createCoachDashboardService(
       limit
     }) as CoachChatQuery;
     const { combatRows, competitionRows, judokaRows, scoresByCombatId } = await loadCoachChatDatasets();
-    return { matches: executeCoachChatQuery(query, judokaRows, competitionRows, combatRows, scoresByCombatId).matches };
+    return {
+      matches: executeCoachChatQuery(
+        query,
+        judokaRows as unknown as Array<Record<string, unknown>>,
+        competitionRows as unknown as Array<Record<string, unknown>>,
+        combatRows as unknown as Array<Record<string, unknown>>,
+        scoresByCombatId
+      ).matches
+    };
   }
 
   async function loadCoachChatDatasets() {
