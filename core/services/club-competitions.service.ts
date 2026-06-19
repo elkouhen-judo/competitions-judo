@@ -113,8 +113,8 @@ export default function createClubCompetitionsService(
           name: event.name,
           competitionDate: event.competitionDate,
           ageCategory: event.ageCategory,
-          weightCategory: event.weightCategory,
-          level: participation.niveau || "",
+          weightCategory: "",
+          level: event.level,
           result: participation.classement || ""
         },
         participation.id_judoka
@@ -131,7 +131,8 @@ export default function createClubCompetitionsService(
           name: event.name,
           competitionDate: event.competitionDate,
           ageCategory: event.ageCategory,
-          weightCategory: event.weightCategory,
+          weightCategory: "",
+          level: event.level,
           clubCompetitionId
         },
         judokaId

@@ -61,6 +61,17 @@ test("mobile mutations are guarded against double taps and offline network", () 
   assert.match(bundle, /:disabled="isSubmitting"/);
 });
 
+test("button colors use consistent variants and disabled states", () => {
+  assert.match(css, /--button-primary-bg: var\(--primary\)/);
+  assert.match(css, /--button-secondary-bg: #ffffff/);
+  assert.match(css, /--button-danger-bg: var\(--danger\)/);
+  assert.match(css, /button:hover:not\(:disabled\), \.button:hover:not\(:disabled\)/);
+  assert.match(css, /\.button-secondary:hover:not\(:disabled\)/);
+  assert.match(css, /\.button-secondary:disabled,[\s\S]*\.button-google:disabled:hover \{[\s\S]*background: var\(--button-secondary-bg\)/);
+  assert.match(css, /\.button-danger:disabled,[\s\S]*\.button-danger:disabled:hover \{[\s\S]*background: var\(--button-danger-bg\)/);
+  assert.doesNotMatch(css, /\.button-secondary:disabled:hover,\s*\.button-danger:disabled:hover\s*\{\s*background: var\(--danger\)/);
+});
+
 test("notifications use a toast layer without shifting the main layout", () => {
   assert.match(bundle, /id="toastLayer" class="toast-layer"/);
   assert.match(bundle, /\.toast-layer\s*\{/);
@@ -127,20 +138,13 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
-test("club competition creation keeps the shared age and weight categories", () => {
+test("club competition creation keeps age category without weight category", () => {
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="club_competition_name"/);
   assert.match(bundle, /id="club_competition_date"/);
   assert.match(bundle, /id="club_competition_categorie_age"/);
-  assert.match(
-    bundle,
-    /select v-if="clubCompetitionWeightCategoryOptions\.length" id="club_competition_categorie_poids" v-model="clubCompetitionForm\.weightCategory"/
-  );
-  assert.match(
-    bundle,
-    /input v-else id="club_competition_categorie_poids" v-model="clubCompetitionForm\.weightCategory" type="text" :disabled="!clubCompetitionForm\.ageCategory"/
-  );
-  assert.match(bundle, /v-for="weightOption in clubCompetitionWeightCategoryOptions"/);
+  assert.doesNotMatch(bundle, /club_competition_categorie_poids/);
+  assert.doesNotMatch(client, /clubCompetitionWeightCategoryOptions/);
 });
 
 test("family home keeps the active judoka competition context", () => {
@@ -160,8 +164,9 @@ test("family home keeps the active judoka competition context", () => {
 
 test("coach home stays club-centered and separate from judoka consultation", () => {
   assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Espace coach" \}\);/);
-  assert.match(bundle, /modes\.push\(\{ key: "coachJudoka", label: "Vue judoka" \}\);/);
-  assert.match(bundle, /modes\.push\(\{ key: "coachChat", label: "Chat" \}\);/);
+  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "coachJudoka",\s*label: "Vue judoka"[\s\S]*key: "coachChat",\s*label: "Chat"/);
+  assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
+  assert.match(bundle, /isPrimaryModeActive\(mode\.key\)/);
   assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
   assert.match(bundle, /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/);
   assert.match(bundle, /homeTitle: "Espace coach"[\s\S]*showCompetitionsSection: false/);
@@ -273,6 +278,15 @@ test("mobile actions stay explicit instead of icon-only", () => {
     bundle,
     /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/
   );
+});
+
+test("parent competition detail exposes coach objectives", () => {
+  assert.match(bundle, /v-if="showCoachAssessment" class="section coach-assessment-section"/);
+  assert.match(client, /state\.isCoach \|\| state\.isParent \|\| state\.currentCompetition\.coachObjective/);
+  assert.match(bundle, /<label class="coach-assessment-label">Objectif<\/label>/);
+  assert.match(bundle, /\{\{ coachObjectiveText \}\}/);
+  assert.match(bundle, /class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachObjective\(\)"/);
+  assert.match(bundle, /class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview\(\)"/);
   assert.doesNotMatch(bundle, /title="Éditer"/);
   assert.doesNotMatch(bundle, /title="Supprimer"/);
 });
@@ -355,6 +369,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
   assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
+  assert.match(client, /Chat coach — quota LLM limité/);
   assert.match(bundle, /id="coachAssistantQuestion" type="search"/);
   assert.match(client, /function askCoachAssistant\(\)/);
   assert.match(client, /function showCoachChat\(\)/);
@@ -524,11 +539,11 @@ test("coach can open club competition creation and participant management UI", (
     bundle,
     /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/
   );
-  assert.match(bundle, /id="club_competition_categorie_poids"/);
+  assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
+  assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
-  assert.match(client, /const clubCompetitionWeightCategoryOptions = window\.Vue\.computed\(/);
   assert.match(client, /function showClubCompetitionForm\(\)/);
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
@@ -556,6 +571,7 @@ test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /v-for="option in filterOptions"/);
   assert.match(bundle, /@blur="hideHomeFilterOptions\(\)"/);
   assert.match(bundle, /@blur="hideCompetitionOwnerOptions\(\)"/);
+  assert.match(client, /showHomeFilterOptions,\s*hideHomeFilterOptions,/);
   assert.match(bundle, /@mousedown\.prevent="selectCompetitionOwner\(option\)"/);
   assert.match(bundle, /@mousedown\.prevent="selectFilterJudoka\(option\)"/);
   assert.match(client, /function hideHomeFilterOptions\(\)/);
@@ -602,6 +618,12 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
   assert.match(bundle, /Alimente les métriques même garde \/ garde opposée\./);
   assert.match(bundle, /Alimente les répartitions par décision et les défaites hansoku-make\./);
   assert.match(bundle, /Alimente les métriques Tachi-waza et Ne-waza\./);
+  assert.match(
+    bundle,
+    /<template v-if="score\.category === 'Tachi-waza'">[\s\S]*type="text" list="tachiWazaTechniqueSuggestions" v-model\.trim="score\.technique" placeholder="Nom de la prise/
+  );
+  assert.match(bundle, /<datalist id="tachiWazaTechniqueSuggestions">[\s\S]*v-for="technique in tachiWazaTechniques"/);
+  assert.match(client, /const tachiWazaTechniques = window\.Vue\.computed\(\(\) => TACHI_WAZA_TECHNIQUES\)/);
   assert.match(
     bundle,
     /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/

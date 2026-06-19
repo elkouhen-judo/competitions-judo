@@ -1,6 +1,7 @@
 import type { JudokaRow } from "../repositories/types";
-import type { McpScope, McpTokenClaims, RpcMethods } from "../types";
+import type { Competition, Judoka, McpScope, McpTokenClaims, RpcMethods } from "../types";
 import { toCanonicalJudoka } from "./domain-adapters";
+import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import { AGE_CATEGORIES } from "../domain/competitions/competition";
 import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "../domain/category-reference";
 import { COMPETITION_RESULTS } from "../domain/competition-results";
@@ -8,7 +9,6 @@ import { COMBAT_RESULTS } from "../domain/competitions/combat-result";
 import { OPPONENT_STANCES } from "../domain/competitions/opponent-stance";
 import { SCORE_CATEGORIES } from "../domain/competitions/combat-score-category";
 import { SCORE_VALUES } from "../domain/competitions/combat-score-value";
-import { TACHI_WAZA_TECHNIQUES } from "../domain/competitions/tachi-waza-technique";
 import { NE_WAZA_TYPES } from "../domain/competitions/ne-waza-type";
 
 type McpToolHandler = (email: string, args: Record<string, unknown>) => Promise<unknown>;
@@ -22,13 +22,59 @@ interface McpToolDefinition {
   handler: McpToolHandler;
 }
 
-const EMPTY_OBJECT_SCHEMA: JsonSchema = { type: "object", properties: {} };
+function applyListLimit<T>(items: T[], limit: unknown): T[] {
+  const parsedLimit = Number(limit);
+  const effectiveLimit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIMIT;
+  return items.slice(0, Math.min(effectiveLimit, MAX_LIMIT));
+}
 
-const BELT_COLORS = [
-  "Blanc", "Blanc-Jaune", "Jaune", "Jaune-Orange", "Orange", "Orange-Vert", "Vert",
-  "Vert-Bleu", "Bleu", "Bleu-Marron", "Marron",
-  "Noir 1er Dan", "Noir 2e Dan", "Noir 3e Dan", "Noir 4e Dan", "Noir 5e Dan"
-];
+function normalizeSearchText(value: unknown): string {
+  return String(value || "")
+    .toLocaleLowerCase("fr-FR")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, " ");
+}
+
+function asTextTerms(value: unknown): string[] {
+  return (Array.isArray(value) ? value : value ? [value] : []).map((term) => String(term || "").trim()).filter(Boolean);
+}
+
+function matchesJudokaListFilters(judoka: Judoka, filters: Record<string, unknown>): boolean {
+  if (filters.ageCategory && judoka.ageCategory !== filters.ageCategory) {
+    return false;
+  }
+  if (filters.beltColor && judoka.beltColor !== filters.beltColor) {
+    return false;
+  }
+  if (filters.categoryYear && judoka.yearInCategory !== filters.categoryYear) {
+    return false;
+  }
+  if (filters.gender && judoka.gender !== filters.gender) {
+    return false;
+  }
+  if (filters.handedness && judoka.handedness !== filters.handedness) {
+    return false;
+  }
+  const textTerms = asTextTerms(filters.text);
+  if (textTerms.length) {
+    const searchText = normalizeSearchText([judoka.firstName, judoka.lastName].join(" "));
+    if (!textTerms.every((term) => searchText.includes(normalizeSearchText(term).trim()))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function matchesCompetitionListFilters(competition: Competition, filters: Record<string, unknown>): boolean {
+  if (filters.competitionDate && competition.competitionDate !== filters.competitionDate) {
+    return false;
+  }
+  if (filters.competitionLevel && competition.level !== filters.competitionLevel) {
+    return false;
+  }
+  return true;
+}
 
 const COMPETITION_SCHEMA: JsonSchema = {
   type: "object",
@@ -63,8 +109,7 @@ const COMBAT_SCORE_SCHEMA: JsonSchema = {
     category: { type: "string", enum: SCORE_CATEGORIES, description: "Type de prise : debout (Tachi-waza) ou au sol (Ne-waza)." },
     technique: {
       type: "string",
-      enum: TACHI_WAZA_TECHNIQUES,
-      description: "Technique utilisée, uniquement si category vaut \"Tachi-waza\"."
+      description: "Nom libre de la prise, uniquement si category vaut \"Tachi-waza\"."
     },
     neWazaType: {
       type: "string",
@@ -122,6 +167,7 @@ const COACH_DASHBOARD_FILTERS_SCHEMA: JsonSchema = {
 export interface McpServerServiceDeps {
   methods: RpcMethods;
   getJudokas: (email: string) => Promise<JudokaRow[]>;
+  getCurrentDate?: () => string;
 }
 
 export interface McpServerService {
@@ -129,35 +175,47 @@ export interface McpServerService {
 }
 
 export default function createMcpServerService(deps: McpServerServiceDeps): McpServerService {
-  const { methods, getJudokas } = deps;
+  const { methods, getJudokas, getCurrentDate = () => new Date().toISOString().slice(0, 10) } = deps;
+
+  function resolveDateFilter(value: unknown): string {
+    const trimmed = String(value || "").trim();
+    return trimmed === "today" ? getCurrentDate() : trimmed;
+  }
+
+  const coachToolHandlers: Record<string, McpToolHandler> = {
+    async "judokas.search"(email, args) {
+      const judokas = (await getJudokas(email)).map(toCanonicalJudoka);
+      const filters = (args.filters as Record<string, unknown>) || {};
+      return applyListLimit(judokas.filter((judoka) => matchesJudokaListFilters(judoka, filters)), args.limit);
+    },
+    async "competitions.search"(email, args) {
+      const initialData = await methods.getInitialData(email);
+      const filters = { ...((args.filters as Record<string, unknown>) || {}) };
+      if (filters.competitionDate) {
+        filters.competitionDate = resolveDateFilter(filters.competitionDate);
+      }
+      return applyListLimit(
+        initialData.competitions.filter((competition) => matchesCompetitionListFilters(competition, filters)),
+        args.limit
+      );
+    },
+    async "combats.search"(email, args) {
+      return methods.searchCombats(
+        email,
+        (args.filters as Record<string, unknown>) || {},
+        args.limit as number | undefined
+      );
+    }
+  };
 
   const tools: McpToolDefinition[] = [
-    {
-      name: "judokas.list",
-      description:
-        "Liste les judokas visibles pour l'appelant : tout le roster du club pour un coach ou un administrateur, " +
-        "ou seulement soi-même et ses enfants pour un parent. " +
-        `Chaque judoka inclut beltColor (une des valeurs ${BELT_COLORS.join(", ")}), ` +
-        `gender (${GENDERS.join(" ou ")}), handedness (${HANDEDNESSES.join(" ou ")}) et ageCategory (${AGE_CATEGORIES.join(", ")}).`,
-      scope: "judokas:read",
-      inputSchema: EMPTY_OBJECT_SCHEMA,
-      async handler(email) {
-        const judokas = await getJudokas(email);
-        return judokas.map(toCanonicalJudoka);
-      }
-    },
-    {
-      name: "competitions.list",
-      description:
-        "Liste les compétitions personnelles visibles pour le coach connecté, sans le détail des combats. " +
-        "Utiliser competitions.get pour récupérer les combats d'une compétition donnée.",
-      scope: "competitions:read",
-      inputSchema: EMPTY_OBJECT_SCHEMA,
-      async handler(email) {
-        const initialData = await methods.getInitialData(email);
-        return initialData.competitions;
-      }
-    },
+    ...buildCoachMcpToolDefinitions().map(({ name, description, scope, inputSchema }) => ({
+      name,
+      description,
+      scope,
+      inputSchema,
+      handler: coachToolHandlers[name]
+    })),
     {
       name: "competitions.get",
       description:

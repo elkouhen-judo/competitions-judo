@@ -46,7 +46,7 @@ This specification does not redefine product behavior already described in `docs
 
 - **ARC-001**: `Index.html` shall provide the mobile-first frontend app shell; each Vue view shall live in its own partial under `assets/views/*.html`, assembled into the shell by `api/app.js` (`renderIndexHtml`) without a build step.
 - **ARC-002**: `api/*` shall provide the Vercel serverless backend surface.
-- **ARC-003**: `supabase/migrations/*` shall contain one canonical SQL schema file for a fresh deployment.
+- **ARC-003**: `supabase/migrations/*` shall contain a single canonical SQL schema file for fresh deployments and idempotent updates on existing deployments.
 - **ARC-004**: `tests/*` shall contain automated Node.js validation for deployment, schema, and UI structure expectations.
 - **ARC-005**: Backend RPC code shall compose shared auth/runtime helpers in `api/_core.js`, domain models and policies in `core/domain/*`, application orchestration in `core/services/*`, and persistence adapters in `core/repositories/*`.
 - **ARC-006**: Domain objects shall not expose Supabase record serialization methods; repositories shall translate domain objects to persistence records.
@@ -103,6 +103,8 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-027**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
 - **DAT-028**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
 - **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`. Age categories without official weight divisions (Poussinet, Poussin) shall use an empty value rather than free text. Vétéran reuses the Senior weight scale.
+- **DAT-030**: `club_competitions` shall not contain a weight category column; club events only share name, date, age category, and participant links, while linked individual `competitions` keep their own optional `categorie_poids`.
+- **DAT-031**: `club_competitions.niveau` shall store the shared club event level, propagated to linked individual `competitions.niveau` when participants are created or resynchronized.
 - **DAT-030**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
 
 ### 3.4 Authentication and authorization

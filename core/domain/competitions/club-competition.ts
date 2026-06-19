@@ -14,7 +14,7 @@ export interface ClubCompetitionModel {
   name: string;
   competitionDate: string;
   ageCategory: AgeCategory;
-  weightCategory: string;
+  level: string;
   participantJudokaIds: string[];
 }
 
@@ -32,12 +32,15 @@ export function createClubCompetitionParticipantIds(values: unknown[] | undefine
 
 export function createClubCompetition(event: ClubCompetitionInput = {}): ClubCompetitionModel {
   const details = createCompetitionDetailsDraft(event);
+  if (!details.level) {
+    throw new Error("Niveau de compétition obligatoire.");
+  }
   return {
     clubCompetitionId: createOptionalCompetitionId(event.clubCompetitionId),
     name: details.name,
     competitionDate: details.competitionDate,
     ageCategory: details.ageCategory,
-    weightCategory: details.weightCategory,
+    level: details.level,
     participantJudokaIds: event.participantJudokaIds
       ? createClubCompetitionParticipantIds(event.participantJudokaIds)
       : []

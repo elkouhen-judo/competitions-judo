@@ -77,7 +77,7 @@ export interface ClubCompetitionRow {
   nom: string;
   date: string;
   categorie_age: string;
-  categorie_poids: string;
+  niveau: string;
 }
 
 export interface AccessInvitationRow {

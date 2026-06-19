@@ -16,11 +16,11 @@ Projet cible :
 
 ## Migration
 
-Le schéma initial est dans :
+Le schéma canonique et les évolutions idempotentes sont dans :
 
-`supabase/migrations/20260612000000_initial_schema.sql`
+- `supabase/migrations/20260612000000_initial_schema.sql`
 
-Il crée les tables :
+Le fichier crée les tables :
 
 - `public.judokas`
 - `public.club_competitions`

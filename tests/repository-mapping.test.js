@@ -311,7 +311,7 @@ test("repositories map club competitions and participation links", async () => {
     name: "Tournoi Nantes",
     competitionDate: "2026-06-14",
     ageCategory: "Minime",
-    weightCategory: "-50kg"
+    level: "Régional"
   });
 
   assert.deepEqual(calls[0], [
@@ -322,7 +322,7 @@ test("repositories map club competitions and participation links", async () => {
       nom: "Tournoi Nantes",
       date: "2026-06-14",
       categorie_age: "Minime",
-      categorie_poids: "-50kg"
+      niveau: "Régional"
     }
   ]);
 });
@@ -533,7 +533,7 @@ test("club competitions repository maps update without overwriting the id and re
     name: "Tournoi Nantes 2",
     competitionDate: "2026-06-15",
     ageCategory: "Cadet",
-    weightCategory: "-55kg"
+    level: "National"
   });
   await clubRepository.remove("CLUB1");
 
@@ -546,7 +546,7 @@ test("club competitions repository maps update without overwriting the id and re
         nom: "Tournoi Nantes 2",
         date: "2026-06-15",
         categorie_age: "Cadet",
-        categorie_poids: "-55kg"
+        niveau: "National"
       }
     ],
     ["delete", "club_competitions", "id_club_competition=eq.CLUB1"]

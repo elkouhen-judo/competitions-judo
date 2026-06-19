@@ -19,7 +19,7 @@ export const TACHI_WAZA_TECHNIQUES = [
   "Yoko-tomoe-nage"
 ] as const;
 
-export type TachiWazaTechnique = (typeof TACHI_WAZA_TECHNIQUES)[number];
+export type TachiWazaTechnique = string;
 
 function normalizeTachiWazaTechniqueKey(value: unknown): string {
   return String(value || "")
@@ -30,12 +30,16 @@ function normalizeTachiWazaTechniqueKey(value: unknown): string {
     .replace(/[-\s]+/g, " ");
 }
 
-const TACHI_WAZA_TECHNIQUE_ALIASES = new Map<string, TachiWazaTechnique>(
+const TACHI_WAZA_TECHNIQUE_ALIASES = new Map<string, string>(
   TACHI_WAZA_TECHNIQUES.map((technique) => [normalizeTachiWazaTechniqueKey(technique), technique])
 );
 
 export function normalizeTachiWazaTechnique(value: unknown): TachiWazaTechnique | "" {
-  return TACHI_WAZA_TECHNIQUE_ALIASES.get(normalizeTachiWazaTechniqueKey(value)) || "";
+  const rawValue = String(value || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+  return TACHI_WAZA_TECHNIQUE_ALIASES.get(normalizeTachiWazaTechniqueKey(rawValue)) || rawValue;
 }
 
 export function createTachiWazaTechnique(value: unknown): TachiWazaTechnique | "" {
@@ -44,9 +48,5 @@ export function createTachiWazaTechnique(value: unknown): TachiWazaTechnique | "
     return "";
   }
 
-  const technique = normalizeTachiWazaTechnique(rawValue);
-  if (!technique) {
-    throw new Error("Nom de la prise Tachi-waza invalide.");
-  }
-  return technique;
+  return normalizeTachiWazaTechnique(rawValue);
 }

@@ -110,7 +110,7 @@
         name: "",
         competitionDate: "",
         ageCategory: "",
-        weightCategory: "",
+        level: "",
         participantJudokaIds: [] as string[]
       }
     };
@@ -121,7 +121,7 @@
         name: "",
         competitionDate: "",
         ageCategory: "",
-        weightCategory: ""
+        level: ""
       },
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
@@ -221,16 +221,6 @@
         competitionFormViewModel.competitionForm.ageCategory
       )
     );
-    const clubCompetitionWeightCategoryOptions = window.Vue.computed(() =>
-      window.KirokuScreenProjections.getWeightCategoryOptions(
-        clubCompetitionFormViewModel.clubCompetitionForm.ageCategory
-      )
-    );
-    const clubCompetitionDetailWeightCategoryOptions = window.Vue.computed(() =>
-      window.KirokuScreenProjections.getWeightCategoryOptions(
-        clubCompetitionDetailViewModel.clubCompetitionDetailForm.ageCategory
-      )
-    );
     const combats = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return [];
       return combatsProjection.value.combats;
@@ -261,14 +251,16 @@
     });
 
     const showCoachAssessment = window.Vue.computed(() =>
-      Boolean(state.isCoach || state.currentCompetition?.coachObjective || state.currentCompetition?.coachReview)
+      Boolean(
+        state.currentCompetition &&
+        (state.isCoach || state.isParent || state.currentCompetition.coachObjective || state.currentCompetition.coachReview)
+      )
     );
     const canEditCoachAssessment = window.Vue.computed(() => state.isCoach);
 
     const combatDecisionOptions = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result));
     const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
     const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
-
     const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
       const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
       const ageCategory = cleanText(clubCompetitionFormViewModel.clubCompetitionForm.ageCategory);
@@ -419,7 +411,6 @@
         },
         {
           isSubmitting,
-          clubCompetitionWeightCategoryOptions,
           clubCompetitionFormParticipantsFiltered,
           clubCompetitionFormParticipantsPage,
           clubCompetitionFormParticipantsTotalPages,
@@ -455,7 +446,6 @@
         },
         {
           isSubmitting,
-          clubCompetitionDetailWeightCategoryOptions,
           clubCompetitionParticipantsPage,
           clubCompetitionParticipantsTotalPages,
           clubCompetitionParticipantsCurrentPage,
@@ -673,16 +663,6 @@
 
     function updateClubCompetitionAgeCategory() {
       const ageCategory = cleanText(clubCompetitionFormViewModel.clubCompetitionForm.ageCategory);
-      if (!ageCategory) {
-        clubCompetitionFormViewModel.clubCompetitionForm.weightCategory = "";
-      } else if (
-        clubCompetitionWeightCategoryOptions.value.length &&
-        !clubCompetitionWeightCategoryOptions.value.includes(
-          clubCompetitionFormViewModel.clubCompetitionForm.weightCategory
-        )
-      ) {
-        clubCompetitionFormViewModel.clubCompetitionForm.weightCategory = "";
-      }
       const allowedIds = new Set(
         clubCompetitionFormViewModel.clubCompetitionParticipants
           .filter((participant) => !ageCategory || participant.ageCategory === ageCategory)
@@ -697,16 +677,6 @@
 
     function updateClubCompetitionDetailAgeCategory() {
       const ageCategory = cleanText(clubCompetitionDetailViewModel.clubCompetitionDetailForm.ageCategory);
-      if (!ageCategory) {
-        clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory = "";
-      } else if (
-        clubCompetitionDetailWeightCategoryOptions.value.length &&
-        !clubCompetitionDetailWeightCategoryOptions.value.includes(
-          clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory
-        )
-      ) {
-        clubCompetitionDetailViewModel.clubCompetitionDetailForm.weightCategory = "";
-      }
       const allowedIds = new Set(
         clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas
           .filter((judoka) => !ageCategory || judoka.ageCategory === ageCategory)
@@ -771,7 +741,7 @@
         name: "",
         competitionDate: getCurrentLocalDate(),
         ageCategory: "",
-        weightCategory: "",
+        level: "",
         participantJudokaIds: []
       });
       state.clubCompetitionFormParticipantsCurrentPage = 1;
@@ -820,7 +790,7 @@
             name: cc.nom || "",
             competitionDate: cc.date || "",
             ageCategory: cc.categorie_age || "",
-            weightCategory: cc.categorie_poids || ""
+            level: cc.niveau || ""
           });
           clubCompetitionDetailViewModel.clubCompetitionDetailTitle = cc.nom || "Compétition club";
           clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants =
@@ -861,7 +831,7 @@
             name: form.name,
             competitionDate: form.competitionDate,
             ageCategory: form.ageCategory,
-            weightCategory: form.weightCategory,
+            level: form.level,
             participantJudokaIds: clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
           }
         ],

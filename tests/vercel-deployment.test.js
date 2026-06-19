@@ -52,6 +52,10 @@ const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"
 const appShell = fs.readFileSync(path.join(root, "api", "app.js"), "utf8");
 const core = fs.readFileSync(path.join(root, "api", "_core.js"), "utf8");
 const coreIndex = fs.readFileSync(path.join(root, "core", "index.js"), "utf8");
+const builtCoachDashboardService = fs.readFileSync(
+  path.join(root, "core-dist", "services", "coach-dashboard.service.js"),
+  "utf8"
+);
 const permissionsShim = fs.readFileSync(path.join(root, "core", "auth", "permissions.js"), "utf8");
 const adminService = fs.readFileSync(
   path.join(root, "core", "services", "admin.service.ts"),
@@ -383,8 +387,9 @@ test("vercel login uses CSV-imported profiles without first-login name entry", (
   assert.match(registrationService, /p_nom: profile\.lastName/);
   assert.match(registrationService, /p_children: \[\]/);
   assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
-  assert.equal(migrationFiles.length, 1);
+  assert.deepEqual(migrationFiles, ["20260612000000_initial_schema.sql"]);
   assert.match(supabaseSchema, /email text unique/i);
+  assert.match(supabaseSchema, /alter table public\.club_competitions\s+drop column if exists categorie_poids/i);
   assert.match(supabaseSchema, /create or replace function public\.register_profile/i);
   assert.match(
     supabaseSchema,
@@ -789,6 +794,11 @@ test("vercel runtime lets the connected user log out", () => {
 });
 
 test("vercel api keeps supabase api key usage server side", () => {
+  assert.equal(vercel.functions["api/*.js"].excludeFiles, "core/**/*.ts");
+  assert.doesNotMatch(
+    builtCoachDashboardService,
+    /readFileSync|core-dist\/prompts|coach-chat-structured-json\.prompt\.txt/
+  );
   assert.match(core, /module\.exports = require\("\.\.\/core"\);/);
   assert.match(coreIndex, /createAdminService/);
   assert.match(coreIndex, /createClubCompetitionsService/);

@@ -36,12 +36,14 @@
             </select>
           </div>
           <div>
-            <label for="club_competition_categorie_poids">Catégorie de poids</label>
-            <select v-if="clubCompetitionWeightCategoryOptions.length" id="club_competition_categorie_poids" v-model="clubCompetitionForm.weightCategory">
-              <option value="">Non renseignée</option>
-              <option v-for="weightOption in clubCompetitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
+            <label for="club_competition_niveau">Niveau</label>
+            <select id="club_competition_niveau" v-model="clubCompetitionForm.level">
+              <option value="">Sélectionnez un niveau</option>
+              <option value="Départemental">Départemental</option>
+              <option value="Régional">Régional</option>
+              <option value="National">National</option>
+              <option value="International">International</option>
             </select>
-            <input v-else id="club_competition_categorie_poids" v-model="clubCompetitionForm.weightCategory" type="text" :disabled="!clubCompetitionForm.ageCategory" :placeholder="clubCompetitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
           </div>
         </div>
 

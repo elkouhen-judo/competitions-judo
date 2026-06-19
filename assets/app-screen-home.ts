@@ -96,9 +96,6 @@
       ];
       if (state.isCoach) {
         modes.push({ key: "coach", label: "Espace coach" });
-        modes.push({ key: "coachJudoka", label: "Vue judoka" });
-        modes.push({ key: "coachDashboard", label: "Tableau de bord" });
-        modes.push({ key: "coachChat", label: "Chat" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Gestion des accès" });
@@ -109,8 +106,25 @@
       return modes;
     });
 
+    const coachSubModes: Array<{ key: string; label: string }> = [
+      { key: "coach", label: "Compétitions" },
+      { key: "coachJudoka", label: "Vue judoka" },
+      { key: "coachDashboard", label: "Tableau de bord" },
+      { key: "coachChat", label: "Chat" }
+    ];
+
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);
     const currentHomeMode = window.Vue.computed(() => getCurrentMode());
+    const showCoachSubTabs = window.Vue.computed(
+      () => state.isCoach && (getCurrentMode() === "coach" || getCurrentMode() === "coachJudoka")
+    );
+
+    function isPrimaryModeActive(modeKey: string): boolean {
+      if (modeKey === "coach") {
+        return getCurrentMode() === "coach" || getCurrentMode() === "coachJudoka";
+      }
+      return modeKey === getCurrentMode();
+    }
 
     const canFilterByJudoka = window.Vue.computed(() => {
       const mode = getCurrentMode();
@@ -444,9 +458,11 @@
         selectFilterJudoka,
         setHomeMode,
         handleModeTabClick,
+        isPrimaryModeActive,
         showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
+        hideHomeFilterOptions,
         showCompetitionsPreviousPage,
         showCompetitionsNextPage,
         showClubCompetitionsPreviousPage,
@@ -455,7 +471,9 @@
       };
       const homeComputedRefs = {
         availableModes,
+        coachSubModes,
         showModeTabs,
+        showCoachSubTabs,
         currentHomeMode,
         canFilterByJudoka,
         canCreateCompetition,
