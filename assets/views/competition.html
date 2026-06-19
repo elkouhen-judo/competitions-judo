@@ -35,6 +35,10 @@
             <span class="meta-label">Niveau</span>
             <span id="competitionNiveau" class="meta-value">{{ competitionLevel }}</span>
           </div>
+          <div class="meta-row metric-warning-row" id="row_competitionNiveauMissing" v-show="!competitionLevel">
+            <span class="meta-label">Métriques</span>
+            <span class="meta-value metric-warning">Niveau de compétition non renseigné</span>
+          </div>
           <div class="meta-row" id="row_competitionClassement" v-show="competitionResult">
             <span class="meta-label">Classement</span>
             <span id="competitionClassement" class="meta-value">{{ competitionResult }}</span>
@@ -133,7 +137,10 @@
                 </div>
                 <div v-if="combat.showJudoka" class="meta-row">
                   <span class="meta-label">Judoka</span>
-                  <span class="meta-value">{{ combat.judokaDisplayName }}</span>
+                  <span class="meta-value">{{ combat.judokaDisplayName }}<span v-if="combat.judokaHandedness"> · {{ combat.judokaHandedness }}</span></span>
+                </div>
+                <div v-if="combat.missingMetricLabels.length" class="metric-missing-list" aria-label="Données manquantes pour les métriques">
+                  <span v-for="label in combat.missingMetricLabels" :key="label" class="metric-warning">{{ label }}</span>
                 </div>
                 <p class="combat-comment">{{ combat.notes }}</p>
                 <div v-if="combat.canEdit" class="card-actions">

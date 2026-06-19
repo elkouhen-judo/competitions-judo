@@ -840,6 +840,37 @@
       color: var(--muted);
     }
 
+    .field-hint {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .metric-missing-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .metric-warning-row {
+      align-items: flex-start;
+    }
+
+    .metric-warning {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid var(--warning);
+      border-radius: 999px;
+      background: var(--warning-soft);
+      color: #6f4b00;
+      padding: 4px 9px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
     /* ── Badge system base ── */
     .result-badge {
       flex: 0 0 auto;

@@ -26,6 +26,7 @@
               <option value="Droitier">Droitier</option>
               <option value="Gaucher">Gaucher</option>
             </select>
+            <p class="field-hint">Alimente les métriques même garde / garde opposée.</p>
           </div>
 
           <div>
@@ -49,6 +50,7 @@
               <option value="">Non spécifié</option>
               <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
             </select>
+            <p class="field-hint">Alimente les répartitions par décision et les défaites hansoku-make.</p>
           </div>
 
           <div v-show="!combatQuickMode" class="full-row">
@@ -87,6 +89,7 @@
               </div>
             </div>
             <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
+            <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
           </div>
 
           <div v-show="!combatQuickMode" class="full-row">

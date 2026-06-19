@@ -84,11 +84,13 @@ function computeStanceBreakdown(
 function computeLateralMatchupBreakdown(
   combats: CoachDashboardCombat[]
 ): CoachDashboardLateralMatchupBreakdownEntry[] {
+  const knownHandednesses = HANDEDNESSES as readonly string[];
+  const knownOpponentStances = OPPONENT_STANCES as readonly string[];
   const decidedCombats = combats.filter(
     (combat) =>
       (isVictoryCombatResult(combat.result) || isLossCombatResult(combat.result)) &&
-      Boolean(combat.judokaHandedness) &&
-      Boolean(combat.opponentStance)
+      knownHandednesses.includes(combat.judokaHandedness || "") &&
+      knownOpponentStances.includes(combat.opponentStance || "")
   );
 
   return [

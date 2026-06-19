@@ -59,7 +59,7 @@ export interface Combat {
 /**
  * A {@link Combat} enriched with the display name of the judoka it belongs to.
  */
-export type CombatReadModel = Combat & { judokaDisplayName: string };
+export type CombatReadModel = Combat & { judokaDisplayName: string; judokaHandedness?: string };
 
 export interface AccessInvitation {
   email: string;

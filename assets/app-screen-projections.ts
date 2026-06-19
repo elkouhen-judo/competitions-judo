@@ -212,6 +212,23 @@
     return [detail, score.value].filter(Boolean).join(" · ");
   }
 
+  function getMissingMetricLabels(combat: CombatReadModel, helpers: { showJudoka: boolean }): string[] {
+    const labels: string[] = [];
+    if (helpers.showJudoka && !combat.judokaHandedness) {
+      labels.push("Garde judoka non renseignée");
+    }
+    if (!combat.opponentStance) {
+      labels.push("Garde adversaire non renseignée");
+    }
+    if (!combat.victoryType) {
+      labels.push("Type de décision non renseigné");
+    }
+    if (!(combat.scores || []).length) {
+      labels.push("Prises marquées non renseignées");
+    }
+    return labels;
+  }
+
   function projectCompetitionCombats(
     combats: CombatReadModel[] | null | undefined,
     helpers: {
@@ -228,10 +245,12 @@
       competitionId: c.competitionId || "",
       opponent: c.opponent || "Adversaire non renseigné",
       opponentStance: c.opponentStance || "",
+      judokaHandedness: c.judokaHandedness || "",
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
+      missingMetricLabels: getMissingMetricLabels(c, helpers),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),

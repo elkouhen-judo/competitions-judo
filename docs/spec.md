@@ -2,7 +2,7 @@
 title: Kiroku Functional Specification
 version: 1.2
 date_created: 2026-06-11
-last_updated: 2026-06-18
+last_updated: 2026-06-19
 owner: competitions-judo
 tags:
   - design
@@ -87,7 +87,7 @@ This specification does not define:
 - **COMP-013**: When opening the competition creation form, the date field shall be initialized to the current day by default.
 - **COMP-014**: Competition creation shall not ask for the final ranking.
 - **COMP-015**: Final ranking shall be entered and updated exclusively from a dedicated competition finalization screen. The competition edit form shall not expose a ranking field.
-- **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `5e`, `7e`, or `Non classé`.
+- **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, or `Non classé`.
 - **COMP-024**: A competition shall expose a level field chosen from: `Départemental`, `Régional`, `National`, `International`. The field is optional (empty by default).
 - **COMP-017**: A `COACH` can create a club competition event and assign one or more judokas as participants.
 - **COMP-018**: Assigning a judoka to a club competition creates an individual competition participation for that judoka.
@@ -189,6 +189,7 @@ This specification does not define:
 - **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
 - **UIX-015**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
 - **UIX-016**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, detailed combats, and finalization status.
+- **UIX-017**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
 
 ### 3.9 Coach dashboard rules
 
@@ -247,6 +248,7 @@ This specification does not define:
 - **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
 - **AC-029**: Given a competition finalization request, when the final ranking is saved successfully, then the system attempts to generate and store an AI analysis without failing the finalization if that generation errors (e.g. the AI provider is unavailable or not configured).
 - **AC-030**: Given a connected `COACH`, when dashboard filters are set by competition, age category, gender, or garde, then the displayed rates and counts are computed only from combats matching the active filters.
+- **AC-030a**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.
 - **AC-031**: Given a connected `PARENT` or `JUDOKA`, when they try to access the club-wide dashboard, then access is rejected.
 - **AC-032**: Given an MCP client requests scopes outside the connected user's role perimeter, when the authorization or request is processed, then unsupported scopes are not granted and protected operations are rejected.
 - **AC-033**: Given an MCP OAuth request, when PKCE is missing/invalid or the redirect URI does not exactly match the registered client URI, then the request is rejected.
