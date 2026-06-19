@@ -84,7 +84,7 @@
     );
     const coachDashboardTitle = window.Vue.computed(() =>
       coachDashboardViewModel.activeCoachDashboardTab === "chat"
-        ? "Chat coach"
+        ? "Chat coach — quota LLM limité"
         : "Tableau de bord coach"
     );
     const coachDashboardSubtitle = window.Vue.computed(() =>

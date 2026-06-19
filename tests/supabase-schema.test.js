@@ -84,6 +84,8 @@ test("supabase schema stores judoka gender, year-in-category and handedness for 
 test("supabase schema stores club competitions and linked participations", () => {
   assert.match(schema, /create table if not exists public\.club_competitions/i);
   assert.match(schema, /id_club_competition text primary key/i);
+  assert.match(schema, /niveau text not null default ''/i);
+  assert.match(schema, /alter table public\.club_competitions[\s\S]*add column if not exists niveau text not null default ''/i);
   assert.match(
     schema,
     /competitions_club_competition_id_fkey[\s\S]*references public\.club_competitions \(id_club_competition\)[\s\S]*on delete set null/i

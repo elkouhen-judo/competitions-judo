@@ -63,10 +63,12 @@
                   <option value="Tachi-waza">Tachi-waza</option>
                   <option value="Ne-waza">Ne-waza</option>
                 </select>
-                <select v-if="score.category === 'Tachi-waza'" v-model="score.technique">
-                  <option value="">Nom de la prise</option>
-                  <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique">{{ technique }}</option>
-                </select>
+                <template v-if="score.category === 'Tachi-waza'">
+                  <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Nom de la prise (ex. Seoi-nage)">
+                  <datalist id="tachiWazaTechniqueSuggestions">
+                    <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
+                  </datalist>
+                </template>
                 <select v-else-if="score.category === 'Ne-waza'" v-model="score.neWazaType">
                   <option value="">Type de prise</option>
                   <option value="Clé">Clé</option>

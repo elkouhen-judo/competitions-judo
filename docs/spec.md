@@ -97,6 +97,8 @@ This specification does not define:
 - **COMP-022**: Deleting a club competition shall detach linked individual competitions by clearing the club link, without deleting those individual competitions, combats, or final rankings.
 - **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
 - **COMP-025**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
+- **COMP-026**: A club competition shall not ask for or store a weight category; weight is only meaningful on an individual judoka competition.
+- **COMP-027**: A club competition shall require a competition level chosen from `Départemental`, `Régional`, `National`, or `International`, and linked individual participations shall inherit that level.
 
 ### 3.4 Combat rules
 
@@ -107,7 +109,7 @@ This specification does not define:
 - **CBT-005b**: To maintain simplicity, complex referee scoring details (Shido counters, scoreboard timelines, and penalty counts) shall not be structural fields; contextual technical details may still be typed in the free text match notes (e.g., "Perdu par Ippon sur Uchi-Mata", "Gagné aux pénalités au Golden Score").
 - **CBT-005c**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
 - **CBT-005d**: A combat may optionally record a list of scoring techniques ("prises marquées"), one entry per point scored during the combat, regardless of the combat result.
-- **CBT-005e**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`) and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall also record the throw name from a fixed practical list of common club throws (selected from a dropdown). When the category is `Ne-waza`, the entry shall also record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
+- **CBT-005e**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`) and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall autocomplete known throw names while still accepting a free-text throw name typed by the user. When the category is `Ne-waza`, the entry shall record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
 - **CBT-005f**: A combat with result `Victoire` or `Défaite` shall record a decision type among `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, or `Forfait`. A combat with result `Egalité` shall use `Hiki wake`. Scoring technique entries remain optional and shall not replace the decision type.
 - **CBT-006**: Deleting a combat shall not delete its parent competition.
 - **CBT-007**: The combat form shall provide a quick entry mode for coaches to record the core result first, while keeping detailed fields (opponent stance, scoring techniques, notes) available in an expanded detail mode.
@@ -188,6 +190,7 @@ This specification does not define:
 - **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
 - **UIX-015**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
 - **UIX-016**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, detailed combats, and finalization status.
+- **UIX-016a**: For `PARENT`, the competition detail screen shall show the coach follow-up block so objectives set by the coach are visible on the judoka's competition.
 - **UIX-017**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
 
 ### 3.9 Coach dashboard rules
@@ -205,7 +208,7 @@ This specification does not define:
 - **DASH-011**: The dashboard shall display distinct judoka counts broken down by judoka garde (`Droitier` / `Gaucher`).
 - **DASH-012**: The dashboard competition selector shall allow searching competitions by name or date without clearing already selected competitions.
 - **DASH-013**: On mobile, the dashboard filters shall be collapsible so the statistics can be reviewed without scrolling through the full filter list.
-- **DASH-014**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
+- **DASH-014**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status, indicate in the chat title that LLM quota is limited, and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
 
 ### 3.10 Internal MCP access rules
 

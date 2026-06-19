@@ -18,7 +18,7 @@ function toClubCompetitionRecord(event: ClubCompetitionModel): Record<string, un
     nom: event.name,
     date: event.competitionDate,
     categorie_age: event.ageCategory || "",
-    categorie_poids: event.weightCategory || ""
+    niveau: event.level || ""
   };
 }
 

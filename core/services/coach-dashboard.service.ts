@@ -1,5 +1,10 @@
 import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
 import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics";
+import {
+  COACH_CHAT_MCP_ROUTER_PROMPT,
+  COACH_CHAT_STRUCTURED_JSON_PROMPT
+} from "../prompts/coach-chat-prompts";
+import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CombatScoreRow } from "../repositories/types";
 import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
@@ -8,39 +13,59 @@ import type { JudokasRepository } from "../repositories/judokas.repository";
 import type {
   CoachAssistantMatch,
   CoachAssistantResponse,
+  CoachChatFilters,
   CoachDashboard,
   CoachDashboardFilters,
   RpcMethods
 } from "../types";
 import type { UserContextService } from "./user-context.service";
 
-type CoachDashboardMethods = Pick<RpcMethods, "askCoachAssistant" | "getCoachDashboard">;
+type CoachDashboardMethods = Pick<RpcMethods, "askCoachAssistant" | "getCoachDashboard" | "searchCombats">;
 
 interface GroqClient {
   generateChatCompletion(messages: Array<{ role: "system" | "user"; content: string }>): Promise<string>;
+  generateToolChatCompletion?(
+    messages: GroqChatMessage[],
+    tools: GroqToolDefinition[]
+  ): Promise<GroqToolChatCompletion>;
 }
 
 type CoachChatEntity = "judokas" | "combats" | "competitions";
+type GroqChatRole = "system" | "user" | "assistant" | "tool";
+
+interface GroqToolCall {
+  id?: string;
+  type?: "function";
+  function?: {
+    name?: string;
+    arguments?: string;
+  };
+}
+
+interface GroqChatMessage {
+  role: GroqChatRole;
+  content: string | null;
+  tool_call_id?: string;
+  tool_calls?: GroqToolCall[];
+}
+
+interface GroqToolChatCompletion {
+  content: string;
+  toolCalls: GroqToolCall[];
+}
+
+interface GroqToolDefinition {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
 
 interface CoachChatQuery {
   entity: CoachChatEntity;
-  filters: {
-    ageCategory?: string;
-    beltColor?: string;
-    categoryYear?: string;
-    competitionDate?: string;
-    competitionLevel?: string;
-    gender?: string;
-    handedness?: string;
-    neWazaType?: string;
-    opponent?: string;
-    opponentStance?: string;
-    result?: string;
-    scoreValue?: string;
-    tachiWazaTechnique?: string;
-    victoryType?: string;
-    text?: string[];
-  };
+  filters: CoachChatFilters;
   limit: number;
 }
 
@@ -183,49 +208,32 @@ export default function createCoachDashboardService(
       };
     }
 
+    const { judokaRows, competitionRows, combatRows, scoresByCombatId } = await loadCoachChatDatasets();
+    const judokasById = new Map(judokaRows.map((row) => [String(row.id_judoka), row]));
+    const competitionsById = new Map(
+      competitionRows.map((competition) => [String(competition.id_competition), competition])
+    );
+
+    const groqQuery = await parseCoachChatQueryWithGroq(question);
+    if (groqQuery) {
+      const groqResult = executeCoachChatQuery(groqQuery, judokaRows, competitionRows, combatRows, scoresByCombatId);
+      if (groqResult.matches.length) {
+        return groqResult;
+      }
+    }
+
     const desiredResult = resolveRequestedResult(query);
     const requestedNeWazaType = resolveRequestedNeWazaType(query);
     const queryTerms = extractAssistantSearchTerms(query).filter(
       (term) => !requestedNeWazaType || !isNeWazaAliasTerm(term)
     );
-    if (!desiredResult && !requestedNeWazaType && !queryTerms.length) {
+    const isGenericCombatListing = isCombatListQuestion(query);
+    if (!desiredResult && !requestedNeWazaType && !queryTerms.length && !isGenericCombatListing) {
       return {
         answer: "Mode bêta : je peux chercher dans les attributs judoka, compétition, combat et scores enregistrés.",
         matches: [],
         beta: true
       };
-    }
-
-    const [competitionRows, judokaRows] = await Promise.all([
-      competitionsRepository.listAll(),
-      judokasRepository.listAll()
-    ]);
-    const judokasById = new Map(judokaRows.map((row) => [String(row.id_judoka), row]));
-    const competitionsById = new Map(
-      competitionRows.map((competition) => [String(competition.id_competition), competition])
-    );
-    const combatRowsByCompetition = await Promise.all(
-      competitionRows.map((competition) => combatsRepository.listByCompetition(competition.id_competition))
-    );
-    const combatRows = combatRowsByCompetition.flat();
-    const scoreRows = await combatScoresRepository.listByCombatIds(
-      combatRows.map((combat) => combat.id_combat)
-    );
-    const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-    scoreRows.forEach((score) => {
-      const idCombat = String(score.id_combat);
-      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
-    });
-
-    const groqQuery = await parseCoachChatQueryWithGroq(question);
-    if (groqQuery) {
-      return executeCoachChatQuery(
-        groqQuery,
-        judokaRows,
-        competitionRows,
-        combatRows,
-        scoresByCombatId
-      );
     }
 
     const requestedAgeCategory = resolveRequestedAgeCategory(query);
@@ -288,6 +296,44 @@ export default function createCoachDashboardService(
     };
   }
 
+  async function searchCombats(
+    email: string,
+    filters: CoachChatFilters = {},
+    limit?: number
+  ): Promise<{ matches: CoachAssistantMatch[] }> {
+    const { domainUser } = await userContextService.getDomainUserContext(email);
+    if (domainUser.accessRole !== "COACH") {
+      throw new Error("Recherche de combats réservée aux coachs.");
+    }
+    const query = buildCoachChatQuery({
+      entity: "combats",
+      filters: filters as Record<string, unknown>,
+      limit
+    }) as CoachChatQuery;
+    const { combatRows, competitionRows, judokaRows, scoresByCombatId } = await loadCoachChatDatasets();
+    return { matches: executeCoachChatQuery(query, judokaRows, competitionRows, combatRows, scoresByCombatId).matches };
+  }
+
+  async function loadCoachChatDatasets() {
+    const [competitionRows, judokaRows] = await Promise.all([
+      competitionsRepository.listAll(),
+      judokasRepository.listAll()
+    ]);
+    const combatRowsByCompetition = await Promise.all(
+      competitionRows.map((competition) => combatsRepository.listByCompetition(competition.id_competition))
+    );
+    const combatRows = combatRowsByCompetition.flat();
+    const scoreRows = await combatScoresRepository.listByCombatIds(
+      combatRows.map((combat) => combat.id_combat)
+    );
+    const scoresByCombatId = new Map<string, CombatScoreRow[]>();
+    scoreRows.forEach((score) => {
+      const idCombat = String(score.id_combat);
+      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
+    });
+    return { judokaRows, competitionRows, combatRows, scoresByCombatId };
+  }
+
   function normalizeAssistantText(value: unknown): string {
     return String(value || "")
       .trim()
@@ -305,19 +351,15 @@ export default function createCoachDashboardService(
       return null;
     }
     try {
+      const toolQuery = await parseCoachChatQueryWithGroqTools(question);
+      if (toolQuery) {
+        return toolQuery;
+      }
+
       const content = await groqClient.generateChatCompletion([
         {
           role: "system",
-          content:
-            "Tu transformes une question de coach de judo en JSON strict. " +
-            "Retourne uniquement un objet JSON avec entity, filters et limit. " +
-            "entity vaut judokas, combats ou competitions. " +
-            "Si la question demande une liste de judokas, entity=judokas. " +
-            "Si elle demande des combats, entity=combats. " +
-            "Si elle demande des compétitions ou tournois, entity=competitions. " +
-            "filters peut contenir ageCategory, beltColor, categoryYear, competitionDate, competitionLevel, gender, handedness, neWazaType, opponent, opponentStance, result, scoreValue, tachiWazaTechnique, victoryType, text. " +
-            "Utilise les valeurs métier françaises exactes quand elles sont connues: Minime, Cadet, Victoire, Défaite, Osaekomi, Ippon, etc. " +
-            "Pour aujourd'hui, mets competitionDate=today. Pour les mots libres, mets un tableau text."
+          content: COACH_CHAT_STRUCTURED_JSON_PROMPT
         },
         {
           role: "user",
@@ -327,7 +369,73 @@ export default function createCoachDashboardService(
       return normalizeCoachChatQuery(content);
     } catch (error) {
       console.error("Échec de l'interprétation Groq du chat coach :", error);
+      throw new Error(formatGroqUnavailableMessage(error));
+    }
+  }
+
+  function formatGroqUnavailableMessage(error: unknown): string {
+    const status = (error as { groqStatus?: number } | null)?.groqStatus;
+    if (status === 429) {
+      return "L'assistant IA est temporairement surchargé (limite de débit Groq atteinte). Réessayez dans quelques secondes.";
+    }
+    return "L'assistant IA est momentanément indisponible. Réessayez dans quelques instants.";
+  }
+
+  async function parseCoachChatQueryWithGroqTools(question: string): Promise<CoachChatQuery | null> {
+    if (!groqClient.generateToolChatCompletion) {
       return null;
+    }
+    const messages: GroqChatMessage[] = [
+      {
+        role: "system",
+        content: COACH_CHAT_MCP_ROUTER_PROMPT
+      },
+      { role: "user", content: question }
+    ];
+    const completion = await groqClient.generateToolChatCompletion(messages, buildCoachMcpGroqTools());
+    const toolCall = (completion.toolCalls || [])[0];
+    if (toolCall) {
+      return normalizeCoachMcpToolCallQuery(toolCall);
+    }
+    return normalizeCoachChatQuery(completion.content);
+  }
+
+  function buildCoachMcpGroqTools(): GroqToolDefinition[] {
+    return buildCoachMcpToolDefinitions().map((definition) => ({
+      type: "function",
+      function: {
+        name: definition.groqName,
+        description: definition.description,
+        parameters: definition.inputSchema
+      }
+    }));
+  }
+
+  function normalizeCoachMcpToolCallQuery(toolCall: GroqToolCall): CoachChatQuery | null {
+    const name = String(toolCall.function?.name || "");
+    const definition = buildCoachMcpToolDefinitions().find((tool) => tool.groqName === name);
+    if (!definition) {
+      return null;
+    }
+    const args = parseToolCallArguments(toolCall.function?.arguments);
+    return buildCoachChatQuery({
+      entity: definition.entity,
+      filters: args.filters && typeof args.filters === "object" ? (args.filters as Record<string, unknown>) : {},
+      limit: args.limit
+    });
+  }
+
+  function parseToolCallArguments(rawArguments: unknown): Record<string, unknown> {
+    if (!rawArguments) {
+      return {};
+    }
+    if (typeof rawArguments === "object") {
+      return rawArguments as Record<string, unknown>;
+    }
+    try {
+      return JSON.parse(String(rawArguments));
+    } catch {
+      return {};
     }
   }
 
@@ -337,20 +445,26 @@ export default function createCoachDashboardService(
       return null;
     }
     const jsonText = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
-    let parsed;
     try {
-      parsed = JSON.parse(jsonText);
+      return buildCoachChatQuery(JSON.parse(jsonText));
     } catch {
       return null;
     }
+  }
+
+  function buildCoachChatQuery(parsed: {
+    entity?: unknown;
+    filters?: Record<string, unknown>;
+    limit?: unknown;
+  } | null | undefined): CoachChatQuery | null {
     const entity = parsed?.entity;
     if (entity !== "judokas" && entity !== "combats" && entity !== "competitions") {
       return null;
     }
     const filters = parsed?.filters && typeof parsed.filters === "object" ? parsed.filters : {};
-    const text = Array.isArray(filters.text)
-      ? filters.text.map((term: unknown) => String(term || "").trim()).filter(Boolean)
-      : [];
+    const text = (Array.isArray(filters.text) ? filters.text : [filters.text])
+      .map((term: unknown) => String(term || "").trim())
+      .filter(Boolean);
     const competitionDate =
       String(filters.competitionDate || "").trim() === "today"
         ? getCurrentDate()
@@ -374,7 +488,7 @@ export default function createCoachDashboardService(
         victoryType: String(filters.victoryType || "").trim() || undefined,
         text
       },
-      limit: Math.min(Math.max(Number(parsed?.limit) || 12, 1), 20)
+      limit: Math.min(Math.max(Number(parsed?.limit) || DEFAULT_LIMIT, 1), MAX_LIMIT)
     };
   }
 
@@ -524,7 +638,8 @@ export default function createCoachDashboardService(
         query.filters.beltColor ||
         query.filters.categoryYear ||
         query.filters.gender ||
-        query.filters.handedness
+        query.filters.handedness ||
+        query.filters.text?.length
     );
   }
 
@@ -560,6 +675,15 @@ export default function createCoachDashboardService(
     }
     if (query.filters.handedness && String(judoka.lateralite || "") !== query.filters.handedness) {
       return false;
+    }
+    const judokaTextTerms = query.filters.text || [];
+    if (judokaTextTerms.length) {
+      const searchText = normalizeAssistantSearchText(
+        [judoka.prenom, judoka.nom, judoka.categorie_age, judoka.couleur_ceinture].join(" ")
+      );
+      if (!judokaTextTerms.every((term) => searchText.includes(normalizeAssistantSearchText(term).trim()))) {
+        return false;
+      }
     }
     return true;
   }
@@ -654,6 +778,8 @@ export default function createCoachDashboardService(
       "au",
       "aux",
       "avec",
+      "affiche",
+      "afficher",
       "cherche",
       "chercher",
       "combat",
@@ -672,7 +798,11 @@ export default function createCoachDashboardService(
       "la",
       "le",
       "les",
+      "liste",
+      "lister",
       "moi",
+      "montre",
+      "montrer",
       "ont",
       "par",
       "pour",
@@ -715,6 +845,13 @@ export default function createCoachDashboardService(
 
   function isJudokaListQuestion(query: string): boolean {
     return /\b(liste|lister|affiche|afficher|montre|montrer|qui)\b/.test(query) && /\bjudoka|judokas\b/.test(query);
+  }
+
+  function isCombatListQuestion(query: string): boolean {
+    return (
+      /\b(liste|lister|affiche|afficher|montre|montrer|cherche|chercher|trouve|trouver)\b/.test(query) &&
+      /\bcombat|combats\b/.test(query)
+    );
   }
 
   function resolveRequestedAgeCategory(query: string): string {
@@ -927,14 +1064,15 @@ export default function createCoachDashboardService(
   ): string {
     const distinctJudokas = new Set(matches.map((match) => match.judokaId)).size;
     const criteria = [desiredResult, requestedNeWazaType, ...queryTerms].filter(Boolean).join(" + ");
+    const criteriaSuffix = criteria ? ` correspondant à ${criteria}` : "";
     if (!matches.length) {
-      return `Aucun combat trouvé pour ${criteria}.`;
+      return criteria ? `Aucun combat trouvé pour ${criteria}.` : "Aucun combat enregistré.";
     }
     const suffix = matches.length >= 12 ? " Les 12 résultats les plus récents sont affichés." : "";
-    return `${distinctJudokas} judoka(s) trouvé(s), ${matches.length} combat(s) correspondant à ${criteria}.${suffix}`;
+    return `${distinctJudokas} judoka(s) trouvé(s), ${matches.length} combat(s)${criteriaSuffix}.${suffix}`;
   }
 
   return {
-    methods: { askCoachAssistant, getCoachDashboard }
+    methods: { askCoachAssistant, getCoachDashboard, searchCombats }
   };
 }

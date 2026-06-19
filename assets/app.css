@@ -16,6 +16,17 @@
       --danger: #9f2f2d;
       --danger-hover: #7d2422;
       --danger-soft: #fdebec;
+      --button-focus-ring: rgba(15, 109, 92, 0.22);
+      --button-primary-bg: var(--primary);
+      --button-primary-bg-hover: var(--primary-hover);
+      --button-primary-text: #ffffff;
+      --button-secondary-bg: #ffffff;
+      --button-secondary-bg-hover: var(--tatami);
+      --button-secondary-border: var(--line);
+      --button-secondary-text: var(--text);
+      --button-danger-bg: var(--danger);
+      --button-danger-bg-hover: var(--danger-hover);
+      --button-danger-text: #ffffff;
       --success: #346538;
       --success-soft: #edf3ec;
       --warning: #956400;
@@ -201,6 +212,7 @@
       right: 10px;
       width: 28px;
       height: 28px;
+      min-height: 28px;
       border: 0;
       border-radius: 999px;
       background: transparent;
@@ -209,10 +221,13 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      padding: 0;
+      box-shadow: none;
     }
 
     .toast-close:hover {
       background: rgba(17, 17, 17, 0.06);
+      transform: none;
     }
 
     .toast-close:focus-visible {
@@ -306,7 +321,7 @@
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
-      outline: 3px solid rgba(17, 17, 17, 0.14);
+      outline: 3px solid var(--button-focus-ring);
     }
 
     input[type="file"] {
@@ -355,8 +370,8 @@
       gap: 6px;
       min-height: 52px;
       border: 1px solid transparent;
-      background: var(--primary);
-      color: #fff;
+      background: var(--button-primary-bg);
+      color: var(--button-primary-text);
       padding: 13px 15px;
       cursor: pointer;
       font-weight: bold;
@@ -366,8 +381,8 @@
       transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
     }
 
-    button:hover, .button:hover {
-      background: var(--primary-hover);
+    button:hover:not(:disabled), .button:hover:not(:disabled) {
+      background: var(--button-primary-bg-hover);
     }
 
     button:active:not(:disabled),
@@ -384,33 +399,51 @@
     }
 
     button:disabled:hover, .button:disabled:hover {
-      background: var(--primary);
+      background: var(--button-primary-bg);
+      color: var(--button-primary-text);
+    }
+
+    button:focus-visible,
+    .button:focus-visible {
+      outline: 3px solid var(--button-focus-ring);
+      outline-offset: 2px;
     }
 
     .button-secondary {
-      border-color: var(--line);
-      background: #fff;
-      color: var(--text);
+      border-color: var(--button-secondary-border);
+      background: var(--button-secondary-bg);
+      color: var(--button-secondary-text);
     }
 
-    .button-secondary:hover {
-      background: var(--soft);
+    .button-secondary:hover:not(:disabled) {
+      background: var(--button-secondary-bg-hover);
     }
 
+    .button-secondary:disabled,
     .button-secondary:disabled:hover,
+    .button-google:disabled,
+    .button-google:disabled:hover {
+      border-color: var(--button-secondary-border);
+      background: var(--button-secondary-bg);
+      color: var(--button-secondary-text);
+    }
+
+    .button-danger:disabled,
     .button-danger:disabled:hover {
-      background: var(--danger);
+      border-color: var(--button-danger-bg);
+      background: var(--button-danger-bg);
+      color: var(--button-danger-text);
     }
 
     .button-danger {
-      border-color: var(--danger);
-      background: var(--danger);
-      color: #fff;
+      border-color: var(--button-danger-bg);
+      background: var(--button-danger-bg);
+      color: var(--button-danger-text);
     }
 
-    .button-danger:hover {
-      background: var(--danger-hover);
-      border-color: var(--danger-hover);
+    .button-danger:hover:not(:disabled) {
+      background: var(--button-danger-bg-hover);
+      border-color: var(--button-danger-bg-hover);
     }
 
     .autocomplete-wrapper {
@@ -610,9 +643,9 @@
     .card-button {
       display: block;
       width: 100%;
-      border-color: var(--line);
-      background: #ffffff;
-      color: var(--text);
+      border-color: var(--button-secondary-border);
+      background: var(--button-secondary-bg);
+      color: var(--button-secondary-text);
       padding: 16px;
       text-align: left;
     }
@@ -628,14 +661,14 @@
       gap: 8px;
     }
 
-    .card-button:hover {
-      background: #fff;
-      border-color: var(--text);
+    .card-button:hover:not(:disabled) {
+      background: var(--button-secondary-bg-hover);
+      border-color: var(--accent);
     }
 
     .card-button:focus-visible {
-      border-color: var(--text);
-      outline: 3px solid rgba(17, 17, 17, 0.14);
+      border-color: var(--accent);
+      outline: 3px solid var(--button-focus-ring);
       outline-offset: 2px;
     }
 
@@ -769,9 +802,9 @@
     }
 
     .segment-active {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #ffffff;
+      border-color: var(--button-primary-bg);
+      background: var(--button-primary-bg);
+      color: var(--button-primary-text);
     }
 
     .quick-result-row {
@@ -1299,19 +1332,20 @@
     }
 
     .mode-tab:hover {
-      color: var(--text);
+      color: var(--primary);
       background: transparent;
+      transform: none;
     }
 
     .mode-tabs .mode-tab-active {
       background: transparent;
-      color: var(--text);
-      border-bottom-color: var(--text);
+      color: var(--primary);
+      border-bottom-color: var(--primary);
     }
 
     .mode-tabs .mode-tab-active:hover {
       background: transparent;
-      color: var(--text);
+      color: var(--primary);
     }
 
     .performance-result-card {
@@ -1643,8 +1677,8 @@
         box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
       }
 
-      button:hover,
-      .button:hover {
+      button:hover:not(:disabled),
+      .button:hover:not(:disabled) {
         transform: translateY(-1px);
       }
 
@@ -1726,12 +1760,12 @@
       gap: 10px;
     }
     .button-google {
-      border-color: var(--line);
-      background: #fff;
-      color: var(--text);
+      border-color: var(--button-secondary-border);
+      background: var(--button-secondary-bg);
+      color: var(--button-secondary-text);
     }
-    .button-google:hover {
-      background: var(--soft);
+    .button-google:hover:not(:disabled) {
+      background: var(--button-secondary-bg-hover);
     }
     .user-actions {
       display: flex;

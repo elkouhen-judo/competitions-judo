@@ -6,9 +6,19 @@
             v-for="mode in availableModes"
             :key="mode.key"
             type="button"
-            :class="['mode-tab', { 'mode-tab-active': mode.key === currentHomeMode }]"
+            :class="['mode-tab', { 'mode-tab-active': isPrimaryModeActive(mode.key) }]"
             @click="handleModeTabClick(mode.key)">
             {{ mode.label }}
+          </button>
+        </nav>
+        <nav v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
+          <button
+            v-for="subMode in coachSubModes"
+            :key="subMode.key"
+            type="button"
+            :class="['mode-tab', { 'mode-tab-active': subMode.key === currentHomeMode }]"
+            @click="handleModeTabClick(subMode.key)">
+            {{ subMode.label }}
           </button>
         </nav>
         <div v-if="showActiveJudokaSummary" id="homeActiveJudokaSummary" class="summary home-context-card">

@@ -241,6 +241,24 @@ export interface CoachDashboard {
   stats: CoachDashboardStats;
 }
 
+export interface CoachChatFilters {
+  ageCategory?: string;
+  beltColor?: string;
+  categoryYear?: string;
+  competitionDate?: string;
+  competitionLevel?: string;
+  gender?: string;
+  handedness?: string;
+  neWazaType?: string;
+  opponent?: string;
+  opponentStance?: string;
+  result?: string;
+  scoreValue?: string;
+  tachiWazaTechnique?: string;
+  victoryType?: string;
+  text?: string[];
+}
+
 export interface CoachAssistantMatch {
   judokaId: string;
   judokaName: string;
@@ -430,4 +448,10 @@ export interface RpcMethods {
   getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
   /** Répond à une question simple du coach sur les judokas et combats enregistrés. */
   askCoachAssistant: (email: string, question: string) => Promise<CoachAssistantResponse>;
+  /** Cherche des combats visibles par le coach selon des filtres structurés (outil MCP combats.search). */
+  searchCombats: (
+    email: string,
+    filters?: CoachChatFilters,
+    limit?: number
+  ) => Promise<{ matches: CoachAssistantMatch[] }>;
 }

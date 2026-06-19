@@ -131,7 +131,7 @@ test("club competition domain normalizes event details and participant ids", () 
     name: " Tournoi Nantes ",
     competitionDate: "2026-06-14",
     ageCategory: " minime ",
-    weightCategory: " -50kg ",
+    level: " Régional ",
     participantJudokaIds: ["J1", "J2", "J1"]
   });
 
@@ -139,11 +139,21 @@ test("club competition domain normalizes event details and participant ids", () 
   assert.equal(event.name, "Tournoi Nantes");
   assert.equal(event.competitionDate, "2026-06-14");
   assert.equal(event.ageCategory, "Minime");
-  assert.equal(event.weightCategory, "-50kg");
+  assert.equal(event.level, "Régional");
+  assert.equal("weightCategory" in event, false);
   assert.deepEqual(event.participantJudokaIds, ["J1", "J2"]);
   assert.throws(
     () => createClubCompetition({ name: "", competitionDate: "2026-06-14" }),
     /Nom et date obligatoires/
+  );
+  assert.throws(
+    () =>
+      createClubCompetition({
+        name: "Tournoi",
+        competitionDate: "2026-06-14",
+        ageCategory: "Minime"
+      }),
+    /Niveau de compétition obligatoire/
   );
   assert.throws(() => createClubCompetitionParticipantIds([]), /Au moins un judoka/);
 });
@@ -592,18 +602,15 @@ test("combat score category domain normalizes aliases and rejects unknown values
   assert.throws(() => createCombatScoreCategory("inconnu"), /Catégorie de prise invalide/);
 });
 
-test("tachi-waza technique domain normalizes aliases and rejects unknown values", () => {
+test("tachi-waza technique domain normalizes known aliases and accepts free text", () => {
   assert.equal(normalizeTachiWazaTechnique("seoi-nage"), "Seoi-nage");
   assert.equal(normalizeTachiWazaTechnique("O Soto Gari"), "O-soto-gari");
-  assert.equal(normalizeTachiWazaTechnique("inconnu"), "");
+  assert.equal(normalizeTachiWazaTechnique("Uchi mata spécial"), "Uchi mata spécial");
 
   assert.equal(createTachiWazaTechnique(""), "");
   assert.equal(createTachiWazaTechnique(undefined), "");
   assert.equal(createTachiWazaTechnique("uchi-mata"), "Uchi-mata");
-  assert.throws(
-    () => createTachiWazaTechnique("uchi mata inconnu"),
-    /Nom de la prise Tachi-waza invalide/
-  );
+  assert.equal(createTachiWazaTechnique("uchi mata inconnu"), "uchi mata inconnu");
 });
 
 test("ne-waza type domain normalizes aliases and rejects unknown values", () => {
@@ -659,6 +666,10 @@ test("combat score domain enforces the conditional sub-field per category", () =
 
   assert.deepEqual(createCombatScores("not-an-array"), []);
   assert.deepEqual(createCombatScores(undefined), []);
+  assert.equal(
+    createCombatScore({ category: "Tachi-waza", technique: "Prise inventée", value: "Yuko" }).technique,
+    "Prise inventée"
+  );
   assert.equal(
     createCombatScores([
       { category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" },

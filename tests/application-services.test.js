@@ -122,7 +122,7 @@ test("coach creates a club competition with linked judoka participations", async
     name: "Tournoi Nantes",
     competitionDate: "2026-06-14",
     ageCategory: "Minime",
-    weightCategory: "-50kg",
+    level: "Régional",
     participantJudokaIds: ["J1", "J2"]
   });
 
@@ -139,7 +139,11 @@ test("coach creates a club competition with linked judoka participations", async
   );
   assert.deepEqual(
     insertedCompetitions.map((row) => row[1].weightCategory),
-    ["-50kg", "-50kg"]
+    ["", ""]
+  );
+  assert.deepEqual(
+    insertedCompetitions.map((row) => row[1].level),
+    ["Régional", "Régional"]
   );
 });
 
@@ -158,7 +162,8 @@ test("editing a club competition resynchronizes existing linked participations",
           nom: "Ancien tournoi",
           date: "2026-06-01",
           categorie_age: "Minime",
-          categorie_poids: "-46kg"
+          categorie_poids: "-46kg",
+          niveau: "Départemental"
         }
       ],
       update: async (id, competition) => calls.push(["updateCompetition", id, competition]),
@@ -193,7 +198,7 @@ test("editing a club competition resynchronizes existing linked participations",
     name: "Tournoi Nantes",
     competitionDate: "2026-06-14",
     ageCategory: "Minime",
-    weightCategory: "-50kg",
+    level: "National",
     participantJudokaIds: ["J1"]
   });
 
@@ -206,7 +211,7 @@ test("editing a club competition resynchronizes existing linked participations",
       name: "Tournoi Nantes",
       competitionDate: "2026-06-14",
       ageCategory: "Minime",
-      weightCategory: "-50kg",
+      level: "National",
       participantJudokaIds: ["J1"]
     }
   ]);
@@ -218,7 +223,8 @@ test("editing a club competition resynchronizes existing linked participations",
   assert.equal(calls[1][2].name, "Tournoi Nantes");
   assert.equal(calls[1][2].competitionDate, "2026-06-14");
   assert.equal(calls[1][2].ageCategory, "Minime");
-  assert.equal(calls[1][2].weightCategory, "-50kg");
+  assert.equal(calls[1][2].weightCategory, "");
+  assert.equal(calls[1][2].level, "National");
   assert.equal(calls[1][2].result, "");
 });
 
@@ -263,6 +269,7 @@ test("admin cannot create a club competition", async () => {
         name: "Tournoi Nantes",
         competitionDate: "2026-06-14",
         ageCategory: "Minime",
+        level: "Régional",
         participantJudokaIds: ["J1"]
       }),
     /réservée aux coachs/
@@ -316,6 +323,7 @@ test("coach cannot add a judoka outside the club competition age category", asyn
         name: "Tournoi Nantes",
         competitionDate: "2026-06-14",
         ageCategory: "Minime",
+        level: "Régional",
         participantJudokaIds: ["J1", "J2"]
       }),
     /catégorie d'âge/
@@ -495,7 +503,7 @@ function createTestCompetitionsService({
 function domainContextFor(idJudoka, role, extras = {}) {
   return async () => ({
     judokas: extras.judokas || [],
-    domainUser: toCanonicalJudoka({ id_judoka: idJudoka, profile_type: "JUDOKA", role }),
+    domainUser: extras.domainUser || toCanonicalJudoka({ id_judoka: idJudoka, profile_type: "JUDOKA", role }),
     managedJudokaScope: extras.managedJudokaScope || createManagedJudokaScope([])
   });
 }
@@ -699,6 +707,10 @@ function createTestCoachDashboardService({
   combatScoresByCombatId = {},
   getCurrentDate,
   groqResponse = "",
+  groqToolCall = null,
+  groqToolError = null,
+  groqToolMessages = [],
+  groqToolDefinitions = [],
   judokaRows = [],
   getDomainUserContext
 } = {}) {
@@ -713,11 +725,20 @@ function createTestCoachDashboardService({
       listAll: async () => competitionRows
     },
     getCurrentDate,
-    groqClient: groqResponse
-      ? {
-          generateChatCompletion: async () => groqResponse
-        }
-      : undefined,
+    groqClient:
+      groqResponse || groqToolCall || groqToolError
+        ? {
+            generateChatCompletion: async () => groqResponse,
+            generateToolChatCompletion: async (messages, tools) => {
+              groqToolMessages.push(messages);
+              groqToolDefinitions.push(tools);
+              if (groqToolError) {
+                throw groqToolError;
+              }
+              return groqToolCall || { content: "", toolCalls: [] };
+            }
+          }
+        : undefined,
     judokasRepository: {
       listAll: async () => judokaRows
     },
@@ -730,7 +751,12 @@ function createTestCoachDashboardService({
 test("getCoachDashboard computes stats filtered by competition, age category, gender and year in category", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [
-      { id_competition: "COMP1", date: "2026-02-10", categorie_age: "Cadet", niveau: "Départemental" },
+      {
+        id_competition: "COMP1",
+        date: "2026-02-10",
+        categorie_age: "Cadet",
+        niveau: "Départemental"
+      },
       { id_competition: "COMP2", date: "2026-03-15", categorie_age: "Minime", niveau: "National" }
     ],
     combatsByCompetitionId: {
@@ -941,6 +967,134 @@ test("askCoachAssistant finds judokas who won by osaekomi", async () => {
   assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
 });
 
+test("askCoachAssistant finds a judoka's combats by name when asked to list them", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [{ id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" }],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Défaite",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "Liste les combats d'Aya"
+  );
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Aya Durand");
+});
+
+test("askCoachAssistant lists every combat when asked to list combats with no further criteria", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [{ id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" }],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Défaite",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant("coach@example.com", "Liste les combats");
+
+  assert.equal(result.matches.length, 2);
+});
+
+test("searchCombats defaults to 50 results when no limit is given, and respects an explicit limit", async () => {
+  const combatRows = Array.from({ length: 60 }, (_, index) => ({
+    id_combat: `CB${index}`,
+    id_judoka: "JUDO1",
+    id_competition: "COMP1",
+    adversaire: "Léo Dupont",
+    resultat: "Victoire",
+    type_victoire: "Ippon"
+  }));
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [{ id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" }],
+    combatsByCompetitionId: { COMP1: combatRows },
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const defaultResult = await service.methods.searchCombats("coach@example.com", {});
+  assert.equal(defaultResult.matches.length, 50);
+
+  const explicitResult = await service.methods.searchCombats("coach@example.com", {}, 5);
+  assert.equal(explicitResult.matches.length, 5);
+});
+
+test("askCoachAssistant falls back to heuristic search when Groq's structured query finds nothing", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [{ id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" }],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
+    // Simule un mauvais choix de Groq (le nom du judoka dans "opponent" au lieu de "text"),
+    // qui ne doit pas empêcher le repli heuristique de retrouver le combat par nom.
+    groqResponse: JSON.stringify({ entity: "combats", filters: { opponent: "Aya" }, limit: 12 }),
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "Liste les combats d'Aya"
+  );
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Aya Durand");
+});
+
 test("askCoachAssistant searches across judoka, competition, combat and score attributes", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [
@@ -1030,8 +1184,14 @@ test("askCoachAssistant lists judokas by age category", async () => {
   );
 
   assert.match(result.answer, /2 judoka/);
-  assert.deepEqual(result.matches.map((match) => match.judokaName), ["Aya Durand", "Imane Morel"]);
-  assert.deepEqual(result.matches.map((match) => match.scoreLabel), ["Minime", "Minime"]);
+  assert.deepEqual(
+    result.matches.map((match) => match.judokaName),
+    ["Aya Durand", "Imane Morel"]
+  );
+  assert.deepEqual(
+    result.matches.map((match) => match.scoreLabel),
+    ["Minime", "Minime"]
+  );
 });
 
 test("askCoachAssistant lists judokas who fought today", async () => {
@@ -1046,9 +1206,7 @@ test("askCoachAssistant lists judokas who fought today", async () => {
         { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP_TODAY" },
         { id_combat: "CB2", id_judoka: "JUDO2", id_competition: "COMP_TODAY" }
       ],
-      COMP_OLD: [
-        { id_combat: "CB3", id_judoka: "JUDO3", id_competition: "COMP_OLD" }
-      ]
+      COMP_OLD: [{ id_combat: "CB3", id_judoka: "JUDO3", id_competition: "COMP_OLD" }]
     },
     judokaRows: [
       { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
@@ -1064,8 +1222,14 @@ test("askCoachAssistant lists judokas who fought today", async () => {
   );
 
   assert.match(result.answer, /2 judoka/);
-  assert.deepEqual(result.matches.map((match) => match.judokaName), ["Aya Durand", "Nina Bernard"]);
-  assert.deepEqual(result.matches.map((match) => match.competitionName), ["Open du jour", "Open du jour"]);
+  assert.deepEqual(
+    result.matches.map((match) => match.judokaName),
+    ["Aya Durand", "Nina Bernard"]
+  );
+  assert.deepEqual(
+    result.matches.map((match) => match.competitionName),
+    ["Open du jour", "Open du jour"]
+  );
 });
 
 test("askCoachAssistant uses Groq structured intent to choose judoka or combat results", async () => {
@@ -1120,8 +1284,14 @@ test("askCoachAssistant uses Groq structured intent to choose judoka or combat r
     })
   }).service;
 
-  const judokaResult = await judokaService.methods.askCoachAssistant("coach@example.com", "liste les judokas minimes");
-  const combatResult = await combatService.methods.askCoachAssistant("coach@example.com", "trouve les combats gagnés par osaekomi");
+  const judokaResult = await judokaService.methods.askCoachAssistant(
+    "coach@example.com",
+    "liste les judokas minimes"
+  );
+  const combatResult = await combatService.methods.askCoachAssistant(
+    "coach@example.com",
+    "trouve les combats gagnés par osaekomi"
+  );
 
   assert.match(judokaResult.answer, /judoka/);
   assert.equal(judokaResult.matches.length, 1);
@@ -1131,6 +1301,161 @@ test("askCoachAssistant uses Groq structured intent to choose judoka or combat r
   assert.equal(combatResult.matches.length, 1);
   assert.equal(combatResult.matches[0].result, "Victoire");
   assert.equal(combatResult.matches[0].scoreLabel, "Osaekomi · Ippon");
+});
+
+test("askCoachAssistant exposes the application's real MCP tool catalog to Groq tool-calling and executes the chosen tool locally", async () => {
+  const groqToolDefinitions = [];
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+    },
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" }],
+    groqToolDefinitions,
+    groqToolCall: {
+      content: "",
+      toolCalls: [
+        {
+          function: {
+            name: "mcp_combats_search",
+            arguments: JSON.stringify({ filters: { result: "Victoire", neWazaType: "Osaekomi" } })
+          }
+        }
+      ]
+    },
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "trouve les combats gagnés par osaekomi"
+  );
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
+
+  const toolNames = groqToolDefinitions[0].map((tool) => tool.function.name);
+  assert.deepEqual(
+    toolNames.sort(),
+    ["mcp_combats_search", "mcp_competitions_search", "mcp_judokas_search"].sort()
+  );
+});
+
+test("askCoachAssistant finds a judoka by name when Groq returns filters.text as a plain string", async () => {
+  const { service } = createTestCoachDashboardService({
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Mehdi", nom: "El Kouhen" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" }
+    ],
+    groqToolCall: {
+      content: "",
+      toolCalls: [
+        {
+          function: {
+            name: "mcp_judokas_search",
+            arguments: JSON.stringify({ filters: { text: "Mehdi" } })
+          }
+        }
+      ]
+    },
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant("coach@example.com", "Cherche Mehdi");
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Mehdi El Kouhen");
+});
+
+test("askCoachAssistant surfaces a clear error when Groq is rate-limited instead of failing silently", async () => {
+  const { service } = createTestCoachDashboardService({
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
+    groqToolError: Object.assign(new Error("Erreur Groq 429 : rate_limit_exceeded"), {
+      groqStatus: 429
+    }),
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  await assert.rejects(
+    () => service.methods.askCoachAssistant("coach@example.com", "liste les judokas"),
+    /limite de débit Groq atteinte/
+  );
+});
+
+test("askCoachAssistant surfaces a generic unavailability error for other Groq failures", async () => {
+  const { service } = createTestCoachDashboardService({
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
+    groqToolError: Object.assign(new Error("Erreur Groq 500 : internal error"), {
+      groqStatus: 500
+    }),
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  await assert.rejects(
+    () => service.methods.askCoachAssistant("coach@example.com", "liste les judokas"),
+    /momentanément indisponible/
+  );
+});
+
+test("searchCombats returns structured matches for a coach and is reserved to coaches", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Défaite",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const { matches } = await service.methods.searchCombats("coach@example.com", {
+    result: "Victoire"
+  });
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].judokaName, "Aya Durand");
+
+  const judokaService = createTestCoachDashboardService({
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  }).service;
+  await assert.rejects(
+    () => judokaService.methods.searchCombats("judoka@example.com", {}),
+    /réservée aux coachs/
+  );
 });
 
 test("askCoachAssistant rejects a non-coach requester", async () => {
@@ -1234,6 +1559,34 @@ test("getCompetitionDetail enriches combats with judoka display names, scores, a
   ]);
   assert.equal(detail.isCoach, true);
   assert.equal(detail.canManageCompetition, true);
+});
+
+test("getCompetitionDetail exposes coach objective to a parent in managed scope", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "CHILD1",
+        nom: "Tournoi",
+        date: "2026-06-14",
+        coach_objective: "Travailler le ne-waza"
+      }
+    },
+    getDomainUserContext: domainContextFor("PARENT1", "NORMAL", {
+      domainUser: toCanonicalJudoka({
+        id_judoka: "PARENT1",
+        profile_type: "PARENT",
+        role: "NORMAL"
+      }),
+      managedJudokaScope: createManagedJudokaScope(["PARENT1", "CHILD1"])
+    })
+  });
+
+  const detail = await service.methods.getCompetitionDetail("parent@example.com", "COMP1");
+
+  assert.equal(detail.isParent, true);
+  assert.equal(detail.canEditCompetition, true);
+  assert.equal(detail.competition.coachObjective, "Travailler le ne-waza");
 });
 
 function createTestCombatsService({
@@ -1845,7 +2198,15 @@ test("parent can update category and belt color for a linked child profile", asy
         yearInCategory,
         handedness
       ) => {
-        saved.push({ idJudoka, ageCategory, weightCategory, beltColor, gender, yearInCategory, handedness });
+        saved.push({
+          idJudoka,
+          ageCategory,
+          weightCategory,
+          beltColor,
+          gender,
+          yearInCategory,
+          handedness
+        });
       }
     },
     parentLinksRepository: {},

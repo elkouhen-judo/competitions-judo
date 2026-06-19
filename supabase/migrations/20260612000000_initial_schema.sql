@@ -24,7 +24,7 @@ create table if not exists public.club_competitions (
   nom text not null,
   date date not null,
   categorie_age text not null default '',
-  categorie_poids text not null default '',
+  niveau text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint club_competitions_nom_not_blank check (btrim(nom) <> '')
@@ -140,6 +140,9 @@ alter table public.judokas
 
 alter table public.judokas
   add column if not exists pending_parent_email text;
+
+alter table public.club_competitions
+  add column if not exists niveau text not null default '';
 
 create index if not exists judokas_pending_parent_email_idx
   on public.judokas (lower(pending_parent_email))
@@ -506,6 +509,10 @@ on public.access_invitations
 for select
 to supabase_auth_admin
 using (true);
+
+alter table public.club_competitions
+  drop column if exists categorie_poids;
+
 
 insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
 values (
