@@ -201,7 +201,6 @@
       competitionDate: formatDate(competition.competitionDate),
       ageWeightLabel,
       competitionResult: competition.result || "",
-      competitionAiAnalysis: competition.aiAnalysis || "",
       canEditCompetition,
       canFinalizeCompetition: canEditCompetition && !hasResult
     };

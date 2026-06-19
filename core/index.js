@@ -61,10 +61,6 @@ const createCompetitionsService =
   /** @type {typeof import("./services/competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/competitions.service.js").default)
   );
-const createAiAnalysisService =
-  /** @type {typeof import("./services/ai-analysis.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/ai-analysis.service.js").default)
-  );
 const createCoachDashboardService =
   /** @type {typeof import("./services/coach-dashboard.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/coach-dashboard.service.js").default)
@@ -129,7 +125,6 @@ const mcpClientAuth = createMcpTokenAuth({
   getTtlSeconds: () => 60 * 60 * 24 * 365 * 50
 });
 const groqClient = createGroqClient({ getGroqApiKey, getGroqModel });
-
 const repositoryDeps = {
   ...supabaseRest,
   eqFilter
@@ -184,17 +179,11 @@ const clubCompetitionsService = createClubCompetitionsService({
   createCompetition
 });
 
-const aiAnalysisService = createAiAnalysisService({
-  combatsRepository,
-  combatScoresRepository,
-  competitionsRepository,
-  groqClient
-});
-
 const coachDashboardService = createCoachDashboardService({
   combatsRepository,
   combatScoresRepository,
   competitionsRepository,
+  groqClient,
   judokasRepository,
   userContextService
 });
@@ -212,8 +201,7 @@ const competitionsService = createCompetitionsService({
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
   buildCompetitionId: ids.buildCompetitionId,
   createCompetition,
-  createPersistedCompetition,
-  generateCompetitionAnalysis: aiAnalysisService.generateCompetitionAnalysis
+  createPersistedCompetition
 });
 
 const combatsService = createCombatsService({

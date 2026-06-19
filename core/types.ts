@@ -34,7 +34,6 @@ export interface Competition {
   result: string | null;
   coachObjective: string;
   coachReview: string;
-  aiAnalysis: string;
 }
 
 export interface CombatScore {
@@ -242,6 +241,24 @@ export interface CoachDashboard {
   stats: CoachDashboardStats;
 }
 
+export interface CoachAssistantMatch {
+  judokaId: string;
+  judokaName: string;
+  competitionId: string;
+  competitionName: string;
+  competitionDate: string;
+  opponent: string;
+  result: string;
+  victoryType: string;
+  scoreLabel: string;
+}
+
+export interface CoachAssistantResponse {
+  answer: string;
+  matches: CoachAssistantMatch[];
+  beta: true;
+}
+
 export interface CompetitionCombatRecord {
   total: number;
   wins: number;
@@ -411,4 +428,6 @@ export interface RpcMethods {
   updateCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Calcule les statistiques agrégées du tableau de bord coach selon les filtres fournis. */
   getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
+  /** Répond à une question simple du coach sur les judokas et combats enregistrés. */
+  askCoachAssistant: (email: string, question: string) => Promise<CoachAssistantResponse>;
 }

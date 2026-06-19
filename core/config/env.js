@@ -5,7 +5,7 @@ const GROQ_API_KEY_ENV = "GROQ_API_KEY";
 const GROQ_MODEL_ENV = "GROQ_MODEL";
 const MCP_JWT_SECRET_ENV = "MCP_JWT_SECRET";
 const MCP_TOKEN_TTL_SECONDS_ENV = "MCP_TOKEN_TTL_SECONDS";
-const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
 const DEFAULT_MCP_TOKEN_TTL_SECONDS = 900;
 
 function getRequiredEnv(name) {
@@ -24,13 +24,12 @@ function getSupabaseConfig() {
   };
 }
 
-// L'analyse IA est une amélioration optionnelle : son absence ne doit jamais empêcher la finalisation d'une compétition.
 function getGroqApiKey() {
-  return process.env[GROQ_API_KEY_ENV] || "";
+  return String(process.env[GROQ_API_KEY_ENV] || "").trim();
 }
 
 function getGroqModel() {
-  return process.env[GROQ_MODEL_ENV] || DEFAULT_GROQ_MODEL;
+  return String(process.env[GROQ_MODEL_ENV] || DEFAULT_GROQ_MODEL).trim();
 }
 
 function getMcpJwtSecret() {

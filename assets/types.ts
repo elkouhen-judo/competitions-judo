@@ -2,6 +2,7 @@ import type {
   AccessInvitation,
   AdminsManagement,
   ClubCompetitionDetail,
+  CoachAssistantResponse,
   CombatReadModel,
   CombatScore,
   Competition,
@@ -168,7 +169,6 @@ export interface ScreenProjections {
     competitionDate: string;
     ageWeightLabel: string;
     competitionResult: string;
-    competitionAiAnalysis: string;
     canEditCompetition: boolean;
     canFinalizeCompetition: boolean;
   };
@@ -243,7 +243,10 @@ export interface AdminsScreen {
 
 export interface CoachDashboardScreen {
   showCoachDashboard(): void;
+  showCoachChat(): void;
 }
+
+export type { CoachAssistantResponse };
 
 export interface LoginScreen {
   bindEvents(): void;
