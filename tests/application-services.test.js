@@ -2054,12 +2054,28 @@ test("getAccessibleJudokaProfile rejects when the target judoka does not exist",
 });
 
 function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, judokasByName = {}) {
-  const calls = { inserted: [], invitations: [], links: [], updated: [], removedInvitations: [] };
+  const calls = {
+    inserted: [],
+    invitations: [],
+    links: [],
+    updated: [],
+    removedInvitations: [],
+    lookups: {
+      currentUser: [],
+      judokaByEmail: [],
+      judokaByName: [],
+      invitationByEmail: [],
+      linksByParent: []
+    }
+  };
   const adminUser = { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN" };
 
   const service = createAdminService({
     invitationsRepository: {
-      getByEmail: async (email) => invitationsByEmail[String(email || "").toLowerCase()] || null,
+      getByEmail: async (email) => {
+        calls.lookups.invitationByEmail.push(email);
+        return invitationsByEmail[String(email || "").toLowerCase()] || null;
+      },
       insert: async (invitation) => {
         calls.invitations.push(invitation);
         return invitation;
@@ -2071,8 +2087,14 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
       }
     },
     judokasRepository: {
-      getByEmail: async (email) => judokasByEmail[String(email || "").toLowerCase()] || null,
-      getByName: async (prenom, nom) => judokasByName[`${prenom}|${nom}`.toLowerCase()] || null,
+      getByEmail: async (email) => {
+        calls.lookups.judokaByEmail.push(email);
+        return judokasByEmail[String(email || "").toLowerCase()] || null;
+      },
+      getByName: async (prenom, nom) => {
+        calls.lookups.judokaByName.push(`${prenom}|${nom}`);
+        return judokasByName[`${prenom}|${nom}`.toLowerCase()] || null;
+      },
       insert: async (judoka, extras) => {
         calls.inserted.push({ judoka, extras });
         const row = {
@@ -2103,10 +2125,14 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         calls.links.push(link);
         return link;
       },
-      listByParent: async () => []
+      listByParent: async (idParent) => {
+        calls.lookups.linksByParent.push(idParent);
+        return [];
+      }
     },
     userContextService: {
       getCurrentUser: async (email) => {
+        calls.lookups.currentUser.push(email);
         if (email === "admin@example.com") return adminUser;
         return judokasByEmail[String(email || "").toLowerCase()] || null;
       }
@@ -2592,6 +2618,31 @@ test("importUsersCsv links children to a parent created earlier in the same CSV"
   assert.equal(summary.imported, 2);
   assert.equal(calls.links.length, 1);
   assert.equal(calls.links[0].id_parent, calls.inserted[0].judoka.judokaId);
+});
+
+test("importUsersCsv reuses per-file lookups for repeated parent links", async () => {
+  const { service, calls } = createTestAdminService({
+    "christine.elkouhen@gmail.com": {
+      id_judoka: "PARENT1",
+      profile_type: "PARENT",
+      role: "NORMAL",
+      email: "christine.elkouhen@gmail.com",
+      prenom: "Christine",
+      nom: "El Kouhen"
+    }
+  });
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail\n" +
+    "JUDOKA,Ali,El Kouhen,,christine.elkouhen@gmail.com\n" +
+    "JUDOKA,Rayane,El Kouhen,,christine.elkouhen@gmail.com\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.equal(calls.links.length, 2);
+  assert.deepEqual(calls.lookups.judokaByEmail, ["christine.elkouhen@gmail.com"]);
+  assert.deepEqual(calls.lookups.linksByParent, ["PARENT1"]);
 });
 
 test("importUsersCsv grants the COACH role to a judoka row with an account email", async () => {
