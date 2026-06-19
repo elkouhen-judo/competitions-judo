@@ -3,6 +3,7 @@ import type {
   AuthApi,
   CoachDashboardScreen,
   CompetitionScreen,
+  CompetitionFormHelpers,
   HomeScreen,
   JudokaProfile,
   JudokaProfilePresentationHelpers,
@@ -23,6 +24,7 @@ declare global {
     KIROKU_RUNTIME_CONFIG: RuntimeConfig;
     KirokuUI: KirokuUi;
     KirokuScreenProjections: ScreenProjections;
+    KirokuCompetitionFormHelpers: CompetitionFormHelpers;
     createKirokuApp: () => KirokuApp;
     createKirokuAuth: (config: {
       runtimeConfig: RuntimeConfig;

@@ -25,6 +25,7 @@ const client = [
     "app-screen-home.js",
     "app-judoka-presentation.js",
     "app-screen-judoka.js",
+    "app-competition-form-helpers.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
     "app-screen-coach-dashboard.js",
@@ -163,8 +164,8 @@ test("family home keeps the active judoka competition context", () => {
 });
 
 test("coach home stays club-centered and separate from judoka consultation", () => {
-  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Compétition" \}\);/);
-  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétition"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachChat",\s*label: "Chat"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"/);
+  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Compétitions club" \}\);/);
+  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétitions club"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"[\s\S]*key: "coachChat",\s*label: "Chat"/);
   assert.match(bundle, /state\.isCoach && \["judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/);
   assert.match(bundle, /v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs"/);
   assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
@@ -371,7 +372,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
   assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/);
-  assert.match(bundle, /class="mode-tabs coach-sub-tabs coach-dashboard-tabs"/);
+  assert.match(bundle, /class="mode-tabs coach-sub-tabs"/);
   assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
   assert.match(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
   assert.match(bundle, /@click="showCoachJudoka\(\)">Judoka/);
@@ -396,20 +397,18 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(bundle, /v-model="coachDashboardForm\.gender"/);
   assert.match(bundle, /v-model="coachDashboardForm\.handedness"/);
-  assert.match(
-    bundle,
-    /v-for="competition in competitionOptions"[\s\S]*v-model="coachDashboardForm\.competitionIds"/
-  );
+  assert.doesNotMatch(bundle, /competitionOptions/);
+  assert.doesNotMatch(bundle, /coachDashboardForm\.competitionIds/);
   assert.match(bundle, /@click="applyCoachDashboardFilters\(\)"/);
   assert.match(bundle, /<h3>Volumes<\/h3>/);
   assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Genre<\/span>/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Genre Judoka<\/span>/
   );
   assert.match(bundle, /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/);
-  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde<\/span>/);
+  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde Judoka<\/span>/);
   assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<h3>Performance globale<\/h3>/);
@@ -447,7 +446,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde adversaire<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
   assert.match(
     bundle,
@@ -577,7 +576,7 @@ test("competition finalization screen is mounted through Vue 3 for the progressi
 test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /class="autocomplete-option-copy"/);
   assert.match(bundle, /class="autocomplete-option-meta"/);
-  assert.doesNotMatch(css, /\.autocomplete-dropdown\s*\{[\s\S]*display:\s*none;/);
+  assert.doesNotMatch(css, /\.autocomplete-dropdown\s*\{[^}]*display:\s*none;/);
   assert.match(bundle, /v-for="option in ownerOptions"/);
   assert.match(bundle, /v-for="option in filterOptions"/);
   assert.match(bundle, /@blur="hideHomeFilterOptions\(\)"/);

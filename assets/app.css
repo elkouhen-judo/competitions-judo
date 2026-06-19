@@ -45,6 +45,10 @@
       box-sizing: border-box;
     }
 
+    html {
+      overflow-y: scroll;
+    }
+
     [v-cloak] {
       display: none;
     }
@@ -322,6 +326,12 @@
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
       outline: 3px solid var(--button-focus-ring);
+    }
+
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      max-width: 100%;
     }
 
     input[type="file"] {
@@ -794,31 +804,6 @@
       margin-top: 16px;
     }
 
-    .segmented-control {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .segment-active {
-      border-color: var(--button-primary-bg);
-      background: var(--button-primary-bg);
-      color: var(--button-primary-text);
-    }
-
-    .quick-result-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin: -8px 0 18px;
-    }
-
-    .quick-result-row button {
-      min-height: 44px;
-      padding: 10px 8px;
-    }
-
     .combat-card {
       display: grid;
       gap: 12px;
@@ -1137,17 +1122,12 @@
 
     .dashboard-date-range {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: 12px;
+      gap: 0 12px;
       align-items: end;
     }
 
-    .dashboard-date-range label {
-      grid-row: 1;
-    }
-
     .dashboard-date-range input {
-      grid-row: 2;
+      min-width: 0;
     }
 
     .dashboard-filter-summary span,
@@ -1311,6 +1291,11 @@
       border-radius: 0;
       padding: 0;
       overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .mode-tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .mode-tab {
@@ -1348,8 +1333,17 @@
       color: var(--primary);
     }
 
-    .coach-dashboard-tabs {
+    .coach-sub-tabs {
       width: 100%;
+      justify-content: space-between;
+      scroll-snap-type: x proximity;
+    }
+
+    .coach-sub-tabs .mode-tab {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 10px 10px 9px;
+      scroll-snap-align: start;
     }
 
     .performance-result-card {
@@ -1616,7 +1610,7 @@
         min-width: 140px;
       }
 
-      .coach-dashboard-tabs {
+      .coach-sub-tabs {
         min-width: 520px;
       }
 
@@ -1656,6 +1650,18 @@
       .form-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 14px;
+      }
+
+      .dashboard-date-range {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-date-range label {
+        grid-row: 1;
+      }
+
+      .dashboard-date-range input {
+        grid-row: 2;
       }
 
       .combat-score-row {

@@ -356,6 +356,19 @@ export interface JudokaProfilePresentationHelpers {
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
 }
 
+export interface CombatScoreFormRow {
+  category: string;
+  technique: string;
+  neWazaType: string;
+  value: string;
+}
+
+export interface CompetitionFormHelpers {
+  createEmptyCombatScoreRow(): CombatScoreFormRow;
+  isCombatScoreRowComplete(score: CombatScoreFormRow): boolean;
+  tachiWazaTechniques: string[];
+}
+
 export interface JudokaProfileViewModel {
   profileTitle: string;
   profileSubtitle: string;

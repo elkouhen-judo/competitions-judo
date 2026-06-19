@@ -9,7 +9,6 @@ import type {
   CoachDashboardHandednessBreakdownEntry,
   CoachDashboardLateralMatchupBreakdownEntry,
   CoachDashboardLevelBreakdownEntry,
-  CoachDashboardStanceBreakdownEntry,
   CoachDashboardStats
 } from "../types";
 
@@ -47,37 +46,16 @@ function computeJudokaCountByGender(
   });
 }
 
-function computeJudokaStatsByHandedness(
+function computeJudokaCountByHandedness(
   combats: CoachDashboardCombat[]
 ): CoachDashboardHandednessBreakdownEntry[] {
   return HANDEDNESSES.map((handedness) => {
-    const handednessCombats = combats.filter((combat) => combat.judokaHandedness === handedness);
-    const judokaIds = new Set(handednessCombats.map((combat) => combat.judokaId));
-    const victories = handednessCombats.filter((combat) => isVictoryCombatResult(combat.result)).length;
-    return {
-      handedness,
-      judokaCount: judokaIds.size,
-      combats: handednessCombats.length,
-      victories,
-      victoryRate: computeRate(victories, handednessCombats.length)
-    };
-  });
-}
-
-function computeStanceBreakdown(
-  combats: CoachDashboardCombat[]
-): CoachDashboardStanceBreakdownEntry[] {
-  return OPPONENT_STANCES.map((opponentStance) => {
-    const stanceCombats = combats.filter((combat) => combat.opponentStance === opponentStance);
-    const victories = stanceCombats.filter((combat) =>
-      isVictoryCombatResult(combat.result)
-    ).length;
-    return {
-      opponentStance,
-      combats: stanceCombats.length,
-      victories,
-      victoryRate: computeRate(victories, stanceCombats.length)
-    };
+    const judokaIds = new Set(
+      combats
+        .filter((combat) => combat.judokaHandedness === handedness)
+        .map((combat) => combat.judokaId)
+    );
+    return { handedness, judokaCount: judokaIds.size };
   });
 }
 
@@ -158,10 +136,9 @@ export function computeCoachDashboardStats(combats: CoachDashboardCombat[]): Coa
     hansokuMakeLossRate: computeRate(hansokuMakeLosses, totalCombats),
     victoriesByDecisionType: computeDecisionBreakdown(combats, "Victoire"),
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
-    byOpponentStance: computeStanceBreakdown(combats),
     byLateralMatchup: computeLateralMatchupBreakdown(combats),
     byCompetitionLevel: computeLevelBreakdown(combats),
     judokasByGender: computeJudokaCountByGender(combats),
-    judokasByHandedness: computeJudokaStatsByHandedness(combats)
+    judokasByHandedness: computeJudokaCountByHandedness(combats)
   };
 }

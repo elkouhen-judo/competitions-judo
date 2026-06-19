@@ -730,26 +730,36 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       scores: [],
       opponentStance: "Inconnue",
       competitionLevel: "International"
+    },
+    {
+      judokaId: "JUDO5",
+      judokaGender: "Homme",
+      judokaHandedness: "Droitier",
+      result: "Victoire",
+      victoryType: "Forfait",
+      scores: [],
+      opponentStance: "Droitier",
+      competitionLevel: "Régional"
     }
   ];
 
   assert.deepEqual(computeCoachDashboardStats(combats), {
-    totalCombats: 5,
-    victories: 3,
-    victoryRate: 60,
+    totalCombats: 6,
+    victories: 4,
+    victoryRate: 67,
     tachiWazaVictories: 1,
-    tachiWazaVictoryRate: 20,
+    tachiWazaVictoryRate: 17,
     neWazaVictories: 1,
-    neWazaVictoryRate: 20,
+    neWazaVictoryRate: 17,
     hansokuMakeLosses: 1,
-    hansokuMakeLossRate: 20,
+    hansokuMakeLossRate: 17,
     victoriesByDecisionType: [
-      { decisionType: "Ippon", count: 2, total: 3, rate: 67 },
-      { decisionType: "Waza-ari", count: 0, total: 3, rate: 0 },
-      { decisionType: "Yuko", count: 0, total: 3, rate: 0 },
-      { decisionType: "Décision", count: 1, total: 3, rate: 33 },
-      { decisionType: "Hansoku-make", count: 0, total: 3, rate: 0 },
-      { decisionType: "Forfait", count: 0, total: 3, rate: 0 }
+      { decisionType: "Ippon", count: 2, total: 4, rate: 50 },
+      { decisionType: "Waza-ari", count: 0, total: 4, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 4, rate: 0 },
+      { decisionType: "Décision", count: 1, total: 4, rate: 25 },
+      { decisionType: "Hansoku-make", count: 0, total: 4, rate: 0 },
+      { decisionType: "Forfait", count: 1, total: 4, rate: 25 }
     ],
     defeatsByDecisionType: [
       { decisionType: "Ippon", count: 1, total: 2, rate: 50 },
@@ -759,27 +769,23 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { decisionType: "Hansoku-make", count: 1, total: 2, rate: 50 },
       { decisionType: "Forfait", count: 0, total: 2, rate: 0 }
     ],
-    byOpponentStance: [
-      { opponentStance: "Droitier", combats: 2, victories: 1, victoryRate: 50 },
-      { opponentStance: "Gaucher", combats: 1, victories: 1, victoryRate: 100 }
-    ],
     byLateralMatchup: [
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
-      { matchup: "same", label: "Même garde", combats: 3, victories: 2, victoryRate: 67 }
+      { matchup: "same", label: "Même garde", combats: 4, victories: 3, victoryRate: 75 }
     ],
     byCompetitionLevel: [
       { level: "Départemental", combats: 2, victories: 1, victoryRate: 50 },
-      { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
+      { level: "Régional", combats: 1, victories: 1, victoryRate: 100 },
       { level: "National", combats: 1, victories: 1, victoryRate: 100 },
       { level: "International", combats: 1, victories: 1, victoryRate: 100 }
     ],
     judokasByGender: [
-      { gender: "Homme", judokaCount: 2 },
+      { gender: "Homme", judokaCount: 3 },
       { gender: "Femme", judokaCount: 1 }
     ],
     judokasByHandedness: [
-      { handedness: "Droitier", judokaCount: 1, combats: 2, victories: 1, victoryRate: 50 },
-      { handedness: "Gaucher", judokaCount: 1, combats: 1, victories: 1, victoryRate: 100 }
+      { handedness: "Droitier", judokaCount: 2 },
+      { handedness: "Gaucher", judokaCount: 1 }
     ]
   });
 
@@ -809,10 +815,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { decisionType: "Hansoku-make", count: 0, total: 0, rate: 0 },
       { decisionType: "Forfait", count: 0, total: 0, rate: 0 }
     ],
-    byOpponentStance: [
-      { opponentStance: "Droitier", combats: 0, victories: 0, victoryRate: 0 },
-      { opponentStance: "Gaucher", combats: 0, victories: 0, victoryRate: 0 }
-    ],
     byLateralMatchup: [
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
       { matchup: "same", label: "Même garde", combats: 0, victories: 0, victoryRate: 0 }
@@ -828,8 +830,8 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { gender: "Femme", judokaCount: 0 }
     ],
     judokasByHandedness: [
-      { handedness: "Droitier", judokaCount: 0, combats: 0, victories: 0, victoryRate: 0 },
-      { handedness: "Gaucher", judokaCount: 0, combats: 0, victories: 0, victoryRate: 0 }
+      { handedness: "Droitier", judokaCount: 0 },
+      { handedness: "Gaucher", judokaCount: 0 }
     ]
   });
 });

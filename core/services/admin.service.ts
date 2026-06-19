@@ -1,4 +1,11 @@
 import { toCanonicalJudoka, toInvitationReadModel } from "./domain-adapters";
+import {
+  applyImportProfileUpdatesToRow,
+  buildChangedImportProfileUpdates,
+  hasImportProfileUpdates,
+  toJudokaRepositoryExtras,
+  type ImportProfileOptions
+} from "./admin-import-mapping";
 import type { AccessInvitationRow, JudokaRow } from "../repositories/types";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { InvitationsRepository } from "../repositories/invitations.repository";
@@ -235,14 +242,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     prenom: string,
     nom: string,
     rawEmail: string,
-    options: {
-      accessRole?: AccessRole;
-      ageCategory?: string;
-      beltColor?: string;
-      gender?: string;
-      yearInCategory?: string;
-      handedness?: string;
-    } = {}
+    options: ImportProfileOptions = {}
   ): Promise<{ idJudoka: string; email: string; message: string }> {
     const accountEmail = createEmail(rawEmail);
     const existingUser = await getCachedCurrentUser(context, accountEmail);
@@ -257,51 +257,18 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         throw new Error(`${accountEmail} correspond déjà à un autre profil ${profileLabel}.`);
       }
 
-      const updates: {
-        accessRole?: AccessRole;
-        ageCategory?: string;
-        beltColor?: string;
-        gender?: string;
-        yearInCategory?: string;
-        handedness?: string;
-      } = {};
+      const updates = buildChangedImportProfileUpdates(existingUser, options);
       if (profileType === "JUDOKA") {
-        if (options.accessRole && options.accessRole !== existingUser.role) {
-          updates.accessRole = options.accessRole;
-        }
-        if (options.ageCategory && options.ageCategory !== existingUser.categorie_age) {
-          updates.ageCategory = options.ageCategory;
-        }
-        if (options.beltColor && options.beltColor !== existingUser.couleur_ceinture) {
-          updates.beltColor = options.beltColor;
-        }
-        if (options.gender && options.gender !== existingUser.genre) {
-          updates.gender = options.gender;
-        }
-        if (options.yearInCategory && options.yearInCategory !== existingUser.annee_categorie) {
-          updates.yearInCategory = options.yearInCategory;
-        }
-        if (options.handedness && options.handedness !== existingUser.lateralite) {
-          updates.handedness = options.handedness;
-        }
-        if (Object.keys(updates).length) {
+        if (hasImportProfileUpdates(updates)) {
           await judokasRepository.update(existingUser.id_judoka, updates);
-          cacheJudokaForImport(context, {
-            ...existingUser,
-            ...(updates.accessRole ? { role: updates.accessRole } : {}),
-            ...(updates.ageCategory ? { categorie_age: updates.ageCategory } : {}),
-            ...(updates.beltColor ? { couleur_ceinture: updates.beltColor } : {}),
-            ...(updates.gender ? { genre: updates.gender } : {}),
-            ...(updates.yearInCategory ? { annee_categorie: updates.yearInCategory } : {}),
-            ...(updates.handedness ? { lateralite: updates.handedness } : {})
-          });
+          cacheJudokaForImport(context, applyImportProfileUpdatesToRow(existingUser, updates));
         }
       }
 
       return {
         idJudoka: existingUser.id_judoka,
         email: accountEmail,
-        message: Object.keys(updates).length
+        message: hasImportProfileUpdates(updates)
           ? `Profil ${profileLabel} existant mis à jour.`
           : `Profil ${profileLabel} existant, aucune modification.`
       };
@@ -331,11 +298,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         email: accountEmail,
         profile_type: profileType,
         ...(options.accessRole ? { role: options.accessRole } : {}),
-        ...(options.ageCategory ? { categorie_age: options.ageCategory } : {}),
-        ...(options.beltColor ? { couleur_ceinture: options.beltColor } : {}),
-        ...(options.gender ? { genre: options.gender } : {}),
-        ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {}),
-        ...(options.handedness ? { lateralite: options.handedness } : {})
+        ...toJudokaRepositoryExtras(options)
       });
       return {
         idJudoka: existingByName.id_judoka,
@@ -355,11 +318,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         accessRole: options.accessRole || "NORMAL"
       }),
       {
-        ...(options.ageCategory ? { categorie_age: options.ageCategory } : {}),
-        ...(options.beltColor ? { couleur_ceinture: options.beltColor } : {}),
-        ...(options.gender ? { genre: options.gender } : {}),
-        ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {}),
-        ...(options.handedness ? { lateralite: options.handedness } : {})
+        ...toJudokaRepositoryExtras(options)
       }
     );
     cacheJudokaForImport(context, {
@@ -501,34 +460,17 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       }
 
       const existingId = existingChild.id_judoka;
-      const ageCategoryChanged = Boolean(ageCategory) && ageCategory !== existingChild.categorie_age;
-      const beltColorChanged = Boolean(beltColor) && beltColor !== existingChild.couleur_ceinture;
-      const genderChanged = Boolean(gender) && gender !== existingChild.genre;
-      const yearInCategoryChanged =
-        Boolean(yearInCategory) && yearInCategory !== existingChild.annee_categorie;
-      const handednessChanged = Boolean(handedness) && handedness !== existingChild.lateralite;
-      const profileInfoChanged =
-        ageCategoryChanged ||
-        beltColorChanged ||
-        genderChanged ||
-        yearInCategoryChanged ||
-        handednessChanged;
+      const profileUpdates = buildChangedImportProfileUpdates(existingChild, {
+        ageCategory,
+        beltColor,
+        gender,
+        yearInCategory,
+        handedness
+      });
+      const profileInfoChanged = hasImportProfileUpdates(profileUpdates);
       if (profileInfoChanged) {
-        await judokasRepository.update(existingId, {
-          ...(ageCategoryChanged ? { ageCategory } : {}),
-          ...(beltColorChanged ? { beltColor } : {}),
-          ...(genderChanged ? { gender } : {}),
-          ...(yearInCategoryChanged ? { yearInCategory } : {}),
-          ...(handednessChanged ? { handedness } : {})
-        });
-        cacheJudokaForImport(context, {
-          ...existingChild,
-          ...(ageCategoryChanged ? { categorie_age: ageCategory } : {}),
-          ...(beltColorChanged ? { couleur_ceinture: beltColor } : {}),
-          ...(genderChanged ? { genre: gender } : {}),
-          ...(yearInCategoryChanged ? { annee_categorie: yearInCategory } : {}),
-          ...(handednessChanged ? { lateralite: handedness } : {})
-        });
+        await judokasRepository.update(existingId, profileUpdates);
+        cacheJudokaForImport(context, applyImportProfileUpdatesToRow(existingChild, profileUpdates));
       }
 
       if (parent) {

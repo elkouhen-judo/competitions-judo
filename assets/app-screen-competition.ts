@@ -4,6 +4,7 @@
   type Competition = import("../core/types").Competition;
   type CompetitionDetail = import("../core/types").CompetitionDetail;
   type ClubCompetitionDetail = import("../core/types").ClubCompetitionDetail;
+  type CombatScoreFormRow = import("./types").CombatScoreFormRow;
 
   interface CompetitionOwnerOption {
     judokaId: string;
@@ -25,44 +26,11 @@
     resultClass: string;
   }
 
-  interface CombatScoreFormRow {
-    category: string;
-    technique: string;
-    neWazaType: string;
-    value: string;
-  }
-
-  const TACHI_WAZA_TECHNIQUES = [
-    "Seoi-nage",
-    "Ippon Seoi-nage",
-    "O-soto-gari",
-    "O-uchi-gari",
-    "Ko-uchi-gari",
-    "Ko-soto-gari",
-    "Uchi-mata",
-    "Harai-goshi",
-    "Tai-otoshi",
-    "Tomoe-nage",
-    "Sumi-gaeshi",
-    "Kata-guruma",
-    "De-ashi-barai",
-    "Hiza-guruma",
-    "Sasae-tsurikomi-goshi",
-    "Okuri-ashi-barai",
-    "Ura-nage",
-    "Yoko-tomoe-nage"
-  ];
-
-  function createEmptyCombatScoreRow(): CombatScoreFormRow {
-    return { category: "", technique: "", neWazaType: "", value: "" };
-  }
-
-  function isCombatScoreRowComplete(score: CombatScoreFormRow): boolean {
-    if (!score.category || !score.value) return false;
-    if (score.category === "Tachi-waza") return Boolean(score.technique);
-    if (score.category === "Ne-waza") return Boolean(score.neWazaType);
-    return false;
-  }
+  const {
+    createEmptyCombatScoreRow,
+    isCombatScoreRowComplete,
+    tachiWazaTechniques: TACHI_WAZA_TECHNIQUES
+  } = window.KirokuCompetitionFormHelpers;
 
   function createKirokuCompetitionScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
@@ -148,7 +116,6 @@
       combatFormTitle: "Ajouter un combat",
       combatFormSubtitle: "Combat de la compétition en cours",
       saveCombatButtonText: "Ajouter le combat",
-      combatQuickMode: true,
       combatForm: { ...defaultCombatForm }
     };
     let competitionDetailRef: { coachObjectiveText: string; coachReviewText: string } | null = null;
@@ -493,8 +460,6 @@
           onCombatScoreCategoryChange,
           removeCombatScoreRow,
           saveCombat,
-          setCombatQuickMode,
-          setCombatQuickResult,
           syncCombatDecisionVisibility
         },
         { combatDecisionOptions, isSubmitting, showCombatDecisionBlock, tachiWazaTechniques }
@@ -986,8 +951,7 @@
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Modifier le combat",
           combatFormSubtitle: competitionName || "",
-          saveCombatButtonText: "Enregistrer le combat",
-          combatQuickMode: false
+          saveCombatButtonText: "Enregistrer le combat"
         });
         Object.assign(combatFormViewModel.combatForm, {
           combatId: combat.combatId || "",
@@ -1007,23 +971,13 @@
       } else {
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Ajouter un combat",
-          combatFormSubtitle: competitionName || "",
-          combatQuickMode: true
+          combatFormSubtitle: competitionName || ""
         });
         syncCombatDecisionVisibility(true);
       }
 
       showView("combatFormView");
       window.Vue.nextTick(() => $("combat_adversaire").focus());
-    }
-
-    function setCombatQuickMode(value: boolean) {
-      combatFormViewModel.combatQuickMode = value;
-    }
-
-    function setCombatQuickResult(result: string) {
-      combatFormViewModel.combatForm.result = result;
-      syncCombatDecisionVisibility(true);
     }
 
     function cancelCombatForm() {
@@ -1309,8 +1263,7 @@
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",
         combatFormSubtitle: "Combat de la compétition en cours",
-        saveCombatButtonText: "Ajouter le combat",
-        combatQuickMode: true
+        saveCombatButtonText: "Ajouter le combat"
       });
       syncCombatDecisionVisibility(true);
     }

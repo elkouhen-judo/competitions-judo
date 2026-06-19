@@ -21,14 +21,12 @@
       dateFrom: "",
       dateTo: "",
       gender: "",
-      handedness: "",
-      competitionIds: [] as string[]
+      handedness: ""
     };
 
     const coachDashboardViewModel = window.Vue.reactive({
-      coachDashboardForm: { ...defaultCoachDashboardForm, competitionIds: [] as string[] },
+      coachDashboardForm: { ...defaultCoachDashboardForm },
       activeCoachDashboardTab: "stats",
-      competitionSearchText: "",
       filtersExpanded: true,
       coachAssistantQuestion: "",
       coachAssistantMessages: [
@@ -46,28 +44,6 @@
     let coachAssistantMessageId = 1;
     let coachDashboardMounted = false;
 
-    const competitionOptions = window.Vue.computed(() => {
-      const query = ui.cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
-      const { ageCategory, dateFrom, dateTo } = coachDashboardViewModel.coachDashboardForm;
-      return [...state.competitions]
-        .sort((a, b) => String(b.competitionDate || "").localeCompare(String(a.competitionDate || "")))
-        .filter((competition) => {
-          if (query && !`${competition.name || ""} ${competition.competitionDate || ""}`.toLowerCase().includes(query)) {
-            return false;
-          }
-          if (ageCategory && competition.ageCategory !== ageCategory) {
-            return false;
-          }
-          const competitionDate = competition.competitionDate || "";
-          if (dateFrom && competitionDate < dateFrom) {
-            return false;
-          }
-          if (dateTo && competitionDate > dateTo) {
-            return false;
-          }
-          return true;
-        });
-    });
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const coachDashboardYearOptions = window.Vue.computed(() =>
       window.KirokuScreenProjections.getYearInCategoryOptions(
@@ -79,9 +55,6 @@
     );
     const coachDashboardDefeatsByType = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.defeatsByDecisionType || []
-    );
-    const coachDashboardByOpponentStance = window.Vue.computed(
-      () => coachDashboardViewModel.coachDashboardStats?.byOpponentStance || []
     );
     const coachDashboardByLateralMatchup = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.byLateralMatchup || []
@@ -122,18 +95,15 @@
           showPersonalSpace,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
-          updateCoachDashboardCompetitionSearch,
           showCoachJudoka,
           showCoachDashboard,
           showCoachChat
         },
         {
-          competitionOptions,
           isSubmitting,
           coachDashboardYearOptions,
           coachDashboardVictoriesByType,
           coachDashboardDefeatsByType,
-          coachDashboardByOpponentStance,
           coachDashboardByLateralMatchup,
           coachDashboardByCompetitionLevel,
           coachDashboardJudokasByGender,
@@ -158,7 +128,6 @@
         "getCoachDashboard",
         [
           {
-            competitionIds: coachDashboardViewModel.coachDashboardForm.competitionIds,
             dateFrom: coachDashboardViewModel.coachDashboardForm.dateFrom,
             dateTo: coachDashboardViewModel.coachDashboardForm.dateTo,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
@@ -221,11 +190,8 @@
     }
 
     function resetCoachDashboardFilters() {
-      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
-        competitionIds: [] as string[]
-      });
+      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm);
       coachDashboardViewModel.activeCoachDashboardTab = "stats";
-      coachDashboardViewModel.competitionSearchText = "";
       fetchCoachDashboardStats();
     }
 
@@ -233,18 +199,10 @@
       coachDashboardViewModel.filtersExpanded = !coachDashboardViewModel.filtersExpanded;
     }
 
-    function updateCoachDashboardCompetitionSearch() {
-      // The selection intentionally survives search changes so a coach can build
-      // a multi-competition scope across several queries.
-    }
-
     function showCoachDashboardMode(tab: "stats" | "chat") {
       ensureCoachDashboardViewModel();
-      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
-        competitionIds: [] as string[]
-      });
+      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm);
       coachDashboardViewModel.activeCoachDashboardTab = tab;
-      coachDashboardViewModel.competitionSearchText = "";
       coachDashboardViewModel.filtersExpanded = true;
       coachDashboardViewModel.coachDashboardStats = null;
       showView("coachDashboardView");
