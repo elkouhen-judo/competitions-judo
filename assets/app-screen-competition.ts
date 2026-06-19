@@ -1115,19 +1115,6 @@
       });
     }
 
-    function deleteCompetitionFromList(id: string, name?: string) {
-      const label = name ? ` "${name}"` : "";
-      app.confirmAndRun({
-        message: `Supprimer la compétition${label} et tous ses combats ?`,
-        method: "deleteCompetition",
-        args: [id],
-        onSuccess: (response) => {
-          showSuccess(response.message);
-          app.reloadInitialData();
-        }
-      });
-    }
-
     function deleteCombat(id: string) {
       const competitionId = getCurrentCompetition().competitionId;
       app.confirmAndRun({
@@ -1346,7 +1333,6 @@
       cancelCompetitionForm,
       confirmDetachClubParticipant,
       deleteCombat,
-      deleteCompetitionFromList,
       deleteCurrentCompetition,
       editCurrentCompetition,
       finalizeCompetition,

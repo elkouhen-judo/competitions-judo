@@ -11,7 +11,7 @@
   }
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
-    const { state, ui, notifications } = app;
+    const { state, screens, ui, notifications } = app;
     const { showView } = ui;
     const { showError } = notifications;
 
@@ -48,11 +48,24 @@
 
     const competitionOptions = window.Vue.computed(() => {
       const query = ui.cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
+      const { ageCategory, dateFrom, dateTo } = coachDashboardViewModel.coachDashboardForm;
       return [...state.competitions]
         .sort((a, b) => String(b.competitionDate || "").localeCompare(String(a.competitionDate || "")))
         .filter((competition) => {
-          if (!query) return true;
-          return `${competition.name || ""} ${competition.competitionDate || ""}`.toLowerCase().includes(query);
+          if (query && !`${competition.name || ""} ${competition.competitionDate || ""}`.toLowerCase().includes(query)) {
+            return false;
+          }
+          if (ageCategory && competition.ageCategory !== ageCategory) {
+            return false;
+          }
+          const competitionDate = competition.competitionDate || "";
+          if (dateFrom && competitionDate < dateFrom) {
+            return false;
+          }
+          if (dateTo && competitionDate > dateTo) {
+            return false;
+          }
+          return true;
         });
     });
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
@@ -106,9 +119,13 @@
           askCoachAssistant,
           onCoachDashboardAgeCategoryChange,
           resetCoachDashboardFilters,
+          showPersonalSpace,
+          showCoachCompetitions,
           toggleCoachDashboardFilters,
           updateCoachDashboardCompetitionSearch,
-          showHome: () => app.showHome && app.showHome()
+          showCoachJudoka,
+          showCoachDashboard,
+          showCoachChat
         },
         {
           competitionOptions,
@@ -242,6 +259,25 @@
 
     function showCoachChat() {
       showCoachDashboardMode("chat");
+    }
+
+    function showCoachHomeMode(mode: "judoka" | "coach" | "coachJudoka") {
+      screens.home.setHomeMode(mode);
+      if (app.showHome) {
+        app.showHome();
+      }
+    }
+
+    function showPersonalSpace() {
+      showCoachHomeMode("judoka");
+    }
+
+    function showCoachCompetitions() {
+      showCoachHomeMode("coach");
+    }
+
+    function showCoachJudoka() {
+      showCoachHomeMode("coachJudoka");
     }
 
     return {

@@ -1348,6 +1348,10 @@
       color: var(--primary);
     }
 
+    .coach-dashboard-tabs {
+      width: 100%;
+    }
+
     .performance-result-card {
       display: grid;
       gap: 12px;
@@ -1610,6 +1614,10 @@
       .login-form .button {
         width: auto;
         min-width: 140px;
+      }
+
+      .coach-dashboard-tabs {
+        min-width: 520px;
       }
 
       .list-summary {

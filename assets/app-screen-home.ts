@@ -28,7 +28,6 @@
     date: string;
     judokaName: string;
     showJudoka: boolean;
-    canDelete: boolean;
     hasCoachReview: boolean;
   }
 
@@ -95,7 +94,7 @@
         { key: "judoka", label: "Mon espace" }
       ];
       if (state.isCoach) {
-        modes.push({ key: "coach", label: "Espace coach" });
+        modes.push({ key: "coach", label: "Compétition" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Gestion des accès" });
@@ -107,16 +106,17 @@
     });
 
     const coachSubModes: Array<{ key: string; label: string }> = [
-      { key: "coach", label: "Compétitions" },
-      { key: "coachJudoka", label: "Vue judoka" },
-      { key: "coachDashboard", label: "Tableau de bord" },
-      { key: "coachChat", label: "Chat" }
+      { key: "judoka", label: "Mon espace" },
+      { key: "coach", label: "Compétition" },
+      { key: "coachJudoka", label: "Judoka" },
+      { key: "coachChat", label: "Chat" },
+      { key: "coachDashboard", label: "Tableau de bord" }
     ];
 
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);
     const currentHomeMode = window.Vue.computed(() => getCurrentMode());
     const showCoachSubTabs = window.Vue.computed(
-      () => state.isCoach && (getCurrentMode() === "coach" || getCurrentMode() === "coachJudoka")
+      () => state.isCoach && ["judoka", "coach", "coachJudoka"].includes(getCurrentMode())
     );
 
     function isPrimaryModeActive(modeKey: string): boolean {
@@ -145,6 +145,17 @@
     );
     const showActiveJudokaSummary = window.Vue.computed(
       () => getCurrentMode() !== "judoka" && getCurrentMode() !== "coach"
+    );
+    const showHomeContextTitle = window.Vue.computed(
+      () => !["admin", "judoka", "family"].includes(getCurrentMode()) && !showCoachSubTabs.value
+    );
+    const showHomeHero = window.Vue.computed(
+      () =>
+        (showModeTabs.value && !showCoachSubTabs.value) ||
+        showCoachSubTabs.value ||
+        showActiveJudokaSummary.value ||
+        canFilterByJudoka.value ||
+        showHomeContextTitle.value
     );
     const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser));
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
@@ -184,7 +195,7 @@
 
       if (mode === "coach") {
         return {
-          homeTitle: "Espace coach",
+          homeTitle: "Compétition",
           homeSubtitle: "Compétitions club, suivis collectifs et bilans coach.",
           filterPlaceholder: "",
           profileButtonText: "",
@@ -200,7 +211,7 @@
 
       if (mode === "coachJudoka") {
         return {
-          homeTitle: "Vue judoka",
+          homeTitle: "Judoka",
           homeSubtitle: activeJudoka
             ? `Parcours de ${activeName}`
             : "Choisissez un judoka pour consulter sa fiche et son historique.",
@@ -318,7 +329,6 @@
           date: formatDate(c.competitionDate),
           judokaName: judoka ? getJudokaDisplayName(judoka) : "",
           showJudoka: false,
-          canDelete: state.isParent && !state.isCoach && !state.isAdmin,
           hasCoachReview: Boolean(c.coachReview)
         };
       });
@@ -446,8 +456,6 @@
       if (homeViewModelRef) return;
 
       const homeActions = {
-        deleteCompetitionFromList: screens.competition.deleteCompetitionFromList,
-        deleteClubCompetitionFromList: screens.competition.confirmDeleteClubCompetitionById,
         openClubCompetition: screens.competition.openClubCompetition,
         openCompetition: screens.competition.openCompetition,
         openUpcomingEvent: (id: string, isClub: boolean) => {
@@ -481,6 +489,8 @@
         canOpenJudokaProfile,
         showClubCompetitionsSection,
         showActiveJudokaSummary,
+        showHomeContextTitle,
+        showHomeHero,
         showHomeActions,
         isSubmitting,
         actionDisabled,
