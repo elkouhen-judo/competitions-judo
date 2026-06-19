@@ -414,7 +414,7 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
   assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
-  assert.match(uiBundle, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
+  assert.doesNotMatch(uiBundle, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
   assert.match(uiBundle, /showHomeActions = window\.Vue\.computed\(/);
   assert.match(
     uiBundle,

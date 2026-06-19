@@ -1,15 +1,12 @@
     <section id="coachDashboardView" class="panel hidden" v-cloak>
-      <div class="panel-header">
-        <div>
-          <h2>{{ coachDashboardTitle }}</h2>
-          <p class="subtitle">{{ coachDashboardSubtitle }}</p>
-        </div>
-        <div class="competition-header-actions">
-          <button class="button-secondary" type="button" @click="showHome()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Retour
-          </button>
-        </div>
+      <div class="dash-hero">
+        <nav class="mode-tabs coach-sub-tabs coach-dashboard-tabs" aria-label="Navigation coach">
+          <button type="button" class="mode-tab" @click="showPersonalSpace()">Mon espace</button>
+          <button type="button" class="mode-tab" @click="showCoachCompetitions()">Compétition</button>
+          <button type="button" class="mode-tab" @click="showCoachJudoka()">Judoka</button>
+          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'chat' }]" @click="showCoachChat()">Chat</button>
+          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'stats' }]" @click="showCoachDashboard()">Tableau de bord</button>
+        </nav>
       </div>
       <div class="panel-body">
         <div v-show="activeCoachDashboardTab === 'chat'" class="section coach-assistant-section" aria-label="Assistant coach bêta">

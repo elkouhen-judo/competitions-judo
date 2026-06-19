@@ -163,20 +163,26 @@ test("family home keeps the active judoka competition context", () => {
 });
 
 test("coach home stays club-centered and separate from judoka consultation", () => {
-  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Espace coach" \}\);/);
-  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "coachJudoka",\s*label: "Vue judoka"[\s\S]*key: "coachChat",\s*label: "Chat"/);
+  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Compétition" \}\);/);
+  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétition"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachChat",\s*label: "Chat"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"/);
+  assert.match(bundle, /state\.isCoach && \["judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/);
+  assert.match(bundle, /v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs"/);
   assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
+  assert.match(bundle, /showHomeContextTitle = window\.Vue\.computed\(\s*\(\) => !\["admin", "judoka", "family"\]\.includes\(getCurrentMode\(\)\) && !showCoachSubTabs\.value\s*\)/);
+  assert.match(bundle, /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showActiveJudokaSummary\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/);
+  assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
+  assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
   assert.match(bundle, /isPrimaryModeActive\(mode\.key\)/);
   assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
   assert.match(bundle, /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/);
-  assert.match(bundle, /homeTitle: "Espace coach"[\s\S]*showCompetitionsSection: false/);
+  assert.match(bundle, /homeTitle: "Compétition"[\s\S]*showCompetitionsSection: false/);
   assert.match(bundle, /canOpenJudokaProfile = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) !== "coach"\s*\)/);
   assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
   assert.doesNotMatch(bundle, /const firstCoachJudoka = mode === "coach"/);
 });
 
 test("coach judoka view shows the selected judoka competition history", () => {
-  assert.match(bundle, /homeTitle: "Vue judoka"/);
+  assert.match(bundle, /homeTitle: "Judoka"/);
   assert.match(bundle, /if \(mode === "coachJudoka"\) \{/);
   assert.match(bundle, /if \(\(mode === "coachJudoka" \|\| mode === "family"\) && !activeJudokaId\) \{/);
   assert.match(bundle, /const emptyMsg = mode === "coachJudoka"/);
@@ -252,16 +258,14 @@ test("competition header actions share one aligned action row", () => {
   assert.match(bundle, /\.classement-badge\s*\{/);
 });
 
-test("competition list exposes direct delete actions without nesting buttons", () => {
+test("competition list cards stay open-only without destructive actions", () => {
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.match(bundle, /Ouvrir les combats/);
-  assert.match(client, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
-  assert.match(
-    bundle,
-    /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/
-  );
-  assert.match(bundle, /function deleteCompetitionFromList\(id,\s*name\)/);
+  assert.doesNotMatch(client, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
+  assert.doesNotMatch(bundle, /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/);
+  assert.doesNotMatch(bundle, /@click="deleteClubCompetitionFromList\(cc\.clubCompetitionId, cc\.name\)"/);
+  assert.doesNotMatch(client, /function deleteCompetitionFromList\(id,\s*name\)/);
   assert.doesNotMatch(bundle, /<button class="card card-button"[\s\S]*?<button/);
 });
 
@@ -274,10 +278,7 @@ test("mobile actions stay explicit instead of icon-only", () => {
     bundle,
     /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/
   );
-  assert.match(
-    bundle,
-    /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/
-  );
+  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
 });
 
 test("parent competition detail exposes coach objectives", () => {
@@ -369,6 +370,14 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
   assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
+  assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/);
+  assert.match(bundle, /class="mode-tabs coach-sub-tabs coach-dashboard-tabs"/);
+  assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
+  assert.match(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
+  assert.match(bundle, /@click="showCoachJudoka\(\)">Judoka/);
+  assert.match(bundle, /activeCoachDashboardTab === 'stats'/);
+  assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,500}<div class="panel-header">/);
+  assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,900}Retour/);
   assert.match(client, /Chat coach — quota LLM limité/);
   assert.match(bundle, /id="coachAssistantQuestion" type="search"/);
   assert.match(client, /function askCoachAssistant\(\)/);

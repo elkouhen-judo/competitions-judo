@@ -1,7 +1,7 @@
     <section id="homeView" class="panel" v-cloak>
       <!-- Compact hero: mode navigation + active context -->
-      <div class="dash-hero">
-        <nav v-if="showModeTabs" class="mode-tabs" aria-label="Changer de mode">
+      <div v-if="showHomeHero" class="dash-hero">
+        <nav v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs" aria-label="Changer de mode">
           <button
             v-for="mode in availableModes"
             :key="mode.key"
@@ -43,7 +43,7 @@
             </div>
           </div>
         </div>
-        <div v-else-if="currentHomeMode !== 'admin'" class="dash-context-line">
+        <div v-else-if="showHomeContextTitle" class="dash-context-line">
           <span class="dash-mode-label">{{ homeTitle }}</span>
         </div>
       </div>
@@ -137,12 +137,6 @@
                     <span class="card-open-hint">Ouvrir le suivi</span>
                   </span>
                 </button>
-                <div class="card-actions">
-                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="deleteClubCompetitionFromList(cc.clubCompetitionId, cc.name)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    Supprimer
-                  </button>
-                </div>
               </article>
             </div>
             <div v-if="clubCompetitionsTotalPages > 1" class="list-summary">
@@ -186,12 +180,6 @@
                     <span class="card-open-hint">Ouvrir les combats</span>
                   </span>
                 </button>
-                <div v-if="competition.canDelete" class="card-actions">
-                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="deleteCompetitionFromList(competition.competitionId, competition.name)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Supprimer
-                  </button>
-                </div>
               </article>
             </div>
             <div v-if="competitionsTotalPages > 1" class="list-summary">

@@ -183,11 +183,13 @@ This specification does not define:
 - **UIX-010b**: For `PARENT`, competition creation shall require an active family profile before the creation form is opened.
 - **UIX-011**: For `COACH`, the home screen shall expose the global Club Competition Dashboard to easily review weekend results. For `ADMIN`, the home screen shall expose access governance without sports management actions.
 - **UIX-011a**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
-- **UIX-011b**: For `COACH`, the `Espace coach` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
-- **UIX-011c**: For `COACH`, a separate `Vue judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
+- **UIX-011b**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
+- **UIX-011c**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
 - **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
 - **UIX-012a**: The judoka performance hero labels shall follow a logical sports-reading order: season, age category, year within category, weight category, gender, garde, then belt color.
 - **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
+- **UIX-013a**: Home widgets shall not repeat the active tab label as a standalone title; when an active tab or useful context card already identifies the view, the redundant home header shall be hidden.
+- **UIX-013b**: Competition cards in lists shall use a uniform open-only interaction. Destructive competition deletion shall be handled from the competition detail screen, not from list cards.
 - **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
 - **UIX-015**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
 - **UIX-016**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, detailed combats, and finalization status.
@@ -210,6 +212,7 @@ This specification does not define:
 - **DASH-012**: The dashboard competition selector shall allow searching competitions by name or date without clearing already selected competitions.
 - **DASH-013**: On mobile, the dashboard filters shall be collapsible so the statistics can be reviewed without scrolling through the full filter list.
 - **DASH-014**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status, indicate in the chat title that LLM quota is limited, and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
+- **DASH-015**: Coach navigation shall be flattened: coach users shall see one tab bar with `Mon espace`, `Compétition`, `Judoka`, `Chat`, and `Tableau de bord` in that order. Selecting a tab shall render the associated widget below the shared tab bar, and coach widgets shall not embed their own coach menu or dedicated back button.
 
 ### 3.10 Internal MCP access rules
 

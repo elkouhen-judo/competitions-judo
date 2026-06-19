@@ -218,6 +218,7 @@ export interface HomeScreen {
   applyInitialData(): void;
   getHomeActiveJudokaId(): string;
   hideHomeFilterOptions(): void;
+  setHomeMode(mode: "judoka" | "coach" | "coachJudoka" | "family"): void;
   showHome(): void;
   showHomeFilterOptions(): void;
 }
@@ -229,7 +230,6 @@ export interface JudokaScreen {
 export interface CompetitionScreen {
   bindEvents(): void;
   confirmDeleteClubCompetitionById(idClubCompetition: string, name?: string): void;
-  deleteCompetitionFromList(idCompetition: string, name?: string): void;
   openClubCompetition(idClubCompetition: string): void;
   openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
   openCompetitionFromJudokaProfile(idCompetition: string): void;
