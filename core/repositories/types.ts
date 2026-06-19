@@ -56,6 +56,7 @@ export interface CombatRow {
   id_judoka: string;
   id_competition: string;
   adversaire: string;
+  garde_adversaire?: string;
   resultat: string;
   type_victoire: string;
   deroule: string;

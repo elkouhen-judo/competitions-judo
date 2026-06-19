@@ -709,26 +709,36 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       scores: [],
       opponentStance: "",
       competitionLevel: ""
+    },
+    {
+      judokaId: "JUDO4",
+      judokaGender: "Homme",
+      judokaHandedness: "Ambidextre",
+      result: "Victoire",
+      victoryType: "Décision",
+      scores: [],
+      opponentStance: "Inconnue",
+      competitionLevel: "International"
     }
   ];
 
   assert.deepEqual(computeCoachDashboardStats(combats), {
-    totalCombats: 4,
-    victories: 2,
-    victoryRate: 50,
+    totalCombats: 5,
+    victories: 3,
+    victoryRate: 60,
     tachiWazaVictories: 1,
-    tachiWazaVictoryRate: 25,
+    tachiWazaVictoryRate: 20,
     neWazaVictories: 1,
-    neWazaVictoryRate: 25,
+    neWazaVictoryRate: 20,
     hansokuMakeLosses: 1,
-    hansokuMakeLossRate: 25,
+    hansokuMakeLossRate: 20,
     victoriesByDecisionType: [
-      { decisionType: "Ippon", count: 2, total: 2, rate: 100 },
-      { decisionType: "Waza-ari", count: 0, total: 2, rate: 0 },
-      { decisionType: "Yuko", count: 0, total: 2, rate: 0 },
-      { decisionType: "Décision", count: 0, total: 2, rate: 0 },
-      { decisionType: "Hansoku-make", count: 0, total: 2, rate: 0 },
-      { decisionType: "Forfait", count: 0, total: 2, rate: 0 }
+      { decisionType: "Ippon", count: 2, total: 3, rate: 67 },
+      { decisionType: "Waza-ari", count: 0, total: 3, rate: 0 },
+      { decisionType: "Yuko", count: 0, total: 3, rate: 0 },
+      { decisionType: "Décision", count: 1, total: 3, rate: 33 },
+      { decisionType: "Hansoku-make", count: 0, total: 3, rate: 0 },
+      { decisionType: "Forfait", count: 0, total: 3, rate: 0 }
     ],
     defeatsByDecisionType: [
       { decisionType: "Ippon", count: 1, total: 2, rate: 50 },
@@ -750,10 +760,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
       { level: "Départemental", combats: 2, victories: 1, victoryRate: 50 },
       { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
       { level: "National", combats: 1, victories: 1, victoryRate: 100 },
-      { level: "International", combats: 0, victories: 0, victoryRate: 0 }
+      { level: "International", combats: 1, victories: 1, victoryRate: 100 }
     ],
     judokasByGender: [
-      { gender: "Homme", judokaCount: 1 },
+      { gender: "Homme", judokaCount: 2 },
       { gender: "Femme", judokaCount: 1 }
     ],
     judokasByHandedness: [

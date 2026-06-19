@@ -133,7 +133,8 @@ export function toCombatReadModelsWithJudokas(
     const judoka = judokasById.get(String(domainCombat.judokaId));
 
     return toCombatReadModel(domainCombat, {
-      judokaDisplayName: judoka ? formatJudokaDisplayName(judoka) : domainCombat.judokaId
+      judokaDisplayName: judoka ? formatJudokaDisplayName(judoka) : domainCombat.judokaId,
+      judokaHandedness: judoka?.handedness || ""
     });
   });
 }

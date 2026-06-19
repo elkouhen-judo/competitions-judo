@@ -48,6 +48,9 @@ export default function createCoachDashboardService(
     const dateTo = String(filters.dateTo || "").trim();
     const gender = String(filters.gender || "").trim();
     const handedness = String(filters.handedness || "").trim();
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      throw new Error("La date de début doit être antérieure ou égale à la date de fin.");
+    }
     const selectedCompetitionIds =
       Array.isArray(filters.competitionIds) && filters.competitionIds.length
         ? new Set(filters.competitionIds.map(String))

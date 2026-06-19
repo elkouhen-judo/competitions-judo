@@ -117,9 +117,11 @@ export interface CompetitionCombatCard {
   competitionId: string;
   opponent: string;
   opponentStance: string;
+  judokaHandedness: string;
   result: string;
   victoryType?: string;
   scoreLabels: string[];
+  missingMetricLabels: string[];
   resultClass: string;
   judokaDisplayName: string;
   showJudoka: boolean;

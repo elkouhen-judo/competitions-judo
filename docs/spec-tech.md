@@ -2,7 +2,7 @@
 title: Kiroku Technical Specification
 version: 1.3
 date_created: 2026-06-11
-last_updated: 2026-06-18
+last_updated: 2026-06-19
 owner: competitions-judo
 tags:
   - architecture
@@ -89,7 +89,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-013**: If privileged rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
 - **DAT-014**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
 - **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
-- **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics.
+- **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics, among `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, `Non classé`, or an empty value before finalization.
 - **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
 - **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
 - **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
@@ -113,7 +113,7 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
 - **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
 - **AUTH-006**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
-- **AUTH-006**: The backend shall resolve the verified email from Supabase before applying business permissions.
+- **AUTH-006a**: The backend shall resolve the verified email from Supabase before applying business permissions.
 - **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
 - **AUTH-008**: Password-based login shall remain unsupported.
 - **AUTH-009**: Magic-link login shall remain unsupported.

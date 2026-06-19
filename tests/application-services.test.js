@@ -999,6 +999,15 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
   });
   assert.equal(dateRangeFiltered.stats.totalCombats, 2);
   assert.equal(dateRangeFiltered.stats.hansokuMakeLosses, 1);
+
+  await assert.rejects(
+    () =>
+      service.methods.getCoachDashboard("coach@example.com", {
+        dateFrom: "2026-03-16",
+        dateTo: "2026-03-15"
+      }),
+    /date de début doit être antérieure ou égale/
+  );
 });
 
 test("getCoachDashboard rejects a non-coach requester", async () => {

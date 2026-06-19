@@ -8,7 +8,7 @@ const createClubCompetitionsRepository = require("../core/repositories/club-comp
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
 const createParentLinksRepository = require("../core/repositories/parent-links.repository");
-const { toCanonicalCombat } = require("../core/services/domain-adapters");
+const { toCanonicalCombat, toCombatReadModelsWithJudokas } = require("../core/services/domain-adapters");
 
 function createRepositoryDeps(calls, options = {}) {
   const { selectOneResult = null, selectResult = [] } = options;
@@ -595,4 +595,14 @@ test("combat read models normalize legacy result codes", () => {
   assert.equal(toCanonicalCombat({ resultat: "D" }).result, "Défaite");
   assert.equal(toCanonicalCombat({ resultat: "E" }).result, "Egalité");
   assert.equal(toCanonicalCombat({ resultat: "Disqualification" }).result, "Défaite");
+});
+
+test("combat read models expose judoka handedness for metric quality indicators", () => {
+  const [combat] = toCombatReadModelsWithJudokas(
+    [{ id_combat: "CB1", id_judoka: "JUDO1", resultat: "Victoire" }],
+    [{ judokaId: "JUDO1", firstName: "Ali", lastName: "El Kouhen", handedness: "Gaucher" }]
+  );
+
+  assert.equal(combat.judokaDisplayName, "Ali El Kouhen");
+  assert.equal(combat.judokaHandedness, "Gaucher");
 });

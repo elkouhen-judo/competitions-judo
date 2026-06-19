@@ -455,6 +455,13 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
   assert.match(bundle, /id="competitionView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="competitionTitle">\{\{ competitionTitle \}\}<\/h2>/);
   assert.match(bundle, /id="combatsList">[\s\S]*v-for="combat in combats"/);
+  assert.match(bundle, /Niveau de compétition non renseigné/);
+  assert.match(bundle, /v-if="combat\.missingMetricLabels\.length"/);
+  assert.match(bundle, /v-for="label in combat\.missingMetricLabels"/);
+  assert.match(client, /Garde judoka non renseignée/);
+  assert.match(client, /Garde adversaire non renseignée/);
+  assert.match(client, /Type de décision non renseigné/);
+  assert.match(client, /Prises marquées non renseignées/);
   assert.doesNotMatch(bundle, /combatsHtml/);
   assert.match(
     bundle,
@@ -585,6 +592,9 @@ test("combat decision type appears only after choosing a result", () => {
 test("combat form screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
+  assert.match(bundle, /Alimente les métriques même garde \/ garde opposée\./);
+  assert.match(bundle, /Alimente les répartitions par décision et les défaites hansoku-make\./);
+  assert.match(bundle, /Alimente les métriques Tachi-waza et Ne-waza\./);
   assert.match(
     bundle,
     /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/
