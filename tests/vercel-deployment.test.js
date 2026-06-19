@@ -794,8 +794,8 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createClubCompetitionsService/);
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
-  assert.match(coreIndex, /createAiAnalysisService/);
   assert.match(coreIndex, /createCoachDashboardService/);
+  assert.match(coreIndex, /createGroqClient/);
   assert.match(coreIndex, /core-dist\/services\/coach-dashboard\.service\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
@@ -806,7 +806,6 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /core-dist\/services\/admin\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/competitions\.service\.js/);
   assert.match(coreIndex, /core-dist\/services\/combats\.service\.js/);
-  assert.match(coreIndex, /core-dist\/services\/ai-analysis\.service\.js/);
   assert.deepEqual(
     [...coreIndex.matchAll(/require\("(\.\/[^"]+)"\)/g)].map((match) => match[1]),
     [

@@ -161,6 +161,7 @@ test("family home keeps the active judoka competition context", () => {
 test("coach home stays club-centered and separate from judoka consultation", () => {
   assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Espace coach" \}\);/);
   assert.match(bundle, /modes\.push\(\{ key: "coachJudoka", label: "Vue judoka" \}\);/);
+  assert.match(bundle, /modes\.push\(\{ key: "coachChat", label: "Chat" \}\);/);
   assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
   assert.match(bundle, /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/);
   assert.match(bundle, /homeTitle: "Espace coach"[\s\S]*showCompetitionsSection: false/);
@@ -353,6 +354,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     /const viewIds = \[\s*"loginView",\s*"homeView",\s*"judokaView",\s*"adminsView",\s*"coachDashboardView",\s*"competitionView"/
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
+  assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
+  assert.match(bundle, /id="coachAssistantQuestion" type="search"/);
+  assert.match(client, /function askCoachAssistant\(\)/);
+  assert.match(client, /function showCoachChat\(\)/);
+  assert.match(client, /"askCoachAssistant"/);
   assert.match(bundle, /id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm\.dateFrom"/);
   assert.match(bundle, /id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm\.dateTo"/);
   assert.match(client, /dateFrom: coachDashboardViewModel\.coachDashboardForm\.dateFrom/);
@@ -431,6 +437,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.doesNotMatch(bundle, /breakdown-row/);
   assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
   assert.match(bundle, /key: "coachDashboard", label: "Tableau de bord"/);
+  assert.match(bundle, /if \(modeKey === "coachChat"\) \{\s*screens\.coachDashboard\.showCoachChat\(\);\s*return;\s*\}/);
 });
 
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {

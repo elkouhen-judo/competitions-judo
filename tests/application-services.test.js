@@ -13,7 +13,6 @@ const { updateCombat } = require("../core/domain/competitions/combat");
 const createCombatsService = require("../core/services/combats.service");
 const createClubCompetitionsService = require("../core/services/club-competitions.service");
 const createCompetitionsService = require("../core/services/competitions.service");
-const createAiAnalysisService = require("../core/services/ai-analysis.service");
 const createCoachDashboardService = require("../core/services/coach-dashboard.service");
 const createProfileService = require("../core/services/profile.service");
 const createRegistrationService = require("../core/services/registration.service");
@@ -416,8 +415,7 @@ function createTestCompetitionsService({
   competitionsByCompetitionId = {},
   combatsByCompetitionId = {},
   combatScoresByCombatId = {},
-  getDomainUserContext,
-  generateCompetitionAnalysis = async () => null
+  getDomainUserContext
 } = {}) {
   const calls = {
     inserted: [],
@@ -425,8 +423,7 @@ function createTestCompetitionsService({
     updatedResult: [],
     coachObjective: [],
     coachReview: [],
-    removed: [],
-    aiAnalysis: []
+    removed: []
   };
 
   const service = createCompetitionsService({
@@ -489,11 +486,7 @@ function createTestCompetitionsService({
     resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
     buildCompetitionId: () => "COMP_NEW",
     createCompetition,
-    createPersistedCompetition,
-    generateCompetitionAnalysis: async (idCompetition) => {
-      calls.aiAnalysis.push(idCompetition);
-      return generateCompetitionAnalysis(idCompetition);
-    }
+    createPersistedCompetition
   });
 
   return { service, calls };
@@ -626,31 +619,7 @@ test("finalizeCompetition records the final ranking for the competition owner", 
       finalization: { competitionId: "COMP1", ownerJudokaId: "JUDO1", result: "1er" }
     }
   ]);
-  assert.deepEqual(calls.aiAnalysis, ["COMP1"]);
-});
-
-test("finalizeCompetition still succeeds when AI analysis generation fails", async () => {
-  const { service, calls } = createTestCompetitionsService({
-    competitionsByCompetitionId: {
-      COMP1: {
-        id_competition: "COMP1",
-        id_judoka: "JUDO1",
-        nom: "Tournoi",
-        date: "2026-06-14",
-        categorie_age: "Cadet"
-      }
-    },
-    getDomainUserContext: domainContextFor("JUDO1", "NORMAL"),
-    generateCompetitionAnalysis: async () => {
-      throw new Error("Erreur Groq 500 : indisponible");
-    }
-  });
-
-  const result = await service.methods.finalizeCompetition("judoka@example.com", "COMP1", "1er");
-
-  assert.equal(result.success, true);
   assert.equal(result.message, "Classement enregistré.");
-  assert.deepEqual(calls.aiAnalysis, ["COMP1"]);
 });
 
 test("finalizeCompetition requires a competition id", async () => {
@@ -724,117 +693,12 @@ test("saveCoachReview rejects an admin", async () => {
   );
 });
 
-function createTestAiAnalysisService({
-  competitionsByCompetitionId = {},
-  combatsByCompetitionId = {},
-  combatScoresByCombatId = {},
-  groqResponse = "Analyse générée."
-} = {}) {
-  const calls = { prompts: [], persisted: [] };
-
-  const service = createAiAnalysisService({
-    combatsRepository: {
-      listByCompetition: async (id) => combatsByCompetitionId[id] || []
-    },
-    combatScoresRepository: {
-      listByCombatIds: async (ids) =>
-        ids.flatMap((idCombat) => combatScoresByCombatId[idCombat] || [])
-    },
-    competitionsRepository: {
-      getById: async (id) => competitionsByCompetitionId[id] || null,
-      updateAiAnalysis: async (idCompetition, analysis) => {
-        calls.persisted.push({ idCompetition, analysis });
-        return null;
-      }
-    },
-    groqClient: {
-      generateChatCompletion: async (messages) => {
-        calls.prompts.push(messages);
-        return groqResponse;
-      }
-    }
-  });
-
-  return { service, calls };
-}
-
-test("generateCompetitionAnalysis builds a French prompt from the competition and its combats, then persists the result", async () => {
-  const { service, calls } = createTestAiAnalysisService({
-    competitionsByCompetitionId: {
-      COMP1: {
-        id_competition: "COMP1",
-        id_judoka: "JUDO1",
-        nom: "Tournoi de Nantes",
-        date: "2026-06-14",
-        categorie_age: "Minime",
-        categorie_poids: "-50kg",
-        niveau: "Régional",
-        classement: "1er"
-      }
-    },
-    combatsByCompetitionId: {
-      COMP1: [
-        {
-          id_combat: "CMB1",
-          id_judoka: "JUDO1",
-          id_competition: "COMP1",
-          adversaire: "Léo Dupont",
-          garde_adversaire: "Gaucher",
-          resultat: "Victoire",
-          type_victoire: "Ippon",
-          deroule: "Bon Seoi-nage"
-        }
-      ]
-    },
-    combatScoresByCombatId: {
-      CMB1: [
-        { id_combat: "CMB1", categorie: "Tachi-waza", technique: "Seoi-nage", valeur: "Ippon" }
-      ]
-    }
-  });
-
-  const analysis = await service.generateCompetitionAnalysis("COMP1");
-
-  assert.equal(analysis, "Analyse générée.");
-  assert.equal(calls.prompts.length, 1);
-  assert.equal(calls.prompts[0][0].role, "system");
-  assert.match(calls.prompts[0][0].content, /analyste technique spécialisé en judo jeunesse/);
-  assert.equal(calls.prompts[0][1].role, "user");
-  assert.match(calls.prompts[0][1].content, /Tournoi de Nantes/);
-  assert.match(calls.prompts[0][1].content, /Léo Dupont/);
-  assert.match(calls.prompts[0][1].content, /Gaucher/);
-  assert.match(calls.prompts[0][1].content, /Seoi-nage \(Ippon\)/);
-  assert.deepEqual(calls.persisted, [{ idCompetition: "COMP1", analysis: "Analyse générée." }]);
-});
-
-test("generateCompetitionAnalysis does nothing for an unknown competition", async () => {
-  const { service, calls } = createTestAiAnalysisService();
-
-  const analysis = await service.generateCompetitionAnalysis("MISSING");
-
-  assert.equal(analysis, null);
-  assert.equal(calls.prompts.length, 0);
-  assert.equal(calls.persisted.length, 0);
-});
-
-test("generateCompetitionAnalysis skips persistence when Groq returns an empty response", async () => {
-  const { service, calls } = createTestAiAnalysisService({
-    competitionsByCompetitionId: {
-      COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi", date: "2026-06-14" }
-    },
-    groqResponse: ""
-  });
-
-  const analysis = await service.generateCompetitionAnalysis("COMP1");
-
-  assert.equal(analysis, null);
-  assert.equal(calls.persisted.length, 0);
-});
-
 function createTestCoachDashboardService({
   competitionRows = [],
   combatsByCompetitionId = {},
   combatScoresByCombatId = {},
+  getCurrentDate,
+  groqResponse = "",
   judokaRows = [],
   getDomainUserContext
 } = {}) {
@@ -848,6 +712,12 @@ function createTestCoachDashboardService({
     competitionsRepository: {
       listAll: async () => competitionRows
     },
+    getCurrentDate,
+    groqClient: groqResponse
+      ? {
+          generateChatCompletion: async () => groqResponse
+        }
+      : undefined,
     judokasRepository: {
       listAll: async () => judokaRows
     },
@@ -1007,6 +877,270 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
         dateTo: "2026-03-15"
       }),
     /date de début doit être antérieure ou égale/
+  );
+});
+
+test("askCoachAssistant finds judokas who won by osaekomi", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" },
+      { id_competition: "COMP2", nom: "Tournoi Rennes", date: "2026-05-10" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Défaite",
+          type_victoire: "Ippon"
+        }
+      ],
+      COMP2: [
+        {
+          id_combat: "CB3",
+          id_judoka: "JUDO3",
+          id_competition: "COMP2",
+          adversaire: "Sam Petit",
+          resultat: "Victoire",
+          type_victoire: "Waza-ari"
+        }
+      ]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
+      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
+      CB3: [{ id_combat: "CB3", categorie: "Ne-waza", type_ne_waza: "Clé", valeur: "Waza-ari" }]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" },
+      { id_judoka: "JUDO3", prenom: "Imane", nom: "Morel" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "Trouve moi les judokas qui ont gagné par Oasaekomi"
+  );
+
+  assert.equal(result.beta, true);
+  assert.match(result.answer, /1 judoka/);
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Aya Durand");
+  assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
+});
+
+test("askCoachAssistant searches across judoka, competition, combat and score attributes", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      {
+        id_competition: "COMP1",
+        nom: "Circuit régional",
+        date: "2026-04-20",
+        categorie_age: "Cadet",
+        niveau: "Régional"
+      }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Malo Robert",
+          garde_adversaire: "Gaucher",
+          resultat: "Victoire",
+          type_victoire: "Décision",
+          deroule: "A bien contrôlé la manche"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Eli Simon",
+          garde_adversaire: "Droitier",
+          resultat: "Victoire",
+          type_victoire: "Ippon",
+          deroule: "Projection rapide"
+        }
+      ]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Tachi-waza", technique: "Tai-otoshi", valeur: "Yuko" }],
+      CB2: [{ id_combat: "CB2", categorie: "Tachi-waza", technique: "Uchi-mata", valeur: "Ippon" }]
+    },
+    judokaRows: [
+      {
+        id_judoka: "JUDO1",
+        prenom: "Aya",
+        nom: "Durand",
+        categorie_age: "Cadet",
+        couleur_ceinture: "Bleu",
+        genre: "Femme",
+        lateralite: "Gauchère"
+      },
+      {
+        id_judoka: "JUDO2",
+        prenom: "Nina",
+        nom: "Bernard",
+        categorie_age: "Minime",
+        couleur_ceinture: "Orange",
+        genre: "Femme",
+        lateralite: "Droitière"
+      }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "cadet régional gaucher manche tai-otoshi"
+  );
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Aya Durand");
+  assert.equal(result.matches[0].competitionName, "Circuit régional");
+  assert.equal(result.matches[0].scoreLabel, "Tai-otoshi · Yuko");
+});
+
+test("askCoachAssistant lists judokas by age category", async () => {
+  const { service } = createTestCoachDashboardService({
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard", categorie_age: "Cadet" },
+      { id_judoka: "JUDO3", prenom: "Imane", nom: "Morel", categorie_age: "Minime" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "Liste les judokas minimes"
+  );
+
+  assert.match(result.answer, /2 judoka/);
+  assert.deepEqual(result.matches.map((match) => match.judokaName), ["Aya Durand", "Imane Morel"]);
+  assert.deepEqual(result.matches.map((match) => match.scoreLabel), ["Minime", "Minime"]);
+});
+
+test("askCoachAssistant lists judokas who fought today", async () => {
+  const { service } = createTestCoachDashboardService({
+    getCurrentDate: () => "2026-06-19",
+    competitionRows: [
+      { id_competition: "COMP_TODAY", nom: "Open du jour", date: "2026-06-19" },
+      { id_competition: "COMP_OLD", nom: "Open ancien", date: "2026-06-18" }
+    ],
+    combatsByCompetitionId: {
+      COMP_TODAY: [
+        { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP_TODAY" },
+        { id_combat: "CB2", id_judoka: "JUDO2", id_competition: "COMP_TODAY" }
+      ],
+      COMP_OLD: [
+        { id_combat: "CB3", id_judoka: "JUDO3", id_competition: "COMP_OLD" }
+      ]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard", categorie_age: "Cadet" },
+      { id_judoka: "JUDO3", prenom: "Imane", nom: "Morel", categorie_age: "Junior" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "Liste les judokas qui ont combattu aujourd'hui"
+  );
+
+  assert.match(result.answer, /2 judoka/);
+  assert.deepEqual(result.matches.map((match) => match.judokaName), ["Aya Durand", "Nina Bernard"]);
+  assert.deepEqual(result.matches.map((match) => match.competitionName), ["Open du jour", "Open du jour"]);
+});
+
+test("askCoachAssistant uses Groq structured intent to choose judoka or combat results", async () => {
+  const sharedData = {
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Défaite",
+          type_victoire: "Ippon"
+        }
+      ]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard", categorie_age: "Cadet" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  };
+
+  const judokaService = createTestCoachDashboardService({
+    ...sharedData,
+    groqResponse: JSON.stringify({
+      entity: "judokas",
+      filters: { ageCategory: "Minime" },
+      limit: 10
+    })
+  }).service;
+  const combatService = createTestCoachDashboardService({
+    ...sharedData,
+    groqResponse: JSON.stringify({
+      entity: "combats",
+      filters: { result: "Victoire", neWazaType: "Osaekomi" },
+      limit: 10
+    })
+  }).service;
+
+  const judokaResult = await judokaService.methods.askCoachAssistant("coach@example.com", "liste les judokas minimes");
+  const combatResult = await combatService.methods.askCoachAssistant("coach@example.com", "trouve les combats gagnés par osaekomi");
+
+  assert.match(judokaResult.answer, /judoka/);
+  assert.equal(judokaResult.matches.length, 1);
+  assert.equal(judokaResult.matches[0].judokaName, "Aya Durand");
+  assert.equal(judokaResult.matches[0].result, "");
+  assert.match(combatResult.answer, /combat/);
+  assert.equal(combatResult.matches.length, 1);
+  assert.equal(combatResult.matches[0].result, "Victoire");
+  assert.equal(combatResult.matches[0].scoreLabel, "Osaekomi · Ippon");
+});
+
+test("askCoachAssistant rejects a non-coach requester", async () => {
+  const { service } = createTestCoachDashboardService({
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  await assert.rejects(
+    () => service.methods.askCoachAssistant("judoka@example.com", "gagné par osaekomi"),
+    /réservé aux coachs/
   );
 });
 

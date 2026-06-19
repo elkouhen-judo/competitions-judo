@@ -16,25 +16,21 @@ function createGroqClient({ getGroqApiKey, getGroqModel }) {
       body: JSON.stringify({
         model: getGroqModel(),
         messages,
-        temperature: 0.4,
-        max_tokens: 350
+        temperature: 0,
+        response_format: { type: "json_object" }
       })
     });
-    const body = await response.text();
 
     if (!response.ok) {
+      const body = await response.text();
       throw new Error(`Erreur Groq ${response.status} : ${body}`);
     }
 
-    const data = JSON.parse(body);
-    return data?.choices?.[0]?.message?.content || "";
+    const payload = await response.json();
+    return String(payload?.choices?.[0]?.message?.content || "").trim();
   }
 
-  return {
-    generateChatCompletion
-  };
+  return { generateChatCompletion };
 }
 
-module.exports = {
-  createGroqClient
-};
+module.exports = { createGroqClient };

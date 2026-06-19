@@ -55,6 +55,7 @@ This specification does not redefine product behavior already described in `docs
 - **ARC-009**: Browser screens may be migrated progressively to Vue 3 while preserving existing screen IDs and global action entry points until the full frontend migration is complete. The Vue 3 browser runtime shall be vendored locally and served through `/api/client` before screen scripts.
 - **ARC-010**: `api/mcp-oauth.js` shall implement the OAuth 2.1 authorization endpoint (`/mcp/authorize`, delegating end-user authentication to the existing Google/Supabase login), the token endpoint (`/mcp/token`, exchanging a PKCE-verified authorization code for a short-lived Kiroku-signed JWT MCP access token), Dynamic Client Registration (RFC 7591, `/mcp/register`, returning a self-contained signed `client_id` rather than persisting registrations server-side), and the unauthenticated `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` discovery metadata — consolidated into a single Vercel function to stay within the Hobby plan serverless function limit (see `tests/vercel-deployment.test.js`).
 - **ARC-011**: `api/mcp.js` shall expose a remote MCP server speaking JSON-RPC 2.0 over HTTP, secured by Kiroku-issued JWT MCP access tokens, independent from Supabase access tokens.
+- **ARC-012**: The beta coach assistant shall be exposed through the existing `/api/rpc` channel. When Groq is configured, Groq shall only translate the coach's question into a validated structured search query (`entity`, `filters`, `limit`); the backend shall execute that query server-side against Supabase-backed judokas, competitions, combats, combat decisions, notes, and combat scores. If Groq is unavailable or not configured, supported deterministic intents shall still work.
 
 ### 3.2 Vercel routing and runtime injection
 
@@ -93,7 +94,6 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
 - **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
 - **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
-- **DAT-025**: `competitions.ai_analysis` shall store the latest AI-generated competition analysis text, defaulting to an empty string when none has been generated yet.
 - **DAT-026**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
 - **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
@@ -155,10 +155,9 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-006b**: `http://localhost:3100` must also be allowed in Supabase redirect URLs to support local development.
 - **CFG-007**: Supabase Auth must configure the `before-user-created` hook to call `public.hook_check_invited_signup`.
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
-- **CFG-009**: `GROQ_API_KEY` is optional. When absent, AI competition analysis generation shall be skipped silently (no error raised, no analysis stored) rather than failing the calling operation.
-- **CFG-010**: `GROQ_MODEL` is optional and defaults to a fixed Groq chat-completion model id when unset.
 - **CFG-011**: Each deployment environment (production, dev) shall use its own dedicated Supabase project (own `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, own Google OAuth redirect URI, own copy of the schema migration); environment variables and data shall never be shared across Supabase projects.
 - **CFG-012**: Environment configuration shall provide `MCP_JWT_SECRET`; `MCP_TOKEN_TTL_SECONDS` is optional and configures the MCP token lifetime when set.
+- **CFG-013**: `GROQ_API_KEY` is optional and enables the beta coach chat natural-language parser. `GROQ_MODEL` is optional and defaults to the configured lightweight Groq chat model when unset.
 
 ## 4. Interfaces & Data Contracts
 

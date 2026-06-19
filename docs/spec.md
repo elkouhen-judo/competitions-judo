@@ -97,7 +97,6 @@ This specification does not define:
 - **COMP-022**: Deleting a club competition shall detach linked individual competitions by clearing the club link, without deleting those individual competitions, combats, or final rankings.
 - **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
 - **COMP-025**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
-- **COMP-026**: When a competition is finalized, the system shall attempt to generate a short AI-written analysis (overall performance versus the final ranking, tactical patterns across the recorded combats, and a confidence score reflecting how much combat data was available) and store it for display in a dedicated read-only section of the competition view. A failure to generate this analysis shall not block the finalization itself.
 
 ### 3.4 Combat rules
 
@@ -206,6 +205,7 @@ This specification does not define:
 - **DASH-011**: The dashboard shall display distinct judoka counts broken down by judoka garde (`Droitier` / `Gaucher`).
 - **DASH-012**: The dashboard competition selector shall allow searching competitions by name or date without clearing already selected competitions.
 - **DASH-013**: On mobile, the dashboard filters shall be collapsible so the statistics can be reviewed without scrolling through the full filter list.
+- **DASH-014**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
 
 ### 3.10 Internal MCP access rules
 
@@ -246,9 +246,9 @@ This specification does not define:
 - **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
 - **AC-027**: Given a coach removes a participant from a club competition, when the operation succeeds, then the individual competition and sports data remain available outside the club event.
 - **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
-- **AC-029**: Given a competition finalization request, when the final ranking is saved successfully, then the system attempts to generate and store an AI analysis without failing the finalization if that generation errors (e.g. the AI provider is unavailable or not configured).
 - **AC-030**: Given a connected `COACH`, when dashboard filters are set by competition, age category, gender, or garde, then the displayed rates and counts are computed only from combats matching the active filters.
 - **AC-030a**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.
+- **AC-030b**: Given a connected `COACH`, when they ask the beta coach assistant for judokas who won by `Osaekomi`, for `Minime` judokas, for judokas who fought today, or for terms matching recorded attributes, then the response lists matching judokas and combats from stored data only.
 - **AC-031**: Given a connected `PARENT` or `JUDOKA`, when they try to access the club-wide dashboard, then access is rejected.
 - **AC-032**: Given an MCP client requests scopes outside the connected user's role perimeter, when the authorization or request is processed, then unsupported scopes are not granted and protected operations are rejected.
 - **AC-033**: Given an MCP OAuth request, when PKCE is missing/invalid or the redirect URI does not exactly match the registered client URI, then the request is rejected.

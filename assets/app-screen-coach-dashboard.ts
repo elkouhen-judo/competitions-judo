@@ -1,6 +1,14 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type CoachAssistantResponse = import("./types").CoachAssistantResponse;
   type CoachDashboardStats = import("../core/types").CoachDashboardStats;
+
+  interface CoachAssistantMessage {
+    id: number;
+    role: "coach" | "assistant";
+    text: string;
+    matches?: CoachAssistantResponse["matches"];
+  }
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
     const { state, ui, notifications } = app;
@@ -19,11 +27,23 @@
 
     const coachDashboardViewModel = window.Vue.reactive({
       coachDashboardForm: { ...defaultCoachDashboardForm, competitionIds: [] as string[] },
+      activeCoachDashboardTab: "stats",
       competitionSearchText: "",
       filtersExpanded: true,
+      coachAssistantQuestion: "",
+      coachAssistantMessages: [
+        {
+          id: 1,
+          role: "assistant",
+          text: "Mode bêta. Essaie : « Trouve les judokas qui ont gagné par Osaekomi ».",
+          matches: []
+        }
+      ] as CoachAssistantMessage[],
+      isLoadingCoachAssistant: false,
       coachDashboardStats: null as CoachDashboardStats | null,
       isLoadingCoachDashboardStats: false
     });
+    let coachAssistantMessageId = 1;
     let coachDashboardMounted = false;
 
     const competitionOptions = window.Vue.computed(() => {
@@ -62,6 +82,16 @@
     const coachDashboardJudokasByHandedness = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.judokasByHandedness || []
     );
+    const coachDashboardTitle = window.Vue.computed(() =>
+      coachDashboardViewModel.activeCoachDashboardTab === "chat"
+        ? "Chat coach"
+        : "Tableau de bord coach"
+    );
+    const coachDashboardSubtitle = window.Vue.computed(() =>
+      coachDashboardViewModel.activeCoachDashboardTab === "chat"
+        ? "Recherche bêta dans les informations des judokas et combats."
+        : "Statistiques agrégées sur une ou plusieurs compétitions"
+    );
 
     function ensureCoachDashboardViewModel() {
       if (coachDashboardMounted) {
@@ -73,6 +103,7 @@
         coachDashboardViewModel,
         {
           applyCoachDashboardFilters,
+          askCoachAssistant,
           onCoachDashboardAgeCategoryChange,
           resetCoachDashboardFilters,
           toggleCoachDashboardFilters,
@@ -89,7 +120,9 @@
           coachDashboardByLateralMatchup,
           coachDashboardByCompetitionLevel,
           coachDashboardJudokasByGender,
-          coachDashboardJudokasByHandedness
+          coachDashboardJudokasByHandedness,
+          coachDashboardTitle,
+          coachDashboardSubtitle
         }
       );
     }
@@ -132,6 +165,38 @@
       fetchCoachDashboardStats();
     }
 
+    function askCoachAssistant() {
+      const question = ui.cleanText(coachDashboardViewModel.coachAssistantQuestion);
+      if (!question || coachDashboardViewModel.isLoadingCoachAssistant) {
+        return;
+      }
+      coachDashboardViewModel.coachAssistantMessages.push({
+        id: (coachAssistantMessageId += 1),
+        role: "coach",
+        text: question
+      });
+      coachDashboardViewModel.coachAssistantQuestion = "";
+      coachDashboardViewModel.isLoadingCoachAssistant = true;
+
+      app.runServer(
+        "askCoachAssistant",
+        [question],
+        (response) => {
+          coachDashboardViewModel.coachAssistantMessages.push({
+            id: (coachAssistantMessageId += 1),
+            role: "assistant",
+            text: response.answer,
+            matches: response.matches
+          });
+          coachDashboardViewModel.isLoadingCoachAssistant = false;
+        },
+        (error) => {
+          coachDashboardViewModel.isLoadingCoachAssistant = false;
+          showError(error);
+        }
+      );
+    }
+
     function onCoachDashboardAgeCategoryChange() {
       if (!coachDashboardYearOptions.value.includes(coachDashboardViewModel.coachDashboardForm.categoryYear)) {
         coachDashboardViewModel.coachDashboardForm.categoryYear = "";
@@ -142,6 +207,7 @@
       Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
         competitionIds: [] as string[]
       });
+      coachDashboardViewModel.activeCoachDashboardTab = "stats";
       coachDashboardViewModel.competitionSearchText = "";
       fetchCoachDashboardStats();
     }
@@ -155,19 +221,31 @@
       // a multi-competition scope across several queries.
     }
 
-    function showCoachDashboard() {
+    function showCoachDashboardMode(tab: "stats" | "chat") {
       ensureCoachDashboardViewModel();
       Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
         competitionIds: [] as string[]
       });
+      coachDashboardViewModel.activeCoachDashboardTab = tab;
       coachDashboardViewModel.competitionSearchText = "";
       coachDashboardViewModel.filtersExpanded = true;
       coachDashboardViewModel.coachDashboardStats = null;
       showView("coachDashboardView");
-      fetchCoachDashboardStats();
+      if (tab === "stats") {
+        fetchCoachDashboardStats();
+      }
+    }
+
+    function showCoachDashboard() {
+      showCoachDashboardMode("stats");
+    }
+
+    function showCoachChat() {
+      showCoachDashboardMode("chat");
     }
 
     return {
+      showCoachChat,
       showCoachDashboard
     };
   }

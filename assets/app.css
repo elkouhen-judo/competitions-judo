@@ -1006,6 +1006,90 @@
       padding: 9px 12px;
     }
 
+    .coach-dashboard-stats-tab > .section:first-child,
+    .coach-assistant-section {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .beta-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      margin-left: 6px;
+      padding: 3px 8px;
+      border: 1px solid var(--warning);
+      border-radius: 999px;
+      background: var(--warning-soft);
+      color: var(--warning);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .coach-assistant-thread {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .coach-assistant-message {
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      padding: 10px 12px;
+      background: var(--surface);
+    }
+
+    .coach-assistant-message p {
+      margin: 0;
+    }
+
+    .coach-assistant-message-user {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .coach-assistant-results {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .coach-assistant-result {
+      display: grid;
+      gap: 2px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .coach-assistant-result span {
+      color: var(--muted);
+    }
+
+    .coach-assistant-loading {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .coach-assistant-form {
+      display: grid;
+      gap: 8px;
+    }
+
+    .coach-assistant-input-row {
+      display: grid;
+      gap: 8px;
+    }
+
     .dashboard-competition-list {
       max-height: 320px;
       overflow: auto;
@@ -1508,6 +1592,16 @@
         display: flex;
       }
 
+      .coach-assistant-input-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+      }
+
+      .coach-assistant-input-row button {
+        width: auto;
+        min-width: 140px;
+      }
+
       .mobile-action-bar {
         position: static;
         margin: 14px 0 0;
@@ -1824,25 +1918,6 @@
       background: var(--accent-soft);
       border-color: var(--accent);
       color: var(--accent);
-    }
-
-    /* AI analysis */
-    .ai-analysis-section {
-      border-top: 1px solid var(--line);
-      padding-top: 8px;
-    }
-
-    .ai-analysis-disclaimer {
-      font-size: 0.8rem;
-      font-style: italic;
-    }
-
-    .ai-analysis-text {
-      margin: 0;
-      color: var(--text);
-      font-size: 0.95rem;
-      line-height: 1.55;
-      white-space: pre-wrap;
     }
 
     /* Coach assessment */

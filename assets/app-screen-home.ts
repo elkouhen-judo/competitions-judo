@@ -98,6 +98,7 @@
         modes.push({ key: "coach", label: "Espace coach" });
         modes.push({ key: "coachJudoka", label: "Vue judoka" });
         modes.push({ key: "coachDashboard", label: "Tableau de bord" });
+        modes.push({ key: "coachChat", label: "Chat" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Gestion des accès" });
@@ -593,6 +594,10 @@
       }
       if (modeKey === "coachDashboard") {
         screens.coachDashboard.showCoachDashboard();
+        return;
+      }
+      if (modeKey === "coachChat") {
+        screens.coachDashboard.showCoachChat();
         return;
       }
       setHomeMode(modeKey as HomeMode);
