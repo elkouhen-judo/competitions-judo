@@ -569,6 +569,8 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   assert.doesNotMatch(adminService, /async function saveAccessInvitation\(/);
   assert.doesNotMatch(adminService, /"saveAccessInvitation"/);
   assert.match(uiBundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
+  assert.match(uiBundle, /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./);
+  assert.doesNotMatch(uiBundle, /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/);
   assert.match(
     adminService,
     /async function importUsersCsv\(email: string,\s*csvContent: string\)/

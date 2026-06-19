@@ -459,6 +459,8 @@ test("admins screen is mounted through Vue 3 for the progressive screen migratio
   assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
   assert.match(bundle, /couleur_ceinture \(facultatif, ex : Orange\)/);
+  assert.match(bundle, /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./);
+  assert.doesNotMatch(bundle, /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/);
   assert.match(bundle, /id="usersList"/);
   assert.match(bundle, /v-for="managedUser in managedUsersPage"/);
   assert.match(bundle, /@click="deleteUser\(managedUser\.judokaId, managedUser\.fullName\)"/);

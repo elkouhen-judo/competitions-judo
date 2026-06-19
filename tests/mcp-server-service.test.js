@@ -30,7 +30,16 @@ test("mcp-server tools/list exposes the real read tool catalog, including combat
     getJudokas: async () => []
   });
 
-  const { tools } = await service.handleRequest(createClaims([]), { method: "tools/list" });
+  const { tools } = await service.handleRequest(
+    createClaims([
+      "judokas:read",
+      "competitions:read",
+      "competitions:write",
+      "combats:read",
+      "combats:write"
+    ]),
+    { method: "tools/list" }
+  );
   const toolNames = tools.map((tool) => tool.name);
 
   assert.deepEqual(toolNames, [
@@ -49,6 +58,21 @@ test("mcp-server tools/list exposes the real read tool catalog, including combat
   assert.equal(combatsSearch.inputSchema.properties.filters.properties.result.type, "string");
   assert.equal(combatsSearch.inputSchema.properties.limit.default, 50);
   assert.equal(combatsSearch.inputSchema.properties.limit.maximum, 100);
+});
+
+test("mcp-server tools/list only exposes tools allowed by the caller scopes", async () => {
+  const service = createMcpServerService({
+    methods: /** @type {any} */ ({}),
+    getJudokas: async () => []
+  });
+
+  const adminCatalog = await service.handleRequest(createClaims(["access:read"]), {
+    method: "tools/list"
+  });
+  assert.deepEqual(adminCatalog.tools, []);
+
+  const emptyCatalog = await service.handleRequest(createClaims([]), { method: "tools/list" });
+  assert.deepEqual(emptyCatalog.tools, []);
 });
 
 test("mcp-server judokas.search filters by attributes and applies limit", async () => {
@@ -174,6 +198,31 @@ test("mcp-server combats.search delegates to RpcMethods.searchCombats with the g
     { email: "coach@example.com", filters: { result: "Victoire" }, limit: 5 }
   ]);
   assert.deepEqual(result, { matches: [{ judokaId: "JUDO1", judokaName: "Aya Durand" }] });
+});
+
+test("mcp-server lets parent-scoped tokens read combats through the scoped service", async () => {
+  const calls = [];
+  const service = createMcpServerService({
+    methods: /** @type {any} */ ({
+      async searchCombats(email, filters, limit) {
+        calls.push({ email, filters, limit });
+        return { matches: [{ judokaId: "CHILD1", judokaName: "Aya Durand" }] };
+      }
+    }),
+    getJudokas: async () => []
+  });
+
+  const claims = createClaims(
+    ["judokas:read", "competitions:read", "competitions:write", "combats:read", "combats:write"],
+    "parent@example.com"
+  );
+  const result = await callTool(service, claims, "combats.search", {
+    filters: { text: "Aya" },
+    limit: 10
+  });
+
+  assert.deepEqual(calls, [{ email: "parent@example.com", filters: { text: "Aya" }, limit: 10 }]);
+  assert.deepEqual(result, { matches: [{ judokaId: "CHILD1", judokaName: "Aya Durand" }] });
 });
 
 test("mcp-server rejects combats.search when the caller lacks the combats:read scope", async () => {

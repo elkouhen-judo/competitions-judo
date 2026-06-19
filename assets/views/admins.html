@@ -37,23 +37,6 @@
               Importer
             </button>
           </div>
-
-          <div v-if="importUsersResults.length" id="importUsersResults" class="list">
-            <p class="list-summary-text">{{ importUsersSummary }}</p>
-            <article v-for="entry in importUsersResults" :key="entry.row" class="card admin-card">
-              <p class="card-title">Ligne {{ entry.row }} — {{ entry.name }}</p>
-              <div class="card-meta">
-                <div class="meta-row">
-                  <span class="meta-label">Statut</span>
-                  <span class="meta-value">{{ entry.success ? 'OK' : 'Erreur' }}</span>
-                </div>
-                <div class="meta-row">
-                  <span class="meta-label">Détail</span>
-                  <span class="meta-value">{{ entry.message }}</span>
-                </div>
-              </div>
-            </article>
-          </div>
         </div>
 
         <div class="section">

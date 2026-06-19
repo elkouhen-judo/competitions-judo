@@ -322,9 +322,14 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
 
   const toolsByName = new Map(tools.map((tool) => [tool.name, tool]));
 
-  async function listTools() {
+  async function listTools(claims: McpTokenClaims) {
+    const allowedTools = tools.filter((tool) => claims.scopes.includes(tool.scope));
     return {
-      tools: tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema }))
+      tools: allowedTools.map(({ name, description, inputSchema }) => ({
+        name,
+        description,
+        inputSchema
+      }))
     };
   }
 
@@ -346,7 +351,7 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
   async function handleRequest(claims: McpTokenClaims, body: Record<string, unknown>) {
     const method = String(body.method || "");
     if (method === "tools/list") {
-      return listTools();
+      return listTools(claims);
     }
     if (method === "tools/call") {
       return callTool(claims, (body.params as Record<string, unknown>) || {});
