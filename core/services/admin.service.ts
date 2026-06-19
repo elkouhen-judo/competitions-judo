@@ -51,6 +51,13 @@ export interface AdminService {
   methods: AdminMethods;
 }
 
+interface UserImportContext {
+  invitationsByEmail: Map<string, AccessInvitationRow | null>;
+  judokasByEmail: Map<string, JudokaRow | null>;
+  judokasByName: Map<string, JudokaRow | null>;
+  linksByParent: Map<string, Set<string>>;
+}
+
 export default function createAdminService(deps: AdminServiceDeps): AdminService {
   const {
     competitionsRepository,
@@ -94,6 +101,103 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     return invitationsRepository.getByEmail(normalizedEmail);
   }
 
+  function createUserImportContext(): UserImportContext {
+    return {
+      invitationsByEmail: new Map(),
+      judokasByEmail: new Map(),
+      judokasByName: new Map(),
+      linksByParent: new Map()
+    };
+  }
+
+  function getNameCacheKey(prenom: string, nom: string): string {
+    return `${cleanText(prenom).toLowerCase()}|${cleanText(nom).toLowerCase()}`;
+  }
+
+  function cacheJudokaForImport(context: UserImportContext, judoka: JudokaRow | null): void {
+    if (!judoka) {
+      return;
+    }
+    const email = normalizeEmail(judoka.email);
+    if (email) {
+      context.judokasByEmail.set(email, judoka);
+    }
+    const prenom = cleanText(judoka.prenom);
+    const nom = cleanText(judoka.nom);
+    if (prenom && nom) {
+      context.judokasByName.set(getNameCacheKey(prenom, nom), judoka);
+    }
+  }
+
+  async function getCachedJudokaByEmail(
+    context: UserImportContext,
+    email: string
+  ): Promise<JudokaRow | null> {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+    if (context.judokasByEmail.has(normalizedEmail)) {
+      return context.judokasByEmail.get(normalizedEmail) || null;
+    }
+
+    const judoka = await judokasRepository.getByEmail(normalizedEmail);
+    context.judokasByEmail.set(normalizedEmail, judoka);
+    cacheJudokaForImport(context, judoka);
+    return judoka;
+  }
+
+  async function getCachedCurrentUser(
+    context: UserImportContext,
+    email: string
+  ): Promise<JudokaRow | null> {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+    if (context.judokasByEmail.has(normalizedEmail)) {
+      return context.judokasByEmail.get(normalizedEmail) || null;
+    }
+
+    const judoka = await userContextService.getCurrentUser(normalizedEmail);
+    context.judokasByEmail.set(normalizedEmail, judoka);
+    cacheJudokaForImport(context, judoka);
+    return judoka;
+  }
+
+  async function getCachedJudokaByName(
+    context: UserImportContext,
+    prenom: string,
+    nom: string
+  ): Promise<JudokaRow | null> {
+    const key = getNameCacheKey(prenom, nom);
+    if (context.judokasByName.has(key)) {
+      return context.judokasByName.get(key) || null;
+    }
+
+    const judoka = await judokasRepository.getByName(prenom, nom);
+    context.judokasByName.set(key, judoka);
+    cacheJudokaForImport(context, judoka);
+    return judoka;
+  }
+
+  async function getCachedAccessInvitation(
+    context: UserImportContext,
+    email: string
+  ): Promise<AccessInvitationRow | null> {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+    if (context.invitationsByEmail.has(normalizedEmail)) {
+      return context.invitationsByEmail.get(normalizedEmail) || null;
+    }
+
+    const invitation = await getAccessInvitation(normalizedEmail);
+    context.invitationsByEmail.set(normalizedEmail, invitation);
+    return invitation;
+  }
+
   async function getAdminsManagement(email: string) {
     const user = await requireAdminUser(email);
     return {
@@ -126,6 +230,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
   }
 
   async function createAccountProfile(
+    context: UserImportContext,
     profileType: "JUDOKA" | "PARENT",
     prenom: string,
     nom: string,
@@ -140,7 +245,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     } = {}
   ): Promise<{ idJudoka: string; email: string; message: string }> {
     const accountEmail = createEmail(rawEmail);
-    const existingUser = await userContextService.getCurrentUser(accountEmail);
+    const existingUser = await getCachedCurrentUser(context, accountEmail);
     if (existingUser) {
       const profileLabel = profileType === "JUDOKA" ? "judoka" : "parent";
       if (existingUser.profile_type !== profileType) {
@@ -181,6 +286,15 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         }
         if (Object.keys(updates).length) {
           await judokasRepository.update(existingUser.id_judoka, updates);
+          cacheJudokaForImport(context, {
+            ...existingUser,
+            ...(updates.accessRole ? { role: updates.accessRole } : {}),
+            ...(updates.ageCategory ? { categorie_age: updates.ageCategory } : {}),
+            ...(updates.beltColor ? { couleur_ceinture: updates.beltColor } : {}),
+            ...(updates.gender ? { genre: updates.gender } : {}),
+            ...(updates.yearInCategory ? { annee_categorie: updates.yearInCategory } : {}),
+            ...(updates.handedness ? { lateralite: updates.handedness } : {})
+          });
         }
       }
 
@@ -193,7 +307,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       };
     }
 
-    const existingByName = await judokasRepository.getByName(prenom, nom);
+    const existingByName = await getCachedJudokaByName(context, prenom, nom);
     if (existingByName) {
       if (existingByName.profile_type !== profileType) {
         throw new Error(`${prenom} ${nom} existe déjà avec un autre type de profil.`);
@@ -211,6 +325,17 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         ...(options.gender ? { gender: options.gender } : {}),
         ...(options.yearInCategory ? { yearInCategory: options.yearInCategory } : {}),
         ...(options.handedness ? { handedness: options.handedness } : {})
+      });
+      cacheJudokaForImport(context, {
+        ...existingByName,
+        email: accountEmail,
+        profile_type: profileType,
+        ...(options.accessRole ? { role: options.accessRole } : {}),
+        ...(options.ageCategory ? { categorie_age: options.ageCategory } : {}),
+        ...(options.beltColor ? { couleur_ceinture: options.beltColor } : {}),
+        ...(options.gender ? { genre: options.gender } : {}),
+        ...(options.yearInCategory ? { annee_categorie: options.yearInCategory } : {}),
+        ...(options.handedness ? { lateralite: options.handedness } : {})
       });
       return {
         idJudoka: existingByName.id_judoka,
@@ -237,6 +362,19 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         ...(options.handedness ? { lateralite: options.handedness } : {})
       }
     );
+    cacheJudokaForImport(context, {
+      id_judoka: idJudoka,
+      email: accountEmail,
+      prenom,
+      nom,
+      profile_type: profileType,
+      role: options.accessRole || "NORMAL",
+      categorie_age: options.ageCategory || "",
+      couleur_ceinture: options.beltColor || "",
+      genre: options.gender || "",
+      annee_categorie: options.yearInCategory || "",
+      lateralite: options.handedness || ""
+    });
 
     return {
       idJudoka,
@@ -245,18 +383,30 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     };
   }
 
-  async function linkChildToParent(parent: JudokaRow, idJudoka: string): Promise<boolean> {
-    const links = await parentLinksRepository.listByParent(parent.id_judoka);
-    const alreadyLinked = links.some((link) => String(link.id_judoka) === String(idJudoka));
+  async function linkChildToParent(
+    context: UserImportContext,
+    parent: JudokaRow,
+    idJudoka: string
+  ): Promise<boolean> {
+    let links = context.linksByParent.get(parent.id_judoka);
+    if (!links) {
+      const existingLinks = await parentLinksRepository.listByParent(parent.id_judoka);
+      links = new Set(existingLinks.map((link) => String(link.id_judoka)));
+      context.linksByParent.set(parent.id_judoka, links);
+    }
+
+    const alreadyLinked = links.has(String(idJudoka));
     if (alreadyLinked) {
       return false;
     }
 
     await parentLinksRepository.insert({ id_parent: parent.id_judoka, id_judoka: idJudoka });
+    links.add(String(idJudoka));
     return true;
   }
 
   async function importUserRow(
+    context: UserImportContext,
     row: Record<string, string>
   ): Promise<{ email: string | null; message: string }> {
     const profileType = createProfileType(row.profiletype);
@@ -288,7 +438,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       if (!rawEmail) {
         throw new Error("Email obligatoire pour un profil PARENT.");
       }
-      return createAccountProfile("PARENT", prenom, nom, rawEmail);
+      return createAccountProfile(context, "PARENT", prenom, nom, rawEmail);
     }
 
     if (rawRole === "COACH" && !rawEmail) {
@@ -298,13 +448,13 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     let parent: JudokaRow | null = null;
     let pendingParentEmail: string | null = null;
     if (rawParentEmail) {
-      parent = await judokasRepository.getByEmail(rawParentEmail);
+      parent = await getCachedJudokaByEmail(context, rawParentEmail);
       if (parent) {
         if (parent.profile_type !== "PARENT") {
           throw new Error(`${rawParentEmail} n'est pas un profil PARENT.`);
         }
       } else {
-        const invitation = await getAccessInvitation(rawParentEmail);
+        const invitation = await getCachedAccessInvitation(context, rawParentEmail);
         if (!invitation || invitation.invited_profile_type !== "PARENT") {
           throw new Error(
             `Aucune invitation ni compte PARENT trouvé pour ${rawParentEmail}. Invitez d'abord ce parent.`
@@ -315,7 +465,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     }
 
     if (rawEmail) {
-      const accountProfile = await createAccountProfile("JUDOKA", prenom, nom, rawEmail, {
+      const accountProfile = await createAccountProfile(context, "JUDOKA", prenom, nom, rawEmail, {
         ...(rawRole ? { accessRole: rawRole as AccessRole } : {}),
         ageCategory,
         beltColor,
@@ -324,7 +474,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
         handedness
       });
       if (parent) {
-        const linked = await linkChildToParent(parent, accountProfile.idJudoka);
+        const linked = await linkChildToParent(context, parent, accountProfile.idJudoka);
         return {
           email: accountProfile.email,
           message: linked
@@ -344,7 +494,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       return accountProfile;
     }
 
-    const existingChild = await judokasRepository.getByName(prenom, nom);
+    const existingChild = await getCachedJudokaByName(context, prenom, nom);
     if (existingChild) {
       if (existingChild.profile_type !== "JUDOKA") {
         throw new Error(`${prenom} ${nom} existe déjà avec un autre type de profil.`);
@@ -371,10 +521,18 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
           ...(yearInCategoryChanged ? { yearInCategory } : {}),
           ...(handednessChanged ? { handedness } : {})
         });
+        cacheJudokaForImport(context, {
+          ...existingChild,
+          ...(ageCategoryChanged ? { categorie_age: ageCategory } : {}),
+          ...(beltColorChanged ? { couleur_ceinture: beltColor } : {}),
+          ...(genderChanged ? { genre: gender } : {}),
+          ...(yearInCategoryChanged ? { annee_categorie: yearInCategory } : {}),
+          ...(handednessChanged ? { lateralite: handedness } : {})
+        });
       }
 
       if (parent) {
-        const linked = await linkChildToParent(parent, existingId);
+        const linked = await linkChildToParent(context, parent, existingId);
         if (!linked) {
           return {
             email: null,
@@ -392,6 +550,10 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
           pendingParentEmail.toLowerCase()
       ) {
         await judokasRepository.update(existingId, { pendingParentEmail });
+        cacheJudokaForImport(context, {
+          ...existingChild,
+          pending_parent_email: pendingParentEmail
+        });
         return {
           email: null,
           message: `Profil existant, en attente de la première connexion de ${pendingParentEmail}.`
@@ -420,9 +582,23 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       ...(handedness ? { lateralite: handedness } : {}),
       ...(pendingParentEmail ? { pending_parent_email: pendingParentEmail } : {})
     });
+    cacheJudokaForImport(context, {
+      id_judoka: idJudoka,
+      email: "",
+      prenom,
+      nom,
+      profile_type: "JUDOKA",
+      role: "NORMAL",
+      categorie_age: ageCategory || "",
+      couleur_ceinture: beltColor || "",
+      genre: gender || "",
+      annee_categorie: yearInCategory || "",
+      lateralite: handedness || "",
+      pending_parent_email: pendingParentEmail || ""
+    });
 
     if (parent) {
-      await parentLinksRepository.insert({ id_parent: parent.id_judoka, id_judoka: idJudoka });
+      await linkChildToParent(context, parent, idJudoka);
       return { email: null, message: "Profil judoka créé et rattaché au parent." };
     }
 
@@ -444,12 +620,13 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     }
 
     const results: UserImportRowResult[] = [];
+    const importContext = createUserImportContext();
     for (let index = 0; index < rows.length; index += 1) {
       const rowNumber = index + 2;
       const row = rows[index];
       const label = `${cleanText(row.prenom)} ${cleanText(row.nom)}`.trim() || `ligne ${rowNumber}`;
       try {
-        const outcome = await importUserRow(row);
+        const outcome = await importUserRow(importContext, row);
         results.push({
           row: rowNumber,
           name: label,
