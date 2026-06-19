@@ -49,12 +49,11 @@ function createAdminScopes(): McpScope[] {
 
 /**
  * Scopes for an authenticated caller who is neither COACH nor ADMIN (a plain
- * JUDOKA or PARENT). Limited to their own perimeter: no `combats:read` (the
- * only consumer is the club-wide coach dashboard), no `judokas:read` beyond
- * what `judokas.search` already scopes to the caller's managed judokas.
+ * JUDOKA or PARENT). Limited to their own perimeter by the application
+ * services backing each MCP tool.
  */
 function createNormalScopes(): McpScope[] {
-  return ["judokas:read", "competitions:read", "competitions:write", "combats:write"];
+  return ["judokas:read", "competitions:read", "competitions:write", "combats:read", "combats:write"];
 }
 
 async function resolveAuthorizedCaller(

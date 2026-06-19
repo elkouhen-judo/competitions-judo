@@ -1,6 +1,5 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
-  type UserImportRowResult = import("./types").UserImportRowResult;
 
   function createKirokuAdminsScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
@@ -9,9 +8,7 @@
     const defaultAdminsViewState = {
       adminEmail: "",
       importUsersFileName: "",
-      importUsersCsvContent: "",
-      importUsersSummary: "",
-      importUsersResults: [] as UserImportRowResult[]
+      importUsersCsvContent: ""
     };
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
 
@@ -123,8 +120,6 @@
       const input = event.target as HTMLInputElement;
       const file = input.files && input.files[0];
       const viewModel = getAdminsViewModel();
-      viewModel.importUsersResults = [];
-      viewModel.importUsersSummary = "";
 
       if (!file) {
         viewModel.importUsersFileName = "";
@@ -154,8 +149,7 @@
         "importUsersCsv",
         [viewModel.importUsersCsvContent],
         (response) => {
-          viewModel.importUsersResults = response.results;
-          viewModel.importUsersSummary = `${response.imported} profil(s) importé(s), ${response.failed} échec(s).`;
+          const importSummary = `Import CSV terminé : ${response.imported} ligne(s) OK, ${response.failed} ligne(s) KO.`;
           viewModel.importUsersFileName = "";
           viewModel.importUsersCsvContent = "";
           const fileInput = document.getElementById("importUsersFile") as HTMLInputElement | null;
@@ -164,9 +158,9 @@
           }
 
           if (response.success) {
-            showSuccess(viewModel.importUsersSummary);
+            showSuccess(importSummary);
           } else {
-            showError({ message: viewModel.importUsersSummary });
+            showError({ message: importSummary });
           }
           app.reloadInitialDataAndShowAdmins();
         },

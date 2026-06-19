@@ -28,7 +28,9 @@ function normalizeProfileType(value: unknown): Judoka["profileType"] {
 }
 
 function normalizeAccessRole(value: unknown): Judoka["accessRole"] {
-  const normalized = String(value || "").trim();
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase();
   if (normalized === "ADMIN") {
     return "ADMIN";
   }

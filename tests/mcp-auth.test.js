@@ -149,7 +149,13 @@ test("mcp auth service grants parents a scoped read/write subset limited to thei
 
   const result = await service.issueTokenForUser("parent@example.com");
   assert.equal(result.email, "parent@example.com");
-  assert.deepEqual(result.scopes, ["judokas:read", "competitions:read", "competitions:write", "combats:write"]);
+  assert.deepEqual(result.scopes, [
+    "judokas:read",
+    "competitions:read",
+    "competitions:write",
+    "combats:read",
+    "combats:write"
+  ]);
 });
 
 test("mcp auth service issues an authorization code carrying client/redirect/PKCE binding for coaches", async () => {
@@ -191,7 +197,7 @@ test("mcp auth service recognizes a coach from a raw repository row (role, not a
     userContextService: {
       async getCurrentUser() {
         // Raw judokas-table row shape: snake_case `role`, not the canonical `accessRole`.
-        return { id_judoka: "judoka_1", email: "coach@example.com", role: "COACH" };
+        return { id_judoka: "judoka_1", email: "coach@example.com", role: "coach" };
       }
     },
     isCoach: permissions.isCoach,
@@ -203,6 +209,7 @@ test("mcp auth service recognizes a coach from a raw repository row (role, not a
   const result = await service.issueTokenForUser("coach@example.com");
   assert.equal(result.email, "coach@example.com");
   assert.equal(result.role, "COACH");
+  assert.ok(result.scopes.includes("judokas:read"));
 });
 
 test("mcp auth service issues an authorization code with the scoped subset for parents", async () => {
@@ -226,5 +233,11 @@ test("mcp auth service issues an authorization code with the scoped subset for p
   });
 
   assert.equal(result.email, "parent@example.com");
-  assert.deepEqual(result.scopes, ["judokas:read", "competitions:read", "competitions:write", "combats:write"]);
+  assert.deepEqual(result.scopes, [
+    "judokas:read",
+    "competitions:read",
+    "competitions:write",
+    "combats:read",
+    "combats:write"
+  ]);
 });
