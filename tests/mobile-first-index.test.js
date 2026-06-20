@@ -466,7 +466,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     bundle,
     /v-for="entry in coachDashboardDefeatsByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
   );
-  assert.match(bundle, /<h3>Qualité de la saisie<\/h3>/);
+  assert.match(bundle, /<h3>Qualité des données<\/h3>/);
   assert.match(
     bundle,
     /v-if="!coachDashboardDataQualityIssues\.length" class="empty-state">Aucun problème de saisie détecté/
@@ -506,7 +506,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     "<h3>Rapport de garde</h3>",
     "<h3>Victoires par décision",
     "<h3>Défaites par décision",
-    "<h3>Qualité de la saisie</h3>"
+    "<h3>Qualité des données</h3>"
   ].map((marker) => bundle.indexOf(marker));
   assert.ok(
     dashboardSectionOrder.every((index) => index !== -1),
