@@ -198,13 +198,6 @@ export interface CoachDashboardHandednessBreakdownEntry {
   judokaCount: number;
 }
 
-export interface CoachDashboardLevelBreakdownEntry {
-  level: string;
-  combats: number;
-  victories: number;
-  victoryRate: number;
-}
-
 export interface CoachDashboardQualityIssueEntry {
   criterion: string;
   label: string;
@@ -235,11 +228,10 @@ export interface CoachDashboardStats {
   victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
-  byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
   dataQualityIssues: CoachDashboardQualityIssueEntry[];
-  podiums: CoachDashboardPodiumBreakdownEntry[];
+  podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
 }
 
 export interface CoachDashboardCompetitionOption {

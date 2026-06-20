@@ -9,9 +9,7 @@ import type {
   CoachDashboardGenderBreakdownEntry,
   CoachDashboardHandednessBreakdownEntry,
   CoachDashboardLateralMatchupBreakdownEntry,
-  CoachDashboardLevelBreakdownEntry,
   CoachDashboardLevelPodiumBreakdownEntry,
-  CoachDashboardPodiumBreakdownEntry,
   CoachDashboardQualityIssueEntry,
   CoachDashboardStats
 } from "../types";
@@ -104,21 +102,6 @@ function hasAnyIpponScore(combat: CoachDashboardCombat): boolean {
   return hasIpponScore(combat, "Tachi-waza") || hasIpponScore(combat, "Ne-waza");
 }
 
-function computeLevelBreakdown(
-  combats: CoachDashboardCombat[]
-): CoachDashboardLevelBreakdownEntry[] {
-  return COMPETITION_LEVELS.map((level) => {
-    const levelCombats = combats.filter((combat) => combat.competitionLevel === level);
-    const victories = levelCombats.filter((combat) => isVictoryCombatResult(combat.result)).length;
-    return {
-      level,
-      combats: levelCombats.length,
-      victories,
-      victoryRate: computeRate(victories, levelCombats.length)
-    };
-  });
-}
-
 const DATA_QUALITY_CRITERIA: Array<{
   criterion: string;
   label: string;
@@ -203,22 +186,9 @@ function computePodiumBreakdownByLevel(
   });
 }
 
-function computePodiumBreakdown(
-  competitions: Pick<Competition, "result">[]
-): CoachDashboardPodiumBreakdownEntry[] {
-  const finalizedCompetitions = competitions.filter((competition) =>
-    isFinalizedCompetitionResult(competition.result)
-  );
-  return PODIUM_PLACES.map(({ place, label }) => ({
-    place,
-    label,
-    count: finalizedCompetitions.filter((competition) => competition.result === place).length
-  }));
-}
-
 export function computeCoachDashboardStats(
   combats: CoachDashboardCombat[],
-  competitions: Pick<Competition, "result">[] = []
+  competitions: Pick<Competition, "result" | "level">[] = []
 ): CoachDashboardStats {
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
@@ -240,10 +210,9 @@ export function computeCoachDashboardStats(
     victoriesByDecisionType: computeDecisionBreakdown(combats, "Victoire"),
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
     byLateralMatchup: computeLateralMatchupBreakdown(combats),
-    byCompetitionLevel: computeLevelBreakdown(combats),
     judokasByGender: computeJudokaCountByGender(combats),
     judokasByHandedness: computeJudokaCountByHandedness(combats),
     dataQualityIssues: computeDataQualityIssues(combats),
-    podiums: computePodiumBreakdown(competitions)
+    podiumsByLevel: computePodiumBreakdownByLevel(competitions)
   };
 }

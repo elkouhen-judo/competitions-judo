@@ -427,10 +427,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /<h3>Podiums/);
   assert.match(
     bundle,
-    /v-for="entry in coachDashboardPodiums" :key="entry\.place" class="stat-card" :class="\{ 'stat-card-success': entry\.place === '1er' \}"[\s\S]*\{\{ entry\.label \}\}[\s\S]*<span class="stat-value">\{\{ entry\.count \}\}<\/span>/
+    /v-for="entry in coachDashboardPodiumsByLevel" :key="entry\.level" class="stat-card stat-card-split"[\s\S]*\{\{ entry\.level \}\}[\s\S]*v-for="podium in entry\.podiums" :key="`\$\{entry\.level\}-\$\{podium\.place\}`"[\s\S]*\{\{ podium\.label \}\}[\s\S]*<span class="split-stat-value">\{\{ podium\.count \}\}<\/span>/
   );
-  assert.doesNotMatch(bundle, /entry\.place === '1er' \}"[\s\S]{0,400}entry\.total/);
-  assert.match(client, /coachDashboardPodiums/);
+  assert.match(bundle, /podium-split-grid/);
+  assert.doesNotMatch(bundle, /podium\.place === '1er' \}"[\s\S]{0,400}podium\.total/);
+  assert.match(client, /coachDashboardPodiumsByLevel/);
   assert.match(bundle, /<h3>Performance globale<\/h3>/);
   assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
   assert.doesNotMatch(bundle, /dashboard-subsection/);
@@ -485,10 +486,8 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     bundle,
     /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Face à la garde adverse[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
-  assert.match(
-    bundle,
-    /v-for="entry in coachDashboardByCompetitionLevel" :key="entry\.level" class="stat-card"[\s\S]*\{\{ entry\.victories \}\}\/\{\{ entry\.combats \}\} \(\{\{ entry\.victoryRate \}\}%\)/
-  );
+  assert.doesNotMatch(bundle, /<h3>Par niveau/);
+  assert.doesNotMatch(client, /coachDashboardByCompetitionLevel/);
   assert.doesNotMatch(bundle, /Performance selon la garde de l'adversaire/);
   assert.doesNotMatch(bundle, /Performance selon la garde historique du judoka/);
   assert.match(bundle, /\.stat-card-split\s*\{/);
@@ -504,7 +503,6 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     "<h3>Répartition des judokas</h3>",
     "<h3>Performance globale</h3>",
     "<h3>Podiums",
-    "<h3>Par niveau",
     "<h3>Rapport de garde</h3>",
     "<h3>Victoires par décision",
     "<h3>Défaites par décision",
