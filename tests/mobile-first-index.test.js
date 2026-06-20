@@ -163,24 +163,39 @@ test("family home keeps the active judoka competition context", () => {
   assert.match(bundle, /label: "Judoka actif"/);
   assert.match(bundle, /getCurrentMode\(\) === "coachJudoka" \? "Judoka consulté" : "Judoka actif"/);
   assert.match(bundle, /Sélectionnez un judoka pour voir ses résultats\./);
+  assert.match(bundle, /modes\.push\(\{ key: "parentHome", label: "Parent" \}\);/);
+  assert.match(bundle, /if \(modeKey === "parentHome"\) \{\s*return \["parentHome", "family"\]\.includes\(getCurrentMode\(\)\);/);
+  assert.match(bundle, /state\.homeMode = "parentHome";/);
+  assert.match(bundle, /<h3>Accueil parent<\/h3>/);
+  assert.match(bundle, /<h4>Gérer les compétitions<\/h4>[\s\S]*Ouvrir ma famille/);
+  assert.match(bundle, /<h4>Choisir un judoka<\/h4>[\s\S]*Changer de judoka/);
+  assert.match(bundle, /<h4>Voir la fiche<\/h4>[\s\S]*@click="openParentProfileHub\(\)"/);
   assert.doesNotMatch(bundle, /Moi ou mes enfants/);
 });
 
 test("coach home stays club-centered and separate from judoka consultation", () => {
-  assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Compétitions club" \}\);/);
-  assert.match(bundle, /coachSubModes = window\.Vue\.computed\(\(\) => \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétitions club"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"[\s\S]*key: "coachChat",\s*label: "Chat"/);
-  assert.match(bundle, /state\.isCoach && \["judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/);
+  assert.match(bundle, /modes\.push\(\{ key: "coachHome", label: "Coach" \}\);/);
+  assert.match(bundle, /coachSubModes = window\.Vue\.computed\(\(\) => \[[\s\S]*key: "coachHome",\s*label: "Accueil coach"[\s\S]*key: "judoka",\s*label: "Mon espace"/);
+  assert.doesNotMatch(bundle, /key: "coach",\s*label: "Compétitions club"/);
+  assert.doesNotMatch(bundle, /key: "coachJudoka",\s*label: "Judoka"/);
+  assert.match(bundle, /state\.isCoach && \["coachHome", "judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/);
   assert.match(bundle, /v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs"/);
   assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
-  assert.match(bundle, /showHomeContextTitle = window\.Vue\.computed\(\s*\(\) => !\["admin", "judoka", "family"\]\.includes\(getCurrentMode\(\)\) && !showCoachSubTabs\.value\s*\)/);
+  assert.match(bundle, /showHomeContextTitle = window\.Vue\.computed\(\s*\(\) => !\["admin", "judoka", "family", "parentHome", "coachHome"\]\.includes\(getCurrentMode\(\)\) && !showCoachSubTabs\.value\s*\)/);
   assert.match(bundle, /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showActiveJudokaSummary\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/);
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
+  assert.match(bundle, /<h4>Gérer les compétitions<\/h4>/);
+  assert.match(bundle, /<h4>Rechercher un judoka<\/h4>/);
+  assert.match(bundle, /<h4>Voir les statistiques<\/h4>/);
+  assert.match(client, /function openCoachStatsHub\(\)/);
   assert.match(bundle, /isPrimaryModeActive\(mode\.key\)/);
+  assert.match(bundle, /if \(getCurrentMode\(\) === "coachHome"\) return "";/);
   assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
   assert.match(bundle, /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/);
+  assert.match(bundle, /homeTitle: "Coach"[\s\S]*showCompetitionsSection: false/);
   assert.match(bundle, /homeTitle: "Compétition"[\s\S]*showCompetitionsSection: false/);
-  assert.match(bundle, /canOpenJudokaProfile = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) !== "coach"\s*\)/);
+  assert.match(bundle, /canOpenJudokaProfile = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) !== "coachHome" && getCurrentMode\(\) !== "coach"\s*\)/);
   assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
   assert.doesNotMatch(bundle, /const firstCoachJudoka = mode === "coach"/);
 });
@@ -376,9 +391,10 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/);
   assert.match(bundle, /class="mode-tabs coach-sub-tabs"/);
+  assert.match(bundle, /@click="showCoachHome\(\)">Accueil coach/);
   assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
-  assert.match(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
-  assert.match(bundle, /@click="showCoachJudoka\(\)">Judoka/);
+  assert.doesNotMatch(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
+  assert.doesNotMatch(bundle, /@click="showCoachJudoka\(\)">Judoka/);
   assert.match(bundle, /activeCoachDashboardTab === 'stats'/);
   assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,500}<div class="panel-header">/);
   assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,900}Retour/);
@@ -415,6 +431,15 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.doesNotMatch(bundle, /applyCoachDashboardFilters|>Actualiser</);
   assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
   assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
+  assert.match(bundle, /<h3>À retenir<\/h3>/);
+  assert.match(bundle, /Lecture rapide avant les métriques détaillées\./);
+  assert.match(bundle, /coachDashboardTopPodiumLevel/);
+  assert.match(bundle, /coachDashboardMainQualityIssue/);
+  assert.match(bundle, /coachDashboardSummaryInsight/);
+  assert.ok(
+    bundle.indexOf("<h3>À retenir</h3>") < bundle.indexOf("<h3>Podiums"),
+    "the dashboard summary should appear before detailed podium metrics"
+  );
   assert.match(bundle, /<h3>Volumes<\/h3>/);
   assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
   assert.match(
@@ -497,8 +522,13 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /\.split-stat-label\s*\{/);
   assert.doesNotMatch(bundle, /breakdown-row/);
   assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
-  assert.match(bundle, /key: "coachDashboard", label: "Tableau de bord"/);
-  assert.match(bundle, /if \(modeKey === "coachChat"\) \{\s*screens\.coachDashboard\.showCoachChat\(\);\s*return;\s*\}/);
+  assert.match(bundle, /@click="showCoachHome\(\)">Accueil coach/);
+  assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
+  assert.doesNotMatch(bundle, /@click="showCoachCompetitions\(\)">Compétitions club/);
+  assert.doesNotMatch(bundle, /@click="showCoachJudoka\(\)">Judoka/);
+  assert.doesNotMatch(bundle, /@click="showCoachDashboard\(\)">Tableau de bord/);
+  assert.doesNotMatch(bundle, /@click="showCoachChat\(\)">Chat/);
+  assert.match(client, /function showCoachHome\(\)/);
 
   const dashboardSectionOrder = [
     "<h3>Podiums",

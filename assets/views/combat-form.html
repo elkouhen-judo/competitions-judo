@@ -8,11 +8,15 @@
       <div class="panel-body">
         <input type="hidden" id="combat_id" v-model="combatForm.combatId">
 
-        <div class="form-section">
+        <div class="form-section combat-quick-section">
           <div class="form-section-heading">
-            <h3>Résultat</h3>
+            <div>
+              <span class="combat-section-kicker">Étape 1</span>
+              <h3>Saisie rapide</h3>
+              <p class="subtitle">Renseignez l'essentiel juste après le combat.</p>
+            </div>
           </div>
-          <div class="form-grid">
+          <div class="form-grid combat-fast-grid">
             <div>
               <label for="combat_resultat">Résultat</label>
               <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
@@ -24,7 +28,7 @@
             </div>
 
             <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
-              <label for="combat_type_victoire">Type de décision</label>
+              <label for="combat_type_victoire">Issue du combat</label>
               <select id="combat_type_victoire" v-model="combatForm.victoryType">
                 <option value="">Non spécifié</option>
                 <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
@@ -37,19 +41,23 @@
                 </span>
               </div>
             </div>
+
+            <div>
+              <label for="combat_adversaire">Adversaire</label>
+              <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse">
+            </div>
           </div>
         </div>
 
         <div class="form-section">
           <div class="form-section-heading">
-            <h3>Adversaire</h3>
+            <div>
+              <span class="combat-section-kicker">Étape 2</span>
+              <h3>Détails sportifs</h3>
+              <p class="subtitle">Complétez ce qui améliore les statistiques coach.</p>
+            </div>
           </div>
           <div class="form-grid">
-            <div>
-              <label for="combat_adversaire">Adversaire</label>
-              <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent">
-            </div>
-
             <div>
               <label for="combat_garde_adversaire">Garde de l'adversaire</label>
               <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
@@ -65,72 +73,80 @@
                 </span>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <div class="form-section-heading">
-            <h3>Prises marquées</h3>
-          </div>
-          <div class="form-grid">
-          <div class="full-row">
-            <label>Prises marquées</label>
-            <div class="combat-score-rows">
-              <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
-                <span class="combat-score-row-title">Prise {{ index + 1 }}</span>
-                <select v-model="score.category" @change="onCombatScoreCategoryChange(index)">
-                  <option value="">Catégorie</option>
-                  <option value="Tachi-waza">Tachi-waza</option>
-                  <option value="Ne-waza">Ne-waza</option>
-                </select>
-                <template v-if="score.category === 'Tachi-waza'">
-                  <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Nom de la prise (ex. Seoi-nage)">
-                  <datalist id="tachiWazaTechniqueSuggestions">
-                    <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
-                  </datalist>
-                </template>
-                <select v-else-if="score.category === 'Ne-waza'" v-model="score.neWazaType">
-                  <option value="">Type de prise</option>
-                  <option value="Clé">Clé</option>
-                  <option value="Étranglement">Étranglement</option>
-                  <option value="Osaekomi">Osaekomi</option>
-                </select>
-                <select v-else disabled>
-                  <option value="">Choisir une catégorie</option>
-                </select>
-                <select v-model="score.value">
-                  <option value="">Valeur</option>
-                  <option value="Ippon">Ippon</option>
-                  <option value="Waza-ari">Waza-ari</option>
-                  <option value="Yuko">Yuko</option>
-                </select>
-                <button class="button-danger" type="button" @click="removeCombatScoreRow(index)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  Retirer cette prise
-                </button>
+            <div class="full-row combat-score-block">
+              <div class="combat-score-header">
+                <div>
+                  <label>Prises marquées</label>
+                  <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
+                </div>
+                <span class="result-badge">{{ combatForm.scores.length }} prise(s)</span>
+              </div>
+              <div v-if="!combatForm.scores.length" class="combat-score-empty">
+                Ajoutez une prise seulement si un point a été marqué.
+              </div>
+              <div class="combat-score-rows">
+                <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
+                  <div class="combat-score-row-header">
+                    <span class="combat-score-row-title">Prise {{ index + 1 }}</span>
+                    <button class="button-danger compact-button" type="button" @click="removeCombatScoreRow(index)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      Retirer
+                    </button>
+                  </div>
+                  <div class="combat-score-row-fields">
+                    <select v-model="score.category" @change="onCombatScoreCategoryChange(index)">
+                      <option value="">Catégorie</option>
+                      <option value="Tachi-waza">Tachi-waza</option>
+                      <option value="Ne-waza">Ne-waza</option>
+                    </select>
+                    <template v-if="score.category === 'Tachi-waza'">
+                      <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Nom de la prise (ex. Seoi-nage)">
+                      <datalist id="tachiWazaTechniqueSuggestions">
+                        <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
+                      </datalist>
+                    </template>
+                    <select v-else-if="score.category === 'Ne-waza'" v-model="score.neWazaType">
+                      <option value="">Type de prise</option>
+                      <option value="Clé">Clé</option>
+                      <option value="Étranglement">Étranglement</option>
+                      <option value="Osaekomi">Osaekomi</option>
+                    </select>
+                    <select v-else disabled>
+                      <option value="">Choisir une catégorie</option>
+                    </select>
+                    <select v-model="score.value">
+                      <option value="">Valeur</option>
+                      <option value="Ippon">Ippon</option>
+                      <option value="Waza-ari">Waza-ari</option>
+                      <option value="Yuko">Yuko</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
+              <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les prises marquées">
+                <span v-for="issue in combatFormScoreIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
+                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
+                  {{ issue.label }}
+                </span>
               </div>
             </div>
-            <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
-            <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
-            <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les prises marquées">
-              <span v-for="issue in combatFormScoreIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
-                <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
-                {{ issue.label }}
-              </span>
-            </div>
-          </div>
           </div>
         </div>
 
         <div class="form-section">
           <div class="form-section-heading">
-            <h3>Notes coach</h3>
+            <div>
+              <span class="combat-section-kicker">Étape 3</span>
+              <h3>Analyse</h3>
+              <p class="subtitle">Ajoutez le contexte utile pour le prochain entraînement.</p>
+            </div>
           </div>
           <div class="form-grid">
-          <div class="full-row">
-            <label for="combat_deroule">Déroulé du combat</label>
-            <textarea id="combat_deroule" rows="3" placeholder="Racontez le déroulé du combat (prises, temps forts...)" v-model.trim="combatForm.notes"></textarea>
-          </div>
+            <div class="full-row">
+              <label for="combat_deroule">Notes / déroulé du combat</label>
+              <textarea id="combat_deroule" rows="4" placeholder="Ex : départ fort, difficulté sur garde opposée, projection tentée..." v-model.trim="combatForm.notes"></textarea>
+            </div>
           </div>
         </div>
 

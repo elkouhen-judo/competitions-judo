@@ -49,6 +49,88 @@
       </div>
 
       <div class="panel-body">
+        <div v-if="showParentHub" class="section parent-home-section">
+          <div class="section-heading">
+            <div>
+              <h3>Accueil parent</h3>
+              <p class="subtitle">Accédez rapidement aux actions utiles pour vos judokas.</p>
+            </div>
+          </div>
+          <div class="coach-home-grid">
+            <article class="card coach-home-card parent-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Compétitions</span>
+                <h4>Gérer les compétitions</h4>
+                <p>Ajouter une compétition, préparer les rendez-vous à venir et consulter les résultats.</p>
+              </div>
+              <button type="button" @click="openParentCompetitionsHub()">
+                Ouvrir ma famille
+              </button>
+            </article>
+            <article class="card coach-home-card parent-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Judokas</span>
+                <h4>Choisir un judoka</h4>
+                <p>Sélectionner l'enfant suivi avant d'ajouter une compétition ou consulter son historique.</p>
+              </div>
+              <button type="button" class="button-secondary" @click="openParentJudokaSelectionHub()">
+                Changer de judoka
+              </button>
+            </article>
+            <article class="card coach-home-card parent-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Progression</span>
+                <h4>Voir la fiche</h4>
+                <p>Consulter les statistiques de saison, le bilan des combats et les classements.</p>
+              </div>
+              <button type="button" class="button-secondary" :disabled="!filterJudokaId" @click="openParentProfileHub()">
+                Voir la fiche
+              </button>
+            </article>
+          </div>
+        </div>
+
+        <div v-if="showCoachHub" class="section coach-home-section">
+          <div class="section-heading">
+            <div>
+              <h3>Accueil coach</h3>
+              <p class="subtitle">Accédez rapidement aux actions principales du club.</p>
+            </div>
+          </div>
+          <div class="coach-home-grid">
+            <article class="card coach-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Compétitions</span>
+                <h4>Gérer les compétitions</h4>
+                <p>Créer une compétition club, ouvrir les suivis récents et compléter les bilans.</p>
+              </div>
+              <button type="button" @click="openCoachCompetitionsHub()">
+                Ouvrir les compétitions
+              </button>
+            </article>
+            <article class="card coach-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Judokas</span>
+                <h4>Rechercher un judoka</h4>
+                <p>Consulter une fiche, l'historique de compétition et la progression individuelle.</p>
+              </div>
+              <button type="button" class="button-secondary" @click="openCoachJudokaHub()">
+                Choisir un judoka
+              </button>
+            </article>
+            <article class="card coach-home-card">
+              <div class="coach-home-card-copy">
+                <span class="coach-home-card-kicker">Analyse</span>
+                <h4>Voir les statistiques</h4>
+                <p>Analyser la saison, filtrer les compétitions et repérer les données à compléter.</p>
+              </div>
+              <button type="button" class="button-secondary" @click="openCoachStatsHub()">
+                Analyser la saison
+              </button>
+            </article>
+          </div>
+        </div>
+
         <!-- Primary CTA + secondary actions -->
         <div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">
           <button id="addCompetitionButton" v-if="canCreateCompetition" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm()">

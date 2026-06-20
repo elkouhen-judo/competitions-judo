@@ -1,7 +1,7 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
   type Judoka = import("../core/types").Judoka;
-  type HomeMode = "judoka" | "coach" | "coachJudoka" | "family";
+  type HomeMode = "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family";
 
   interface HomeFilterOption {
     judokaId: string;
@@ -78,6 +78,7 @@
       if (!state.currentUser) return "";
       if (getCurrentMode() === "judoka") return String(state.currentUser.judokaId || "");
       if (getCurrentMode() === "coach") return "";
+      if (getCurrentMode() === "coachHome") return "";
       return state.homeFilterJudokaId || "";
     }
 
@@ -94,34 +95,34 @@
         { key: "judoka", label: "Mon espace" }
       ];
       if (state.isCoach) {
-        modes.push({ key: "coach", label: "Compétitions club" });
+        modes.push({ key: "coachHome", label: "Coach" });
       }
       if (state.isAdmin) {
         modes.push({ key: "admin", label: "Gestion des accès" });
       }
       if (state.isParent) {
-        modes.push({ key: "family", label: "Ma famille" });
+        modes.push({ key: "parentHome", label: "Parent" });
       }
       return modes;
     });
 
     const coachSubModes = window.Vue.computed(() => [
-      { key: "judoka", label: "Mon espace" },
-      { key: "coach", label: "Compétitions club" },
-      { key: "coachJudoka", label: "Judoka" },
-      { key: "coachDashboard", label: "Tableau de bord" },
-      { key: "coachChat", label: "Chat" }
+      { key: "coachHome", label: "Accueil coach" },
+      { key: "judoka", label: "Mon espace" }
     ]);
 
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);
     const currentHomeMode = window.Vue.computed(() => getCurrentMode());
     const showCoachSubTabs = window.Vue.computed(
-      () => state.isCoach && ["judoka", "coach", "coachJudoka"].includes(getCurrentMode())
+      () => state.isCoach && ["coachHome", "judoka", "coach", "coachJudoka"].includes(getCurrentMode())
     );
 
     function isPrimaryModeActive(modeKey: string): boolean {
-      if (modeKey === "coach") {
-        return getCurrentMode() === "coach" || getCurrentMode() === "coachJudoka";
+      if (modeKey === "coachHome") {
+        return ["coachHome", "coach", "coachJudoka"].includes(getCurrentMode());
+      }
+      if (modeKey === "parentHome") {
+        return ["parentHome", "family"].includes(getCurrentMode());
       }
       return modeKey === getCurrentMode();
     }
@@ -132,22 +133,29 @@
     });
 
     const canCreateCompetition = window.Vue.computed(
-      () => !state.isAdmin && getCurrentMode() !== "coach" && getCurrentMode() !== "coachJudoka"
+      () =>
+        !state.isAdmin &&
+        getCurrentMode() !== "parentHome" &&
+        getCurrentMode() !== "coachHome" &&
+        getCurrentMode() !== "coach" &&
+        getCurrentMode() !== "coachJudoka"
     );
     const canCreateClubCompetition = window.Vue.computed(
       () => getCurrentMode() === "coach" && state.isCoach
     );
     const canOpenJudokaProfile = window.Vue.computed(
-      () => getCurrentMode() !== "coach"
+      () => getCurrentMode() !== "coachHome" && getCurrentMode() !== "coach"
     );
     const showClubCompetitionsSection = window.Vue.computed(
       () => getCurrentMode() === "coach"
     );
+    const showParentHub = window.Vue.computed(() => getCurrentMode() === "parentHome");
+    const showCoachHub = window.Vue.computed(() => getCurrentMode() === "coachHome");
     const showActiveJudokaSummary = window.Vue.computed(
-      () => getCurrentMode() !== "judoka" && getCurrentMode() !== "coach"
+      () => getCurrentMode() !== "judoka" && getCurrentMode() !== "coachHome" && getCurrentMode() !== "coach"
     );
     const showHomeContextTitle = window.Vue.computed(
-      () => !["admin", "judoka", "family"].includes(getCurrentMode()) && !showCoachSubTabs.value
+      () => !["admin", "judoka", "family", "parentHome", "coachHome"].includes(getCurrentMode()) && !showCoachSubTabs.value
     );
     const showHomeHero = window.Vue.computed(
       () =>
@@ -157,7 +165,7 @@
         canFilterByJudoka.value ||
         showHomeContextTitle.value
     );
-    const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser));
+    const showHomeActions = window.Vue.computed(() => Boolean(state.currentUser) && !showParentHub.value && !showCoachHub.value);
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const judokasById = window.Vue.computed(() => new Map(state.judokas.map((j) => [String(j.judokaId), j])));
 
@@ -165,6 +173,8 @@
       const mode = getCurrentMode();
       if (mode === "judoka") return false;
       if (mode === "coach") return false;
+      if (mode === "coachHome") return false;
+      if (mode === "parentHome") return !getHomeActiveJudokaId();
       if (mode === "coachJudoka") return !getHomeActiveJudokaId();
       if (mode === "family") return !getHomeActiveJudokaId();
       return false;
@@ -193,6 +203,22 @@
         };
       }
 
+      if (mode === "coachHome") {
+        return {
+          homeTitle: "Coach",
+          homeSubtitle: "Choisissez l'action à lancer.",
+          filterPlaceholder: "",
+          profileButtonText: "",
+          profileButtonMeta: "",
+          addCompetitionButtonText: "",
+          addCompetitionButtonMeta: "",
+          competitionsTitle: "",
+          competitionsSubtitle: "",
+          showCompetitionsSection: false,
+          activeJudokaSummary: { label: "", value: "", meta: "" }
+        };
+      }
+
       if (mode === "coach") {
         return {
           homeTitle: "Compétition",
@@ -206,6 +232,28 @@
           competitionsSubtitle: "",
           showCompetitionsSection: false,
           activeJudokaSummary: { label: "", value: "", meta: "" }
+        };
+      }
+
+      if (mode === "parentHome") {
+        return {
+          homeTitle: "Parent",
+          homeSubtitle: "Choisissez l'action à lancer pour votre famille.",
+          filterPlaceholder: "",
+          profileButtonText: "",
+          profileButtonMeta: activeLabel || "Choisir un judoka",
+          addCompetitionButtonText: "",
+          addCompetitionButtonMeta: "",
+          competitionsTitle: "",
+          competitionsSubtitle: "",
+          showCompetitionsSection: false,
+          activeJudokaSummary: {
+            label: "Judoka suivi",
+            value: activeName || "Aucun judoka sélectionné",
+            meta: activeJudoka
+              ? "Les actions rapides utiliseront ce profil par défaut."
+              : "Choisissez un judoka pour gérer ses compétitions et sa fiche."
+          }
         };
       }
 
@@ -471,6 +519,12 @@
         setHomeMode,
         handleModeTabClick,
         isPrimaryModeActive,
+        openParentCompetitionsHub,
+        openParentJudokaSelectionHub,
+        openParentProfileHub,
+        openCoachCompetitionsHub,
+        openCoachJudokaHub,
+        openCoachStatsHub,
         showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
@@ -491,6 +545,8 @@
         canCreateCompetition,
         canCreateClubCompetition,
         canOpenJudokaProfile,
+        showParentHub,
+        showCoachHub,
         showClubCompetitionsSection,
         showActiveJudokaSummary,
         showHomeContextTitle,
@@ -537,7 +593,10 @@
     function applyInitialData() {
       ensureHomeViewModel();
       if (state.isParent && getCurrentMode() === "judoka") {
-        state.homeMode = "family";
+        state.homeMode = "parentHome";
+      }
+      if (state.isCoach && getCurrentMode() === "judoka" && !state.isParent) {
+        state.homeMode = "coachHome";
       }
       if (getCurrentMode() === "judoka") {
         getHomeViewModel().filterJudokaText = "";
@@ -635,6 +694,36 @@
       setHomeMode(modeKey as HomeMode);
     }
 
+    function openCoachCompetitionsHub() {
+      setHomeMode("coach");
+    }
+
+    function openCoachJudokaHub() {
+      setHomeMode("coachJudoka");
+    }
+
+    function openCoachStatsHub() {
+      screens.coachDashboard.showCoachDashboard();
+    }
+
+    function openParentCompetitionsHub() {
+      setHomeMode("family");
+    }
+
+    function openParentJudokaSelectionHub() {
+      setHomeMode("family");
+      window.Vue.nextTick(() => {
+        const input = document.getElementById("filterJudokaText") as HTMLInputElement | null;
+        if (input) {
+          input.focus();
+        }
+      });
+    }
+
+    function openParentProfileHub() {
+      openHomeJudokaProfile();
+    }
+
     function ensureHomeActiveJudokaSelection() {
       const mode = getCurrentMode();
       if (mode === "judoka") return;
@@ -647,10 +736,10 @@
         return;
       }
 
-      const firstChild = mode === "family"
+      const firstChild = mode === "family" || mode === "parentHome"
         ? accessibleJudokas.find((j) => String(j.judokaId) !== String(state.currentUser?.judokaId || ""))
         : null;
-      const autoId = mode === "family"
+      const autoId = mode === "family" || mode === "parentHome"
         ? getDefaultHomeJudokaId() || String(firstChild?.judokaId || "")
         : "";
       const autoJudoka = autoId

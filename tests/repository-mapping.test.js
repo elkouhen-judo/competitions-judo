@@ -302,6 +302,20 @@ test("combat scores repository replaces a combat's scores with deterministic ids
   ]);
 });
 
+test("combat scores repository batches score lookup by combat ids", async () => {
+  const calls = [];
+  const combatScoresRepository = createCombatScoresRepository(createRepositoryDeps(calls));
+  const combatIds = Array.from({ length: 205 }, (_, index) => `CB${index + 1}`);
+
+  await combatScoresRepository.listByCombatIds([...combatIds, "CB1", ""]);
+
+  assert.deepEqual(calls, [
+    ["select", "combat_scores", `select=*&id_combat=in.(${combatIds.slice(0, 100).join(",")})&order=ordre.asc`],
+    ["select", "combat_scores", `select=*&id_combat=in.(${combatIds.slice(100, 200).join(",")})&order=ordre.asc`],
+    ["select", "combat_scores", `select=*&id_combat=in.(${combatIds.slice(200).join(",")})&order=ordre.asc`]
+  ]);
+});
+
 test("repositories map club competitions and participation links", async () => {
   const calls = [];
   const clubRepository = createClubCompetitionsRepository(createRepositoryDeps(calls));

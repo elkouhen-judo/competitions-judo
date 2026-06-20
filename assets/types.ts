@@ -245,7 +245,7 @@ export interface HomeScreen {
   applyInitialData(): void;
   getHomeActiveJudokaId(): string;
   hideHomeFilterOptions(): void;
-  setHomeMode(mode: "judoka" | "coach" | "coachJudoka" | "family"): void;
+  setHomeMode(mode: "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family"): void;
   showHome(): void;
   showHomeFilterOptions(): void;
 }
@@ -332,7 +332,7 @@ export interface KirokuAppState {
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
-  homeMode: "judoka" | "coach" | "coachJudoka" | "family";
+  homeMode: "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family";
   competitions: Competition[];
   clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string }>;
   currentCompetition: CompetitionDetail["competition"] | null;
