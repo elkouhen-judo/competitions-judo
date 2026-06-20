@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (gitignored) and fill in, or export as TF_VAR_*
+# env vars / VERCEL_API_TOKEN / SUPABASE_ACCESS_TOKEN instead of writing a file.
+# Never commit a filled-in terraform.tfvars.
+
+# vercel_api_token      = "..."   # or env VERCEL_API_TOKEN
+# supabase_access_token = "..."   # or env SUPABASE_ACCESS_TOKEN
+
+supabase_project_ref = "" # subdomain ref of the dev Supabase project

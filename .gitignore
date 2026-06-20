@@ -5,3 +5,8 @@ node_modules
 assets/dist/
 core-dist/
 *.csv
+terraform/**/.terraform/
+terraform/**/*.tfstate
+terraform/**/*.tfstate.*
+terraform/**/terraform.tfvars
+terraform/**/*.tfplan
