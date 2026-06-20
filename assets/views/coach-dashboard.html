@@ -1,11 +1,8 @@
     <section id="coachDashboardView" class="panel hidden" v-cloak>
       <div class="dash-hero">
         <nav class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
+          <button type="button" class="mode-tab" @click="showCoachHome()">Accueil coach</button>
           <button type="button" class="mode-tab" @click="showPersonalSpace()">Mon espace</button>
-          <button type="button" class="mode-tab" @click="showCoachCompetitions()">Compétitions club</button>
-          <button type="button" class="mode-tab" @click="showCoachJudoka()">Judoka</button>
-          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'stats' }]" @click="showCoachDashboard()">Tableau de bord</button>
-          <button type="button" :class="['mode-tab', { 'mode-tab-active': activeCoachDashboardTab === 'chat' }]" @click="showCoachChat()">Chat</button>
         </nav>
       </div>
       <div class="panel-body">
@@ -116,6 +113,36 @@
           </div>
           <div v-if="isLoadingCoachDashboardStats" class="empty-state">Chargement des statistiques...</div>
           <div v-else-if="!coachDashboardStats || !coachDashboardStats.totalCombats" class="empty-state">Aucun combat trouvé pour ces filtres.</div>
+        </div>
+
+        <div class="section dashboard-summary-section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div>
+              <h3>À retenir</h3>
+              <p class="subtitle">Lecture rapide avant les métriques détaillées.</p>
+            </div>
+          </div>
+          <div class="dashboard-summary-card">
+            <div class="dashboard-summary-grid">
+              <div class="summary-metric">
+                <span class="stat-label">Combats analysés</span>
+                <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
+              </div>
+              <div class="summary-metric summary-metric-success">
+                <span class="stat-label">Taux de victoire</span>
+                <span class="stat-value">{{ coachDashboardStats.victoryRate }}%</span>
+              </div>
+              <div class="summary-metric">
+                <span class="stat-label">Podiums marquants</span>
+                <span class="stat-value">{{ coachDashboardTopPodiumLevel }}</span>
+              </div>
+              <div class="summary-metric summary-metric-warning">
+                <span class="stat-label">Données à compléter</span>
+                <span class="stat-value">{{ coachDashboardMainQualityIssue }}</span>
+              </div>
+            </div>
+            <p class="dashboard-summary-insight">{{ coachDashboardSummaryInsight }}</p>
+          </div>
         </div>
 
         <div class="section" v-if="coachDashboardStats">

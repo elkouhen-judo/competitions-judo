@@ -1,6 +1,8 @@
 import type { CombatScoreDraft } from "../domain/competitions/combat-score";
 import type { CombatScoreRow, SupabaseRestDeps } from "./types";
 
+const COMBAT_SCORE_SELECT_BATCH_SIZE = 100;
+
 export interface CombatScoresRepository {
   listByCombatId(idCombat: string): Promise<CombatScoreRow[]>;
   listByCombatIds(ids: string[]): Promise<CombatScoreRow[]>;
@@ -36,14 +38,22 @@ export default function createCombatScoresRepository(
   }
 
   async function listByCombatIds(ids: string[]): Promise<CombatScoreRow[]> {
-    if (!ids.length) {
+    const uniqueIds = Array.from(new Set((ids || []).map(String).filter(Boolean)));
+    if (!uniqueIds.length) {
       return [];
     }
 
-    return supabaseSelect<CombatScoreRow>(
-      "combat_scores",
-      `select=*&id_combat=in.(${ids.join(",")})&order=ordre.asc`
-    );
+    const rows: CombatScoreRow[] = [];
+    for (let index = 0; index < uniqueIds.length; index += COMBAT_SCORE_SELECT_BATCH_SIZE) {
+      const batchIds = uniqueIds.slice(index, index + COMBAT_SCORE_SELECT_BATCH_SIZE);
+      rows.push(
+        ...(await supabaseSelect<CombatScoreRow>(
+          "combat_scores",
+          `select=*&id_combat=in.(${batchIds.join(",")})&order=ordre.asc`
+        ))
+      );
+    }
+    return rows;
   }
 
   async function replaceForCombat(

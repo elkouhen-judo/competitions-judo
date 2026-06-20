@@ -156,7 +156,7 @@
       }
 
       showView("combatFormView");
-      window.Vue.nextTick(() => $("combat_adversaire").focus());
+      window.Vue.nextTick(() => $("combat_resultat").focus());
     }
 
     function cancelCombatForm() {

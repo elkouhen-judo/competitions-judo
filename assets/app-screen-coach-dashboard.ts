@@ -90,6 +90,37 @@
     const coachDashboardPodiumsByLevel = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.podiumsByLevel || []
     );
+    const coachDashboardTopPodiumLevel = window.Vue.computed(() => {
+      const entries = coachDashboardPodiumsByLevel.value;
+      let bestEntry = "";
+      let bestCount = 0;
+      entries.forEach((entry) => {
+        const podiumCount = entry.podiums.reduce((sum, podium) => sum + Number(podium.count || 0), 0);
+        if (podiumCount > bestCount) {
+          bestEntry = `${entry.level} · ${podiumCount}`;
+          bestCount = podiumCount;
+        }
+      });
+      return bestEntry || "Aucun podium";
+    });
+    const coachDashboardMainQualityIssue = window.Vue.computed(() => {
+      const [issue] = coachDashboardDataQualityIssues.value;
+      return issue ? `${issue.label} · ${issue.rate}%` : "Données complètes";
+    });
+    const coachDashboardSummaryInsight = window.Vue.computed(() => {
+      const stats = coachDashboardViewModel.coachDashboardStats;
+      if (!stats || !stats.totalCombats) {
+        return "Aucun combat à analyser sur ce périmètre.";
+      }
+      const qualityIssue = coachDashboardDataQualityIssues.value[0];
+      if (qualityIssue) {
+        return `Priorité saisie : ${qualityIssue.label.toLowerCase()} concerne ${qualityIssue.count} combat(s).`;
+      }
+      if (stats.victoryRate >= 60) {
+        return "Point fort : le taux de victoire est favorable sur ce périmètre.";
+      }
+      return "Point d'attention : comparez les décisions et les gardes pour orienter le prochain travail.";
+    });
     const coachDashboardCompetitionOptionsFiltered = window.Vue.computed(() => {
       const query = cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
       const selectedIds = new Set(
@@ -137,6 +168,7 @@
           getDataQualityIssueDescription,
           resetCoachDashboardFilters,
           scheduleCoachDashboardRefresh,
+          showCoachHome,
           showPersonalSpace,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
@@ -156,6 +188,9 @@
           coachDashboardJudokasByHandedness,
           coachDashboardDataQualityIssues,
           coachDashboardPodiumsByLevel,
+          coachDashboardTopPodiumLevel,
+          coachDashboardMainQualityIssue,
+          coachDashboardSummaryInsight,
           coachDashboardCompetitionOptionsPage: coachDashboardCompetitionOptionsPaginationRefs.page,
           coachDashboardCompetitionOptionsTotalPages:
             coachDashboardCompetitionOptionsPaginationRefs.totalPages,
@@ -336,11 +371,15 @@
       showCoachDashboardMode("chat");
     }
 
-    function showCoachHomeMode(mode: "judoka" | "coach" | "coachJudoka") {
+    function showCoachHomeMode(mode: "judoka" | "coachHome" | "coach" | "coachJudoka") {
       screens.home.setHomeMode(mode);
       if (app.showHome) {
         app.showHome();
       }
+    }
+
+    function showCoachHome() {
+      showCoachHomeMode("coachHome");
     }
 
     function showPersonalSpace() {
