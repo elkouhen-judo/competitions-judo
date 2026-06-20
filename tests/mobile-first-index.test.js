@@ -26,6 +26,9 @@ const client = [
     "app-judoka-presentation.js",
     "app-screen-judoka.js",
     "app-competition-form-helpers.js",
+    "app-screen-competition-form.js",
+    "app-screen-club-competition.js",
+    "app-screen-combat-form.js",
     "app-screen-competition.js",
     "app-screen-admins.js",
     "app-screen-coach-dashboard.js",
@@ -165,7 +168,7 @@ test("family home keeps the active judoka competition context", () => {
 
 test("coach home stays club-centered and separate from judoka consultation", () => {
   assert.match(bundle, /modes\.push\(\{ key: "coach", label: "Compétitions club" \}\);/);
-  assert.match(bundle, /coachSubModes = \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétitions club"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"[\s\S]*key: "coachChat",\s*label: "Chat"/);
+  assert.match(bundle, /coachSubModes = window\.Vue\.computed\(\(\) => \[[\s\S]*key: "judoka",\s*label: "Mon espace"[\s\S]*key: "coach",\s*label: "Compétitions club"[\s\S]*key: "coachJudoka",\s*label: "Judoka"[\s\S]*key: "coachDashboard",\s*label: "Tableau de bord"[\s\S]*key: "coachChat",\s*label: "Chat"/);
   assert.match(bundle, /state\.isCoach && \["judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/);
   assert.match(bundle, /v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs"/);
   assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
@@ -404,22 +407,28 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Genre Judoka<\/span>/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par genre<\/span>/
   );
   assert.match(bundle, /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/);
-  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde Judoka<\/span>/);
+  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par garde<\/span>/);
   assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<h3>Performance globale<\/h3>/);
   assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
   assert.match(bundle, /class="section-heading dashboard-subsection"/);
   assert.match(bundle, /\.dashboard-subsection\s*\{/);
-  assert.match(bundle, /<h3>Garde<\/h3>/);
+  assert.match(bundle, /<span class="stat-label">Victoires totales<\/span>/);
+  assert.match(bundle, /<span class="stat-label">Victoires debout<\/span>/);
+  assert.match(bundle, /<span class="stat-label">Victoires au sol<\/span>/);
+  assert.match(bundle, /<span class="stat-label">Défaites par hansoku-make<\/span>/);
+  assert.match(bundle, /<h3>Rapport de garde<\/h3>/);
   assert.match(
     bundle,
     /Taux de victoire quand judoka et adversaire ont une garde opposée ou identique\./
   );
+  assert.match(bundle, /<span class="split-stat-label">Garde opposée<\/span>/);
+  assert.match(bundle, /<span class="split-stat-label">Même garde<\/span>/);
   assert.match(
     bundle,
     /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
@@ -446,7 +455,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde adversaire<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Face à la garde adverse<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
   assert.match(
     bundle,

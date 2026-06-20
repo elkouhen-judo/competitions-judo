@@ -42,6 +42,7 @@ const entryPoints = [
   "core/repositories/parent-links.repository.ts",
   "core/services/domain-adapters.ts",
   "core/services/admin-import-mapping.ts",
+  "core/services/coach-assistant-search.ts",
   "core/services/coach-dashboard-loader.ts",
   "core/services/user-context.service.ts",
   "core/services/admin.service.ts",

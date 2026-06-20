@@ -24,38 +24,51 @@
           </div>
         </div>
 
-        <label for="competition_nom">Nom de la compétition</label>
-        <input type="text" id="competition_nom" v-model.trim="competitionForm.name">
-
-        <label for="competition_date">Date</label>
-        <input type="date" id="competition_date" v-model="competitionForm.competitionDate">
-
-        <div class="form-grid">
-          <div>
-            <label for="competition_categorie_age">Catégorie d'âge</label>
-            <select id="competition_categorie_age" v-model="competitionForm.ageCategory" @change="onCompetitionFormAgeCategoryChange()">
-              <option value="">Sélectionnez une catégorie</option>
-              <option value="Poussinet">Poussinet</option>
-              <option value="Poussin">Poussin</option>
-              <option value="Benjamin">Benjamin</option>
-              <option value="Minime">Minime</option>
-              <option value="Cadet">Cadet</option>
-              <option value="Junior">Junior</option>
-              <option value="Senior">Senior</option>
-              <option value="Vétéran">Vétéran</option>
-            </select>
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Compétition</h3>
           </div>
-          <div>
-            <label for="competition_categorie_poids">Catégorie de poids</label>
-            <select v-if="competitionWeightCategoryOptions.length" id="competition_categorie_poids" v-model="competitionForm.weightCategory">
-              <option value="">Non renseignée</option>
-              <option v-for="weightOption in competitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
-            </select>
-            <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
+          <label for="competition_nom">Nom de la compétition</label>
+          <input type="text" id="competition_nom" v-model.trim="competitionForm.name">
+
+          <label for="competition_date">Date</label>
+          <input type="date" id="competition_date" v-model="competitionForm.competitionDate">
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Catégorie</h3>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label for="competition_categorie_age">Catégorie d'âge</label>
+              <select id="competition_categorie_age" v-model="competitionForm.ageCategory" @change="onCompetitionFormAgeCategoryChange()">
+                <option value="">Sélectionnez une catégorie</option>
+                <option value="Poussinet">Poussinet</option>
+                <option value="Poussin">Poussin</option>
+                <option value="Benjamin">Benjamin</option>
+                <option value="Minime">Minime</option>
+                <option value="Cadet">Cadet</option>
+                <option value="Junior">Junior</option>
+                <option value="Senior">Senior</option>
+                <option value="Vétéran">Vétéran</option>
+              </select>
+            </div>
+            <div>
+              <label for="competition_categorie_poids">Catégorie de poids</label>
+              <select v-if="competitionWeightCategoryOptions.length" id="competition_categorie_poids" v-model="competitionForm.weightCategory">
+                <option value="">Non renseignée</option>
+                <option v-for="weightOption in competitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
+              </select>
+              <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
+            </div>
           </div>
         </div>
 
-        <div>
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Niveau</h3>
+          </div>
           <label for="competition_niveau">Niveau</label>
           <select id="competition_niveau" v-model="competitionForm.level">
             <option value="">Non renseigné</option>

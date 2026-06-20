@@ -8,41 +8,59 @@
       <div class="panel-body">
         <input type="hidden" id="combat_id" v-model="combatForm.combatId">
 
-        <div class="form-grid">
-          <div>
-            <label for="combat_adversaire">Adversaire</label>
-            <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent">
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Résultat</h3>
           </div>
+          <div class="form-grid">
+            <div>
+              <label for="combat_resultat">Résultat</label>
+              <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
+                <option value="">Choisir</option>
+                <option value="Victoire">Victoire</option>
+                <option value="Défaite">Défaite</option>
+                <option value="Egalité">Egalité</option>
+              </select>
+            </div>
 
-          <div>
-            <label for="combat_garde_adversaire">Garde de l'adversaire</label>
-            <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
-              <option value="">Non spécifié</option>
-              <option value="Droitier">Droitier</option>
-              <option value="Gaucher">Gaucher</option>
-            </select>
-            <p class="field-hint">Alimente les métriques même garde / garde opposée.</p>
+            <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
+              <label for="combat_type_victoire">Type de décision</label>
+              <select id="combat_type_victoire" v-model="combatForm.victoryType">
+                <option value="">Non spécifié</option>
+                <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
+              </select>
+              <p class="field-hint">Alimente les répartitions par décision et les défaites hansoku-make.</p>
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label for="combat_resultat">Résultat</label>
-            <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
-              <option value="">Choisir</option>
-              <option value="Victoire">Victoire</option>
-              <option value="Défaite">Défaite</option>
-              <option value="Egalité">Egalité</option>
-            </select>
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Adversaire</h3>
           </div>
+          <div class="form-grid">
+            <div>
+              <label for="combat_adversaire">Adversaire</label>
+              <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent">
+            </div>
 
-          <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
-            <label for="combat_type_victoire">Type de décision</label>
-            <select id="combat_type_victoire" v-model="combatForm.victoryType">
-              <option value="">Non spécifié</option>
-              <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
-            </select>
-            <p class="field-hint">Alimente les répartitions par décision et les défaites hansoku-make.</p>
+            <div>
+              <label for="combat_garde_adversaire">Garde de l'adversaire</label>
+              <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
+                <option value="">Non spécifié</option>
+                <option value="Droitier">Droitier</option>
+                <option value="Gaucher">Gaucher</option>
+              </select>
+              <p class="field-hint">Alimente les métriques même garde / garde opposée.</p>
+            </div>
           </div>
+        </div>
 
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Prises marquées</h3>
+          </div>
+          <div class="form-grid">
           <div class="full-row">
             <label>Prises marquées</label>
             <div class="combat-score-rows">
@@ -83,10 +101,18 @@
             <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
             <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
           </div>
+          </div>
+        </div>
 
+        <div class="form-section">
+          <div class="form-section-heading">
+            <h3>Notes coach</h3>
+          </div>
+          <div class="form-grid">
           <div class="full-row">
             <label for="combat_deroule">Déroulé du combat</label>
             <textarea id="combat_deroule" rows="3" placeholder="Racontez le déroulé du combat (prises, temps forts...)" v-model.trim="combatForm.notes"></textarea>
+          </div>
           </div>
         </div>
 

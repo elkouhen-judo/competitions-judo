@@ -166,6 +166,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     judoka: JudokaModel,
     extras?: {
       categorie_age?: string;
+      couleur_ceinture?: string;
       pending_parent_email?: string;
       genre?: string;
       annee_categorie?: string;

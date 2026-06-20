@@ -52,6 +52,24 @@ export interface VueLike {
 export type ActionMap = Record<string, (...args: never[]) => unknown>;
 export type ComputedRefMap = Record<string, ComputedRef<unknown>>;
 
+export interface PaginationResult<T> {
+  pageItems: T[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  canShowPreviousPage: boolean;
+  canShowNextPage: boolean;
+}
+
+export interface PaginationRefs<T> {
+  page: ComputedRef<T[]>;
+  totalPages: ComputedRef<number>;
+  currentPage: ComputedRef<number>;
+  totalCount: ComputedRef<number>;
+  canShowPreviousPage: ComputedRef<boolean>;
+  canShowNextPage: ComputedRef<boolean>;
+}
+
 export type ViewId =
   | "loginView"
   | "homeView"
@@ -74,6 +92,7 @@ export interface KirokuUi {
     actions?: ActionMap,
     computedRefs?: ComputedRefMap
   ): T;
+  createPaginationRefs<T>(pagination: ComputedRef<PaginationResult<T>>): PaginationRefs<T>;
   formatDate(value: unknown): string;
   formatDateTime(value: unknown): string;
   formatResultat(value: unknown): string;
@@ -169,6 +188,7 @@ export interface ScreenProjections {
     competitionDate: string;
     ageWeightLabel: string;
     competitionResult: string;
+    competitionAiAnalysis: string;
     canEditCompetition: boolean;
     canFinalizeCompetition: boolean;
   };
@@ -225,6 +245,40 @@ export interface HomeScreen {
 
 export interface JudokaScreen {
   showJudokaProfile(idJudoka?: string, keepMessage?: boolean): void;
+}
+
+export interface CompetitionDetailDeps {
+  deleteCombat(idCombat: string): void;
+  showCombatForm(idCombat?: string | Event): void;
+}
+
+export interface CompetitionDetailScreen {
+  getCurrentCompetition(): Competition;
+  openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
+  openCompetitionFromClubDetail(idCompetition: string): void;
+  openCompetitionFromJudokaProfile(idCompetition: string): void;
+  showCompetitionForm(idCompetition?: string): void;
+}
+
+export interface CombatFormDeps {
+  getCurrentCompetition(): Competition;
+  openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
+}
+
+export interface CombatFormScreen {
+  bindEvents(): void;
+  deleteCombat(idCombat: string): void;
+  showCombatForm(idCombat?: string | Event): void;
+}
+
+export interface ClubCompetitionDeps {
+  openCompetitionFromClubDetail(idCompetition: string): void;
+}
+
+export interface ClubCompetitionScreen {
+  confirmDeleteClubCompetitionById(idClubCompetition: string, name?: string): void;
+  openClubCompetition(idClubCompetition: string): void;
+  showClubCompetitionForm(idClubCompetition?: string): void;
 }
 
 export interface CompetitionScreen {
