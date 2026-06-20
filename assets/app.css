@@ -1875,6 +1875,10 @@
       align-items: start;
     }
 
+    .podium-split-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .split-stat-item {
       display: grid;
       gap: 6px;

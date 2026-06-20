@@ -223,36 +223,24 @@
           </div>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+        <div class="section" v-if="coachDashboardStats">
           <div class="section-heading">
             <div><h3>Podiums
-              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place sur le périmètre filtré.">
+              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place, ventilées par niveau de compétition sur le périmètre filtré.">
                 <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place sur le périmètre filtré.</span>
+                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place, ventilées par niveau de compétition sur le périmètre filtré.</span>
               </span>
             </h3></div>
           </div>
           <div class="stats-grid">
-            <div v-for="entry in coachDashboardPodiums" :key="entry.place" class="stat-card" :class="{ 'stat-card-success': entry.place === '1er' }">
-              <span class="stat-label">{{ entry.label }}</span>
-              <span class="stat-value">{{ entry.count }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
-          <div class="section-heading">
-            <div><h3>Par niveau
-              <span class="info-tip" tabindex="0" aria-label="Taux de victoire et nombre de combats gagnés, calculés séparément pour chaque niveau de compétition (départemental, régional, national, international).">
-                <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Taux de victoire et nombre de combats gagnés, calculés séparément pour chaque niveau de compétition (départemental, régional, national, international).</span>
-              </span>
-            </h3></div>
-          </div>
-          <div class="stats-grid">
-            <div v-for="entry in coachDashboardByCompetitionLevel" :key="entry.level" class="stat-card">
+            <div v-for="entry in coachDashboardPodiumsByLevel" :key="entry.level" class="stat-card stat-card-split">
               <span class="stat-label">{{ entry.level }}</span>
-              <span class="stat-value">{{ entry.victories }}/{{ entry.combats }} ({{ entry.victoryRate }}%)</span>
+              <div class="split-stat-grid podium-split-grid">
+                <div v-for="podium in entry.podiums" :key="`${entry.level}-${podium.place}`" class="split-stat-item" :class="{ 'stat-card-success': podium.place === '1er' }">
+                  <span class="split-stat-label">{{ podium.label }}</span>
+                  <span class="split-stat-value">{{ podium.count }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -16,7 +16,7 @@
     scores:
       "Aucune prise n'a été détaillée sur ce combat — cela alimente les métriques Victoires Ippon debout/au sol.",
     competitionLevel:
-      "Le niveau de la compétition n'est pas renseigné — il alimente la répartition Par niveau.",
+      "Le niveau de la compétition n'est pas renseigné — il alimente les Podiums par niveau.",
     judokaGender:
       "Le genre du judoka suivi n'est pas renseigné — il alimente la répartition Judokas par genre.",
     inconsistentIppon:
@@ -76,11 +76,6 @@
     const coachDashboardByLateralMatchup = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.byLateralMatchup || []
     );
-    const coachDashboardByCompetitionLevel = window.Vue.computed(() =>
-      (coachDashboardViewModel.coachDashboardStats?.byCompetitionLevel || []).filter(
-        (entry) => entry.combats > 0
-      )
-    );
     const coachDashboardJudokasByGender = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.judokasByGender || []
     );
@@ -92,8 +87,8 @@
         (entry) => entry.count > 0
       )
     );
-    const coachDashboardPodiums = window.Vue.computed(
-      () => coachDashboardViewModel.coachDashboardStats?.podiums || []
+    const coachDashboardPodiumsByLevel = window.Vue.computed(
+      () => coachDashboardViewModel.coachDashboardStats?.podiumsByLevel || []
     );
     const coachDashboardCompetitionOptionsFiltered = window.Vue.computed(() => {
       const query = cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
@@ -157,11 +152,10 @@
           coachDashboardVictoriesByType,
           coachDashboardDefeatsByType,
           coachDashboardByLateralMatchup,
-          coachDashboardByCompetitionLevel,
           coachDashboardJudokasByGender,
           coachDashboardJudokasByHandedness,
           coachDashboardDataQualityIssues,
-          coachDashboardPodiums,
+          coachDashboardPodiumsByLevel,
           coachDashboardCompetitionOptionsPage: coachDashboardCompetitionOptionsPaginationRefs.page,
           coachDashboardCompetitionOptionsTotalPages:
             coachDashboardCompetitionOptionsPaginationRefs.totalPages,

@@ -744,11 +744,11 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
   ];
 
   const competitions = [
-    { result: "1er" },
-    { result: "1er" },
-    { result: "2e" },
-    { result: "5e" },
-    { result: "" }
+    { level: "Départemental", result: "1er" },
+    { level: "National", result: "1er" },
+    { level: "Régional", result: "2e" },
+    { level: "International", result: "5e" },
+    { level: "International", result: "" }
   ];
 
   assert.deepEqual(computeCoachDashboardStats(combats, competitions), {
@@ -779,12 +779,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
       { matchup: "same", label: "Même garde", combats: 4, victories: 3, victoryRate: 75 }
     ],
-    byCompetitionLevel: [
-      { level: "Départemental", combats: 2, victories: 1, victoryRate: 50 },
-      { level: "Régional", combats: 1, victories: 1, victoryRate: 100 },
-      { level: "National", combats: 1, victories: 1, victoryRate: 100 },
-      { level: "International", combats: 1, victories: 1, victoryRate: 100 }
-    ],
     judokasByGender: [
       { gender: "Homme", judokaCount: 3 },
       { gender: "Femme", judokaCount: 1 }
@@ -802,10 +796,39 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 1, total: 6, rate: 17 },
       { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 6, rate: 0 }
     ],
-    podiums: [
-      { place: "1er", label: "1ère place", count: 2 },
-      { place: "2e", label: "2ème place", count: 1 },
-      { place: "3e", label: "3ème place", count: 0 }
+    podiumsByLevel: [
+      {
+        level: "Départemental",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 1 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "Régional",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 1 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "National",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 1 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "International",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      }
     ]
   });
 
@@ -837,12 +860,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
       { matchup: "same", label: "Même garde", combats: 0, victories: 0, victoryRate: 0 }
     ],
-    byCompetitionLevel: [
-      { level: "Départemental", combats: 0, victories: 0, victoryRate: 0 },
-      { level: "Régional", combats: 0, victories: 0, victoryRate: 0 },
-      { level: "National", combats: 0, victories: 0, victoryRate: 0 },
-      { level: "International", combats: 0, victories: 0, victoryRate: 0 }
-    ],
     judokasByGender: [
       { gender: "Homme", judokaCount: 0 },
       { gender: "Femme", judokaCount: 0 }
@@ -860,10 +877,39 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 0, total: 0, rate: 0 },
       { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 0, rate: 0 }
     ],
-    podiums: [
-      { place: "1er", label: "1ère place", count: 0 },
-      { place: "2e", label: "2ème place", count: 0 },
-      { place: "3e", label: "3ème place", count: 0 }
+    podiumsByLevel: [
+      {
+        level: "Départemental",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "Régional",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "National",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      },
+      {
+        level: "International",
+        podiums: [
+          { place: "1er", label: "1ère place", count: 0 },
+          { place: "2e", label: "2ème place", count: 0 },
+          { place: "3e", label: "3ème place", count: 0 }
+        ]
+      }
     ]
   });
 });

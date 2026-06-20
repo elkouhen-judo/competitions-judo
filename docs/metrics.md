@@ -48,7 +48,7 @@ Sauf mention contraire explicite dans les tableaux ci-dessous, tous les taux et 
 
 ## 3. Spécifications détaillées par section
 
-L'ordre des sous-sections ci-dessous suit l'ordre d'affichage pédagogique du tableau de bord : périmètre (combien de combats, qui sont les judokas), puis résultats globaux (performance, podiums), puis analyses détaillées (par niveau, par garde).
+L'ordre des sous-sections ci-dessous suit l'ordre d'affichage pédagogique du tableau de bord : périmètre (combien de combats, qui sont les judokas), puis résultats globaux (performance, podiums), puis analyses détaillées (par garde, par décision).
 
 ### 3.1. Section "Volumes"
 Cette section comptabilise la volumétrie globale de l'activité sur le périmètre totalement filtré.
@@ -78,31 +78,22 @@ Pour cette section, le dénominateur commun et systématique est le nombre total
 
 *Note de discriminant :* Le score (`CombatScore.value`) est l'unique critère retenu pour ces deux métriques — le type de décision finale du combat (`victoryType`, ex. nom de la prise) n'intervient pas dans ce calcul. Ces deux métriques ne sont donc pas mutuellement exclusives ni exhaustives par rapport à la ligne `Ippon` de la section 4.1 : un écart entre les deux est un signal de qualité de saisie, voir section 5.
 
-### 3.4. Section "Podiums" (`podiums`)
-Cette section dénombre les compétitions du périmètre filtré (Étape 1, indépendamment des combats) terminées sur le podium.
+### 3.4. Section "Podiums" (`podiumsByLevel`)
+Cette section dénombre les compétitions du périmètre filtré (Étape 1, indépendamment des combats) terminées sur le podium, puis les regroupe par niveau de compétition.
 
 | Métrique technique | Libellé IHM   | Type de décompte | Règle de calcul                                                                                          |
 | :------------------ | :------------ | :---------------- | :--------------------------------------------------------------------------------------------------------- |
-| `podiums` (`1er`)   | **1ère place** | Compte de lignes  | Nombre de compétitions du périmètre filtré dont le classement final est exactement `"1er"`.                |
-| `podiums` (`2e`)    | **2ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré dont le classement final est exactement `"2e"`.                 |
-| `podiums` (`3e`)    | **3ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré dont le classement final est exactement `"3e"`.                 |
+| `podiumsByLevel[niveau].podiums` (`1er`) | **1ère place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"1er"`. |
+| `podiumsByLevel[niveau].podiums` (`2e`)  | **2ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"2e"`.  |
+| `podiumsByLevel[niveau].podiums` (`3e`)  | **3ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"3e"`.  |
 
 *Particularités :*
 - **Compteurs bruts uniquement :** contrairement aux autres sections, aucun pourcentage n'est affiché (pas de dénominateur pertinent à exposer).
 - **Compétitions finalisées uniquement :** une compétition dont le classement (`Competition.result`) est vide (non finalisée) est exclue du calcul, y compris pour les places autres que 1/2/3 (`"4e"`…`"8e"`, `"Non classé"` ne comptent pas non plus, seules les valeurs exactes `"1er"`/`"2e"`/`"3e"` sont retenues).
 - **Niveau de calcul :** par compétition, pas par combat — une compétition sans combat enregistré mais déjà classée compte normalement.
+- **Niveaux gérés :** `Départemental`, `Régional`, `National`, `International`. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
 
-### 3.5. Section "Par niveau" (`byCompetitionLevel`)
-Cette section ventile les performances selon le niveau hiérarchique de la compétition (`byCompetitionLevel`).
-* **Niveaux gérés :** `Départemental`, `Régional`, `National`, `International`.
-
-Chaque niveau dispose de ses propres compteurs indépendants :
-* **Volume du niveau :** Nombre total de combats disputés dans une compétition de ce niveau spécifique.
-* **Victoires du niveau :** Nombre de combats du niveau dont le résultat est `"Victoire"`.
-* **Taux de victoire du niveau :** `round((victories / combats) * 100)`.
-* **Affichage IHM :** Un niveau dont le volume de combats est `0` sur le périmètre filtré n'est pas affiché dans la carte (filtrage côté frontend uniquement ; les 4 niveaux restent toujours présents dans la réponse `byCompetitionLevel`).
-
-### 3.6. Section "Rapport de garde" (`byLateralMatchup`)
+### 3.5. Section "Rapport de garde" (`byLateralMatchup`)
 Libellé IHM de la carte : **Face à la garde adverse**.
 Cet indicateur évalue l'impact de la symétrie des gardes sur le taux de réussite du judoka.
 

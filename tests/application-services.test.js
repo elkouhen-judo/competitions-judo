@@ -824,19 +824,6 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       { matchup: "same", combats: 3, victories: 2, victoryRate: 67 }
     ]
   );
-  assert.deepEqual(
-    allResult.stats.byCompetitionLevel.map(({ level, combats, victories }) => ({
-      level,
-      combats,
-      victories
-    })),
-    [
-      { level: "Départemental", combats: 2, victories: 1 },
-      { level: "Régional", combats: 0, victories: 0 },
-      { level: "National", combats: 1, victories: 1 },
-      { level: "International", combats: 0, victories: 0 }
-    ]
-  );
   assert.deepEqual(allResult.stats.judokasByGender, [
     { gender: "Homme", judokaCount: 1 },
     { gender: "Femme", judokaCount: 1 }
@@ -849,10 +836,39 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     allResult.stats.victoriesByDecisionType.find((entry) => entry.decisionType === "Ippon"),
     { decisionType: "Ippon", count: 2, total: 2, rate: 100 }
   );
-  assert.deepEqual(allResult.stats.podiums, [
-    { place: "1er", label: "1ère place", count: 1 },
-    { place: "2e", label: "2ème place", count: 0 },
-    { place: "3e", label: "3ème place", count: 1 }
+  assert.deepEqual(allResult.stats.podiumsByLevel, [
+    {
+      level: "Départemental",
+      podiums: [
+        { place: "1er", label: "1ère place", count: 1 },
+        { place: "2e", label: "2ème place", count: 0 },
+        { place: "3e", label: "3ème place", count: 0 }
+      ]
+    },
+    {
+      level: "Régional",
+      podiums: [
+        { place: "1er", label: "1ère place", count: 0 },
+        { place: "2e", label: "2ème place", count: 0 },
+        { place: "3e", label: "3ème place", count: 0 }
+      ]
+    },
+    {
+      level: "National",
+      podiums: [
+        { place: "1er", label: "1ère place", count: 0 },
+        { place: "2e", label: "2ème place", count: 0 },
+        { place: "3e", label: "3ème place", count: 1 }
+      ]
+    },
+    {
+      level: "International",
+      podiums: [
+        { place: "1er", label: "1ère place", count: 0 },
+        { place: "2e", label: "2ème place", count: 0 },
+        { place: "3e", label: "3ème place", count: 0 }
+      ]
+    }
   ]);
 
   const ageFiltered = await service.methods.getCoachDashboard("coach@example.com", {
@@ -860,11 +876,14 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   });
   assert.equal(ageFiltered.stats.totalCombats, 2);
   assert.equal(ageFiltered.stats.tachiWazaIpponVictories, 1);
-  assert.deepEqual(ageFiltered.stats.podiums, [
-    { place: "1er", label: "1ère place", count: 1 },
-    { place: "2e", label: "2ème place", count: 0 },
-    { place: "3e", label: "3ème place", count: 0 }
-  ]);
+  assert.deepEqual(ageFiltered.stats.podiumsByLevel[0], {
+    level: "Départemental",
+    podiums: [
+      { place: "1er", label: "1ère place", count: 1 },
+      { place: "2e", label: "2ème place", count: 0 },
+      { place: "3e", label: "3ème place", count: 0 }
+    ]
+  });
   assert.deepEqual(ageFiltered.availableCompetitions, [
     { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" }
   ]);
