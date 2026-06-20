@@ -8,9 +8,9 @@
 
   const DATA_QUALITY_ISSUE_DESCRIPTIONS: Record<string, string> = {
     judokaHandedness:
-      "La garde (droitier/gaucher) du judoka suivi n'est pas renseignée sur ce combat — elle alimente le Rapport de garde.",
+      "La garde (droitier/gaucher) du judoka suivi n'est pas renseignée sur ce combat — elle alimente la Répartition des gardes.",
     opponentStance:
-      "La garde de l'adversaire n'est pas renseignée sur ce combat — elle alimente le Rapport de garde.",
+      "La garde de l'adversaire n'est pas renseignée sur ce combat — elle alimente la Répartition des gardes.",
     victoryType:
       "Le type de décision finale (Ippon, Waza-ari...) n'est pas renseigné sur ce combat — il alimente les répartitions par décision.",
     scores:
