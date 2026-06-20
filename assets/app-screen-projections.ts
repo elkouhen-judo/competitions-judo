@@ -2,6 +2,7 @@
   type Competition = import("./types").Competition;
   type CompetitionCombatCard = import("./types").CompetitionCombatCard;
   type CombatReadModel = import("./types").CombatReadModel;
+  type CombatDataQualityIssue = import("./types").CombatDataQualityIssue;
   type AccessInvitation = import("./types").AccessInvitation;
   type Judoka = import("./types").Judoka;
   type ManagedAdminCard = import("./types").ManagedAdminCard;
@@ -212,21 +213,35 @@
     return [detail, score.value].filter(Boolean).join(" · ");
   }
 
-  function getMissingMetricLabels(combat: CombatReadModel, helpers: { showJudoka: boolean }): string[] {
-    const labels: string[] = [];
-    if (helpers.showJudoka && !combat.judokaHandedness) {
-      labels.push("Garde judoka non renseignée");
-    }
-    if (!combat.opponentStance) {
-      labels.push("Garde adversaire non renseignée");
-    }
+  function hasMatchingIpponScore(combat: CombatReadModel): boolean {
+    return (combat.scores || []).some((score) => score.value === "Ippon");
+  }
+
+  function getCombatDataQualityIssues(
+    combat: CombatReadModel,
+    helpers: { showJudoka: boolean }
+  ): CombatDataQualityIssue[] {
+    const issues: CombatDataQualityIssue[] = [];
     if (!combat.victoryType) {
-      labels.push("Type de décision non renseigné");
+      issues.push({ label: "Type de décision non renseigné", priority: "high" });
+    }
+    if (
+      combat.result === "Victoire" &&
+      combat.victoryType === "Ippon" &&
+      !hasMatchingIpponScore(combat)
+    ) {
+      issues.push({ label: "Décision Ippon sans prise marquée à Ippon", priority: "high" });
     }
     if (!(combat.scores || []).length) {
-      labels.push("Prises marquées non renseignées");
+      issues.push({ label: "Prises marquées non renseignées", priority: "medium" });
     }
-    return labels;
+    if (helpers.showJudoka && !combat.judokaHandedness) {
+      issues.push({ label: "Garde judoka non renseignée", priority: "medium" });
+    }
+    if (!combat.opponentStance) {
+      issues.push({ label: "Garde adversaire non renseignée", priority: "medium" });
+    }
+    return issues;
   }
 
   function projectCompetitionCombats(
@@ -250,7 +265,7 @@
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
-      missingMetricLabels: getMissingMetricLabels(c, helpers),
+      dataQualityIssues: getCombatDataQualityIssues(c, helpers),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),

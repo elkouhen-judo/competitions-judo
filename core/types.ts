@@ -171,9 +171,6 @@ export interface CoachDashboardFilters {
   dateFrom?: string;
   dateTo?: string;
   ageCategory?: string;
-  categoryYear?: string;
-  gender?: string;
-  handedness?: string;
 }
 
 export interface CoachDashboardDecisionBreakdownEntry {
@@ -191,13 +188,6 @@ export interface CoachDashboardLateralMatchupBreakdownEntry {
   victoryRate: number;
 }
 
-export interface CoachDashboardLevelBreakdownEntry {
-  level: string;
-  combats: number;
-  victories: number;
-  victoryRate: number;
-}
-
 export interface CoachDashboardGenderBreakdownEntry {
   gender: string;
   judokaCount: number;
@@ -208,26 +198,59 @@ export interface CoachDashboardHandednessBreakdownEntry {
   judokaCount: number;
 }
 
+export interface CoachDashboardLevelBreakdownEntry {
+  level: string;
+  combats: number;
+  victories: number;
+  victoryRate: number;
+}
+
+export interface CoachDashboardQualityIssueEntry {
+  criterion: string;
+  label: string;
+  count: number;
+  total: number;
+  rate: number;
+}
+
+export interface CoachDashboardPodiumBreakdownEntry {
+  place: "1er" | "2e" | "3e";
+  label: string;
+  count: number;
+}
+
+export interface CoachDashboardLevelPodiumBreakdownEntry {
+  level: string;
+  podiums: CoachDashboardPodiumBreakdownEntry[];
+}
+
 export interface CoachDashboardStats {
   totalCombats: number;
   victories: number;
   victoryRate: number;
-  tachiWazaVictories: number;
-  tachiWazaVictoryRate: number;
-  neWazaVictories: number;
-  neWazaVictoryRate: number;
-  hansokuMakeLosses: number;
-  hansokuMakeLossRate: number;
+  tachiWazaIpponVictories: number;
+  tachiWazaIpponVictoryRate: number;
+  neWazaIpponVictories: number;
+  neWazaIpponVictoryRate: number;
   victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
   byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
   byCompetitionLevel: CoachDashboardLevelBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
+  dataQualityIssues: CoachDashboardQualityIssueEntry[];
+  podiums: CoachDashboardPodiumBreakdownEntry[];
+}
+
+export interface CoachDashboardCompetitionOption {
+  competitionId: string;
+  name: string;
+  competitionDate: string;
 }
 
 export interface CoachDashboard {
   stats: CoachDashboardStats;
+  availableCompetitions: CoachDashboardCompetitionOption[];
 }
 
 export interface CoachChatFilters {

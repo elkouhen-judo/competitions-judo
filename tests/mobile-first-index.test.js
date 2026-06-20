@@ -393,35 +393,51 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(client, /dateTo: coachDashboardViewModel\.coachDashboardForm\.dateTo/);
   assert.match(client, /if \(dateFrom && dateTo && dateFrom > dateTo\) \{/);
   assert.match(client, /La date de début doit être antérieure ou égale à la date de fin\./);
-  assert.match(bundle, /v-if="coachDashboardYearOptions\.length"/);
+  assert.doesNotMatch(bundle, /coachDashboardYearOptions|coachDashboardForm\.categoryYear/);
+  assert.doesNotMatch(bundle, /coachDashboard_genre|coachDashboardForm\.gender"/);
+  assert.doesNotMatch(bundle, /coachDashboard_lateralite|coachDashboardForm\.handedness/);
   assert.match(
     bundle,
-    /v-model="coachDashboardForm\.categoryYear"[\s\S]*v-for="yearOption in coachDashboardYearOptions"/
+    /v-for="option in coachDashboardCompetitionOptionsPage" :key="option\.competitionId"[\s\S]*type="checkbox" :value="option\.competitionId" v-model="coachDashboardForm\.competitionIds"/
   );
-  assert.match(bundle, /v-model="coachDashboardForm\.gender"/);
-  assert.match(bundle, /v-model="coachDashboardForm\.handedness"/);
-  assert.doesNotMatch(bundle, /competitionOptions/);
-  assert.doesNotMatch(bundle, /coachDashboardForm\.competitionIds/);
-  assert.match(bundle, /@click="applyCoachDashboardFilters\(\)"/);
+  assert.ok(
+    bundle.indexOf('id="coachDashboard_date_debut"') < bundle.indexOf('id="coachDashboardCompetitionSearch"'),
+    "the age/date filters should appear before the competition picker"
+  );
+  assert.match(client, /competitionIds: coachDashboardViewModel\.coachDashboardForm\.competitionIds/);
+  assert.match(client, /availableCompetitions = response\.availableCompetitions/);
+  assert.match(
+    client,
+    /coachDashboardForm\.competitionIds = coachDashboardViewModel\.coachDashboardForm\.competitionIds\.filter/
+  );
+  assert.doesNotMatch(bundle, /applyCoachDashboardFilters|>Actualiser</);
+  assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
+  assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
   assert.match(bundle, /<h3>Volumes<\/h3>/);
   assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par genre<\/span>/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par genre/
   );
   assert.match(bundle, /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/);
-  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par garde<\/span>/);
+  assert.match(bundle, /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par garde/);
   assert.match(bundle, /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/);
   assert.match(bundle, /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/);
+  assert.match(bundle, /<h3>Podiums/);
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardPodiums" :key="entry\.place" class="stat-card" :class="\{ 'stat-card-success': entry\.place === '1er' \}"[\s\S]*\{\{ entry\.label \}\}[\s\S]*<span class="stat-value">\{\{ entry\.count \}\}<\/span>/
+  );
+  assert.doesNotMatch(bundle, /entry\.place === '1er' \}"[\s\S]{0,400}entry\.total/);
+  assert.match(client, /coachDashboardPodiums/);
   assert.match(bundle, /<h3>Performance globale<\/h3>/);
   assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
-  assert.match(bundle, /class="section-heading dashboard-subsection"/);
-  assert.match(bundle, /\.dashboard-subsection\s*\{/);
-  assert.match(bundle, /<span class="stat-label">Victoires totales<\/span>/);
-  assert.match(bundle, /<span class="stat-label">Victoires debout<\/span>/);
-  assert.match(bundle, /<span class="stat-label">Victoires au sol<\/span>/);
-  assert.match(bundle, /<span class="stat-label">Défaites par hansoku-make<\/span>/);
+  assert.doesNotMatch(bundle, /dashboard-subsection/);
+  assert.match(bundle, /<span class="stat-label">Victoires totales/);
+  assert.match(bundle, /<span class="stat-label">Victoires Ippon debout/);
+  assert.match(bundle, /<span class="stat-label">Victoires Ippon au sol/);
+  assert.doesNotMatch(bundle, /Défaites par hansoku-make<\/span>/);
   assert.match(bundle, /<h3>Rapport de garde<\/h3>/);
   assert.match(
     bundle,
@@ -435,15 +451,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.match(
     bundle,
-    /\{\{ coachDashboardStats\.tachiWazaVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.tachiWazaVictoryRate \}\}%\)/
+    /\{\{ coachDashboardStats\.tachiWazaIpponVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.tachiWazaIpponVictoryRate \}\}%\)/
   );
   assert.match(
     bundle,
-    /\{\{ coachDashboardStats\.neWazaVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.neWazaVictoryRate \}\}%\)/
-  );
-  assert.match(
-    bundle,
-    /\{\{ coachDashboardStats\.hansokuMakeLosses \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.hansokuMakeLossRate \}\}%\)/
+    /\{\{ coachDashboardStats\.neWazaIpponVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.neWazaIpponVictoryRate \}\}%\)/
   );
   assert.match(
     bundle,
@@ -453,9 +465,25 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     bundle,
     /v-for="entry in coachDashboardDefeatsByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
   );
+  assert.match(bundle, /<h3>Qualité de la saisie<\/h3>/);
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Face à la garde adverse<\/span>[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
+    /v-if="!coachDashboardDataQualityIssues\.length" class="empty-state">Aucun problème de saisie détecté/
+  );
+  assert.match(
+    bundle,
+    /v-for="entry in coachDashboardDataQualityIssues" :key="entry\.criterion" class="stat-card"[\s\S]*\{\{ entry\.label \}\}[\s\S]*:aria-label="getDataQualityIssueDescription\(entry\.criterion\)"[\s\S]*\{\{ getDataQualityIssueDescription\(entry\.criterion\) \}\}[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
+  );
+  assert.match(client, /function getDataQualityIssueDescription\(criterion\)/);
+  assert.match(client, /\(entry\) => entry\.count > 0/);
+  assert.match(client, /inconsistentIppon:/);
+  assert.match(bundle, /class="info-tip" tabindex="0"/);
+  assert.match(bundle, /class="info-tip-bubble" aria-hidden="true"/);
+  assert.match(bundle, /\.info-tip\s*\{/);
+  assert.match(bundle, /\.info-tip-bubble\s*\{/);
+  assert.match(
+    bundle,
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Face à la garde adverse[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
   assert.match(
     bundle,
@@ -470,6 +498,26 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
   assert.match(bundle, /key: "coachDashboard", label: "Tableau de bord"/);
   assert.match(bundle, /if \(modeKey === "coachChat"\) \{\s*screens\.coachDashboard\.showCoachChat\(\);\s*return;\s*\}/);
+
+  const dashboardSectionOrder = [
+    "<h3>Volumes</h3>",
+    "<h3>Répartition des judokas</h3>",
+    "<h3>Performance globale</h3>",
+    "<h3>Podiums",
+    "<h3>Par niveau",
+    "<h3>Rapport de garde</h3>",
+    "<h3>Victoires par décision",
+    "<h3>Défaites par décision",
+    "<h3>Qualité de la saisie</h3>"
+  ].map((marker) => bundle.indexOf(marker));
+  assert.ok(
+    dashboardSectionOrder.every((index) => index !== -1),
+    "every dashboard section heading should be present"
+  );
+  assert.ok(
+    dashboardSectionOrder.every((index, position) => position === 0 || dashboardSectionOrder[position - 1] < index),
+    "dashboard sections should follow the pedagogical order: scope, then headline outcomes, then breakdowns, then data quality"
+  );
 });
 
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
@@ -497,12 +545,16 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
   assert.match(bundle, /id="competitionTitle">\{\{ competitionTitle \}\}<\/h2>/);
   assert.match(bundle, /id="combatsList">[\s\S]*v-for="combat in combats"/);
   assert.match(bundle, /Niveau de compétition non renseigné/);
-  assert.match(bundle, /v-if="combat\.missingMetricLabels\.length"/);
-  assert.match(bundle, /v-for="label in combat\.missingMetricLabels"/);
+  assert.match(bundle, /v-if="combat\.dataQualityIssues\.length"/);
+  assert.match(bundle, /v-for="issue in combat\.dataQualityIssues"/);
+  assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
   assert.match(client, /Garde judoka non renseignée/);
   assert.match(client, /Garde adversaire non renseignée/);
   assert.match(client, /Type de décision non renseigné/);
   assert.match(client, /Prises marquées non renseignées/);
+  assert.match(client, /Décision Ippon sans prise marquée à Ippon/);
+  assert.match(client, /priority: "high"/);
+  assert.match(client, /priority: "medium"/);
   assert.doesNotMatch(bundle, /combatsHtml/);
   assert.match(
     bundle,
@@ -654,4 +706,28 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
   assert.match(bundle, /@click="showCombatForm\(\)"/);
   assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
   assert.match(bundle, /function ensureCombatFormViewModel\(\)/);
+});
+
+test("combat form surfaces every data quality issue inline, near the field it concerns", () => {
+  assert.match(
+    bundle,
+    /id="combatDecisionBlock"[\s\S]*v-if="combatFormVictoryTypeIssues\.length"[\s\S]*v-for="issue in combatFormVictoryTypeIssues"/
+  );
+  assert.match(
+    bundle,
+    /id="combat_garde_adversaire"[\s\S]*v-if="combatFormOpponentStanceIssues\.length"[\s\S]*v-for="issue in combatFormOpponentStanceIssues"/
+  );
+  assert.match(
+    bundle,
+    /\+ Ajouter une prise[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/
+  );
+  assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
+  assert.match(
+    client,
+    /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!form\.scores\.some\(\(score\) => score\.value === "Ippon"\)/
+  );
+  assert.match(client, /Décision Ippon sans prise marquée à Ippon/);
+  assert.match(client, /getCombatDecisionOptions\(form\.result\)\.length && !form\.victoryType/);
+  assert.doesNotMatch(bundle, /hasInconsistentIppon/);
+  assert.doesNotMatch(bundle, /v-if="combatFormDataQualityIssues\.length"/);
 });

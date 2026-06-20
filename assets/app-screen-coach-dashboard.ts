@@ -2,6 +2,26 @@
   type KirokuApp = import("./types").KirokuApp;
   type CoachAssistantResponse = import("./types").CoachAssistantResponse;
   type CoachDashboardStats = import("../core/types").CoachDashboardStats;
+  type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
+
+  const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
+
+  const DATA_QUALITY_ISSUE_DESCRIPTIONS: Record<string, string> = {
+    judokaHandedness:
+      "La garde (droitier/gaucher) du judoka suivi n'est pas renseignée sur ce combat — elle alimente le Rapport de garde.",
+    opponentStance:
+      "La garde de l'adversaire n'est pas renseignée sur ce combat — elle alimente le Rapport de garde.",
+    victoryType:
+      "Le type de décision finale (Ippon, Waza-ari...) n'est pas renseigné sur ce combat — il alimente les répartitions par décision.",
+    scores:
+      "Aucune prise n'a été détaillée sur ce combat — cela alimente les métriques Victoires Ippon debout/au sol.",
+    competitionLevel:
+      "Le niveau de la compétition n'est pas renseigné — il alimente la répartition Par niveau.",
+    judokaGender:
+      "Le genre du judoka suivi n'est pas renseigné — il alimente la répartition Judokas par genre.",
+    inconsistentIppon:
+      "Le combat est gagné par décision Ippon, mais aucune prise marquée à Ippon n'a été enregistrée : la saisie mérite une vérification."
+  };
 
   interface CoachAssistantMessage {
     id: number;
@@ -11,21 +31,21 @@
   }
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
-    const { state, screens, ui, notifications } = app;
-    const { showView } = ui;
+    const { defaultListPageSize, state, screens, ui, notifications } = app;
+    const { cleanText, showView } = ui;
     const { showError } = notifications;
 
     const defaultCoachDashboardForm = {
       ageCategory: "",
-      categoryYear: "",
       dateFrom: "",
       dateTo: "",
-      gender: "",
-      handedness: ""
+      competitionIds: [] as string[]
     };
 
     const coachDashboardViewModel = window.Vue.reactive({
-      coachDashboardForm: { ...defaultCoachDashboardForm },
+      coachDashboardForm: { ...defaultCoachDashboardForm, competitionIds: [] as string[] },
+      availableCompetitions: [] as CoachDashboardCompetitionOption[],
+      competitionSearchText: "",
       activeCoachDashboardTab: "stats",
       filtersExpanded: true,
       coachAssistantQuestion: "",
@@ -43,13 +63,10 @@
     });
     let coachAssistantMessageId = 1;
     let coachDashboardMounted = false;
+    let coachDashboardRefreshTimer: number | null = null;
+    let coachDashboardRequestId = 0;
 
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
-    const coachDashboardYearOptions = window.Vue.computed(() =>
-      window.KirokuScreenProjections.getYearInCategoryOptions(
-        coachDashboardViewModel.coachDashboardForm.ageCategory
-      )
-    );
     const coachDashboardVictoriesByType = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.victoriesByDecisionType || []
     );
@@ -59,14 +76,47 @@
     const coachDashboardByLateralMatchup = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.byLateralMatchup || []
     );
-    const coachDashboardByCompetitionLevel = window.Vue.computed(
-      () => coachDashboardViewModel.coachDashboardStats?.byCompetitionLevel || []
+    const coachDashboardByCompetitionLevel = window.Vue.computed(() =>
+      (coachDashboardViewModel.coachDashboardStats?.byCompetitionLevel || []).filter(
+        (entry) => entry.combats > 0
+      )
     );
     const coachDashboardJudokasByGender = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.judokasByGender || []
     );
     const coachDashboardJudokasByHandedness = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.judokasByHandedness || []
+    );
+    const coachDashboardDataQualityIssues = window.Vue.computed(() =>
+      (coachDashboardViewModel.coachDashboardStats?.dataQualityIssues || []).filter(
+        (entry) => entry.count > 0
+      )
+    );
+    const coachDashboardPodiums = window.Vue.computed(
+      () => coachDashboardViewModel.coachDashboardStats?.podiums || []
+    );
+    const coachDashboardCompetitionOptionsFiltered = window.Vue.computed(() => {
+      const query = cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
+      const selectedIds = new Set(
+        coachDashboardViewModel.coachDashboardForm.competitionIds.map(String)
+      );
+      return coachDashboardViewModel.availableCompetitions.filter(
+        (option) =>
+          selectedIds.has(String(option.competitionId)) ||
+          !query ||
+          option.name.toLowerCase().includes(query) ||
+          option.competitionDate.includes(query)
+      );
+    });
+    const coachDashboardCompetitionOptionsPagination = window.Vue.computed(() =>
+      window.KirokuScreenProjections.paginateList(
+        coachDashboardCompetitionOptionsFiltered.value,
+        state.coachDashboardCompetitionOptionsCurrentPage,
+        defaultListPageSize
+      )
+    );
+    const coachDashboardCompetitionOptionsPaginationRefs = ui.createPaginationRefs(
+      coachDashboardCompetitionOptionsPagination
     );
     const coachDashboardTitle = window.Vue.computed(() =>
       coachDashboardViewModel.activeCoachDashboardTab === "chat"
@@ -88,26 +138,41 @@
         "coachDashboardView",
         coachDashboardViewModel,
         {
-          applyCoachDashboardFilters,
           askCoachAssistant,
-          onCoachDashboardAgeCategoryChange,
+          getDataQualityIssueDescription,
           resetCoachDashboardFilters,
+          scheduleCoachDashboardRefresh,
           showPersonalSpace,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
+          updateCoachDashboardCompetitionSearch,
+          showCoachDashboardCompetitionOptionsPreviousPage,
+          showCoachDashboardCompetitionOptionsNextPage,
           showCoachJudoka,
           showCoachDashboard,
           showCoachChat
         },
         {
           isSubmitting,
-          coachDashboardYearOptions,
           coachDashboardVictoriesByType,
           coachDashboardDefeatsByType,
           coachDashboardByLateralMatchup,
           coachDashboardByCompetitionLevel,
           coachDashboardJudokasByGender,
           coachDashboardJudokasByHandedness,
+          coachDashboardDataQualityIssues,
+          coachDashboardPodiums,
+          coachDashboardCompetitionOptionsPage: coachDashboardCompetitionOptionsPaginationRefs.page,
+          coachDashboardCompetitionOptionsTotalPages:
+            coachDashboardCompetitionOptionsPaginationRefs.totalPages,
+          coachDashboardCompetitionOptionsCurrentPage:
+            coachDashboardCompetitionOptionsPaginationRefs.currentPage,
+          coachDashboardCompetitionOptionsTotalCount:
+            coachDashboardCompetitionOptionsPaginationRefs.totalCount,
+          coachDashboardCompetitionOptionsCanShowPreviousPage:
+            coachDashboardCompetitionOptionsPaginationRefs.canShowPreviousPage,
+          coachDashboardCompetitionOptionsCanShowNextPage:
+            coachDashboardCompetitionOptionsPaginationRefs.canShowNextPage,
           coachDashboardTitle,
           coachDashboardSubtitle
         }
@@ -122,6 +187,7 @@
         return;
       }
 
+      const requestId = (coachDashboardRequestId += 1);
       coachDashboardViewModel.isLoadingCoachDashboardStats = true;
 
       app.runServer(
@@ -131,24 +197,57 @@
             dateFrom: coachDashboardViewModel.coachDashboardForm.dateFrom,
             dateTo: coachDashboardViewModel.coachDashboardForm.dateTo,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
-            categoryYear: coachDashboardViewModel.coachDashboardForm.categoryYear,
-            gender: coachDashboardViewModel.coachDashboardForm.gender,
-            handedness: coachDashboardViewModel.coachDashboardForm.handedness
+            competitionIds: coachDashboardViewModel.coachDashboardForm.competitionIds
           }
         ],
         (response) => {
+          if (requestId !== coachDashboardRequestId) {
+            return;
+          }
           coachDashboardViewModel.coachDashboardStats = response.stats;
+          coachDashboardViewModel.availableCompetitions = response.availableCompetitions;
+          const availableCompetitionIds = new Set(
+            response.availableCompetitions.map((option) => String(option.competitionId))
+          );
+          coachDashboardViewModel.coachDashboardForm.competitionIds =
+            coachDashboardViewModel.coachDashboardForm.competitionIds.filter((id) =>
+              availableCompetitionIds.has(String(id))
+            );
           coachDashboardViewModel.isLoadingCoachDashboardStats = false;
         },
         (error) => {
+          if (requestId !== coachDashboardRequestId) {
+            return;
+          }
           coachDashboardViewModel.isLoadingCoachDashboardStats = false;
           showError(error);
         }
       );
     }
 
-    function applyCoachDashboardFilters() {
-      fetchCoachDashboardStats();
+    function scheduleCoachDashboardRefresh() {
+      if (coachDashboardRefreshTimer) {
+        window.clearTimeout(coachDashboardRefreshTimer);
+      }
+      coachDashboardRefreshTimer = window.setTimeout(() => {
+        coachDashboardRefreshTimer = null;
+        fetchCoachDashboardStats();
+      }, COACH_DASHBOARD_REFRESH_DEBOUNCE_MS);
+    }
+
+    function updateCoachDashboardCompetitionSearch() {
+      state.coachDashboardCompetitionOptionsCurrentPage = 1;
+    }
+
+    function showCoachDashboardCompetitionOptionsPreviousPage() {
+      state.coachDashboardCompetitionOptionsCurrentPage = Math.max(
+        state.coachDashboardCompetitionOptionsCurrentPage - 1,
+        1
+      );
+    }
+
+    function showCoachDashboardCompetitionOptionsNextPage() {
+      state.coachDashboardCompetitionOptionsCurrentPage += 1;
     }
 
     function askCoachAssistant() {
@@ -183,14 +282,15 @@
       );
     }
 
-    function onCoachDashboardAgeCategoryChange() {
-      if (!coachDashboardYearOptions.value.includes(coachDashboardViewModel.coachDashboardForm.categoryYear)) {
-        coachDashboardViewModel.coachDashboardForm.categoryYear = "";
-      }
-    }
-
     function resetCoachDashboardFilters() {
-      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm);
+      if (coachDashboardRefreshTimer) {
+        window.clearTimeout(coachDashboardRefreshTimer);
+        coachDashboardRefreshTimer = null;
+      }
+      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
+        competitionIds: [] as string[]
+      });
+      coachDashboardViewModel.competitionSearchText = "";
       coachDashboardViewModel.activeCoachDashboardTab = "stats";
       fetchCoachDashboardStats();
     }
@@ -201,7 +301,14 @@
 
     function showCoachDashboardMode(tab: "stats" | "chat") {
       ensureCoachDashboardViewModel();
-      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm);
+      if (coachDashboardRefreshTimer) {
+        window.clearTimeout(coachDashboardRefreshTimer);
+        coachDashboardRefreshTimer = null;
+      }
+      Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
+        competitionIds: [] as string[]
+      });
+      coachDashboardViewModel.competitionSearchText = "";
       coachDashboardViewModel.activeCoachDashboardTab = tab;
       coachDashboardViewModel.filtersExpanded = true;
       coachDashboardViewModel.coachDashboardStats = null;
@@ -236,6 +343,10 @@
 
     function showCoachJudoka() {
       showCoachHomeMode("coachJudoka");
+    }
+
+    function getDataQualityIssueDescription(criterion: string): string {
+      return DATA_QUALITY_ISSUE_DESCRIPTIONS[criterion] || "";
     }
 
     return {

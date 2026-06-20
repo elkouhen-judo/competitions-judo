@@ -40,6 +40,7 @@ function createInitialState(): KirokuAppState {
     clubCompetitionParticipantsCurrentPage: 1,
     clubCompetitionAvailableJudokasCurrentPage: 1,
     clubCompetitionFormParticipantsCurrentPage: 1,
+    coachDashboardCompetitionOptionsCurrentPage: 1,
     judokaCompetitionResultsCurrentPage: 1,
     adminsCurrentPage: 1,
     usersSearch: "",

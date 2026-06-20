@@ -30,6 +30,12 @@
                 <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
               </select>
               <p class="field-hint">Alimente les répartitions par décision et les défaites hansoku-make.</p>
+              <div v-if="combatFormVictoryTypeIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur le type de décision">
+                <span v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
+                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
+                  {{ issue.label }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -52,6 +58,12 @@
                 <option value="Gaucher">Gaucher</option>
               </select>
               <p class="field-hint">Alimente les métriques même garde / garde opposée.</p>
+              <div v-if="combatFormOpponentStanceIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur la garde adversaire">
+                <span v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
+                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
+                  {{ issue.label }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -100,6 +112,12 @@
             </div>
             <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
             <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
+            <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les prises marquées">
+              <span v-for="issue in combatFormScoreIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
+                <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
+                {{ issue.label }}
+              </span>
+            </div>
           </div>
           </div>
         </div>

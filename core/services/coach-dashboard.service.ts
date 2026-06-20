@@ -4,7 +4,12 @@ import {
   type CoachChatDatasets,
   type GroqClient
 } from "./coach-assistant-search";
-import { loadCoachDashboardCombats } from "./coach-dashboard-loader";
+import {
+  filterCompetitionsByScope,
+  filterCompetitionsBySelection,
+  loadCoachDashboardCombats
+} from "./coach-dashboard-loader";
+import { toCanonicalCompetition } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CombatScoreRow } from "../repositories/types";
 import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
@@ -82,11 +87,25 @@ export default function createCoachDashboardService(
     filters: CoachDashboardFilters = {}
   ): Promise<CoachDashboard> {
     await requireCoach(email, "Tableau de bord réservé aux coachs.");
-    const combats = await loadCoachDashboardCombats(
-      { combatsRepository, combatScoresRepository, competitionsRepository, judokasRepository },
+    const [combats, allCompetitionRows] = await Promise.all([
+      loadCoachDashboardCombats(
+        { combatsRepository, combatScoresRepository, competitionsRepository, judokasRepository },
+        filters
+      ),
+      competitionsRepository.listAll()
+    ]);
+    const competitionsInScope = filterCompetitionsBySelection(
+      filterCompetitionsByScope(allCompetitionRows, filters),
       filters
-    );
-    return { stats: computeCoachDashboardStats(combats) };
+    ).map(toCanonicalCompetition);
+    return {
+      stats: computeCoachDashboardStats(combats, competitionsInScope),
+      availableCompetitions: filterCompetitionsByScope(allCompetitionRows, filters).map((competition) => ({
+        competitionId: competition.id_competition,
+        name: competition.nom || "Compétition",
+        competitionDate: competition.date || ""
+      }))
+    };
   }
 
   async function askCoachAssistant(

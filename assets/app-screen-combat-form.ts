@@ -2,6 +2,7 @@
   type KirokuApp = import("./types").KirokuApp;
   type CombatScoreFormRow = import("./types").CombatScoreFormRow;
   type CombatFormDeps = import("./types").CombatFormDeps;
+  type CombatDataQualityIssue = import("./types").CombatDataQualityIssue;
 
   const {
     createEmptyCombatScoreRow,
@@ -41,6 +42,47 @@
     const combatDecisionOptions = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result));
     const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
     const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
+    const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
+      const form = combatFormViewModel.combatForm;
+      if (!form.result) {
+        return [];
+      }
+      const issues: CombatDataQualityIssue[] = [];
+      if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
+        issues.push({ label: "Type de décision non renseigné", priority: "high", field: "victoryType" });
+      }
+      if (
+        form.result === "Victoire" &&
+        form.victoryType === "Ippon" &&
+        !form.scores.some((score) => score.value === "Ippon")
+      ) {
+        issues.push({
+          label: "Décision Ippon sans prise marquée à Ippon",
+          priority: "high",
+          field: "scores"
+        });
+      }
+      if (!form.scores.length) {
+        issues.push({ label: "Prises marquées non renseignées", priority: "medium", field: "scores" });
+      }
+      if (!form.opponentStance) {
+        issues.push({
+          label: "Garde adversaire non renseignée",
+          priority: "medium",
+          field: "opponentStance"
+        });
+      }
+      return issues;
+    });
+    const combatFormVictoryTypeIssues = window.Vue.computed(() =>
+      combatFormDataQualityIssues.value.filter((issue) => issue.field === "victoryType")
+    );
+    const combatFormScoreIssues = window.Vue.computed(() =>
+      combatFormDataQualityIssues.value.filter((issue) => issue.field === "scores")
+    );
+    const combatFormOpponentStanceIssues = window.Vue.computed(() =>
+      combatFormDataQualityIssues.value.filter((issue) => issue.field === "opponentStance")
+    );
 
     function ensureCombatFormViewModel() {
       if (combatFormMounted) {
@@ -58,7 +100,15 @@
           saveCombat,
           syncCombatDecisionVisibility
         },
-        { combatDecisionOptions, isSubmitting, showCombatDecisionBlock, tachiWazaTechniques }
+        {
+          combatDecisionOptions,
+          combatFormVictoryTypeIssues,
+          combatFormScoreIssues,
+          combatFormOpponentStanceIssues,
+          isSubmitting,
+          showCombatDecisionBlock,
+          tachiWazaTechniques
+        }
       );
     }
 
