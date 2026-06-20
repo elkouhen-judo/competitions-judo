@@ -131,7 +131,7 @@ Ces deux sections analysent la distribution des types de décisions. Elles affic
 
 ---
 
-## 5. Section "Qualité de la saisie" (`dataQualityIssues`)
+## 5. Section "Qualité des données" (`dataQualityIssues`)
 
 Cette section est affichée en dernier sur le tableau de bord : c'est une information de diagnostic sur la fiabilité des données, à consulter après avoir pris connaissance des résultats eux-mêmes (sections 3 et 4).
 
