@@ -800,33 +800,33 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       {
         level: "Départemental",
         podiums: [
-          { place: "1er", label: "1ère place", count: 1 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 1 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "Régional",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 1 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 1 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "National",
         podiums: [
-          { place: "1er", label: "1ère place", count: 1 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 1 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "International",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       }
     ]
@@ -881,33 +881,33 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       {
         level: "Départemental",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "Régional",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "National",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       },
       {
         level: "International",
         podiums: [
-          { place: "1er", label: "1ère place", count: 0 },
-          { place: "2e", label: "2ème place", count: 0 },
-          { place: "3e", label: "3ème place", count: 0 }
+          { place: "1er", label: "🥇", count: 0 },
+          { place: "2e", label: "🥈", count: 0 },
+          { place: "3e", label: "🥉", count: 0 }
         ]
       }
     ]

@@ -7,6 +7,9 @@
       </div>
       <div class="panel-body">
         <input type="hidden" id="competition_id" v-model="competitionForm.competitionId">
+        <div v-if="competitionInheritedFieldsLocked" class="status-banner status-banner-warning">
+          Compétition liée à un événement club — le nom, la date, la catégorie d'âge et le niveau sont hérités et se modifient depuis la compétition club.
+        </div>
 
         <div id="competitionOwnerBlock" class="full-row" :class="{ hidden: !showCompetitionOwnerBlock }">
           <label>Judoka</label>
@@ -29,10 +32,10 @@
             <h3>Compétition</h3>
           </div>
           <label for="competition_nom">Nom de la compétition</label>
-          <input type="text" id="competition_nom" v-model.trim="competitionForm.name">
+          <input type="text" id="competition_nom" v-model.trim="competitionForm.name" :disabled="competitionInheritedFieldsLocked">
 
           <label for="competition_date">Date</label>
-          <input type="date" id="competition_date" v-model="competitionForm.competitionDate">
+          <input type="date" id="competition_date" v-model="competitionForm.competitionDate" :disabled="competitionInheritedFieldsLocked">
         </div>
 
         <div class="form-section">
@@ -42,7 +45,7 @@
           <div class="form-grid">
             <div>
               <label for="competition_categorie_age">Catégorie d'âge</label>
-              <select id="competition_categorie_age" v-model="competitionForm.ageCategory" @change="onCompetitionFormAgeCategoryChange()">
+              <select id="competition_categorie_age" v-model="competitionForm.ageCategory" :disabled="competitionInheritedFieldsLocked" @change="onCompetitionFormAgeCategoryChange()">
                 <option value="">Sélectionnez une catégorie</option>
                 <option value="Poussinet">Poussinet</option>
                 <option value="Poussin">Poussin</option>
@@ -70,7 +73,7 @@
             <h3>Niveau</h3>
           </div>
           <label for="competition_niveau">Niveau</label>
-          <select id="competition_niveau" v-model="competitionForm.level">
+          <select id="competition_niveau" v-model="competitionForm.level" :disabled="competitionInheritedFieldsLocked">
             <option value="">Non renseigné</option>
             <option value="Départemental">Départemental</option>
             <option value="Régional">Régional</option>

@@ -2,6 +2,7 @@ import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat
 import { getAllowedDecisionTypesForCombatResult } from "./competitions/combat-decision-type";
 import { OPPONENT_STANCES } from "./competitions/opponent-stance";
 import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
+import { formatCompetitionRankingDisplay } from "./competition-results";
 import type {
   Combat,
   Competition,
@@ -158,9 +159,9 @@ function computeDataQualityIssues(
 }
 
 const PODIUM_PLACES: Array<{ place: "1er" | "2e" | "3e"; label: string }> = [
-  { place: "1er", label: "1ère place" },
-  { place: "2e", label: "2ème place" },
-  { place: "3e", label: "3ème place" }
+  { place: "1er", label: formatCompetitionRankingDisplay("1er") },
+  { place: "2e", label: formatCompetitionRankingDisplay("2e") },
+  { place: "3e", label: formatCompetitionRankingDisplay("3e") }
 ];
 
 function isFinalizedCompetitionResult(result: unknown): boolean {

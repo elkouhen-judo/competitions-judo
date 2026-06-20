@@ -337,6 +337,16 @@ test("detaching a club participant keeps the individual competition", async () =
       getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
     },
     competitionsRepository: {
+      listByClubCompetition: async () => [
+        {
+          id_competition: "COMP1",
+          id_judoka: "J1",
+          club_competition_id: "CLUB1",
+          nom: "Tournoi",
+          date: "2026-06-14",
+          classement: ""
+        }
+      ],
       getById: async () => ({
         id_competition: "COMP1",
         id_judoka: "J1",
@@ -368,6 +378,126 @@ test("detaching a club participant keeps the individual competition", async () =
 
   assert.deepEqual(calls, [["detach", "COMP1"]]);
   assert.match(result.message, /sans supprimer ses résultats/);
+});
+
+test("editing a finished club competition blocks adding participants", async () => {
+  const calls = [];
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      update: async (id, event) => calls.push(["updateClub", id, event])
+    },
+    competitionsRepository: {
+      listByClubCompetition: async () => [
+        {
+          id_competition: "COMP1",
+          id_judoka: "J1",
+          club_competition_id: "CLUB1",
+          nom: "Tournoi Nantes",
+          date: "2026-06-14",
+          categorie_age: "Minime",
+          niveau: "National",
+          classement: "1er"
+        }
+      ],
+      update: async (id, competition) => calls.push(["updateCompetition", id, competition]),
+      insert: async (competition, id) => calls.push(["insertCompetition", id, competition])
+    },
+    judokasRepository: {
+      listByIds: async (ids) =>
+        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime" }))
+    },
+    userContextService: {
+      getDomainUserContext: async () => ({
+        user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    buildClubCompetitionId: () => "CLUB1",
+    buildCompetitionId: () => "COMP_NEW",
+    createClubCompetition,
+    createCompetition
+  });
+
+  await assert.rejects(
+    () =>
+      service.methods.saveClubCompetition("coach@example.com", {
+        clubCompetitionId: "CLUB1",
+        name: "Tournoi Nantes",
+        competitionDate: "2026-06-14",
+        ageCategory: "Minime",
+        level: "National",
+        participantJudokaIds: ["J2"]
+      }),
+    /participants sont verrouillés/
+  );
+  assert.deepEqual(calls, []);
+});
+
+test("finished club competition blocks detaching participants", async () => {
+  const calls = [];
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
+    },
+    competitionsRepository: {
+      listByClubCompetition: async () => [
+        {
+          id_competition: "COMP1",
+          id_judoka: "J1",
+          club_competition_id: "CLUB1",
+          nom: "Tournoi",
+          date: "2026-06-14",
+          classement: "2e"
+        },
+        {
+          id_competition: "COMP2",
+          id_judoka: "J2",
+          club_competition_id: "CLUB1",
+          nom: "Tournoi",
+          date: "2026-06-14",
+          classement: ""
+        }
+      ],
+      getById: async () => ({
+        id_competition: "COMP2",
+        id_judoka: "J2",
+        club_competition_id: "CLUB1",
+        nom: "Tournoi",
+        date: "2026-06-14",
+        classement: ""
+      }),
+      detachFromClubCompetition: async (id) => calls.push(["detach", id])
+    },
+    userContextService: {
+      getDomainUserContext: async () => ({
+        user: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
+        domainUser: toCanonicalJudoka({
+          id_judoka: "COACH1",
+          profile_type: "JUDOKA",
+          role: "COACH"
+        }),
+        managedJudokaScope: createManagedJudokaScope([])
+      })
+    },
+    canManageClubCompetition: permissions.canManageClubCompetition
+  });
+
+  await assert.rejects(
+    () =>
+      service.methods.detachClubCompetitionParticipant(
+        "coach@example.com",
+        "CLUB1",
+        "COMP2"
+      ),
+    /participants sont verrouillés/
+  );
+  assert.deepEqual(calls, []);
 });
 
 test("deleting a club competition detaches linked individual competitions", async () => {
@@ -552,6 +682,43 @@ test("saveCompetition lets the owner edit their own competition", async () => {
   assert.equal(calls.updated.length, 1);
   assert.equal(calls.updated[0].idCompetition, "COMP1");
   assert.equal(calls.updated[0].draft.name, "Tournoi Nantes 2");
+});
+
+test("saveCompetition preserves club-inherited fields on a linked participant competition", async () => {
+  const { service, calls } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        club_competition_id: "CLUB1",
+        nom: "Tournoi club",
+        date: "2026-06-14",
+        categorie_age: "Cadet",
+        categorie_poids: "",
+        niveau: "Régional",
+        classement: ""
+      }
+    },
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  const result = await service.methods.saveCompetition("judoka@example.com", {
+    competitionId: "COMP1",
+    name: "Nom modifié côté judoka",
+    competitionDate: "2026-06-20",
+    ageCategory: "Junior",
+    weightCategory: "-60kg",
+    level: "National"
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(calls.updated.length, 1);
+  assert.equal(calls.updated[0].draft.name, "Tournoi club");
+  assert.equal(calls.updated[0].draft.competitionDate, "2026-06-14");
+  assert.equal(calls.updated[0].draft.ageCategory, "Cadet");
+  assert.equal(calls.updated[0].draft.weightCategory, "-60kg");
+  assert.equal(calls.updated[0].draft.level, "Régional");
+  assert.equal(calls.updated[0].draft.clubCompetitionId, "CLUB1");
 });
 
 test("saveCompetition lets the owner add age and weight categories to a legacy competition", async () => {
@@ -861,33 +1028,33 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     {
       level: "Départemental",
       podiums: [
-        { place: "1er", label: "1ère place", count: 1 },
-        { place: "2e", label: "2ème place", count: 0 },
-        { place: "3e", label: "3ème place", count: 0 }
+        { place: "1er", label: "🥇", count: 1 },
+        { place: "2e", label: "🥈", count: 0 },
+        { place: "3e", label: "🥉", count: 0 }
       ]
     },
     {
       level: "Régional",
       podiums: [
-        { place: "1er", label: "1ère place", count: 0 },
-        { place: "2e", label: "2ème place", count: 0 },
-        { place: "3e", label: "3ème place", count: 0 }
+        { place: "1er", label: "🥇", count: 0 },
+        { place: "2e", label: "🥈", count: 0 },
+        { place: "3e", label: "🥉", count: 0 }
       ]
     },
     {
       level: "National",
       podiums: [
-        { place: "1er", label: "1ère place", count: 0 },
-        { place: "2e", label: "2ème place", count: 0 },
-        { place: "3e", label: "3ème place", count: 1 }
+        { place: "1er", label: "🥇", count: 0 },
+        { place: "2e", label: "🥈", count: 0 },
+        { place: "3e", label: "🥉", count: 1 }
       ]
     },
     {
       level: "International",
       podiums: [
-        { place: "1er", label: "1ère place", count: 0 },
-        { place: "2e", label: "2ème place", count: 0 },
-        { place: "3e", label: "3ème place", count: 0 }
+        { place: "1er", label: "🥇", count: 0 },
+        { place: "2e", label: "🥈", count: 0 },
+        { place: "3e", label: "🥉", count: 0 }
       ]
     }
   ]);
@@ -900,9 +1067,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   assert.deepEqual(ageFiltered.stats.podiumsByLevel[0], {
     level: "Départemental",
     podiums: [
-      { place: "1er", label: "1ère place", count: 1 },
-      { place: "2e", label: "2ème place", count: 0 },
-      { place: "3e", label: "3ème place", count: 0 }
+      { place: "1er", label: "🥇", count: 1 },
+      { place: "2e", label: "🥈", count: 0 },
+      { place: "3e", label: "🥉", count: 0 }
     ]
   });
   assert.deepEqual(ageFiltered.availableCompetitions, [
@@ -1613,6 +1780,27 @@ test("getCompetitionDetail enriches combats with judoka display names, scores, a
   ]);
   assert.equal(detail.isCoach, true);
   assert.equal(detail.canManageCompetition, true);
+  assert.equal(detail.hasInheritedClubCompetitionFields, false);
+});
+
+test("getCompetitionDetail exposes inherited club competition fields", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        club_competition_id: "CLUB1",
+        nom: "Tournoi club",
+        date: "2026-06-14",
+        categorie_age: "Cadet"
+      }
+    },
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  const detail = await service.methods.getCompetitionDetail("judoka@example.com", "COMP1");
+
+  assert.equal(detail.hasInheritedClubCompetitionFields, true);
 });
 
 test("getCompetitionDetail exposes coach objective to a parent in managed scope", async () => {

@@ -131,6 +131,7 @@ export interface CompetitionDetail {
   isParent: boolean;
   canManageCompetition: boolean;
   canEditCompetition: boolean;
+  hasInheritedClubCompetitionFields: boolean;
   judokas: Judoka[];
 }
 

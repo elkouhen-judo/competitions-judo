@@ -70,6 +70,10 @@ export default function createClubCompetitionsService(
     }
   }
 
+  function hasFinalRanking(row: { classement?: unknown }): boolean {
+    return Boolean(String(row.classement || "").trim());
+  }
+
   async function saveClubCompetition(email: string, input: ClubCompetitionInput) {
     const { domainUser } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
@@ -80,11 +84,19 @@ export default function createClubCompetitionsService(
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
     const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
+    const participantsLocked = existing.some(hasFinalRanking);
 
     const participantJudokaIds =
       Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
         ? input.participantJudokaIds
         : undefined;
+    if (
+      isEditing &&
+      participantsLocked &&
+      (participantJudokaIds || []).some((judokaId) => !existingJudokaIds.has(String(judokaId)))
+    ) {
+      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
+    }
 
     const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds });
 
@@ -191,6 +203,10 @@ export default function createClubCompetitionsService(
     const event = await clubCompetitionsRepository.getById(idClubCompetition);
     if (!event) {
       throw new Error("Compétition club introuvable.");
+    }
+    const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
+    if (participations.some(hasFinalRanking)) {
+      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
     }
     const participation = await competitionsRepository.getById(idCompetition);
     if (

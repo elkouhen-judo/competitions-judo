@@ -18,7 +18,14 @@
 
   function createKirokuClubCompetitionScreen(app: KirokuApp, deps: ClubCompetitionDeps) {
     const { defaultListPageSize, state, ui, notifications } = app;
-    const { cleanText, getClassementBadgeClass, getCurrentLocalDate, getJudokaDisplayName, showView } = ui;
+    const {
+      cleanText,
+      formatCompetitionRanking,
+      getClassementBadgeClass,
+      getCurrentLocalDate,
+      getJudokaDisplayName,
+      showView
+    } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
     const { openCompetitionFromClubDetail } = deps;
 
@@ -46,6 +53,7 @@
       },
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
+      clubCompetitionParticipantsLocked: false,
       judokaAvailableSearchText: "",
       clubCompetitionNewJudokaIds: [] as string[]
     };
@@ -60,6 +68,7 @@
       clubCompetitionDetailForm: { ...defaultClubCompetitionDetailViewState.clubCompetitionDetailForm },
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
+      clubCompetitionParticipantsLocked: false,
       clubCompetitionNewJudokaIds: [] as string[]
     });
     let clubCompetitionDetailMounted = false;
@@ -313,6 +322,7 @@
       clubCompetitionDetailViewModel.clubCompetitionDetailTitle = "Chargement...";
       clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = [];
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = [];
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked = false;
       clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
       showView("clubCompetitionDetailView");
 
@@ -340,10 +350,12 @@
               return {
                 competitionId: p.competitionId || "",
                 judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
-                result: p.result || "Non classé",
+                result: formatCompetitionRanking(p.result) || "Non classé",
                 resultClass: getClassementBadgeClass(p.result)
               };
             });
+          clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
+            data.participations.some((p) => Boolean(cleanText(p.result)));
           state.clubCompetitionParticipantsCurrentPage = 1;
           const available = state.judokas
             .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
@@ -364,6 +376,13 @@
     function saveClubCompetitionDetails() {
       ensureClubCompetitionDetailViewModel();
       const form = clubCompetitionDetailViewModel.clubCompetitionDetailForm;
+      if (
+        clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked &&
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.length
+      ) {
+        showError("Les participants sont verrouillés car la compétition est terminée.");
+        return;
+      }
       app.runServer(
         "saveClubCompetition",
         [
@@ -389,6 +408,10 @@
       competitionId: string,
       judokaName: string
     ) {
+      if (clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked) {
+        showError("Les participants sont verrouillés car la compétition est terminée.");
+        return;
+      }
       app.confirmAndRun({
         message: `Retirer ${judokaName} de cette compétition club ? Ses résultats individuels seront conservés.`,
         method: "detachClubCompetitionParticipant",

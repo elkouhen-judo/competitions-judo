@@ -83,9 +83,9 @@ Cette section dénombre les compétitions du périmètre filtré (Étape 1, ind�
 
 | Métrique technique | Libellé IHM   | Type de décompte | Règle de calcul                                                                                          |
 | :------------------ | :------------ | :---------------- | :--------------------------------------------------------------------------------------------------------- |
-| `podiumsByLevel[niveau].podiums` (`1er`) | **1ère place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"1er"`. |
-| `podiumsByLevel[niveau].podiums` (`2e`)  | **2ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"2e"`.  |
-| `podiumsByLevel[niveau].podiums` (`3e`)  | **3ème place** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"3e"`.  |
+| `podiumsByLevel[niveau].podiums` (`1er`) | **🥇** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"1er"`. |
+| `podiumsByLevel[niveau].podiums` (`2e`)  | **🥈** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"2e"`.  |
+| `podiumsByLevel[niveau].podiums` (`3e`)  | **🥉** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"3e"`.  |
 
 *Particularités :*
 - **Compteurs bruts uniquement :** contrairement aux autres sections, aucun pourcentage n'est affiché (pas de dénominateur pertinent à exposer).
