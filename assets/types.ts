@@ -131,6 +131,13 @@ export interface ManagedUserCard {
   isPending: boolean;
 }
 
+export interface CombatDataQualityIssue {
+  label: string;
+  priority: "high" | "medium";
+  /** Which form field the issue relates to, so the combat form can show it inline while editing that field. */
+  field?: "victoryType" | "scores" | "opponentStance";
+}
+
 export interface CompetitionCombatCard {
   combatId: string;
   judokaId: string;
@@ -141,7 +148,7 @@ export interface CompetitionCombatCard {
   result: string;
   victoryType?: string;
   scoreLabels: string[];
-  missingMetricLabels: string[];
+  dataQualityIssues: CombatDataQualityIssue[];
   resultClass: string;
   judokaDisplayName: string;
   showJudoka: boolean;
@@ -346,6 +353,7 @@ export interface KirokuAppState {
   clubCompetitionParticipantsCurrentPage: number;
   clubCompetitionAvailableJudokasCurrentPage: number;
   clubCompetitionFormParticipantsCurrentPage: number;
+  coachDashboardCompetitionOptionsCurrentPage: number;
   judokaCompetitionResultsCurrentPage: number;
   adminsCurrentPage: number;
   usersSearch: string;

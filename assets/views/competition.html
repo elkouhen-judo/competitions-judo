@@ -139,8 +139,11 @@
                   <span class="meta-label">Judoka</span>
                   <span class="meta-value">{{ combat.judokaDisplayName }}<span v-if="combat.judokaHandedness"> · {{ combat.judokaHandedness }}</span></span>
                 </div>
-                <div v-if="combat.missingMetricLabels.length" class="metric-missing-list" aria-label="Données manquantes pour les métriques">
-                  <span v-for="label in combat.missingMetricLabels" :key="label" class="metric-warning">{{ label }}</span>
+                <div v-if="combat.dataQualityIssues.length" class="metric-missing-list" aria-label="Problèmes de saisie détectés sur ce combat">
+                  <span v-for="issue in combat.dataQualityIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
+                    <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
+                    {{ issue.label }}
+                  </span>
                 </div>
                 <p class="combat-comment">{{ combat.notes }}</p>
                 <div v-if="combat.canEdit" class="card-actions">

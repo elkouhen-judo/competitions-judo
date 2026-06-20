@@ -679,7 +679,7 @@ test("combat score domain enforces the conditional sub-field per category", () =
   );
 });
 
-test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, hansoku-make and breakdown rates", () => {
+test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-waza ippon and breakdown rates", () => {
   const combats = [
     {
       judokaId: "JUDO1",
@@ -743,16 +743,22 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     }
   ];
 
-  assert.deepEqual(computeCoachDashboardStats(combats), {
+  const competitions = [
+    { result: "1er" },
+    { result: "1er" },
+    { result: "2e" },
+    { result: "5e" },
+    { result: "" }
+  ];
+
+  assert.deepEqual(computeCoachDashboardStats(combats, competitions), {
     totalCombats: 6,
     victories: 4,
     victoryRate: 67,
-    tachiWazaVictories: 1,
-    tachiWazaVictoryRate: 17,
-    neWazaVictories: 1,
-    neWazaVictoryRate: 17,
-    hansokuMakeLosses: 1,
-    hansokuMakeLossRate: 17,
+    tachiWazaIpponVictories: 1,
+    tachiWazaIpponVictoryRate: 17,
+    neWazaIpponVictories: 1,
+    neWazaIpponVictoryRate: 17,
     victoriesByDecisionType: [
       { decisionType: "Ippon", count: 2, total: 4, rate: 50 },
       { decisionType: "Waza-ari", count: 0, total: 4, rate: 0 },
@@ -786,6 +792,20 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     judokasByHandedness: [
       { handedness: "Droitier", judokaCount: 2 },
       { handedness: "Gaucher", judokaCount: 1 }
+    ],
+    dataQualityIssues: [
+      { criterion: "judokaHandedness", label: "Garde judoka non renseignée", count: 1, total: 6, rate: 17 },
+      { criterion: "opponentStance", label: "Garde adversaire non renseignée", count: 1, total: 6, rate: 17 },
+      { criterion: "victoryType", label: "Type de décision non renseigné", count: 0, total: 6, rate: 0 },
+      { criterion: "scores", label: "Prises marquées non renseignées", count: 4, total: 6, rate: 67 },
+      { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 1, total: 6, rate: 17 },
+      { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 1, total: 6, rate: 17 },
+      { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 6, rate: 0 }
+    ],
+    podiums: [
+      { place: "1er", label: "1ère place", count: 2 },
+      { place: "2e", label: "2ème place", count: 1 },
+      { place: "3e", label: "3ème place", count: 0 }
     ]
   });
 
@@ -793,12 +813,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     totalCombats: 0,
     victories: 0,
     victoryRate: 0,
-    tachiWazaVictories: 0,
-    tachiWazaVictoryRate: 0,
-    neWazaVictories: 0,
-    neWazaVictoryRate: 0,
-    hansokuMakeLosses: 0,
-    hansokuMakeLossRate: 0,
+    tachiWazaIpponVictories: 0,
+    tachiWazaIpponVictoryRate: 0,
+    neWazaIpponVictories: 0,
+    neWazaIpponVictoryRate: 0,
     victoriesByDecisionType: [
       { decisionType: "Ippon", count: 0, total: 0, rate: 0 },
       { decisionType: "Waza-ari", count: 0, total: 0, rate: 0 },
@@ -832,7 +850,81 @@ test("coach dashboard statistics domain computes victory, tachi-waza, ne-waza, h
     judokasByHandedness: [
       { handedness: "Droitier", judokaCount: 0 },
       { handedness: "Gaucher", judokaCount: 0 }
+    ],
+    dataQualityIssues: [
+      { criterion: "judokaHandedness", label: "Garde judoka non renseignée", count: 0, total: 0, rate: 0 },
+      { criterion: "opponentStance", label: "Garde adversaire non renseignée", count: 0, total: 0, rate: 0 },
+      { criterion: "victoryType", label: "Type de décision non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "scores", label: "Prises marquées non renseignées", count: 0, total: 0, rate: 0 },
+      { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 0, rate: 0 }
+    ],
+    podiums: [
+      { place: "1er", label: "1ère place", count: 0 },
+      { place: "2e", label: "2ème place", count: 0 },
+      { place: "3e", label: "3ème place", count: 0 }
     ]
+  });
+});
+
+test("coach dashboard statistics domain only counts an ippon victory when the scoring ippon matches the category", () => {
+  const combats = [
+    {
+      judokaId: "JUDO1",
+      result: "Victoire",
+      victoryType: "Waza-ari",
+      scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Waza-ari" }]
+    },
+    {
+      judokaId: "JUDO2",
+      result: "Victoire",
+      victoryType: "Ippon",
+      scores: [
+        { category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" },
+        { category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }
+      ]
+    }
+  ];
+
+  const stats = computeCoachDashboardStats(combats);
+
+  assert.equal(stats.tachiWazaIpponVictories, 1);
+  assert.equal(stats.neWazaIpponVictories, 0);
+});
+
+test("coach dashboard statistics domain flags an ippon decision with no matching ippon score as inconsistent", () => {
+  const combats = [
+    {
+      judokaId: "JUDO1",
+      result: "Victoire",
+      victoryType: "Ippon",
+      scores: []
+    },
+    {
+      judokaId: "JUDO2",
+      result: "Victoire",
+      victoryType: "Ippon",
+      scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }]
+    },
+    {
+      judokaId: "JUDO3",
+      result: "Défaite",
+      victoryType: "Ippon",
+      scores: []
+    }
+  ];
+
+  const issue = computeCoachDashboardStats(combats).dataQualityIssues.find(
+    (entry) => entry.criterion === "inconsistentIppon"
+  );
+
+  assert.deepEqual(issue, {
+    criterion: "inconsistentIppon",
+    label: "Ippon incohérent",
+    count: 1,
+    total: 3,
+    rate: 33
   });
 });
 

@@ -4,11 +4,15 @@ import { OPPONENT_STANCES } from "./competitions/opponent-stance";
 import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
 import type {
   Combat,
+  Competition,
   CoachDashboardDecisionBreakdownEntry,
   CoachDashboardGenderBreakdownEntry,
   CoachDashboardHandednessBreakdownEntry,
   CoachDashboardLateralMatchupBreakdownEntry,
   CoachDashboardLevelBreakdownEntry,
+  CoachDashboardLevelPodiumBreakdownEntry,
+  CoachDashboardPodiumBreakdownEntry,
+  CoachDashboardQualityIssueEntry,
   CoachDashboardStats
 } from "../types";
 
@@ -92,6 +96,14 @@ function computeLateralMatchupBreakdown(
   });
 }
 
+function hasIpponScore(combat: CoachDashboardCombat, category: "Tachi-waza" | "Ne-waza"): boolean {
+  return (combat.scores || []).some((score) => score.value === "Ippon" && score.category === category);
+}
+
+function hasAnyIpponScore(combat: CoachDashboardCombat): boolean {
+  return hasIpponScore(combat, "Tachi-waza") || hasIpponScore(combat, "Ne-waza");
+}
+
 function computeLevelBreakdown(
   combats: CoachDashboardCombat[]
 ): CoachDashboardLevelBreakdownEntry[] {
@@ -107,38 +119,131 @@ function computeLevelBreakdown(
   });
 }
 
-export function computeCoachDashboardStats(combats: CoachDashboardCombat[]): CoachDashboardStats {
+const DATA_QUALITY_CRITERIA: Array<{
+  criterion: string;
+  label: string;
+  isMissing: (combat: CoachDashboardCombat) => boolean;
+}> = [
+  {
+    criterion: "judokaHandedness",
+    label: "Garde judoka non renseignée",
+    isMissing: (combat) => !combat.judokaHandedness
+  },
+  {
+    criterion: "opponentStance",
+    label: "Garde adversaire non renseignée",
+    isMissing: (combat) => !combat.opponentStance
+  },
+  {
+    criterion: "victoryType",
+    label: "Type de décision non renseigné",
+    isMissing: (combat) => !combat.victoryType
+  },
+  {
+    criterion: "scores",
+    label: "Prises marquées non renseignées",
+    isMissing: (combat) => !(combat.scores || []).length
+  },
+  {
+    criterion: "competitionLevel",
+    label: "Niveau de compétition non renseigné",
+    isMissing: (combat) => !combat.competitionLevel
+  },
+  {
+    criterion: "judokaGender",
+    label: "Genre judoka non renseigné",
+    isMissing: (combat) => !combat.judokaGender
+  },
+  {
+    criterion: "inconsistentIppon",
+    label: "Ippon incohérent",
+    isMissing: (combat) =>
+      isVictoryCombatResult(combat.result) &&
+      combat.victoryType === "Ippon" &&
+      !hasAnyIpponScore(combat)
+  }
+];
+
+function computeDataQualityIssues(
+  combats: CoachDashboardCombat[]
+): CoachDashboardQualityIssueEntry[] {
+  const total = combats.length;
+  return DATA_QUALITY_CRITERIA.map(({ criterion, label, isMissing }) => {
+    const count = combats.filter(isMissing).length;
+    return { criterion, label, count, total, rate: computeRate(count, total) };
+  });
+}
+
+const PODIUM_PLACES: Array<{ place: "1er" | "2e" | "3e"; label: string }> = [
+  { place: "1er", label: "1ère place" },
+  { place: "2e", label: "2ème place" },
+  { place: "3e", label: "3ème place" }
+];
+
+function isFinalizedCompetitionResult(result: unknown): boolean {
+  return Boolean(String(result || "").trim());
+}
+
+function computePodiumBreakdownByLevel(
+  competitions: Pick<Competition, "result" | "level">[]
+): CoachDashboardLevelPodiumBreakdownEntry[] {
+  const finalizedCompetitions = competitions.filter((competition) =>
+    isFinalizedCompetitionResult(competition.result)
+  );
+  return COMPETITION_LEVELS.map((level) => {
+    const levelCompetitions = finalizedCompetitions.filter((competition) => competition.level === level);
+    return {
+      level,
+      podiums: PODIUM_PLACES.map(({ place, label }) => ({
+        place,
+        label,
+        count: levelCompetitions.filter((competition) => competition.result === place).length
+      }))
+    };
+  });
+}
+
+function computePodiumBreakdown(
+  competitions: Pick<Competition, "result">[]
+): CoachDashboardPodiumBreakdownEntry[] {
+  const finalizedCompetitions = competitions.filter((competition) =>
+    isFinalizedCompetitionResult(competition.result)
+  );
+  return PODIUM_PLACES.map(({ place, label }) => ({
+    place,
+    label,
+    count: finalizedCompetitions.filter((competition) => competition.result === place).length
+  }));
+}
+
+export function computeCoachDashboardStats(
+  combats: CoachDashboardCombat[],
+  competitions: Pick<Competition, "result">[] = []
+): CoachDashboardStats {
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
-  const tachiWazaVictories = combats.filter(
-    (combat) =>
-      isVictoryCombatResult(combat.result) &&
-      (combat.scores || []).some((score) => score.category === "Tachi-waza")
+  const tachiWazaIpponVictories = combats.filter(
+    (combat) => isVictoryCombatResult(combat.result) && hasIpponScore(combat, "Tachi-waza")
   ).length;
-  const neWazaVictories = combats.filter(
-    (combat) =>
-      isVictoryCombatResult(combat.result) &&
-      (combat.scores || []).some((score) => score.category === "Ne-waza")
-  ).length;
-  const hansokuMakeLosses = combats.filter(
-    (combat) => isLossCombatResult(combat.result) && combat.victoryType === "Hansoku-make"
+  const neWazaIpponVictories = combats.filter(
+    (combat) => isVictoryCombatResult(combat.result) && hasIpponScore(combat, "Ne-waza")
   ).length;
 
   return {
     totalCombats,
     victories,
     victoryRate: computeRate(victories, totalCombats),
-    tachiWazaVictories,
-    tachiWazaVictoryRate: computeRate(tachiWazaVictories, totalCombats),
-    neWazaVictories,
-    neWazaVictoryRate: computeRate(neWazaVictories, totalCombats),
-    hansokuMakeLosses,
-    hansokuMakeLossRate: computeRate(hansokuMakeLosses, totalCombats),
+    tachiWazaIpponVictories,
+    tachiWazaIpponVictoryRate: computeRate(tachiWazaIpponVictories, totalCombats),
+    neWazaIpponVictories,
+    neWazaIpponVictoryRate: computeRate(neWazaIpponVictories, totalCombats),
     victoriesByDecisionType: computeDecisionBreakdown(combats, "Victoire"),
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
     byLateralMatchup: computeLateralMatchupBreakdown(combats),
     byCompetitionLevel: computeLevelBreakdown(combats),
     judokasByGender: computeJudokaCountByGender(combats),
-    judokasByHandedness: computeJudokaCountByHandedness(combats)
+    judokasByHandedness: computeJudokaCountByHandedness(combats),
+    dataQualityIssues: computeDataQualityIssues(combats),
+    podiums: computePodiumBreakdown(competitions)
   };
 }

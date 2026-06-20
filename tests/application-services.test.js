@@ -748,16 +748,23 @@ function createTestCoachDashboardService({
   return { service };
 }
 
-test("getCoachDashboard computes stats filtered by competition, age category, gender and year in category", async () => {
+test("getCoachDashboard computes stats filtered by competition and age category", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [
       {
         id_competition: "COMP1",
         date: "2026-02-10",
         categorie_age: "Cadet",
-        niveau: "Départemental"
+        niveau: "Départemental",
+        classement: "1er"
       },
-      { id_competition: "COMP2", date: "2026-03-15", categorie_age: "Minime", niveau: "National" }
+      {
+        id_competition: "COMP2",
+        date: "2026-03-15",
+        categorie_age: "Minime",
+        niveau: "National",
+        classement: "3e"
+      }
     ],
     combatsByCompetitionId: {
       COMP1: [
@@ -801,6 +808,10 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
 
   const allResult = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(allResult.stats.totalCombats, 3);
+  assert.deepEqual(allResult.availableCompetitions, [
+    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" },
+    { competitionId: "COMP2", name: "Compétition", competitionDate: "2026-03-15" }
+  ]);
   assert.deepEqual(
     allResult.stats.byLateralMatchup.map(({ matchup, combats, victories, victoryRate }) => ({
       matchup,
@@ -838,38 +849,32 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
     allResult.stats.victoriesByDecisionType.find((entry) => entry.decisionType === "Ippon"),
     { decisionType: "Ippon", count: 2, total: 2, rate: 100 }
   );
+  assert.deepEqual(allResult.stats.podiums, [
+    { place: "1er", label: "1ère place", count: 1 },
+    { place: "2e", label: "2ème place", count: 0 },
+    { place: "3e", label: "3ème place", count: 1 }
+  ]);
 
   const ageFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     ageCategory: "Cadet"
   });
   assert.equal(ageFiltered.stats.totalCombats, 2);
-  assert.equal(ageFiltered.stats.tachiWazaVictories, 1);
-  assert.equal(ageFiltered.stats.hansokuMakeLosses, 1);
-
-  const genderFiltered = await service.methods.getCoachDashboard("coach@example.com", {
-    gender: "Femme"
-  });
-  assert.equal(genderFiltered.stats.totalCombats, 1);
-  assert.equal(genderFiltered.stats.hansokuMakeLosses, 1);
-
-  const handednessFiltered = await service.methods.getCoachDashboard("coach@example.com", {
-    handedness: "Droitier"
-  });
-  assert.equal(handednessFiltered.stats.totalCombats, 2);
-  assert.equal(handednessFiltered.stats.victories, 2);
-
-  const yearFiltered = await service.methods.getCoachDashboard("coach@example.com", {
-    ageCategory: "Cadet",
-    categoryYear: "1"
-  });
-  assert.equal(yearFiltered.stats.totalCombats, 1);
-  assert.equal(yearFiltered.stats.victories, 1);
+  assert.equal(ageFiltered.stats.tachiWazaIpponVictories, 1);
+  assert.deepEqual(ageFiltered.stats.podiums, [
+    { place: "1er", label: "1ère place", count: 1 },
+    { place: "2e", label: "2ème place", count: 0 },
+    { place: "3e", label: "3ème place", count: 0 }
+  ]);
+  assert.deepEqual(ageFiltered.availableCompetitions, [
+    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" }
+  ]);
 
   const competitionFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     competitionIds: ["COMP2"]
   });
   assert.equal(competitionFiltered.stats.totalCombats, 1);
   assert.equal(competitionFiltered.stats.victories, 1);
+  assert.equal(competitionFiltered.availableCompetitions.length, 2);
 
   const exactDateFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     dateFrom: "2026-03-15",
@@ -877,13 +882,18 @@ test("getCoachDashboard computes stats filtered by competition, age category, ge
   });
   assert.equal(exactDateFiltered.stats.totalCombats, 1);
   assert.equal(exactDateFiltered.stats.victories, 1);
+  assert.deepEqual(exactDateFiltered.availableCompetitions, [
+    { competitionId: "COMP2", name: "Compétition", competitionDate: "2026-03-15" }
+  ]);
 
   const dateRangeFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     dateFrom: "2026-02-01",
     dateTo: "2026-02-28"
   });
   assert.equal(dateRangeFiltered.stats.totalCombats, 2);
-  assert.equal(dateRangeFiltered.stats.hansokuMakeLosses, 1);
+  assert.deepEqual(dateRangeFiltered.availableCompetitions, [
+    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" }
+  ]);
 
   await assert.rejects(
     () =>

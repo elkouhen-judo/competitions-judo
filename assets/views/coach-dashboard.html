@@ -52,7 +52,7 @@
           <div v-show="filtersExpanded" class="form-grid">
             <div>
               <label for="coachDashboard_categorie_age">Catégorie d'âge</label>
-              <select id="coachDashboard_categorie_age" v-model="coachDashboardForm.ageCategory" @change="onCoachDashboardAgeCategoryChange()">
+              <select id="coachDashboard_categorie_age" v-model="coachDashboardForm.ageCategory" @change="scheduleCoachDashboardRefresh()">
                 <option value="">Toutes catégories</option>
                 <option value="Poussinet">Poussinet</option>
                 <option value="Poussin">Poussin</option>
@@ -64,47 +64,47 @@
                 <option value="Vétéran">Vétéran</option>
               </select>
             </div>
-            <div v-if="coachDashboardYearOptions.length">
-              <label for="coachDashboard_annee_categorie">Année dans la catégorie</label>
-              <select id="coachDashboard_annee_categorie" v-model="coachDashboardForm.categoryYear">
-                <option value="">Toutes années</option>
-                <option v-for="yearOption in coachDashboardYearOptions" :key="yearOption" :value="yearOption">{{ coachDashboardForm.ageCategory }} {{ yearOption }}</option>
-              </select>
-            </div>
             <div class="dashboard-date-range full-row">
               <label for="coachDashboard_date_debut">Date début</label>
-              <input id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm.dateFrom">
+              <input id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm.dateFrom" @change="scheduleCoachDashboardRefresh()">
               <label for="coachDashboard_date_fin">Date fin</label>
-              <input id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm.dateTo">
+              <input id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm.dateTo" @change="scheduleCoachDashboardRefresh()">
             </div>
-            <div>
-              <label for="coachDashboard_genre">Genre</label>
-              <select id="coachDashboard_genre" v-model="coachDashboardForm.gender">
-                <option value="">Tous</option>
-                <option value="Homme">Homme</option>
-                <option value="Femme">Femme</option>
-              </select>
-            </div>
-            <div>
-              <label for="coachDashboard_lateralite">Garde</label>
-              <select id="coachDashboard_lateralite" v-model="coachDashboardForm.handedness">
-                <option value="">Toutes</option>
-                <option value="Droitier">Droitier</option>
-                <option value="Gaucher">Gaucher</option>
-              </select>
+          </div>
+
+          <div v-show="filtersExpanded">
+            <div class="full-row">
+              <label for="coachDashboardCompetitionSearch">Compétitions
+                <span v-if="coachDashboardForm.competitionIds.length" class="result-badge">{{ coachDashboardForm.competitionIds.length }} sélectionnée(s)</span>
+              </label>
+              <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher par nom ou date..." autocomplete="off" v-model="competitionSearchText" @input="updateCoachDashboardCompetitionSearch()">
+              <div id="coachDashboardCompetitionOptions">
+                <div v-if="!coachDashboardCompetitionOptionsPage.length" class="empty-state">Aucune compétition trouvée.</div>
+                <div v-else class="list">
+                  <label v-for="option in coachDashboardCompetitionOptionsPage" :key="option.competitionId" class="checkbox-row">
+                    <input type="checkbox" :value="option.competitionId" v-model="coachDashboardForm.competitionIds" @change="scheduleCoachDashboardRefresh()">
+                    <span>{{ option.name }} — {{ option.competitionDate }}</span>
+                  </label>
+                </div>
+                <div v-if="coachDashboardCompetitionOptionsTotalPages > 1" class="list-summary">
+                  <p class="list-summary-text">Page {{ coachDashboardCompetitionOptionsCurrentPage }} / {{ coachDashboardCompetitionOptionsTotalPages }} ({{ coachDashboardCompetitionOptionsTotalCount }} compétitions)</p>
+                  <div class="list-summary-actions">
+                    <button v-if="coachDashboardCompetitionOptionsCanShowPreviousPage" class="button-secondary" type="button" @click="showCoachDashboardCompetitionOptionsPreviousPage()">Page précédente</button>
+                    <button v-if="coachDashboardCompetitionOptionsCanShowNextPage" class="button-secondary" type="button" @click="showCoachDashboardCompetitionOptionsNextPage()">Page suivante</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div v-show="filtersExpanded" class="form-actions mobile-action-bar">
             <button class="button-secondary" type="button" @click="resetCoachDashboardFilters()">Réinitialiser</button>
-            <button id="applyCoachDashboardFiltersButton" type="button" :disabled="isSubmitting" @click="applyCoachDashboardFilters()">Actualiser</button>
           </div>
           <div v-show="!filtersExpanded" class="dashboard-filter-summary">
+            <span v-if="coachDashboardForm.ageCategory">{{ coachDashboardForm.ageCategory }}</span>
             <span v-if="coachDashboardForm.dateFrom">Depuis {{ coachDashboardForm.dateFrom }}</span>
             <span v-if="coachDashboardForm.dateTo">Jusqu'au {{ coachDashboardForm.dateTo }}</span>
-            <span v-if="coachDashboardForm.ageCategory">{{ coachDashboardForm.ageCategory }}</span>
-            <span v-if="coachDashboardForm.gender">{{ coachDashboardForm.gender }}</span>
-            <span v-if="coachDashboardForm.handedness">{{ coachDashboardForm.handedness }}</span>
+            <span v-if="coachDashboardForm.competitionIds.length">{{ coachDashboardForm.competitionIds.length }} compétition(s)</span>
           </div>
         </div>
 
@@ -114,83 +114,140 @@
               <h3>Statistiques</h3>
             </div>
           </div>
-          <template v-if="isLoadingCoachDashboardStats">
-            <div class="empty-state">Chargement des statistiques...</div>
-          </template>
-          <template v-else-if="!coachDashboardStats || !coachDashboardStats.totalCombats">
-            <div class="empty-state">Aucun combat trouvé pour ces filtres.</div>
-          </template>
-          <template v-else>
-            <div class="section-heading">
-              <div>
-                <h3>Volumes</h3>
-                <p class="subtitle">Compteurs bruts sur le périmètre filtré.</p>
-              </div>
-            </div>
-            <div class="stats-grid">
-              <div class="stat-card stat-card-highlight">
-                <span class="stat-label">Combats analysés</span>
-                <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
-              </div>
-              <div class="stat-card stat-card-split">
-                <span class="stat-label">Judokas par genre</span>
-                <div class="split-stat-grid">
-                  <div class="split-stat-item">
-                    <span class="split-stat-label">Homme</span>
-                    <span class="split-stat-value">{{ coachDashboardJudokasByGender[0]?.judokaCount || 0 }}</span>
-                  </div>
-                  <div class="split-stat-item">
-                    <span class="split-stat-label">Femme</span>
-                    <span class="split-stat-value">{{ coachDashboardJudokasByGender[1]?.judokaCount || 0 }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="stat-card stat-card-split">
-                <span class="stat-label">Judokas par garde</span>
-                <div class="split-stat-grid">
-                  <div class="split-stat-item">
-                    <span class="split-stat-label">Droitier</span>
-                    <span class="split-stat-value">{{ coachDashboardJudokasByHandedness[0]?.judokaCount || 0 }}</span>
-                  </div>
-                  <div class="split-stat-item">
-                    <span class="split-stat-label">Gaucher</span>
-                    <span class="split-stat-value">{{ coachDashboardJudokasByHandedness[1]?.judokaCount || 0 }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="section-heading dashboard-subsection">
-              <div>
-                <h3>Performance globale</h3>
-                <p class="subtitle">Taux calculés sur les combats du périmètre filtré.</p>
-              </div>
-            </div>
-            <div class="stats-grid">
-              <div class="stat-card stat-card-success">
-                <span class="stat-label">Victoires totales</span>
-                <span class="stat-value">{{ coachDashboardStats.victories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.victoryRate }}%)</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-label">Victoires debout</span>
-                <span class="stat-value">{{ coachDashboardStats.tachiWazaVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.tachiWazaVictoryRate }}%)</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-label">Victoires au sol</span>
-                <span class="stat-value">{{ coachDashboardStats.neWazaVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.neWazaVictoryRate }}%)</span>
-              </div>
-              <div class="stat-card stat-card-danger">
-                <span class="stat-label">Défaites par hansoku-make</span>
-                <span class="stat-value">{{ coachDashboardStats.hansokuMakeLosses }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.hansokuMakeLossRate }}%)</span>
-              </div>
-            </div>
-
-          </template>
+          <div v-if="isLoadingCoachDashboardStats" class="empty-state">Chargement des statistiques...</div>
+          <div v-else-if="!coachDashboardStats || !coachDashboardStats.totalCombats" class="empty-state">Aucun combat trouvé pour ces filtres.</div>
         </div>
 
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
-            <div><h3>Par niveau</h3></div>
+            <div>
+              <h3>Volumes</h3>
+              <p class="subtitle">Compteurs bruts sur le périmètre filtré.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card stat-card-highlight">
+              <span class="stat-label">Combats analysés
+                <span class="info-tip" tabindex="0" aria-label="Nombre total de combats retenus après application des filtres actifs (compétitions, dates, catégorie d'âge, genre).">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre total de combats retenus après application des filtres actifs (compétitions, dates, catégorie d'âge, genre).</span>
+                </span>
+              </span>
+              <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div>
+              <h3>Répartition des judokas</h3>
+              <p class="subtitle">Judokas distincts ayant au moins un combat dans le périmètre filtré.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card stat-card-split">
+              <span class="stat-label">Judokas par genre
+                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu dans le périmètre filtré, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu dans le périmètre filtré, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
+                </span>
+              </span>
+              <div class="split-stat-grid">
+                <div class="split-stat-item">
+                  <span class="split-stat-label">Homme</span>
+                  <span class="split-stat-value">{{ coachDashboardJudokasByGender[0]?.judokaCount || 0 }}</span>
+                </div>
+                <div class="split-stat-item">
+                  <span class="split-stat-label">Femme</span>
+                  <span class="split-stat-value">{{ coachDashboardJudokasByGender[1]?.judokaCount || 0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="stat-card stat-card-split">
+              <span class="stat-label">Judokas par garde
+                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu dans le périmètre filtré, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu dans le périmètre filtré, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
+                </span>
+              </span>
+              <div class="split-stat-grid">
+                <div class="split-stat-item">
+                  <span class="split-stat-label">Droitier</span>
+                  <span class="split-stat-value">{{ coachDashboardJudokasByHandedness[0]?.judokaCount || 0 }}</span>
+                </div>
+                <div class="split-stat-item">
+                  <span class="split-stat-label">Gaucher</span>
+                  <span class="split-stat-value">{{ coachDashboardJudokasByHandedness[1]?.judokaCount || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div>
+              <h3>Performance globale</h3>
+              <p class="subtitle">Taux calculés sur les combats du périmètre filtré.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card stat-card-success">
+              <span class="stat-label">Victoires totales
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi tous les combats du périmètre filtré.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi tous les combats du périmètre filtré.</span>
+                </span>
+              </span>
+              <span class="stat-value">{{ coachDashboardStats.victories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.victoryRate }}%)</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Victoires Ippon debout
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Tachi-waza (debout).">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Tachi-waza (debout).</span>
+                </span>
+              </span>
+              <span class="stat-value">{{ coachDashboardStats.tachiWazaIpponVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.tachiWazaIpponVictoryRate }}%)</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Victoires Ippon au sol
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Ne-waza (au sol).">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Ne-waza (au sol).</span>
+                </span>
+              </span>
+              <span class="stat-value">{{ coachDashboardStats.neWazaIpponVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.neWazaIpponVictoryRate }}%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div><h3>Podiums
+              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place sur le périmètre filtré.">
+                <span aria-hidden="true">i</span>
+                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place sur le périmètre filtré.</span>
+              </span>
+            </h3></div>
+          </div>
+          <div class="stats-grid">
+            <div v-for="entry in coachDashboardPodiums" :key="entry.place" class="stat-card" :class="{ 'stat-card-success': entry.place === '1er' }">
+              <span class="stat-label">{{ entry.label }}</span>
+              <span class="stat-value">{{ entry.count }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div><h3>Par niveau
+              <span class="info-tip" tabindex="0" aria-label="Taux de victoire et nombre de combats gagnés, calculés séparément pour chaque niveau de compétition (départemental, régional, national, international).">
+                <span aria-hidden="true">i</span>
+                <span class="info-tip-bubble" aria-hidden="true">Taux de victoire et nombre de combats gagnés, calculés séparément pour chaque niveau de compétition (départemental, régional, national, international).</span>
+              </span>
+            </h3></div>
           </div>
           <div class="stats-grid">
             <div v-for="entry in coachDashboardByCompetitionLevel" :key="entry.level" class="stat-card">
@@ -209,7 +266,12 @@
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-split">
-              <span class="stat-label">Face à la garde adverse</span>
+              <span class="stat-label">Face à la garde adverse
+                <span class="info-tip" tabindex="0" aria-label="Taux de victoire selon que la garde de l'adversaire est opposée ou identique à celle du judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Taux de victoire selon que la garde de l'adversaire est opposée ou identique à celle du judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.</span>
+                </span>
+              </span>
               <div class="split-stat-grid">
                 <div class="split-stat-item">
                   <span class="split-stat-label">Garde opposée</span>
@@ -226,7 +288,12 @@
 
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
-            <div><h3>Victoires par décision</h3></div>
+            <div><h3>Victoires par décision
+              <span class="info-tip" tabindex="0" aria-label="Répartition des victoires selon le type de décision (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.">
+                <span aria-hidden="true">i</span>
+                <span class="info-tip-bubble" aria-hidden="true">Répartition des victoires selon le type de décision (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.</span>
+              </span>
+            </h3></div>
           </div>
           <div class="stats-grid">
             <div v-for="entry in coachDashboardVictoriesByType" :key="entry.decisionType" class="stat-card">
@@ -238,11 +305,37 @@
 
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
-            <div><h3>Défaites par décision</h3></div>
+            <div><h3>Défaites par décision
+              <span class="info-tip" tabindex="0" aria-label="Répartition des défaites selon le type de décision, en pourcentage du total des défaites.">
+                <span aria-hidden="true">i</span>
+                <span class="info-tip-bubble" aria-hidden="true">Répartition des défaites selon le type de décision, en pourcentage du total des défaites.</span>
+              </span>
+            </h3></div>
           </div>
           <div class="stats-grid">
             <div v-for="entry in coachDashboardDefeatsByType" :key="entry.decisionType" class="stat-card">
               <span class="stat-label">{{ entry.decisionType }}</span>
+              <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+          <div class="section-heading">
+            <div>
+              <h3>Qualité de la saisie</h3>
+              <p class="subtitle">Combats du périmètre filtré dont la saisie est incomplète ou incohérente.</p>
+            </div>
+          </div>
+          <div v-if="!coachDashboardDataQualityIssues.length" class="empty-state">Aucun problème de saisie détecté sur ce périmètre.</div>
+          <div v-else class="stats-grid">
+            <div v-for="entry in coachDashboardDataQualityIssues" :key="entry.criterion" class="stat-card">
+              <span class="stat-label">{{ entry.label }}
+                <span class="info-tip" tabindex="0" :aria-label="getDataQualityIssueDescription(entry.criterion)">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">{{ getDataQualityIssueDescription(entry.criterion) }}</span>
+                </span>
+              </span>
               <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
             </div>
           </div>
