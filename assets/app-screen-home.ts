@@ -105,13 +105,13 @@
       return modes;
     });
 
-    const coachSubModes: Array<{ key: string; label: string }> = [
+    const coachSubModes = window.Vue.computed(() => [
       { key: "judoka", label: "Mon espace" },
       { key: "coach", label: "Compétitions club" },
       { key: "coachJudoka", label: "Judoka" },
       { key: "coachDashboard", label: "Tableau de bord" },
       { key: "coachChat", label: "Chat" }
-    ];
+    ]);
 
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);
     const currentHomeMode = window.Vue.computed(() => getCurrentMode());
@@ -340,14 +340,16 @@
       };
     });
 
-    const competitions = window.Vue.computed(() => competitionsProjection.value.page.pageItems);
+    const competitionsPage = window.Vue.computed(() => competitionsProjection.value.page);
+    const competitionsPaginationRefs = ui.createPaginationRefs(competitionsPage);
+    const competitions = competitionsPaginationRefs.page;
     const hasCompetitions = window.Vue.computed(() => competitionsProjection.value.hasCompetitions);
     const competitionsEmptyMessage = window.Vue.computed(() => competitionsProjection.value.competitionsEmptyMessage);
-    const competitionsTotalPages = window.Vue.computed(() => competitionsProjection.value.page.totalPages);
-    const competitionsCurrentPage = window.Vue.computed(() => competitionsProjection.value.page.currentPage);
-    const competitionsTotalCount = window.Vue.computed(() => competitionsProjection.value.page.totalItems);
-    const competitionsCanShowPreviousPage = window.Vue.computed(() => competitionsProjection.value.page.canShowPreviousPage);
-    const competitionsCanShowNextPage = window.Vue.computed(() => competitionsProjection.value.page.canShowNextPage);
+    const competitionsTotalPages = competitionsPaginationRefs.totalPages;
+    const competitionsCurrentPage = competitionsPaginationRefs.currentPage;
+    const competitionsTotalCount = competitionsPaginationRefs.totalCount;
+    const competitionsCanShowPreviousPage = competitionsPaginationRefs.canShowPreviousPage;
+    const competitionsCanShowNextPage = competitionsPaginationRefs.canShowNextPage;
 
     const clubCompetitionsProjection = window.Vue.computed(() => {
       const today = getTodayStr();
@@ -397,14 +399,16 @@
       };
     });
 
-    const clubCompetitionsList = window.Vue.computed(() => clubCompetitionsProjection.value.page.pageItems);
+    const clubCompetitionsPage = window.Vue.computed(() => clubCompetitionsProjection.value.page);
+    const clubCompetitionsPaginationRefs = ui.createPaginationRefs(clubCompetitionsPage);
+    const clubCompetitionsList = clubCompetitionsPaginationRefs.page;
     const hasClubCompetitions = window.Vue.computed(() => clubCompetitionsProjection.value.hasClubCompetitions);
     const clubCompetitionsEmptyMessage = window.Vue.computed(() => clubCompetitionsProjection.value.clubCompetitionsEmptyMessage);
-    const clubCompetitionsTotalPages = window.Vue.computed(() => clubCompetitionsProjection.value.page.totalPages);
-    const clubCompetitionsCurrentPage = window.Vue.computed(() => clubCompetitionsProjection.value.page.currentPage);
-    const clubCompetitionsTotalCount = window.Vue.computed(() => clubCompetitionsProjection.value.page.totalItems);
-    const clubCompetitionsCanShowPreviousPage = window.Vue.computed(() => clubCompetitionsProjection.value.page.canShowPreviousPage);
-    const clubCompetitionsCanShowNextPage = window.Vue.computed(() => clubCompetitionsProjection.value.page.canShowNextPage);
+    const clubCompetitionsTotalPages = clubCompetitionsPaginationRefs.totalPages;
+    const clubCompetitionsCurrentPage = clubCompetitionsPaginationRefs.currentPage;
+    const clubCompetitionsTotalCount = clubCompetitionsPaginationRefs.totalCount;
+    const clubCompetitionsCanShowPreviousPage = clubCompetitionsPaginationRefs.canShowPreviousPage;
+    const clubCompetitionsCanShowNextPage = clubCompetitionsPaginationRefs.canShowNextPage;
 
     const upcomingEvents = window.Vue.computed(() => {
       const today = getTodayStr();

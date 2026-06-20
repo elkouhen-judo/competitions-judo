@@ -1,7 +1,13 @@
 import type {
   AdminsScreen,
   AuthApi,
+  ClubCompetitionDeps,
+  ClubCompetitionScreen,
   CoachDashboardScreen,
+  CombatFormDeps,
+  CombatFormScreen,
+  CompetitionDetailDeps,
+  CompetitionDetailScreen,
   CompetitionScreen,
   CompetitionFormHelpers,
   HomeScreen,
@@ -38,6 +44,15 @@ declare global {
     ) => JudokaProfileViewModel | null;
     createKirokuHomeScreen: (app: KirokuApp) => HomeScreen;
     createKirokuJudokaScreen: (app: KirokuApp) => JudokaScreen;
+    createKirokuCompetitionDetailScreen: (
+      app: KirokuApp,
+      deps: CompetitionDetailDeps
+    ) => CompetitionDetailScreen;
+    createKirokuClubCompetitionScreen: (
+      app: KirokuApp,
+      deps: ClubCompetitionDeps
+    ) => ClubCompetitionScreen;
+    createKirokuCombatFormScreen: (app: KirokuApp, deps: CombatFormDeps) => CombatFormScreen;
     createKirokuCompetitionScreen: (app: KirokuApp) => CompetitionScreen;
     createKirokuAdminsScreen: (app: KirokuApp) => AdminsScreen;
     createKirokuCoachDashboardScreen: (app: KirokuApp) => CoachDashboardScreen;

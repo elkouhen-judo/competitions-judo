@@ -17,6 +17,7 @@
 
   type ActionMap = Record<string, (...args: never[]) => unknown>;
   type ComputedRefMap = import("./types").ComputedRefMap;
+  type PaginationResult<T> = import("./types").PaginationResult<T>;
 
   function $<TElement extends HTMLElement = HTMLElement>(id: string): TElement {
     const element = document.getElementById(id);
@@ -173,6 +174,19 @@
     return viewModel;
   }
 
+  function createPaginationRefs<TItem>(
+    pagination: import("./types").ComputedRef<PaginationResult<TItem>>
+  ) {
+    return {
+      page: window.Vue.computed(() => pagination.value.pageItems),
+      totalPages: window.Vue.computed(() => pagination.value.totalPages),
+      currentPage: window.Vue.computed(() => pagination.value.currentPage),
+      totalCount: window.Vue.computed(() => pagination.value.totalItems),
+      canShowPreviousPage: window.Vue.computed(() => pagination.value.canShowPreviousPage),
+      canShowNextPage: window.Vue.computed(() => pagination.value.canShowNextPage)
+    };
+  }
+
   window.KirokuUI = {
     $,
     cleanText,
@@ -185,6 +199,7 @@
     getJudokaDisplayName,
     getJudokaInitials,
     createMountedViewModel,
+    createPaginationRefs,
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,

@@ -38,16 +38,7 @@
 
     const admins = window.Vue.computed(() => adminsProjection.value.admins);
     const hasAdmins = window.Vue.computed(() => adminsProjection.value.hasAdmins);
-    const adminsPage = window.Vue.computed(() => adminsPagination.value.pageItems);
-    const adminsTotalPages = window.Vue.computed(() => adminsPagination.value.totalPages);
-    const adminsCurrentPage = window.Vue.computed(() => adminsPagination.value.currentPage);
-    const adminsTotalCount = window.Vue.computed(() => adminsPagination.value.totalItems);
-    const adminsCanShowPreviousPage = window.Vue.computed(
-      () => adminsPagination.value.canShowPreviousPage
-    );
-    const adminsCanShowNextPage = window.Vue.computed(
-      () => adminsPagination.value.canShowNextPage
-    );
+    const adminsPaginationRefs = ui.createPaginationRefs(adminsPagination);
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const managedUsersPage = window.Vue.computed(() => usersProjection.value.users);
     const usersSearch = window.Vue.computed(() => state.usersSearch);
@@ -89,12 +80,12 @@
         {
           admins,
           hasAdmins,
-          adminsPage,
-          adminsTotalPages,
-          adminsCurrentPage,
-          adminsTotalCount,
-          adminsCanShowPreviousPage,
-          adminsCanShowNextPage,
+          adminsPage: adminsPaginationRefs.page,
+          adminsTotalPages: adminsPaginationRefs.totalPages,
+          adminsCurrentPage: adminsPaginationRefs.currentPage,
+          adminsTotalCount: adminsPaginationRefs.totalCount,
+          adminsCanShowPreviousPage: adminsPaginationRefs.canShowPreviousPage,
+          adminsCanShowNextPage: adminsPaginationRefs.canShowNextPage,
           managedUsersPage,
           usersSearch,
           usersSummary,
