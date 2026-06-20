@@ -404,7 +404,9 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     bundle.indexOf('id="coachDashboard_date_debut"') < bundle.indexOf('id="coachDashboardCompetitionSearch"'),
     "the age/date filters should appear before the competition picker"
   );
-  assert.match(client, /competitionIds: coachDashboardViewModel\.coachDashboardForm\.competitionIds/);
+  assert.match(client, /competitionIds: getSelectedCoachDashboardCompetitionIds\(\)/);
+  assert.match(client, /function getSelectedCoachDashboardCompetitionIds\(\)/);
+  assert.match(client, /option\.competitionIds\?\.length \? option\.competitionIds : \[option\.competitionId\]/);
   assert.match(client, /availableCompetitions = response\.availableCompetitions/);
   assert.match(
     client,
