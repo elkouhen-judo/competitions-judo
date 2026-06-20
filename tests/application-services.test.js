@@ -753,10 +753,20 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     competitionRows: [
       {
         id_competition: "COMP1",
+        club_competition_id: "CLUB1",
         date: "2026-02-10",
         categorie_age: "Cadet",
         niveau: "Départemental",
         classement: "1er"
+      },
+      {
+        id_competition: "COMP1_BIS",
+        club_competition_id: "CLUB1",
+        nom: "Compétition club",
+        date: "2026-02-10",
+        categorie_age: "Cadet",
+        niveau: "Départemental",
+        classement: ""
       },
       {
         id_competition: "COMP2",
@@ -809,9 +819,20 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   const allResult = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(allResult.stats.totalCombats, 3);
   assert.deepEqual(allResult.availableCompetitions, [
-    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" },
-    { competitionId: "COMP2", name: "Compétition", competitionDate: "2026-03-15" }
+    {
+      competitionId: "COMP1",
+      competitionIds: ["COMP1", "COMP1_BIS"],
+      name: "Compétition",
+      competitionDate: "2026-02-10"
+    },
+    {
+      competitionId: "COMP2",
+      competitionIds: ["COMP2"],
+      name: "Compétition",
+      competitionDate: "2026-03-15"
+    }
   ]);
+  assert.equal(allResult.availableCompetitions.length, 2);
   assert.deepEqual(
     allResult.stats.byLateralMatchup.map(({ matchup, combats, victories, victoryRate }) => ({
       matchup,
@@ -885,7 +906,12 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     ]
   });
   assert.deepEqual(ageFiltered.availableCompetitions, [
-    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" }
+    {
+      competitionId: "COMP1",
+      competitionIds: ["COMP1", "COMP1_BIS"],
+      name: "Compétition",
+      competitionDate: "2026-02-10"
+    }
   ]);
 
   const competitionFiltered = await service.methods.getCoachDashboard("coach@example.com", {
@@ -902,7 +928,12 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   assert.equal(exactDateFiltered.stats.totalCombats, 1);
   assert.equal(exactDateFiltered.stats.victories, 1);
   assert.deepEqual(exactDateFiltered.availableCompetitions, [
-    { competitionId: "COMP2", name: "Compétition", competitionDate: "2026-03-15" }
+    {
+      competitionId: "COMP2",
+      competitionIds: ["COMP2"],
+      name: "Compétition",
+      competitionDate: "2026-03-15"
+    }
   ]);
 
   const dateRangeFiltered = await service.methods.getCoachDashboard("coach@example.com", {
@@ -911,7 +942,12 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   });
   assert.equal(dateRangeFiltered.stats.totalCombats, 2);
   assert.deepEqual(dateRangeFiltered.availableCompetitions, [
-    { competitionId: "COMP1", name: "Compétition", competitionDate: "2026-02-10" }
+    {
+      competitionId: "COMP1",
+      competitionIds: ["COMP1", "COMP1_BIS"],
+      name: "Compétition",
+      competitionDate: "2026-02-10"
+    }
   ]);
 
   await assert.rejects(

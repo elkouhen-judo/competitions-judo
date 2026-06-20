@@ -191,7 +191,7 @@
             dateFrom: coachDashboardViewModel.coachDashboardForm.dateFrom,
             dateTo: coachDashboardViewModel.coachDashboardForm.dateTo,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
-            competitionIds: coachDashboardViewModel.coachDashboardForm.competitionIds
+            competitionIds: getSelectedCoachDashboardCompetitionIds()
           }
         ],
         (response) => {
@@ -217,6 +217,22 @@
           showError(error);
         }
       );
+    }
+
+    function getSelectedCoachDashboardCompetitionIds() {
+      const selectedIds = new Set(coachDashboardViewModel.coachDashboardForm.competitionIds.map(String));
+      const expandedCompetitionIds: string[] = [];
+      coachDashboardViewModel.availableCompetitions.forEach((option) => {
+        if (!selectedIds.has(String(option.competitionId))) {
+          return;
+        }
+        (option.competitionIds?.length ? option.competitionIds : [option.competitionId]).forEach((id) => {
+          expandedCompetitionIds.push(String(id));
+        });
+      });
+      return expandedCompetitionIds.length
+        ? expandedCompetitionIds
+        : coachDashboardViewModel.coachDashboardForm.competitionIds;
     }
 
     function scheduleCoachDashboardRefresh() {

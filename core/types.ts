@@ -236,6 +236,7 @@ export interface CoachDashboardStats {
 
 export interface CoachDashboardCompetitionOption {
   competitionId: string;
+  competitionIds: string[];
   name: string;
   competitionDate: string;
 }

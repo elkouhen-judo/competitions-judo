@@ -11,7 +11,7 @@ import {
 } from "./coach-dashboard-loader";
 import { toCanonicalCompetition } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
-import type { CombatScoreRow } from "../repositories/types";
+import type { CombatScoreRow, CompetitionRow } from "../repositories/types";
 import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
@@ -26,6 +26,30 @@ import type {
 import type { UserContextService } from "./user-context.service";
 
 type CoachDashboardMethods = Pick<RpcMethods, "askCoachAssistant" | "getCoachDashboard" | "searchCombats">;
+
+function buildCoachDashboardCompetitionOptions(competitionRows: CompetitionRow[]) {
+  const optionsByKey = new Map<
+    string,
+    { competitionId: string; competitionIds: string[]; name: string; competitionDate: string }
+  >();
+  competitionRows.forEach((competition) => {
+    const competitionId = String(competition.id_competition || "");
+    const clubCompetitionId = String(competition.club_competition_id || "");
+    const key = clubCompetitionId || competitionId;
+    const existingOption = optionsByKey.get(key);
+    if (existingOption) {
+      existingOption.competitionIds.push(competitionId);
+      return;
+    }
+    optionsByKey.set(key, {
+      competitionId,
+      competitionIds: [competitionId],
+      name: competition.nom || "Compétition",
+      competitionDate: competition.date || ""
+    });
+  });
+  return Array.from(optionsByKey.values());
+}
 
 export interface CoachDashboardServiceDeps {
   combatsRepository: CombatsRepository;
@@ -100,11 +124,9 @@ export default function createCoachDashboardService(
     ).map(toCanonicalCompetition);
     return {
       stats: computeCoachDashboardStats(combats, competitionsInScope),
-      availableCompetitions: filterCompetitionsByScope(allCompetitionRows, filters).map((competition) => ({
-        competitionId: competition.id_competition,
-        name: competition.nom || "Compétition",
-        competitionDate: competition.date || ""
-      }))
+      availableCompetitions: buildCoachDashboardCompetitionOptions(
+        filterCompetitionsByScope(allCompetitionRows, filters)
+      )
     };
   }
 
