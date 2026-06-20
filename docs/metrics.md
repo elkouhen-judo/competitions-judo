@@ -48,7 +48,7 @@ Sauf mention contraire explicite dans les tableaux ci-dessous, tous les taux et 
 
 ## 3. Spécifications détaillées par section
 
-L'ordre des sous-sections ci-dessous suit l'ordre d'affichage pédagogique du tableau de bord : périmètre (combien de combats, qui sont les judokas), puis résultats globaux (performance, podiums), puis analyses détaillées (par garde, par décision).
+L'ordre des sous-sections ci-dessous suit l'ordre d'affichage du tableau de bord : podiums, volumes, répartition des judokas, répartition des gardes, performance globale, décisions, puis qualité des données.
 
 ### 3.1. Section "Volumes"
 Cette section comptabilise la volumétrie globale de l'activité sur le périmètre totalement filtré.
@@ -93,7 +93,7 @@ Cette section dénombre les compétitions du périmètre filtré (Étape 1, ind�
 - **Niveau de calcul :** par compétition, pas par combat — une compétition sans combat enregistré mais déjà classée compte normalement.
 - **Niveaux gérés :** `Départemental`, `Régional`, `National`, `International`. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
 
-### 3.5. Section "Rapport de garde" (`byLateralMatchup`)
+### 3.5. Section "Répartition des gardes" (`byLateralMatchup`)
 Libellé IHM de la carte : **Face à la garde adverse**.
 Cet indicateur évalue l'impact de la symétrie des gardes sur le taux de réussite du judoka.
 

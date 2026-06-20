@@ -439,7 +439,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /<span class="stat-label">Victoires Ippon debout/);
   assert.match(bundle, /<span class="stat-label">Victoires Ippon au sol/);
   assert.doesNotMatch(bundle, /Défaites par hansoku-make<\/span>/);
-  assert.match(bundle, /<h3>Rapport de garde<\/h3>/);
+  assert.match(bundle, /<h3>Répartition des gardes<\/h3>/);
   assert.match(
     bundle,
     /Taux de victoire quand judoka et adversaire ont une garde opposée ou identique\./
@@ -499,11 +499,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /if \(modeKey === "coachChat"\) \{\s*screens\.coachDashboard\.showCoachChat\(\);\s*return;\s*\}/);
 
   const dashboardSectionOrder = [
+    "<h3>Podiums",
     "<h3>Volumes</h3>",
     "<h3>Répartition des judokas</h3>",
+    "<h3>Répartition des gardes</h3>",
     "<h3>Performance globale</h3>",
-    "<h3>Podiums",
-    "<h3>Rapport de garde</h3>",
     "<h3>Victoires par décision",
     "<h3>Défaites par décision",
     "<h3>Qualité des données</h3>"
@@ -514,7 +514,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
   assert.ok(
     dashboardSectionOrder.every((index, position) => position === 0 || dashboardSectionOrder[position - 1] < index),
-    "dashboard sections should follow the pedagogical order: scope, then headline outcomes, then breakdowns, then data quality"
+    "dashboard sections should follow the configured order"
   );
 });
 
