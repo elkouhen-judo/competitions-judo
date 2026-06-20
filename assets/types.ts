@@ -93,6 +93,7 @@ export interface KirokuUi {
     computedRefs?: ComputedRefMap
   ): T;
   createPaginationRefs<T>(pagination: ComputedRef<PaginationResult<T>>): PaginationRefs<T>;
+  formatCompetitionRanking(value: unknown): string;
   formatDate(value: unknown): string;
   formatDateTime(value: unknown): string;
   formatResultat(value: unknown): string;
@@ -412,6 +413,7 @@ export interface KirokuApp {
 }
 
 export interface JudokaProfilePresentationHelpers {
+  formatCompetitionRanking(value: unknown): string;
   formatDate(value: unknown): string;
   getClassementBadgeClass(value: unknown): string;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;

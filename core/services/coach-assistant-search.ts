@@ -4,6 +4,7 @@ import {
 } from "../prompts/coach-chat-prompts";
 import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import type { CombatRow, CombatScoreRow, CompetitionRow, JudokaRow } from "../repositories/types";
+import { formatCompetitionRankingDisplay } from "../domain/competition-results";
 import type { CoachAssistantMatch, CoachAssistantResponse, CoachChatFilters } from "../types";
 
 export interface GroqClient {
@@ -546,7 +547,13 @@ function searchCoachCompetitions(
       opponent: "",
       result: "",
       victoryType: "",
-      scoreLabel: [competition.categorie_age, competition.niveau, competition.classement].filter(Boolean).join(" · ")
+      scoreLabel: [
+        competition.categorie_age,
+        competition.niveau,
+        formatCompetitionRankingDisplay(competition.classement)
+      ]
+        .filter(Boolean)
+        .join(" · ")
     }))
     .sort((a, b) => b.competitionDate.localeCompare(a.competitionDate))
     .slice(0, query.limit);

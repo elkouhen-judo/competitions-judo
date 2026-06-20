@@ -104,6 +104,12 @@
     return value ? String(value) : "";
   }
 
+  function formatCompetitionRanking(value: unknown) {
+    const normalized = String(value || "").trim();
+    const rankingLabels: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
+    return rankingLabels[normalized] || normalized;
+  }
+
   function getClassementBadgeClass(value: unknown) {
     const normalized = String(value || "").toLowerCase();
     if (normalized === "1er") return "rank-1";
@@ -192,6 +198,7 @@
     cleanText,
     formatDate,
     formatDateTime,
+    formatCompetitionRanking,
     formatResultat,
     getClassementBadgeClass,
     getCompactJudokaLabel,

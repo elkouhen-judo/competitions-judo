@@ -43,6 +43,7 @@
     const defaultCompetitionFormViewState = {
       competitionFormTitle: "Compétition",
       showCompetitionOwnerBlock: false,
+      competitionInheritedFieldsLocked: false,
       ownerJudokaText: "",
       ownerJudokaId: "",
       ownerOptions: [] as CompetitionOwnerOption[],
@@ -102,6 +103,9 @@
     const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
     const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
+    const competitionInheritedFieldsLocked = window.Vue.computed(() =>
+      Boolean(competitionFormViewModel.competitionInheritedFieldsLocked)
+    );
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const competitionWeightCategoryOptions = window.Vue.computed(() =>
@@ -203,7 +207,7 @@
           updateCompetitionOwnerText,
           hideCompetitionOwnerOptions
         },
-        { isSubmitting, competitionWeightCategoryOptions }
+        { isSubmitting, competitionInheritedFieldsLocked, competitionWeightCategoryOptions }
       );
     }
 
@@ -341,6 +345,7 @@
         }
 
         competitionFormViewModel.competitionFormTitle = "Modifier la compétition";
+        competitionFormViewModel.competitionInheritedFieldsLocked = Boolean(c.clubCompetitionId);
         setCompetitionOwnerField(c.ownerJudokaId || "");
         Object.assign(competitionFormViewModel.competitionForm, {
           competitionId: c.competitionId || "",
@@ -354,6 +359,7 @@
       } else {
         previousCompetitionFormView = "homeView";
         competitionFormViewModel.competitionFormTitle = "Ajouter une compétition";
+        competitionFormViewModel.competitionInheritedFieldsLocked = false;
         setCompetitionOwnerField(app.screens.home.getHomeActiveJudokaId());
         Object.assign(competitionFormViewModel.competitionForm, {
           ...defaultCompetitionForm,

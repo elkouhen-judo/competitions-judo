@@ -10,6 +10,12 @@ const RESULT_RANKS: Record<string, number> = {
   "non classé": 99
 };
 
+const RESULT_DISPLAY_LABELS: Record<string, string> = {
+  "1er": "🥇",
+  "2e": "🥈",
+  "3e": "🥉"
+};
+
 export const COMPETITION_RESULTS: string[] = Object.keys(RESULT_RANKS);
 
 export function createCompetitionRanking(value: unknown): string {
@@ -27,6 +33,11 @@ export function createCompetitionRanking(value: unknown): string {
 
 export function getCompetitionResultRank(value: unknown): number {
   return RESULT_RANKS[String(value || "").toLowerCase()] || Number.POSITIVE_INFINITY;
+}
+
+export function formatCompetitionRankingDisplay(value: unknown): string {
+  const ranking = String(value || "").trim();
+  return RESULT_DISPLAY_LABELS[ranking] || ranking;
 }
 
 export interface CompetitionCategoryLike {

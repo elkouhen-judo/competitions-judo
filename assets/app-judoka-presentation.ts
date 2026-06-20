@@ -24,8 +24,13 @@
       return null;
     }
 
-    const { formatDate, getClassementBadgeClass, getJudokaDisplayName, getJudokaInitials } =
-      helpers;
+    const {
+      formatCompetitionRanking,
+      formatDate,
+      getClassementBadgeClass,
+      getJudokaDisplayName,
+      getJudokaInitials
+    } = helpers;
     const {
       judoka,
       season,
@@ -95,7 +100,7 @@
         competitionId: result.competitionId || "",
         name: result.name || "Compétition",
         date: formatDate(result.competitionDate),
-        result: result.result || "Non classé",
+        result: formatCompetitionRanking(result.result) || "Non classé",
         resultClass: getClassementBadgeClass(result.result),
         badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
         combatRecord: result.combatRecord ? result.combatRecord.label : "0V · 0D"

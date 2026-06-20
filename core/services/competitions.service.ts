@@ -169,6 +169,7 @@ export default function createCompetitionsService(
       isParent: access.isManaged(),
       canManageCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
       canEditCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
+      hasInheritedClubCompetitionFields: Boolean(domainCompetition.clubCompetitionId),
       judokas
     };
   }
@@ -197,10 +198,19 @@ export default function createCompetitionsService(
       );
 
       const existingDomainCompetition = toCanonicalCompetition(existingCompetition);
+      const inheritedClubFields = existingDomainCompetition.clubCompetitionId
+        ? {
+            name: existingDomainCompetition.name,
+            competitionDate: existingDomainCompetition.competitionDate,
+            ageCategory: existingDomainCompetition.ageCategory,
+            level: existingDomainCompetition.level
+          }
+        : {};
       const competitionDraft = createCompetition(
         {
           ...existingDomainCompetition,
           ...domainCompetitionInput,
+          ...inheritedClubFields,
           competitionId,
           clubCompetitionId:
             domainCompetitionInput.clubCompetitionId !== null &&
