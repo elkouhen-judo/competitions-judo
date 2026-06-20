@@ -33,7 +33,7 @@
                 <option value="">Non spécifié</option>
                 <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
               </select>
-              <p class="field-hint">Alimente les répartitions par décision et les défaites hansoku-make.</p>
+              <p class="field-hint">Utile pour le bilan coach par décision et les défaites hansoku-make.</p>
               <div v-if="combatFormVictoryTypeIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur le type de décision">
                 <span v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
                   <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
@@ -54,7 +54,7 @@
             <div>
               <span class="combat-section-kicker">Étape 2</span>
               <h3>Détails sportifs</h3>
-              <p class="subtitle">Complétez ce qui améliore les statistiques coach.</p>
+              <p class="subtitle">Complétez ce qui aide le coach à relire le combat.</p>
             </div>
           </div>
           <div class="form-grid">
@@ -65,7 +65,7 @@
                 <option value="Droitier">Droitier</option>
                 <option value="Gaucher">Gaucher</option>
               </select>
-              <p class="field-hint">Alimente les métriques même garde / garde opposée.</p>
+              <p class="field-hint">Aide à comparer les combats en même garde ou garde opposée.</p>
               <div v-if="combatFormOpponentStanceIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur la garde adversaire">
                 <span v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
                   <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
@@ -77,7 +77,7 @@
               <div class="combat-score-header">
                 <div>
                   <label>Prises marquées</label>
-                  <p class="field-hint">Alimente les métriques Tachi-waza et Ne-waza.</p>
+                  <p class="field-hint">Aide à repérer les points marqués debout et au sol.</p>
                 </div>
                 <span class="result-badge">{{ combatForm.scores.length }} prise(s)</span>
               </div>

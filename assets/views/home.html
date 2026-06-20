@@ -166,7 +166,12 @@
           </div>
           <div v-if="!hasUpcomingEvents" class="empty-action">
             <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <p class="empty-action-title">Aucun rendez-vous planifié</p>
             <p class="empty-action-body">{{ upcomingEmptyMessage }}</p>
+            <div v-if="canCreateCompetition || canCreateClubCompetition" class="empty-action-actions">
+              <button v-if="canCreateCompetition" type="button" :disabled="actionDisabled" @click="showHomeCompetitionForm()">Ajouter une compétition</button>
+              <button v-else-if="canCreateClubCompetition" type="button" @click="showClubCompetitionForm()">Créer une compétition club</button>
+            </div>
           </div>
           <div v-else class="list">
             <article v-for="ev in upcomingEvents" :key="ev.id" class="card competition-card">
@@ -198,7 +203,11 @@
           <div id="clubCompetitionsList">
             <div v-if="!hasClubCompetitions" class="empty-action">
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <p class="empty-action-title">Aucun suivi club</p>
               <p class="empty-action-body">{{ clubCompetitionsEmptyMessage }}</p>
+              <div v-if="canCreateClubCompetition" class="empty-action-actions">
+                <button type="button" @click="showClubCompetitionForm()">Créer une compétition club</button>
+              </div>
             </div>
             <div v-else class="list">
               <article v-for="cc in clubCompetitionsList" :key="cc.clubCompetitionId" class="card competition-card">
@@ -241,7 +250,11 @@
           <div id="competitionsList">
             <div v-if="!hasCompetitions" class="empty-action">
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+              <p class="empty-action-title">Aucune compétition enregistrée</p>
               <p class="empty-action-body">{{ competitionsEmptyMessage }}</p>
+              <div v-if="canCreateCompetition" class="empty-action-actions">
+                <button type="button" :disabled="actionDisabled" @click="showHomeCompetitionForm()">Ajouter la première compétition</button>
+              </div>
             </div>
             <div v-else class="list">
               <article v-for="competition in competitions" :key="competition.competitionId" class="card competition-card">

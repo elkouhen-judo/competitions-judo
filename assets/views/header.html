@@ -1,11 +1,12 @@
     <header id="appHeader" class="topbar" :class="{ hidden: !showHeader }" v-cloak>
       <div class="brand">
-        <div class="brand-logo">
-          <img
-            class="brand-logo-image"
-            src="https://s1.qwant.com/thumbr/474x474/9/e/fa3015ea6c561c107f0cf721991fdb75be4e334e5c30201ed296d964509cf4/OIP.2L4yJnGwNyAZkgiTuUu-NAHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.2L4yJnGwNyAZkgiTuUu-NAHaHa%3Fpid%3DApi&amp;q=0&amp;b=1&amp;p=0&amp;a=0"
-            alt="Kiroku"
-          >
+        <div class="brand-logo" aria-hidden="true">
+          <svg class="brand-logo-mark" viewBox="0 0 64 64" focusable="false">
+            <rect class="brand-logo-field" x="6" y="6" width="52" height="52" rx="10"></rect>
+            <path class="brand-logo-tatami" d="M18 18h28M18 30h28M18 42h28M18 18v24M32 18v24M46 18v24"></path>
+            <path class="brand-logo-belt" d="M13 47h38"></path>
+            <text x="32" y="38" text-anchor="middle">記</text>
+          </svg>
         </div>
         <div class="brand-copy">
           <h1>Kiroku - 記録</h1>

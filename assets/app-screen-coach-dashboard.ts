@@ -5,6 +5,15 @@
   type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
 
   const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
+  const PODIUM_LEVEL_PRIORITY = ["International", "National", "Régional", "Départemental"];
+  const PODIUM_LEVEL_LABELS: Record<string, string> = {
+    International: "Int.",
+    National: "Nat.",
+    Régional: "Rég.",
+    Départemental: "Dép."
+  };
+  const PODIUM_PLACE_PRIORITY = ["1er", "2e", "3e"];
+  const PODIUM_PLACE_EMOJIS: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
 
   const DATA_QUALITY_ISSUE_DESCRIPTIONS: Record<string, string> = {
     judokaHandedness:
@@ -14,7 +23,7 @@
     victoryType:
       "Le type de décision finale (Ippon, Waza-ari...) n'est pas renseigné sur ce combat — il alimente les répartitions par décision.",
     scores:
-      "Aucune prise n'a été détaillée sur ce combat — cela alimente les métriques Victoires Ippon debout/au sol.",
+      "Aucune prise n'a été détaillée sur ce combat — cela aide à distinguer les Ippon debout et au sol.",
     competitionLevel:
       "Le niveau de la compétition n'est pas renseigné — il alimente les Podiums par niveau.",
     judokaGender:
@@ -92,16 +101,22 @@
     );
     const coachDashboardTopPodiumLevel = window.Vue.computed(() => {
       const entries = coachDashboardPodiumsByLevel.value;
-      let bestEntry = "";
-      let bestCount = 0;
-      entries.forEach((entry) => {
-        const podiumCount = entry.podiums.reduce((sum, podium) => sum + Number(podium.count || 0), 0);
-        if (podiumCount > bestCount) {
-          bestEntry = `${entry.level} · ${podiumCount}`;
-          bestCount = podiumCount;
+      const podiumHighlights: string[] = [];
+      for (const level of PODIUM_LEVEL_PRIORITY) {
+        const entry = entries.find((candidate) => candidate.level === level);
+        if (!entry) {
+          continue;
         }
-      });
-      return bestEntry || "Aucun podium";
+        for (const place of PODIUM_PLACE_PRIORITY) {
+          const podium = entry.podiums.find((candidate) => candidate.place === place);
+          const podiumCount = Number(podium?.count || 0);
+          if (podiumCount > 0) {
+            podiumHighlights.push(`${PODIUM_LEVEL_LABELS[level] || level} ${podiumCount}x${PODIUM_PLACE_EMOJIS[place]}`);
+            break;
+          }
+        }
+      }
+      return podiumHighlights.length ? podiumHighlights.join("\n") : "Aucun podium";
     });
     const coachDashboardMainQualityIssue = window.Vue.computed(() => {
       const [issue] = coachDashboardDataQualityIssues.value;
