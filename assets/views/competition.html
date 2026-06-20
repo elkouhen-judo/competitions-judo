@@ -36,7 +36,7 @@
             <span id="competitionNiveau" class="meta-value">{{ competitionLevel }}</span>
           </div>
           <div class="meta-row metric-warning-row" id="row_competitionNiveauMissing" v-show="!competitionLevel">
-            <span class="meta-label">Métriques</span>
+            <span class="meta-label">Bilan coach</span>
             <span class="meta-value metric-warning">Niveau de compétition non renseigné</span>
           </div>
           <div class="meta-row" id="row_competitionClassement" v-show="competitionResult">
@@ -124,6 +124,9 @@
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               <p class="empty-action-title">Aucun combat</p>
               <p class="empty-action-body">{{ combatsEmptyMessage }}</p>
+              <div v-if="canEditCompetition" class="empty-action-actions">
+                <button type="button" :disabled="isSubmitting" @click="showCombatForm()">Ajouter le premier combat</button>
+              </div>
             </div>
             <div v-else class="list">
               <article v-for="combat in combats" :key="combat.combatId" class="card combat-card">

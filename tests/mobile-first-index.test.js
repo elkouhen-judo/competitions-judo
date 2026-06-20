@@ -109,7 +109,9 @@ test("small-screen layout is the base and desktop is progressive", () => {
   assert.match(bundle, /@media \(min-width: 721px\)/);
   assert.match(bundle, /\.topbar\s*\{[\s\S]*?padding: 12px 12px 8px;/);
   assert.match(bundle, /class="brand-logo"/);
-  assert.match(bundle, /class="brand-logo-image"/);
+  assert.match(bundle, /class="brand-logo-mark"/);
+  assert.match(bundle, /class="brand-logo-belt"/);
+  assert.doesNotMatch(bundle, /qwant\.com|tse\.mm\.bing\.net|OIP\.2L4yJnGwNyAZkgiTuUu-NAHaHa/);
   assert.match(
     bundle,
     /\.app-shell\s*\{[\s\S]*?padding: 0 0 calc\(96px \+ env\(safe-area-inset-bottom\)\);/
@@ -250,6 +252,8 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Victoires ippon/);
   assert.match(bundle, /v-if="Number\(combatProfile\.penalties\)"/);
   assert.match(bundle, /v-if="Number\(combatProfile\.forfeits\)"/);
+  assert.match(judokaScreenClient, /formatCompetitionRanking/);
+  assert.match(bundle, /class="result-badge classement-badge"[\s\S]*\{\{ result\.result \}\}/);
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
   assert.match(bundle, /id="finalization_classement"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
@@ -432,8 +436,20 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
   assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
   assert.match(bundle, /<h3>À retenir<\/h3>/);
-  assert.match(bundle, /Lecture rapide avant les métriques détaillées\./);
+  assert.match(bundle, /Lecture rapide avant les analyses détaillées\./);
+  assert.match(
+    bundle,
+    /Pour chaque niveau, affiche la plus belle médaille obtenue et le nombre de podiums de cette médaille uniquement/
+  );
   assert.match(bundle, /coachDashboardTopPodiumLevel/);
+  assert.match(client, /PODIUM_LEVEL_PRIORITY = \["International", "National", "Régional", "Départemental"\]/);
+  assert.match(client, /PODIUM_LEVEL_LABELS = \{[\s\S]*International: "Int\."[\s\S]*National: "Nat\."[\s\S]*Régional: "Rég\."[\s\S]*Départemental: "Dép\."/);
+  assert.match(client, /PODIUM_PLACE_PRIORITY = \["1er", "2e", "3e"\]/);
+  assert.match(client, /PODIUM_PLACE_EMOJIS = \{ "1er": "🥇", "2e": "🥈", "3e": "🥉" \}/);
+  assert.match(client, /const podiumCount = Number\(podium\?\.count \|\| 0\)/);
+  assert.match(client, /podiumHighlights\.push\(`\$\{PODIUM_LEVEL_LABELS\[level\] \|\| level\} \$\{podiumCount\}x\$\{PODIUM_PLACE_EMOJIS\[place\]\}`\)/);
+  assert.match(client, /podiumHighlights\.join\("\\n"\)/);
+  assert.match(bundle, /class="stat-value stat-value-multiline">\{\{ coachDashboardTopPodiumLevel \}\}/);
   assert.match(bundle, /coachDashboardMainQualityIssue/);
   assert.match(bundle, /coachDashboardSummaryInsight/);
   assert.ok(
@@ -553,7 +569,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
 test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
-  assert.match(bundle, /couleur_ceinture \(facultatif, ex : Orange\)/);
+  assert.match(bundle, /<strong>couleur_ceinture<\/strong>/);
   assert.match(bundle, /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./);
   assert.doesNotMatch(bundle, /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/);
   assert.match(bundle, /id="usersList"/);
@@ -596,7 +612,7 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(
     bundle,
-    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory" @change="onCompetitionFormAgeCategoryChange\(\)">[\s\S]*<option value="">Sélectionnez une catégorie<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
+    /<select id="competition_categorie_age" v-model="competitionForm\.ageCategory" :disabled="competitionInheritedFieldsLocked" @change="onCompetitionFormAgeCategoryChange\(\)">[\s\S]*<option value="">Sélectionnez une catégorie<\/option>[\s\S]*<option value="Poussinet">Poussinet<\/option>[\s\S]*<option value="Poussin">Poussin<\/option>[\s\S]*<option value="Benjamin">Benjamin<\/option>[\s\S]*<option value="Minime">Minime<\/option>[\s\S]*<option value="Cadet">Cadet<\/option>[\s\S]*<option value="Junior">Junior<\/option>[\s\S]*<option value="Senior">Senior<\/option>[\s\S]*<option value="Vétéran">Vétéran<\/option>[\s\S]*<\/select>/
   );
   assert.match(
     bundle,
@@ -627,8 +643,24 @@ test("new competition form defaults the date to today", () => {
 
 test("competition form screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="competitionFormView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="competition_nom" v-model\.trim="competitionForm\.name"/);
-  assert.match(bundle, /id="competition_date" v-model="competitionForm\.competitionDate"/);
+  assert.match(bundle, /Compétition liée à un événement club/);
+  assert.match(
+    bundle,
+    /id="competition_nom" v-model\.trim="competitionForm\.name" :disabled="competitionInheritedFieldsLocked"/
+  );
+  assert.match(
+    bundle,
+    /id="competition_date" v-model="competitionForm\.competitionDate" :disabled="competitionInheritedFieldsLocked"/
+  );
+  assert.match(
+    bundle,
+    /id="competition_categorie_age" v-model="competitionForm\.ageCategory" :disabled="competitionInheritedFieldsLocked"/
+  );
+  assert.match(
+    bundle,
+    /id="competition_niveau" v-model="competitionForm\.level" :disabled="competitionInheritedFieldsLocked"/
+  );
+  assert.match(client, /competitionFormViewModel\.competitionInheritedFieldsLocked = Boolean\(c\.clubCompetitionId\)/);
   assert.match(bundle, /@click="saveCompetition\(\)"/);
   assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
 });
@@ -642,6 +674,9 @@ test("coach can open club competition creation and participant management UI", (
   );
   assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
   assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
+  assert.match(bundle, /Compétition terminée — les participants sont verrouillés/);
+  assert.match(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
+  assert.match(bundle, /:disabled="isSubmitting \|\| clubCompetitionParticipantsLocked"/);
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
@@ -649,6 +684,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);
+  assert.match(client, /formatCompetitionRanking\(p\.result\) \|\| "Non classé"/);
   assert.match(bundle, /Aucun judoka disponible dans cette catégorie\./);
   assert.match(bundle, /v-else-if="!clubCompetitionAvailableJudokasFiltered\.length"/);
 });
@@ -660,6 +696,9 @@ test("competition finalization screen is mounted through Vue 3 for the progressi
     /id="competitionFinalizationSubtitle" class="subtitle">\{\{ finalizationSubtitle \}\}<\/p>/
   );
   assert.match(bundle, /id="finalization_classement" v-model="finalizationForm\.result"/);
+  assert.match(bundle, /<option value="1er">🥇<\/option>/);
+  assert.match(bundle, /<option value="2e">🥈<\/option>/);
+  assert.match(bundle, /<option value="3e">🥉<\/option>/);
   assert.match(bundle, /@click="finalizeCompetition\(\)"/);
   assert.match(bundle, /function ensureCompetitionFinalizationViewModel\(\)/);
 });
@@ -716,9 +755,9 @@ test("combat decision type appears only after choosing a result", () => {
 test("combat form screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
-  assert.match(bundle, /Alimente les métriques même garde \/ garde opposée\./);
-  assert.match(bundle, /Alimente les répartitions par décision et les défaites hansoku-make\./);
-  assert.match(bundle, /Alimente les métriques Tachi-waza et Ne-waza\./);
+  assert.match(bundle, /Aide à comparer les combats en même garde ou garde opposée\./);
+  assert.match(bundle, /Utile pour le bilan coach par décision et les défaites hansoku-make\./);
+  assert.match(bundle, /Aide à repérer les points marqués debout et au sol\./);
   assert.match(
     bundle,
     /<template v-if="score\.category === 'Tachi-waza'">[\s\S]*type="text" list="tachiWazaTechniqueSuggestions" v-model\.trim="score\.technique" placeholder="Nom de la prise/

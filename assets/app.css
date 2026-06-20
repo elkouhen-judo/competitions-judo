@@ -1,16 +1,18 @@
     :root {
-      --bg: #fbfbfa;
+      --bg: #f7f7f4;
       --panel: #ffffff;
       --text: #111111;
-      --muted: #787774;
-      --line: #eaeaea;
+      --muted: #746f64;
+      --line: #e4e4df;
       --primary: #173d36;
       --primary-hover: #0f2d28;
       --accent: #0f6d5c;
       --accent-soft: #e4f4ef;
-      --tatami: #eef2e8;
-      --tatami-line: #d9e1d1;
-      --surface: #fbfcfa;
+      --hajime: #b7352d;
+      --hajime-soft: #f8e6e2;
+      --tatami: #eff1ea;
+      --tatami-line: #d9ddd1;
+      --surface: #fbfbf8;
       --radius: 6px;
       --radius-card: 8px;
       --danger: #9f2f2d;
@@ -31,13 +33,13 @@
       --success-soft: #edf3ec;
       --warning: #956400;
       --warning-soft: #fbf3db;
-      --gold: #9c7a13;
-      --gold-soft: #fdf6e3;
+      --gold: #b8912f;
+      --gold-soft: #fff4d8;
       --silver: #6b7280;
       --silver-soft: #f4f5f7;
       --bronze: #9c6532;
       --bronze-soft: #f9efe6;
-      --soft: #f7f6f3;
+      --soft: #f2f3ee;
       --shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
     }
 
@@ -56,7 +58,7 @@
     body {
       min-height: 100vh;
       margin: 0;
-      background: #f6f7f4;
+      background: var(--bg);
       color: var(--text);
       font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, Helvetica, sans-serif;
       font-size: 16px;
@@ -74,7 +76,7 @@
       gap: 8px;
       padding: 12px 12px 8px;
       margin-bottom: 0;
-      background: #ffffff;
+      background: var(--panel);
       border-bottom: 1px solid var(--line);
     }
 
@@ -92,18 +94,41 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
+      border-radius: 12px;
       overflow: hidden;
-      background: #fff;
+      background: var(--primary);
       box-shadow: none;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(15, 45, 40, 0.28);
     }
 
-    .brand-logo-image {
+    .brand-logo-mark {
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: cover;
+    }
+
+    .brand-logo-field {
+      fill: var(--primary);
+    }
+
+    .brand-logo-tatami {
+      fill: none;
+      stroke: rgba(255, 253, 248, 0.22);
+      stroke-width: 1.5;
+    }
+
+    .brand-logo-belt {
+      fill: none;
+      stroke: var(--hajime);
+      stroke-linecap: round;
+      stroke-width: 5;
+    }
+
+    .brand-logo-mark text {
+      fill: #fffdf8;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 25px;
+      font-weight: 700;
     }
 
     .brand-copy {
@@ -642,7 +667,7 @@
     .card {
       border: 1px solid var(--line);
       border-radius: var(--radius-card);
-      background: #ffffff;
+      background: var(--panel);
       padding: 16px;
       box-shadow: none;
       transition: transform 180ms ease, box-shadow 180ms ease;
@@ -653,6 +678,14 @@
       gap: 0;
       padding: 0;
       overflow: hidden;
+      position: relative;
+    }
+
+    .competition-card::before {
+      content: "";
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--hajime));
     }
 
     .card-button {
@@ -768,7 +801,7 @@
     }
 
     .competition-summary {
-      border-left: 4px solid var(--accent);
+      border-left: 4px solid var(--hajime);
     }
 
     .form-grid {
@@ -996,6 +1029,21 @@
       opacity: 0.75;
     }
 
+    .status-banner {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .status-banner-warning {
+      border-color: var(--warning);
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
     /* ── Badge system base ── */
     .result-badge {
       flex: 0 0 auto;
@@ -1178,6 +1226,10 @@
       background: var(--warning-soft);
     }
 
+    .stat-value-multiline {
+      white-space: pre-line;
+    }
+
     .dashboard-summary-insight {
       margin: 0;
       color: var(--text);
@@ -1337,7 +1389,7 @@
     .coach-home-card {
       display: grid;
       gap: 14px;
-      border-left: 4px solid var(--accent);
+      border-left: 4px solid var(--hajime);
     }
 
     .parent-home-card {
@@ -1435,7 +1487,7 @@
     .dash-hero {
       padding: 14px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(180deg, #f7f9f4 0%, #eef2e8 100%);
+      background: var(--tatami);
       display: grid;
       gap: 12px;
     }
@@ -1638,6 +1690,37 @@
       font-size: 13px;
       color: var(--muted);
       max-width: 26rem;
+    }
+
+    .empty-action-actions {
+      display: grid;
+      gap: 8px;
+      width: min(100%, 320px);
+      margin-top: 4px;
+    }
+
+    .csv-import-help {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .csv-checklist {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .csv-checklist strong {
+      color: var(--text);
     }
 
     .list-summary {
@@ -2161,7 +2244,7 @@
       padding: 18px;
       border-radius: var(--radius);
       border: 1px solid var(--line);
-      border-left: 4px solid var(--accent);
+      border-left: 4px solid var(--hajime);
       background: var(--surface);
       box-shadow: none;
     }
@@ -2173,7 +2256,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      background: var(--primary);
       color: #fff;
       font-size: 24px;
       font-weight: bold;
@@ -2187,7 +2270,7 @@
     }
 
     .hero-kicker {
-      color: var(--accent);
+      color: var(--hajime);
       font-size: 13px;
       font-weight: bold;
       letter-spacing: 0.12em;

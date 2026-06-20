@@ -119,25 +119,45 @@
           <div class="section-heading">
             <div>
               <h3>À retenir</h3>
-              <p class="subtitle">Lecture rapide avant les métriques détaillées.</p>
+              <p class="subtitle">Lecture rapide avant les analyses détaillées.</p>
             </div>
           </div>
           <div class="dashboard-summary-card">
             <div class="dashboard-summary-grid">
               <div class="summary-metric">
-                <span class="stat-label">Combats analysés</span>
+                <span class="stat-label">Combats analysés
+                  <span class="info-tip" tabindex="0" aria-label="Nombre total de combats retenus après application des filtres actifs.">
+                    <span aria-hidden="true">i</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Nombre total de combats retenus après application des filtres actifs.</span>
+                  </span>
+                </span>
                 <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
               </div>
               <div class="summary-metric summary-metric-success">
-                <span class="stat-label">Taux de victoire</span>
+                <span class="stat-label">Taux de victoire
+                  <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi les combats analysés dans le périmètre filtré.">
+                    <span aria-hidden="true">i</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi les combats analysés dans le périmètre filtré.</span>
+                  </span>
+                </span>
                 <span class="stat-value">{{ coachDashboardStats.victoryRate }}%</span>
               </div>
               <div class="summary-metric">
-                <span class="stat-label">Podiums marquants</span>
-                <span class="stat-value">{{ coachDashboardTopPodiumLevel }}</span>
+                <span class="stat-label">Podiums marquants
+                  <span class="info-tip" tabindex="0" aria-label="Pour chaque niveau, affiche la plus belle médaille obtenue et le nombre de podiums de cette médaille uniquement, triés du niveau international au départemental.">
+                    <span aria-hidden="true">i</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Pour chaque niveau, affiche la plus belle médaille obtenue et le nombre de podiums de cette médaille uniquement, triés du niveau international au départemental.</span>
+                  </span>
+                </span>
+                <span class="stat-value stat-value-multiline">{{ coachDashboardTopPodiumLevel }}</span>
               </div>
               <div class="summary-metric summary-metric-warning">
-                <span class="stat-label">Données à compléter</span>
+                <span class="stat-label">Données à compléter
+                  <span class="info-tip" tabindex="0" aria-label="Principal critère de qualité de données à corriger, avec son taux sur les combats analysés.">
+                    <span aria-hidden="true">i</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Principal critère de qualité de données à corriger, avec son taux sur les combats analysés.</span>
+                  </span>
+                </span>
                 <span class="stat-value">{{ coachDashboardMainQualityIssue }}</span>
               </div>
             </div>
@@ -148,9 +168,9 @@
         <div class="section" v-if="coachDashboardStats">
           <div class="section-heading">
             <div><h3>Podiums
-              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place, ventilées par niveau de compétition sur le périmètre filtré.">
+              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées sur un podium (🥇, 🥈 ou 🥉), ventilées par niveau de compétition sur le périmètre filtré.">
                 <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées à la 1ère, 2ème ou 3ème place, ventilées par niveau de compétition sur le périmètre filtré.</span>
+                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées sur un podium (🥇, 🥈 ou 🥉), ventilées par niveau de compétition sur le périmètre filtré.</span>
               </span>
             </h3></div>
           </div>
