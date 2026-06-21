@@ -330,23 +330,13 @@ test("coach cannot add a judoka outside the club competition age category", asyn
   );
 });
 
-test("detaching a club participant keeps the individual competition", async () => {
+test("detaching a participant from a club competition that has not started yet deletes the individual competition", async () => {
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
       getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
     },
     competitionsRepository: {
-      listByClubCompetition: async () => [
-        {
-          id_competition: "COMP1",
-          id_judoka: "J1",
-          club_competition_id: "CLUB1",
-          nom: "Tournoi",
-          date: "2026-06-14",
-          classement: ""
-        }
-      ],
       getById: async () => ({
         id_competition: "COMP1",
         id_judoka: "J1",
@@ -354,7 +344,7 @@ test("detaching a club participant keeps the individual competition", async () =
         nom: "Tournoi",
         date: "2026-06-14"
       }),
-      detachFromClubCompetition: async (id) => calls.push(["detach", id])
+      remove: async (id) => calls.push(["remove", id])
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -367,7 +357,8 @@ test("detaching a club participant keeps the individual competition", async () =
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
-    canManageClubCompetition: permissions.canManageClubCompetition
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    getCurrentDate: () => "2026-06-01"
   });
 
   const result = await service.methods.detachClubCompetitionParticipant(
@@ -376,8 +367,8 @@ test("detaching a club participant keeps the individual competition", async () =
     "COMP1"
   );
 
-  assert.deepEqual(calls, [["detach", "COMP1"]]);
-  assert.match(result.message, /sans supprimer ses résultats/);
+  assert.deepEqual(calls, [["remove", "COMP1"]]);
+  assert.match(result.message, /n'a pas encore eu lieu/);
 });
 
 test("editing a finished club competition blocks adding participants", async () => {
@@ -396,7 +387,7 @@ test("editing a finished club competition blocks adding participants", async () 
           date: "2026-06-14",
           categorie_age: "Minime",
           niveau: "National",
-          classement: "1er"
+          classement: ""
         }
       ],
       update: async (id, competition) => calls.push(["updateCompetition", id, competition]),
@@ -421,7 +412,8 @@ test("editing a finished club competition blocks adding participants", async () 
     buildClubCompetitionId: () => "CLUB1",
     buildCompetitionId: () => "COMP_NEW",
     createClubCompetition,
-    createCompetition
+    createCompetition,
+    getCurrentDate: () => "2026-06-20"
   });
 
   await assert.rejects(
@@ -446,33 +438,14 @@ test("finished club competition blocks detaching participants", async () => {
       getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
     },
     competitionsRepository: {
-      listByClubCompetition: async () => [
-        {
-          id_competition: "COMP1",
-          id_judoka: "J1",
-          club_competition_id: "CLUB1",
-          nom: "Tournoi",
-          date: "2026-06-14",
-          classement: "2e"
-        },
-        {
-          id_competition: "COMP2",
-          id_judoka: "J2",
-          club_competition_id: "CLUB1",
-          nom: "Tournoi",
-          date: "2026-06-14",
-          classement: ""
-        }
-      ],
       getById: async () => ({
         id_competition: "COMP2",
         id_judoka: "J2",
         club_competition_id: "CLUB1",
         nom: "Tournoi",
-        date: "2026-06-14",
-        classement: ""
+        date: "2026-06-14"
       }),
-      detachFromClubCompetition: async (id) => calls.push(["detach", id])
+      remove: async (id) => calls.push(["remove", id])
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -485,7 +458,8 @@ test("finished club competition blocks detaching participants", async () => {
         managedJudokaScope: createManagedJudokaScope([])
       })
     },
-    canManageClubCompetition: permissions.canManageClubCompetition
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    getCurrentDate: () => "2026-06-14"
   });
 
   await assert.rejects(

@@ -24,7 +24,7 @@ export function normalizeCombatScoreValue(value: unknown): CombatScoreValue | ""
 export function createCombatScoreValue(value: unknown): CombatScoreValue {
   const scoreValue = normalizeCombatScoreValue(value);
   if (!scoreValue) {
-    throw new Error("Valeur de la prise invalide.");
+    throw new Error("Point marqué invalide.");
   }
   return scoreValue;
 }

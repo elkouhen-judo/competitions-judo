@@ -59,6 +59,11 @@
       localStorage.removeItem(sessionStorageKey);
     }
 
+    function hasLocalVercelSession() {
+      const session = readVercelSession();
+      return Boolean(session && session.access_token);
+    }
+
     function getVercelAuthRedirectUrl() {
       const baseUrl = runtimeConfig.appUrl || window.location.origin;
       return new URL(window.location.pathname || "/", baseUrl).toString();
@@ -173,19 +178,32 @@
         return session;
       }
 
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return session;
+      }
+
       if (!session.refresh_token) {
         clearVercelSession();
         return null;
       }
 
-      const response = await fetch(
-        `${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`,
-        {
-          method: "POST",
-          headers: getSupabaseAnonymousAuthHeaders(),
-          body: JSON.stringify({ refresh_token: session.refresh_token })
+      let response: Response;
+      try {
+        response = await fetch(
+          `${runtimeConfig.supabaseUrl}/auth/v1/token?grant_type=refresh_token`,
+          {
+            method: "POST",
+            headers: getSupabaseAnonymousAuthHeaders(),
+            body: JSON.stringify({ refresh_token: session.refresh_token })
+          }
+        );
+      } catch (error) {
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          return session;
         }
-      );
+
+        throw error;
+      }
 
       if (!response.ok) {
         clearVercelSession();
@@ -287,6 +305,7 @@
     return {
       clearVercelSession,
       getValidVercelSession,
+      hasLocalVercelSession,
       logoutSupabaseSession,
       parseVercelAuthCallback,
       startGoogleLogin

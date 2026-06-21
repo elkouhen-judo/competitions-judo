@@ -76,7 +76,7 @@ function computeLateralMatchupBreakdown(
 
   return [
     { matchup: "opposite" as const, label: "Garde opposée" },
-    { matchup: "same" as const, label: "Même garde" }
+    { matchup: "same" as const, label: "Même Garde" }
   ].map((entry) => {
     const matchupCombats = decidedCombats.filter((combat) =>
       entry.matchup === "opposite"
@@ -110,22 +110,22 @@ const DATA_QUALITY_CRITERIA: Array<{
 }> = [
   {
     criterion: "judokaHandedness",
-    label: "Garde judoka non renseignée",
+    label: "Droitier/gaucher du judoka non renseigné",
     isMissing: (combat) => !combat.judokaHandedness
   },
   {
     criterion: "opponentStance",
-    label: "Garde adversaire non renseignée",
+    label: "Droitier/gaucher de l'adversaire non renseigné",
     isMissing: (combat) => !combat.opponentStance
   },
   {
     criterion: "victoryType",
-    label: "Type de décision non renseigné",
+    label: "Fin du combat non renseignée",
     isMissing: (combat) => !combat.victoryType
   },
   {
     criterion: "scores",
-    label: "Prises marquées non renseignées",
+    label: "Points marqués non renseignés",
     isMissing: (combat) => !(combat.scores || []).length
   },
   {
@@ -135,12 +135,12 @@ const DATA_QUALITY_CRITERIA: Array<{
   },
   {
     criterion: "judokaGender",
-    label: "Genre judoka non renseigné",
+    label: "Genre du judoka non renseigné",
     isMissing: (combat) => !combat.judokaGender
   },
   {
     criterion: "inconsistentIppon",
-    label: "Ippon incohérent",
+    label: "Ippon à vérifier",
     isMissing: (combat) =>
       isVictoryCombatResult(combat.result) &&
       combat.victoryType === "Ippon" &&

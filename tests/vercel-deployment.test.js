@@ -612,7 +612,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   );
   assert.match(uiBundle, /Aucun résultat enregistré pour votre périmètre/);
   assert.match(uiBundle, /Résumé performance/);
-  assert.match(uiBundle, /Profil de combat/);
+  assert.match(uiBundle, /Bilan des combats/);
   assert.match(uiBundle, /Résultats compétition/);
   assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
   assert.match(uiBundle, /id="judokaSeasonBalance"/);

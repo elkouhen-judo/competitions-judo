@@ -1,8 +1,8 @@
 ---
 title: Kiroku Technical Specification
-version: 1.3
+version: 1.4
 date_created: 2026-06-11
-last_updated: 2026-06-19
+last_updated: 2026-06-21
 owner: competitions-judo
 tags:
   - architecture
@@ -72,6 +72,12 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-007**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
 - **VCL-008**: Browser RPC calls shall fail explicitly when offline and shall abort with a user-facing slow-network error when the mobile network does not answer in time.
 - **VCL-009**: `terraform/` shall manage, as code, the Vercel project name/`node_version` and the Supabase Auth `site_url`/`uri_allow_list` for both environments (prod and dev), kept in sync with VCL-005b/CFG-011. `terraform/modules/kiroku_project` shall hold environment-agnostic resource definitions (no hardcoded environment values); `terraform/environments/prod` and `terraform/environments/dev` shall each be an independent root module with its own state, calling that shared module with environment-specific values, so each environment can be planned/applied on its own without touching the other's state. Project creation, build/install commands (owned by `vercel.json`, VCL-006/VCL-006a), and sensitive environment variables stay outside Terraform's scope — see `terraform/README.md` for rationale and the required one-time `terraform import`.
+- **VCL-010**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
+- **VCL-011**: Offline mutation replay shall call the same authenticated `/api/rpc` methods used by connected actions; no offline path shall bypass server-side authorization or validation.
+- **VCL-012**: Cached business data and pending offline operations shall be partitioned by authenticated user identity so a later user on the same browser cannot read another user's sports data.
+- **VCL-013**: Pending offline operations shall include a stable local operation identifier, operation type, payload, user identity, creation timestamp, and status among `pending`, `syncing`, `synced`, `failed`, or `conflict`.
+- **VCL-014**: Offline synchronization shall replay pending operations in creation order and mark an operation as synchronized only after the backend confirms success.
+- **VCL-015**: If replay fails because of backend permission, validation, or conflict errors, the browser shall keep the local operation with the backend error details needed to render an actionable user-facing state.
 
 ### 3.3 Data model constraints
 
@@ -90,7 +96,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-012**: `judokas.role` shall store the structural access level among `NORMAL`, `COACH`, and `ADMIN`.
 - **DAT-013**: If privileged rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
 - **DAT-014**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
-- **DAT-015**: Unused competition fields for location and actual weigh-in shall remain absent.
+- **DAT-015**: The unused competition field for actual weigh-in shall remain absent.
 - **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics, among `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, `Non classé`, or an empty value before finalization.
 - **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
 - **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
@@ -100,13 +106,14 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
 - **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
 - **DAT-020**: `competitions.club_competition_id` optionally links an individual competition participation to a club competition.
-- **DAT-021**: Deleting a club competition or detaching a club competition link shall preserve individual competitions, combats, and rankings by clearing `competitions.club_competition_id` instead of deleting linked participations.
+- **DAT-021**: Deleting a club competition shall detach every linked individual competition by clearing `competitions.club_competition_id`, preserving those individual competitions, combats, and rankings.
 - **DAT-027**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
 - **DAT-028**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
 - **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`. Age categories without official weight divisions (Poussinet, Poussin) shall use an empty value rather than free text. Vétéran reuses the Senior weight scale.
 - **DAT-030**: `club_competitions` shall not contain a weight category column; club events only share name, date, age category, and participant links, while linked individual `competitions` keep their own optional `categorie_poids`.
 - **DAT-031**: `club_competitions.niveau` shall store the shared club event level, propagated to linked individual `competitions.niveau` when participants are created or resynchronized.
-- **DAT-030**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
+- **DAT-032**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
+- **DAT-033**: Removing a single participant from a club competition whose date is strictly in the future shall delete that judoka's individual competition row, cascading to its combats per DAT-010, instead of clearing `competitions.club_competition_id`; removing a participant from a club competition whose date is today or in the past is rejected per COMP-019a.
 
 ### 3.4 Authentication and authorization
 
@@ -203,3 +210,8 @@ The endpoint returns HTML with runtime configuration injected into the page:
     supabaseAnonKey: "<public-anon-key>"
   };
 </script>
+```
+
+## 5. Related Specifications / Further Reading
+
+- `docs/spec.md` - functional requirements, roles, acceptance criteria, and business edge cases

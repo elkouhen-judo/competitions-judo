@@ -65,6 +65,33 @@ test("mobile mutations are guarded against double taps and offline network", () 
   assert.match(bundle, /:disabled="isSubmitting"/);
 });
 
+test("initial data can reopen from a local offline snapshot", () => {
+  assert.match(client, /kiroku_initial_data:/);
+  assert.match(client, /function loadCachedInitialData\(\)/);
+  assert.match(client, /hasLocalVercelSession/);
+  assert.match(client, /if \(!app\.state\.isOnline && app\.loadCachedInitialData\(\)\)/);
+  assert.match(client, /Hors connexion - données du/);
+  assert.match(bundle, /v-if="showOfflineStatus" class="offline-status"/);
+  assert.match(css, /\.offline-status\s*\{/);
+  assert.match(css, /\.user-actions \.offline-status\s*\{/);
+});
+
+test("offline combat and ranking mutations queue as pending operations and sync on reconnect", () => {
+  assert.match(client, /kiroku_pending_ops:/);
+  assert.match(client, /function loadPendingOperationsForUser\(/);
+  assert.match(client, /function upsertPendingOperation\(/);
+  assert.match(client, /function syncPendingOperations\(\)/);
+  assert.match(client, /function getLocalOfflineMutationError\(/);
+  assert.match(client, /function cancelPendingOperation\(/);
+  assert.match(client, /Enregistré localement\. En attente de synchronisation\./);
+  assert.match(client, /window\.KirokuScreenProjections\.mergePendingCombatCards\(/);
+  assert.match(bundle, /v-if="combat\.pendingSync" class="pending-sync-note"/);
+  assert.match(bundle, /v-if="pendingFinalization" class="pending-sync-note"/);
+  assert.match(bundle, /@click="cancelPendingOperation\(combat\.pendingOperationId\)"/);
+  assert.match(css, /\.badge-pending\s*\{/);
+  assert.match(css, /\.pending-sync-note\s*\{/);
+});
+
 test("button colors use consistent variants and disabled states", () => {
   assert.match(css, /--button-primary-bg: var\(--primary\)/);
   assert.match(css, /--button-secondary-bg: #ffffff/);
@@ -235,7 +262,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Résultats du judoka actif/);
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /Résumé performance/);
-  assert.match(bundle, /Profil de combat/);
+  assert.match(bundle, /Bilan des combats/);
   assert.match(bundle, /id="judokaCompetitionResults"/);
   assert.match(bundle, /:key="result\.competitionId \|\|/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
@@ -435,8 +462,8 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.doesNotMatch(bundle, /applyCoachDashboardFilters|>Actualiser</);
   assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
   assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
-  assert.match(bundle, /<h3>À retenir<\/h3>/);
-  assert.match(bundle, /Lecture rapide avant les analyses détaillées\./);
+  assert.match(bundle, /<h3>Synthèse coach<\/h3>/);
+  assert.match(bundle, /L'essentiel avant de creuser les détails\./);
   assert.match(
     bundle,
     /Pour chaque niveau, affiche la plus belle médaille obtenue et le nombre de podiums de cette médaille uniquement/
@@ -453,11 +480,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /coachDashboardMainQualityIssue/);
   assert.match(bundle, /coachDashboardSummaryInsight/);
   assert.ok(
-    bundle.indexOf("<h3>À retenir</h3>") < bundle.indexOf("<h3>Podiums"),
+    bundle.indexOf("<h3>Synthèse coach</h3>") < bundle.indexOf("<h3>Podiums"),
     "the dashboard summary should appear before detailed podium metrics"
   );
-  assert.match(bundle, /<h3>Volumes<\/h3>/);
-  assert.match(bundle, /Compteurs bruts sur le périmètre filtré\./);
+  assert.match(bundle, /<h3>Volume de combats<\/h3>/);
+  assert.match(bundle, /Volume calculé avec les filtres choisis\./);
   assert.match(
     bundle,
     /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par genre/
@@ -475,20 +502,20 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /podium-split-grid/);
   assert.doesNotMatch(bundle, /podium\.place === '1er' \}"[\s\S]{0,400}podium\.total/);
   assert.match(client, /coachDashboardPodiumsByLevel/);
-  assert.match(bundle, /<h3>Performance globale<\/h3>/);
-  assert.match(bundle, /Taux calculés sur les combats du périmètre filtré\./);
+  assert.match(bundle, /<h3>Profil de performance<\/h3>/);
+  assert.match(bundle, /Taux calculés avec les filtres choisis\./);
   assert.doesNotMatch(bundle, /dashboard-subsection/);
   assert.match(bundle, /<span class="stat-label">Victoires totales/);
   assert.match(bundle, /<span class="stat-label">Victoires Ippon debout/);
   assert.match(bundle, /<span class="stat-label">Victoires Ippon au sol/);
   assert.doesNotMatch(bundle, /Défaites par hansoku-make<\/span>/);
-  assert.match(bundle, /<h3>Répartition des gardes<\/h3>/);
+  assert.match(bundle, /<h3>Par garde<\/h3>/);
   assert.match(
     bundle,
-    /Taux de victoire quand judoka et adversaire ont une garde opposée ou identique\./
+    /Taux de victoire selon la garde du judoka et de l'adversaire\./
   );
   assert.match(bundle, /<span class="split-stat-label">Garde opposée<\/span>/);
-  assert.match(bundle, /<span class="split-stat-label">Même garde<\/span>/);
+  assert.match(bundle, /<span class="split-stat-label">Même Garde<\/span>/);
   assert.match(
     bundle,
     /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
@@ -509,10 +536,10 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     bundle,
     /v-for="entry in coachDashboardDefeatsByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
   );
-  assert.match(bundle, /<h3>Qualité des données<\/h3>/);
+  assert.match(bundle, /<h3>Fiabilité des données<\/h3>/);
   assert.match(
     bundle,
-    /v-if="!coachDashboardDataQualityIssues\.length" class="empty-state">Aucun problème de saisie détecté/
+    /v-if="!coachDashboardDataQualityIssues\.length" class="empty-state">Aucune donnée à fiabiliser/
   );
   assert.match(
     bundle,
@@ -527,7 +554,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(bundle, /\.info-tip-bubble\s*\{/);
   assert.match(
     bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Face à la garde adverse[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
+    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde du judoka vs garde de l'adversaire[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
   );
   assert.doesNotMatch(bundle, /<h3>Par niveau/);
   assert.doesNotMatch(client, /coachDashboardByCompetitionLevel/);
@@ -548,13 +575,13 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
 
   const dashboardSectionOrder = [
     "<h3>Podiums",
-    "<h3>Volumes</h3>",
-    "<h3>Répartition des judokas</h3>",
-    "<h3>Répartition des gardes</h3>",
-    "<h3>Performance globale</h3>",
-    "<h3>Victoires par décision",
-    "<h3>Défaites par décision",
-    "<h3>Qualité des données</h3>"
+    "<h3>Volume de combats</h3>",
+    "<h3>Effectif engagé</h3>",
+    "<h3>Par garde</h3>",
+    "<h3>Profil de performance</h3>",
+    "<h3>Mode de victoire",
+    "<h3>Mode de défaite",
+    "<h3>Fiabilité des données</h3>"
   ].map((marker) => bundle.indexOf(marker));
   assert.ok(
     dashboardSectionOrder.every((index) => index !== -1),
@@ -594,11 +621,11 @@ test("competition detail screen is mounted through Vue 3 for the progressive scr
   assert.match(bundle, /v-if="combat\.dataQualityIssues\.length"/);
   assert.match(bundle, /v-for="issue in combat\.dataQualityIssues"/);
   assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
-  assert.match(client, /Garde judoka non renseignée/);
-  assert.match(client, /Garde adversaire non renseignée/);
-  assert.match(client, /Type de décision non renseigné/);
-  assert.match(client, /Prises marquées non renseignées/);
-  assert.match(client, /Décision Ippon sans prise marquée à Ippon/);
+  assert.match(client, /Droitier\/gaucher du judoka non renseigné/);
+  assert.match(client, /Droitier\/gaucher de l'adversaire non renseigné/);
+  assert.match(client, /Fin du combat non renseignée/);
+  assert.match(client, /Points marqués non renseignés/);
+  assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
   assert.match(client, /priority: "high"/);
   assert.match(client, /priority: "medium"/);
   assert.doesNotMatch(bundle, /combatsHtml/);
@@ -755,12 +782,12 @@ test("combat decision type appears only after choosing a result", () => {
 test("combat form screen is mounted through Vue 3 for the progressive screen migration", () => {
   assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
   assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
-  assert.match(bundle, /Aide à comparer les combats en même garde ou garde opposée\./);
-  assert.match(bundle, /Utile pour le bilan coach par décision et les défaites hansoku-make\./);
-  assert.match(bundle, /Aide à repérer les points marqués debout et au sol\./);
+  assert.match(bundle, /Aide à comparer les combats selon le côté préféré de chacun\./);
+  assert.match(bundle, /Indiquez si le combat s'est terminé par ippon, points, décision ou pénalité\./);
+  assert.match(bundle, /Aide à repérer les points debout et au sol\./);
   assert.match(
     bundle,
-    /<template v-if="score\.category === 'Tachi-waza'">[\s\S]*type="text" list="tachiWazaTechniqueSuggestions" v-model\.trim="score\.technique" placeholder="Nom de la prise/
+    /<template v-if="score\.category === 'Tachi-waza'">[\s\S]*type="text" list="tachiWazaTechniqueSuggestions" v-model\.trim="score\.technique" placeholder="Action debout/
   );
   assert.match(bundle, /<datalist id="tachiWazaTechniqueSuggestions">[\s\S]*v-for="technique in tachiWazaTechniques"/);
   assert.match(client, /const tachiWazaTechniques = window\.Vue\.computed\(\(\) => TACHI_WAZA_TECHNIQUES\)/);
@@ -795,7 +822,7 @@ test("combat form surfaces every data quality issue inline, near the field it co
     client,
     /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!form\.scores\.some\(\(score\) => score\.value === "Ippon"\)/
   );
-  assert.match(client, /Décision Ippon sans prise marquée à Ippon/);
+  assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
   assert.match(client, /getCombatDecisionOptions\(form\.result\)\.length && !form\.victoryType/);
   assert.doesNotMatch(bundle, /hasInconsistentIppon/);
   assert.doesNotMatch(bundle, /v-if="combatFormDataQualityIssues\.length"/);

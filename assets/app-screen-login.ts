@@ -110,6 +110,11 @@
         return;
       }
 
+      if (!app.state.isOnline && app.loadCachedInitialData()) {
+        screens.home.showHome();
+        return;
+      }
+
       app.runServerWithOptions(
         "getInitialData",
         [],
@@ -122,7 +127,14 @@
           applyInitialData(data);
           screens.home.showHome();
         },
-        showError,
+        (error) => {
+          if (app.loadCachedInitialData()) {
+            screens.home.showHome();
+            return;
+          }
+
+          showError(error);
+        },
         { retrySessionOnce: Boolean(callbackResult && callbackResult.completedAuth) }
       );
     }

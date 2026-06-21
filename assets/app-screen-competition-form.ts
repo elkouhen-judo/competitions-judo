@@ -83,14 +83,49 @@
       );
     });
 
-    const combatsProjection = window.Vue.computed(() =>
-      window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
+    const combatsProjection = window.Vue.computed(() => {
+      const base = window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
         formatResultat,
         normalizeDisplayName,
         showJudoka: state.isCoach,
         canEdit: state.canEditCurrentCompetition
-      })
-    );
+      });
+      const competitionId = state.currentCompetition?.competitionId || "";
+      const combats = window.KirokuScreenProjections.mergePendingCombatCards(
+        base.combats,
+        state.pendingOperations,
+        competitionId,
+        {
+          formatResultat,
+          normalizeDisplayName,
+          showJudoka: state.isCoach,
+          canEdit: state.canEditCurrentCompetition,
+          judokas: state.judokas,
+          getJudokaDisplayName
+        }
+      );
+      return {
+        ...base,
+        combats,
+        hasCombats: combats.length > 0,
+        combatsEmptyMessage: combats.length ? "" : base.combatsEmptyMessage
+      };
+    });
+
+    const pendingFinalization = window.Vue.computed(() => {
+      const competitionId = state.currentCompetition?.competitionId || "";
+      if (!competitionId) {
+        return null;
+      }
+      return (
+        state.pendingOperations.find(
+          (op) =>
+            op.type === "finalizeCompetition" &&
+            op.competitionId === competitionId &&
+            op.status !== "synced"
+        ) || null
+      );
+    });
 
     const competitionTitle = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return "Chargement...";
@@ -99,7 +134,14 @@
     const competitionSubtitle = window.Vue.computed(() => competitionDetailProjection.value?.competitionSubtitle ?? "");
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
-    const competitionResult = window.Vue.computed(() => competitionDetailProjection.value?.competitionResult ?? "");
+    const competitionResult = window.Vue.computed(() => {
+      const pending = pendingFinalization.value;
+      if (pending) {
+        const pendingResult = String((pending.payload[1] as string) || "");
+        return pendingResult ? `${pendingResult} · en attente de synchronisation` : "";
+      }
+      return competitionDetailProjection.value?.competitionResult ?? "";
+    });
     const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
     const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
@@ -159,6 +201,7 @@
         "competitionView",
         defaultCompetitionDetailViewState,
         {
+          cancelPendingOperation,
           deleteCurrentCompetition,
           deleteCombat,
           editCurrentCompetition,
@@ -185,7 +228,8 @@
           isLoadingCombats,
           competitionSportSummary,
           showCoachAssessment,
-          canEditCoachAssessment
+          canEditCoachAssessment,
+          pendingFinalization
         }
       );
     }
@@ -259,6 +303,10 @@
         },
         showError
       );
+    }
+
+    function cancelPendingOperation(operationId: string) {
+      app.cancelPendingOperation(operationId);
     }
 
     function navigateBackFromCompetition() {

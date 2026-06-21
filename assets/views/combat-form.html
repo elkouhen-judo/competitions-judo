@@ -28,12 +28,12 @@
             </div>
 
             <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
-              <label for="combat_type_victoire">Issue du combat</label>
+              <label for="combat_type_victoire">Comment le combat s'est terminé</label>
               <select id="combat_type_victoire" v-model="combatForm.victoryType">
                 <option value="">Non spécifié</option>
                 <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
               </select>
-              <p class="field-hint">Utile pour le bilan coach par décision et les défaites hansoku-make.</p>
+              <p class="field-hint">Indiquez si le combat s'est terminé par ippon, points, décision ou pénalité.</p>
               <div v-if="combatFormVictoryTypeIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur le type de décision">
                 <span v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
                   <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
@@ -53,19 +53,19 @@
           <div class="form-section-heading">
             <div>
               <span class="combat-section-kicker">Étape 2</span>
-              <h3>Détails sportifs</h3>
+              <h3>Détails du combat</h3>
               <p class="subtitle">Complétez ce qui aide le coach à relire le combat.</p>
             </div>
           </div>
           <div class="form-grid">
             <div>
-              <label for="combat_garde_adversaire">Garde de l'adversaire</label>
+              <label for="combat_garde_adversaire">Adversaire droitier ou gaucher</label>
               <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
                 <option value="">Non spécifié</option>
                 <option value="Droitier">Droitier</option>
                 <option value="Gaucher">Gaucher</option>
               </select>
-              <p class="field-hint">Aide à comparer les combats en même garde ou garde opposée.</p>
+              <p class="field-hint">Aide à comparer les combats selon le côté préféré de chacun.</p>
               <div v-if="combatFormOpponentStanceIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur la garde adversaire">
                 <span v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
                   <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
@@ -76,8 +76,8 @@
             <div class="full-row combat-score-block">
               <div class="combat-score-header">
                 <div>
-                  <label>Prises marquées</label>
-                  <p class="field-hint">Aide à repérer les points marqués debout et au sol.</p>
+                  <label>Points marqués</label>
+                  <p class="field-hint">Aide à repérer les points debout et au sol.</p>
                 </div>
                 <span class="result-badge">{{ combatForm.scores.length }} prise(s)</span>
               </div>
@@ -95,27 +95,27 @@
                   </div>
                   <div class="combat-score-row-fields">
                     <select v-model="score.category" @change="onCombatScoreCategoryChange(index)">
-                      <option value="">Catégorie</option>
-                      <option value="Tachi-waza">Tachi-waza</option>
-                      <option value="Ne-waza">Ne-waza</option>
+                      <option value="">Debout ou au sol</option>
+                      <option value="Tachi-waza">Debout</option>
+                      <option value="Ne-waza">Au sol</option>
                     </select>
                     <template v-if="score.category === 'Tachi-waza'">
-                      <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Nom de la prise (ex. Seoi-nage)">
+                      <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Action debout (ex. Seoi-nage)">
                       <datalist id="tachiWazaTechniqueSuggestions">
                         <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
                       </datalist>
                     </template>
                     <select v-else-if="score.category === 'Ne-waza'" v-model="score.neWazaType">
-                      <option value="">Type de prise</option>
+                      <option value="">Action au sol</option>
                       <option value="Clé">Clé</option>
                       <option value="Étranglement">Étranglement</option>
-                      <option value="Osaekomi">Osaekomi</option>
+                      <option value="Osaekomi">Immobilisation (Osaekomi)</option>
                     </select>
                     <select v-else disabled>
-                      <option value="">Choisir une catégorie</option>
+                      <option value="">Choisir debout ou au sol</option>
                     </select>
                     <select v-model="score.value">
-                      <option value="">Valeur</option>
+                      <option value="">Point marqué</option>
                       <option value="Ippon">Ippon</option>
                       <option value="Waza-ari">Waza-ari</option>
                       <option value="Yuko">Yuko</option>
@@ -144,8 +144,8 @@
           </div>
           <div class="form-grid">
             <div class="full-row">
-              <label for="combat_deroule">Notes / déroulé du combat</label>
-              <textarea id="combat_deroule" rows="4" placeholder="Ex : départ fort, difficulté sur garde opposée, projection tentée..." v-model.trim="combatForm.notes"></textarea>
+              <label for="combat_deroule">Notes sur le combat</label>
+              <textarea id="combat_deroule" rows="4" placeholder="Ex : bon départ, difficulté contre un gaucher, projection tentée..." v-model.trim="combatForm.notes"></textarea>
             </div>
           </div>
         </div>

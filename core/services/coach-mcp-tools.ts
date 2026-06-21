@@ -70,7 +70,7 @@ const COMBAT_FILTER_PROPERTIES: JsonSchema = {
   opponentStance: { type: "string", enum: OPPONENT_STANCES },
   result: { type: "string", enum: COMBAT_RESULTS },
   scoreValue: { type: "string", enum: SCORE_VALUES },
-  tachiWazaTechnique: { type: "string", description: "Nom libre de prise Tachi-waza à rechercher." },
+  tachiWazaTechnique: { type: "string", description: "Nom libre de prise debout à rechercher." },
   victoryType: { type: "string", description: "Type de décision (Ippon, Waza-ari, Hansoku-make...)." },
   text: {
     type: "array",

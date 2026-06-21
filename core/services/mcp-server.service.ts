@@ -104,19 +104,19 @@ const COMPETITION_SCHEMA: JsonSchema = {
 
 const COMBAT_SCORE_SCHEMA: JsonSchema = {
   type: "object",
-  description: "Une prise (score) marquée durant le combat.",
+  description: "Un point marqué durant le combat.",
   properties: {
-    category: { type: "string", enum: SCORE_CATEGORIES, description: "Type de prise : debout (Tachi-waza) ou au sol (Ne-waza)." },
+    category: { type: "string", enum: SCORE_CATEGORIES, description: "Situation du point : Debout ou Au sol." },
     technique: {
       type: "string",
-      description: "Nom libre de la prise, uniquement si category vaut \"Tachi-waza\"."
+      description: "Nom libre de l'action, uniquement pour un point debout."
     },
     neWazaType: {
       type: "string",
       enum: NE_WAZA_TYPES,
-      description: "Type de prise au sol, uniquement si category vaut \"Ne-waza\"."
+      description: "Action au sol."
     },
-    value: { type: "string", enum: SCORE_VALUES, description: "Valeur de la prise." }
+    value: { type: "string", enum: SCORE_VALUES, description: "Point marqué." }
   },
   required: ["category", "value"]
 };
@@ -130,8 +130,8 @@ const COMBAT_SCHEMA: JsonSchema = {
     judokaId: { type: "string", description: "Identifiant du judoka qui a combattu." },
     competitionId: { type: "string", description: "Identifiant de la compétition à laquelle ce combat appartient." },
     opponent: { type: "string", description: "Nom de l'adversaire." },
-    opponentStance: { type: "string", enum: OPPONENT_STANCES, description: "Garde de l'adversaire (optionnel)." },
-    result: { type: "string", enum: COMBAT_RESULTS, description: "Issue du combat pour le judoka." },
+    opponentStance: { type: "string", enum: OPPONENT_STANCES, description: "Adversaire droitier ou gaucher (optionnel)." },
+    result: { type: "string", enum: COMBAT_RESULTS, description: "Résultat du combat pour le judoka." },
     victoryType: {
       type: "string",
       enum: ["Ippon", "Waza-ari", "Yuko", "Décision", "Hansoku-make", "Forfait", "Hiki wake"],

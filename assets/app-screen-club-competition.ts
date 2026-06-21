@@ -355,7 +355,7 @@
               };
             });
           clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
-            data.participations.some((p) => Boolean(cleanText(p.result)));
+            Boolean(cc.date) && String(cc.date) <= new Date().toISOString().slice(0, 10);
           state.clubCompetitionParticipantsCurrentPage = 1;
           const available = state.judokas
             .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
@@ -413,7 +413,7 @@
         return;
       }
       app.confirmAndRun({
-        message: `Retirer ${judokaName} de cette compétition club ? Ses résultats individuels seront conservés.`,
+        message: `Retirer ${judokaName} de cette compétition club ? La compétition n'a pas encore eu lieu : sa participation individuelle sera définitivement supprimée.`,
         method: "detachClubCompetitionParticipant",
         args: [clubCompetitionId, competitionId],
         onSuccess: (response) => {

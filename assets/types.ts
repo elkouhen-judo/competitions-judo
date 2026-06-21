@@ -155,11 +155,42 @@ export interface CompetitionCombatCard {
   showJudoka: boolean;
   canEdit: boolean;
   notes: string;
+  pendingSync?: boolean;
+  pendingError?: string;
+  pendingOperationId?: string;
+}
+
+export type PendingOfflineOperationType = "ajouterCombat" | "updateCombat" | "finalizeCompetition";
+export type PendingOfflineOperationStatus = "pending" | "syncing" | "synced" | "failed" | "conflict";
+
+export interface PendingOfflineOperation {
+  id: string;
+  type: PendingOfflineOperationType;
+  competitionId: string;
+  payload: unknown[];
+  userEmail: string;
+  createdAt: string;
+  status: PendingOfflineOperationStatus;
+  errorMessage?: string;
+  summary: string;
 }
 
 export interface ScreenProjections {
   getWeightCategoryOptions(ageCategory: string, gender?: string): string[];
   getYearInCategoryOptions(ageCategory: string): string[];
+  mergePendingCombatCards(
+    cards: CompetitionCombatCard[],
+    pendingOperations: PendingOfflineOperation[] | null | undefined,
+    competitionId: string,
+    helpers: {
+      formatResultat(value: unknown): string;
+      normalizeDisplayName(value: unknown): string;
+      showJudoka: boolean;
+      canEdit: boolean;
+      judokas: Judoka[];
+      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
+    }
+  ): CompetitionCombatCard[];
   paginateList<T>(
     items: T[] | null | undefined,
     currentPage: number,
@@ -237,6 +268,7 @@ export interface NotificationsApi {
 export interface AuthApi {
   clearVercelSession(): void;
   getValidVercelSession(): Promise<SessionLike | null>;
+  hasLocalVercelSession(): boolean;
   logoutSupabaseSession(): Promise<void>;
   parseVercelAuthCallback(): Promise<AuthCallbackResult | undefined>;
   startGoogleLogin(): void;
@@ -347,7 +379,10 @@ export interface KirokuAppState {
   isLoadingCompetition: boolean;
   isSubmitting: boolean;
   isOnline: boolean;
+  isUsingCachedData: boolean;
+  cachedDataLoadedAt: string;
   pendingRpcKeys: Record<string, boolean>;
+  pendingOperations: PendingOfflineOperation[];
   homeFilterJudokaId: string;
   competitionsCurrentPage: number;
   clubCompetitionsCurrentPage: number;
@@ -364,6 +399,7 @@ export interface KirokuAppState {
 export interface RunServerOptions {
   actionKey?: string;
   retrySessionOnce?: boolean;
+  bypassOfflineQueue?: boolean;
 }
 
 export type RpcClientMethod = keyof RpcMethods;
@@ -378,6 +414,7 @@ export type RpcClientResult<M extends RpcClientMethod> = Awaited<ReturnType<RpcM
 export interface KirokuApp {
   applyInitialData(data: InitialData): void;
   auth: AuthApi;
+  cancelPendingOperation(operationId: string): void;
   confirmAndRun<M extends RpcClientMethod>(config: {
     message: string;
     method: M;
@@ -386,6 +423,7 @@ export interface KirokuApp {
   }): void;
   defaultListPageSize: number;
   loginScreen?: LoginScreen;
+  loadCachedInitialData(): boolean;
   notifications: NotificationsApi;
   reloadInitialData(openCompetitionId?: string): void;
   reloadInitialDataAndShowAdmins(): void;

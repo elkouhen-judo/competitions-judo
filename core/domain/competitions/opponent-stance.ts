@@ -29,7 +29,7 @@ export function createOpponentStance(value: unknown): OpponentStance {
 
   const stance = normalizeOpponentStance(rawValue);
   if (!stance) {
-    throw new Error("Garde de l'adversaire invalide.");
+    throw new Error("Adversaire droitier/gaucher invalide.");
   }
   return stance;
 }

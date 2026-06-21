@@ -26,6 +26,7 @@ export interface ClubCompetitionsServiceDeps {
   buildCompetitionId: () => string;
   createClubCompetition: typeof createClubCompetition;
   createCompetition: typeof createCompetition;
+  getCurrentDate?: () => string;
 }
 
 export interface ClubCompetitionsService {
@@ -44,7 +45,8 @@ export default function createClubCompetitionsService(
     buildClubCompetitionId,
     buildCompetitionId,
     createClubCompetition,
-    createCompetition
+    createCompetition,
+    getCurrentDate = () => new Date().toISOString().slice(0, 10)
   } = deps;
 
   function assertCanManage(domainUser: ReturnType<typeof toCanonicalJudoka>): void {
@@ -70,8 +72,9 @@ export default function createClubCompetitionsService(
     }
   }
 
-  function hasFinalRanking(row: { classement?: unknown }): boolean {
-    return Boolean(String(row.classement || "").trim());
+  function isCompetitionFinished(row: { date?: unknown }): boolean {
+    const date = String(row.date || "").trim();
+    return Boolean(date) && date <= getCurrentDate();
   }
 
   async function saveClubCompetition(email: string, input: ClubCompetitionInput) {
@@ -84,7 +87,7 @@ export default function createClubCompetitionsService(
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
     const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
-    const participantsLocked = existing.some(hasFinalRanking);
+    const participantsLocked = existing.some(isCompetitionFinished);
 
     const participantJudokaIds =
       Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
@@ -204,10 +207,6 @@ export default function createClubCompetitionsService(
     if (!event) {
       throw new Error("Compétition club introuvable.");
     }
-    const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
-    if (participations.some(hasFinalRanking)) {
-      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
-    }
     const participation = await competitionsRepository.getById(idCompetition);
     if (
       !participation ||
@@ -215,10 +214,13 @@ export default function createClubCompetitionsService(
     ) {
       throw new Error("Participation introuvable.");
     }
-    await competitionsRepository.detachFromClubCompetition(idCompetition);
+    if (isCompetitionFinished(event)) {
+      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
+    }
+    await competitionsRepository.remove(idCompetition);
     return {
       success: true,
-      message: "La participation a été retirée de la compétition club sans supprimer ses résultats."
+      message: "La participation a été supprimée car la compétition n'a pas encore eu lieu."
     };
   }
 

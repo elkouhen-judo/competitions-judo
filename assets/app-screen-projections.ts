@@ -7,6 +7,7 @@
   type Judoka = import("./types").Judoka;
   type ManagedAdminCard = import("./types").ManagedAdminCard;
   type ManagedUserCard = import("./types").ManagedUserCard;
+  type PendingOfflineOperation = import("./types").PendingOfflineOperation;
 
   /**
    * FFJDA weight categories (2025-2026 season), mirroring
@@ -209,7 +210,8 @@
   }
 
   function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
-    const detail = score.category === "Tachi-waza" ? score.technique : score.neWazaType;
+    const fallback = score.category === "Tachi-waza" ? "Debout" : "Au sol";
+    const detail = score.category === "Tachi-waza" ? score.technique || fallback : score.neWazaType || fallback;
     return [detail, score.value].filter(Boolean).join(" · ");
   }
 
@@ -223,23 +225,23 @@
   ): CombatDataQualityIssue[] {
     const issues: CombatDataQualityIssue[] = [];
     if (!combat.victoryType) {
-      issues.push({ label: "Type de décision non renseigné", priority: "high" });
+      issues.push({ label: "Fin du combat non renseignée", priority: "high" });
     }
     if (
       combat.result === "Victoire" &&
       combat.victoryType === "Ippon" &&
       !hasMatchingIpponScore(combat)
     ) {
-      issues.push({ label: "Décision Ippon sans prise marquée à Ippon", priority: "high" });
+      issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", priority: "high" });
     }
     if (!(combat.scores || []).length) {
-      issues.push({ label: "Prises marquées non renseignées", priority: "medium" });
+      issues.push({ label: "Points marqués non renseignés", priority: "medium" });
     }
     if (helpers.showJudoka && !combat.judokaHandedness) {
-      issues.push({ label: "Garde judoka non renseignée", priority: "medium" });
+      issues.push({ label: "Droitier/gaucher du judoka non renseigné", priority: "medium" });
     }
     if (!combat.opponentStance) {
-      issues.push({ label: "Garde adversaire non renseignée", priority: "medium" });
+      issues.push({ label: "Droitier/gaucher de l'adversaire non renseigné", priority: "medium" });
     }
     return issues;
   }
@@ -280,9 +282,117 @@
     };
   }
 
+  function buildPendingCombatCard(
+    op: PendingOfflineOperation,
+    payload: {
+      judokaId?: string;
+      combatId?: string;
+      opponent?: string;
+      opponentStance?: string;
+      result?: string;
+      victoryType?: string;
+      scores?: CombatReadModel["scores"];
+      notes?: string;
+    },
+    helpers: {
+      formatResultat(value: unknown): string;
+      normalizeDisplayName(value: unknown): string;
+      showJudoka: boolean;
+      canEdit: boolean;
+      judokas: Judoka[];
+      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
+    }
+  ): CompetitionCombatCard {
+    const judoka = helpers.judokas.find((j) => String(j.judokaId) === String(payload.judokaId));
+    const combatLike: CombatReadModel = {
+      combatId: payload.combatId || op.id,
+      judokaId: payload.judokaId || "",
+      competitionId: op.competitionId,
+      opponent: payload.opponent || "",
+      opponentStance: payload.opponentStance || "",
+      result: (payload.result as CombatReadModel["result"]) || "Victoire",
+      victoryType: payload.victoryType || "",
+      scores: payload.scores || [],
+      notes: payload.notes || "",
+      judokaDisplayName: judoka ? helpers.getJudokaDisplayName(judoka) : "",
+      judokaHandedness: judoka ? judoka.handedness : ""
+    };
+
+    return {
+      combatId: combatLike.combatId,
+      judokaId: combatLike.judokaId,
+      competitionId: combatLike.competitionId,
+      opponent: combatLike.opponent || "Adversaire non renseigné",
+      opponentStance: combatLike.opponentStance || "",
+      judokaHandedness: combatLike.judokaHandedness || "",
+      result: helpers.formatResultat(combatLike.result),
+      resultClass: `result-${String(combatLike.result || "").toLowerCase()}`,
+      victoryType: combatLike.victoryType || "",
+      scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
+      dataQualityIssues: getCombatDataQualityIssues(combatLike, helpers),
+      judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
+      showJudoka: Boolean(helpers.showJudoka),
+      canEdit: op.type === "updateCombat" && Boolean(helpers.canEdit),
+      notes: combatLike.notes || "Aucun déroulé renseigné",
+      pendingSync: true,
+      pendingError: op.errorMessage,
+      pendingOperationId: op.id
+    };
+  }
+
+  /**
+   * Overlays not-yet-synced `ajouterCombat`/`updateCombat` offline operations
+   * onto an already-projected combat card list (OFF-005/OFF-006): updates
+   * replace their target card in place, adds are appended as synthetic cards.
+   */
+  function mergePendingCombatCards(
+    cards: CompetitionCombatCard[],
+    pendingOperations: PendingOfflineOperation[] | null | undefined,
+    competitionId: string,
+    helpers: {
+      formatResultat(value: unknown): string;
+      normalizeDisplayName(value: unknown): string;
+      showJudoka: boolean;
+      canEdit: boolean;
+      judokas: Judoka[];
+      getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
+    }
+  ): CompetitionCombatCard[] {
+    const relevantOps = (pendingOperations || []).filter(
+      (op) =>
+        (op.type === "ajouterCombat" || op.type === "updateCombat") &&
+        op.competitionId === competitionId &&
+        op.status !== "synced"
+    );
+
+    if (!relevantOps.length) {
+      return cards;
+    }
+
+    let merged = cards;
+
+    relevantOps.forEach((op) => {
+      const payload = (op.payload[0] || {}) as Parameters<typeof buildPendingCombatCard>[1];
+      const card = buildPendingCombatCard(op, payload, helpers);
+
+      if (op.type === "updateCombat" && payload.combatId) {
+        const index = merged.findIndex((c) => c.combatId === payload.combatId);
+        if (index !== -1) {
+          merged = [...merged.slice(0, index), card, ...merged.slice(index + 1)];
+          return;
+        }
+      }
+
+      merged = [...merged, card];
+    });
+
+    return merged;
+  }
+
   window.KirokuScreenProjections = {
     getWeightCategoryOptions,
     getYearInCategoryOptions,
+    mergePendingCombatCards,
     paginateList,
     projectCompetitionCombats,
     projectCompetitionDetail,

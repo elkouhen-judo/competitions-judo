@@ -30,7 +30,7 @@ export function createNeWazaType(value: unknown): NeWazaType | "" {
 
   const neWazaType = normalizeNeWazaType(rawValue);
   if (!neWazaType) {
-    throw new Error("Type de prise Ne-waza invalide.");
+    throw new Error("Action au sol invalide.");
   }
   return neWazaType;
 }

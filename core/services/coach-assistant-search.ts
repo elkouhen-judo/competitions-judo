@@ -930,8 +930,8 @@ function formatJudokaName(judoka: { prenom?: string; nom?: string } | undefined)
 function formatScoreLabel(score: CombatScoreRow): string {
   const detail =
     String(score.categorie || "") === "Ne-waza"
-      ? String(score.type_ne_waza || "Ne-waza")
-      : String(score.technique || "Tachi-waza");
+      ? String(score.type_ne_waza || "Au sol")
+      : String(score.technique || "Debout");
   return [detail, score.valeur].filter(Boolean).join(" · ");
 }
 
