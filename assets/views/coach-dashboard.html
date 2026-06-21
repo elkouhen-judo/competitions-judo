@@ -108,7 +108,7 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Statistiques</h3>
+              <h3>Analyse des combats</h3>
             </div>
           </div>
           <div v-if="isLoadingCoachDashboardStats" class="empty-state">Chargement des statistiques...</div>
@@ -118,8 +118,8 @@
         <div class="section dashboard-summary-section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>À retenir</h3>
-              <p class="subtitle">Lecture rapide avant les analyses détaillées.</p>
+              <h3>Synthèse coach</h3>
+              <p class="subtitle">L'essentiel avant de creuser les détails.</p>
             </div>
           </div>
           <div class="dashboard-summary-card">
@@ -135,9 +135,9 @@
               </div>
               <div class="summary-metric summary-metric-success">
                 <span class="stat-label">Taux de victoire
-                  <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi les combats analysés dans le périmètre filtré.">
+                  <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi les combats qui correspondent aux filtres choisis.">
                     <span aria-hidden="true">i</span>
-                    <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi les combats analysés dans le périmètre filtré.</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi les combats qui correspondent aux filtres choisis.</span>
                   </span>
                 </span>
                 <span class="stat-value">{{ coachDashboardStats.victoryRate }}%</span>
@@ -152,10 +152,10 @@
                 <span class="stat-value stat-value-multiline">{{ coachDashboardTopPodiumLevel }}</span>
               </div>
               <div class="summary-metric summary-metric-warning">
-                <span class="stat-label">Données à compléter
-                  <span class="info-tip" tabindex="0" aria-label="Principal critère de qualité de données à corriger, avec son taux sur les combats analysés.">
+                <span class="stat-label">Données à fiabiliser
+                  <span class="info-tip" tabindex="0" aria-label="Principal critère de qualité de données à fiabiliser, avec son taux sur les combats analysés.">
                     <span aria-hidden="true">i</span>
-                    <span class="info-tip-bubble" aria-hidden="true">Principal critère de qualité de données à corriger, avec son taux sur les combats analysés.</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Principal critère de qualité de données à fiabiliser, avec son taux sur les combats analysés.</span>
                   </span>
                 </span>
                 <span class="stat-value">{{ coachDashboardMainQualityIssue }}</span>
@@ -168,9 +168,9 @@
         <div class="section" v-if="coachDashboardStats">
           <div class="section-heading">
             <div><h3>Podiums
-              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions finalisées terminées sur un podium (🥇, 🥈 ou 🥉), ventilées par niveau de compétition sur le périmètre filtré.">
+              <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions terminées sur un podium (🥇, 🥈 ou 🥉), regroupées par niveau avec les filtres choisis.">
                 <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions finalisées terminées sur un podium (🥇, 🥈 ou 🥉), ventilées par niveau de compétition sur le périmètre filtré.</span>
+                <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions terminées sur un podium (🥇, 🥈 ou 🥉), regroupées par niveau avec les filtres choisis.</span>
               </span>
             </h3></div>
           </div>
@@ -190,16 +190,16 @@
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>Volumes</h3>
-              <p class="subtitle">Compteurs bruts sur le périmètre filtré.</p>
+              <h3>Volume de combats</h3>
+              <p class="subtitle">Volume calculé avec les filtres choisis.</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-highlight">
               <span class="stat-label">Combats analysés
-                <span class="info-tip" tabindex="0" aria-label="Nombre total de combats retenus après application des filtres actifs (compétitions, dates, catégorie d'âge, genre).">
+                <span class="info-tip" tabindex="0" aria-label="Nombre total de combats qui correspondent aux filtres choisis.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Nombre total de combats retenus après application des filtres actifs (compétitions, dates, catégorie d'âge, genre).</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre total de combats qui correspondent aux filtres choisis.</span>
                 </span>
               </span>
               <span class="stat-value">{{ coachDashboardStats.totalCombats }}</span>
@@ -210,16 +210,16 @@
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>Répartition des judokas</h3>
-              <p class="subtitle">Judokas distincts ayant au moins un combat dans le périmètre filtré.</p>
+              <h3>Effectif engagé</h3>
+              <p class="subtitle">Judokas du club ayant combattu avec les filtres choisis.</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-split">
               <span class="stat-label">Judokas par genre
-                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu dans le périmètre filtré, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
+                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu avec les filtres choisis, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu dans le périmètre filtré, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu avec les filtres choisis, par genre. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
                 </span>
               </span>
               <div class="split-stat-grid">
@@ -235,9 +235,9 @@
             </div>
             <div class="stat-card stat-card-split">
               <span class="stat-label">Judokas par garde
-                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu dans le périmètre filtré, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
+                <span class="info-tip" tabindex="0" aria-label="Nombre de judokas différents ayant combattu avec les filtres choisis, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu dans le périmètre filtré, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre de judokas différents ayant combattu avec les filtres choisis, par garde. Un judoka n'est compté qu'une fois, même avec plusieurs combats.</span>
                 </span>
               </span>
               <div class="split-stat-grid">
@@ -257,16 +257,16 @@
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>Répartition des gardes</h3>
-              <p class="subtitle">Taux de victoire quand judoka et adversaire ont une garde opposée ou identique.</p>
+              <h3>Par garde</h3>
+              <p class="subtitle">Taux de victoire selon la garde du judoka et de l'adversaire.</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-split">
-              <span class="stat-label">Face à la garde adverse
-                <span class="info-tip" tabindex="0" aria-label="Taux de victoire selon que la garde de l'adversaire est opposée ou identique à celle du judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.">
+              <span class="stat-label">Garde du judoka vs garde de l'adversaire
+                <span class="info-tip" tabindex="0" aria-label="Taux de victoire selon que l'adversaire est droitier ou gaucher par rapport au judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Taux de victoire selon que la garde de l'adversaire est opposée ou identique à celle du judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Taux de victoire selon que l'adversaire est droitier ou gaucher par rapport au judoka. Seuls les combats gagnés ou perdus avec les deux gardes connues sont comptés.</span>
                 </span>
               </span>
               <div class="split-stat-grid">
@@ -275,7 +275,7 @@
                   <span class="split-stat-value">{{ coachDashboardByLateralMatchup[0]?.victories || 0 }}/{{ coachDashboardByLateralMatchup[0]?.combats || 0 }} ({{ coachDashboardByLateralMatchup[0]?.victoryRate || 0 }}%)</span>
                 </div>
                 <div class="split-stat-item">
-                  <span class="split-stat-label">Même garde</span>
+                  <span class="split-stat-label">Même Garde</span>
                   <span class="split-stat-value">{{ coachDashboardByLateralMatchup[1]?.victories || 0 }}/{{ coachDashboardByLateralMatchup[1]?.combats || 0 }} ({{ coachDashboardByLateralMatchup[1]?.victoryRate || 0 }}%)</span>
                 </div>
               </div>
@@ -286,34 +286,34 @@
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>Performance globale</h3>
-              <p class="subtitle">Taux calculés sur les combats du périmètre filtré.</p>
+              <h3>Profil de performance</h3>
+              <p class="subtitle">Taux calculés avec les filtres choisis.</p>
             </div>
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-success">
               <span class="stat-label">Victoires totales
-                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi tous les combats du périmètre filtré.">
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés parmi tous les combats qui correspondent aux filtres choisis.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi tous les combats du périmètre filtré.</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés parmi tous les combats qui correspondent aux filtres choisis.</span>
                 </span>
               </span>
               <span class="stat-value">{{ coachDashboardStats.victories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.victoryRate }}%)</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Victoires Ippon debout
-                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Tachi-waza (debout).">
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon debout.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Tachi-waza (debout).</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon debout.</span>
                 </span>
               </span>
               <span class="stat-value">{{ coachDashboardStats.tachiWazaIpponVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.tachiWazaIpponVictoryRate }}%)</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Victoires Ippon au sol
-                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Ne-waza (au sol).">
+                <span class="info-tip" tabindex="0" aria-label="Pourcentage de combats gagnés avec au moins une prise marquée à Ippon au sol.">
                   <span aria-hidden="true">i</span>
-                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon en Ne-waza (au sol).</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Pourcentage de combats gagnés avec au moins une prise marquée à Ippon au sol.</span>
                 </span>
               </span>
               <span class="stat-value">{{ coachDashboardStats.neWazaIpponVictories }}/{{ coachDashboardStats.totalCombats }} ({{ coachDashboardStats.neWazaIpponVictoryRate }}%)</span>
@@ -323,10 +323,10 @@
 
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
-            <div><h3>Victoires par décision
-              <span class="info-tip" tabindex="0" aria-label="Répartition des victoires selon le type de décision (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.">
+            <div><h3>Mode de victoire
+              <span class="info-tip" tabindex="0" aria-label="Répartition des victoires selon la manière dont le combat s'est terminé (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.">
                 <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Répartition des victoires selon le type de décision (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.</span>
+                <span class="info-tip-bubble" aria-hidden="true">Répartition des victoires selon la manière dont le combat s'est terminé (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait), en pourcentage du total des victoires.</span>
               </span>
             </h3></div>
           </div>
@@ -340,10 +340,10 @@
 
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
-            <div><h3>Défaites par décision
-              <span class="info-tip" tabindex="0" aria-label="Répartition des défaites selon le type de décision, en pourcentage du total des défaites.">
+            <div><h3>Mode de défaite
+              <span class="info-tip" tabindex="0" aria-label="Répartition des défaites selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.">
                 <span aria-hidden="true">i</span>
-                <span class="info-tip-bubble" aria-hidden="true">Répartition des défaites selon le type de décision, en pourcentage du total des défaites.</span>
+                <span class="info-tip-bubble" aria-hidden="true">Répartition des défaites selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.</span>
               </span>
             </h3></div>
           </div>
@@ -358,11 +358,11 @@
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div>
-              <h3>Qualité des données</h3>
-              <p class="subtitle">Combats du périmètre filtré dont la saisie est incomplète ou incohérente.</p>
+              <h3>Fiabilité des données</h3>
+              <p class="subtitle">Combats avec une saisie incomplète ou à vérifier.</p>
             </div>
           </div>
-          <div v-if="!coachDashboardDataQualityIssues.length" class="empty-state">Aucun problème de saisie détecté sur ce périmètre.</div>
+          <div v-if="!coachDashboardDataQualityIssues.length" class="empty-state">Aucune donnée à fiabiliser avec ces filtres.</div>
           <div v-else class="stats-grid">
             <div v-for="entry in coachDashboardDataQualityIssues" :key="entry.criterion" class="stat-card">
               <span class="stat-label">{{ entry.label }}

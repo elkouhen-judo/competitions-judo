@@ -17,19 +17,19 @@
 
   const DATA_QUALITY_ISSUE_DESCRIPTIONS: Record<string, string> = {
     judokaHandedness:
-      "La garde (droitier/gaucher) du judoka suivi n'est pas renseignée sur ce combat — elle alimente la Répartition des gardes.",
+      "La garde du judoka suivi (droitier/gaucher) n'est pas renseignée sur ce combat — elle alimente les statistiques par garde.",
     opponentStance:
-      "La garde de l'adversaire n'est pas renseignée sur ce combat — elle alimente la Répartition des gardes.",
+      "La garde de l'adversaire (droitier/gaucher) n'est pas renseignée sur ce combat — elle alimente les statistiques par garde.",
     victoryType:
-      "Le type de décision finale (Ippon, Waza-ari...) n'est pas renseigné sur ce combat — il alimente les répartitions par décision.",
+      "La manière dont le combat s'est terminé (Ippon, Waza-ari...) n'est pas renseignée sur ce combat.",
     scores:
-      "Aucune prise n'a été détaillée sur ce combat — cela aide à distinguer les Ippon debout et au sol.",
+      "Aucun point marqué n'a été détaillé sur ce combat — cela aide à distinguer les Ippon debout et au sol.",
     competitionLevel:
       "Le niveau de la compétition n'est pas renseigné — il alimente les Podiums par niveau.",
     judokaGender:
       "Le genre du judoka suivi n'est pas renseigné — il alimente la répartition Judokas par genre.",
     inconsistentIppon:
-      "Le combat est gagné par décision Ippon, mais aucune prise marquée à Ippon n'a été enregistrée : la saisie mérite une vérification."
+      "Le combat est gagné par Ippon, mais aucun point Ippon n'a été détaillé : la saisie mérite une vérification."
   };
 
   interface CoachAssistantMessage {

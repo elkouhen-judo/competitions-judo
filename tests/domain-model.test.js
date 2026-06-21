@@ -587,7 +587,7 @@ test("opponent stance domain normalizes aliases and rejects unknown values", () 
   assert.equal(createOpponentStance(""), "");
   assert.equal(createOpponentStance(undefined), "");
   assert.equal(createOpponentStance("Gaucher"), "Gaucher");
-  assert.throws(() => createOpponentStance("ambidextre"), /Garde de l'adversaire invalide/);
+  assert.throws(() => createOpponentStance("ambidextre"), /Adversaire droitier\/gaucher invalide/);
 });
 
 test("combat score category domain normalizes aliases and rejects unknown values", () => {
@@ -622,7 +622,7 @@ test("ne-waza type domain normalizes aliases and rejects unknown values", () => 
   assert.equal(createNeWazaType(""), "");
   assert.equal(createNeWazaType(undefined), "");
   assert.equal(createNeWazaType("Clé"), "Clé");
-  assert.throws(() => createNeWazaType("inconnu"), /Type de prise Ne-waza invalide/);
+  assert.throws(() => createNeWazaType("inconnu"), /Action au sol invalide/);
 });
 
 test("combat score value domain normalizes aliases and rejects unknown values", () => {
@@ -632,7 +632,7 @@ test("combat score value domain normalizes aliases and rejects unknown values", 
   assert.equal(normalizeCombatScoreValue("inconnu"), "");
 
   assert.equal(createCombatScoreValue("Ippon"), "Ippon");
-  assert.throws(() => createCombatScoreValue("inconnu"), /Valeur de la prise invalide/);
+  assert.throws(() => createCombatScoreValue("inconnu"), /Point marqué invalide/);
 });
 
 test("combat score domain enforces the conditional sub-field per category", () => {
@@ -657,11 +657,11 @@ test("combat score domain enforces the conditional sub-field per category", () =
 
   assert.throws(
     () => createCombatScore({ category: "Tachi-waza", value: "Ippon" }),
-    /Nom de la prise obligatoire pour une prise Tachi-waza/
+    /Nom de l'action obligatoire pour un point debout/
   );
   assert.throws(
     () => createCombatScore({ category: "Ne-waza", value: "Ippon" }),
-    /Type de prise obligatoire pour une prise Ne-waza/
+    /Action au sol obligatoire pour un point au sol/
   );
 
   assert.deepEqual(createCombatScores("not-an-array"), []);
@@ -777,7 +777,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     ],
     byLateralMatchup: [
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
-      { matchup: "same", label: "Même garde", combats: 4, victories: 3, victoryRate: 75 }
+      { matchup: "same", label: "Même Garde", combats: 4, victories: 3, victoryRate: 75 }
     ],
     judokasByGender: [
       { gender: "Homme", judokaCount: 3 },
@@ -788,13 +788,13 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { handedness: "Gaucher", judokaCount: 1 }
     ],
     dataQualityIssues: [
-      { criterion: "judokaHandedness", label: "Garde judoka non renseignée", count: 1, total: 6, rate: 17 },
-      { criterion: "opponentStance", label: "Garde adversaire non renseignée", count: 1, total: 6, rate: 17 },
-      { criterion: "victoryType", label: "Type de décision non renseigné", count: 0, total: 6, rate: 0 },
-      { criterion: "scores", label: "Prises marquées non renseignées", count: 4, total: 6, rate: 67 },
+      { criterion: "judokaHandedness", label: "Droitier/gaucher du judoka non renseigné", count: 1, total: 6, rate: 17 },
+      { criterion: "opponentStance", label: "Droitier/gaucher de l'adversaire non renseigné", count: 1, total: 6, rate: 17 },
+      { criterion: "victoryType", label: "Fin du combat non renseignée", count: 0, total: 6, rate: 0 },
+      { criterion: "scores", label: "Points marqués non renseignés", count: 4, total: 6, rate: 67 },
       { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 1, total: 6, rate: 17 },
-      { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 1, total: 6, rate: 17 },
-      { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 6, rate: 0 }
+      { criterion: "judokaGender", label: "Genre du judoka non renseigné", count: 1, total: 6, rate: 17 },
+      { criterion: "inconsistentIppon", label: "Ippon à vérifier", count: 0, total: 6, rate: 0 }
     ],
     podiumsByLevel: [
       {
@@ -858,7 +858,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     ],
     byLateralMatchup: [
       { matchup: "opposite", label: "Garde opposée", combats: 0, victories: 0, victoryRate: 0 },
-      { matchup: "same", label: "Même garde", combats: 0, victories: 0, victoryRate: 0 }
+      { matchup: "same", label: "Même Garde", combats: 0, victories: 0, victoryRate: 0 }
     ],
     judokasByGender: [
       { gender: "Homme", judokaCount: 0 },
@@ -869,13 +869,13 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { handedness: "Gaucher", judokaCount: 0 }
     ],
     dataQualityIssues: [
-      { criterion: "judokaHandedness", label: "Garde judoka non renseignée", count: 0, total: 0, rate: 0 },
-      { criterion: "opponentStance", label: "Garde adversaire non renseignée", count: 0, total: 0, rate: 0 },
-      { criterion: "victoryType", label: "Type de décision non renseigné", count: 0, total: 0, rate: 0 },
-      { criterion: "scores", label: "Prises marquées non renseignées", count: 0, total: 0, rate: 0 },
+      { criterion: "judokaHandedness", label: "Droitier/gaucher du judoka non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "opponentStance", label: "Droitier/gaucher de l'adversaire non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "victoryType", label: "Fin du combat non renseignée", count: 0, total: 0, rate: 0 },
+      { criterion: "scores", label: "Points marqués non renseignés", count: 0, total: 0, rate: 0 },
       { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 0, total: 0, rate: 0 },
-      { criterion: "judokaGender", label: "Genre judoka non renseigné", count: 0, total: 0, rate: 0 },
-      { criterion: "inconsistentIppon", label: "Ippon incohérent", count: 0, total: 0, rate: 0 }
+      { criterion: "judokaGender", label: "Genre du judoka non renseigné", count: 0, total: 0, rate: 0 },
+      { criterion: "inconsistentIppon", label: "Ippon à vérifier", count: 0, total: 0, rate: 0 }
     ],
     podiumsByLevel: [
       {
@@ -967,7 +967,7 @@ test("coach dashboard statistics domain flags an ippon decision with no matching
 
   assert.deepEqual(issue, {
     criterion: "inconsistentIppon",
-    label: "Ippon incohérent",
+    label: "Ippon à vérifier",
     count: 1,
     total: 3,
     rate: 33

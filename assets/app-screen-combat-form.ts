@@ -49,7 +49,7 @@
       }
       const issues: CombatDataQualityIssue[] = [];
       if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
-        issues.push({ label: "Type de décision non renseigné", priority: "high", field: "victoryType" });
+        issues.push({ label: "Fin du combat non renseignée", priority: "high", field: "victoryType" });
       }
       if (
         form.result === "Victoire" &&
@@ -57,17 +57,17 @@
         !form.scores.some((score) => score.value === "Ippon")
       ) {
         issues.push({
-          label: "Décision Ippon sans prise marquée à Ippon",
+          label: "Ippon indiqué, mais aucun point Ippon détaillé",
           priority: "high",
           field: "scores"
         });
       }
       if (!form.scores.length) {
-        issues.push({ label: "Prises marquées non renseignées", priority: "medium", field: "scores" });
+        issues.push({ label: "Points marqués non renseignés", priority: "medium", field: "scores" });
       }
       if (!form.opponentStance) {
         issues.push({
-          label: "Garde adversaire non renseignée",
+          label: "Droitier/gaucher de l'adversaire non renseigné",
           priority: "medium",
           field: "opponentStance"
         });

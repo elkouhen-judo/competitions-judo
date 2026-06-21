@@ -24,14 +24,14 @@ export function createCombatScore(score: CombatScoreInput = {}): CombatScoreDraf
   if (category === "Tachi-waza") {
     const technique = createTachiWazaTechnique(score.technique);
     if (!technique) {
-      throw new Error("Nom de la prise obligatoire pour une prise Tachi-waza.");
+      throw new Error("Nom de l'action obligatoire pour un point debout.");
     }
     return { category, technique, neWazaType: "", value };
   }
 
   const neWazaType = createNeWazaType(score.neWazaType);
   if (!neWazaType) {
-    throw new Error("Type de prise obligatoire pour une prise Ne-waza.");
+    throw new Error("Action au sol obligatoire pour un point au sol.");
   }
   return { category, technique: "", neWazaType, value };
 }
