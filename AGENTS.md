@@ -99,6 +99,15 @@ Commits directement sur `main`. Message de commit explicite sur le pourquoi du c
 - sécurité ;
 - configuration.
 
+### Règles de rédaction
+
+- Une règle = une responsabilité.
+- Une phrase = une idée.
+- Pas de prose narrative.
+- Identifiants stables.
+- Vocabulaire contrôlé.
+- Séparer faits, règles, contraintes et scénarios.
+
 Ne conserve pas l'historique des anciennes demandes dans les specs. Les détails longs vont dans `docs/`.
 
 ## Frontend
