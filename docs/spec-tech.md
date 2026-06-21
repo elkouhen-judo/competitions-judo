@@ -60,87 +60,87 @@ This specification does not redefine product behavior already described in `docs
 ### 3.2 Vercel routing and runtime injection
 
 - **VCL-001**: Vercel shall route `/api/rpc` directly to the RPC endpoint.
-- **VCL-001a**: Vercel shall route `/service-worker.js` to `/api/service-worker` and `/manifest.webmanifest` to `/api/manifest` before the catch-all app shell route.
-- **VCL-002**: Vercel shall route all remaining non-API paths to `/api/app`.
-- **VCL-003**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
-- **VCL-004**: Runtime config shall expose only public Supabase values required by the browser.
-- **VCL-005**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
-- **VCL-005a**: The canonical local development URL shall be `http://localhost:3100`, served via `vercel dev --listen 3100`.
-- **VCL-005b**: A separate Vercel project (`competitions-judo-dev`, production URL `https://competitions-judo-dev.vercel.app/`) shall provide a dev deployment environment, backed by its own Supabase project (independent schema and auth configuration from production), deployed from the `dev` git branch. Every dual-environment npm script carries an explicit suffix: `:prod` (`dev:prod`, `db:pull-env:prod`, `app:deploy:prod`, `redeploy:prod`) targets production; `:dev` (`dev:dev`, `db:pull-env:dev`, `app:deploy:dev`, `redeploy:dev`) targets the dev project explicitly (via `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` overrides), so no script silently mixes environments and no bare script name leaves the environment implicit.
-- **VCL-006**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
-- **VCL-006a**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
-- **VCL-007**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
-- **VCL-008**: Browser RPC calls shall fail explicitly when offline and shall abort with a user-facing slow-network error when the mobile network does not answer in time.
-- **VCL-009**: `terraform/` shall manage, as code, the Vercel project name/`node_version` and the Supabase Auth `site_url`/`uri_allow_list` for both environments (prod and dev), kept in sync with VCL-005b/CFG-011. `terraform/modules/kiroku_project` shall hold environment-agnostic resource definitions (no hardcoded environment values); `terraform/environments/prod` and `terraform/environments/dev` shall each be an independent root module with its own state, calling that shared module with environment-specific values, so each environment can be planned/applied on its own without touching the other's state. Project creation, build/install commands (owned by `vercel.json`, VCL-006/VCL-006a), and sensitive environment variables stay outside Terraform's scope — see `terraform/README.md` for rationale and the required one-time `terraform import`.
-- **VCL-010**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
-- **VCL-011**: Offline mutation replay shall call the same authenticated `/api/rpc` methods used by connected actions; no offline path shall bypass server-side authorization or validation.
-- **VCL-012**: Cached business data and pending offline operations shall be partitioned by authenticated user identity so a later user on the same browser cannot read another user's sports data.
-- **VCL-013**: Pending offline operations shall include a stable local operation identifier, operation type, payload, user identity, creation timestamp, and status among `pending`, `syncing`, `synced`, `failed`, or `conflict`.
-- **VCL-014**: Offline synchronization shall replay pending operations in creation order and mark an operation as synchronized only after the backend confirms success.
-- **VCL-015**: If replay fails because of backend permission, validation, or conflict errors, the browser shall keep the local operation with the backend error details needed to render an actionable user-facing state.
+- **VCL-002**: Vercel shall route `/service-worker.js` to `/api/service-worker` and `/manifest.webmanifest` to `/api/manifest` before the catch-all app shell route.
+- **VCL-003**: Vercel shall route all remaining non-API paths to `/api/app`.
+- **VCL-004**: `/api/app` shall return `Index.html` assembled with its view partials (`assets/views/*.html`) and with runtime config injected into the HTML.
+- **VCL-005**: Runtime config shall expose only public Supabase values required by the browser.
+- **VCL-006**: The canonical production application URL shall be `https://competitions-judo.vercel.app/`.
+- **VCL-007**: The canonical local development URL shall be `http://localhost:3100`, served via `vercel dev --listen 3100`.
+- **VCL-008**: A separate Vercel project (`competitions-judo-dev`, production URL `https://competitions-judo-dev.vercel.app/`) shall provide a dev deployment environment, backed by its own Supabase project (independent schema and auth configuration from production), deployed from the `dev` git branch. Every dual-environment npm script carries an explicit suffix: `:prod` (`dev:prod`, `db:pull-env:prod`, `app:deploy:prod`, `redeploy:prod`) targets production; `:dev` (`dev:dev`, `db:pull-env:dev`, `app:deploy:dev`, `redeploy:dev`) targets the dev project explicitly (via `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID` overrides), so no script silently mixes environments and no bare script name leaves the environment implicit.
+- **VCL-009**: `terraform/` shall manage, as code, the Vercel project name/`node_version` and the Supabase Auth `site_url`/`uri_allow_list` for both environments (prod and dev), kept in sync with VCL-008/CFG-011. `terraform/modules/kiroku_project` shall hold environment-agnostic resource definitions (no hardcoded environment values); `terraform/environments/prod` and `terraform/environments/dev` shall each be an independent root module with its own state, calling that shared module with environment-specific values, so each environment can be planned/applied on its own without touching the other's state. Project creation, build/install commands (owned by `vercel.json`, VCL-010/VCL-011), and sensitive environment variables stay outside Terraform's scope — see `terraform/README.md` for rationale and the required one-time `terraform import`.
+- **VCL-010**: `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled `assets/dist/*` files consumed by `/api/client` exist before Vercel bundles the serverless functions.
+- **VCL-011**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
+- **VCL-012**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
+- **VCL-013**: Browser RPC calls shall fail explicitly when offline and shall abort with a user-facing slow-network error when the mobile network does not answer in time.
+- **VCL-014**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
+- **VCL-015**: Offline mutation replay shall call the same authenticated `/api/rpc` methods used by connected actions; no offline path shall bypass server-side authorization or validation.
+- **VCL-016**: Cached business data and pending offline operations shall be partitioned by authenticated user identity so a later user on the same browser cannot read another user's sports data.
+- **VCL-017**: Pending offline operations shall include a stable local operation identifier, operation type, payload, user identity, creation timestamp, and status among `pending`, `syncing`, `synced`, `failed`, or `conflict`.
+- **VCL-018**: Offline synchronization shall replay pending operations in creation order and mark an operation as synchronized only after the backend confirms success.
+- **VCL-019**: If replay fails because of backend permission, validation, or conflict errors, the browser shall keep the local operation with the backend error details needed to render an actionable user-facing state.
 
 ### 3.3 Data model constraints
 
 - **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `club_competitions`, `competitions`, and `combats`.
-- **DAT-001a**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
-- **DAT-002**: Business identifiers shall remain text fields.
-- **DAT-003**: `judokas.id_judoka` is the judoka business identifier.
-- **DAT-004**: `parent_judokas.id_parent` and `parent_judokas.id_judoka` define the parent-child link.
-- **DAT-005**: `competitions.id_competition` is the competition business identifier.
-- **DAT-006**: `combats.id_combat` is the combat business identifier.
-- **DAT-007**: `competitions.id_judoka` references the owning judoka.
-- **DAT-008**: `combats.id_judoka` references the concerned judoka.
-- **DAT-009**: `combats.id_competition` references the parent competition.
-- **DAT-010**: Competition deletion shall cascade to combats.
-- **DAT-011**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
-- **DAT-012**: `judokas.role` shall store the structural access level among `NORMAL`, `COACH`, and `ADMIN`.
-- **DAT-013**: If privileged rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
-- **DAT-014**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
-- **DAT-015**: The unused competition field for actual weigh-in shall remain absent.
-- **DAT-016**: `competitions.classement` shall store the final ranking/result used by judoka season statistics, among `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, `Non classé`, or an empty value before finalization.
-- **DAT-022**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
-- **DAT-023**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
-- **DAT-024**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
-- **DAT-026**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
-- **DAT-017**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
-- **DAT-018**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
-- **DAT-019**: `club_competitions.id_club_competition` is the club event business identifier.
-- **DAT-020**: `competitions.club_competition_id` optionally links an individual competition participation to a club competition.
-- **DAT-021**: Deleting a club competition shall detach every linked individual competition by clearing `competitions.club_competition_id`, preserving those individual competitions, combats, and rankings.
-- **DAT-027**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
-- **DAT-028**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
-- **DAT-029**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`. Age categories without official weight divisions (Poussinet, Poussin) shall use an empty value rather than free text. Vétéran reuses the Senior weight scale.
-- **DAT-030**: `club_competitions` shall not contain a weight category column; club events only share name, date, age category, and participant links, while linked individual `competitions` keep their own optional `categorie_poids`.
-- **DAT-031**: `club_competitions.niveau` shall store the shared club event level, propagated to linked individual `competitions.niveau` when participants are created or resynchronized.
-- **DAT-032**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
-- **DAT-033**: Removing a single participant from a club competition whose date is strictly in the future shall delete that judoka's individual competition row, cascading to its combats per DAT-010, instead of clearing `competitions.club_competition_id`; removing a participant from a club competition whose date is today or in the past is rejected per COMP-019a.
+- **DAT-002**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
+- **DAT-003**: `club_competitions.id_club_competition` is the club event business identifier.
+- **DAT-004**: Business identifiers shall remain text fields.
+- **DAT-005**: `judokas.id_judoka` is the judoka business identifier.
+- **DAT-006**: `parent_judokas.id_parent` and `parent_judokas.id_judoka` define the parent-child link.
+- **DAT-007**: `competitions.id_competition` is the competition business identifier.
+- **DAT-008**: `combats.id_combat` is the combat business identifier.
+- **DAT-009**: `competitions.id_judoka` references the owning judoka.
+- **DAT-010**: `combats.id_judoka` references the concerned judoka.
+- **DAT-011**: `combats.id_competition` references the parent competition.
+- **DAT-012**: `competitions.club_competition_id` optionally links an individual competition participation to a club competition.
+- **DAT-013**: Competition deletion shall cascade to combats.
+- **DAT-014**: Deleting a club competition shall detach every linked individual competition by clearing `competitions.club_competition_id`, preserving those individual competitions, combats, and rankings.
+- **DAT-015**: Removing a single participant from a club competition whose date is strictly in the future shall delete that judoka's individual competition row, cascading to its combats per DAT-013, instead of clearing `competitions.club_competition_id`; removing a participant from a club competition whose date is today or in the past is rejected per COMP-026.
+- **DAT-016**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
+- **DAT-017**: `judokas.role` shall store the structural access level among `NORMAL`, `COACH`, and `ADMIN`.
+- **DAT-018**: If privileged rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
+- **DAT-019**: Fresh deployments shall seed the initial `ADMIN` user `Mehdi EL KOUHEN` with email `mehdi.elkouhen@gmail.com`.
+- **DAT-020**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
+- **DAT-021**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
+- **DAT-022**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
+- **DAT-023**: `judokas.annee_categorie` shall store the year within the age category as a text field, validated against the valid year count for that age category (`1`/`2` for Poussinet/Poussin/Benjamin/Minime, `1`/`2`/`3` for Cadet/Junior, not applicable for Senior/Vétéran), or empty string.
+- **DAT-024**: `judokas.categorie_poids` and `competitions.categorie_poids` shall be validated against the official FFJDA weight category list for the given age category (and gender, for judokas) defined in `core/domain/category-reference.ts`. Age categories without official weight divisions (Poussinet, Poussin) shall use an empty value rather than free text. Vétéran reuses the Senior weight scale.
+- **DAT-025**: `judokas.lateralite` shall store the judoka's handedness as a text field among `Droitier`, `Gaucher`, or empty string.
+- **DAT-026**: The unused competition field for actual weigh-in shall remain absent.
+- **DAT-027**: `competitions.classement` shall store the final ranking/result used by judoka season statistics, among `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, `Non classé`, or an empty value before finalization.
+- **DAT-028**: `competitions.niveau` shall store the competition level as a text field among `Départemental`, `Régional`, `National`, `International`, or empty string.
+- **DAT-029**: `club_competitions` shall not contain a weight category column; club events only share name, date, age category, and participant links, while linked individual `competitions` keep their own optional `categorie_poids`.
+- **DAT-030**: `club_competitions.niveau` shall store the shared club event level, propagated to linked individual `competitions.niveau` when participants are created or resynchronized.
+- **DAT-031**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
+- **DAT-032**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
+- **DAT-033**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 
 ### 3.4 Authentication and authorization
 
 - **AUTH-001**: Authentication shall use Google through Supabase Auth.
 - **AUTH-002**: The OAuth callback shall complete in the browser runtime.
 - **AUTH-003**: The browser shall persist the Supabase session locally.
-- **AUTH-004**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
-- **AUTH-005**: The backend shall validate the access token through Supabase `/auth/v1/user`.
-- **AUTH-006**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
-- **AUTH-006a**: The backend shall resolve the verified email from Supabase before applying business permissions.
-- **AUTH-007**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
-- **AUTH-008**: Password-based login shall remain unsupported.
-- **AUTH-009**: Magic-link login shall remain unsupported.
-- **AUTH-010**: Backend profile registration shall create only the initial invited profile.
-- **AUTH-011**: A child profile may store a verified email to support direct Google login without changing the child role to `PARENT`, `COACH`, or `ADMIN`.
+- **AUTH-004**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
+- **AUTH-005**: Password-based login shall remain unsupported.
+- **AUTH-006**: Magic-link login shall remain unsupported.
+- **AUTH-007**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
+- **AUTH-008**: The backend shall validate the access token through Supabase `/auth/v1/user`.
+- **AUTH-009**: The backend shall resolve the verified email from Supabase before applying business permissions.
+- **AUTH-010**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
+- **AUTH-011**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
 - **AUTH-012**: Backend profile registration shall reject any email that is neither already linked to a judoka profile nor present in `access_invitations`.
-- **AUTH-013**: Backend profile registration shall create the initial profile type from `access_invitations.invited_profile_type`.
-- **AUTH-014**: Backend profile registration shall always create the initial access role as `NORMAL`.
-- **AUTH-015**: Child management mutations shall be restricted to users whose immutable `profile_type` is `PARENT`.
-- **AUTH-016**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither linked to an existing imported profile nor present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
-- **AUTH-017**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
-- **AUTH-018**: Browser logout shall call Supabase Auth logout when possible, clear the locally persisted session, and return to the login screen.
-- **AUTH-019**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then OAuth 2.1 authorization-code issuance, then Kiroku-signed JWT MCP access token exchange.
-- **AUTH-020**: Any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
-- **AUTH-021**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, access-governance scopes only and no judoka/competition/combat scopes for `ADMIN`, judoka/competition/combat read-write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request and filter `tools/list` to callable tools only.
-- **AUTH-022**: The MCP token endpoint shall require PKCE (`code_verifier` matching the `code_challenge` bound to the authorization code via SHA-256) before issuing an access token; requests without a valid verifier shall be rejected with `invalid_grant`.
-- **AUTH-023**: The MCP authorization endpoint shall verify that the requested `redirect_uri` exactly matches one of the URIs registered for the `client_id`, and shall never redirect to an unregistered URI.
+- **AUTH-013**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither linked to an existing imported profile nor present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.
+- **AUTH-014**: When Google signup is rejected by the invitation hook, the browser shall return to the login screen with an explicit invitation-required message rather than a generic OAuth failure.
+- **AUTH-015**: Backend profile registration shall create the initial profile type from `access_invitations.invited_profile_type`.
+- **AUTH-016**: Backend profile registration shall always create the initial access role as `NORMAL`.
+- **AUTH-017**: Backend profile registration shall create only the initial invited profile.
+- **AUTH-018**: A child profile may store a verified email to support direct Google login without changing the child role to `PARENT`, `COACH`, or `ADMIN`.
+- **AUTH-019**: Child management mutations shall be restricted to users whose immutable `profile_type` is `PARENT`.
+- **AUTH-020**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then OAuth 2.1 authorization-code issuance, then Kiroku-signed JWT MCP access token exchange.
+- **AUTH-021**: Any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
+- **AUTH-022**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, access-governance scopes only and no judoka/competition/combat scopes for `ADMIN`, judoka/competition/combat read-write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request and filter `tools/list` to callable tools only.
+- **AUTH-023**: The MCP token endpoint shall require PKCE (`code_verifier` matching the `code_challenge` bound to the authorization code via SHA-256) before issuing an access token; requests without a valid verifier shall be rejected with `invalid_grant`.
+- **AUTH-024**: The MCP authorization endpoint shall verify that the requested `redirect_uri` exactly matches one of the URIs registered for the `client_id`, and shall never redirect to an unregistered URI.
 
 ### 3.5 Security and secrets
 

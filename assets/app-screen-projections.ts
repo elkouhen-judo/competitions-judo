@@ -342,7 +342,7 @@
 
   /**
    * Overlays not-yet-synced `ajouterCombat`/`updateCombat` offline operations
-   * onto an already-projected combat card list (OFF-005/OFF-006): updates
+   * onto an already-projected combat card list (OFF-007/OFF-008): updates
    * replace their target card in place, adds are appended as synthetic cards.
    */
   function mergePendingCombatCards(
