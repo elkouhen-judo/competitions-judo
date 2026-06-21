@@ -52,7 +52,12 @@
         <div v-if="showParentHub" class="section parent-home-section">
           <div class="section-heading">
             <div>
-              <h3>Accueil parent</h3>
+              <h3>Accueil parent
+                <span class="tooltip" tabindex="0" aria-label="Espace parent centré sur l'enfant sélectionné pour accéder à ses compétitions, changer de judoka ou ouvrir sa fiche.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Espace parent centré sur l'enfant sélectionné pour accéder à ses compétitions, changer de judoka ou ouvrir sa fiche.</span>
+                </span>
+              </h3>
               <p class="subtitle">Accédez rapidement aux actions utiles pour vos judokas.</p>
             </div>
           </div>
@@ -61,7 +66,12 @@
               <div class="coach-home-card-head">
                 <div class="coach-home-card-copy">
                   <span class="coach-home-card-kicker">Compétitions</span>
-                  <h4>Gérer les compétitions</h4>
+                  <h4>Gérer les compétitions
+                    <span class="tooltip" tabindex="0" aria-label="Ouvre la liste des compétitions filtrée sur le judoka actif pour ajouter un résultat ou consulter son historique.">
+                      <span class="tooltip-trigger" aria-hidden="true">i</span>
+                      <span class="tooltip-content" aria-hidden="true">Ouvre la liste des compétitions filtrée sur le judoka actif pour ajouter un résultat ou consulter son historique.</span>
+                    </span>
+                  </h4>
                   <p>Ajouter une compétition, préparer les rendez-vous à venir et consulter les résultats.</p>
                 </div>
                 <span class="coach-home-card-icon" aria-hidden="true">
@@ -70,14 +80,19 @@
               </div>
               <button type="button" @click="openParentCompetitionsHub()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M7 5H4a2 2 0 0 0 0 4h1"></path><path d="M17 5h3a2 2 0 0 1 0 4h-1"></path></svg>
-                Ouvrir ma famille
+                {{ parentCompetitionsHubButtonText }}
               </button>
             </article>
             <article class="card coach-home-card parent-home-card">
               <div class="coach-home-card-head">
                 <div class="coach-home-card-copy">
                   <span class="coach-home-card-kicker">Judokas</span>
-                  <h4>Choisir un judoka</h4>
+                  <h4>Choisir un judoka
+                    <span class="tooltip" tabindex="0" aria-label="Change l'enfant actif. Les compétitions et la fiche affichées suivent ensuite ce choix.">
+                      <span class="tooltip-trigger" aria-hidden="true">i</span>
+                      <span class="tooltip-content" aria-hidden="true">Change l'enfant actif. Les compétitions et la fiche affichées suivent ensuite ce choix.</span>
+                    </span>
+                  </h4>
                   <p>Sélectionner l'enfant suivi avant d'ajouter une compétition ou consulter son historique.</p>
                 </div>
                 <span class="coach-home-card-icon" aria-hidden="true">
@@ -93,7 +108,12 @@
               <div class="coach-home-card-head">
                 <div class="coach-home-card-copy">
                   <span class="coach-home-card-kicker">Progression</span>
-                  <h4>Voir la fiche</h4>
+                  <h4>Voir la fiche
+                    <span class="tooltip" tabindex="0" aria-label="Affiche la progression du judoka actif : saison, combats, victoires et classements.">
+                      <span class="tooltip-trigger" aria-hidden="true">i</span>
+                      <span class="tooltip-content" aria-hidden="true">Affiche la progression du judoka actif : saison, combats, victoires et classements.</span>
+                    </span>
+                  </h4>
                   <p>Consulter les statistiques de saison, le bilan des combats et les classements.</p>
                 </div>
                 <span class="coach-home-card-icon" aria-hidden="true">

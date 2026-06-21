@@ -83,6 +83,16 @@ export type ViewId =
   | "combatFormView"
   | "coachDashboardView";
 
+export interface NavigationSnapshot {
+  viewId: ViewId;
+  homeMode?: KirokuAppState["homeMode"];
+  homeFilterJudokaId?: string;
+  competitionId?: string;
+  judokaId?: string;
+  clubCompetitionId?: string;
+  coachDashboardTab?: "stats" | "chat";
+}
+
 export interface KirokuUi {
   $(id: string): HTMLElement;
   cleanText(value: unknown): string;
@@ -110,7 +120,15 @@ export interface KirokuUi {
   ): void;
   normalizeDisplayName(value: unknown): string;
   normalizeLastName(value: unknown): string;
-  showView(id: ViewId, options?: { replace?: boolean; skipHistory?: boolean; preserveScroll?: boolean }): void;
+  showView(
+    id: ViewId,
+    options?: {
+      replace?: boolean;
+      routeState?: Partial<NavigationSnapshot>;
+      skipHistory?: boolean;
+      preserveScroll?: boolean;
+    }
+  ): void;
   toInputDate(value: unknown): string;
   viewIds: readonly ViewId[];
 }
@@ -425,6 +443,7 @@ export interface KirokuApp {
   loginScreen?: LoginScreen;
   loadCachedInitialData(): boolean;
   notifications: NotificationsApi;
+  persistNavigationState(routeState?: Partial<NavigationSnapshot>): void;
   reloadInitialData(openCompetitionId?: string): void;
   reloadInitialDataAndShowAdmins(): void;
   reloadInitialDataThen(afterReload: () => void): void;
@@ -443,6 +462,7 @@ export interface KirokuApp {
     options?: RunServerOptions
   ): Promise<void>;
   runtimeConfig: RuntimeConfig;
+  restoreNavigationState(): void;
   screens: AppScreens;
   setHeaderVisible(visible: boolean): void;
   showHome?(): void;

@@ -204,6 +204,7 @@ This specification does not define:
 - **UIX-031**: The combat form shall surface the same data-entry quality issues live while editing, scoped to the fields it owns (combat ending, inconsistent Ippon decision, scores, opponent right/left side — judoka right/left side is edited on the judoka profile, not shown here), with the same priority levels, once a result has been selected. Each issue shall be displayed inline next to the field it concerns (combat-ending issues under "Comment le combat s'est terminé", score issues under "Points marqués", opponent right/left side issues under "Adversaire droitier ou gaucher") rather than grouped in a single block, so it stays visible while the coach is actively filling that field.
 - **UIX-032**: Coach-facing and parent-facing helper copy shall use plain sports-field language ("bilan coach", "relire le combat", "points marqués", "debout et au sol", "droitier ou gaucher") instead of technical dashboard wording where possible.
 - **UIX-033**: The admin CSV import screen shall present import requirements as a short checklist and downloadable example rather than a long inline column description.
+- **UIX-034**: Opening an existing combat in the mobile form shall preserve the recorded result and shall not autofocus the result field when a result is already set. The form shall focus the first useful missing detail instead.
 
 ### 3.9 Offline usage rules
 

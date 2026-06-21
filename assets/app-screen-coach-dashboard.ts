@@ -378,7 +378,7 @@
       coachDashboardViewModel.activeCoachDashboardTab = tab;
       coachDashboardViewModel.filtersExpanded = true;
       coachDashboardViewModel.coachDashboardStats = null;
-      showView("coachDashboardView");
+      showView("coachDashboardView", { routeState: { coachDashboardTab: tab } });
       if (tab === "stats") {
         fetchCoachDashboardStats();
       }

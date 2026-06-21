@@ -348,7 +348,7 @@
       state.currentCompetition = null;
       state.currentCombats = [];
       state.isLoadingCompetition = true;
-      showView("competitionView");
+      showView("competitionView", { routeState: { competitionId: id } });
 
       app.runServer(
         "getCompetitionDetail",

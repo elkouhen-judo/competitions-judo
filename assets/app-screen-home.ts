@@ -88,6 +88,20 @@
       return getAccessibleHomeJudokas().find((j) => String(j.judokaId) === String(targetId)) || null;
     }
 
+    function getJudokaFirstName(judoka: Judoka): string {
+      const firstName = cleanText(judoka.firstName);
+      if (firstName) return firstName;
+      return cleanText(getJudokaDisplayName(judoka)).split(/\s+/)[0] || "";
+    }
+
+    function formatParentCompetitionsHubButtonText(judoka: Judoka | null): string {
+      if (!judoka) return "Ouvrir les compétitions";
+      const firstName = getJudokaFirstName(judoka);
+      if (!firstName) return "Ouvrir les compétitions";
+      const prefix = /^[aeiouyàâäéèêëîïôöùûüh]/i.test(firstName) ? "d'" : "de ";
+      return `Ouvrir les compétitions ${prefix}${firstName}`;
+    }
+
     // --- Computed refs ---
 
     const availableModes = window.Vue.computed(() => {
@@ -321,6 +335,9 @@
     const filterPlaceholder = window.Vue.computed(() => homeContext.value.filterPlaceholder);
     const profileButtonText = window.Vue.computed(() => homeContext.value.profileButtonText);
     const profileButtonMeta = window.Vue.computed(() => homeContext.value.profileButtonMeta);
+    const parentCompetitionsHubButtonText = window.Vue.computed(() =>
+      formatParentCompetitionsHubButtonText(getHomeActiveJudoka())
+    );
     const addCompetitionButtonText = window.Vue.computed(() => homeContext.value.addCompetitionButtonText);
     const addCompetitionButtonMeta = window.Vue.computed(() => homeContext.value.addCompetitionButtonMeta);
     const competitionsTitle = window.Vue.computed(() => homeContext.value.competitionsTitle);
@@ -560,6 +577,7 @@
         filterPlaceholder,
         profileButtonText,
         profileButtonMeta,
+        parentCompetitionsHubButtonText,
         addCompetitionButtonText,
         addCompetitionButtonMeta,
         competitionsTitle,
@@ -665,6 +683,7 @@
       viewModel.filterJudokaText = option ? option.name : "";
       viewModel.showFilterOptions = false;
       state.competitionsCurrentPage = 1;
+      app.persistNavigationState({ viewId: "homeView" });
     }
 
     function setHomeMode(mode: HomeMode) {
@@ -676,6 +695,7 @@
       vm.filterJudokaText = "";
       vm.showFilterOptions = false;
       ensureHomeActiveJudokaSelection();
+      app.persistNavigationState({ viewId: "homeView" });
     }
 
     function handleModeTabClick(modeKey: string) {

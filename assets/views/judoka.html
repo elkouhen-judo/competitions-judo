@@ -32,7 +32,12 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Résumé performance</h3>
+              <h3>Résumé performance
+                <span class="tooltip" tabindex="0" aria-label="Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement.</span>
+                </span>
+              </h3>
               <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
             </div>
             <div class="season-nav">
@@ -48,19 +53,39 @@
           </div>
           <div class="stats-grid">
             <div class="stat-card stat-card-highlight">
-              <span class="stat-label">Compétitions</span>
+              <span class="stat-label">Compétitions
+                <span class="tooltip" tabindex="0" aria-label="Nombre de compétitions rattachées au judoka sur la saison affichée.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Nombre de compétitions rattachées au judoka sur la saison affichée.</span>
+                </span>
+              </span>
               <span id="judokaSeasonCompetitionCount" class="stat-value">{{ seasonCompetitionCount }}</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Combats</span>
+              <span class="stat-label">Combats
+                <span class="tooltip" tabindex="0" aria-label="Nombre total de combats saisis dans les compétitions de la saison affichée.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Nombre total de combats saisis dans les compétitions de la saison affichée.</span>
+                </span>
+              </span>
               <span id="judokaSeasonCombatCount" class="stat-value">{{ seasonCombatCount }}</span>
             </div>
             <div class="stat-card stat-card-highlight">
-              <span class="stat-label">Bilan</span>
+              <span class="stat-label">Bilan
+                <span class="tooltip" tabindex="0" aria-label="Répartition des combats gagnés, perdus et nuls sur la saison affichée.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Répartition des combats gagnés, perdus et nuls sur la saison affichée.</span>
+                </span>
+              </span>
               <span id="judokaSeasonBalance" class="stat-value">{{ seasonWins }}V · {{ seasonLosses }}D · {{ seasonDraws }}N</span>
             </div>
             <div class="stat-card stat-card-success">
-              <span class="stat-label">Taux de victoire</span>
+              <span class="stat-label">Taux de victoire
+                <span class="tooltip" tabindex="0" aria-label="Pourcentage de victoires parmi les combats gagnés ou perdus. Les nuls ne sont pas comptés dans le calcul.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Pourcentage de victoires parmi les combats gagnés ou perdus. Les nuls ne sont pas comptés dans le calcul.</span>
+                </span>
+              </span>
               <span id="judokaVictoryRate" class="stat-value">{{ victoryRate }}</span>
             </div>
           </div>
@@ -69,7 +94,12 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Bilan des combats</h3>
+              <h3>Bilan des combats
+                <span class="tooltip" tabindex="0" aria-label="Détaille la manière dont les combats se terminent pour repérer les points forts et axes de travail.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Détaille la manière dont les combats se terminent pour repérer les points forts et axes de travail.</span>
+                </span>
+              </h3>
               <p class="subtitle">Tendances sur la saison sélectionnée.</p>
             </div>
           </div>
@@ -101,7 +131,12 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Résultats compétition</h3>
+              <h3>Résultats compétition
+                <span class="tooltip" tabindex="0" aria-label="Liste les compétitions de la saison avec le classement et le bilan de combats saisis.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Liste les compétitions de la saison avec le classement et le bilan de combats saisis.</span>
+                </span>
+              </h3>
               <p class="subtitle">Classements et bilans par tournoi.</p>
             </div>
           </div>
@@ -147,7 +182,12 @@
         <div v-if="canEditJudokaInfo" class="section">
           <div class="section-heading">
             <div>
-              <h3>Profil judoka</h3>
+              <h3>Profil judoka
+                <span class="tooltip" tabindex="0" aria-label="Informations utilisées pour qualifier les analyses et préparer les compétitions du judoka.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Informations utilisées pour qualifier les analyses et préparer les compétitions du judoka.</span>
+                </span>
+              </h3>
             </div>
           </div>
           <label for="judoka_categorie_age">Catégorie d'âge</label>
@@ -210,7 +250,7 @@
           <div class="form-actions">
             <button type="button" :disabled="isSubmitting" @click="saveJudokaInfo()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              Enregistrer le profil
+              Enregistrer
             </button>
           </div>
         </div>

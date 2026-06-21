@@ -53,6 +53,10 @@ test("mobile navigation uses browser history and restores focus", () => {
   assert.match(client, /window\.addEventListener\("popstate"/);
   assert.match(client, /window\.history\.pushState/);
   assert.match(client, /window\.history\.replaceState/);
+  assert.match(client, /kiroku_navigation_state/);
+  assert.match(client, /function restoreNavigationState\(\)/);
+  assert.match(client, /sessionStorage\.setItem\(navigationStateStorageKey/);
+  assert.match(client, /app\.restoreNavigationState\(\)/);
   assert.match(client, /view\.setAttribute\("tabindex", "-1"\)/);
   assert.match(client, /view\.focus\(\{ preventScroll: true \}\)/);
 });
@@ -95,7 +99,9 @@ test("offline combat and ranking mutations queue as pending operations and sync 
 test("button colors use consistent variants and disabled states", () => {
   assert.match(css, /--button-primary-bg: var\(--primary\)/);
   assert.match(css, /--button-secondary-bg: #ffffff/);
-  assert.match(css, /--button-danger-bg: var\(--danger\)/);
+  assert.match(css, /--button-danger-bg: #fffaf9/);
+  assert.match(css, /--button-danger-border: #efc9c5/);
+  assert.match(css, /--button-danger-text: var\(--danger\)/);
   assert.match(css, /button:hover:not\(:disabled\), \.button:hover:not\(:disabled\)/);
   assert.match(css, /\.button-secondary:hover:not\(:disabled\)/);
   assert.match(css, /\.button-secondary:disabled,[\s\S]*\.button-google:disabled:hover \{[\s\S]*background: var\(--button-secondary-bg\)/);
@@ -195,10 +201,16 @@ test("family home keeps the active judoka competition context", () => {
   assert.match(bundle, /modes\.push\(\{ key: "parentHome", label: "Parent" \}\);/);
   assert.match(bundle, /if \(modeKey === "parentHome"\) \{\s*return \["parentHome", "family"\]\.includes\(getCurrentMode\(\)\);/);
   assert.match(bundle, /state\.homeMode = "parentHome";/);
-  assert.match(bundle, /<h3>Accueil parent<\/h3>/);
-  assert.match(bundle, /<h4>Gérer les compétitions<\/h4>[\s\S]*Ouvrir ma famille/);
-  assert.match(bundle, /<h4>Choisir un judoka<\/h4>[\s\S]*Changer de judoka/);
-  assert.match(bundle, /<h4>Voir la fiche<\/h4>[\s\S]*@click="openParentProfileHub\(\)"/);
+  assert.match(bundle, /<h3>Accueil parent[\s\S]*class="tooltip"/);
+  assert.match(bundle, /Espace parent centré sur l'enfant sélectionné/);
+  assert.match(bundle, /Ouvre la liste des compétitions filtrée sur le judoka actif/);
+  assert.match(bundle, /Change l'enfant actif/);
+  assert.match(bundle, /Affiche la progression du judoka actif/);
+  assert.match(bundle, /<h4>Gérer les compétitions[\s\S]*\{\{ parentCompetitionsHubButtonText \}\}/);
+  assert.match(client, /formatParentCompetitionsHubButtonText\(getHomeActiveJudoka\(\)\)/);
+  assert.match(client, /Ouvrir les compétitions \$\{prefix\}\$\{firstName\}/);
+  assert.match(bundle, /<h4>Choisir un judoka[\s\S]*Changer de judoka/);
+  assert.match(bundle, /<h4>Voir la fiche[\s\S]*@click="openParentProfileHub\(\)"/);
   assert.doesNotMatch(bundle, /Moi ou mes enfants/);
 });
 
@@ -214,7 +226,7 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   assert.match(bundle, /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showActiveJudokaSummary\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/);
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
-  assert.match(bundle, /<h4>Gérer les compétitions<\/h4>/);
+  assert.match(bundle, /<h4>Gérer les compétitions/);
   assert.match(bundle, /<h4>Rechercher un judoka<\/h4>/);
   assert.match(bundle, /<h4>Voir les statistiques<\/h4>/);
   assert.match(client, /function openCoachStatsHub\(\)/);
@@ -262,13 +274,19 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Résultats du judoka actif/);
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /Résumé performance/);
+  assert.match(bundle, /Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement/);
+  assert.match(bundle, /Nombre de compétitions rattachées au judoka sur la saison affichée/);
+  assert.match(bundle, /Pourcentage de victoires parmi les combats gagnés ou perdus/);
   assert.match(bundle, /Bilan des combats/);
+  assert.match(bundle, /Détaille la manière dont les combats se terminent/);
   assert.match(bundle, /id="judokaCompetitionResults"/);
+  assert.match(bundle, /Liste les compétitions de la saison avec le classement/);
   assert.match(bundle, /:key="result\.competitionId \|\|/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaSeasonBalance"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
   assert.match(bundle, /id="judoka_couleur_ceinture"/);
+  assert.match(bundle, /Informations utilisées pour qualifier les analyses/);
   assert.match(bundle, /<label for="judoka_lateralite">Garde<\/label>/);
   assert.match(judokaScreenClient, /const isManagedProfile = /);
   assert.match(
@@ -321,9 +339,15 @@ test("competition list cards stay open-only without destructive actions", () => 
 });
 
 test("mobile actions stay explicit instead of icon-only", () => {
+  assert.match(bundle, /id="editCompetitionButton"[\s\S]*Modifier la compétition/);
+  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*Supprimer la compétition/);
   assert.match(
     bundle,
-    /@click="showCombatForm\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Modifier\s*<\/button>/
+    /@click="showCombatForm\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Modifier le combat\s*<\/button>/
+  );
+  assert.match(
+    bundle,
+    /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer le combat\s*<\/button>/
   );
   assert.match(
     bundle,
@@ -555,6 +579,14 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(client, /inconsistentIppon:/);
   assert.match(bundle, /class="info-tip" tabindex="0"/);
   assert.match(bundle, /class="info-tip-bubble" aria-hidden="true"/);
+  assert.match(bundle, /\.tooltip,\s*\.info-tip\s*\{/);
+  assert.match(bundle, /\.tooltip-trigger\s*\{/);
+  assert.match(bundle, /\.tooltip-content,\s*\.info-tip-bubble\s*\{/);
+  assert.match(bundle, /--tooltip-shift-x/);
+  assert.match(bundle, /--tooltip-arrow-shift-x/);
+  assert.match(bundle, /\.tooltip:hover \.tooltip-content/);
+  assert.match(client, /function setupTooltipPositioning\(\)/);
+  assert.match(client, /getBoundingClientRect\(\)/);
   assert.match(bundle, /\.info-tip\s*\{/);
   assert.match(bundle, /\.info-tip-bubble\s*\{/);
   assert.match(
@@ -774,6 +806,9 @@ test("owner autocomplete provides disambiguation metadata", () => {
 test("combat decision type appears only after choosing a result", () => {
   assert.match(bundle, /id="combatDecisionBlock" :class="\{ hidden: !showCombatDecisionBlock \}"/);
   assert.match(bundle, /function getCombatDecisionOptions\(result\)/);
+  assert.match(bundle, /function getCombatFormFocusTarget\(isEditingExistingCombat\)/);
+  assert.match(bundle, /!isEditingExistingCombat \|\| !form\.result/);
+  assert.match(bundle, /return "combat_adversaire"/);
   assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
   assert.match(bundle, /if \(result === "Victoire" \|\| result === "Défaite"\)/);
   assert.match(bundle, /if \(result === "Egalité"\)/);
