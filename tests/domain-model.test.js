@@ -744,14 +744,15 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
   ];
 
   const competitions = [
-    { level: "Départemental", result: "1er" },
-    { level: "National", result: "1er" },
-    { level: "Régional", result: "2e" },
-    { level: "International", result: "5e" },
-    { level: "International", result: "" }
+    { competitionId: "COMP1", level: "Départemental", result: "1er" },
+    { competitionId: "COMP2", level: "National", result: "1er" },
+    { competitionId: "COMP3", level: "Régional", result: "2e" },
+    { competitionId: "COMP4", level: "International", result: "5e" },
+    { competitionId: "COMP5", level: "International", result: "" }
   ];
 
   assert.deepEqual(computeCoachDashboardStats(combats, competitions), {
+    analyzedCompetitions: 5,
     totalCombats: 6,
     victories: 4,
     victoryRate: 67,
@@ -833,6 +834,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
   });
 
   assert.deepEqual(computeCoachDashboardStats([]), {
+    analyzedCompetitions: 0,
     totalCombats: 0,
     victories: 0,
     victoryRate: 0,
@@ -912,6 +914,16 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       }
     ]
   });
+});
+
+test("coach dashboard statistics counts linked club competition participations once", () => {
+  const competitions = [
+    { competitionId: "COMP1", clubCompetitionId: "CLUB1", level: "Départemental", result: "1er" },
+    { competitionId: "COMP2", clubCompetitionId: "CLUB1", level: "Départemental", result: "2e" },
+    { competitionId: "COMP3", clubCompetitionId: "", level: "Régional", result: "3e" }
+  ];
+
+  assert.equal(computeCoachDashboardStats([], competitions).analyzedCompetitions, 2);
 });
 
 test("coach dashboard statistics domain only counts an ippon victory when the scoring ippon matches the category", () => {

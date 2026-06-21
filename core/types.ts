@@ -219,6 +219,7 @@ export interface CoachDashboardLevelPodiumBreakdownEntry {
 }
 
 export interface CoachDashboardStats {
+  analyzedCompetitions: number;
   totalCombats: number;
   victories: number;
   victoryRate: number;

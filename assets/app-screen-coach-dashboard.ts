@@ -118,8 +118,14 @@
       }
       return podiumHighlights.length ? podiumHighlights.join("\n") : "Aucun podium";
     });
+    const coachDashboardTopQualityIssue = window.Vue.computed(() =>
+      coachDashboardDataQualityIssues.value.reduce(
+        (topIssue, issue) => (!topIssue || issue.rate > topIssue.rate ? issue : topIssue),
+        null as CoachDashboardStats["dataQualityIssues"][number] | null
+      )
+    );
     const coachDashboardMainQualityIssue = window.Vue.computed(() => {
-      const [issue] = coachDashboardDataQualityIssues.value;
+      const issue = coachDashboardTopQualityIssue.value;
       return issue ? `${issue.label} · ${issue.rate}%` : "Données complètes";
     });
     const coachDashboardSummaryInsight = window.Vue.computed(() => {
@@ -127,7 +133,7 @@
       if (!stats || !stats.totalCombats) {
         return "Aucun combat à analyser sur ce périmètre.";
       }
-      const qualityIssue = coachDashboardDataQualityIssues.value[0];
+      const qualityIssue = coachDashboardTopQualityIssue.value;
       if (qualityIssue) {
         return `Priorité saisie : ${qualityIssue.label.toLowerCase()} concerne ${qualityIssue.count} combat(s).`;
       }

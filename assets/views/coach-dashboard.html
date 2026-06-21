@@ -125,6 +125,15 @@
           <div class="dashboard-summary-card">
             <div class="dashboard-summary-grid">
               <div class="summary-metric">
+                <span class="stat-label">Compétitions analysées
+                  <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions retenues après application des filtres actifs. Une compétition club liée à plusieurs judokas n'est comptée qu'une fois.">
+                    <span aria-hidden="true">i</span>
+                    <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions retenues après application des filtres actifs. Une compétition club liée à plusieurs judokas n'est comptée qu'une fois.</span>
+                  </span>
+                </span>
+                <span class="stat-value">{{ coachDashboardStats.analyzedCompetitions }}</span>
+              </div>
+              <div class="summary-metric">
                 <span class="stat-label">Combats analysés
                   <span class="info-tip" tabindex="0" aria-label="Nombre total de combats retenus après application des filtres actifs.">
                     <span aria-hidden="true">i</span>
@@ -195,6 +204,15 @@
             </div>
           </div>
           <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Compétitions analysées
+                <span class="info-tip" tabindex="0" aria-label="Nombre de compétitions retenues après application des filtres actifs. Une compétition club liée à plusieurs judokas n'est comptée qu'une fois.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Nombre de compétitions retenues après application des filtres actifs. Une compétition club liée à plusieurs judokas n'est comptée qu'une fois.</span>
+                </span>
+              </span>
+              <span class="stat-value">{{ coachDashboardStats.analyzedCompetitions }}</span>
+            </div>
             <div class="stat-card stat-card-highlight">
               <span class="stat-label">Combats analysés
                 <span class="info-tip" tabindex="0" aria-label="Nombre total de combats qui correspondent aux filtres choisis.">

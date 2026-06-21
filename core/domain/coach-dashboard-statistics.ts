@@ -187,9 +187,21 @@ function computePodiumBreakdownByLevel(
   });
 }
 
+function computeAnalyzedCompetitionCount(
+  competitions: Array<Pick<Competition, "result" | "level"> & Partial<Pick<Competition, "competitionId" | "clubCompetitionId">>>
+): number {
+  const competitionKeys = new Set<string>();
+  competitions.forEach((competition, index) => {
+    const clubCompetitionId = String(competition.clubCompetitionId || "").trim();
+    const competitionId = String(competition.competitionId || "").trim();
+    competitionKeys.add(clubCompetitionId || competitionId || `competition-${index}`);
+  });
+  return competitionKeys.size;
+}
+
 export function computeCoachDashboardStats(
   combats: CoachDashboardCombat[],
-  competitions: Pick<Competition, "result" | "level">[] = []
+  competitions: Array<Pick<Competition, "result" | "level"> & Partial<Pick<Competition, "competitionId" | "clubCompetitionId">>> = []
 ): CoachDashboardStats {
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
@@ -201,6 +213,7 @@ export function computeCoachDashboardStats(
   ).length;
 
   return {
+    analyzedCompetitions: computeAnalyzedCompetitionCount(competitions),
     totalCombats,
     victories,
     victoryRate: computeRate(victories, totalCombats),
