@@ -1,7 +1,7 @@
 # Terraform — infrastructure Kiroku
 
 Gère en code la configuration des deux projets Vercel (`competitions-judo` /
-prod, `competitions-judo-dev` / dev — voir `docs/spec-tech.md` VCL-005b) et
+prod, `competitions-judo-dev` / dev — voir `docs/spec-tech.md` VCL-008) et
 les réglages Auth des deux projets Supabase associés (CFG-011).
 
 ## Structure
@@ -23,8 +23,8 @@ inversement.
 ## Périmètre volontairement limité
 
 - **Vercel** : nom du projet et `node_version` uniquement. Les commandes de
-  build/install et le routing restent pilotés par `vercel.json` (VCL-006,
-  VCL-006a) — une seule source de vérité.
+  build/install et le routing restent pilotés par `vercel.json` (VCL-010,
+  VCL-011) — une seule source de vérité.
 - **Supabase** : `site_url` et `uri_allow_list` (Auth redirects), reflet de
   CFG-005/CFG-006/CFG-006a/CFG-006b.
 - **Hors périmètre** : création des projets Vercel/Supabase eux-mêmes (faite

@@ -69,79 +69,79 @@ This specification does not define:
 - **ROL-002**: A `PARENT` profile can access and edit data of linked child judokas.
 - **ROL-003**: A `COACH` profile has read access to all judokas, competitions, and stats within the club, and can manage club competition events and their linked sports data. They cannot manage invitations.
 - **ROL-004**: An `ADMIN` profile manages invitations and structural roles only. Admin rights do not include coach sports permissions and shall not allow creating, updating, finalizing, or deleting competitions or combats.
-- **ROL-005**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
-- **ROL-006**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
+- **ROL-005**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
+- **ROL-006**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
 
 ### 3.3 Competition rules
 
-- **COMP-001**: A `JUDOKA` or `PARENT` can create, update, and delete only competitions linked to their scope.
-- **COMP-002**: When a `PARENT` or `JUDOKA` creates an individual competition outside a club competition, the system shall prevent that same judoka from having another standalone individual competition with the same name and date.
-- **COMP-002a**: Multiple judokas may have individual competitions with the same name and date when those participations are linked to the same club competition. If a matching club competition already exists, the UI should guide the user toward attaching the judoka's participation to that club event instead of creating an isolated duplicate.
-- **COMP-003**: `COACH` profiles can view a global "Competition Dashboard" aggregating all judokas who participated in the same event.
-- **COMP-004**: Competition lists shall be sorted by date descending.
-- **COMP-005**: A competition must include a name and a date.
-- **COMP-006**: A competition shall expose an age category chosen from the fixed list: `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, and a weight category.
-- **COMP-008**: A competition shall not use an actual weigh-in field.
-- **COMP-009**: Deleting a competition from a judoka profile shall remove all linked combats for that specific judoka.
-- **COMP-013**: When opening the competition creation form, the date field shall be initialized to the current day by default.
-- **COMP-014**: Competition creation shall not ask for the final ranking.
-- **COMP-015**: Final ranking shall be entered and updated exclusively from a dedicated competition finalization screen. The competition edit form shall not expose a ranking field.
-- **COMP-016**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, or `Non classé`.
-- **COMP-016a**: The UI shall display podium rankings as medal emojis (`1er 🥇`, `2e 🥈`, `3e 🥉`) wherever rankings are shown, while preserving the stored final ranking values `1er`, `2e`, and `3e`.
-- **COMP-024**: A competition shall expose a level field chosen from: `Départemental`, `Régional`, `National`, `International`. The field is optional (empty by default).
-- **COMP-017**: A `COACH` can create a club competition event and assign one or more judokas as participants.
-- **COMP-018**: Assigning a judoka to a club competition creates an individual competition participation for that judoka.
-- **COMP-019**: A linked participation remains visible and editable in the judoka's individual competition history.
-- **COMP-019a**: A club competition is considered finished once its date is today or in the past. While finished, participant management is locked: adding or removing judokas shall be blocked and the detail screen shall show a finished-state banner. Editing event information, combats, final rankings, coach objective/review, deletion, and consultation remain available.
-- **COMP-019b**: For an individual competition linked to a club competition, the inherited club fields (name, date, age category, and competition level) shall not be editable from the individual competition form; they are updated only from the club competition detail. Individual fields such as weight category, combats, final ranking, coach objective/review, and deletion remain available according to the usual permissions.
-- **COMP-020**: Removing a judoka from a club competition whose date is today or in the past is blocked per COMP-019a. Removing a judoka from a club competition that has not started yet (date strictly in the future) deletes that judoka's individual competition outright, including its combats, rather than merely detaching the club link.
-- **COMP-021**: A `JUDOKA` or `PARENT` can still create individual competitions outside a club competition.
-- **COMP-022**: Deleting a club competition shall detach linked individual competitions by clearing the club link, without deleting those individual competitions, combats, or final rankings.
-- **COMP-023**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
-- **COMP-025**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
-- **COMP-026**: A club competition shall not ask for or store a weight category; weight is only meaningful on an individual judoka competition.
-- **COMP-027**: A club competition shall require a competition level chosen from `Départemental`, `Régional`, `National`, or `International`, and linked individual participations shall inherit that level.
+- **COMP-001**: A competition must include a name and a date.
+- **COMP-002**: A competition shall expose an age category chosen from the fixed list: `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, and a weight category.
+- **COMP-003**: A competition shall expose a level field chosen from: `Départemental`, `Régional`, `National`, `International`. The field is optional (empty by default).
+- **COMP-004**: A competition shall not use an actual weigh-in field.
+- **COMP-005**: A `JUDOKA` or `PARENT` can create, update, and delete only competitions linked to their scope.
+- **COMP-006**: A `JUDOKA` or `PARENT` can still create individual competitions outside a club competition.
+- **COMP-007**: When opening the competition creation form, the date field shall be initialized to the current day by default.
+- **COMP-008**: Competition creation shall not ask for the final ranking.
+- **COMP-009**: When a `PARENT` or `JUDOKA` creates an individual competition outside a club competition, the system shall prevent that same judoka from having another standalone individual competition with the same name and date.
+- **COMP-010**: Multiple judokas may have individual competitions with the same name and date when those participations are linked to the same club competition. If a matching club competition already exists, the UI should guide the user toward attaching the judoka's participation to that club event instead of creating an isolated duplicate.
+- **COMP-011**: Final ranking shall be entered and updated exclusively from a dedicated competition finalization screen. The competition edit form shall not expose a ranking field.
+- **COMP-012**: Final ranking values shall be limited to supported ranking results: `1er`, `2e`, `3e`, `4e`, `5e`, `6e`, `7e`, `8e`, or `Non classé`.
+- **COMP-013**: The UI shall display podium rankings as medal emojis (`1er 🥇`, `2e 🥈`, `3e 🥉`) wherever rankings are shown, while preserving the stored final ranking values `1er`, `2e`, and `3e`.
+- **COMP-014**: Competition lists shall be sorted by date descending.
+- **COMP-015**: `COACH` profiles can view a global "Competition Dashboard" aggregating all judokas who participated in the same event.
+- **COMP-016**: The club competition detail screen shall display each participant's current final ranking (or "Non classé" if not yet set) alongside their name, so a `COACH` can see standings at a glance.
+- **COMP-017**: Deleting a competition from a judoka profile shall remove all linked combats for that specific judoka.
+- **COMP-018**: Deleting a club competition shall detach linked individual competitions by clearing the club link, without deleting those individual competitions, combats, or final rankings.
+- **COMP-019**: A `COACH` can create a club competition event and assign one or more judokas as participants.
+- **COMP-020**: When a `COACH` creates a club competition, the participant selection list shall stay hidden until an age category is selected, then show only judokas in that category.
+- **COMP-021**: A club competition shall not ask for or store a weight category; weight is only meaningful on an individual judoka competition.
+- **COMP-022**: A club competition shall require a competition level chosen from `Départemental`, `Régional`, `National`, or `International`, and linked individual participations shall inherit that level.
+- **COMP-023**: Assigning a judoka to a club competition creates an individual competition participation for that judoka.
+- **COMP-024**: A linked participation remains visible and editable in the judoka's individual competition history.
+- **COMP-025**: For an individual competition linked to a club competition, the inherited club fields (name, date, age category, and competition level) shall not be editable from the individual competition form; they are updated only from the club competition detail. Individual fields such as weight category, combats, final ranking, coach objective/review, and deletion remain available according to the usual permissions.
+- **COMP-026**: A club competition is considered finished once its date is today or in the past. While finished, participant management is locked: adding or removing judokas shall be blocked and the detail screen shall show a finished-state banner. Editing event information, combats, final rankings, coach objective/review, deletion, and consultation remain available.
+- **COMP-027**: Removing a judoka from a club competition whose date is today or in the past is blocked per COMP-026. Removing a judoka from a club competition that has not started yet (date strictly in the future) deletes that judoka's individual competition outright, including its combats, rather than merely detaching the club link.
 
 ### 3.4 Combat rules
 
-- **CBT-001**: A `JUDOKA` or `PARENT` can manage combats for their own scope. `COACH` users can manage combats for club competition participations.
-- **CBT-004**: A combat must include a parent competition, a judoka, and a result.
-- **CBT-005**: A combat may include an opponent name and match notes (free text for technical feedback).
-- **CBT-005a**: Combat result values shall be limited to `Victoire`, `Défaite`, or `Egalité`.
-- **CBT-005b**: To maintain simplicity, complex referee scoring details (Shido counters, scoreboard timelines, and penalty counts) shall not be structural fields; contextual technical details may still be typed in the free text match notes (e.g., "Perdu par Ippon sur Uchi-Mata", "Gagné aux pénalités au Golden Score").
-- **CBT-005c**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
-- **CBT-005d**: A combat may optionally record a list of scoring techniques ("prises marquées"), one entry per point scored during the combat, regardless of the combat result.
-- **CBT-005e**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`), shown to users as `Debout` or `Au sol`, and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall autocomplete known throw names while still accepting a free-text throw name typed by the user. When the category is `Ne-waza`, the entry shall record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
-- **CBT-005f**: A combat with result `Victoire` or `Défaite` shall record a decision type among `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, or `Forfait`. A combat with result `Egalité` shall use `Hiki wake`. Scoring technique entries remain optional and shall not replace the decision type.
-- **CBT-006**: Deleting a combat shall not delete its parent competition.
-- **CBT-007**: The combat form shall always show the detailed fields for opponent stance, scoring techniques, and notes.
+- **CBT-001**: A combat must include a parent competition, a judoka, and a result.
+- **CBT-002**: Combat result values shall be limited to `Victoire`, `Défaite`, or `Egalité`.
+- **CBT-003**: A combat may include an opponent name and match notes (free text for technical feedback).
+- **CBT-004**: To maintain simplicity, complex referee scoring details (Shido counters, scoreboard timelines, and penalty counts) shall not be structural fields; contextual technical details may still be typed in the free text match notes (e.g., "Perdu par Ippon sur Uchi-Mata", "Gagné aux pénalités au Golden Score").
+- **CBT-005**: A combat with result `Victoire` or `Défaite` shall record a decision type among `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, or `Forfait`. A combat with result `Egalité` shall use `Hiki wake`. Scoring technique entries remain optional and shall not replace the decision type.
+- **CBT-006**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
+- **CBT-007**: A combat may optionally record a list of scoring techniques ("prises marquées"), one entry per point scored during the combat, regardless of the combat result.
+- **CBT-008**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`), shown to users as `Debout` or `Au sol`, and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall autocomplete known throw names while still accepting a free-text throw name typed by the user. When the category is `Ne-waza`, the entry shall record a sub-type (`Clé`, `Étranglement`, or `Osaekomi`).
+- **CBT-009**: A `JUDOKA` or `PARENT` can manage combats for their own scope. `COACH` users can manage combats for club competition participations.
+- **CBT-010**: Deleting a combat shall not delete its parent competition.
+- **CBT-011**: The combat form shall always show the detailed fields for opponent stance, scoring techniques, and notes.
 
 ### 3.5 Imported child link and judoka profile rules
 
 - **CHD-001**: Parent-child links shall be created through club CSV import, not through an in-app parent child-management screen.
 - **CHD-002**: A CSV-imported child judoka can be linked to a parent through `parentEmail`, including when the parent account is still pending invitation.
 - **CHD-003**: A CSV-imported child profile with a direct account email shall be able to log in through Google once that imported `JUDOKA` profile exists, and shall only access its own judoka data. A separate invitation is not required when the profile already exists.
-- **CHD-010**: A coach shall be able to set or update the age category of any judoka from the judoka profile view.
-- **CHD-011**: The weight category field (judoka profile and competition form) shall be selected from a dropdown of the official FFJDA weight categories for the chosen age category (and gender, for the judoka profile), instead of free text. The list is empty for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
-- **CHD-012**: The "année dans la catégorie" field shall only offer the years that actually exist for the selected age category: 2 years for Poussinet/Poussin/Benjamin/Minime, 3 years for Cadet/Junior, and no field at all for Senior/Vétéran (open/age-banded categories where the concept doesn't apply).
-- **CHD-013**: A judoka profile may store the judoka's garde (`Droitier` or `Gaucher`) from the judoka profile form.
+- **CHD-004**: A coach shall be able to set or update the age category of any judoka from the judoka profile view.
+- **CHD-005**: The weight category field (judoka profile and competition form) shall be selected from a dropdown of the official FFJDA weight categories for the chosen age category (and gender, for the judoka profile), instead of free text. The list is empty for age categories without official weight divisions (Poussinet, Poussin). Vétéran reuses the Senior weight scale.
+- **CHD-006**: The "année dans la catégorie" field shall only offer the years that actually exist for the selected age category: 2 years for Poussinet/Poussin/Benjamin/Minime, 3 years for Cadet/Junior, and no field at all for Senior/Vétéran (open/age-banded categories where the concept doesn't apply).
+- **CHD-007**: A judoka profile may store the judoka's garde (`Droitier` or `Gaucher`) from the judoka profile form.
 
 ### 3.6 Judoka season statistics rules
 
 - **STA-001**: The application shall provide a dedicated judoka profile view.
-- **STA-002**: The judoka profile shall display the judoka category derived from the latest competition of the displayed season.
-- **STA-003**: The judoka profile shall display a short competition-results list for the displayed season with date, competition name, final ranking, combat record, and a ranking badge.
-- **STA-004**: The season shall run from September 1st to August 31st.
-- **STA-005**: The judoka profile shall display the number of competitions for the displayed season.
-- **STA-006**: The judoka profile shall display the number of combats for the displayed season.
-- **STA-007**: The judoka profile shall display the victory rate for the displayed season.
-- **STA-007a**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
-- **STA-007b**: The judoka profile shall display a combat profile summary for the displayed season based on global Victory/Loss/Equality ratios and notes insights.
-- **STA-007c**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
-- **STA-007d**: The judoka profile hero shall display the judoka's garde when it is known.
-- **STA-008**: A `JUDOKA` shall be able to open only their own judoka profile from home.
-- **STA-009**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
-- **STA-010**: `COACH` profiles shall be able to open the judoka profile of any judoka in the club.
+- **STA-002**: A `JUDOKA` shall be able to open only their own judoka profile from home.
+- **STA-003**: A `PARENT` shall be able to open their own judoka profile and the profiles of linked children only.
+- **STA-004**: `COACH` profiles shall be able to open the judoka profile of any judoka in the club.
+- **STA-005**: The season shall run from September 1st to August 31st.
+- **STA-006**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
+- **STA-007**: The judoka profile shall display the judoka category derived from the latest competition of the displayed season.
+- **STA-008**: The judoka profile hero shall display the judoka's garde when it is known.
+- **STA-009**: The judoka profile shall display a short competition-results list for the displayed season with date, competition name, final ranking, combat record, and a ranking badge.
+- **STA-010**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
+- **STA-011**: The judoka profile shall display the number of competitions for the displayed season.
+- **STA-012**: The judoka profile shall display the number of combats for the displayed season.
+- **STA-013**: The judoka profile shall display the victory rate for the displayed season.
+- **STA-014**: The judoka profile shall display a combat profile summary for the displayed season based on global Victory/Loss/Equality ratios and notes insights.
 
 ### 3.7 Authentication behavior
 
@@ -151,144 +151,144 @@ This specification does not define:
 - **AUTH-004**: The login UI shall not expose password login.
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
 - **AUTH-006**: The connected header shall show user identity and provide an explicit logout action.
-- **AUTH-007**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data once the imported `JUDOKA` profile exists.
-- **AUTH-008**: A user without an existing imported profile or an active invitation shall not be allowed to create an account in the application.
-- **AUTH-009**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
-- **AUTH-009a**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
+- **AUTH-007**: A user without an existing imported profile or an active invitation shall not be allowed to create an account in the application.
+- **AUTH-008**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
+- **AUTH-009**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
 - **AUTH-010**: Each invitation shall define the target profile type among `PARENT` or `JUDOKA`.
-- **AUTH-011**: CSV-imported profiles with an account email shall be able to connect with Google without re-entering first name or last name.
-- **AUTH-011a**: A CSV-imported `JUDOKA` with an account email may also provide `parentEmail` to be linked to that parent.
-- **AUTH-011b**: A CSV-imported `JUDOKA` row may set a `role` column of `COACH` to grant coach rights at import time; this requires an account email and is not available for `PARENT` rows.
-- **AUTH-011c**: A CSV-imported `JUDOKA` row may set an `ageCategory` column to assign the judoka's age category (e.g. `Minime`) at import time.
-- **AUTH-011d**: Re-importing a CSV row that matches an existing `JUDOKA` (by account email, or by first and last name when no email is given) shall not be treated as an import error; it shall update that judoka's `role` and `ageCategory` from the row instead of failing the row.
-- **AUTH-011e**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
-- **AUTH-011f**: A CSV-imported `JUDOKA` row may set a `genre` column (`Homme` or `Femme`) and an `anneeCategorie` column (the year within the age category, e.g. Cadet 1 / Cadet 2 / Cadet 3 — see **CHD-012** for valid values per category) at import time; re-importing an existing judoka updates both fields the same way `ageCategory` is updated.
-- **AUTH-011g**: A CSV-imported `JUDOKA` row may set a `lateralite` column for the judoka's garde (`Droitier` or `Gaucher`) at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
-- **AUTH-011h**: A CSV-imported `JUDOKA` row may set a `couleur_ceinture` column for the judoka's belt color at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
-- **AUTH-011i**: After a CSV import, the admin UI shall show only a toast summary with the number of successful rows and failed rows; it shall not render a row-by-row import result list.
-- **AUTH-012**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
-- **AUTH-013**: Admin and Coach elevations shall be managed separately from the invitation flow.
+- **AUTH-011**: A child profile with a direct account email shall be able to log in through Google and be treated as a `JUDOKA` limited to their own data once the imported `JUDOKA` profile exists.
+- **AUTH-012**: CSV-imported profiles with an account email shall be able to connect with Google without re-entering first name or last name.
+- **AUTH-013**: A CSV-imported `JUDOKA` with an account email may also provide `parentEmail` to be linked to that parent.
+- **AUTH-014**: A CSV-imported `JUDOKA` row may set a `role` column of `COACH` to grant coach rights at import time; this requires an account email and is not available for `PARENT` rows.
+- **AUTH-015**: A CSV-imported `JUDOKA` row may set an `ageCategory` column to assign the judoka's age category (e.g. `Minime`) at import time.
+- **AUTH-016**: A CSV-imported `JUDOKA` row may set a `genre` column (`Homme` or `Femme`) and an `anneeCategorie` column (the year within the age category, e.g. Cadet 1 / Cadet 2 / Cadet 3 — see **CHD-006** for valid values per category) at import time; re-importing an existing judoka updates both fields the same way `ageCategory` is updated.
+- **AUTH-017**: A CSV-imported `JUDOKA` row may set a `lateralite` column for the judoka's garde (`Droitier` or `Gaucher`) at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
+- **AUTH-018**: A CSV-imported `JUDOKA` row may set a `couleur_ceinture` column for the judoka's belt color at import time; re-importing an existing judoka updates it the same way `ageCategory` is updated.
+- **AUTH-019**: Re-importing a CSV row that matches an existing `JUDOKA` (by account email, or by first and last name when no email is given) shall not be treated as an import error; it shall update that judoka's `role` and `ageCategory` from the row instead of failing the row.
+- **AUTH-020**: Re-importing a CSV row that matches an existing `PARENT` by account email shall not be treated as an import error either; the row succeeds as a no-op update once first and last name are confirmed to match. A row whose email matches an existing account of the other profile type, or whose name does not match that account, shall still fail.
+- **AUTH-021**: After a CSV import, the admin UI shall show only a toast summary with the number of successful rows and failed rows; it shall not render a row-by-row import result list.
+- **AUTH-022**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
+- **AUTH-023**: Admin and Coach elevations shall be managed separately from the invitation flow.
 
 ### 3.8 UI and UX rules
 
 - **UIX-001**: The application shall be mobile first.
 - **UIX-002**: Lists and forms shall remain separated.
 - **UIX-003**: Main actions shall be visible, tactile, and explicit.
-- **UIX-004**: The UI shall provide loading, empty, error, and success states.
-- **UIX-004a**: Empty states that can be resolved by the current user shall include a direct contextual action, such as creating the first competition or adding the first combat.
-- **UIX-005**: Deletions shall require explicit confirmation.
-- **UIX-006**: After create or update operations, the application shall refresh relevant data and display the affected item.
-- **UIX-007**: Action labels shall stay textual and explicit on mobile, not icon-only.
-- **UIX-008**: Desktop-specific layout shall be a progressive enhancement over the small-screen baseline.
-- **UIX-009**: The judoka profile view shall remain readable and actionable on mobile.
-- **UIX-010**: For `PARENT`, the home screen shall open on a parent hub exposing three explicit cards: "Gérer les compétitions", "Choisir un judoka", and "Voir la fiche".
-- **UIX-010a**: For `PARENT`, the parent hub shall keep an active judoka context selected by default, using the first linked child when possible.
-- **UIX-010b**: For `PARENT`, competition creation shall require an active family profile before the creation form is opened.
-- **UIX-011**: For `COACH`, the home screen shall open on a coach hub exposing three explicit cards: "Gérer les compétitions", "Rechercher un judoka", and "Voir les statistiques". For `ADMIN`, the home screen shall expose access governance without sports management actions.
-- **UIX-011d**: For `COACH`, the top coach navigation shall stay limited to returning to "Accueil coach" and "Mon espace"; detailed coach actions shall be launched from the coach hub cards instead of duplicated as top navigation tabs.
-- **UIX-011a**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
-- **UIX-011b**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
-- **UIX-011c**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
-- **UIX-012**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
-- **UIX-012a**: The judoka performance hero labels shall follow a logical sports-reading order: season, age category, year within category, weight category, gender, garde, then belt color.
-- **UIX-013**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
-- **UIX-013a**: Home widgets shall not repeat the active tab label as a standalone title; when an active tab or useful context card already identifies the view, the redundant home header shall be hidden.
-- **UIX-013b**: Competition cards in lists shall use a uniform open-only interaction. Destructive competition deletion shall be handled from the competition detail screen, not from list cards.
-- **UIX-014**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
-- **UIX-015**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
-- **UIX-016**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, combats with scores, and finalization status.
-- **UIX-016a**: For `PARENT`, the competition detail screen shall show the coach follow-up block so objectives set by the coach are visible on the judoka's competition.
-- **UIX-017**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
-- **UIX-017a**: On the competition detail screen, each combat card shall list every data-entry quality issue detected on that combat — missing combat ending, an `Ippon` decision with no matching `Ippon` score, no scores recorded, missing judoka right/left side, and missing opponent right/left side — each tagged with a priority level ("Haute" for the missing combat ending and the inconsistent Ippon decision, "Moyenne" for the other criteria) shown alongside the message.
-- **UIX-017b**: The combat form shall surface the same data-entry quality issues live while editing, scoped to the fields it owns (combat ending, inconsistent Ippon decision, scores, opponent right/left side — judoka right/left side is edited on the judoka profile, not shown here), with the same priority levels, once a result has been selected. Each issue shall be displayed inline next to the field it concerns (combat-ending issues under "Comment le combat s'est terminé", score issues under "Points marqués", opponent right/left side issues under "Adversaire droitier ou gaucher") rather than grouped in a single block, so it stays visible while the coach is actively filling that field.
-- **UIX-018**: Coach-facing and parent-facing helper copy shall use plain sports-field language ("bilan coach", "relire le combat", "points marqués", "debout et au sol", "droitier ou gaucher") instead of technical dashboard wording where possible.
-- **UIX-019**: The admin CSV import screen shall present import requirements as a short checklist and downloadable example rather than a long inline column description.
-- **UIX-020**: The UI visual identity should use local Kiroku/dojo elements, including a local app mark, tatami-inspired surfaces, and restrained belt/podium accents; it shall not depend on a remote logo image.
+- **UIX-004**: Action labels shall stay textual and explicit on mobile, not icon-only.
+- **UIX-005**: Desktop-specific layout shall be a progressive enhancement over the small-screen baseline.
+- **UIX-006**: The UI visual identity should use local Kiroku/dojo elements, including a local app mark, tatami-inspired surfaces, and restrained belt/podium accents; it shall not depend on a remote logo image.
+- **UIX-007**: The UI shall provide loading, empty, error, and success states.
+- **UIX-008**: Empty states that can be resolved by the current user shall include a direct contextual action, such as creating the first competition or adding the first combat.
+- **UIX-009**: Deletions shall require explicit confirmation.
+- **UIX-010**: After create or update operations, the application shall refresh relevant data and display the affected item.
+- **UIX-011**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
+- **UIX-012**: For `PARENT`, the home screen shall open on a parent hub exposing three explicit cards: "Gérer les compétitions", "Choisir un judoka", and "Voir la fiche".
+- **UIX-013**: For `PARENT`, the parent hub shall keep an active judoka context selected by default, using the first linked child when possible.
+- **UIX-014**: For `PARENT`, competition creation shall require an active family profile before the creation form is opened.
+- **UIX-015**: For `COACH`, the home screen shall open on a coach hub exposing three explicit cards: "Gérer les compétitions", "Rechercher un judoka", and "Voir les statistiques". For `ADMIN`, the home screen shall expose access governance without sports management actions.
+- **UIX-016**: For `COACH`, the top coach navigation shall stay limited to returning to "Accueil coach" and "Mon espace"; detailed coach actions shall be launched from the coach hub cards instead of duplicated as top navigation tabs.
+- **UIX-017**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
+- **UIX-018**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
+- **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
+- **UIX-020**: The judoka profile view shall remain readable and actionable on mobile.
+- **UIX-021**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
+- **UIX-022**: The judoka performance hero labels shall follow a logical sports-reading order: season, age category, year within category, weight category, gender, garde, then belt color.
+- **UIX-023**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
+- **UIX-024**: Home widgets shall not repeat the active tab label as a standalone title; when an active tab or useful context card already identifies the view, the redundant home header shall be hidden.
+- **UIX-025**: Competition cards in lists shall use a uniform open-only interaction. Destructive competition deletion shall be handled from the competition detail screen, not from list cards.
+- **UIX-026**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
+- **UIX-027**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, combats with scores, and finalization status.
+- **UIX-028**: For `PARENT`, the competition detail screen shall show the coach follow-up block so objectives set by the coach are visible on the judoka's competition.
+- **UIX-029**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
+- **UIX-030**: On the competition detail screen, each combat card shall list every data-entry quality issue detected on that combat — missing combat ending, an `Ippon` decision with no matching `Ippon` score, no scores recorded, missing judoka right/left side, and missing opponent right/left side — each tagged with a priority level ("Haute" for the missing combat ending and the inconsistent Ippon decision, "Moyenne" for the other criteria) shown alongside the message.
+- **UIX-031**: The combat form shall surface the same data-entry quality issues live while editing, scoped to the fields it owns (combat ending, inconsistent Ippon decision, scores, opponent right/left side — judoka right/left side is edited on the judoka profile, not shown here), with the same priority levels, once a result has been selected. Each issue shall be displayed inline next to the field it concerns (combat-ending issues under "Comment le combat s'est terminé", score issues under "Points marqués", opponent right/left side issues under "Adversaire droitier ou gaucher") rather than grouped in a single block, so it stays visible while the coach is actively filling that field.
+- **UIX-032**: Coach-facing and parent-facing helper copy shall use plain sports-field language ("bilan coach", "relire le combat", "points marqués", "debout et au sol", "droitier ou gaucher") instead of technical dashboard wording where possible.
+- **UIX-033**: The admin CSV import screen shall present import requirements as a short checklist and downloadable example rather than a long inline column description.
 
 ### 3.9 Offline usage rules
 
 - **OFF-001**: After a first successful connected load, the application shall remain openable offline and shall display the latest locally available data for the connected user's known scope.
 - **OFF-002**: Offline data shall be clearly identified as data from the latest successful load; the UI shall not present cached data as freshly synchronized.
-- **OFF-003**: A `JUDOKA`, `PARENT`, or `COACH` may create or update combats offline only inside the locally known authorized scope.
-- **OFF-004**: A `JUDOKA`, `PARENT`, or `COACH` may save a final ranking offline for an individual competition inside the locally known authorized scope.
-- **OFF-005**: Offline mutations shall be stored as pending operations and synchronized when network access returns.
-- **OFF-006**: Pending offline operations shall remain visible in the UI until they are synchronized, rejected, cancelled, or corrected by the user.
-- **OFF-007**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, and club competition creation or update shall be unavailable offline.
-- **OFF-008**: If a pending offline operation is rejected during synchronization because permissions, validation rules, or source data changed, the operation shall remain visible with an actionable error instead of being silently discarded.
-- **OFF-009**: Coach dashboard and beta coach chat results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
+- **OFF-003**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, and club competition creation or update shall be unavailable offline.
+- **OFF-004**: Coach dashboard and beta coach chat results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
+- **OFF-005**: A `JUDOKA`, `PARENT`, or `COACH` may create or update combats offline only inside the locally known authorized scope.
+- **OFF-006**: A `JUDOKA`, `PARENT`, or `COACH` may save a final ranking offline for an individual competition inside the locally known authorized scope.
+- **OFF-007**: Offline mutations shall be stored as pending operations and synchronized when network access returns.
+- **OFF-008**: Pending offline operations shall remain visible in the UI until they are synchronized, rejected, cancelled, or corrected by the user.
+- **OFF-009**: If a pending offline operation is rejected during synchronization because permissions, validation rules, or source data changed, the operation shall remain visible with an actionable error instead of being silently discarded.
 
 ### 3.10 Coach dashboard rules
 
 - **DASH-001**: `COACH` users shall have access to a dedicated dashboard screen aggregating statistics across one or more competitions. `ADMIN` users shall not have sports dashboard access.
 - **DASH-002**: The dashboard shall display, in order, the age category filter, the start/end date range, and the competition multi-select filter. All filters are optional; when none is set, the dashboard aggregates every competition and judoka. When both dates are set, the start date must be before or equal to the end date. The dashboard shall not offer a judoka gender filter or a judoka garde filter.
 - **DASH-003**: The dashboard shall recompute statistics automatically whenever any filter changes, debounced by 300ms of inactivity, with no manual refresh button; this applies uniformly to the competition multi-select, the date range, and the age category filters. Changing the age category or the date range shall also update the set of competitions offered by the competition selector, and any previously selected competition that falls outside the new range shall be deselected automatically.
-- **DASH-003a**: Before detailed metric sections, the dashboard shall display a "Synthèse coach" summary with combats analyzed, victory rate, compact podium highlights sorted by competition level (`International`, `National`, `Régional`, `Départemental`) showing an abbreviated level, the best podium medal emoji and the count for that medal at each level with at least one podium, the main data-quality issue, and one short action-oriented insight.
-- **DASH-004**: The dashboard shall display the victory rate (% of combats won) over the combats matching the active filters, labeled "Victoires totales", alongside the raw win count and the total combat count (e.g. "8/12 (67%)").
-- **DASH-005**: The dashboard shall display the debout Ippon victory rate labeled "Victoires Ippon debout" (% of combats won where at least one recorded score has category `Tachi-waza` and value `Ippon`) and, symmetrically, the au sol Ippon victory rate labeled "Victoires Ippon au sol", each alongside its win count and the total combat count.
-- **DASH-006**: The dashboard shall display a "Fiabilité des données" section, shown only when the active filtered scope has at least one combat, listing for each of 7 data-quality criteria (missing judoka right/left side, missing opponent right/left side, missing combat ending, no scores recorded, missing competition level, missing judoka gender, and an Ippon decision with no matching Ippon score) the affected combat count, the total combat count, and the percentage, in the format "compte/total (taux%)". Only criteria with at least one affected combat shall be shown; when none of the 7 criteria has any affected combat, the section shall display a message indicating no missing information was detected instead of an empty grid.
-- **DASH-007**: The dashboard shall display a breakdown of victories and of defeats by combat ending (`Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`), each as a count, the total count for that result (all victories or all defeats), and a percentage of that total.
-- **DASH-008**: The dashboard shall display the "Par garde" section with a "Garde du judoka vs garde de l'adversaire" card showing the victory rate against "Garde opposée" and "Même Garde" opponents, alongside the win count and the eligible combat count for each relative right/left-side group. A combat is eligible for these two metrics only when the judoka right/left side and opponent right/left side are both known and the combat result is a win or loss; draws are excluded.
-- **DASH-009**: The dashboard shall not display a standalone "Par niveau" performance section; competition-level analysis is limited to podium counts grouped inside the "Podiums" section.
-- **DASH-010**: The dashboard shall display the number of distinct judokas matching the active filters who have at least one combat in scope, under the "Effectif engagé" section and broken down by gender (`Homme` / `Femme`).
-- **DASH-011**: The dashboard shall display distinct judoka counts under the "Effectif engagé" section and broken down by judoka right/left side (`Droitier` / `Gaucher`).
-- **DASH-012**: The dashboard competition selector shall allow searching competitions by name or date without clearing already selected competitions; when a club competition has generated several individual competition rows, the selector shall show a single option for that club competition and selecting it shall filter on all generated individual competitions.
-- **DASH-013**: On mobile, the dashboard filters shall be collapsible so the statistics can be reviewed without scrolling through the full filter list.
-- **DASH-014**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status, indicate in the chat title that LLM quota is limited, and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
-- **DASH-016**: Every metric on the dashboard statistics tab shall expose a hover/focus info tooltip with a plain-language explanation of what it measures, attached either to the individual metric label (for standalone counters and rates) or to the section/card heading shared by several rows computed with the same formula (per competition level, per combat ending, and the right/left-side matchup card); each "Fiabilité des données" criterion shall have its own tooltip since each one explains a distinct issue.
-- **DASH-017**: The dashboard shall display a "Podiums" section with raw counts (no percentage) grouped by competition level (`Départemental`, `Régional`, `National`, `International`) for competitions in the filtered scope finalized with exactly a 1st, 2nd, or 3rd place ranking; competitions without a finalized ranking, with a non-podium ranking, or without a recognized level shall not be counted in any level.
-- **DASH-018**: The dashboard statistics tab shall present its sections in the following order: Podiums, Volume de combats, Effectif engagé, Par garde, Profil de performance, Mode de victoire, Mode de défaite, then the "Fiabilité des données" data-reliability caveat last.
+- **DASH-004**: The dashboard competition selector shall allow searching competitions by name or date without clearing already selected competitions; when a club competition has generated several individual competition rows, the selector shall show a single option for that club competition and selecting it shall filter on all generated individual competitions.
+- **DASH-005**: On mobile, the dashboard filters shall be collapsible so the statistics can be reviewed without scrolling through the full filter list.
+- **DASH-006**: The dashboard statistics tab shall present its sections in the following order: Podiums, Volume de combats, Effectif engagé, Par garde, Profil de performance, Mode de victoire, Mode de défaite, then the "Fiabilité des données" data-reliability caveat last.
+- **DASH-007**: Before detailed metric sections, the dashboard shall display a "Synthèse coach" summary with combats analyzed, victory rate, compact podium highlights sorted by competition level (`International`, `National`, `Régional`, `Départemental`) showing an abbreviated level, the best podium medal emoji and the count for that medal at each level with at least one podium, the main data-quality issue, and one short action-oriented insight.
+- **DASH-008**: Every metric on the dashboard statistics tab shall expose a hover/focus info tooltip with a plain-language explanation of what it measures, attached either to the individual metric label (for standalone counters and rates) or to the section/card heading shared by several rows computed with the same formula (per competition level, per combat ending, and the right/left-side matchup card); each "Fiabilité des données" criterion shall have its own tooltip since each one explains a distinct issue.
+- **DASH-009**: The dashboard shall display a "Podiums" section with raw counts (no percentage) grouped by competition level (`Départemental`, `Régional`, `National`, `International`) for competitions in the filtered scope finalized with exactly a 1st, 2nd, or 3rd place ranking; competitions without a finalized ranking, with a non-podium ranking, or without a recognized level shall not be counted in any level.
+- **DASH-010**: The dashboard shall not display a standalone "Par niveau" performance section; competition-level analysis is limited to podium counts grouped inside the "Podiums" section.
+- **DASH-011**: The dashboard shall display the victory rate (% of combats won) over the combats matching the active filters, labeled "Victoires totales", alongside the raw win count and the total combat count (e.g. "8/12 (67%)").
+- **DASH-012**: The dashboard shall display the number of distinct judokas matching the active filters who have at least one combat in scope, under the "Effectif engagé" section and broken down by gender (`Homme` / `Femme`).
+- **DASH-013**: The dashboard shall display distinct judoka counts under the "Effectif engagé" section and broken down by judoka right/left side (`Droitier` / `Gaucher`).
+- **DASH-014**: The dashboard shall display the "Par garde" section with a "Garde du judoka vs garde de l'adversaire" card showing the victory rate against "Garde opposée" and "Même Garde" opponents, alongside the win count and the eligible combat count for each relative right/left-side group. A combat is eligible for these two metrics only when the judoka right/left side and opponent right/left side are both known and the combat result is a win or loss; draws are excluded.
+- **DASH-015**: The dashboard shall display the debout Ippon victory rate labeled "Victoires Ippon debout" (% of combats won where at least one recorded score has category `Tachi-waza` and value `Ippon`) and, symmetrically, the au sol Ippon victory rate labeled "Victoires Ippon au sol", each alongside its win count and the total combat count.
+- **DASH-016**: The dashboard shall display a breakdown of victories and of defeats by combat ending (`Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`), each as a count, the total count for that result (all victories or all defeats), and a percentage of that total.
+- **DASH-017**: The dashboard shall display a "Fiabilité des données" section, shown only when the active filtered scope has at least one combat, listing for each of 7 data-quality criteria (missing judoka right/left side, missing opponent right/left side, missing combat ending, no scores recorded, missing competition level, missing judoka gender, and an Ippon decision with no matching Ippon score) the affected combat count, the total combat count, and the percentage, in the format "compte/total (taux%)". Only criteria with at least one affected combat shall be shown; when none of the 7 criteria has any affected combat, the section shall display a message indicating no missing information was detected instead of an empty grid.
+- **DASH-018**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status, indicate in the chat title that LLM quota is limited, and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Osaekomi`, listing judokas by age category, and listing judokas who fought today.
 
 ### 3.11 Internal MCP access rules
 
 - **MCP-001**: The application shall expose a remote MCP server usable by standard MCP clients (e.g. Claude Desktop, Claude.ai connectors), open to any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, `JUDOKA`).
-- **MCP-002**: MCP clients shall authenticate via an OAuth 2.1 authorization-code flow with mandatory PKCE (S256); the authorization step shall delegate to the existing Google/Supabase login rather than a separate credential.
-- **MCP-003**: The OAuth authorization server shall support unauthenticated discovery (`/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`) and Dynamic Client Registration so that MCP clients can connect without manual configuration.
-- **MCP-004**: The backend shall mint a short-lived Kiroku-signed JWT MCP access token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
-- **MCP-005**: The JWT MCP access token shall expire after a short duration and shall encode only scopes from the fixed Kiroku MCP scope vocabulary assigned at mint time for the caller's Kiroku role: full read/write sports scopes for `COACH`, access-governance scopes only for `ADMIN` with no judoka/competition/combat data scopes, and judoka/competition/combat read-write scopes limited to the caller's own perimeter (no club-wide dashboard access) for `PARENT` and `JUDOKA`.
-- **MCP-006**: The remote MCP endpoint shall enforce the minted JWT MCP access token scopes on each request and shall expose only callable tools in `tools/list`, so a `PARENT` or `JUDOKA` caller can only read or write competitions/combats within their own managed scope and cannot reach the club-wide coach dashboard, and an `ADMIN` caller cannot reach judoka, competition, or combat data through MCP.
-- **MCP-007**: The remote MCP endpoint shall implement the MCP JSON-RPC 2.0 wire protocol, including the `initialize` handshake, so that standard MCP clients can connect without bespoke client code.
+- **MCP-002**: The remote MCP endpoint shall implement the MCP JSON-RPC 2.0 wire protocol, including the `initialize` handshake, so that standard MCP clients can connect without bespoke client code.
+- **MCP-003**: MCP clients shall authenticate via an OAuth 2.1 authorization-code flow with mandatory PKCE (S256); the authorization step shall delegate to the existing Google/Supabase login rather than a separate credential.
+- **MCP-004**: The OAuth authorization server shall support unauthenticated discovery (`/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`) and Dynamic Client Registration so that MCP clients can connect without manual configuration.
+- **MCP-005**: The backend shall mint a short-lived Kiroku-signed JWT MCP access token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
+- **MCP-006**: The JWT MCP access token shall expire after a short duration and shall encode only scopes from the fixed Kiroku MCP scope vocabulary assigned at mint time for the caller's Kiroku role: full read/write sports scopes for `COACH`, access-governance scopes only for `ADMIN` with no judoka/competition/combat data scopes, and judoka/competition/combat read-write scopes limited to the caller's own perimeter (no club-wide dashboard access) for `PARENT` and `JUDOKA`.
+- **MCP-007**: The remote MCP endpoint shall enforce the minted JWT MCP access token scopes on each request and shall expose only callable tools in `tools/list`, so a `PARENT` or `JUDOKA` caller can only read or write competitions/combats within their own managed scope and cannot reach the club-wide coach dashboard, and an `ADMIN` caller cannot reach judoka, competition, or combat data through MCP.
 
 ## 4. Acceptance Criteria
 
 - **AC-001**: Given a connected `JUDOKA`, when initial data is loaded, then only that user's competitions are visible.
 - **AC-002**: Given a connected `PARENT`, when initial data is loaded, then competitions for the parent and linked children are visible, and no unrelated data is visible.
 - **AC-003**: Given a connected `COACH`, when opening the Club Competition Dashboard, then they can see all club participants and results for any given tournament.
-- **AC-004**: Given a parent attempting to save a competition for an unmanaged judoka, when the request is processed, then the save is rejected.
-- **AC-005**: Given a competition save request missing name or date, when the request is processed, then the save is rejected.
-- **AC-006**: Given a combat create request missing competition, judoka, or result, when the request is processed, then the save is rejected.
-- **AC-007**: Given a competition deletion, when the operation succeeds, then no linked combat remains accessible for that judoka.
-- **AC-008**: Given a combat deletion, when the operation succeeds, then the parent competition still exists.
-- **AC-013**: Given a user reaching the login screen, when authentication options are displayed, then only Google login is available.
-- **AC-014**: Given a connected session, when the app header is rendered, then user identity is displayed and a logout button is available.
-- **AC-015**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
-- **AC-016**: Given a CSV-imported child profile has a direct account email, when that child logs in with the same Google account, then only that child's profile, competitions, and combats are visible.
-- **AC-017**: Given a Google account without judoka profile and without active invitation, when initial access is checked, then profile creation is rejected with an explicit invitation-required message.
-- **AC-018**: Given an admin creates an invitation for a new email and a target profile type, when that invited user logs in, then profile creation is allowed exactly for that invited email and invited type.
-- **AC-019**: Given an admin or coach role change, when the request succeeds, then the user's underlying `JUDOKA` or `PARENT` profile type remains unchanged.
-- **AC-020**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
-- **AC-021**: Given a user opens the competition creation form, when the form is displayed, then the competition date is prefilled with the current day.
-- **AC-022**: Given a user creates or edits a competition, when the form is displayed, then no ranking field is shown.
-- **AC-023**: Given a user wants to set a final ranking, when they open the finalization screen, then only the ranking field is available (not accessible from the edit form).
-- **AC-024**: Given a user typing combat details, when saving the combat, then they can optionally write any text in the notes field (e.g., "Perdu par Ippon sur Uchi-Mata").
-- **AC-025**: Given a connected `COACH`, when they create a club competition with selected judokas, then one club event and one linked individual competition per selected judoka are created.
-- **AC-025a**: Given a connected `COACH` selects `Minime` on the club competition creation form, when they choose participants, then only judokas with the `Minime` age category are selectable.
-- **AC-025b**: Given a connected `ADMIN`, when they use the application, then competition, combat, ranking, and club competition management actions are not available and server-side mutations are rejected.
-- **AC-025c**: Given a connected `ADMIN`, when they try to open sports dashboards or retrieve sports data through MCP, then access is rejected because admin rights do not include sports read permissions.
-- **AC-026**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
-- **AC-027**: Given a coach removes a participant from a club competition that has not started yet, when the operation succeeds, then that judoka's individual competition and its combats are permanently deleted.
-- **AC-027a**: Given a coach attempts to remove a participant from a club competition whose date is today or in the past, when the request is processed, then it is rejected and the participant stays linked.
-- **AC-028**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
-- **AC-030**: Given a connected `COACH`, when dashboard filters are set by competition, age category, or date range, then the displayed rates and counts are computed only from combats matching the active filters.
-- **AC-030a**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.
-- **AC-030b**: Given a connected `COACH`, when they ask the beta coach assistant for judokas who won by `Osaekomi`, for `Minime` judokas, for judokas who fought today, or for terms matching recorded attributes, then the response lists matching judokas and combats from stored data only.
-- **AC-031**: Given a connected `PARENT` or `JUDOKA`, when they try to access the club-wide dashboard, then access is rejected.
-- **AC-032**: Given an MCP client requests scopes outside the connected user's role perimeter, when the authorization or request is processed, then unsupported scopes are not granted and protected operations are rejected.
-- **AC-033**: Given an MCP OAuth request, when PKCE is missing/invalid or the redirect URI does not exactly match the registered client URI, then the request is rejected.
-- **AC-034**: Given a previously connected user opens the app offline, when cached data exists for that user, then the app displays it with an explicit offline/stale-data indicator.
-- **AC-035**: Given a connected user records a combat while offline inside their known scope, when the save action is submitted, then the combat is shown as pending synchronization and no backend success is claimed.
-- **AC-036**: Given pending offline operations exist, when network access returns, then the app replays them through the authenticated backend API and clears the pending state only after server confirmation.
-- **AC-037**: Given a pending offline operation is rejected during synchronization, when the error is displayed, then the user can keep, edit, or cancel the local operation.
-- **AC-038**: Given the user is offline, when they attempt an admin, deletion, import, login, or club competition participant-management action, then the action is blocked with an explicit offline message.
+- **AC-004**: Given a connected `ADMIN`, when they use the application, then competition, combat, ranking, and club competition management actions are not available and server-side mutations are rejected.
+- **AC-005**: Given a connected `ADMIN`, when they try to open sports dashboards or retrieve sports data through MCP, then access is rejected because admin rights do not include sports read permissions.
+- **AC-006**: Given a connected `PARENT` or `JUDOKA`, when they try to access the club-wide dashboard, then access is rejected.
+- **AC-007**: Given an admin or coach role change, when the request succeeds, then the user's underlying `JUDOKA` or `PARENT` profile type remains unchanged.
+- **AC-008**: Given a parent attempting to save a competition for an unmanaged judoka, when the request is processed, then the save is rejected.
+- **AC-009**: Given a competition save request missing name or date, when the request is processed, then the save is rejected.
+- **AC-010**: Given a combat create request missing competition, judoka, or result, when the request is processed, then the save is rejected.
+- **AC-011**: Given a competition deletion, when the operation succeeds, then no linked combat remains accessible for that judoka.
+- **AC-012**: Given a combat deletion, when the operation succeeds, then the parent competition still exists.
+- **AC-013**: Given a user opens the competition creation form, when the form is displayed, then the competition date is prefilled with the current day.
+- **AC-014**: Given a user creates or edits a competition, when the form is displayed, then no ranking field is shown.
+- **AC-015**: Given a user wants to set a final ranking, when they open the finalization screen, then only the ranking field is available (not accessible from the edit form).
+- **AC-016**: Given a user typing combat details, when saving the combat, then they can optionally write any text in the notes field (e.g., "Perdu par Ippon sur Uchi-Mata").
+- **AC-017**: Given a connected `COACH`, when they create a club competition with selected judokas, then one club event and one linked individual competition per selected judoka are created.
+- **AC-018**: Given a connected `COACH` selects `Minime` on the club competition creation form, when they choose participants, then only judokas with the `Minime` age category are selectable.
+- **AC-019**: Given a linked participation, when the concerned judoka or parent updates combats or ranking, then only that participation is modified.
+- **AC-020**: Given a coach removes a participant from a club competition that has not started yet, when the operation succeeds, then that judoka's individual competition and its combats are permanently deleted.
+- **AC-021**: Given a coach attempts to remove a participant from a club competition whose date is today or in the past, when the request is processed, then it is rejected and the participant stays linked.
+- **AC-022**: Given a coach opens a club competition's detail screen, when the participant list is displayed, then each participant shows their current ranking badge ("1er", "2e", ..., "Non classé").
+- **AC-023**: Given a user reaching the login screen, when authentication options are displayed, then only Google login is available.
+- **AC-024**: Given a CSV-imported child profile has a direct account email, when that child logs in with the same Google account, then only that child's profile, competitions, and combats are visible.
+- **AC-025**: Given a Google account without judoka profile and without active invitation, when initial access is checked, then profile creation is rejected with an explicit invitation-required message.
+- **AC-026**: Given an admin creates an invitation for a new email and a target profile type, when that invited user logs in, then profile creation is allowed exactly for that invited email and invited type.
+- **AC-027**: Given a connected session, when the app header is rendered, then user identity is displayed and a logout button is available.
+- **AC-028**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
+- **AC-029**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
+- **AC-030**: Given a previously connected user opens the app offline, when cached data exists for that user, then the app displays it with an explicit offline/stale-data indicator.
+- **AC-031**: Given a connected user records a combat while offline inside their known scope, when the save action is submitted, then the combat is shown as pending synchronization and no backend success is claimed.
+- **AC-032**: Given pending offline operations exist, when network access returns, then the app replays them through the authenticated backend API and clears the pending state only after server confirmation.
+- **AC-033**: Given a pending offline operation is rejected during synchronization, when the error is displayed, then the user can keep, edit, or cancel the local operation.
+- **AC-034**: Given the user is offline, when they attempt an admin, deletion, import, login, or club competition participant-management action, then the action is blocked with an explicit offline message.
+- **AC-035**: Given a connected `COACH`, when dashboard filters are set by competition, age category, or date range, then the displayed rates and counts are computed only from combats matching the active filters.
+- **AC-036**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.
+- **AC-037**: Given a connected `COACH`, when they ask the beta coach assistant for judokas who won by `Osaekomi`, for `Minime` judokas, for judokas who fought today, or for terms matching recorded attributes, then the response lists matching judokas and combats from stored data only.
+- **AC-038**: Given an MCP client requests scopes outside the connected user's role perimeter, when the authorization or request is processed, then unsupported scopes are not granted and protected operations are rejected.
+- **AC-039**: Given an MCP OAuth request, when PKCE is missing/invalid or the redirect URI does not exactly match the registered client URI, then the request is rejected.
 
 ## 5. Examples & Edge Cases
 
