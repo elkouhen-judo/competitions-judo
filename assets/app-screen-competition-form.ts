@@ -172,8 +172,11 @@
       const draws = state.currentCombats.filter((combat) => combat.result === "Egalité").length;
       const scoredCombats = state.currentCombats.filter((combat) => (combat.scores || []).length > 0).length;
       const victoryRate = total ? Math.round((wins / total) * 100) : 0;
-      const finalizationStatus = state.currentCompetition?.result
-        ? `Classement ${state.currentCompetition.result}`
+      const finalizationResult = state.currentCompetition?.result || "";
+      const finalizationStatus = finalizationResult
+        ? finalizationResult === "Non classé"
+          ? "Non classé"
+          : `Classement ${finalizationResult}`
         : "À finaliser";
       return {
         total,

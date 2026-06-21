@@ -284,6 +284,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
   assert.match(bundle, /id="finalization_classement"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
+  assert.match(client, /finalizationResult === "Non classé"/);
 });
 
 test("judoka forms do not expose birth year fields", () => {
@@ -477,8 +478,12 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.match(client, /podiumHighlights\.push\(`\$\{PODIUM_LEVEL_LABELS\[level\] \|\| level\} \$\{podiumCount\}x\$\{PODIUM_PLACE_EMOJIS\[place\]\}`\)/);
   assert.match(client, /podiumHighlights\.join\("\\n"\)/);
   assert.match(bundle, /class="stat-value stat-value-multiline">\{\{ coachDashboardTopPodiumLevel \}\}/);
+  assert.match(client, /const coachDashboardTopQualityIssue = window\.Vue\.computed/);
+  assert.match(client, /issue\.rate > topIssue\.rate/);
   assert.match(bundle, /coachDashboardMainQualityIssue/);
   assert.match(bundle, /coachDashboardSummaryInsight/);
+  assert.match(bundle, /Compétitions analysées/);
+  assert.match(bundle, /\{\{ coachDashboardStats\.analyzedCompetitions \}\}/);
   assert.ok(
     bundle.indexOf("<h3>Synthèse coach</h3>") < bundle.indexOf("<h3>Podiums"),
     "the dashboard summary should appear before detailed podium metrics"
