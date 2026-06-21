@@ -28,7 +28,7 @@
     const defaultCombatFormViewState = {
       combatFormTitle: "Ajouter un combat",
       combatFormSubtitle: "Combat de la compétition en cours",
-      saveCombatButtonText: "Ajouter le combat",
+      saveCombatButtonText: "Enregistrer",
       combatForm: { ...defaultCombatForm }
     };
 
@@ -118,6 +118,7 @@
       resetCombatForm();
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
       const competitionName = getCurrentCompetition().name;
+      let isEditingExistingCombat = false;
 
       if (combatId) {
         const combat = state.currentCombats.find((c) => String(c.combatId) === String(combatId));
@@ -127,10 +128,11 @@
           return;
         }
 
+        isEditingExistingCombat = true;
         Object.assign(combatFormViewModel, {
           combatFormTitle: "Modifier le combat",
           combatFormSubtitle: competitionName || "",
-          saveCombatButtonText: "Enregistrer le combat"
+          saveCombatButtonText: "Enregistrer"
         });
         Object.assign(combatFormViewModel.combatForm, {
           combatId: combat.combatId || "",
@@ -156,7 +158,24 @@
       }
 
       showView("combatFormView");
-      window.Vue.nextTick(() => $("combat_resultat").focus());
+      window.Vue.nextTick(() => $(getCombatFormFocusTarget(isEditingExistingCombat)).focus());
+    }
+
+    function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
+      const form = combatFormViewModel.combatForm;
+      if (!isEditingExistingCombat || !form.result) {
+        return "combat_resultat";
+      }
+      if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
+        return "combat_type_victoire";
+      }
+      if (!form.opponent) {
+        return "combat_adversaire";
+      }
+      if (!form.opponentStance) {
+        return "combat_garde_adversaire";
+      }
+      return "saveCombatButton";
     }
 
     function cancelCombatForm() {
@@ -293,7 +312,7 @@
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",
         combatFormSubtitle: "Combat de la compétition en cours",
-        saveCombatButtonText: "Ajouter le combat"
+        saveCombatButtonText: "Enregistrer"
       });
       syncCombatDecisionVisibility(true);
     }

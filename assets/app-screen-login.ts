@@ -111,7 +111,7 @@
       }
 
       if (!app.state.isOnline && app.loadCachedInitialData()) {
-        screens.home.showHome();
+        app.restoreNavigationState();
         return;
       }
 
@@ -125,11 +125,11 @@
           }
 
           applyInitialData(data);
-          screens.home.showHome();
+          app.restoreNavigationState();
         },
         (error) => {
           if (app.loadCachedInitialData()) {
-            screens.home.showHome();
+            app.restoreNavigationState();
             return;
           }
 

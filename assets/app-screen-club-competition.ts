@@ -324,7 +324,7 @@
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = [];
       clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked = false;
       clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
-      showView("clubCompetitionDetailView");
+      showView("clubCompetitionDetailView", { routeState: { clubCompetitionId: id } });
 
       app.runServer(
         "getClubCompetitionDetail",
