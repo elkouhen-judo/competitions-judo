@@ -1,0 +1,22 @@
+id: no-repository-import-outside-service
+snapshots:
+  import type { CompetitionsRepository } from "../repositories/competitions.repository";:
+    labels:
+    - source: import type { CompetitionsRepository } from "../repositories/competitions.repository";
+      style: primary
+      start: 0
+      end: 86
+    - source: '"../repositories/competitions.repository"'
+      style: secondary
+      start: 44
+      end: 85
+  import { CompetitionsRepository } from "../repositories/competitions.repository";:
+    labels:
+    - source: import { CompetitionsRepository } from "../repositories/competitions.repository";
+      style: primary
+      start: 0
+      end: 81
+    - source: '"../repositories/competitions.repository"'
+      style: secondary
+      start: 39
+      end: 80

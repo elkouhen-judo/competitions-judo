@@ -1,0 +1,6 @@
+ruleDirs:
+- /Users/dev/competitions-judo/rules
+testConfigs:
+- testDir: /Users/dev/competitions-judo/rule-tests
+utilDirs:
+- /Users/dev/competitions-judo/utils

@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-repository-import-outside-service
+message: Only core/services may import repository implementations. Inject the repository into a service instead, or import shared types from "repositories/types" if you only need the DTO shape.
+severity: error
+language: TypeScript
+files:
+  - "core/**"
+  - "assets/**"
+ignores:
+  - "core/services/**"
+  - "core/repositories/**"
+  - "**/*.repository.ts"
+rule:
+  all:
+    - kind: import_statement
+      has:
+        field: source
+        regex: "repositories/"
+    - not:
+        has:
+          field: source
+          regex: "repositories/types"
