@@ -20,7 +20,10 @@
     "db:check": "node scripts/db-check.js",
     "db:reset": "node scripts/db-reset.js",
     "redeploy:prod": "npm run db:pull-env:prod && npm run db:reset && npm run db:deploy && npm run app:deploy:prod",
-    "redeploy:dev": "npm run db:pull-env:dev && npm run db:reset && npm run db:deploy && npm run app:deploy:dev"
+    "redeploy:dev": "npm run db:pull-env:dev && npm run db:reset && npm run db:deploy && npm run app:deploy:dev",
+    "sonar:up": "docker-compose -f docker-compose.sonarqube.yml up -d",
+    "sonar:down": "docker-compose -f docker-compose.sonarqube.yml down",
+    "sonar:scan": "docker run --rm --network=host -e SONAR_HOST_URL=http://localhost:9090 -e SONAR_TOKEN -v \"$PWD:/usr/src\" sonarsource/sonar-scanner-cli"
   },
   "engines": {
     "node": ">=20"
@@ -39,10 +42,6 @@
     "esbuild@0.28.1": true
   },
   "dependencies": {
-  "tree-sitter": "0.21.1",
-  "tree-sitter-typescript": "0.23.2",
-  "tree-sitter-javascript": "0.23.1",
-  "tree-sitter-html": "0.23.2",
-  "tree-sitter-css": "0.23.1"
+
   }
 }
