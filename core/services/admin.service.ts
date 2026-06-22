@@ -66,10 +66,28 @@ interface UserImportContext {
   linksByParent: Map<string, Set<string>>;
 }
 
-export default function createAdminService(deps: AdminServiceDeps): AdminService {
+interface UserImportControllerDeps {
+  judokasRepository: JudokasRepository;
+  parentLinksRepository: ParentLinksRepository;
+  userContextService: UserContextService;
+  buildJudokaId: () => string;
+  cleanText: (value: unknown) => string;
+  createEmail: typeof createEmail;
+  createJudoka: typeof createJudoka;
+  createManagedChild: typeof createManagedChild;
+  createProfileType: typeof createProfileType;
+  createHandedness: typeof createHandedness;
+  createYearInCategory: typeof createYearInCategory;
+  normalizeEmail: (value: unknown) => string;
+  requireAdminUser: (email: string) => Promise<JudokaRow>;
+  getAccessInvitation: (email: string) => Promise<AccessInvitationRow | null>;
+}
+
+// CSV import concern: resolving each row against existing judokas/invitations/parent
+// links (with a per-import cache to avoid repeat lookups) and creating or updating
+// accounts as needed. Kept separate from admin management (grant/revoke/delete) below.
+function createUserImportController(deps: UserImportControllerDeps) {
   const {
-    competitionsRepository,
-    invitationsRepository,
     judokasRepository,
     parentLinksRepository,
     userContextService,
@@ -80,35 +98,11 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     createManagedChild,
     createProfileType,
     createHandedness,
-    createWeightCategory,
     createYearInCategory,
-    getCurrentDate = () => new Date().toISOString().slice(0, 10),
-    normalizeEmail
+    normalizeEmail,
+    requireAdminUser,
+    getAccessInvitation
   } = deps;
-
-  async function requireAdminUser(email: string): Promise<JudokaRow> {
-    const user = await userContextService.getCurrentUser(email);
-    if (!user) {
-      throw new Error(`Accès refusé pour : ${email}`);
-    }
-    if (!createJudoka(toCanonicalJudoka(user)).isAdmin()) {
-      throw new Error("Gestion des admins réservée aux admins.");
-    }
-    return user;
-  }
-
-  async function getAdmins(): Promise<JudokaRow[]> {
-    return judokasRepository.listAdmins();
-  }
-
-  async function getAccessInvitation(email: string): Promise<AccessInvitationRow | null> {
-    const normalizedEmail = normalizeEmail(email);
-    if (!normalizedEmail) {
-      return null;
-    }
-
-    return invitationsRepository.getByEmail(normalizedEmail);
-  }
 
   function createUserImportContext(): UserImportContext {
     return {
@@ -205,37 +199,6 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     const invitation = await getAccessInvitation(normalizedEmail);
     context.invitationsByEmail.set(normalizedEmail, invitation);
     return invitation;
-  }
-
-  async function getAdminsManagement(email: string) {
-    const user = await requireAdminUser(email);
-    return {
-      user: toCanonicalJudoka(user),
-      admins: (await getAdmins()).map(toCanonicalJudoka),
-      users: (await judokasRepository.listAll()).map(toCanonicalJudoka),
-      accessInvitations: (await invitationsRepository.listAll()).map(toInvitationReadModel)
-    };
-  }
-
-  async function grantAdminRole(email: string, targetEmail: string) {
-    await requireAdminUser(email);
-    const normalizedEmail = createEmail(targetEmail);
-
-    const target = await userContextService.getCurrentUser(normalizedEmail);
-    if (!target) {
-      throw new Error("Aucun judoka trouvé avec cet email.");
-    }
-
-    await judokasRepository.update(
-      target.id_judoka,
-      createJudoka(toCanonicalJudoka(target)).grantAdminRole()
-    );
-
-    return {
-      success: true,
-      judokaId: target.id_judoka,
-      message: "Droits admin accordés."
-    };
   }
 
   async function createAccountProfile(
@@ -595,6 +558,101 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       imported: results.filter((result) => result.success).length,
       failed: results.filter((result) => !result.success).length,
       results
+    };
+  }
+
+  return { importUsersCsv };
+}
+
+export default function createAdminService(deps: AdminServiceDeps): AdminService {
+  const {
+    competitionsRepository,
+    invitationsRepository,
+    judokasRepository,
+    parentLinksRepository,
+    userContextService,
+    buildJudokaId,
+    cleanText,
+    createEmail,
+    createJudoka,
+    createManagedChild,
+    createProfileType,
+    createHandedness,
+    createWeightCategory,
+    createYearInCategory,
+    getCurrentDate = () => new Date().toISOString().slice(0, 10),
+    normalizeEmail
+  } = deps;
+
+  async function requireAdminUser(email: string): Promise<JudokaRow> {
+    const user = await userContextService.getCurrentUser(email);
+    if (!user) {
+      throw new Error(`Accès refusé pour : ${email}`);
+    }
+    if (!createJudoka(toCanonicalJudoka(user)).isAdmin()) {
+      throw new Error("Gestion des admins réservée aux admins.");
+    }
+    return user;
+  }
+
+  async function getAdmins(): Promise<JudokaRow[]> {
+    return judokasRepository.listAdmins();
+  }
+
+  async function getAccessInvitation(email: string): Promise<AccessInvitationRow | null> {
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+
+    return invitationsRepository.getByEmail(normalizedEmail);
+  }
+
+  const { importUsersCsv } = createUserImportController({
+    judokasRepository,
+    parentLinksRepository,
+    userContextService,
+    buildJudokaId,
+    cleanText,
+    createEmail,
+    createJudoka,
+    createManagedChild,
+    createProfileType,
+    createHandedness,
+    createYearInCategory,
+    normalizeEmail,
+    requireAdminUser,
+    getAccessInvitation
+  });
+
+  async function getAdminsManagement(email: string) {
+    const user = await requireAdminUser(email);
+    return {
+      user: toCanonicalJudoka(user),
+      admins: (await getAdmins()).map(toCanonicalJudoka),
+      users: (await judokasRepository.listAll()).map(toCanonicalJudoka),
+      accessInvitations: (await invitationsRepository.listAll()).map(toInvitationReadModel)
+    };
+  }
+
+  async function grantAdminRole(email: string, targetEmail: string) {
+    await requireAdminUser(email);
+    const normalizedEmail = createEmail(targetEmail);
+
+    const target = await userContextService.getCurrentUser(normalizedEmail);
+    if (!target) {
+      throw new Error("Aucun judoka trouvé avec cet email.");
+    }
+
+    await judokasRepository.update(
+      target.id_judoka,
+      createJudoka(toCanonicalJudoka(target)).grantAdminRole()
+    );
+
+    return {
+      success: true,
+      judokaId: target.id_judoka,
+      message: "Droits admin accordés."
     };
   }
 

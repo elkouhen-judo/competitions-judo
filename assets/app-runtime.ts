@@ -6,6 +6,7 @@ import type {
   InitialData,
   KirokuApp,
   KirokuAppState,
+  KirokuUi,
   NavigationSnapshot,
   NotificationsApi,
   PendingOfflineOperation,
@@ -57,93 +58,329 @@ function createInitialState(): KirokuAppState {
 }
 
 (() => {
+  const initialDataCachePrefix = "kiroku_initial_data:";
+  const lastInitialDataCacheKey = "kiroku_initial_data:last";
+  const competitionDetailCachePrefix = "kiroku_competition_detail:";
+  const pendingOperationsStoragePrefix = "kiroku_pending_ops:";
 
-  window.createKirokuApp = function createKirokuApp() {
-    const runtimeConfig: RuntimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
-    const defaultListPageSize = 10;
-    const state = window.Vue.reactive(createInitialState());
+  interface HeaderViewModel {
+    showHeader: boolean;
+    userName: string;
+    roleLabel: string;
+    showOfflineStatus: boolean;
+    offlineStatusText: string;
+  }
 
-    const ui = window.KirokuUI;
-    const { $, viewIds } = ui;
-    const notifications: NotificationsApi = window.createKirokuNotifications();
-    const { clearMessage, showError, showSuccess } = notifications;
+  function setupTooltipPositioning() {
+    const tooltipSelector = ".tooltip, .info-tip";
+    const contentSelector = ".tooltip-content, .info-tip-bubble";
+    const viewportPadding = 12;
 
-    // Assigned once below, but must stay `let`: closures defined here (getLoginScreen,
-    // onInvitationRequired) capture it by reference before that assignment runs.
-    // eslint-disable-next-line prefer-const
-    let loginScreen: AppScreens["login"] | undefined;
-
-    function getLoginScreen(): AppScreens["login"] {
-      if (!loginScreen) {
-        throw new Error("Écran de connexion non initialisé.");
+    const findTooltip = (target: EventTarget | null): HTMLElement | null => {
+      if (!(target instanceof Element)) {
+        return null;
       }
-      return loginScreen;
-    }
+      const tooltip = target.closest(tooltipSelector);
+      return tooltip instanceof HTMLElement ? tooltip : null;
+    };
 
-    const headerViewModel = window.Vue.reactive({
-      showHeader: false,
-      userName: "",
-      roleLabel: "",
-      showOfflineStatus: false,
-      offlineStatusText: ""
+    const syncTooltipPosition = (tooltip: HTMLElement) => {
+      const content = tooltip.querySelector(contentSelector);
+      if (!(content instanceof HTMLElement)) {
+        return;
+      }
+
+      tooltip.style.removeProperty("--tooltip-shift-x");
+      tooltip.style.removeProperty("--tooltip-arrow-shift-x");
+      const rect = content.getBoundingClientRect();
+      const rightLimit = window.innerWidth - viewportPadding;
+      let shift = 0;
+
+      if (rect.left < viewportPadding) {
+        shift = viewportPadding - rect.left;
+      } else if (rect.right > rightLimit) {
+        shift = rightLimit - rect.right;
+      }
+
+      const roundedShift = Math.round(shift);
+      tooltip.style.setProperty("--tooltip-shift-x", `${roundedShift}px`);
+      tooltip.style.setProperty("--tooltip-arrow-shift-x", `${-roundedShift}px`);
+    };
+
+    document.addEventListener("pointerover", (event) => {
+      const tooltip = findTooltip(event.target);
+      if (tooltip) {
+        syncTooltipPosition(tooltip);
+      }
     });
-    const initialDataCachePrefix = "kiroku_initial_data:";
-    const lastInitialDataCacheKey = "kiroku_initial_data:last";
-    const competitionDetailCachePrefix = "kiroku_competition_detail:";
-    const pendingOperationsStoragePrefix = "kiroku_pending_ops:";
+    document.addEventListener("focusin", (event) => {
+      const tooltip = findTooltip(event.target);
+      if (tooltip) {
+        syncTooltipPosition(tooltip);
+      }
+    });
+    window.addEventListener("resize", () => {
+      document.querySelectorAll<HTMLElement>(tooltipSelector).forEach(syncTooltipPosition);
+    });
+  }
+
+  // Routing/history concern: which view is shown, how it's reflected in the URL/history
+  // entry, and how a navigation snapshot is persisted/restored across reloads. Decoupled
+  // from the data layer below — it only ever reaches into `screens` and `state`.
+  function createNavigationController(ui: KirokuUi, state: KirokuAppState, screens: AppScreens) {
+    const { $, viewIds } = ui;
     const navigationStateStorageKey = "kiroku_navigation_state";
-    const rpcTimeoutMs = 20000;
     let currentViewId: ViewId = "loginView";
     let hasNavigationState = false;
 
-    ui.mountViewModel("appHeader", headerViewModel, {
-      logoutUser
-    });
+    function showHome() {
+      screens.home.showHome();
+    }
 
-    const auth: AuthApi = window.createKirokuAuth({
-      runtimeConfig,
-      onInvitationRequired: () => loginScreen && loginScreen.showInvitationRequired(),
-      onError: showError
-    });
-    const { clearVercelSession, getValidVercelSession, logoutSupabaseSession } = auth;
+    function readHistoryViewId(stateValue: unknown): ViewId {
+      const navigationState = readHistoryNavigationState(stateValue);
+      if (navigationState) {
+        return navigationState.viewId;
+      }
 
-    ui.showView = showView;
+      const hashView = getViewFromHash(window.location.hash);
+      return hashView || currentViewId || "homeView";
+    }
 
-    const screens = {} as AppScreens;
-    const app: KirokuApp = {
-      applyInitialData,
-      auth,
-      cancelPendingOperation,
-      confirmAndRun,
-      defaultListPageSize,
-      loadCachedInitialData,
-      notifications,
+    function readHistoryNavigationState(stateValue: unknown): NavigationSnapshot | null {
+      if (stateValue && typeof stateValue === "object" && "kirokuNavigation" in stateValue) {
+        return normalizeNavigationSnapshot(
+          (stateValue as { kirokuNavigation?: unknown }).kirokuNavigation
+        );
+      }
+      if (stateValue && typeof stateValue === "object" && "kirokuView" in stateValue) {
+        const viewId = String((stateValue as { kirokuView?: unknown }).kirokuView || "");
+        if (isViewId(viewId)) {
+          return { viewId };
+        }
+      }
+      return null;
+    }
+
+    function isViewId(value: string): value is ViewId {
+      return viewIds.includes(value as ViewId);
+    }
+
+    function getViewFromHash(hash: string): ViewId | "" {
+      const slug = String(hash || "").replace(/^#\/?/, "");
+      const found = viewIds.find((viewId) => viewId.replace(/View$/, "").toLowerCase() === slug);
+      return found || "";
+    }
+
+    function getViewHash(id: ViewId) {
+      return `#${id.replace(/View$/, "").toLowerCase()}`;
+    }
+
+    function syncHistory(id: ViewId, replace: boolean, navigationState: NavigationSnapshot) {
+      const stateValue = { kirokuView: id, kirokuNavigation: navigationState };
+      const url = getViewHash(id);
+      if (replace || !hasNavigationState) {
+        window.history.replaceState(stateValue, "", url);
+        hasNavigationState = true;
+        return;
+      }
+
+      if (window.history.state && window.history.state.kirokuView === id) {
+        return;
+      }
+
+      window.history.pushState(stateValue, "", url);
+    }
+
+    function focusActiveView(id: ViewId, preserveScroll: boolean) {
+      const view = $(id);
+      if (!preserveScroll) {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      view.setAttribute("tabindex", "-1");
+      window.Vue.nextTick(() => view.focus({ preventScroll: true }));
+    }
+
+    function showView(
+      id: ViewId,
+      options: {
+        replace?: boolean;
+        routeState?: Partial<NavigationSnapshot>;
+        skipHistory?: boolean;
+        preserveScroll?: boolean;
+      } = {}
+    ) {
+      viewIds.forEach((viewId) => {
+        $(viewId).classList.add("hidden");
+      });
+
+      $(id).classList.remove("hidden");
+      currentViewId = id;
+      const navigationState = persistNavigationState({ ...options.routeState, viewId: id });
+      if (!options.skipHistory) {
+        syncHistory(id, Boolean(options.replace), navigationState);
+      }
+      focusActiveView(id, Boolean(options.preserveScroll));
+    }
+
+    function getCurrentNavigationSnapshot(routeState: Partial<NavigationSnapshot> = {}): NavigationSnapshot {
+      return {
+        viewId: routeState.viewId || currentViewId,
+        homeMode: routeState.homeMode || state.homeMode,
+        homeFilterJudokaId:
+          routeState.homeFilterJudokaId !== undefined
+            ? routeState.homeFilterJudokaId
+            : state.homeFilterJudokaId,
+        competitionId:
+          routeState.competitionId !== undefined
+            ? routeState.competitionId
+            : state.currentCompetition?.competitionId || "",
+        judokaId:
+          routeState.judokaId !== undefined
+            ? routeState.judokaId
+            : state.currentJudokaProfile?.judoka?.judokaId || "",
+        clubCompetitionId: routeState.clubCompetitionId || "",
+        coachDashboardTab: routeState.coachDashboardTab
+      };
+    }
+
+    function normalizeNavigationSnapshot(value: unknown): NavigationSnapshot | null {
+      if (!value || typeof value !== "object") {
+        return null;
+      }
+      const candidate = value as Partial<NavigationSnapshot>;
+      const viewId = String(candidate.viewId || "");
+      if (!isViewId(viewId) || viewId === "loginView") {
+        return null;
+      }
+      return {
+        viewId,
+        homeMode: isHomeMode(candidate.homeMode) ? candidate.homeMode : undefined,
+        homeFilterJudokaId: String(candidate.homeFilterJudokaId || ""),
+        competitionId: String(candidate.competitionId || ""),
+        judokaId: String(candidate.judokaId || ""),
+        clubCompetitionId: String(candidate.clubCompetitionId || ""),
+        coachDashboardTab: candidate.coachDashboardTab === "chat" ? "chat" : "stats"
+      };
+    }
+
+    function isHomeMode(value: unknown): value is KirokuAppState["homeMode"] {
+      return ["judoka", "parentHome", "coachHome", "coach", "coachJudoka", "family"].includes(
+        String(value)
+      );
+    }
+
+    function persistNavigationState(routeState: Partial<NavigationSnapshot> = {}): NavigationSnapshot {
+      const snapshot = getCurrentNavigationSnapshot(routeState);
+      try {
+        sessionStorage.setItem(navigationStateStorageKey, JSON.stringify(snapshot));
+      } catch (_error) {
+        // Navigation restore is best-effort; browser storage can be unavailable in private contexts.
+      }
+      return snapshot;
+    }
+
+    function readSavedNavigationState(): NavigationSnapshot | null {
+      try {
+        const saved = sessionStorage.getItem(navigationStateStorageKey);
+        return saved ? normalizeNavigationSnapshot(JSON.parse(saved)) : null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function clearNavigationState() {
+      try {
+        sessionStorage.removeItem(navigationStateStorageKey);
+      } catch (_error) {
+        // Nothing to clear when session storage is unavailable.
+      }
+    }
+
+    function restoreNavigationState() {
+      const restored =
+        readHistoryNavigationState(window.history.state) ||
+        readSavedNavigationState() ||
+        normalizeNavigationSnapshot({ viewId: getViewFromHash(window.location.hash) });
+      showRestoredNavigationState(restored, { replace: true });
+    }
+
+    function showRestoredNavigationState(
+      restored: NavigationSnapshot | null,
+      options: { preserveScroll?: boolean; replace?: boolean; skipHistory?: boolean } = {}
+    ) {
+      if (!restored) {
+        showHome();
+        return;
+      }
+      if (restored.viewId === "competitionView" && restored.competitionId) {
+        screens.competition.openCompetition(restored.competitionId, true);
+        return;
+      }
+      if (restored.viewId === "judokaView" && restored.judokaId) {
+        screens.judoka.showJudokaProfile(restored.judokaId, true);
+        return;
+      }
+      if (restored.viewId === "clubCompetitionDetailView" && restored.clubCompetitionId) {
+        screens.competition.openClubCompetition(restored.clubCompetitionId);
+        return;
+      }
+      if (restored.viewId === "adminsView" && state.isAdmin) {
+        screens.admins.showAdminsManagement(true);
+        return;
+      }
+      if (restored.viewId === "coachDashboardView" && state.isCoach) {
+        restored.coachDashboardTab === "chat"
+          ? screens.coachDashboard.showCoachChat()
+          : screens.coachDashboard.showCoachDashboard();
+        return;
+      }
+      if (restored.viewId === "homeView") {
+        if (isHomeMode(restored.homeMode)) {
+          screens.home.setHomeMode(restored.homeMode);
+        }
+        if (restored.homeFilterJudokaId) {
+          state.homeFilterJudokaId = restored.homeFilterJudokaId;
+        }
+        showHome();
+        return;
+      }
+      showView(restored.viewId, options);
+    }
+
+    function setupHistoryNavigation() {
+      window.addEventListener("popstate", (event) => {
+        const navigationState = readHistoryNavigationState(event.state);
+        showRestoredNavigationState(navigationState, { preserveScroll: true, skipHistory: true });
+      });
+    }
+
+    return {
+      showHome,
+      showView,
       persistNavigationState,
-      reloadInitialData,
-      reloadInitialDataAndShowAdmins,
-      reloadInitialDataThen,
-      resetApplicationState,
-      runtimeConfig,
-      runServer,
-      runServerWithOptions,
-      setHeaderVisible,
       restoreNavigationState,
-      screens,
-      state,
-      ui
+      clearNavigationState,
+      setupHistoryNavigation
     };
+  }
 
-    screens.home = window.createKirokuHomeScreen(app);
-    screens.judoka = window.createKirokuJudokaScreen(app);
-    screens.competition = window.createKirokuCompetitionScreen(app);
-    screens.admins = window.createKirokuAdminsScreen(app);
-    screens.coachDashboard = window.createKirokuCoachDashboardScreen(app);
-    loginScreen = window.createKirokuLoginScreen(app);
-    screens.login = loginScreen;
-    app.loginScreen = loginScreen;
-    setupNetworkStatus();
-    setupHistoryNavigation();
-    setupTooltipPositioning();
+  // Data concern: RPC calls (with session retry), the offline mutation queue, and the
+  // initial-data/competition-detail local caches that back them. Kept as one unit because
+  // every piece of it ultimately feeds the same request/response loop (an offline RPC call
+  // is queued here and later replayed through the same `runServerWithOptions`).
+  function createDataController(deps: {
+    state: KirokuAppState;
+    auth: AuthApi;
+    screens: AppScreens;
+    ui: KirokuUi;
+    headerViewModel: HeaderViewModel;
+    showError: NotificationsApi["showError"];
+    getLoginScreen: () => AppScreens["login"];
+  }) {
+    const { state, auth, screens, ui, headerViewModel, showError, getLoginScreen } = deps;
+    const { clearVercelSession, getValidVercelSession } = auth;
+    const rpcTimeoutMs = 20000;
 
     async function runServer<M extends RpcClientMethod>(
       method: M,
@@ -322,35 +559,6 @@ function createInitialState(): KirokuAppState {
 
     function wait(delayMs: number): Promise<void> {
       return new Promise((resolve) => window.setTimeout(resolve, delayMs));
-    }
-
-    function resetApplicationState() {
-      Object.assign(state, createInitialState());
-      clearNavigationState();
-    }
-
-    async function logoutUser() {
-      clearMessage();
-      await logoutSupabaseSession();
-      purgeLocalUserData();
-      resetApplicationState();
-      getLoginScreen().showVercelLogin();
-      showSuccess("Vous êtes déconnecté.");
-    }
-
-    function purgeLocalUserData() {
-      const prefixes = [
-        initialDataCachePrefix,
-        competitionDetailCachePrefix,
-        pendingOperationsStoragePrefix,
-        "kiroku_supabase_session"
-      ];
-      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
-        const key = localStorage.key(index) || "";
-        if (prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) {
-          localStorage.removeItem(key);
-        }
-      }
     }
 
     function getInitialDataCacheUserKey(data: InitialData) {
@@ -718,30 +926,12 @@ function createInitialState(): KirokuAppState {
       syncOfflineStatusHeader();
     }
 
-    function confirmAndRun<M extends RpcClientMethod>({
-      message,
-      method,
-      args,
-      onSuccess
-    }: {
-      message: string;
-      method: M;
-      args: RpcClientArgs<M>;
-      onSuccess?: (response: RpcClientResult<M>) => void;
-    }) {
-      if (!window.confirm(message)) {
-        return;
-      }
-
-      runServer(method, args, onSuccess, showError);
-    }
-
     function reloadInitialData(openCompetitionId?: string) {
       reloadInitialDataThen(() => {
         if (openCompetitionId) {
           screens.competition.openCompetition(openCompetitionId, true);
         } else {
-          showHome();
+          screens.home.showHome();
         }
       });
     }
@@ -762,8 +952,161 @@ function createInitialState(): KirokuAppState {
       reloadInitialDataThen(() => screens.admins.showAdminsManagement(true));
     }
 
-    function showHome() {
-      screens.home.showHome();
+    return {
+      runServer,
+      runServerWithOptions,
+      applyInitialData,
+      loadCachedInitialData,
+      reloadInitialData,
+      reloadInitialDataThen,
+      reloadInitialDataAndShowAdmins,
+      cancelPendingOperation,
+      syncPendingOperations,
+      setHeaderVisible,
+      syncOfflineStatusHeader
+    };
+  }
+
+  window.createKirokuApp = function createKirokuApp() {
+    const runtimeConfig: RuntimeConfig = window.KIROKU_RUNTIME_CONFIG || {};
+    const defaultListPageSize = 10;
+    const state = window.Vue.reactive(createInitialState());
+
+    const ui = window.KirokuUI;
+    const notifications: NotificationsApi = window.createKirokuNotifications();
+    const { clearMessage, showError, showSuccess } = notifications;
+
+    // Assigned once below, but must stay `let`: closures defined here (getLoginScreen,
+    // onInvitationRequired) capture it by reference before that assignment runs.
+    // eslint-disable-next-line prefer-const
+    let loginScreen: AppScreens["login"] | undefined;
+
+    function getLoginScreen(): AppScreens["login"] {
+      if (!loginScreen) {
+        throw new Error("Écran de connexion non initialisé.");
+      }
+      return loginScreen;
+    }
+
+    const headerViewModel: HeaderViewModel = window.Vue.reactive({
+      showHeader: false,
+      userName: "",
+      roleLabel: "",
+      showOfflineStatus: false,
+      offlineStatusText: ""
+    });
+
+    ui.mountViewModel("appHeader", headerViewModel, {
+      logoutUser
+    });
+
+    const screens = {} as AppScreens;
+    const navigation = createNavigationController(ui, state, screens);
+    const { showHome, persistNavigationState, restoreNavigationState, clearNavigationState, setupHistoryNavigation } =
+      navigation;
+    ui.showView = navigation.showView;
+
+    const auth: AuthApi = window.createKirokuAuth({
+      runtimeConfig,
+      onInvitationRequired: () => loginScreen && loginScreen.showInvitationRequired(),
+      onError: showError
+    });
+
+    const data = createDataController({ state, auth, screens, ui, headerViewModel, showError, getLoginScreen });
+    const {
+      runServer,
+      runServerWithOptions,
+      applyInitialData,
+      loadCachedInitialData,
+      reloadInitialData,
+      reloadInitialDataThen,
+      reloadInitialDataAndShowAdmins,
+      cancelPendingOperation,
+      syncPendingOperations,
+      setHeaderVisible,
+      syncOfflineStatusHeader
+    } = data;
+
+    const app: KirokuApp = {
+      applyInitialData,
+      auth,
+      cancelPendingOperation,
+      confirmAndRun,
+      defaultListPageSize,
+      loadCachedInitialData,
+      notifications,
+      persistNavigationState,
+      reloadInitialData,
+      reloadInitialDataAndShowAdmins,
+      reloadInitialDataThen,
+      resetApplicationState,
+      runtimeConfig,
+      runServer,
+      runServerWithOptions,
+      setHeaderVisible,
+      restoreNavigationState,
+      screens,
+      state,
+      ui
+    };
+
+    screens.home = window.createKirokuHomeScreen(app);
+    screens.judoka = window.createKirokuJudokaScreen(app);
+    screens.competition = window.createKirokuCompetitionScreen(app);
+    screens.admins = window.createKirokuAdminsScreen(app);
+    screens.coachDashboard = window.createKirokuCoachDashboardScreen(app);
+    loginScreen = window.createKirokuLoginScreen(app);
+    screens.login = loginScreen;
+    app.loginScreen = loginScreen;
+    setupNetworkStatus();
+    setupHistoryNavigation();
+    setupTooltipPositioning();
+
+    function resetApplicationState() {
+      Object.assign(state, createInitialState());
+      clearNavigationState();
+    }
+
+    async function logoutUser() {
+      clearMessage();
+      await auth.logoutSupabaseSession();
+      purgeLocalUserData();
+      resetApplicationState();
+      getLoginScreen().showVercelLogin();
+      showSuccess("Vous êtes déconnecté.");
+    }
+
+    function purgeLocalUserData() {
+      const prefixes = [
+        initialDataCachePrefix,
+        competitionDetailCachePrefix,
+        pendingOperationsStoragePrefix,
+        "kiroku_supabase_session"
+      ];
+      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+        const key = localStorage.key(index) || "";
+        if (prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
+
+    function confirmAndRun<M extends RpcClientMethod>({
+      message,
+      method,
+      args,
+      onSuccess
+    }: {
+      message: string;
+      method: M;
+      args: RpcClientArgs<M>;
+      onSuccess?: (response: RpcClientResult<M>) => void;
+    }) {
+      if (!window.confirm(message)) {
+        return;
+      }
+
+      runServer(method, args, onSuccess, showError);
     }
 
     function setupNetworkStatus() {
@@ -781,277 +1124,6 @@ function createInitialState(): KirokuAppState {
         syncOfflineStatusHeader();
         showError({ message: "Connexion perdue. Les actions seront bloquées jusqu'au retour du réseau." });
       });
-    }
-
-    function setupHistoryNavigation() {
-      window.addEventListener("popstate", (event) => {
-        const navigationState = readHistoryNavigationState(event.state);
-        showRestoredNavigationState(navigationState, { preserveScroll: true, skipHistory: true });
-      });
-    }
-
-    function setupTooltipPositioning() {
-      const tooltipSelector = ".tooltip, .info-tip";
-      const contentSelector = ".tooltip-content, .info-tip-bubble";
-      const viewportPadding = 12;
-
-      const findTooltip = (target: EventTarget | null): HTMLElement | null => {
-        if (!(target instanceof Element)) {
-          return null;
-        }
-        const tooltip = target.closest(tooltipSelector);
-        return tooltip instanceof HTMLElement ? tooltip : null;
-      };
-
-      const syncTooltipPosition = (tooltip: HTMLElement) => {
-        const content = tooltip.querySelector(contentSelector);
-        if (!(content instanceof HTMLElement)) {
-          return;
-        }
-
-        tooltip.style.removeProperty("--tooltip-shift-x");
-        tooltip.style.removeProperty("--tooltip-arrow-shift-x");
-        const rect = content.getBoundingClientRect();
-        const rightLimit = window.innerWidth - viewportPadding;
-        let shift = 0;
-
-        if (rect.left < viewportPadding) {
-          shift = viewportPadding - rect.left;
-        } else if (rect.right > rightLimit) {
-          shift = rightLimit - rect.right;
-        }
-
-        const roundedShift = Math.round(shift);
-        tooltip.style.setProperty("--tooltip-shift-x", `${roundedShift}px`);
-        tooltip.style.setProperty("--tooltip-arrow-shift-x", `${-roundedShift}px`);
-      };
-
-      document.addEventListener("pointerover", (event) => {
-        const tooltip = findTooltip(event.target);
-        if (tooltip) {
-          syncTooltipPosition(tooltip);
-        }
-      });
-      document.addEventListener("focusin", (event) => {
-        const tooltip = findTooltip(event.target);
-        if (tooltip) {
-          syncTooltipPosition(tooltip);
-        }
-      });
-      window.addEventListener("resize", () => {
-        document.querySelectorAll<HTMLElement>(tooltipSelector).forEach(syncTooltipPosition);
-      });
-    }
-
-    function readHistoryViewId(stateValue: unknown): ViewId {
-      const navigationState = readHistoryNavigationState(stateValue);
-      if (navigationState) {
-        return navigationState.viewId;
-      }
-
-      const hashView = getViewFromHash(window.location.hash);
-      return hashView || currentViewId || "homeView";
-    }
-
-    function readHistoryNavigationState(stateValue: unknown): NavigationSnapshot | null {
-      if (stateValue && typeof stateValue === "object" && "kirokuNavigation" in stateValue) {
-        return normalizeNavigationSnapshot(
-          (stateValue as { kirokuNavigation?: unknown }).kirokuNavigation
-        );
-      }
-      if (stateValue && typeof stateValue === "object" && "kirokuView" in stateValue) {
-        const viewId = String((stateValue as { kirokuView?: unknown }).kirokuView || "");
-        if (isViewId(viewId)) {
-          return { viewId };
-        }
-      }
-      return null;
-    }
-
-    function isViewId(value: string): value is ViewId {
-      return viewIds.includes(value as ViewId);
-    }
-
-    function getViewFromHash(hash: string): ViewId | "" {
-      const slug = String(hash || "").replace(/^#\/?/, "");
-      const found = viewIds.find((viewId) => viewId.replace(/View$/, "").toLowerCase() === slug);
-      return found || "";
-    }
-
-    function getViewHash(id: ViewId) {
-      return `#${id.replace(/View$/, "").toLowerCase()}`;
-    }
-
-    function syncHistory(id: ViewId, replace: boolean, navigationState: NavigationSnapshot) {
-      const stateValue = { kirokuView: id, kirokuNavigation: navigationState };
-      const url = getViewHash(id);
-      if (replace || !hasNavigationState) {
-        window.history.replaceState(stateValue, "", url);
-        hasNavigationState = true;
-        return;
-      }
-
-      if (window.history.state && window.history.state.kirokuView === id) {
-        return;
-      }
-
-      window.history.pushState(stateValue, "", url);
-    }
-
-    function focusActiveView(id: ViewId, preserveScroll: boolean) {
-      const view = $(id);
-      if (!preserveScroll) {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      }
-      view.setAttribute("tabindex", "-1");
-      window.Vue.nextTick(() => view.focus({ preventScroll: true }));
-    }
-
-    function showView(
-      id: ViewId,
-      options: {
-        replace?: boolean;
-        routeState?: Partial<NavigationSnapshot>;
-        skipHistory?: boolean;
-        preserveScroll?: boolean;
-      } = {}
-    ) {
-      viewIds.forEach((viewId) => {
-        $(viewId).classList.add("hidden");
-      });
-
-      $(id).classList.remove("hidden");
-      currentViewId = id;
-      const navigationState = persistNavigationState({ ...options.routeState, viewId: id });
-      if (!options.skipHistory) {
-        syncHistory(id, Boolean(options.replace), navigationState);
-      }
-      focusActiveView(id, Boolean(options.preserveScroll));
-    }
-
-    function getCurrentNavigationSnapshot(routeState: Partial<NavigationSnapshot> = {}): NavigationSnapshot {
-      return {
-        viewId: routeState.viewId || currentViewId,
-        homeMode: routeState.homeMode || state.homeMode,
-        homeFilterJudokaId:
-          routeState.homeFilterJudokaId !== undefined
-            ? routeState.homeFilterJudokaId
-            : state.homeFilterJudokaId,
-        competitionId:
-          routeState.competitionId !== undefined
-            ? routeState.competitionId
-            : state.currentCompetition?.competitionId || "",
-        judokaId:
-          routeState.judokaId !== undefined
-            ? routeState.judokaId
-            : state.currentJudokaProfile?.judoka?.judokaId || "",
-        clubCompetitionId: routeState.clubCompetitionId || "",
-        coachDashboardTab: routeState.coachDashboardTab
-      };
-    }
-
-    function normalizeNavigationSnapshot(value: unknown): NavigationSnapshot | null {
-      if (!value || typeof value !== "object") {
-        return null;
-      }
-      const candidate = value as Partial<NavigationSnapshot>;
-      const viewId = String(candidate.viewId || "");
-      if (!isViewId(viewId) || viewId === "loginView") {
-        return null;
-      }
-      return {
-        viewId,
-        homeMode: isHomeMode(candidate.homeMode) ? candidate.homeMode : undefined,
-        homeFilterJudokaId: String(candidate.homeFilterJudokaId || ""),
-        competitionId: String(candidate.competitionId || ""),
-        judokaId: String(candidate.judokaId || ""),
-        clubCompetitionId: String(candidate.clubCompetitionId || ""),
-        coachDashboardTab: candidate.coachDashboardTab === "chat" ? "chat" : "stats"
-      };
-    }
-
-    function isHomeMode(value: unknown): value is KirokuAppState["homeMode"] {
-      return ["judoka", "parentHome", "coachHome", "coach", "coachJudoka", "family"].includes(
-        String(value)
-      );
-    }
-
-    function persistNavigationState(routeState: Partial<NavigationSnapshot> = {}): NavigationSnapshot {
-      const snapshot = getCurrentNavigationSnapshot(routeState);
-      try {
-        sessionStorage.setItem(navigationStateStorageKey, JSON.stringify(snapshot));
-      } catch (_error) {
-        // Navigation restore is best-effort; browser storage can be unavailable in private contexts.
-      }
-      return snapshot;
-    }
-
-    function readSavedNavigationState(): NavigationSnapshot | null {
-      try {
-        const saved = sessionStorage.getItem(navigationStateStorageKey);
-        return saved ? normalizeNavigationSnapshot(JSON.parse(saved)) : null;
-      } catch (_error) {
-        return null;
-      }
-    }
-
-    function clearNavigationState() {
-      try {
-        sessionStorage.removeItem(navigationStateStorageKey);
-      } catch (_error) {
-        // Nothing to clear when session storage is unavailable.
-      }
-    }
-
-    function restoreNavigationState() {
-      const restored =
-        readHistoryNavigationState(window.history.state) ||
-        readSavedNavigationState() ||
-        normalizeNavigationSnapshot({ viewId: getViewFromHash(window.location.hash) });
-      showRestoredNavigationState(restored, { replace: true });
-    }
-
-    function showRestoredNavigationState(
-      restored: NavigationSnapshot | null,
-      options: { preserveScroll?: boolean; replace?: boolean; skipHistory?: boolean } = {}
-    ) {
-      if (!restored) {
-        showHome();
-        return;
-      }
-      if (restored.viewId === "competitionView" && restored.competitionId) {
-        screens.competition.openCompetition(restored.competitionId, true);
-        return;
-      }
-      if (restored.viewId === "judokaView" && restored.judokaId) {
-        screens.judoka.showJudokaProfile(restored.judokaId, true);
-        return;
-      }
-      if (restored.viewId === "clubCompetitionDetailView" && restored.clubCompetitionId) {
-        screens.competition.openClubCompetition(restored.clubCompetitionId);
-        return;
-      }
-      if (restored.viewId === "adminsView" && state.isAdmin) {
-        screens.admins.showAdminsManagement(true);
-        return;
-      }
-      if (restored.viewId === "coachDashboardView" && state.isCoach) {
-        restored.coachDashboardTab === "chat"
-          ? screens.coachDashboard.showCoachChat()
-          : screens.coachDashboard.showCoachDashboard();
-        return;
-      }
-      if (restored.viewId === "homeView") {
-        if (isHomeMode(restored.homeMode)) {
-          screens.home.setHomeMode(restored.homeMode);
-        }
-        if (restored.homeFilterJudokaId) {
-          state.homeFilterJudokaId = restored.homeFilterJudokaId;
-        }
-        showHome();
-        return;
-      }
-      showView(restored.viewId, options);
     }
 
     app.showHome = showHome;

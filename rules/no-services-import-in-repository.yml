@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-services-import-in-repository
+message: Repositories must not depend on application services. Services orchestrate repositories, not the other way around — pass any needed data in through the repository's own interface.
+severity: error
+language: TypeScript
+files:
+  - "core/repositories/**"
+rule:
+  kind: import_statement
+  has:
+    field: source
+    regex: "services/"

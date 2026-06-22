@@ -1,0 +1,5 @@
+id: no-core-require-outside-gateway-in-api
+valid:
+  - 'const { methods, verifySupabaseUser } = require("./_core");'
+invalid:
+  - 'module.exports = require("../core");'

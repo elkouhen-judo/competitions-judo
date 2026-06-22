@@ -1,0 +1,6 @@
+id: no-service-role-key-in-assets
+valid:
+  - "const key = runtimeConfig.supabaseAnonKey;"
+invalid:
+  - "const key = runtimeConfig.serviceRoleKey;"
+  - "const key = config.SUPABASE_SERVICE_ROLE_KEY;"

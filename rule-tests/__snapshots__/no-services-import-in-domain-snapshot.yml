@@ -1,0 +1,12 @@
+id: no-services-import-in-domain
+snapshots:
+  import { askCoachAssistant } from "../services/coach-assistant-search";:
+    labels:
+    - source: import { askCoachAssistant } from "../services/coach-assistant-search";
+      style: primary
+      start: 0
+      end: 71
+    - source: '"../services/coach-assistant-search"'
+      style: secondary
+      start: 34
+      end: 70

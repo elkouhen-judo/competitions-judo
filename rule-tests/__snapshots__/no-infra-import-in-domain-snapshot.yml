@@ -1,0 +1,12 @@
+id: no-infra-import-in-domain
+snapshots:
+  import { getSupabaseClient } from "../infra/supabase-client";:
+    labels:
+    - source: import { getSupabaseClient } from "../infra/supabase-client";
+      style: primary
+      start: 0
+      end: 61
+    - source: '"../infra/supabase-client"'
+      style: secondary
+      start: 34
+      end: 60

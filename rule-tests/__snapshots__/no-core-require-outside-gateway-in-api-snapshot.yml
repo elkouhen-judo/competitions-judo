@@ -1,0 +1,8 @@
+id: no-core-require-outside-gateway-in-api
+snapshots:
+  module.exports = require("../core");:
+    labels:
+    - source: require("../core")
+      style: primary
+      start: 17
+      end: 35

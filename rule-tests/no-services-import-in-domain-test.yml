@@ -1,0 +1,5 @@
+id: no-services-import-in-domain
+valid:
+  - 'import { PersonName } from "./access/person-name";'
+invalid:
+  - 'import { askCoachAssistant } from "../services/coach-assistant-search";'

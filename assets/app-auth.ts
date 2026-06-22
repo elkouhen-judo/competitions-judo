@@ -10,39 +10,10 @@
 
   const sessionStorageKey = "kiroku_supabase_session";
 
-  function createKirokuAuth({
-    runtimeConfig,
-    onInvitationRequired,
-    onError
-  }: {
-    runtimeConfig: RuntimeConfig;
-    onInvitationRequired: () => void;
-    onError: (error: unknown) => void;
-  }) {
-    function getResponsePreview(body: unknown) {
-      return String(body || "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 160);
-    }
-
-    async function readJsonResponse(
-      response: Response,
-      invalidMessage: string
-    ): Promise<SupabaseAuthResponse | null> {
-      const body = await response.text();
-      if (!body) {
-        return null;
-      }
-
-      try {
-        return JSON.parse(body) as SupabaseAuthResponse;
-      } catch (_error) {
-        const preview = getResponsePreview(body);
-        throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
-      }
-    }
-
+  // Local session storage concern: reading/writing the Supabase session in localStorage
+  // and decoding the email out of the JWT payload. Pure and dependency-free — no network
+  // calls, no runtimeConfig.
+  function createKirokuSessionStorage() {
     function readVercelSession(): SessionLike | null {
       try {
         return JSON.parse(localStorage.getItem(sessionStorageKey) || "null") as SessionLike | null;
@@ -85,6 +56,56 @@
           .toLowerCase();
       } catch (_error) {
         return "";
+      }
+    }
+
+    return {
+      readVercelSession,
+      saveVercelSession,
+      clearVercelSession,
+      hasLocalVercelSession,
+      getLocalSessionEmailKey
+    };
+  }
+
+  function createKirokuAuth({
+    runtimeConfig,
+    onInvitationRequired,
+    onError
+  }: {
+    runtimeConfig: RuntimeConfig;
+    onInvitationRequired: () => void;
+    onError: (error: unknown) => void;
+  }) {
+    const {
+      readVercelSession,
+      saveVercelSession,
+      clearVercelSession,
+      hasLocalVercelSession,
+      getLocalSessionEmailKey
+    } = createKirokuSessionStorage();
+
+    function getResponsePreview(body: unknown) {
+      return String(body || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 160);
+    }
+
+    async function readJsonResponse(
+      response: Response,
+      invalidMessage: string
+    ): Promise<SupabaseAuthResponse | null> {
+      const body = await response.text();
+      if (!body) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(body) as SupabaseAuthResponse;
+      } catch (_error) {
+        const preview = getResponsePreview(body);
+        throw new Error(preview ? `${invalidMessage} ${preview}` : invalidMessage);
       }
     }
 
