@@ -23,6 +23,7 @@ module.exports = function handler(_req, res) {
     "app-screen-competition.js",
     "app-screen-admins.js",
     "app-screen-coach-dashboard.js",
+    "coach-chat-widget.js",
     "app-runtime.js",
     "app.js"
   ];

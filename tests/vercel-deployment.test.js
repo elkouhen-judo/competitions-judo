@@ -152,30 +152,34 @@ test("vercel config routes the app shell and rpc endpoint", () => {
     destination: "/api/rpc"
   });
   assert.deepEqual(vercel.rewrites[4], {
+    source: "/api/coach-chat",
+    destination: "/api/coach-chat"
+  });
+  assert.deepEqual(vercel.rewrites[5], {
     source: "/mcp",
     destination: "/api/mcp"
   });
-  assert.deepEqual(vercel.rewrites[5], {
+  assert.deepEqual(vercel.rewrites[6], {
     source: "/mcp/authorize",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[6], {
+  assert.deepEqual(vercel.rewrites[7], {
     source: "/mcp/register",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[7], {
+  assert.deepEqual(vercel.rewrites[8], {
     source: "/mcp/token",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[8], {
+  assert.deepEqual(vercel.rewrites[9], {
     source: "/.well-known/oauth-authorization-server",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[9], {
+  assert.deepEqual(vercel.rewrites[10], {
     source: "/.well-known/oauth-protected-resource",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[10], {
+  assert.deepEqual(vercel.rewrites[11], {
     source: "/(.*)",
     destination: "/api/app"
   });
@@ -393,7 +397,10 @@ test("vercel login uses CSV-imported profiles without first-login name entry", (
   assert.doesNotMatch(registrationService, /child\.\$\{childId\.toLowerCase\(\)\}@kiroku\.local/);
   assert.deepEqual(migrationFiles, ["20260612000000_initial_schema.sql"]);
   assert.match(supabaseSchema, /email text unique/i);
-  assert.match(supabaseSchema, /alter table public\.club_competitions\s+drop column if exists categorie_poids/i);
+  assert.match(
+    supabaseSchema,
+    /alter table public\.club_competitions\s+drop column if exists categorie_poids/i
+  );
   assert.match(supabaseSchema, /create or replace function public\.register_profile/i);
   assert.match(
     supabaseSchema,
@@ -573,8 +580,14 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   assert.doesNotMatch(adminService, /async function saveAccessInvitation\(/);
   assert.doesNotMatch(adminService, /"saveAccessInvitation"/);
   assert.match(uiBundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
-  assert.match(uiBundle, /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./);
-  assert.doesNotMatch(uiBundle, /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/);
+  assert.match(
+    uiBundle,
+    /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./
+  );
+  assert.doesNotMatch(
+    uiBundle,
+    /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/
+  );
   assert.match(
     adminService,
     /async function importUsersCsv\(email: string,\s*csvContent: string\)/
@@ -914,6 +927,6 @@ test("service worker never intercepts the downloadable CSV template, even as a n
   assert.match(serviceWorkerSource, /const BYPASS_URLS = \["\/sample-users-import\.csv"\];/);
   assert.match(
     serviceWorkerSource,
-    /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
+    /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*url\.pathname === "\/api\/coach-chat" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
   );
 });
