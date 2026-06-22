@@ -87,6 +87,10 @@ Après la modification :
 - Mettre à jour `docs/spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent.
 - Vérifier `git status`.
 
+## Analyse d'impact avant changement à risque
+
+Pour un changement qui touche plusieurs composants (services, repositories, API, écrans), une chaîne d'appels longue, un flux asynchrone (RPC, offline queue, MCP), ou une interface consommée ailleurs dans le code — pas un correctif local simple — utiliser le prompt `docs/codebase-memmory-mcp` pour produire une analyse d'impact complète (composants touchés, flux, risques, tests, plan de déploiement et de rollback) avant toute modification de fichier.
+
 ## Fin de tâche
 
 À la fin de chaque tâche, demander à l'utilisateur s'il est d'accord pour compacter la conversation (`/compact`). Ne jamais compacter sans son accord explicite.
