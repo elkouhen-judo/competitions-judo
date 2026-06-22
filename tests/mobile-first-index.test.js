@@ -997,7 +997,7 @@ test("combat form surfaces every data quality issue inline, near the field it co
   );
   assert.match(
     bundle,
-    /\+ Ajouter une prise[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/
+    /\+ Ajouter une technique[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/
   );
   assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
   assert.match(

@@ -141,7 +141,7 @@ const COMBAT_SCHEMA: JsonSchema = {
     scores: {
       type: "array",
       items: COMBAT_SCORE_SCHEMA,
-      description: "Liste des prises marquées durant le combat."
+      description: "Liste des techniques marquées durant le combat."
     },
     notes: { type: "string", description: "Notes libres du coach sur le combat (optionnel)." }
   },
