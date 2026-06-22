@@ -1,0 +1,6 @@
+id: no-repository-import-outside-service
+valid:
+  - 'import type { JudokaRow } from "../repositories/types";'
+invalid:
+  - 'import { CompetitionsRepository } from "../repositories/competitions.repository";'
+  - 'import type { CompetitionsRepository } from "../repositories/competitions.repository";'

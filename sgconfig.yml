@@ -1,0 +1,6 @@
+ruleDirs:
+- /Users/m.el-kouhen/competitions-judo/rules
+testConfigs:
+- testDir: /Users/m.el-kouhen/competitions-judo/rule-tests
+utilDirs:
+- /Users/m.el-kouhen/competitions-judo/utils
