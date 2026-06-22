@@ -97,10 +97,9 @@ export async function loadCoachDashboardCombats(
     ])
   );
 
-  const combatRowsByCompetition = await Promise.all(
-    competitionRows.map((competition) => deps.combatsRepository.listByCompetition(competition.id_competition))
+  const combatRows = await deps.combatsRepository.listByCompetitionIds(
+    competitionRows.map((competition) => competition.id_competition)
   );
-  const combatRows = combatRowsByCompetition.flat();
   const scoreRows = await deps.combatScoresRepository.listByCombatIds(
     combatRows.map((combat) => combat.id_combat)
   );

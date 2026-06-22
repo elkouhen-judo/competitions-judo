@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "codebase-memory-mcp-intelligence": {
+      "source": "aradotso/mcp-skills",
+      "sourceType": "github",
+      "skillPath": "skills/codebase-memory-mcp-intelligence/SKILL.md",
+      "computedHash": "419b71fe3f4f9521f5da639099a97eea0cd4808f74977f7cdc9cbf59bcb26f92"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",

@@ -16,12 +16,50 @@ Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'ind
 ## Budget de contexte
 
 - Ne relis pas tout le dépôt ni toutes les specs par défaut.
-- Utilise `grep` ou `find` pour localiser les règles, fonctions et tests concernés.
+- Utilise `rg` ou `find` pour localiser les règles, fonctions et tests concernés.
 - Lis seulement les fichiers utiles à la demande.
 - Lis `docs/spec.md` pour les règles fonctionnelles.
 - Lis `docs/spec-tech.md` seulement pour architecture, données, auth, sécurité ou déploiement.
 - Pour un changement simple, donne une réponse courte et actionnable.
 - Si un échec de test est préexistant, signale-le sans le résoudre hors périmètre.
+
+## Symbol navigation
+
+Outil MCP principal : `codebase-memory-mcp` (graphe de connaissance du code, requêtes en lecture). Projet déjà indexé sous le nom `Users-m.el-kouhen-competitions-judo`.
+
+Quand tu explores ou refactores du code :
+
+- Découverte d'un symbole par nom : `search_graph(name_pattern=...)` ou `search_graph(query=...)` pour une recherche floue.
+- Qui appelle / qu'est-ce qui est appelé : `trace_path(function_name=..., mode="calls")`.
+- Lire la source exacte d'un symbole : `get_code_snippet(qualified_name=...)`.
+- Vue d'ensemble architecture : `get_architecture`.
+- Ne reviens au text search (`grep`/`Glob`) que si le graphe ne résout pas le symbole.
+
+### Fraîcheur de l'index — pas d'auto-sync continu
+
+Le graphe persisté (utilisé par `search_graph`/`trace_path`/`get_architecture`) reste figé jusqu'au prochain `index_repository` — il n'y a pas de file-watcher. `auto_index=true` ne fait qu'indexer automatiquement un projet jamais vu, pas resynchroniser un projet déjà indexé après modification.
+
+- Avant de faire confiance à un résultat structurel après une session d'édition : `detect_changes()` (diff git à la volée, gratuit, ne modifie pas le graphe) pour voir si le repo a divergé.
+- Si oui, relancer `index_repository(mode="fast")` (le moins coûteux) avant de requêter à nouveau.
+
+### `vscode-lsp` — usage ponctuel uniquement
+
+Le serveur MCP `vscode-lsp` (déclaré dans `.mcp.json`, lancé par `mcp-lsp-proxy.sh`) reste disponible mais s'est montré instable en session (déconnexions, sessions expirées, `search_workspace_symbols` qui renvoie systématiquement zéro résultat). Ne l'utiliser qu'en complément, pour la seule capacité que `codebase-memory-mcp` n'a pas : `rename_symbol` (le graphe est en lecture seule). Vérifier `references` via `codebase-memory-mcp`/`trace_path` avant tout renommage, indépendamment de l'outil utilisé pour le renommage lui-même.
+
+## Editing workflow
+
+1. Utilise `codebase-memory-mcp` pour découvrir les symboles et leurs appelants.
+2. Vérifie les références avant tout renommage.
+3. Lis les diagnostics avant de modifier.
+4. Effectue ensuite les modifications.
+
+## Stack
+
+Ce dépôt utilise :
+
+- TypeScript
+- HTML
+- CSS
 
 ## Contrainte critique — Tests de patterns source
 

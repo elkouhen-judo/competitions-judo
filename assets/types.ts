@@ -421,7 +421,6 @@ export interface KirokuAppState {
   clubCompetitionParticipantsCurrentPage: number;
   clubCompetitionAvailableJudokasCurrentPage: number;
   clubCompetitionFormParticipantsCurrentPage: number;
-  coachDashboardCompetitionOptionsCurrentPage: number;
   judokaCompetitionResultsCurrentPage: number;
   adminsCurrentPage: number;
   usersSearch: string;

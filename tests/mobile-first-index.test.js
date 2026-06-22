@@ -470,7 +470,11 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.doesNotMatch(bundle, /coachDashboard_lateralite|coachDashboardForm\.handedness/);
   assert.match(
     bundle,
-    /v-for="option in coachDashboardCompetitionOptionsPage" :key="option\.competitionId"[\s\S]*type="checkbox" :value="option\.competitionId" v-model="coachDashboardForm\.competitionIds"/
+    /v-for="option in coachDashboardCompetitionSuggestions" :key="option\.competitionId"[\s\S]*@click="addCoachDashboardCompetition\(option\.competitionId\)"/
+  );
+  assert.match(
+    bundle,
+    /v-for="competition in coachDashboardSelectedCompetitions" :key="competition\.competitionId"[\s\S]*@click="removeCoachDashboardCompetition\(competition\.competitionId\)"/
   );
   assert.ok(
     bundle.indexOf('id="coachDashboard_date_debut"') < bundle.indexOf('id="coachDashboardCompetitionSearch"'),
