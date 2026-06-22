@@ -51,18 +51,18 @@
       if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
         issues.push({ label: "Fin du combat non renseignée", priority: "high", field: "victoryType" });
       }
-      if (
+      const hasMissingIpponScore =
         form.result === "Victoire" &&
         form.victoryType === "Ippon" &&
-        !form.scores.some((score) => score.value === "Ippon")
-      ) {
+        !form.scores.some((score) => score.value === "Ippon");
+      if (hasMissingIpponScore) {
         issues.push({
           label: "Ippon indiqué, mais aucun point Ippon détaillé",
           priority: "high",
           field: "scores"
         });
       }
-      if (!form.scores.length) {
+      if (!form.scores.length && !hasMissingIpponScore) {
         issues.push({ label: "Points marqués non renseignés", priority: "medium", field: "scores" });
       }
       if (!form.opponentStance) {

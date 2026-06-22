@@ -253,14 +253,14 @@
     if (!combat.victoryType) {
       issues.push({ label: "Fin du combat non renseignée", priority: "high" });
     }
-    if (
+    const hasMissingIpponScore =
       combat.result === "Victoire" &&
       combat.victoryType === "Ippon" &&
-      !hasMatchingIpponScore(combat)
-    ) {
+      !hasMatchingIpponScore(combat);
+    if (hasMissingIpponScore) {
       issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", priority: "high" });
     }
-    if (!(combat.scores || []).length) {
+    if (!(combat.scores || []).length && !hasMissingIpponScore) {
       issues.push({ label: "Points marqués non renseignés", priority: "medium" });
     }
     if (helpers.showJudoka && !combat.judokaHandedness) {
