@@ -901,11 +901,11 @@ function createTestCoachDashboardService({
   combatsByCompetitionId = {},
   combatScoresByCombatId = {},
   getCurrentDate,
-  groqResponse = "",
-  groqToolCall = null,
-  groqToolError = null,
-  groqToolMessages = [],
-  groqToolDefinitions = [],
+  anthropicResponse = "",
+  anthropicToolCall = null,
+  anthropicToolError = null,
+  anthropicToolMessages = [],
+  anthropicToolDefinitions = [],
   judokaRows = [],
   getDomainUserContext
 } = {}) {
@@ -921,17 +921,17 @@ function createTestCoachDashboardService({
       listAll: async () => competitionRows
     },
     getCurrentDate,
-    groqClient:
-      groqResponse || groqToolCall || groqToolError
+    anthropicClient:
+      anthropicResponse || anthropicToolCall || anthropicToolError
         ? {
-            generateChatCompletion: async () => groqResponse,
+            generateChatCompletion: async () => anthropicResponse,
             generateToolChatCompletion: async (messages, tools) => {
-              groqToolMessages.push(messages);
-              groqToolDefinitions.push(tools);
-              if (groqToolError) {
-                throw groqToolError;
+              anthropicToolMessages.push(messages);
+              anthropicToolDefinitions.push(tools);
+              if (anthropicToolError) {
+                throw anthropicToolError;
               }
-              return groqToolCall || { content: "", toolCalls: [] };
+              return anthropicToolCall || { content: "", toolCalls: [] };
             }
           }
         : undefined,
@@ -1319,7 +1319,7 @@ test("searchCombats defaults to 50 results when no limit is given, and respects 
   assert.equal(explicitResult.matches.length, 5);
 });
 
-test("askCoachAssistant falls back to heuristic search when Groq's structured query finds nothing", async () => {
+test("askCoachAssistant falls back to heuristic search when Anthropic's structured query finds nothing", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [{ id_competition: "COMP1", nom: "Tournoi Nantes", date: "2026-06-14" }],
     combatsByCompetitionId: {
@@ -1335,9 +1335,9 @@ test("askCoachAssistant falls back to heuristic search when Groq's structured qu
       ]
     },
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
-    // Simule un mauvais choix de Groq (le nom du judoka dans "opponent" au lieu de "text"),
+    // Simule un mauvais choix d'Anthropic (le nom du judoka dans "opponent" au lieu de "text"),
     // qui ne doit pas empêcher le repli heuristique de retrouver le combat par nom.
-    groqResponse: JSON.stringify({ entity: "combats", filters: { opponent: "Aya" }, limit: 12 }),
+    anthropicResponse: JSON.stringify({ entity: "combats", filters: { opponent: "Aya" }, limit: 12 }),
     getDomainUserContext: domainContextFor("COACH1", "COACH")
   });
 
@@ -1487,7 +1487,7 @@ test("askCoachAssistant lists judokas who fought today", async () => {
   );
 });
 
-test("askCoachAssistant uses Groq structured intent to choose judoka or combat results", async () => {
+test("askCoachAssistant uses Anthropic structured intent to choose judoka or combat results", async () => {
   const sharedData = {
     competitionRows: [
       { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
@@ -1524,7 +1524,7 @@ test("askCoachAssistant uses Groq structured intent to choose judoka or combat r
 
   const judokaService = createTestCoachDashboardService({
     ...sharedData,
-    groqResponse: JSON.stringify({
+    anthropicResponse: JSON.stringify({
       entity: "judokas",
       filters: { ageCategory: "Minime" },
       limit: 10
@@ -1532,7 +1532,7 @@ test("askCoachAssistant uses Groq structured intent to choose judoka or combat r
   }).service;
   const combatService = createTestCoachDashboardService({
     ...sharedData,
-    groqResponse: JSON.stringify({
+    anthropicResponse: JSON.stringify({
       entity: "combats",
       filters: { result: "Victoire", neWazaType: "Osaekomi" },
       limit: 10
@@ -1558,8 +1558,8 @@ test("askCoachAssistant uses Groq structured intent to choose judoka or combat r
   assert.equal(combatResult.matches[0].scoreLabel, "Osaekomi · Ippon");
 });
 
-test("askCoachAssistant exposes the application's real MCP tool catalog to Groq tool-calling and executes the chosen tool locally", async () => {
-  const groqToolDefinitions = [];
+test("askCoachAssistant exposes the application's real MCP tool catalog to Anthropic tool-calling and executes the chosen tool locally", async () => {
+  const anthropicToolDefinitions = [];
   const { service } = createTestCoachDashboardService({
     competitionRows: [
       { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
@@ -1580,8 +1580,8 @@ test("askCoachAssistant exposes the application's real MCP tool catalog to Groq 
       CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
     },
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" }],
-    groqToolDefinitions,
-    groqToolCall: {
+    anthropicToolDefinitions,
+    anthropicToolCall: {
       content: "",
       toolCalls: [
         {
@@ -1603,20 +1603,20 @@ test("askCoachAssistant exposes the application's real MCP tool catalog to Groq 
   assert.equal(result.matches.length, 1);
   assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
 
-  const toolNames = groqToolDefinitions[0].map((tool) => tool.function.name);
+  const toolNames = anthropicToolDefinitions[0].map((tool) => tool.name);
   assert.deepEqual(
     toolNames.sort(),
     ["mcp_combats_search", "mcp_competitions_search", "mcp_judokas_search"].sort()
   );
 });
 
-test("askCoachAssistant finds a judoka by name when Groq returns filters.text as a plain string", async () => {
+test("askCoachAssistant finds a judoka by name when Anthropic returns filters.text as a plain string", async () => {
   const { service } = createTestCoachDashboardService({
     judokaRows: [
       { id_judoka: "JUDO1", prenom: "Mehdi", nom: "El Kouhen" },
       { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard" }
     ],
-    groqToolCall: {
+    anthropicToolCall: {
       content: "",
       toolCalls: [
         {
@@ -1636,26 +1636,26 @@ test("askCoachAssistant finds a judoka by name when Groq returns filters.text as
   assert.equal(result.matches[0].judokaName, "Mehdi El Kouhen");
 });
 
-test("askCoachAssistant surfaces a clear error when Groq is rate-limited instead of failing silently", async () => {
+test("askCoachAssistant surfaces a clear error when Anthropic is rate-limited instead of failing silently", async () => {
   const { service } = createTestCoachDashboardService({
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
-    groqToolError: Object.assign(new Error("Erreur Groq 429 : rate_limit_exceeded"), {
-      groqStatus: 429
+    anthropicToolError: Object.assign(new Error("Erreur Anthropic 429 : rate_limit_exceeded"), {
+      anthropicStatus: 429
     }),
     getDomainUserContext: domainContextFor("COACH1", "COACH")
   });
 
   await assert.rejects(
     () => service.methods.askCoachAssistant("coach@example.com", "liste les judokas"),
-    /limite de débit Groq atteinte/
+    /limite de débit Anthropic atteinte/
   );
 });
 
-test("askCoachAssistant surfaces a generic unavailability error for other Groq failures", async () => {
+test("askCoachAssistant surfaces a generic unavailability error for other Anthropic failures", async () => {
   const { service } = createTestCoachDashboardService({
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
-    groqToolError: Object.assign(new Error("Erreur Groq 500 : internal error"), {
-      groqStatus: 500
+    anthropicToolError: Object.assign(new Error("Erreur Anthropic 500 : internal error"), {
+      anthropicStatus: 500
     }),
     getDomainUserContext: domainContextFor("COACH1", "COACH")
   });

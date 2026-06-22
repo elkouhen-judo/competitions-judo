@@ -813,7 +813,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
   assert.match(coreIndex, /createCoachDashboardService/);
-  assert.match(coreIndex, /createGroqClient/);
+  assert.match(coreIndex, /createAnthropicClient/);
   assert.match(coreIndex, /core-dist\/services\/coach-dashboard\.service\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
@@ -830,7 +830,7 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./config/env.js",
       "./infra/supabase-client.js",
       "./infra/supabase-rest.js",
-      "./infra/groq-client.js",
+      "./infra/anthropic-client.js",
       "./auth/session.js",
       "./auth/mcp-token.js",
       "./auth/permissions.js",

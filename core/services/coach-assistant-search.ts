@@ -7,12 +7,12 @@ import type { CombatRow, CombatScoreRow, CompetitionRow, JudokaRow } from "../re
 import { formatCompetitionRankingDisplay } from "../domain/competition-results";
 import type { CoachAssistantMatch, CoachAssistantResponse, CoachChatFilters } from "../types";
 
-export interface GroqClient {
+export interface AnthropicClient {
   generateChatCompletion(messages: Array<{ role: "system" | "user"; content: string }>): Promise<string>;
   generateToolChatCompletion?(
-    messages: GroqChatMessage[],
-    tools: GroqToolDefinition[]
-  ): Promise<GroqToolChatCompletion>;
+    messages: Array<{ role: "system" | "user"; content: string }>,
+    tools: AnthropicToolDefinition[]
+  ): Promise<AnthropicToolChatCompletion>;
 }
 
 export interface CoachChatDatasets {
@@ -23,36 +23,24 @@ export interface CoachChatDatasets {
 }
 
 type CoachChatEntity = "judokas" | "combats" | "competitions";
-type GroqChatRole = "system" | "user" | "assistant" | "tool";
 
-interface GroqToolCall {
+interface AnthropicToolCall {
   id?: string;
-  type?: "function";
   function?: {
     name?: string;
     arguments?: string;
   };
 }
 
-interface GroqChatMessage {
-  role: GroqChatRole;
-  content: string | null;
-  tool_call_id?: string;
-  tool_calls?: GroqToolCall[];
-}
-
-interface GroqToolChatCompletion {
+interface AnthropicToolChatCompletion {
   content: string;
-  toolCalls: GroqToolCall[];
+  toolCalls: AnthropicToolCall[];
 }
 
-interface GroqToolDefinition {
-  type: "function";
-  function: {
-    name: string;
-    description: string;
-    parameters: Record<string, unknown>;
-  };
+interface AnthropicToolDefinition {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
 }
 
 interface CoachChatQuery {
@@ -63,7 +51,7 @@ interface CoachChatQuery {
 
 export interface CoachAssistantSearchDeps {
   getCurrentDate: () => string;
-  groqClient?: GroqClient;
+  anthropicClient?: AnthropicClient;
 }
 
 export interface CoachAssistantSearch {
@@ -76,7 +64,7 @@ export interface CoachAssistantSearch {
 }
 
 export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): CoachAssistantSearch {
-  const { getCurrentDate, groqClient } = deps;
+  const { getCurrentDate, anthropicClient } = deps;
 
   async function ask(
     question: string,
@@ -97,11 +85,11 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
       competitionRows.map((competition) => [String(competition.id_competition), competition])
     );
 
-    const groqQuery = await parseCoachChatQueryWithGroq(question);
-    if (groqQuery) {
-      const groqResult = executeCoachChatQuery(groqQuery, datasets);
-      if (groqResult.matches.length) {
-        return groqResult;
+    const anthropicQuery = await parseCoachChatQueryWithAnthropic(question);
+    if (anthropicQuery) {
+      const anthropicResult = executeCoachChatQuery(anthropicQuery, datasets);
+      if (anthropicResult.matches.length) {
+        return anthropicResult;
       }
     }
 
@@ -192,17 +180,17 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     return { matches: executeCoachChatQuery(query, datasets).matches };
   }
 
-  async function parseCoachChatQueryWithGroq(question: string): Promise<CoachChatQuery | null> {
-    if (!groqClient) {
+  async function parseCoachChatQueryWithAnthropic(question: string): Promise<CoachChatQuery | null> {
+    if (!anthropicClient) {
       return null;
     }
     try {
-      const toolQuery = await parseCoachChatQueryWithGroqTools(question);
+      const toolQuery = await parseCoachChatQueryWithAnthropicTools(question);
       if (toolQuery) {
         return resolveRelativeDates(toolQuery);
       }
 
-      const content = await groqClient.generateChatCompletion([
+      const content = await anthropicClient.generateChatCompletion([
         {
           role: "system",
           content: COACH_CHAT_STRUCTURED_JSON_PROMPT
@@ -214,8 +202,8 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
       ]);
       return resolveRelativeDates(normalizeCoachChatQuery(content));
     } catch (error) {
-      console.error("Échec de l'interprétation Groq du chat coach :", error);
-      throw new Error(formatGroqUnavailableMessage(error));
+      console.error("Échec de l'interprétation Anthropic du chat coach :", error);
+      throw new Error(formatAnthropicUnavailableMessage(error));
     }
   }
 
@@ -232,18 +220,18 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     };
   }
 
-  async function parseCoachChatQueryWithGroqTools(question: string): Promise<CoachChatQuery | null> {
-    if (!groqClient.generateToolChatCompletion) {
+  async function parseCoachChatQueryWithAnthropicTools(question: string): Promise<CoachChatQuery | null> {
+    if (!anthropicClient.generateToolChatCompletion) {
       return null;
     }
-    const messages: GroqChatMessage[] = [
+    const messages: Array<{ role: "system" | "user"; content: string }> = [
       {
         role: "system",
         content: COACH_CHAT_MCP_ROUTER_PROMPT
       },
       { role: "user", content: question }
     ];
-    const completion = await groqClient.generateToolChatCompletion(messages, buildCoachMcpGroqTools());
+    const completion = await anthropicClient.generateToolChatCompletion(messages, buildCoachMcpAnthropicTools());
     const toolCall = (completion.toolCalls || [])[0];
     if (toolCall) {
       return normalizeCoachMcpToolCallQuery(toolCall);
@@ -287,28 +275,25 @@ function normalizeAssistantSearchText(value: unknown): string {
   return normalizeAssistantText(value).replace(/[^\p{Letter}\p{Number}]+/gu, " ");
 }
 
-function formatGroqUnavailableMessage(error: unknown): string {
-  const status = (error as { groqStatus?: number } | null)?.groqStatus;
+function formatAnthropicUnavailableMessage(error: unknown): string {
+  const status = (error as { anthropicStatus?: number } | null)?.anthropicStatus;
   if (status === 429) {
-    return "L'assistant IA est temporairement surchargé (limite de débit Groq atteinte). Réessayez dans quelques secondes.";
+    return "L'assistant IA est temporairement surchargé (limite de débit Anthropic atteinte). Réessayez dans quelques secondes.";
   }
   return "L'assistant IA est momentanément indisponible. Réessayez dans quelques instants.";
 }
 
-function buildCoachMcpGroqTools(): GroqToolDefinition[] {
+function buildCoachMcpAnthropicTools(): AnthropicToolDefinition[] {
   return buildCoachMcpToolDefinitions().map((definition) => ({
-    type: "function",
-    function: {
-      name: definition.groqName,
-      description: definition.description,
-      parameters: definition.inputSchema
-    }
+    name: definition.anthropicName,
+    description: definition.description,
+    input_schema: definition.inputSchema
   }));
 }
 
-function normalizeCoachMcpToolCallQuery(toolCall: GroqToolCall): CoachChatQuery | null {
+function normalizeCoachMcpToolCallQuery(toolCall: AnthropicToolCall): CoachChatQuery | null {
   const name = String(toolCall.function?.name || "");
-  const definition = buildCoachMcpToolDefinitions().find((tool) => tool.groqName === name);
+  const definition = buildCoachMcpToolDefinitions().find((tool) => tool.anthropicName === name);
   if (!definition) {
     return null;
   }

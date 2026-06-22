@@ -2,7 +2,7 @@ import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics
 import {
   createCoachAssistantSearch,
   type CoachChatDatasets,
-  type GroqClient
+  type AnthropicClient
 } from "./coach-assistant-search";
 import {
   filterCompetitionsByScope,
@@ -56,7 +56,7 @@ export interface CoachDashboardServiceDeps {
   combatScoresRepository: CombatScoresRepository;
   competitionsRepository: CompetitionsRepository;
   getCurrentDate?: () => string;
-  groqClient?: GroqClient;
+  anthropicClient?: AnthropicClient;
   judokasRepository: JudokasRepository;
   userContextService: UserContextService;
 }
@@ -73,11 +73,11 @@ export default function createCoachDashboardService(
     combatScoresRepository,
     competitionsRepository,
     getCurrentDate = () => new Date().toISOString().slice(0, 10),
-    groqClient,
+    anthropicClient,
     judokasRepository,
     userContextService
   } = deps;
-  const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate, groqClient });
+  const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate, anthropicClient });
 
   async function requireCoach(email: string, message: string): Promise<void> {
     const { domainUser } = await userContextService.getDomainUserContext(email);
