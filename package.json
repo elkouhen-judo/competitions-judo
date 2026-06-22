@@ -20,8 +20,8 @@
     "db:status": "node scripts/db-status.js",
     "db:check": "node scripts/db-check.js",
     "db:reset": "node scripts/db-reset.js",
-    "redeploy:prod": "npm run db:pull-env:prod && npm run db:reset && npm run db:deploy && npm run app:deploy:prod",
-    "redeploy:dev": "npm run db:pull-env:dev && npm run db:reset && npm run db:deploy && npm run app:deploy:dev",
+    "redeploy:prod": "npm run db:pull-env:prod && npm run db:deploy && npm run app:deploy:prod",
+    "redeploy:dev": "npm run db:pull-env:dev && npm run db:deploy && npm run app:deploy:dev",
     "sonar:up": "docker-compose -f docker-compose.sonarqube.yml up -d",
     "sonar:down": "docker-compose -f docker-compose.sonarqube.yml down",
     "sonar:scan": "docker run --rm --network=host -e SONAR_HOST_URL=http://localhost:9090 -e SONAR_TOKEN -v \"$PWD:/usr/src\" sonarsource/sonar-scanner-cli"
