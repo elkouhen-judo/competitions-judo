@@ -25,9 +25,22 @@ export interface CoachMcpToolDefinition {
 }
 
 export const BELT_COLORS = [
-  "Blanc", "Blanc-Jaune", "Jaune", "Jaune-Orange", "Orange", "Orange-Vert", "Vert",
-  "Vert-Bleu", "Bleu", "Bleu-Marron", "Marron",
-  "Noir 1er Dan", "Noir 2e Dan", "Noir 3e Dan", "Noir 4e Dan", "Noir 5e Dan"
+  "Blanc",
+  "Blanc-Jaune",
+  "Jaune",
+  "Jaune-Orange",
+  "Orange",
+  "Orange-Vert",
+  "Vert",
+  "Vert-Bleu",
+  "Bleu",
+  "Bleu-Marron",
+  "Marron",
+  "Noir 1er Dan",
+  "Noir 2e Dan",
+  "Noir 3e Dan",
+  "Noir 4e Dan",
+  "Noir 5e Dan"
 ];
 
 export const DEFAULT_LIMIT = 50;
@@ -44,7 +57,7 @@ const LIMIT_SCHEMA: JsonSchema = {
 const JUDOKA_FILTER_PROPERTIES: JsonSchema = {
   ageCategory: { type: "string", enum: AGE_CATEGORIES },
   beltColor: { type: "string", enum: BELT_COLORS },
-  categoryYear: { type: "string", description: "Année dans la catégorie (ex. \"1\", \"2\", \"3\")." },
+  categoryYear: { type: "string", description: 'Année dans la catégorie (ex. "1", "2", "3").' },
   gender: { type: "string", enum: GENDERS },
   handedness: { type: "string", enum: HANDEDNESSES },
   text: {
@@ -55,7 +68,10 @@ const JUDOKA_FILTER_PROPERTIES: JsonSchema = {
 };
 
 const COMPETITION_FILTER_PROPERTIES: JsonSchema = {
-  competitionDate: { type: "string", description: "Date ISO AAAA-MM-JJ ou \"today\" pour aujourd'hui." },
+  competitionDate: {
+    type: "string",
+    description: 'Date ISO AAAA-MM-JJ ou "today" pour aujourd\'hui.'
+  },
   competitionLevel: { type: "string", enum: COMPETITION_LEVELS }
 };
 
@@ -65,13 +81,17 @@ const COMBAT_FILTER_PROPERTIES: JsonSchema = {
   neWazaType: { type: "string", enum: NE_WAZA_TYPES },
   opponent: {
     type: "string",
-    description: "Nom (ou partie du nom) de l'ADVERSAIRE uniquement. Pour le nom du judoka lui-même, utiliser text."
+    description:
+      "Nom (ou partie du nom) de l'ADVERSAIRE uniquement. Pour le nom du judoka lui-même, utiliser text."
   },
   opponentStance: { type: "string", enum: OPPONENT_STANCES },
   result: { type: "string", enum: COMBAT_RESULTS },
   scoreValue: { type: "string", enum: SCORE_VALUES },
   tachiWazaTechnique: { type: "string", description: "Nom libre de prise debout à rechercher." },
-  victoryType: { type: "string", description: "Type de décision (Ippon, Waza-ari, Hansoku-make...)." },
+  victoryType: {
+    type: "string",
+    description: "Type de décision (Ippon, Waza-ari, Hansoku-make...)."
+  },
   text: {
     type: "array",
     items: { type: "string" },
@@ -101,8 +121,10 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
         "Outil MCP judokas.search : cherche/liste les judokas visibles pour l'appelant (tout le roster du club pour un coach, " +
         "seulement soi-même et ses enfants pour un parent), avec filtres optionnels. " +
         `Chaque judoka inclut beltColor (une des valeurs ${BELT_COLORS.join(", ")}), ` +
-        `gender (${GENDERS.join(" ou ")}), handedness (${HANDEDNESSES.join(" ou ")}) et ageCategory (${AGE_CATEGORIES.join(", ")}).`,
-      inputSchema: buildFilteredListSchema(JUDOKA_FILTER_PROPERTIES)
+        `gender (${GENDERS.join(" ou ")}), handedness (${HANDEDNESSES.join(" ou ")}) et ageCategory (${AGE_CATEGORIES.join(", ")}). ` +
+        "Accepte aussi des filtres de combat (résultat, adversaire, technique, score...) : un judoka n'est alors retourné " +
+        "que s'il a au moins un combat correspondant, mais une seule ligne par judoka est renvoyée (pas une par combat).",
+      inputSchema: buildFilteredListSchema(COMBAT_FILTER_PROPERTIES)
     },
     {
       name: "competitions.search",
@@ -112,8 +134,10 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
       description:
         "Outil MCP competitions.search : cherche/liste les compétitions personnelles visibles pour le coach connecté, " +
         "sans le détail des combats, avec filtres optionnels sur la date et le niveau. " +
-        "Utiliser competitions.get pour récupérer les combats d'une compétition donnée.",
-      inputSchema: buildFilteredListSchema(COMPETITION_FILTER_PROPERTIES)
+        "Accepte aussi des filtres de judoka ou de combat : une compétition n'est alors retournée que si elle contient " +
+        "au moins un combat correspondant, mais une seule ligne par compétition est renvoyée (pas une par combat). " +
+        "Utiliser competitions.get pour récupérer le détail des combats d'une compétition donnée.",
+      inputSchema: buildFilteredListSchema(COMBAT_FILTER_PROPERTIES)
     },
     {
       name: "combats.search",

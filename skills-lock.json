@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "caveman-token-optimizer": {
+      "source": "aradotso/trending-skills",
+      "sourceType": "github",
+      "skillPath": "skills/caveman-token-optimizer/SKILL.md",
+      "computedHash": "dc25123400285cea64953678b07ee76d2c24ff2b7624cdfcc6eae3712824851a"
+    },
     "codebase-memory-mcp-intelligence": {
       "source": "aradotso/mcp-skills",
       "sourceType": "github",

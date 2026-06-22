@@ -5,12 +5,19 @@ import {
 import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import type { CombatRow, CombatScoreRow, CompetitionRow, JudokaRow } from "../repositories/types";
 import { formatCompetitionRankingDisplay } from "../domain/competition-results";
-import type { CoachAssistantMatch, CoachAssistantResponse, CoachChatFilters } from "../types";
+import type {
+  CoachAssistantMatch,
+  CoachAssistantResponse,
+  CoachChatFilters,
+  CoachChatHistoryMessage
+} from "../types";
 
 export interface AnthropicClient {
-  generateChatCompletion(messages: Array<{ role: "system" | "user"; content: string }>): Promise<string>;
+  generateChatCompletion(
+    messages: Array<{ role: "system" | "user" | "assistant"; content: string }>
+  ): Promise<string>;
   generateToolChatCompletion?(
-    messages: Array<{ role: "system" | "user"; content: string }>,
+    messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
     tools: AnthropicToolDefinition[]
   ): Promise<AnthropicToolChatCompletion>;
 }
@@ -55,7 +62,11 @@ export interface CoachAssistantSearchDeps {
 }
 
 export interface CoachAssistantSearch {
-  ask(question: string, datasets: CoachChatDatasets): Promise<CoachAssistantResponse>;
+  ask(
+    question: string,
+    datasets: CoachChatDatasets,
+    history?: CoachChatHistoryMessage[]
+  ): Promise<CoachAssistantResponse>;
   searchCombats(
     filters: CoachChatFilters,
     limit: number | undefined,
@@ -68,12 +79,14 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
 
   async function ask(
     question: string,
-    datasets: CoachChatDatasets
+    datasets: CoachChatDatasets,
+    history: CoachChatHistoryMessage[] = []
   ): Promise<CoachAssistantResponse> {
     const query = normalizeAssistantText(question);
     if (!query) {
       return {
-        answer: "Pose une question sur les combats enregistrés, par exemple : « Trouve les judokas qui ont gagné par Osaekomi ».",
+        answer:
+          "Pose une question sur les combats enregistrés, par exemple : « Trouve les judokas qui ont gagné par Osaekomi ».",
         matches: [],
         beta: true
       };
@@ -85,7 +98,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
       competitionRows.map((competition) => [String(competition.id_competition), competition])
     );
 
-    const anthropicQuery = await parseCoachChatQueryWithAnthropic(question);
+    const anthropicQuery = await parseCoachChatQueryWithAnthropic(question, history);
     if (anthropicQuery) {
       const anthropicResult = executeCoachChatQuery(anthropicQuery, datasets);
       if (anthropicResult.matches.length) {
@@ -101,7 +114,8 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     const isGenericCombatListing = isCombatListQuestion(query);
     if (!desiredResult && !requestedNeWazaType && !queryTerms.length && !isGenericCombatListing) {
       return {
-        answer: "Mode bêta : je peux chercher dans les attributs judoka, compétition, combat et scores enregistrés.",
+        answer:
+          "Mode bêta : je peux chercher dans les attributs judoka, compétition, combat et scores enregistrés.",
         matches: [],
         beta: true
       };
@@ -180,12 +194,15 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     return { matches: executeCoachChatQuery(query, datasets).matches };
   }
 
-  async function parseCoachChatQueryWithAnthropic(question: string): Promise<CoachChatQuery | null> {
+  async function parseCoachChatQueryWithAnthropic(
+    question: string,
+    history: CoachChatHistoryMessage[]
+  ): Promise<CoachChatQuery | null> {
     if (!anthropicClient) {
       return null;
     }
     try {
-      const toolQuery = await parseCoachChatQueryWithAnthropicTools(question);
+      const toolQuery = await parseCoachChatQueryWithAnthropicTools(question, history);
       if (toolQuery) {
         return resolveRelativeDates(toolQuery);
       }
@@ -195,6 +212,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
           role: "system",
           content: COACH_CHAT_STRUCTURED_JSON_PROMPT
         },
+        ...buildHistoryMessages(history),
         {
           role: "user",
           content: question
@@ -220,18 +238,25 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     };
   }
 
-  async function parseCoachChatQueryWithAnthropicTools(question: string): Promise<CoachChatQuery | null> {
+  async function parseCoachChatQueryWithAnthropicTools(
+    question: string,
+    history: CoachChatHistoryMessage[]
+  ): Promise<CoachChatQuery | null> {
     if (!anthropicClient.generateToolChatCompletion) {
       return null;
     }
-    const messages: Array<{ role: "system" | "user"; content: string }> = [
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
       {
         role: "system",
         content: COACH_CHAT_MCP_ROUTER_PROMPT
       },
+      ...buildHistoryMessages(history),
       { role: "user", content: question }
     ];
-    const completion = await anthropicClient.generateToolChatCompletion(messages, buildCoachMcpAnthropicTools());
+    const completion = await anthropicClient.generateToolChatCompletion(
+      messages,
+      buildCoachMcpAnthropicTools()
+    );
     const toolCall = (completion.toolCalls || [])[0];
     if (toolCall) {
       return normalizeCoachMcpToolCallQuery(toolCall);
@@ -239,11 +264,16 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     return normalizeCoachChatQuery(completion.content);
   }
 
-  function buildCoachChatQuery(parsed: {
-    entity?: unknown;
-    filters?: Record<string, unknown>;
-    limit?: unknown;
-  } | null | undefined): CoachChatQuery | null {
+  function buildCoachChatQuery(
+    parsed:
+      | {
+          entity?: unknown;
+          filters?: Record<string, unknown>;
+          limit?: unknown;
+        }
+      | null
+      | undefined
+  ): CoachChatQuery | null {
     return resolveRelativeDates(buildCoachChatQueryWithoutDateResolution(parsed));
   }
 
@@ -283,6 +313,14 @@ function formatAnthropicUnavailableMessage(error: unknown): string {
   return "L'assistant IA est momentanément indisponible. Réessayez dans quelques instants.";
 }
 
+function buildHistoryMessages(
+  history: CoachChatHistoryMessage[]
+): Array<{ role: "user" | "assistant"; content: string }> {
+  return history
+    .filter((message) => message.text.trim())
+    .map((message) => ({ role: message.role, content: message.text }));
+}
+
 function buildCoachMcpAnthropicTools(): AnthropicToolDefinition[] {
   return buildCoachMcpToolDefinitions().map((definition) => ({
     name: definition.anthropicName,
@@ -300,7 +338,10 @@ function normalizeCoachMcpToolCallQuery(toolCall: AnthropicToolCall): CoachChatQ
   const args = parseToolCallArguments(toolCall.function?.arguments);
   return buildCoachChatQueryWithoutDateResolution({
     entity: definition.entity,
-    filters: args.filters && typeof args.filters === "object" ? (args.filters as Record<string, unknown>) : {},
+    filters:
+      args.filters && typeof args.filters === "object"
+        ? (args.filters as Record<string, unknown>)
+        : {},
     limit: args.limit
   });
 }
@@ -324,7 +365,11 @@ function normalizeCoachChatQuery(rawContent: string): CoachChatQuery | null {
   if (!raw) {
     return null;
   }
-  const jsonText = raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+  const jsonText = raw
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
   try {
     return buildCoachChatQueryWithoutDateResolution(JSON.parse(jsonText));
   } catch {
@@ -332,11 +377,16 @@ function normalizeCoachChatQuery(rawContent: string): CoachChatQuery | null {
   }
 }
 
-function buildCoachChatQueryWithoutDateResolution(parsed: {
-  entity?: unknown;
-  filters?: Record<string, unknown>;
-  limit?: unknown;
-} | null | undefined): CoachChatQuery | null {
+function buildCoachChatQueryWithoutDateResolution(
+  parsed:
+    | {
+        entity?: unknown;
+        filters?: Record<string, unknown>;
+        limit?: unknown;
+      }
+    | null
+    | undefined
+): CoachChatQuery | null {
   const entity = parsed?.entity;
   if (entity !== "judokas" && entity !== "combats" && entity !== "competitions") {
     return null;
@@ -345,25 +395,26 @@ function buildCoachChatQueryWithoutDateResolution(parsed: {
   const text = (Array.isArray(filters.text) ? filters.text : [filters.text])
     .map((term: unknown) => String(term || "").trim())
     .filter(Boolean);
+  const normalizedFilters: CoachChatFilters = {
+    ageCategory: String(filters.ageCategory || "").trim() || undefined,
+    beltColor: String(filters.beltColor || "").trim() || undefined,
+    categoryYear: String(filters.categoryYear || "").trim() || undefined,
+    competitionDate: String(filters.competitionDate || "").trim() || undefined,
+    competitionLevel: String(filters.competitionLevel || "").trim() || undefined,
+    gender: String(filters.gender || "").trim() || undefined,
+    handedness: String(filters.handedness || "").trim() || undefined,
+    neWazaType: String(filters.neWazaType || "").trim() || undefined,
+    opponent: String(filters.opponent || "").trim() || undefined,
+    opponentStance: String(filters.opponentStance || "").trim() || undefined,
+    result: String(filters.result || "").trim() || undefined,
+    scoreValue: String(filters.scoreValue || "").trim() || undefined,
+    tachiWazaTechnique: String(filters.tachiWazaTechnique || "").trim() || undefined,
+    victoryType: String(filters.victoryType || "").trim() || undefined,
+    text
+  };
   return {
     entity,
-    filters: {
-      ageCategory: String(filters.ageCategory || "").trim() || undefined,
-      beltColor: String(filters.beltColor || "").trim() || undefined,
-      categoryYear: String(filters.categoryYear || "").trim() || undefined,
-      competitionDate: String(filters.competitionDate || "").trim() || undefined,
-      competitionLevel: String(filters.competitionLevel || "").trim() || undefined,
-      gender: String(filters.gender || "").trim() || undefined,
-      handedness: String(filters.handedness || "").trim() || undefined,
-      neWazaType: String(filters.neWazaType || "").trim() || undefined,
-      opponent: String(filters.opponent || "").trim() || undefined,
-      opponentStance: String(filters.opponentStance || "").trim() || undefined,
-      result: String(filters.result || "").trim() || undefined,
-      scoreValue: String(filters.scoreValue || "").trim() || undefined,
-      tachiWazaTechnique: String(filters.tachiWazaTechnique || "").trim() || undefined,
-      victoryType: String(filters.victoryType || "").trim() || undefined,
-      text
-    },
+    filters: normalizedFilters,
     limit: Math.min(Math.max(Number(parsed?.limit) || DEFAULT_LIMIT, 1), MAX_LIMIT)
   };
 }
@@ -378,7 +429,13 @@ function executeCoachChatQuery(
   );
   const judokasById = new Map(judokaRows.map((judoka) => [String(judoka.id_judoka), judoka]));
   if (query.entity === "judokas") {
-    const matches = searchCoachJudokas(query, judokaRows, combatRows, competitionsById, scoresByCombatId);
+    const matches = searchCoachJudokas(
+      query,
+      judokaRows,
+      combatRows,
+      competitionsById,
+      scoresByCombatId
+    );
     return {
       answer: formatEntityAnswer("judoka", matches.length, query.limit),
       matches,
@@ -386,14 +443,26 @@ function executeCoachChatQuery(
     };
   }
   if (query.entity === "competitions") {
-    const matches = searchCoachCompetitions(query, competitionRows, combatRows, judokasById, scoresByCombatId);
+    const matches = searchCoachCompetitions(
+      query,
+      competitionRows,
+      combatRows,
+      judokasById,
+      scoresByCombatId
+    );
     return {
       answer: formatEntityAnswer("compétition", matches.length, query.limit),
       matches,
       beta: true
     };
   }
-  const matches = searchCoachCombats(query, combatRows, judokasById, competitionsById, scoresByCombatId);
+  const matches = searchCoachCombats(
+    query,
+    combatRows,
+    judokasById,
+    competitionsById,
+    scoresByCombatId
+  );
   return {
     answer: formatEntityAnswer("combat", matches.length, query.limit),
     matches,
@@ -429,8 +498,17 @@ function searchCoachJudokas(
       if (combatFilters && !relatedCombat) {
         return [];
       }
-      const competition = relatedCombat ? competitionsById.get(String(relatedCombat.id_competition)) : undefined;
-      return [toAssistantMatch(judoka, relatedCombat, competition, relatedCombat ? scoresByCombatId.get(String(relatedCombat.id_combat)) || [] : [])];
+      const competition = relatedCombat
+        ? competitionsById.get(String(relatedCombat.id_competition))
+        : undefined;
+      return [
+        toAssistantMatch(
+          judoka,
+          relatedCombat,
+          competition,
+          relatedCombat ? scoresByCombatId.get(String(relatedCombat.id_combat)) || [] : []
+        )
+      ];
     })
     .sort((a, b) => a.judokaName.localeCompare(b.judokaName))
     .slice(0, query.limit);
@@ -515,25 +593,25 @@ function searchCoachCompetitions(
 function hasJudokaFilters(query: CoachChatQuery): boolean {
   return Boolean(
     query.filters.ageCategory ||
-      query.filters.beltColor ||
-      query.filters.categoryYear ||
-      query.filters.gender ||
-      query.filters.handedness ||
-      query.filters.text?.length
+    query.filters.beltColor ||
+    query.filters.categoryYear ||
+    query.filters.gender ||
+    query.filters.handedness ||
+    query.filters.text?.length
   );
 }
 
 function hasCombatFilters(query: CoachChatQuery): boolean {
   return Boolean(
     query.filters.competitionDate ||
-      query.filters.competitionLevel ||
-      query.filters.neWazaType ||
-      query.filters.opponent ||
-      query.filters.opponentStance ||
-      query.filters.result ||
-      query.filters.scoreValue ||
-      query.filters.tachiWazaTechnique ||
-      query.filters.victoryType
+    query.filters.competitionLevel ||
+    query.filters.neWazaType ||
+    query.filters.opponent ||
+    query.filters.opponentStance ||
+    query.filters.result ||
+    query.filters.scoreValue ||
+    query.filters.tachiWazaTechnique ||
+    query.filters.victoryType
   );
 }
 
@@ -541,13 +619,22 @@ function matchesJudokaFilters(judoka: JudokaRow | undefined, query: CoachChatQue
   if (!judoka) {
     return false;
   }
-  if (query.filters.ageCategory && String(judoka.categorie_age || "") !== query.filters.ageCategory) {
+  if (
+    query.filters.ageCategory &&
+    String(judoka.categorie_age || "") !== query.filters.ageCategory
+  ) {
     return false;
   }
-  if (query.filters.beltColor && String(judoka.couleur_ceinture || "") !== query.filters.beltColor) {
+  if (
+    query.filters.beltColor &&
+    String(judoka.couleur_ceinture || "") !== query.filters.beltColor
+  ) {
     return false;
   }
-  if (query.filters.categoryYear && String(judoka.annee_categorie || "") !== query.filters.categoryYear) {
+  if (
+    query.filters.categoryYear &&
+    String(judoka.annee_categorie || "") !== query.filters.categoryYear
+  ) {
     return false;
   }
   if (query.filters.gender && String(judoka.genre || "") !== query.filters.gender) {
@@ -561,21 +648,34 @@ function matchesJudokaFilters(judoka: JudokaRow | undefined, query: CoachChatQue
     const searchText = normalizeAssistantSearchText(
       [judoka.prenom, judoka.nom, judoka.categorie_age, judoka.couleur_ceinture].join(" ")
     );
-    if (!judokaTextTerms.every((term) => searchText.includes(normalizeAssistantSearchText(term).trim()))) {
+    if (
+      !judokaTextTerms.every((term) =>
+        searchText.includes(normalizeAssistantSearchText(term).trim())
+      )
+    ) {
       return false;
     }
   }
   return true;
 }
 
-function matchesCompetitionFilters(competition: CompetitionRow | undefined, query: CoachChatQuery): boolean {
+function matchesCompetitionFilters(
+  competition: CompetitionRow | undefined,
+  query: CoachChatQuery
+): boolean {
   if (!competition) {
     return false;
   }
-  if (query.filters.competitionDate && String(competition.date || "") !== query.filters.competitionDate) {
+  if (
+    query.filters.competitionDate &&
+    String(competition.date || "") !== query.filters.competitionDate
+  ) {
     return false;
   }
-  if (query.filters.competitionLevel && String(competition.niveau || "") !== query.filters.competitionLevel) {
+  if (
+    query.filters.competitionLevel &&
+    String(competition.niveau || "") !== query.filters.competitionLevel
+  ) {
     return false;
   }
   return true;
@@ -597,28 +697,50 @@ function matchesCombatFilters(
   if (query.filters.result && String(combat.resultat || "") !== query.filters.result) {
     return false;
   }
-  if (query.filters.victoryType && String(combat.type_victoire || "") !== query.filters.victoryType) {
+  if (
+    query.filters.victoryType &&
+    String(combat.type_victoire || "") !== query.filters.victoryType
+  ) {
     return false;
   }
-  if (query.filters.opponentStance && String(combat.garde_adversaire || "") !== query.filters.opponentStance) {
+  if (
+    query.filters.opponentStance &&
+    String(combat.garde_adversaire || "") !== query.filters.opponentStance
+  ) {
     return false;
   }
-  if (query.filters.opponent && !normalizeAssistantSearchText(combat.adversaire).includes(normalizeAssistantSearchText(query.filters.opponent))) {
+  if (
+    query.filters.opponent &&
+    !normalizeAssistantSearchText(combat.adversaire).includes(
+      normalizeAssistantSearchText(query.filters.opponent)
+    )
+  ) {
     return false;
   }
-  if (query.filters.neWazaType && !scores.some((score) => String(score.type_ne_waza || "") === query.filters.neWazaType)) {
+  if (
+    query.filters.neWazaType &&
+    !scores.some((score) => String(score.type_ne_waza || "") === query.filters.neWazaType)
+  ) {
     return false;
   }
-  if (query.filters.tachiWazaTechnique && !scores.some((score) => String(score.technique || "") === query.filters.tachiWazaTechnique)) {
+  if (
+    query.filters.tachiWazaTechnique &&
+    !scores.some((score) => String(score.technique || "") === query.filters.tachiWazaTechnique)
+  ) {
     return false;
   }
-  if (query.filters.scoreValue && !scores.some((score) => String(score.valeur || "") === query.filters.scoreValue)) {
+  if (
+    query.filters.scoreValue &&
+    !scores.some((score) => String(score.valeur || "") === query.filters.scoreValue)
+  ) {
     return false;
   }
   const textTerms = query.filters.text || [];
   if (textTerms.length) {
     const searchText = buildAssistantSearchText(combat, scores, judoka, competition);
-    if (!textTerms.every((term) => searchText.includes(normalizeAssistantSearchText(term).trim()))) {
+    if (
+      !textTerms.every((term) => searchText.includes(normalizeAssistantSearchText(term).trim()))
+    ) {
       return false;
     }
   }
@@ -640,7 +762,9 @@ function toAssistantMatch(
     opponent: String(combat?.adversaire || ""),
     result: String(combat?.resultat || ""),
     victoryType: String(combat?.type_victoire || ""),
-    scoreLabel: scores.length ? scores.map(formatScoreLabel).join(", ") : String(judoka?.categorie_age || "")
+    scoreLabel: scores.length
+      ? scores.map(formatScoreLabel).join(", ")
+      : String(judoka?.categorie_age || "")
   };
 }
 
@@ -724,13 +848,17 @@ function resolveRequestedNeWazaType(query: string): string {
 }
 
 function isJudokaListQuestion(query: string): boolean {
-  return /\b(liste|lister|affiche|afficher|montre|montrer|qui)\b/.test(query) && /\bjudoka|judokas\b/.test(query);
+  return (
+    /\b(liste|lister|affiche|afficher|montre|montrer|qui)\b/.test(query) &&
+    /\bjudoka|judokas\b/.test(query)
+  );
 }
 
 function isCombatListQuestion(query: string): boolean {
   return (
-    /\b(liste|lister|affiche|afficher|montre|montrer|cherche|chercher|trouve|trouver)\b/.test(query) &&
-    /\bcombat|combats\b/.test(query)
+    /\b(liste|lister|affiche|afficher|montre|montrer|cherche|chercher|trouve|trouver)\b/.test(
+      query
+    ) && /\bcombat|combats\b/.test(query)
   );
 }
 
@@ -771,7 +899,10 @@ function buildJudokaListMatches(
   const competitionsById = new Map(
     competitionRows.map((competition) => [String(competition.id_competition), competition])
   );
-  const combatByJudokaId = new Map<string, { competitionId: string; competitionName: string; competitionDate: string }>();
+  const combatByJudokaId = new Map<
+    string,
+    { competitionId: string; competitionName: string; competitionDate: string }
+  >();
   combatRows.forEach((combat) => {
     const competition = competitionsById.get(String(combat.id_competition));
     if (requestedDate && String(competition?.date || "") !== requestedDate) {
@@ -788,7 +919,10 @@ function buildJudokaListMatches(
     });
   });
   return judokaRows
-    .filter((judoka) => !requestedAgeCategory || String(judoka.categorie_age || "") === requestedAgeCategory)
+    .filter(
+      (judoka) =>
+        !requestedAgeCategory || String(judoka.categorie_age || "") === requestedAgeCategory
+    )
     .filter((judoka) => !requestedDate || combatByJudokaId.has(String(judoka.id_judoka || "")))
     .map((judoka) => {
       const combatInfo = combatByJudokaId.get(String(judoka.id_judoka || ""));
@@ -816,7 +950,9 @@ function formatJudokaListAnswer(
   const criteria = [
     requestedAgeCategory ? `catégorie ${requestedAgeCategory}` : "",
     requestedDate ? `combat le ${requestedDate}` : ""
-  ].filter(Boolean).join(" + ");
+  ]
+    .filter(Boolean)
+    .join(" + ");
   if (!matches.length) {
     return `Aucun judoka trouvé pour ${criteria}.`;
   }
@@ -829,7 +965,16 @@ function isNeWazaAliasTerm(term: string): boolean {
 }
 
 function buildAssistantSearchText(
-  combat: Pick<CombatRow, "id_judoka" | "id_competition" | "adversaire" | "garde_adversaire" | "resultat" | "type_victoire" | "deroule">,
+  combat: Pick<
+    CombatRow,
+    | "id_judoka"
+    | "id_competition"
+    | "adversaire"
+    | "garde_adversaire"
+    | "resultat"
+    | "type_victoire"
+    | "deroule"
+  >,
   scores: CombatScoreRow[],
   judoka: JudokaRow | undefined,
   competition: CompetitionRow | undefined

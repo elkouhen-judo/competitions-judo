@@ -278,6 +278,11 @@ export interface CoachAssistantResponse {
   beta: true;
 }
 
+export interface CoachChatHistoryMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
 export interface CompetitionCombatRecord {
   total: number;
   wins: number;
@@ -451,7 +456,11 @@ export interface RpcMethods {
   /** Calcule les statistiques agrégées du tableau de bord coach selon les filtres fournis. */
   getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
   /** Répond à une question simple du coach sur les judokas et combats enregistrés. */
-  askCoachAssistant: (email: string, question: string) => Promise<CoachAssistantResponse>;
+  askCoachAssistant: (
+    email: string,
+    question: string,
+    history?: CoachChatHistoryMessage[]
+  ) => Promise<CoachAssistantResponse>;
   /** Cherche des combats visibles par le coach selon des filtres structurés (outil MCP combats.search). */
   searchCombats: (
     email: string,

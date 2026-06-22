@@ -2,14 +2,30 @@ const { methods, verifySupabaseUser } = require("./_core");
 const { readRawBody } = require("./_read-body");
 const { createUIMessageStream, pipeUIMessageStreamToResponse } = require("ai");
 
-function extractQuestion(body) {
-  const lastMessage = Array.isArray(body.messages) ? body.messages.at(-1) : null;
-  const parts = (lastMessage && lastMessage.parts) || [];
+const MAX_HISTORY_MESSAGES = 6;
+
+function extractMessageText(message) {
+  const parts = (message && message.parts) || [];
   return parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join(" ")
     .trim();
+}
+
+function extractQuestion(body) {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  return extractMessageText(messages.at(-1));
+}
+
+function extractHistory(body) {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  return messages
+    .slice(0, -1)
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map((message) => ({ role: message.role, text: extractMessageText(message) }))
+    .filter((message) => message.text)
+    .slice(-MAX_HISTORY_MESSAGES);
 }
 
 module.exports = async function handler(req, res) {
@@ -26,8 +42,9 @@ module.exports = async function handler(req, res) {
     const email = await verifySupabaseUser(accessToken);
     const body = JSON.parse((await rawBodyPromise) || "{}");
     const question = extractQuestion(body);
+    const history = extractHistory(body);
 
-    const { answer, matches } = await methods.askCoachAssistant(email, question);
+    const { answer, matches } = await methods.askCoachAssistant(email, question, history);
 
     const stream = createUIMessageStream({
       execute({ writer }) {

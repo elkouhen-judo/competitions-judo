@@ -23,39 +23,19 @@ Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'ind
 - Pour un changement simple, donne une réponse courte et actionnable.
 - Si un échec de test est préexistant, signale-le sans le résoudre hors périmètre.
 
-## Symbol navigation
 
-Outil MCP principal : `codebase-memory-mcp` (graphe de connaissance du code, requêtes en lecture). Projet déjà indexé sous le nom `Users-m.el-kouhen-competitions-judo`.
+## Exploration du codebase
 
-Quand tu explores ou refactores du code :
+Utilise les outils classiques (`rg`/`ripgrep`, `find`, `grep`) comme moyen principal pour comprendre le codebase.
 
-- Découverte d'un symbole par nom : `search_graph(name_pattern=...)` ou `search_graph(query=...)` pour une recherche floue.
-- Qui appelle / qu'est-ce qui est appelé : `trace_path(function_name=..., mode="calls")`.
-- Lire la source exacte d'un symbole : `get_code_snippet(qualified_name=...)`.
-- Vue d'ensemble architecture : `get_architecture`.
-- Ne reviens au text search (`grep`/`Glob`) que si le graphe ne résout pas le symbole.
+### Workflow
 
-### Fraîcheur de l'index — pas d'auto-sync continu
+1. Utiliser `rg`/`ripgrep` pour localiser les classes, fonctions, modules, services, dépendances ou flux métier pertinents.
+2. Lire les fichiers sources identifiés.
+3. Proposer ou appliquer la modification.
+4. Vérifier les tests existants ou recommander les tests à lancer.
 
-Le graphe persisté (utilisé par `search_graph`/`trace_path`/`get_architecture`) reste figé jusqu'au prochain `index_repository` — il n'y a pas de file-watcher. `auto_index=true` ne fait qu'indexer automatiquement un projet jamais vu, pas resynchroniser un projet déjà indexé après modification.
-
-- Avant de faire confiance à un résultat structurel après une session d'édition : `detect_changes()` (diff git à la volée, gratuit, ne modifie pas le graphe) pour voir si le repo a divergé.
-- Si oui, relancer `index_repository(mode="fast")` (le moins coûteux) avant de requêter à nouveau.
-
-## Editing workflow
-
-1. Utilise `codebase-memory-mcp` pour découvrir les symboles et leurs appelants.
-2. Vérifie les références avant tout renommage.
-3. Lis les diagnostics avant de modifier.
-4. Effectue ensuite les modifications.
-
-## Stack
-
-Ce dépôt utilise :
-
-- TypeScript
-- HTML
-- CSS
+Ne modifie jamais du code sans avoir lu les fichiers sources concernés.
 
 ## Contrainte critique — Tests de patterns source
 
@@ -106,6 +86,10 @@ Après la modification :
 - Mettre à jour `docs/spec.md` quand une règle, un écran ou un flux utilisateur change.
 - Mettre à jour `docs/spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent.
 - Vérifier `git status`.
+
+## Fin de tâche
+
+À la fin de chaque tâche, demander à l'utilisateur s'il est d'accord pour compacter la conversation (`/compact`). Ne jamais compacter sans son accord explicite.
 
 ## Git
 

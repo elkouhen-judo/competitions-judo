@@ -463,12 +463,7 @@ test("finished club competition blocks detaching participants", async () => {
   });
 
   await assert.rejects(
-    () =>
-      service.methods.detachClubCompetitionParticipant(
-        "coach@example.com",
-        "CLUB1",
-        "COMP2"
-      ),
+    () => service.methods.detachClubCompetitionParticipant("coach@example.com", "CLUB1", "COMP2"),
     /participants sont verrouillés/
   );
   assert.deepEqual(calls, []);
@@ -615,7 +610,8 @@ function createTestCompetitionsService({
 function domainContextFor(idJudoka, role, extras = {}) {
   return async () => ({
     judokas: extras.judokas || [],
-    domainUser: extras.domainUser || toCanonicalJudoka({ id_judoka: idJudoka, profile_type: "JUDOKA", role }),
+    domainUser:
+      extras.domainUser || toCanonicalJudoka({ id_judoka: idJudoka, profile_type: "JUDOKA", role }),
     managedJudokaScope: extras.managedJudokaScope || createManagedJudokaScope([])
   });
 }
@@ -1337,7 +1333,11 @@ test("askCoachAssistant falls back to heuristic search when Anthropic's structur
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" }],
     // Simule un mauvais choix d'Anthropic (le nom du judoka dans "opponent" au lieu de "text"),
     // qui ne doit pas empêcher le repli heuristique de retrouver le combat par nom.
-    anthropicResponse: JSON.stringify({ entity: "combats", filters: { opponent: "Aya" }, limit: 12 }),
+    anthropicResponse: JSON.stringify({
+      entity: "combats",
+      filters: { opponent: "Aya" },
+      limit: 12
+    }),
     getDomainUserContext: domainContextFor("COACH1", "COACH")
   });
 
@@ -1558,6 +1558,65 @@ test("askCoachAssistant uses Anthropic structured intent to choose judoka or com
   assert.equal(combatResult.matches[0].scoreLabel, "Osaekomi · Ippon");
 });
 
+test("askCoachAssistant keeps a judokas query grouped by judoka (one row per judoka, not per combat) when filtered by a combat-only attribute", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-06-19", niveau: "Régional" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [
+        {
+          id_combat: "CB1",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Léo Dupont",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB2",
+          id_judoka: "JUDO1",
+          id_competition: "COMP1",
+          adversaire: "Noa Martin",
+          resultat: "Victoire",
+          type_victoire: "Ippon"
+        },
+        {
+          id_combat: "CB3",
+          id_judoka: "JUDO2",
+          id_competition: "COMP1",
+          adversaire: "Sami Klein",
+          resultat: "Victoire",
+          type_victoire: "Waza-ari"
+        }
+      ]
+    },
+    combatScoresByCombatId: {
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
+      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+    },
+    judokaRows: [
+      { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
+      { id_judoka: "JUDO2", prenom: "Nina", nom: "Bernard", categorie_age: "Minime" }
+    ],
+    getDomainUserContext: domainContextFor("COACH1", "COACH"),
+    anthropicResponse: JSON.stringify({
+      entity: "judokas",
+      filters: { neWazaType: "Osaekomi" },
+      limit: 10
+    })
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "trouve les judokas qui ont gagné par osaekomi"
+  );
+
+  assert.match(result.answer, /judoka/);
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].judokaName, "Aya Durand");
+});
+
 test("askCoachAssistant exposes the application's real MCP tool catalog to Anthropic tool-calling and executes the chosen tool locally", async () => {
   const anthropicToolDefinitions = [];
   const { service } = createTestCoachDashboardService({
@@ -1634,6 +1693,54 @@ test("askCoachAssistant finds a judoka by name when Anthropic returns filters.te
 
   assert.equal(result.matches.length, 1);
   assert.equal(result.matches[0].judokaName, "Mehdi El Kouhen");
+});
+
+test("askCoachAssistant forwards conversation history so a follow-up pronoun can be resolved to the earlier judoka", async () => {
+  const anthropicToolMessages = [];
+  const { service } = createTestCoachDashboardService({
+    judokaRows: [{ id_judoka: "JUDO1", prenom: "Ali", nom: "El Kouhen" }],
+    competitionRows: [
+      { id_competition: "COMP1", nom: "Tournoi régional", date: "2026-05-01" }
+    ],
+    combatsByCompetitionId: {
+      COMP1: [{ id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "Victoire" }]
+    },
+    anthropicToolMessages,
+    anthropicToolCall: {
+      content: "",
+      toolCalls: [
+        {
+          function: {
+            name: "mcp_competitions_search",
+            arguments: JSON.stringify({ filters: { text: ["Ali El Kouhen"] } })
+          }
+        }
+      ]
+    },
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.askCoachAssistant(
+    "coach@example.com",
+    "à quelles compétitions a-t-il participé",
+    [
+      { role: "user", text: "Qui est Ali El Kouhen" },
+      { role: "assistant", text: "1 judoka(s) trouvé(s)." }
+    ]
+  );
+
+  assert.equal(result.matches.length, 1);
+  assert.equal(result.matches[0].competitionName, "Tournoi régional");
+
+  const [messages] = anthropicToolMessages;
+  assert.ok(
+    messages.some((message) => message.role === "user" && message.content === "Qui est Ali El Kouhen")
+  );
+  assert.ok(
+    messages.some(
+      (message) => message.role === "assistant" && message.content === "1 judoka(s) trouvé(s)."
+    )
+  );
 });
 
 test("askCoachAssistant surfaces a clear error when Anthropic is rate-limited instead of failing silently", async () => {
