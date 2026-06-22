@@ -542,6 +542,7 @@
         openCoachCompetitionsHub,
         openCoachJudokaHub,
         openCoachStatsHub,
+        openCoachChatHub,
         showClubCompetitionForm: screens.competition.showClubCompetitionForm,
         showHomeCompetitionForm,
         showHomeFilterOptions,
@@ -724,6 +725,10 @@
 
     function openCoachStatsHub() {
       screens.coachDashboard.showCoachDashboard();
+    }
+
+    function openCoachChatHub() {
+      screens.coachDashboard.showCoachChat();
     }
 
     function openParentCompetitionsHub() {

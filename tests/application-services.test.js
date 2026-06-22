@@ -742,32 +742,6 @@ test("saveCompetition rejects editing a competition owned by another judoka", as
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
-  test("saveCompetition rejects duplicate standalone competitions for the same judoka", async () => {
-    const { service } = createTestCompetitionsService({
-      competitionsByCompetitionId: {
-        COMP1: {
-          id_competition: "COMP1",
-          id_judoka: "JUDO1",
-          nom: "Tournoi Nantes",
-          date: "2026-06-14",
-          categorie_age: "Cadet",
-          club_competition_id: null
-        }
-      },
-      getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
-    });
-
-    await assert.rejects(
-      () =>
-        service.methods.saveCompetition("judoka@example.com", {
-          name: "Tournoi Nantes",
-          competitionDate: "2026-06-14",
-          ageCategory: "Cadet"
-        }),
-      /déjà une compétition individuelle/
-    );
-  });
-
   await assert.rejects(
     () =>
       service.methods.saveCompetition("judoka@example.com", {
@@ -776,6 +750,32 @@ test("saveCompetition rejects editing a competition owned by another judoka", as
         competitionDate: "2026-06-15"
       }),
     /Modification de cette compétition non autorisée/
+  );
+});
+
+test("saveCompetition rejects duplicate standalone competitions for the same judoka", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        nom: "Tournoi Nantes",
+        date: "2026-06-14",
+        categorie_age: "Cadet",
+        club_competition_id: null
+      }
+    },
+    getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  await assert.rejects(
+    () =>
+      service.methods.saveCompetition("judoka@example.com", {
+        name: "Tournoi Nantes",
+        competitionDate: "2026-06-14",
+        ageCategory: "Cadet"
+      }),
+    /déjà une compétition individuelle/
   );
 });
 
@@ -810,29 +810,29 @@ test("finalizeCompetition requires a competition id", async () => {
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
-  test("finalizeCompetition rejects an admin requester", async () => {
-    const { service } = createTestCompetitionsService({
-      competitionsByCompetitionId: {
-        COMP1: {
-          id_competition: "COMP1",
-          id_judoka: "JUDO1",
-          nom: "Tournoi",
-          date: "2026-06-14",
-          categorie_age: "Cadet"
-        }
-      },
-      getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
-    });
-
-    await assert.rejects(
-      () => service.methods.finalizeCompetition("admin@example.com", "COMP1", "1er"),
-      /Finalisation de cette compétition non autorisée/
-    );
-  });
-
   await assert.rejects(
     () => service.methods.finalizeCompetition("judoka@example.com", "", "1er"),
     /Compétition obligatoire/
+  );
+});
+
+test("finalizeCompetition rejects an admin requester", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: {
+        id_competition: "COMP1",
+        id_judoka: "JUDO1",
+        nom: "Tournoi",
+        date: "2026-06-14",
+        categorie_age: "Cadet"
+      }
+    },
+    getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+  });
+
+  await assert.rejects(
+    () => service.methods.finalizeCompetition("admin@example.com", "COMP1", "1er"),
+    /Finalisation de cette compétition non autorisée/
   );
 });
 
@@ -911,7 +911,8 @@ function createTestCoachDashboardService({
 } = {}) {
   const service = createCoachDashboardService({
     combatsRepository: {
-      listByCompetition: async (id) => combatsByCompetitionId[id] || []
+      listByCompetition: async (id) => combatsByCompetitionId[id] || [],
+      listByCompetitionIds: async (ids) => ids.flatMap((id) => combatsByCompetitionId[id] || [])
     },
     combatScoresRepository: {
       listByCombatIds: async (ids) => ids.flatMap((id) => combatScoresByCombatId[id] || [])
@@ -2017,23 +2018,23 @@ test("deleteCombat requires a combat id", async () => {
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
-  test("deleteCombat rejects an admin requester", async () => {
-    const { service } = createTestCombatsService({
-      combatsById: {
-        CB1: { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "V" }
-      },
-      getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
-    });
-
-    await assert.rejects(
-      () => service.methods.deleteCombat("admin@example.com", "CB1"),
-      /Suppression de ce combat non autorisée/
-    );
-  });
-
   await assert.rejects(
     () => service.methods.deleteCombat("judoka@example.com", ""),
     /Combat obligatoire/
+  );
+});
+
+test("deleteCombat rejects an admin requester", async () => {
+  const { service } = createTestCombatsService({
+    combatsById: {
+      CB1: { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "V" }
+    },
+    getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+  });
+
+  await assert.rejects(
+    () => service.methods.deleteCombat("admin@example.com", "CB1"),
+    /Suppression de ce combat non autorisée/
   );
 });
 

@@ -5,6 +5,7 @@
   type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
 
   const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
+  const COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT = 8;
   const PODIUM_LEVEL_PRIORITY = ["International", "National", "Régional", "Départemental"];
   const PODIUM_LEVEL_LABELS: Record<string, string> = {
     International: "Int.",
@@ -40,12 +41,12 @@
   }
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
-    const { defaultListPageSize, state, screens, ui, notifications } = app;
+    const { state, screens, ui, notifications } = app;
     const { cleanText, showView } = ui;
     const { showError } = notifications;
 
     const defaultCoachDashboardForm = {
-      ageCategory: "",
+      ageCategory: "Minime",
       dateFrom: "",
       dateTo: "",
       competitionIds: [] as string[]
@@ -145,29 +146,33 @@
       }
       return "Point d'attention : comparez les décisions et les gardes pour orienter le prochain travail.";
     });
-    const coachDashboardCompetitionOptionsFiltered = window.Vue.computed(() => {
+    const coachDashboardSelectedCompetitions = window.Vue.computed(() => {
+      const optionsById = new Map(
+        coachDashboardViewModel.availableCompetitions.map((option) => [
+          String(option.competitionId),
+          option
+        ])
+      );
+      return coachDashboardViewModel.coachDashboardForm.competitionIds
+        .map((id) => optionsById.get(String(id)))
+        .filter((option): option is CoachDashboardCompetitionOption => Boolean(option));
+    });
+    const coachDashboardCompetitionSuggestions = window.Vue.computed(() => {
       const query = cleanText(coachDashboardViewModel.competitionSearchText).toLowerCase();
+      if (!query) {
+        return [] as CoachDashboardCompetitionOption[];
+      }
       const selectedIds = new Set(
         coachDashboardViewModel.coachDashboardForm.competitionIds.map(String)
       );
-      return coachDashboardViewModel.availableCompetitions.filter(
-        (option) =>
-          selectedIds.has(String(option.competitionId)) ||
-          !query ||
-          option.name.toLowerCase().includes(query) ||
-          option.competitionDate.includes(query)
-      );
+      return coachDashboardViewModel.availableCompetitions
+        .filter(
+          (option) =>
+            !selectedIds.has(String(option.competitionId)) &&
+            (option.name.toLowerCase().includes(query) || option.competitionDate.includes(query))
+        )
+        .slice(0, COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT);
     });
-    const coachDashboardCompetitionOptionsPagination = window.Vue.computed(() =>
-      window.KirokuScreenProjections.paginateList(
-        coachDashboardCompetitionOptionsFiltered.value,
-        state.coachDashboardCompetitionOptionsCurrentPage,
-        defaultListPageSize
-      )
-    );
-    const coachDashboardCompetitionOptionsPaginationRefs = ui.createPaginationRefs(
-      coachDashboardCompetitionOptionsPagination
-    );
     const coachDashboardTitle = window.Vue.computed(() =>
       coachDashboardViewModel.activeCoachDashboardTab === "chat"
         ? "Chat coach — quota LLM limité"
@@ -196,9 +201,8 @@
           showPersonalSpace,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
-          updateCoachDashboardCompetitionSearch,
-          showCoachDashboardCompetitionOptionsPreviousPage,
-          showCoachDashboardCompetitionOptionsNextPage,
+          addCoachDashboardCompetition,
+          removeCoachDashboardCompetition,
           showCoachJudoka,
           showCoachDashboard,
           showCoachChat
@@ -216,17 +220,8 @@
           coachDashboardTopWinTechniques,
           coachDashboardMainQualityIssue,
           coachDashboardSummaryInsight,
-          coachDashboardCompetitionOptionsPage: coachDashboardCompetitionOptionsPaginationRefs.page,
-          coachDashboardCompetitionOptionsTotalPages:
-            coachDashboardCompetitionOptionsPaginationRefs.totalPages,
-          coachDashboardCompetitionOptionsCurrentPage:
-            coachDashboardCompetitionOptionsPaginationRefs.currentPage,
-          coachDashboardCompetitionOptionsTotalCount:
-            coachDashboardCompetitionOptionsPaginationRefs.totalCount,
-          coachDashboardCompetitionOptionsCanShowPreviousPage:
-            coachDashboardCompetitionOptionsPaginationRefs.canShowPreviousPage,
-          coachDashboardCompetitionOptionsCanShowNextPage:
-            coachDashboardCompetitionOptionsPaginationRefs.canShowNextPage,
+          coachDashboardSelectedCompetitions,
+          coachDashboardCompetitionSuggestions,
           coachDashboardTitle,
           coachDashboardSubtitle
         }
@@ -305,19 +300,22 @@
       }, COACH_DASHBOARD_REFRESH_DEBOUNCE_MS);
     }
 
-    function updateCoachDashboardCompetitionSearch() {
-      state.coachDashboardCompetitionOptionsCurrentPage = 1;
+    function addCoachDashboardCompetition(competitionId: string) {
+      const id = String(competitionId);
+      if (!coachDashboardViewModel.coachDashboardForm.competitionIds.includes(id)) {
+        coachDashboardViewModel.coachDashboardForm.competitionIds.push(id);
+      }
+      coachDashboardViewModel.competitionSearchText = "";
+      scheduleCoachDashboardRefresh();
     }
 
-    function showCoachDashboardCompetitionOptionsPreviousPage() {
-      state.coachDashboardCompetitionOptionsCurrentPage = Math.max(
-        state.coachDashboardCompetitionOptionsCurrentPage - 1,
-        1
-      );
-    }
-
-    function showCoachDashboardCompetitionOptionsNextPage() {
-      state.coachDashboardCompetitionOptionsCurrentPage += 1;
+    function removeCoachDashboardCompetition(competitionId: string) {
+      const id = String(competitionId);
+      coachDashboardViewModel.coachDashboardForm.competitionIds =
+        coachDashboardViewModel.coachDashboardForm.competitionIds.filter(
+          (existingId) => existingId !== id
+        );
+      scheduleCoachDashboardRefresh();
     }
 
     function askCoachAssistant() {

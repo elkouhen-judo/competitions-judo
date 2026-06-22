@@ -37,5 +37,12 @@
   },
   "allowScripts": {
     "esbuild@0.28.1": true
+  },
+  "dependencies": {
+  "tree-sitter": "0.21.1",
+  "tree-sitter-typescript": "0.23.2",
+  "tree-sitter-javascript": "0.23.1",
+  "tree-sitter-html": "0.23.2",
+  "tree-sitter-css": "0.23.1"
   }
 }

@@ -256,39 +256,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     filters?: Record<string, unknown>;
     limit?: unknown;
   } | null | undefined): CoachChatQuery | null {
-    const entity = parsed?.entity;
-    if (entity !== "judokas" && entity !== "combats" && entity !== "competitions") {
-      return null;
-    }
-    const filters = parsed?.filters && typeof parsed.filters === "object" ? parsed.filters : {};
-    const text = (Array.isArray(filters.text) ? filters.text : [filters.text])
-      .map((term: unknown) => String(term || "").trim())
-      .filter(Boolean);
-    const competitionDate =
-      String(filters.competitionDate || "").trim() === "today"
-        ? getCurrentDate()
-        : String(filters.competitionDate || "").trim();
-    return {
-      entity,
-      filters: {
-        ageCategory: String(filters.ageCategory || "").trim() || undefined,
-        beltColor: String(filters.beltColor || "").trim() || undefined,
-        categoryYear: String(filters.categoryYear || "").trim() || undefined,
-        competitionDate: competitionDate || undefined,
-        competitionLevel: String(filters.competitionLevel || "").trim() || undefined,
-        gender: String(filters.gender || "").trim() || undefined,
-        handedness: String(filters.handedness || "").trim() || undefined,
-        neWazaType: String(filters.neWazaType || "").trim() || undefined,
-        opponent: String(filters.opponent || "").trim() || undefined,
-        opponentStance: String(filters.opponentStance || "").trim() || undefined,
-        result: String(filters.result || "").trim() || undefined,
-        scoreValue: String(filters.scoreValue || "").trim() || undefined,
-        tachiWazaTechnique: String(filters.tachiWazaTechnique || "").trim() || undefined,
-        victoryType: String(filters.victoryType || "").trim() || undefined,
-        text
-      },
-      limit: Math.min(Math.max(Number(parsed?.limit) || DEFAULT_LIMIT, 1), MAX_LIMIT)
-    };
+    return resolveRelativeDates(buildCoachChatQueryWithoutDateResolution(parsed));
   }
 
   function resolveRequestedCompetitionDate(query: string): string {

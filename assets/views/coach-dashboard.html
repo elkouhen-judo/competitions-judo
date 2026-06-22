@@ -72,23 +72,21 @@
           <div v-show="filtersExpanded">
             <div class="full-row">
               <label for="coachDashboardCompetitionSearch">Compétitions
-                <span v-if="coachDashboardForm.competitionIds.length" class="result-badge">{{ coachDashboardForm.competitionIds.length }} sélectionnée(s)</span>
+                <span v-if="coachDashboardSelectedCompetitions.length" class="result-badge">{{ coachDashboardSelectedCompetitions.length }} sélectionnée(s)</span>
               </label>
-              <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher par nom ou date..." autocomplete="off" v-model="competitionSearchText" @input="updateCoachDashboardCompetitionSearch()">
-              <div id="coachDashboardCompetitionOptions">
-                <div v-if="!coachDashboardCompetitionOptionsPage.length" class="empty-state">Aucune compétition trouvée.</div>
+              <div v-if="coachDashboardSelectedCompetitions.length" class="competition-chip-list">
+                <span v-for="competition in coachDashboardSelectedCompetitions" :key="competition.competitionId" class="competition-chip">
+                  {{ competition.name }} — {{ competition.competitionDate }}
+                  <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${competition.name}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
+                </span>
+              </div>
+              <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher une compétition par nom ou date..." autocomplete="off" v-model="competitionSearchText">
+              <div v-if="competitionSearchText.trim()" id="coachDashboardCompetitionOptions">
+                <div v-if="!coachDashboardCompetitionSuggestions.length" class="empty-state">Aucune compétition trouvée.</div>
                 <div v-else class="list">
-                  <label v-for="option in coachDashboardCompetitionOptionsPage" :key="option.competitionId" class="checkbox-row">
-                    <input type="checkbox" :value="option.competitionId" v-model="coachDashboardForm.competitionIds" @change="scheduleCoachDashboardRefresh()">
+                  <button v-for="option in coachDashboardCompetitionSuggestions" :key="option.competitionId" type="button" class="checkbox-row competition-suggestion" @click="addCoachDashboardCompetition(option.competitionId)">
                     <span>{{ option.name }} — {{ option.competitionDate }}</span>
-                  </label>
-                </div>
-                <div v-if="coachDashboardCompetitionOptionsTotalPages > 1" class="list-summary">
-                  <p class="list-summary-text">Page {{ coachDashboardCompetitionOptionsCurrentPage }} / {{ coachDashboardCompetitionOptionsTotalPages }} ({{ coachDashboardCompetitionOptionsTotalCount }} compétitions)</p>
-                  <div class="list-summary-actions">
-                    <button v-if="coachDashboardCompetitionOptionsCanShowPreviousPage" class="button-secondary" type="button" @click="showCoachDashboardCompetitionOptionsPreviousPage()">Page précédente</button>
-                    <button v-if="coachDashboardCompetitionOptionsCanShowNextPage" class="button-secondary" type="button" @click="showCoachDashboardCompetitionOptionsNextPage()">Page suivante</button>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>

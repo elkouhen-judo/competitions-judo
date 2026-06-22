@@ -7,6 +7,8 @@ const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
   Egalité: "E"
 };
 
+const COMBAT_SELECT_BATCH_SIZE = 100;
+
 export interface CombatsRepository {
   existsForJudoka(idJudoka: string): Promise<CombatRow | null>;
   getById(idCombat: string): Promise<CombatRow | null>;
@@ -14,6 +16,7 @@ export interface CombatsRepository {
   listByCompetition(idCompetition: string): Promise<CombatRow[]>;
   listByCompetitionAndJudoka(idCompetition: string, idJudoka: string): Promise<CombatRow[]>;
   listByCompetitionAndJudokaIds(idCompetition: string, ids: string[]): Promise<CombatRow[]>;
+  listByCompetitionIds(ids: string[]): Promise<CombatRow[]>;
   listByJudoka(idJudoka: string): Promise<CombatRow[]>;
   remove(idCombat: string): Promise<void>;
   update(idCombat: string, combat: CombatModel): Promise<CombatRow | null>;
@@ -107,6 +110,25 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     );
   }
 
+  async function listByCompetitionIds(ids: string[]): Promise<CombatRow[]> {
+    const uniqueIds = Array.from(new Set((ids || []).map(String).filter(Boolean)));
+    if (!uniqueIds.length) {
+      return [];
+    }
+
+    const rows: CombatRow[] = [];
+    for (let index = 0; index < uniqueIds.length; index += COMBAT_SELECT_BATCH_SIZE) {
+      const batchIds = uniqueIds.slice(index, index + COMBAT_SELECT_BATCH_SIZE);
+      rows.push(
+        ...(await supabaseSelect<CombatRow>(
+          "combats",
+          `select=*&id_competition=in.(${batchIds.join(",")})`
+        ))
+      );
+    }
+    return rows;
+  }
+
   async function getById(idCombat: string): Promise<CombatRow | null> {
     return supabaseSelectOne<CombatRow>("combats", `select=*&${eqFilter("id_combat", idCombat)}`);
   }
@@ -158,6 +180,7 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     listByCompetition,
     listByCompetitionAndJudoka,
     listByCompetitionAndJudokaIds,
+    listByCompetitionIds,
     listByJudoka,
     remove,
     update

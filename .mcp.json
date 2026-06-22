@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vscode-lsp": {
+      "type": "stdio",
+      "command": "./mcp-lsp-proxy.sh"
+    }
+  }
+}

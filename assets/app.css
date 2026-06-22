@@ -1213,6 +1213,57 @@
       padding: 9px 12px;
     }
 
+    .competition-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 7px 0;
+    }
+
+    .competition-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--text);
+      padding: 5px 6px 5px 12px;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .competition-chip-remove {
+      width: auto;
+      min-height: auto;
+      min-width: 28px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .competition-chip-remove:hover:not(:disabled),
+    .competition-chip-remove:active:not(:disabled) {
+      background: transparent;
+      color: var(--text);
+      transform: none;
+    }
+
+    .competition-suggestion {
+      justify-content: flex-start;
+      text-align: left;
+      font-weight: normal;
+      color: var(--text);
+    }
+
+    .competition-suggestion:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
     .coach-dashboard-stats-tab > .section:first-child,
     .coach-assistant-section {
       border-top: 0;
@@ -1956,7 +2007,7 @@
       }
 
       .coach-home-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       }
 
       .coach-home-card {
