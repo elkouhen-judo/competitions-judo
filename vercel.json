@@ -24,6 +24,10 @@
       "destination": "/api/rpc"
     },
     {
+      "source": "/api/coach-chat",
+      "destination": "/api/coach-chat"
+    },
+    {
       "source": "/mcp",
       "destination": "/api/mcp"
     },

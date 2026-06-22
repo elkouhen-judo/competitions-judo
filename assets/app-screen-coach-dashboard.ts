@@ -1,6 +1,5 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
-  type CoachAssistantResponse = import("./types").CoachAssistantResponse;
   type CoachDashboardStats = import("../core/types").CoachDashboardStats;
   type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
 
@@ -33,13 +32,6 @@
       "Le combat est gagné par Ippon, mais aucun point Ippon n'a été détaillé : la saisie mérite une vérification."
   };
 
-  interface CoachAssistantMessage {
-    id: number;
-    role: "coach" | "assistant";
-    text: string;
-    matches?: CoachAssistantResponse["matches"];
-  }
-
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
     const { state, screens, ui, notifications } = app;
     const { cleanText, showView } = ui;
@@ -58,21 +50,11 @@
       competitionSearchText: "",
       activeCoachDashboardTab: "stats",
       filtersExpanded: true,
-      coachAssistantQuestion: "",
-      coachAssistantMessages: [
-        {
-          id: 1,
-          role: "assistant",
-          text: "Mode bêta. Essaie : « Trouve les judokas qui ont gagné par Osaekomi ».",
-          matches: []
-        }
-      ] as CoachAssistantMessage[],
-      isLoadingCoachAssistant: false,
       coachDashboardStats: null as CoachDashboardStats | null,
       isLoadingCoachDashboardStats: false
     });
-    let coachAssistantMessageId = 1;
     let coachDashboardMounted = false;
+    let coachChatWidgetMounted = false;
     let coachDashboardRefreshTimer: number | null = null;
     let coachDashboardRequestId = 0;
 
@@ -193,7 +175,6 @@
         "coachDashboardView",
         coachDashboardViewModel,
         {
-          askCoachAssistant,
           getDataQualityIssueDescription,
           resetCoachDashboardFilters,
           scheduleCoachDashboardRefresh,
@@ -318,36 +299,16 @@
       scheduleCoachDashboardRefresh();
     }
 
-    function askCoachAssistant() {
-      const question = ui.cleanText(coachDashboardViewModel.coachAssistantQuestion);
-      if (!question || coachDashboardViewModel.isLoadingCoachAssistant) {
+    function mountCoachChatWidget() {
+      if (coachChatWidgetMounted) {
         return;
       }
-      coachDashboardViewModel.coachAssistantMessages.push({
-        id: (coachAssistantMessageId += 1),
-        role: "coach",
-        text: question
+      coachChatWidgetMounted = true;
+      window.mountKirokuCoachChatWidget({
+        elementId: "coachChatWidget",
+        getAccessToken: () =>
+          app.auth.getValidVercelSession().then((session) => session?.access_token || "")
       });
-      coachDashboardViewModel.coachAssistantQuestion = "";
-      coachDashboardViewModel.isLoadingCoachAssistant = true;
-
-      app.runServer(
-        "askCoachAssistant",
-        [question],
-        (response) => {
-          coachDashboardViewModel.coachAssistantMessages.push({
-            id: (coachAssistantMessageId += 1),
-            role: "assistant",
-            text: response.answer,
-            matches: response.matches
-          });
-          coachDashboardViewModel.isLoadingCoachAssistant = false;
-        },
-        (error) => {
-          coachDashboardViewModel.isLoadingCoachAssistant = false;
-          showError(error);
-        }
-      );
     }
 
     function resetCoachDashboardFilters() {
@@ -392,6 +353,7 @@
 
     function showCoachChat() {
       showCoachDashboardMode("chat");
+      mountCoachChatWidget();
     }
 
     function showCoachHomeMode(mode: "judoka" | "coachHome" | "coach" | "coachJudoka") {

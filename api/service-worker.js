@@ -31,6 +31,7 @@ self.addEventListener("fetch", (event) => {
   if (
     request.method !== "GET" ||
     url.pathname === "/api/rpc" ||
+    url.pathname === "/api/coach-chat" ||
     BYPASS_URLS.includes(url.pathname)
   ) {
     return;

@@ -13,27 +13,7 @@
               <p class="subtitle">Recherche dans les attributs judoka, compétition, combat et scores enregistrés.</p>
             </div>
           </div>
-          <div class="coach-assistant-thread">
-            <article v-for="message in coachAssistantMessages" :key="message.id" class="coach-assistant-message" :class="message.role === 'coach' ? 'coach-assistant-message-user' : 'coach-assistant-message-system'">
-              <p>{{ message.text }}</p>
-              <div v-if="message.matches && message.matches.length" class="coach-assistant-results">
-                <div v-for="match in message.matches" :key="`${match.competitionId}-${match.judokaId}-${match.opponent}-${match.scoreLabel}`" class="coach-assistant-result">
-                  <strong>{{ match.judokaName }}</strong>
-                  <span v-if="match.competitionName || match.competitionDate">{{ match.competitionName }}<template v-if="match.competitionName && match.competitionDate"> · </template>{{ match.competitionDate }}</span>
-                  <span v-if="match.result || match.opponent">{{ match.result }}<template v-if="match.result && match.opponent"> contre </template>{{ match.opponent }}<template v-if="match.victoryType"> · {{ match.victoryType }}</template></span>
-                  <span v-if="match.scoreLabel">{{ match.scoreLabel }}</span>
-                </div>
-              </div>
-            </article>
-            <div v-if="isLoadingCoachAssistant" class="coach-assistant-loading">Recherche en cours...</div>
-          </div>
-          <form class="coach-assistant-form" @submit.prevent="askCoachAssistant()">
-            <label for="coachAssistantQuestion">Question</label>
-            <div class="coach-assistant-input-row">
-              <input id="coachAssistantQuestion" type="search" autocomplete="off" placeholder="Ex. Trouve les judokas qui ont gagné par Osaekomi" v-model="coachAssistantQuestion">
-              <button type="submit" :disabled="isLoadingCoachAssistant || !coachAssistantQuestion.trim()">Rechercher</button>
-            </div>
-          </form>
+          <div id="coachChatWidget"></div>
         </div>
 
         <div v-show="activeCoachDashboardTab === 'stats'" class="coach-dashboard-stats-tab">
