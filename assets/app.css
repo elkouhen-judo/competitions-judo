@@ -1397,8 +1397,9 @@
       text-decoration-color: transparent;
     }
 
-    .coach-assistant-result-name:hover,
+    button.coach-assistant-result-name:hover:not(:disabled),
     .coach-assistant-result-name:focus-visible {
+      background: none;
       text-decoration-color: currentColor;
     }
 
@@ -1415,8 +1416,9 @@
       text-decoration-color: transparent;
     }
 
-    .coach-assistant-result-competition:hover,
+    button.coach-assistant-result-competition:hover:not(:disabled),
     .coach-assistant-result-competition:focus-visible {
+      background: none;
       text-decoration-color: currentColor;
     }
 
