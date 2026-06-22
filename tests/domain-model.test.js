@@ -611,8 +611,8 @@ test("combat score category domain normalizes aliases and rejects unknown values
   assert.equal(normalizeCombatScoreCategory("inconnu"), "");
 
   assert.equal(createCombatScoreCategory("Tachi-waza"), "Tachi-waza");
-  assert.throws(() => createCombatScoreCategory(""), /Catégorie de prise invalide/);
-  assert.throws(() => createCombatScoreCategory("inconnu"), /Catégorie de prise invalide/);
+  assert.throws(() => createCombatScoreCategory(""), /Catégorie de technique invalide/);
+  assert.throws(() => createCombatScoreCategory("inconnu"), /Catégorie de technique invalide/);
 });
 
 test("tachi-waza technique domain normalizes known aliases and accepts free text", () => {

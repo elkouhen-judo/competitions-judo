@@ -26,7 +26,7 @@ export function normalizeCombatScoreCategory(value: unknown): CombatScoreCategor
 export function createCombatScoreCategory(value: unknown): CombatScoreCategory {
   const category = normalizeCombatScoreCategory(value);
   if (!category) {
-    throw new Error("Catégorie de prise invalide.");
+    throw new Error("Catégorie de technique invalide.");
   }
   return category;
 }

@@ -79,15 +79,15 @@
                   <label>Points marqués</label>
                   <p class="field-hint">Aide à repérer les points debout et au sol.</p>
                 </div>
-                <span class="result-badge">{{ combatForm.scores.length }} prise(s)</span>
+                <span class="result-badge">{{ combatForm.scores.length }} technique(s)</span>
               </div>
               <div v-if="!combatForm.scores.length" class="combat-score-empty">
-                Ajoutez une prise seulement si un point a été marqué.
+                Ajoutez une technique seulement si un point a été marqué.
               </div>
               <div class="combat-score-rows">
                 <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
                   <div class="combat-score-row-header">
-                    <span class="combat-score-row-title">Prise {{ index + 1 }}</span>
+                    <span class="combat-score-row-title">Technique {{ index + 1 }}</span>
                     <button class="button-danger compact-button" type="button" @click="removeCombatScoreRow(index)">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                       Retirer
@@ -123,8 +123,8 @@
                   </div>
                 </div>
               </div>
-              <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une prise</button>
-              <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les prises marquées">
+              <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une technique</button>
+              <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les techniques marquées">
                 <span v-for="issue in combatFormScoreIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
                   <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
                   {{ issue.label }}

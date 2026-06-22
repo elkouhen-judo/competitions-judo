@@ -156,7 +156,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
         }
         const scoreLabel = matchingScores.length
           ? matchingScores.map(formatScoreLabel).join(", ")
-          : "Aucune prise détaillée";
+          : "Aucune technique détaillée";
         return [
           {
             judokaId: String(combat.id_judoka || ""),
