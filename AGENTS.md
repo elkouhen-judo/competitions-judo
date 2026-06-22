@@ -42,10 +42,6 @@ Le graphe persisté (utilisé par `search_graph`/`trace_path`/`get_architecture`
 - Avant de faire confiance à un résultat structurel après une session d'édition : `detect_changes()` (diff git à la volée, gratuit, ne modifie pas le graphe) pour voir si le repo a divergé.
 - Si oui, relancer `index_repository(mode="fast")` (le moins coûteux) avant de requêter à nouveau.
 
-### `vscode-lsp` — usage ponctuel uniquement
-
-Le serveur MCP `vscode-lsp` (déclaré dans `.mcp.json`, lancé par `mcp-lsp-proxy.sh`) reste disponible mais s'est montré instable en session (déconnexions, sessions expirées, `search_workspace_symbols` qui renvoie systématiquement zéro résultat). Ne l'utiliser qu'en complément, pour la seule capacité que `codebase-memory-mcp` n'a pas : `rename_symbol` (le graphe est en lecture seule). Vérifier `references` via `codebase-memory-mcp`/`trace_path` avant tout renommage, indépendamment de l'outil utilisé pour le renommage lui-même.
-
 ## Editing workflow
 
 1. Utilise `codebase-memory-mcp` pour découvrir les symboles et leurs appelants.

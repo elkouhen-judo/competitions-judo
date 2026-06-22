@@ -11,13 +11,13 @@ export type CoachMcpEntity = "judokas" | "combats" | "competitions";
 
 /**
  * A coach-facing MCP read tool. `name` is the real MCP tool name (used by `tools/call`),
- * `groqName` is the same tool sanitized for Groq function-calling (no dots allowed).
- * Both the MCP server and the Groq tool-calling integration build their tool list from
+ * `anthropicName` is the same tool sanitized for Claude tool-use (no dots allowed).
+ * Both the MCP server and the Claude tool-calling integration build their tool list from
  * this single source so the two never drift apart.
  */
 export interface CoachMcpToolDefinition {
   name: string;
-  groqName: string;
+  anthropicName: string;
   entity: CoachMcpEntity;
   description: string;
   scope: McpScope;
@@ -94,7 +94,7 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
   return [
     {
       name: "judokas.search",
-      groqName: "mcp_judokas_search",
+      anthropicName: "mcp_judokas_search",
       entity: "judokas",
       scope: "judokas:read",
       description:
@@ -106,7 +106,7 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
     },
     {
       name: "competitions.search",
-      groqName: "mcp_competitions_search",
+      anthropicName: "mcp_competitions_search",
       entity: "competitions",
       scope: "competitions:read",
       description:
@@ -117,7 +117,7 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
     },
     {
       name: "combats.search",
-      groqName: "mcp_combats_search",
+      anthropicName: "mcp_combats_search",
       entity: "combats",
       scope: "combats:read",
       description:

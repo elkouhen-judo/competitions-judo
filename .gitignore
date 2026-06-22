@@ -10,7 +10,6 @@ terraform/**/*.tfstate
 terraform/**/*.tfstate.*
 terraform/**/terraform.tfvars
 terraform/**/*.tfplan
-.lsp_mcp.port
 .scannerwork/
 .claude/
 !.claude/skills/
