@@ -380,6 +380,19 @@ test("competition domain builds a normalized entity", () => {
       ),
     /Catégorie de poids invalide/
   );
+  assert.throws(
+    () =>
+      createCompetition(
+        {
+          name: "Tournoi",
+          competitionDate: "2026-06-11",
+          ageCategory: "Cadet",
+          level: "Interclub"
+        },
+        "JUDO123"
+      ),
+    /Niveau de compétition invalide/
+  );
   assert.equal(createCompetitionRanking(" Non classé "), "Non classé");
 });
 
@@ -830,6 +843,10 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "3e", label: "🥉", count: 0 }
         ]
       }
+    ],
+    topWinTechniques: [
+      { technique: "Osaekomi", count: 1 },
+      { technique: "Seoi-nage", count: 1 }
     ]
   });
 
@@ -912,7 +929,8 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "3e", label: "🥉", count: 0 }
         ]
       }
-    ]
+    ],
+    topWinTechniques: []
   });
 });
 
@@ -984,6 +1002,25 @@ test("coach dashboard statistics domain flags an ippon decision with no matching
     total: 3,
     rate: 33
   });
+});
+
+test("coach dashboard statistics domain ranks the top 3 winning techniques, ignoring losses and unscored wins", () => {
+  const combats = [
+    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }] },
+    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Waza-ari" }] },
+    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" }] },
+    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }] },
+    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" }] },
+    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }] },
+    { result: "Défaite", scores: [{ category: "Tachi-waza", technique: "O-soto-gari", value: "Ippon" }] },
+    { result: "Victoire", scores: [] }
+  ];
+
+  assert.deepEqual(computeCoachDashboardStats(combats).topWinTechniques, [
+    { technique: "Uchi-mata", count: 3 },
+    { technique: "Osaekomi", count: 2 },
+    { technique: "Seoi-nage", count: 1 }
+  ]);
 });
 
 test("category reference domain validates judoka handedness", () => {
@@ -1066,17 +1103,22 @@ test("season statistics domain computes current season snapshot", () => {
   assert.equal(snapshot.seasonLosses, 1);
   assert.equal(snapshot.seasonDraws, 1);
   assert.equal(snapshot.victoryRate, 33);
-  assert.deepEqual(snapshot.combatProfile, {
-    victoryIppon: 1,
-    victoryDecision: 0,
-    lossIppon: 0,
-    lossDecision: 1,
-    lossPenalty: 0,
-    lossForfeit: 0,
-    draws: 1,
-    penalties: 0,
-    forfeits: 0
-  });
+  assert.deepEqual(snapshot.victoriesByDecisionType, [
+    { decisionType: "Ippon", count: 1, total: 1, rate: 100 },
+    { decisionType: "Waza-ari", count: 0, total: 1, rate: 0 },
+    { decisionType: "Yuko", count: 0, total: 1, rate: 0 },
+    { decisionType: "Décision", count: 0, total: 1, rate: 0 },
+    { decisionType: "Hansoku-make", count: 0, total: 1, rate: 0 },
+    { decisionType: "Forfait", count: 0, total: 1, rate: 0 }
+  ]);
+  assert.deepEqual(snapshot.defeatsByDecisionType, [
+    { decisionType: "Ippon", count: 0, total: 1, rate: 0 },
+    { decisionType: "Waza-ari", count: 0, total: 1, rate: 0 },
+    { decisionType: "Yuko", count: 0, total: 1, rate: 0 },
+    { decisionType: "Décision", count: 1, total: 1, rate: 100 },
+    { decisionType: "Hansoku-make", count: 0, total: 1, rate: 0 },
+    { decisionType: "Forfait", count: 0, total: 1, rate: 0 }
+  ]);
   assert.equal(snapshot.competitionResults[0].competitionId, "COMP2");
   assert.equal(snapshot.competitionResults[0].combatRecord.label, "1V · 0D · 1N");
   assert.deepEqual(snapshot.competitionResults[0].resultBadge, {
@@ -1084,6 +1126,62 @@ test("season statistics domain computes current season snapshot", () => {
     className: "rank-gold"
   });
   assert.equal(snapshot.lastCompetition.weightCategory, "-55 kg");
+  assert.deepEqual(snapshot.topWinTechniques, []);
+});
+
+test("season statistics domain ranks the judoka's top winning techniques for the season", () => {
+  const snapshot = buildJudokaProfileSnapshot({
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
+    competitions: [
+      {
+        competitionId: "COMP1",
+        name: "Tournoi A",
+        competitionDate: "2026-02-01",
+        ageCategory: "Cadet",
+        weightCategory: "-55 kg",
+        result: "1er"
+      }
+    ],
+    combats: [
+      {
+        combatId: "CB1",
+        competitionId: "COMP1",
+        result: "V",
+        victoryType: "Ippon",
+        scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }]
+      },
+      {
+        combatId: "CB2",
+        competitionId: "COMP1",
+        result: "V",
+        victoryType: "Ippon",
+        scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }]
+      },
+      {
+        combatId: "CB3",
+        competitionId: "COMP1",
+        result: "V",
+        victoryType: "Ippon",
+        scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }]
+      },
+      {
+        combatId: "CB4",
+        competitionId: "COMP1",
+        result: "D",
+        victoryType: "Ippon",
+        scores: [{ category: "Tachi-waza", technique: "O-soto-gari", value: "Ippon" }]
+      }
+    ],
+    getCompetitionCategoryLabel: (competition) =>
+      [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - "),
+    getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
+    isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end
+  });
+
+  assert.deepEqual(snapshot.topWinTechniques, [
+    { technique: "Uchi-mata", count: 2 },
+    { technique: "Osaekomi", count: 1 }
+  ]);
 });
 
 test("season statistics keep latest competition details and normalize combat results", () => {
@@ -1135,10 +1233,12 @@ test("season statistics keep latest competition details and normalize combat res
   assert.equal(snapshot.lastCompetition.competitionId, "COMP3");
   assert.equal(snapshot.lastCompetition.category, "Junior - -57 kg");
   assert.equal(snapshot.lastCompetition.weightCategory, "-57 kg");
-  assert.equal(snapshot.combatProfile.lossIppon, 1);
-  assert.equal(snapshot.combatProfile.lossDecision, 0);
-  assert.equal(snapshot.combatProfile.lossPenalty, 1);
-  assert.equal(snapshot.combatProfile.lossForfeit, 1);
+  const findDefeatEntry = (decisionType) =>
+    snapshot.defeatsByDecisionType.find((entry) => entry.decisionType === decisionType);
+  assert.equal(findDefeatEntry("Ippon").count, 1);
+  assert.equal(findDefeatEntry("Décision").count, 0);
+  assert.equal(findDefeatEntry("Hansoku-make").count, 1);
+  assert.equal(findDefeatEntry("Forfait").count, 1);
   assert.deepEqual(
     snapshot.competitionResults.map((result) => result.competitionId),
     ["COMP3", "COMP2", "COMP1"]

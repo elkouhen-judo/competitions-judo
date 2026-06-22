@@ -206,11 +206,11 @@ test("family home keeps the active judoka competition context", () => {
   assert.match(bundle, /Ouvre la liste des compétitions filtrée sur le judoka actif/);
   assert.match(bundle, /Change l'enfant actif/);
   assert.match(bundle, /Affiche la progression du judoka actif/);
-  assert.match(bundle, /<h4>Gérer les compétitions[\s\S]*\{\{ parentCompetitionsHubButtonText \}\}/);
+  assert.match(bundle, /<h4>Suivi des compétitions[\s\S]*\{\{ parentCompetitionsHubButtonText \}\}/);
   assert.match(client, /formatParentCompetitionsHubButtonText\(getHomeActiveJudoka\(\)\)/);
-  assert.match(client, /Ouvrir les compétitions \$\{prefix\}\$\{firstName\}/);
-  assert.match(bundle, /<h4>Choisir un judoka[\s\S]*Changer de judoka/);
-  assert.match(bundle, /<h4>Voir la fiche[\s\S]*@click="openParentProfileHub\(\)"/);
+  assert.match(client, /Gérer les compétitions \$\{prefix\}\$\{firstName\}/);
+  assert.match(bundle, /<h4>Judoka actif[\s\S]*@click="openParentJudokaSelectionHub\(\)"/);
+  assert.match(bundle, /<h4>Fiche de progression[\s\S]*@click="openParentProfileHub\(\)"/);
   assert.doesNotMatch(bundle, /Moi ou mes enfants/);
 });
 
@@ -226,9 +226,9 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   assert.match(bundle, /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showActiveJudokaSummary\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/);
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
-  assert.match(bundle, /<h4>Gérer les compétitions/);
-  assert.match(bundle, /<h4>Rechercher un judoka<\/h4>/);
-  assert.match(bundle, /<h4>Voir les statistiques<\/h4>/);
+  assert.match(bundle, /<h4>Suivi des compétitions<\/h4>[\s\S]*@click="openCoachCompetitionsHub\(\)"[\s\S]*Gérer les compétitions/);
+  assert.match(bundle, /<h4>Judoka actif<\/h4>[\s\S]*@click="openCoachJudokaHub\(\)"[\s\S]*Choisir un judoka/);
+  assert.match(bundle, /<h4>Bilan de saison<\/h4>[\s\S]*@click="openCoachStatsHub\(\)"[\s\S]*Voir les statistiques/);
   assert.match(client, /function openCoachStatsHub\(\)/);
   assert.match(bundle, /isPrimaryModeActive\(mode\.key\)/);
   assert.match(bundle, /if \(getCurrentMode\(\) === "coachHome"\) return "";/);
@@ -277,8 +277,9 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement/);
   assert.match(bundle, /Nombre de compétitions rattachées au judoka sur la saison affichée/);
   assert.match(bundle, /Pourcentage de victoires parmi les combats gagnés ou perdus/);
-  assert.match(bundle, /Bilan des combats/);
-  assert.match(bundle, /Détaille la manière dont les combats se terminent/);
+  assert.match(bundle, /Mode de victoire/);
+  assert.match(bundle, /Mode de défaite/);
+  assert.match(bundle, /Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé/);
   assert.match(bundle, /id="judokaCompetitionResults"/);
   assert.match(bundle, /Liste les compétitions de la saison avec le classement/);
   assert.match(bundle, /:key="result\.competitionId \|\|/);
@@ -294,9 +295,8 @@ test("judoka profile screen is available in the mobile action flow", () => {
     /\(\) => state\.isCoach \|\| state\.isAdmin \|\| isOwnProfile\.value \|\| isManagedProfile\.value/
   );
   assert.match(bundle, /Taux de victoire/);
-  assert.match(bundle, /Victoires ippon/);
-  assert.match(bundle, /v-if="Number\(combatProfile\.penalties\)"/);
-  assert.match(bundle, /v-if="Number\(combatProfile\.forfeits\)"/);
+  assert.match(bundle, /v-if="Number\(seasonWins\)"/);
+  assert.match(bundle, /v-if="Number\(seasonLosses\)"/);
   assert.match(judokaScreenClient, /formatCompetitionRanking/);
   assert.match(bundle, /class="result-badge classement-badge"[\s\S]*\{\{ result\.result \}\}/);
   assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
@@ -403,7 +403,7 @@ test("judoka profile screen is mounted through Vue 3 for the progressive screen 
   assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
   assert.match(bundle, /function createJudokaProfileViewModel\(profile,\s*helpers\)/);
   assert.match(bundle, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
-  assert.match(bundle, /class="combat-profile-grid"/);
+  assert.match(bundle, /v-for="entry in victoriesByDecisionType"/);
   assert.match(bundle, /v-if="!hasCompetitionResults"/);
   assert.match(bundle, /v-for="result in competitionResultsPage"/);
   assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
@@ -610,6 +610,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   assert.doesNotMatch(bundle, /@click="showCoachChat\(\)">Chat/);
   assert.match(client, /function showCoachHome\(\)/);
 
+  const coachDashboardSectionStart = bundle.indexOf('id="coachDashboardView"');
   const dashboardSectionOrder = [
     "<h3>Podiums",
     "<h3>Volume de combats</h3>",
@@ -619,7 +620,7 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
     "<h3>Mode de victoire",
     "<h3>Mode de défaite",
     "<h3>Fiabilité des données</h3>"
-  ].map((marker) => bundle.indexOf(marker));
+  ].map((marker) => bundle.indexOf(marker, coachDashboardSectionStart));
   assert.ok(
     dashboardSectionOrder.every((index) => index !== -1),
     "every dashboard section heading should be present"

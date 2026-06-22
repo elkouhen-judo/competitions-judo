@@ -356,6 +356,26 @@
           </div>
         </div>
 
+        <div class="section" v-if="coachDashboardTopWinTechniques.length">
+          <div class="section-heading">
+            <div>
+              <h3>Top prises de victoire du club
+                <span class="info-tip" tabindex="0" aria-label="Les prises marquées le plus souvent dans les combats gagnés par les judokas du club, avec les filtres choisis.">
+                  <span aria-hidden="true">i</span>
+                  <span class="info-tip-bubble" aria-hidden="true">Les prises marquées le plus souvent dans les combats gagnés par les judokas du club, avec les filtres choisis.</span>
+                </span>
+              </h3>
+              <p class="subtitle">Les 3 prises les plus efficaces sur ce périmètre.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div v-for="(entry, index) in coachDashboardTopWinTechniques" :key="entry.technique" class="stat-card" :class="{ 'stat-card-success': index === 0 }">
+              <span class="stat-label">{{ index + 1 }}. {{ entry.technique }}</span>
+              <span class="stat-value">{{ entry.count }}</span>
+            </div>
+          </div>
+        </div>
+
         <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
           <div class="section-heading">
             <div><h3>Mode de défaite

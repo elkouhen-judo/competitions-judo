@@ -4,7 +4,7 @@ import {
   createOptionalCompetitionId
 } from "../shared/identity";
 import { createCompetitionRanking } from "../competition-results";
-import { createWeightCategory } from "../category-reference";
+import { COMPETITION_LEVELS, createWeightCategory } from "../category-reference";
 import { createCombat, type CombatInput, type CombatModel } from "./combat";
 
 export const AGE_CATEGORIES = [
@@ -97,6 +97,17 @@ export function createCompetitionAgeCategory(value: unknown): AgeCategory | "" {
   return normalizedAgeCategory;
 }
 
+export function createCompetitionLevel(value: unknown): string {
+  const level = cleanCompetitionText(value);
+  if (!level) {
+    return "";
+  }
+  if (!(COMPETITION_LEVELS as readonly string[]).includes(level)) {
+    throw new Error("Niveau de compétition invalide.");
+  }
+  return level;
+}
+
 export function createCompetitionDate(value: unknown): string {
   const competitionDate = cleanCompetitionText(value);
   if (!competitionDate) {
@@ -138,7 +149,7 @@ export function createCompetitionDetailsDraft(
     competitionDate,
     ageCategory,
     weightCategory: createWeightCategory(competition.weightCategory, ageCategory),
-    level: cleanCompetitionText(competition.level)
+    level: createCompetitionLevel(competition.level)
   };
 }
 

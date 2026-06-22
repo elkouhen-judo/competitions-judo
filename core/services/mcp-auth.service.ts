@@ -39,7 +39,8 @@ function createCoachScopes(): McpScope[] {
     "competitions:read",
     "competitions:write",
     "combats:read",
-    "combats:write"
+    "combats:write",
+    "coach-dashboard:read"
   ];
 }
 

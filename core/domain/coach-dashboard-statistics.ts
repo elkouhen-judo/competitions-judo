@@ -1,12 +1,12 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
-import { getAllowedDecisionTypesForCombatResult } from "./competitions/combat-decision-type";
+import { computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
+import { computeDecisionBreakdown, computeRate } from "./competitions/combat-decision-breakdown";
 import { OPPONENT_STANCES } from "./competitions/opponent-stance";
 import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
 import { formatCompetitionRankingDisplay } from "./competition-results";
 import type {
   Combat,
   Competition,
-  CoachDashboardDecisionBreakdownEntry,
   CoachDashboardGenderBreakdownEntry,
   CoachDashboardHandednessBreakdownEntry,
   CoachDashboardLateralMatchupBreakdownEntry,
@@ -20,23 +20,6 @@ export type CoachDashboardCombat = Combat & {
   judokaGender?: string;
   judokaHandedness?: string;
 };
-
-function computeRate(count: number, total: number): number {
-  return total ? Math.round((count / total) * 100) : 0;
-}
-
-function computeDecisionBreakdown(
-  combats: CoachDashboardCombat[],
-  result: "Victoire" | "Défaite"
-): CoachDashboardDecisionBreakdownEntry[] {
-  const relevantCombats = combats.filter((combat) => combat.result === result);
-  const total = relevantCombats.length;
-
-  return getAllowedDecisionTypesForCombatResult(result).map((decisionType) => {
-    const count = relevantCombats.filter((combat) => combat.victoryType === decisionType).length;
-    return { decisionType, count, total, rate: computeRate(count, total) };
-  });
-}
 
 function computeJudokaCountByGender(
   combats: CoachDashboardCombat[]
@@ -227,6 +210,7 @@ export function computeCoachDashboardStats(
     judokasByGender: computeJudokaCountByGender(combats),
     judokasByHandedness: computeJudokaCountByHandedness(combats),
     dataQualityIssues: computeDataQualityIssues(combats),
-    podiumsByLevel: computePodiumBreakdownByLevel(competitions)
+    podiumsByLevel: computePodiumBreakdownByLevel(competitions),
+    topWinTechniques: computeTopWinTechniques(combats)
   };
 }

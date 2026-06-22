@@ -5,6 +5,7 @@
     const { defaultListPageSize, state, ui, notifications } = app;
     const { cleanText, getJudokaDisplayName, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
+    const accessInvitationsPageSize = 5;
     const defaultAdminsViewState = {
       adminEmail: "",
       importUsersFileName: "",
@@ -35,6 +36,14 @@
         { getJudokaDisplayName }
       )
     );
+    const accessInvitationsProjection = window.Vue.computed(() =>
+      window.KirokuScreenProjections.projectAccessInvitations(
+        state.managedAccessInvitations,
+        cleanText(state.usersSearch),
+        state.accessInvitationsCurrentPage,
+        accessInvitationsPageSize
+      )
+    );
 
     const admins = window.Vue.computed(() => adminsProjection.value.admins);
     const hasAdmins = window.Vue.computed(() => adminsProjection.value.hasAdmins);
@@ -52,6 +61,24 @@
       () => usersProjection.value.canShowNextUsersPage
     );
     const hasUsers = window.Vue.computed(() => usersProjection.value.hasUsers);
+    const accessInvitationsPage = window.Vue.computed(
+      () => accessInvitationsProjection.value.invitations
+    );
+    const accessInvitationsSummary = window.Vue.computed(
+      () => accessInvitationsProjection.value.invitationsSummary
+    );
+    const accessInvitationsEmptyMessage = window.Vue.computed(
+      () => accessInvitationsProjection.value.invitationsEmptyMessage
+    );
+    const canShowPreviousAccessInvitationsPage = window.Vue.computed(
+      () => accessInvitationsProjection.value.canShowPreviousInvitationsPage
+    );
+    const canShowNextAccessInvitationsPage = window.Vue.computed(
+      () => accessInvitationsProjection.value.canShowNextInvitationsPage
+    );
+    const hasAccessInvitations = window.Vue.computed(
+      () => accessInvitationsProjection.value.hasInvitations
+    );
 
     function ensureAdminsViewModel() {
       if (adminsViewModel) {
@@ -74,6 +101,8 @@
           showAdminsNextPage,
           showNextUsersPage,
           showPreviousUsersPage,
+          showNextAccessInvitationsPage,
+          showPreviousAccessInvitationsPage,
           showHome: () => app.showHome && app.showHome(),
           updateUsersSearch
         },
@@ -94,6 +123,12 @@
           canShowPreviousUsersPage,
           canShowNextUsersPage,
           hasUsers,
+          accessInvitationsPage,
+          accessInvitationsSummary,
+          accessInvitationsEmptyMessage,
+          canShowPreviousAccessInvitationsPage,
+          canShowNextAccessInvitationsPage,
+          hasAccessInvitations,
           isSubmitting
         }
       );
@@ -176,6 +211,7 @@
           state.adminsCurrentPage = 1;
           state.usersSearch = "";
           state.usersCurrentPage = 1;
+          state.accessInvitationsCurrentPage = 1;
           ensureAdminsViewModel();
           resetAdminForm();
           showView("adminsView");
@@ -187,11 +223,13 @@
     function updateUsersSearch(value: string) {
       state.usersSearch = value || "";
       state.usersCurrentPage = 1;
+      state.accessInvitationsCurrentPage = 1;
     }
 
     function resetUsersSearch() {
       state.usersSearch = "";
       state.usersCurrentPage = 1;
+      state.accessInvitationsCurrentPage = 1;
     }
 
     function showNextUsersPage() {
@@ -200,6 +238,14 @@
 
     function showPreviousUsersPage() {
       state.usersCurrentPage = Math.max(state.usersCurrentPage - 1, 1);
+    }
+
+    function showNextAccessInvitationsPage() {
+      state.accessInvitationsCurrentPage += 1;
+    }
+
+    function showPreviousAccessInvitationsPage() {
+      state.accessInvitationsCurrentPage = Math.max(state.accessInvitationsCurrentPage - 1, 1);
     }
 
     function cancelInvitation(email: string, name?: string) {
@@ -218,7 +264,7 @@
     function deleteUser(idJudoka: string, name?: string) {
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
-        message: `Supprimer définitivement${label} ? Ses compétitions et combats seront aussi supprimés.`,
+        message: `Supprimer définitivement${label} ? Ses compétitions futures et combats associés seront aussi supprimés.`,
         method: "deleteUser",
         args: [idJudoka],
         onSuccess: (response) => {

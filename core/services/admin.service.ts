@@ -50,6 +50,7 @@ export interface AdminServiceDeps {
   createHandedness: typeof createHandedness;
   createWeightCategory: typeof createWeightCategory;
   createYearInCategory: typeof createYearInCategory;
+  getCurrentDate?: () => string;
   normalizeEmail: (value: unknown) => string;
 }
 
@@ -81,6 +82,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     createHandedness,
     createWeightCategory,
     createYearInCategory,
+    getCurrentDate = () => new Date().toISOString().slice(0, 10),
     normalizeEmail
   } = deps;
 
@@ -461,6 +463,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
       const existingId = existingChild.id_judoka;
       const profileUpdates = buildChangedImportProfileUpdates(existingChild, {
+        ...(rawRole ? { accessRole: rawRole as AccessRole } : {}),
         ageCategory,
         beltColor,
         gender,
@@ -689,7 +692,16 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       throw new Error("Retirez d'abord les droits admin avant de supprimer ce compte.");
     }
 
-    await competitionsRepository.removeByJudoka(idJudoka);
+    const competitions = await competitionsRepository.listByJudoka(idJudoka);
+    const today = getCurrentDate();
+    const lockedCompetitions = competitions.filter((competition) => String(competition.date || "") <= today);
+    if (lockedCompetitions.length) {
+      throw new Error("Impossible de supprimer un utilisateur ayant des compétitions passées ou terminées.");
+    }
+
+    if (competitions.length) {
+      await competitionsRepository.removeByJudoka(idJudoka);
+    }
     await judokasRepository.remove(idJudoka);
     return { success: true, message: "Utilisateur supprimé." };
   }

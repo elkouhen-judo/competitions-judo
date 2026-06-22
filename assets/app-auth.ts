@@ -64,6 +64,30 @@
       return Boolean(session && session.access_token);
     }
 
+    function getLocalSessionEmailKey() {
+      const session = readVercelSession();
+      const tokenParts = String((session && session.access_token) || "").split(".");
+      if (tokenParts.length < 2) {
+        return "";
+      }
+
+      try {
+        const encodedPayload = tokenParts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const paddedPayload = encodedPayload.padEnd(
+          encodedPayload.length + ((4 - (encodedPayload.length % 4)) % 4),
+          "="
+        );
+        const payload = JSON.parse(
+          atob(paddedPayload)
+        ) as { email?: unknown };
+        return String(payload.email || "")
+          .trim()
+          .toLowerCase();
+      } catch (_error) {
+        return "";
+      }
+    }
+
     function getVercelAuthRedirectUrl() {
       const baseUrl = runtimeConfig.appUrl || window.location.origin;
       return new URL(window.location.pathname || "/", baseUrl).toString();
@@ -304,6 +328,7 @@
 
     return {
       clearVercelSession,
+      getLocalSessionEmailKey,
       getValidVercelSession,
       hasLocalVercelSession,
       logoutSupabaseSession,

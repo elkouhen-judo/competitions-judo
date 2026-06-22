@@ -55,18 +55,10 @@
       seasonLosses: "0",
       seasonDraws: "0",
       victoryRate: "0%",
-      hasCombatProfileExtras: false,
-      combatProfile: {
-        victoryIppon: "0",
-        victoryDecision: "0",
-        lossIppon: "0",
-        lossDecision: "0",
-        lossPenalty: "0",
-        lossForfeit: "0",
-        draws: "0",
-        penalties: "0",
-        forfeits: "0"
-      },
+      victoriesByDecisionType: [],
+      defeatsByDecisionType: [],
+      topWinTechniques: [],
+      hasTopWinTechniques: false,
       hasCompetitionResults: false,
       competitionResults: []
     };
@@ -115,10 +107,14 @@
     const seasonLosses = window.Vue.computed(() => judokaProfile.value.seasonLosses);
     const seasonDraws = window.Vue.computed(() => judokaProfile.value.seasonDraws);
     const victoryRate = window.Vue.computed(() => judokaProfile.value.victoryRate);
-    const hasCombatProfileExtras = window.Vue.computed(
-      () => judokaProfile.value.hasCombatProfileExtras
+    const victoriesByDecisionType = window.Vue.computed(
+      () => judokaProfile.value.victoriesByDecisionType
     );
-    const combatProfile = window.Vue.computed(() => judokaProfile.value.combatProfile);
+    const defeatsByDecisionType = window.Vue.computed(
+      () => judokaProfile.value.defeatsByDecisionType
+    );
+    const topWinTechniques = window.Vue.computed(() => judokaProfile.value.topWinTechniques);
+    const hasTopWinTechniques = window.Vue.computed(() => judokaProfile.value.hasTopWinTechniques);
     const hasCompetitionResults = window.Vue.computed(
       () => judokaProfile.value.hasCompetitionResults
     );
@@ -282,8 +278,10 @@
           seasonLosses,
           seasonDraws,
           victoryRate,
-          hasCombatProfileExtras,
-          combatProfile,
+          victoriesByDecisionType,
+          defeatsByDecisionType,
+          topWinTechniques,
+          hasTopWinTechniques,
           hasCompetitionResults,
           competitionResultsPage,
           competitionResultsTotalPages,

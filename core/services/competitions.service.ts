@@ -225,6 +225,7 @@ export default function createCompetitionsService(
         },
         ownerJudokaId
       );
+      await assertNoStandaloneDuplicateCompetition(competitionDraft, competitionId);
       await competitionsRepository.update(competitionId, competitionDraft);
       return {
         success: true,
@@ -235,6 +236,7 @@ export default function createCompetitionsService(
 
     const idCompetition = buildCompetitionId();
     const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
+    await assertNoStandaloneDuplicateCompetition(competitionDraft);
     await competitionsRepository.insert(competitionDraft, idCompetition);
 
     return {
@@ -242,6 +244,33 @@ export default function createCompetitionsService(
       competitionId: idCompetition,
       message: "Compétition créée."
     };
+  }
+
+  async function assertNoStandaloneDuplicateCompetition(
+    competition: ReturnType<typeof createCompetition>,
+    excludedCompetitionId?: string
+  ) {
+    if (competition.clubCompetitionId) {
+      return;
+    }
+
+    const duplicate = await competitionsRepository.existsForJudoka(
+      competition.ownerJudokaId,
+      competition.name,
+      competition.competitionDate,
+      excludedCompetitionId
+    );
+    if (!duplicate) {
+      return;
+    }
+
+    if (duplicate.club_competition_id) {
+      throw new Error(
+        "Une compétition club existe déjà pour ce judoka à cette date. Ajoutez le judoka à la compétition club existante."
+      );
+    }
+
+    throw new Error("Ce judoka a déjà une compétition individuelle avec ce nom et cette date.");
   }
 
   async function finalizeCompetition(email: string, idCompetition: string, result: string) {

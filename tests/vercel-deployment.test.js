@@ -581,8 +581,10 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   );
 });
 
-test("pending invitations stay visible merged into the users list instead of a separate screen", () => {
+test("pending invitations stay visible in a dedicated paginated admin section", () => {
   assert.match(uiBundle, /isPending/);
+  assert.match(uiBundle, /const accessInvitationsPageSize = 5/);
+  assert.match(uiBundle, /id="accessInvitationsList"/);
   assert.match(uiBundle, /Annuler l'invitation/);
   assert.match(uiBundle, /function cancelInvitation\(email,\s*name\)/);
   assert.match(
@@ -612,14 +614,14 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   );
   assert.match(uiBundle, /Aucun résultat enregistré pour votre périmètre/);
   assert.match(uiBundle, /Résumé performance/);
-  assert.match(uiBundle, /Bilan des combats/);
+  assert.match(uiBundle, /Mode de victoire/);
+  assert.match(uiBundle, /Mode de défaite/);
   assert.match(uiBundle, /Résultats compétition/);
   assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
   assert.match(uiBundle, /id="judokaSeasonBalance"/);
   assert.match(uiBundle, /id="judokaVictoryRate"/);
-  assert.match(uiBundle, /Victoires ippon/);
-  assert.match(uiBundle, /Pénalités/);
-  assert.match(uiBundle, /Forfaits/);
+  assert.match(uiBundle, /v-for="entry in victoriesByDecisionType"/);
+  assert.match(uiBundle, /v-for="entry in defeatsByDecisionType"/);
   assert.match(uiBundle, /rank-gold/);
   assert.match(uiBundle, /rank-silver/);
   assert.match(uiBundle, /rank-bronze/);
@@ -677,7 +679,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     seasonStatisticsDomain,
     /const victoryRate = seasonCombats\.length\s*\? Math\.round\(\(seasonWins \/ seasonCombats\.length\) \* 100\)\s*: 0;/
   );
-  assert.match(seasonStatisticsDomain, /function buildCombatProfile\(combats: Combat\[\]\)/);
+  assert.match(seasonStatisticsDomain, /computeDecisionBreakdown\(seasonCombats, "Victoire"\)/);
   assert.match(
     seasonStatisticsDomain,
     /function getCompetitionCombatRecord\(\s*combats: Combat\[\],\s*competitionId: unknown\s*\)/
@@ -686,7 +688,7 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(seasonStatisticsDomain, /category: getCompetitionCategoryLabel\(lastCompetition\),/);
   assert.match(seasonStatisticsDomain, /weightCategory:/);
   assert.match(seasonStatisticsDomain, /competitionResults/);
-  assert.match(seasonStatisticsDomain, /combatProfile/);
+  assert.match(seasonStatisticsDomain, /victoriesByDecisionType/);
 });
 
 test("admin role does not inherit coach sports management permissions", () => {

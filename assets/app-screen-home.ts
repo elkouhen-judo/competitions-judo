@@ -95,11 +95,11 @@
     }
 
     function formatParentCompetitionsHubButtonText(judoka: Judoka | null): string {
-      if (!judoka) return "Ouvrir les compétitions";
+      if (!judoka) return "Gérer les compétitions";
       const firstName = getJudokaFirstName(judoka);
-      if (!firstName) return "Ouvrir les compétitions";
+      if (!firstName) return "Gérer les compétitions";
       const prefix = /^[aeiouyàâäéèêëîïôöùûüh]/i.test(firstName) ? "d'" : "de ";
-      return `Ouvrir les compétitions ${prefix}${firstName}`;
+      return `Gérer les compétitions ${prefix}${firstName}`;
     }
 
     // --- Computed refs ---
@@ -756,10 +756,12 @@
         return;
       }
 
-      const firstChild = mode === "family" || mode === "parentHome"
+      const shouldAutoSelectJudoka =
+        mode === "family" || mode === "parentHome" || mode === "coachJudoka";
+      const firstChild = shouldAutoSelectJudoka
         ? accessibleJudokas.find((j) => String(j.judokaId) !== String(state.currentUser?.judokaId || ""))
         : null;
-      const autoId = mode === "family" || mode === "parentHome"
+      const autoId = shouldAutoSelectJudoka
         ? getDefaultHomeJudokaId() || String(firstChild?.judokaId || "")
         : "";
       const autoJudoka = autoId

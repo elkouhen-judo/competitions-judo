@@ -52,7 +52,8 @@ function createInitialState(): KirokuAppState {
     judokaCompetitionResultsCurrentPage: 1,
     adminsCurrentPage: 1,
     usersSearch: "",
-    usersCurrentPage: 1
+    usersCurrentPage: 1,
+    accessInvitationsCurrentPage: 1
   };
 }
 
@@ -332,9 +333,25 @@ function createInitialState(): KirokuAppState {
     async function logoutUser() {
       clearMessage();
       await logoutSupabaseSession();
+      purgeLocalUserData();
       resetApplicationState();
       getLoginScreen().showVercelLogin();
       showSuccess("Vous êtes déconnecté.");
+    }
+
+    function purgeLocalUserData() {
+      const prefixes = [
+        initialDataCachePrefix,
+        competitionDetailCachePrefix,
+        pendingOperationsStoragePrefix,
+        "kiroku_supabase_session"
+      ];
+      for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+        const key = localStorage.key(index) || "";
+        if (prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) {
+          localStorage.removeItem(key);
+        }
+      }
     }
 
     function getInitialDataCacheUserKey(data: InitialData) {
@@ -364,9 +381,16 @@ function createInitialState(): KirokuAppState {
       if (!auth.hasLocalVercelSession()) {
         return null;
       }
+      const expectedUserKey = auth.getLocalSessionEmailKey();
+      if (!expectedUserKey) {
+        return null;
+      }
 
       const storageKey = localStorage.getItem(lastInitialDataCacheKey) || "";
       if (!storageKey || !storageKey.startsWith(initialDataCachePrefix)) {
+        return null;
+      }
+      if (storageKey !== getInitialDataCacheStorageKey(expectedUserKey)) {
         return null;
       }
 
@@ -376,6 +400,9 @@ function createInitialState(): KirokuAppState {
           data?: InitialData;
         } | null;
         if (!cached || !cached.data || !cached.data.user) {
+          return null;
+        }
+        if (getInitialDataCacheUserKey(cached.data) !== expectedUserKey) {
           return null;
         }
 

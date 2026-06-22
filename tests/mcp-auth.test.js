@@ -111,7 +111,8 @@ test("mcp auth service allows coaches to mint read/write sports scopes", async (
     "competitions:read",
     "competitions:write",
     "combats:read",
-    "combats:write"
+    "combats:write",
+    "coach-dashboard:read"
   ]);
 });
 
@@ -188,7 +189,8 @@ test("mcp auth service issues an authorization code carrying client/redirect/PKC
     "competitions:read",
     "competitions:write",
     "combats:read",
-    "combats:write"
+    "combats:write",
+    "coach-dashboard:read"
   ]);
 });
 

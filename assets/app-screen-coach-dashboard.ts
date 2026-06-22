@@ -99,6 +99,9 @@
     const coachDashboardPodiumsByLevel = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.podiumsByLevel || []
     );
+    const coachDashboardTopWinTechniques = window.Vue.computed(
+      () => coachDashboardViewModel.coachDashboardStats?.topWinTechniques || []
+    );
     const coachDashboardTopPodiumLevel = window.Vue.computed(() => {
       const entries = coachDashboardPodiumsByLevel.value;
       const podiumHighlights: string[] = [];
@@ -210,6 +213,7 @@
           coachDashboardDataQualityIssues,
           coachDashboardPodiumsByLevel,
           coachDashboardTopPodiumLevel,
+          coachDashboardTopWinTechniques,
           coachDashboardMainQualityIssue,
           coachDashboardSummaryInsight,
           coachDashboardCompetitionOptionsPage: coachDashboardCompetitionOptionsPaginationRefs.page,

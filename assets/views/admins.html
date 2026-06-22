@@ -49,7 +49,7 @@
           <div class="section-heading">
             <div>
               <h3>Utilisateurs</h3>
-              <p class="subtitle">Comptes actifs et invitations en attente.</p>
+              <p class="subtitle">Comptes actifs.</p>
             </div>
           </div>
           <div class="filter-bar">
@@ -83,14 +83,52 @@
                 </div>
                 <div class="card-actions">
                   <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
-                  <button v-else-if="managedUser.isPending" class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(managedUser.accountEmail, managedUser.fullName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Annuler l'invitation
-                  </button>
                   <span v-else-if="managedUser.isAdmin" class="field-hint">Retirez d'abord les droits admin pour supprimer ce compte.</span>
                   <button v-else class="button-danger" type="button" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     Supprimer
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Invitations</h3>
+              <p class="subtitle">Invitations en attente.</p>
+            </div>
+          </div>
+          <div id="accessInvitationsSummary">
+            <div v-if="accessInvitationsSummary" class="list-summary">
+              <p class="list-summary-text">{{ accessInvitationsSummary }}</p>
+              <div class="list-summary-actions">
+                <button v-if="canShowPreviousAccessInvitationsPage" class="button-secondary" type="button" @click="showPreviousAccessInvitationsPage()">Page précédente</button>
+                <button v-if="canShowNextAccessInvitationsPage" class="button-secondary" type="button" @click="showNextAccessInvitationsPage()">Page suivante</button>
+              </div>
+            </div>
+          </div>
+          <div id="accessInvitationsList">
+            <div v-if="!hasAccessInvitations" class="empty-state">{{ accessInvitationsEmptyMessage }}</div>
+            <div v-else class="list">
+              <article v-for="invitation in accessInvitationsPage" :key="invitation.accountEmail" class="card admin-card">
+                <p class="card-title">{{ invitation.fullName }}</p>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Email</span>
+                    <span class="meta-value">{{ invitation.accountEmail }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Rôle</span>
+                    <span class="meta-value">{{ invitation.roleLabel }}</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(invitation.accountEmail, invitation.fullName)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Annuler l'invitation
                   </button>
                 </div>
               </article>

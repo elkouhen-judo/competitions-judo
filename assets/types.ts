@@ -257,6 +257,19 @@ export interface ScreenProjections {
     admins: ManagedAdminCard[];
     hasAdmins: boolean;
   };
+  projectAccessInvitations(
+    pendingInvitations: AccessInvitation[],
+    search: string,
+    currentPage: number,
+    pageSize: number
+  ): {
+    invitations: ManagedUserCard[];
+    invitationsSummary: string;
+    invitationsEmptyMessage: string;
+    canShowPreviousInvitationsPage: boolean;
+    canShowNextInvitationsPage: boolean;
+    hasInvitations: boolean;
+  };
   projectManagedUsers(
     users: Judoka[],
     pendingInvitations: AccessInvitation[],
@@ -285,6 +298,7 @@ export interface NotificationsApi {
 
 export interface AuthApi {
   clearVercelSession(): void;
+  getLocalSessionEmailKey(): string;
   getValidVercelSession(): Promise<SessionLike | null>;
   hasLocalVercelSession(): boolean;
   logoutSupabaseSession(): Promise<void>;
@@ -412,6 +426,7 @@ export interface KirokuAppState {
   adminsCurrentPage: number;
   usersSearch: string;
   usersCurrentPage: number;
+  accessInvitationsCurrentPage: number;
 }
 
 export interface RunServerOptions {
@@ -511,8 +526,10 @@ export interface JudokaProfileViewModel {
   heroYearInCategory: string;
   heroHandedness: string;
   heroSeason: string;
-  combatProfile: Record<string, string>;
-  hasCombatProfileExtras: boolean;
+  victoriesByDecisionType: Array<{ decisionType: string; count: number; total: number; rate: number }>;
+  defeatsByDecisionType: Array<{ decisionType: string; count: number; total: number; rate: number }>;
+  topWinTechniques: Array<{ technique: string; count: number }>;
+  hasTopWinTechniques: boolean;
   competitionResults: Array<{
     competitionId: string;
     name: string;
