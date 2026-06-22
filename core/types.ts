@@ -263,6 +263,7 @@ export interface CoachChatFilters {
 export interface CoachAssistantMatch {
   judokaId: string;
   judokaName: string;
+  beltColor: string;
   competitionId: string;
   competitionName: string;
   competitionDate: string;

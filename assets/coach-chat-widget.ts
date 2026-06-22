@@ -12,6 +12,7 @@ interface MountCoachChatWidgetOptions {
 interface CoachMatch {
   judokaId: string;
   judokaName: string;
+  beltColor: string;
   competitionId: string;
   competitionName: string;
   competitionDate: string;
@@ -19,6 +20,25 @@ interface CoachMatch {
   result: string;
   victoryType: string;
   scoreLabel: string;
+}
+
+const BELT_EMOJI_BY_BASE_COLOR: Record<string, string> = {
+  Blanc: "⚪",
+  Jaune: "🟡",
+  Orange: "🟠",
+  Vert: "🟢",
+  Bleu: "🔵",
+  Marron: "🟤",
+  Noir: "⚫"
+};
+
+function getBeltEmoji(beltColor: string): string {
+  const baseColor = beltColor.replace(/\s+\d+e?r?\s+Dan$/i, "");
+  return baseColor
+    .split("-")
+    .map((color) => BELT_EMOJI_BY_BASE_COLOR[color.trim()])
+    .filter(Boolean)
+    .join("");
 }
 
 const GREETING_MESSAGE = {
@@ -62,6 +82,14 @@ function renderMatchHeading(
   return h("strong", null, match.judokaName);
 }
 
+function renderMatchBeltBadge(match: CoachMatch): VNode | null {
+  if (!match.judokaId || !match.beltColor) {
+    return null;
+  }
+  const emoji = getBeltEmoji(match.beltColor);
+  return h("span", { class: "coach-assistant-result-belt" }, emoji ? `${emoji} ${match.beltColor}` : match.beltColor);
+}
+
 function renderMatchCompetitionLabel(
   match: CoachMatch,
   onSelectCompetition: (competitionId: string) => void
@@ -98,6 +126,7 @@ function renderMatchCard(
   const key = `${match.competitionId}-${match.judokaId}-${match.opponent}-${match.scoreLabel}`;
   return h("div", { key, class: "coach-assistant-result" }, [
     renderMatchHeading(match, onSelectJudoka, onSelectCompetition),
+    renderMatchBeltBadge(match),
     renderMatchCompetitionLabel(match, onSelectCompetition),
     match.result || match.opponent
       ? h("span", null, [

@@ -161,6 +161,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
           {
             judokaId: String(combat.id_judoka || ""),
             judokaName: formatJudokaName(judoka),
+            beltColor: String(judoka?.couleur_ceinture || ""),
             competitionId: String(combat.id_competition || ""),
             competitionName: String(competition?.nom || "Compétition"),
             competitionDate: String(competition?.date || ""),
@@ -572,6 +573,7 @@ function searchCoachCompetitions(
     .map((competition) => ({
       judokaId: "",
       judokaName: String(competition.nom || "Compétition"),
+      beltColor: "",
       competitionId: String(competition.id_competition || ""),
       competitionName: String(competition.nom || ""),
       competitionDate: String(competition.date || ""),
@@ -756,6 +758,7 @@ function toAssistantMatch(
   return {
     judokaId: String(judoka?.id_judoka || combat?.id_judoka || ""),
     judokaName: formatJudokaName(judoka),
+    beltColor: String(judoka?.couleur_ceinture || ""),
     competitionId: String(competition?.id_competition || combat?.id_competition || ""),
     competitionName: String(competition?.nom || ""),
     competitionDate: String(competition?.date || ""),
@@ -883,6 +886,7 @@ function buildJudokaListMatches(
     prenom?: string;
     nom?: string;
     categorie_age?: string;
+    couleur_ceinture?: string;
   }>,
   competitionRows: Array<{
     id_competition?: string;
@@ -929,6 +933,7 @@ function buildJudokaListMatches(
       return {
         judokaId: String(judoka.id_judoka || ""),
         judokaName: formatJudokaName(judoka),
+        beltColor: String(judoka.couleur_ceinture || ""),
         competitionId: combatInfo?.competitionId || "",
         competitionName: combatInfo?.competitionName || "",
         competitionDate: combatInfo?.competitionDate || "",
