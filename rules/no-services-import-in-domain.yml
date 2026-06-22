@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-services-import-in-domain
+message: Domain code must not depend on application services. Move orchestration logic into core/services instead, or pass the needed value into the domain function as a parameter.
+severity: error
+language: TypeScript
+files:
+  - "core/domain/**"
+rule:
+  kind: import_statement
+  has:
+    field: source
+    regex: "services/"

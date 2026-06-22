@@ -12,67 +12,32 @@
     searchText: string;
   }
 
-  function createKirokuCompetitionDetailScreen(app: KirokuApp, deps: CompetitionDetailDeps) {
+  // Competition detail concern: viewing a competition + its combats, the coach
+  // objective/review fields, and finalization status. Returns `openCompetition` so the
+  // form controller (and the finalization glue in the main factory) can navigate back
+  // into the detail view after a save.
+  function createCompetitionDetailController(
+    app: KirokuApp,
+    deps: {
+      showCombatForm: CompetitionDetailDeps["showCombatForm"];
+      deleteCombat: CompetitionDetailDeps["deleteCombat"];
+      editCurrentCompetition: () => void;
+      showCompetitionFinalizationForm: () => void;
+    }
+  ) {
     const { state, ui, notifications } = app;
-    const {
-      cleanText,
-      formatDate,
-      formatResultat,
-      getCurrentLocalDate,
-      getJudokaDisplayName,
-      normalizeDisplayName,
-      toInputDate,
-      showView
-    } = ui;
+    const { formatDate, formatResultat, getJudokaDisplayName, normalizeDisplayName, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
-    const { showCombatForm, deleteCombat } = deps;
+    const { showCombatForm, deleteCombat, editCurrentCompetition, showCompetitionFinalizationForm } = deps;
 
     const defaultCompetitionDetailViewState = {
       coachObjectiveText: "",
       coachReviewText: ""
     };
-    const defaultCompetitionForm = {
-      competitionId: "",
-      name: "",
-      competitionDate: "",
-      ageCategory: "",
-      weightCategory: "",
-      level: "",
-      result: ""
-    };
-    const defaultCompetitionFormViewState = {
-      competitionFormTitle: "Compétition",
-      showCompetitionOwnerBlock: false,
-      competitionInheritedFieldsLocked: false,
-      ownerJudokaText: "",
-      ownerJudokaId: "",
-      ownerOptions: [] as CompetitionOwnerOption[],
-      showOwnerOptions: false,
-      competitionForm: { ...defaultCompetitionForm }
-    };
-    const defaultCompetitionFinalizationViewState = {
-      finalizationSubtitle: "",
-      finalizationForm: {
-        competitionId: "",
-        result: ""
-      }
-    };
 
     let competitionDetailRef: { coachObjectiveText: string; coachReviewText: string } | null = null;
     let competitionDetailMounted = false;
-    const competitionFormViewModel = window.Vue.reactive({
-      ...defaultCompetitionFormViewState,
-      competitionForm: { ...defaultCompetitionFormViewState.competitionForm }
-    });
-    let competitionFormMounted = false;
-    const competitionFinalizationViewModel = window.Vue.reactive({
-      ...defaultCompetitionFinalizationViewState,
-      finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
-    });
-    let competitionFinalizationMounted = false;
-    let hideOwnerOptionsTimer: number | null = null;
     let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" | "judokaView" = "homeView";
-    let previousCompetitionFormView: "homeView" | "competitionView" = "homeView";
 
     const competitionDetailProjection = window.Vue.computed(() => {
       if (!state.currentCompetition) return null;
@@ -145,16 +110,8 @@
     const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
     const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
-    const competitionInheritedFieldsLocked = window.Vue.computed(() =>
-      Boolean(competitionFormViewModel.competitionInheritedFieldsLocked)
-    );
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
-    const competitionWeightCategoryOptions = window.Vue.computed(() =>
-      window.KirokuScreenProjections.getWeightCategoryOptions(
-        competitionFormViewModel.competitionForm.ageCategory
-      )
-    );
     const combats = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return [];
       return combatsProjection.value.combats;
@@ -234,43 +191,6 @@
           canEditCoachAssessment,
           pendingFinalization
         }
-      );
-    }
-
-    function ensureCompetitionFormViewModel() {
-      if (competitionFormMounted) {
-        return;
-      }
-      competitionFormMounted = true;
-      ui.mountViewModel(
-        "competitionFormView",
-        competitionFormViewModel,
-        {
-          cancelCompetitionForm,
-          onCompetitionFormAgeCategoryChange,
-          saveCompetition,
-          selectCompetitionOwner,
-          showCompetitionOwnerOptions,
-          updateCompetitionOwnerText,
-          hideCompetitionOwnerOptions
-        },
-        { isSubmitting, competitionInheritedFieldsLocked, competitionWeightCategoryOptions }
-      );
-    }
-
-    function ensureCompetitionFinalizationViewModel() {
-      if (competitionFinalizationMounted) {
-        return;
-      }
-      competitionFinalizationMounted = true;
-      ui.mountViewModel(
-        "competitionFinalizationView",
-        competitionFinalizationViewModel,
-        {
-          cancelCompetitionFinalizationForm,
-          finalizeCompetition
-        },
-        { isSubmitting }
       );
     }
 
@@ -371,13 +291,104 @@
       );
     }
 
-    function editCurrentCompetition() {
-      if (!state.currentCompetition) {
-        showError({ message: "Compétition introuvable." });
+    function deleteCurrentCompetition() {
+      if (!state.currentCompetition) return;
+
+      const competitionId = state.currentCompetition.competitionId;
+      const label = state.currentCompetition.name ? ` "${state.currentCompetition.name}"` : "";
+      app.confirmAndRun({
+        message: `Supprimer la compétition${label} et tous ses combats ?`,
+        method: "deleteCompetition",
+        args: [competitionId],
+        onSuccess: (response) => {
+          showSuccess(response.message);
+          state.currentCompetition = null;
+          app.reloadInitialData();
+        }
+      });
+    }
+
+    return {
+      getCurrentCompetition,
+      navigateBackFromCompetition,
+      openCompetition,
+      openCompetitionFromClubDetail,
+      openCompetitionFromJudokaProfile,
+      deleteCurrentCompetition
+    };
+  }
+
+  // Competition form concern: creating/editing a competition, including the
+  // parent-only "owner judoka" typed-search picker.
+  function createCompetitionFormController(
+    app: KirokuApp,
+    deps: {
+      openCompetition: ReturnType<typeof createCompetitionDetailController>["openCompetition"];
+      showCombatForm: CompetitionDetailDeps["showCombatForm"];
+    }
+  ) {
+    const { state, ui, notifications } = app;
+    const { cleanText, getCurrentLocalDate, getJudokaDisplayName, toInputDate, showView } = ui;
+    const { clearMessage, showError, showSuccess } = notifications;
+    const { openCompetition, showCombatForm } = deps;
+
+    const defaultCompetitionForm = {
+      competitionId: "",
+      name: "",
+      competitionDate: "",
+      ageCategory: "",
+      weightCategory: "",
+      level: "",
+      result: ""
+    };
+    const defaultCompetitionFormViewState = {
+      competitionFormTitle: "Compétition",
+      showCompetitionOwnerBlock: false,
+      competitionInheritedFieldsLocked: false,
+      ownerJudokaText: "",
+      ownerJudokaId: "",
+      ownerOptions: [] as CompetitionOwnerOption[],
+      showOwnerOptions: false,
+      competitionForm: { ...defaultCompetitionForm }
+    };
+
+    let competitionFormMounted = false;
+    const competitionFormViewModel = window.Vue.reactive({
+      ...defaultCompetitionFormViewState,
+      competitionForm: { ...defaultCompetitionFormViewState.competitionForm }
+    });
+    let hideOwnerOptionsTimer: number | null = null;
+    let previousCompetitionFormView: "homeView" | "competitionView" = "homeView";
+
+    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+    const competitionInheritedFieldsLocked = window.Vue.computed(() =>
+      Boolean(competitionFormViewModel.competitionInheritedFieldsLocked)
+    );
+    const competitionWeightCategoryOptions = window.Vue.computed(() =>
+      window.KirokuScreenProjections.getWeightCategoryOptions(
+        competitionFormViewModel.competitionForm.ageCategory
+      )
+    );
+
+    function ensureCompetitionFormViewModel() {
+      if (competitionFormMounted) {
         return;
       }
-
-      showCompetitionForm(state.currentCompetition.competitionId);
+      competitionFormMounted = true;
+      ui.mountViewModel(
+        "competitionFormView",
+        competitionFormViewModel,
+        {
+          cancelCompetitionForm,
+          onCompetitionFormAgeCategoryChange,
+          saveCompetition,
+          selectCompetitionOwner,
+          showCompetitionOwnerOptions,
+          updateCompetitionOwnerText,
+          hideCompetitionOwnerOptions
+        },
+        { isSubmitting, competitionInheritedFieldsLocked, competitionWeightCategoryOptions }
+      );
     }
 
     function showCompetitionForm(id?: string) {
@@ -483,59 +494,6 @@
         },
         showError
       );
-    }
-
-    function showCompetitionFinalizationForm() {
-      clearMessage();
-      ensureCompetitionFinalizationViewModel();
-      if (!state.currentCompetition) {
-        showError({ message: "Compétition introuvable." });
-        return;
-      }
-
-      competitionFinalizationViewModel.finalizationSubtitle = state.currentCompetition.name || "";
-      Object.assign(competitionFinalizationViewModel.finalizationForm, {
-        competitionId: state.currentCompetition.competitionId || "",
-        result: state.currentCompetition.result || ""
-      });
-      showView("competitionFinalizationView");
-    }
-
-    function cancelCompetitionFinalizationForm() {
-      showView("competitionView");
-    }
-
-    function finalizeCompetition() {
-      ensureCompetitionFinalizationViewModel();
-      const competitionId = competitionFinalizationViewModel.finalizationForm.competitionId;
-      const result = competitionFinalizationViewModel.finalizationForm.result;
-
-      app.runServer(
-        "finalizeCompetition",
-        [competitionId, result],
-        (response) => {
-          showSuccess(response.message);
-          openCompetition(response.competitionId || competitionId, true);
-        },
-        showError
-      );
-    }
-
-    function deleteCurrentCompetition() {
-      if (!state.currentCompetition) return;
-
-      const competitionId = state.currentCompetition.competitionId;
-      const label = state.currentCompetition.name ? ` "${state.currentCompetition.name}"` : "";
-      app.confirmAndRun({
-        message: `Supprimer la compétition${label} et tous ses combats ?`,
-        method: "deleteCompetition",
-        args: [competitionId],
-        onSuccess: (response) => {
-          showSuccess(response.message);
-          state.currentCompetition = null;
-          app.reloadInitialData();
-        }
-      });
     }
 
     function normalizeJudokaSelectionKey(value: string) {
@@ -668,6 +626,134 @@
       competitionFormViewModel.ownerJudokaId = option ? option.judokaId : "";
       competitionFormViewModel.ownerJudokaText = option ? option.name : "";
       competitionFormViewModel.showOwnerOptions = false;
+    }
+
+    return {
+      cancelCompetitionForm,
+      getCompetitionOwnerRequiredMessage,
+      getJudokaSecondaryText,
+      hideCompetitionOwnerOptions,
+      resolveCompetitionOwnerSelection,
+      saveCompetition,
+      selectCompetitionOwner,
+      showCompetitionForm,
+      showCompetitionOwnerOptions,
+      updateCompetitionOwnerText
+    };
+  }
+
+  function createKirokuCompetitionDetailScreen(app: KirokuApp, deps: CompetitionDetailDeps) {
+    const { state, ui, notifications } = app;
+    const { showView } = ui;
+    const { clearMessage, showError, showSuccess } = notifications;
+    const { showCombatForm, deleteCombat } = deps;
+
+    const defaultCompetitionFinalizationViewState = {
+      finalizationSubtitle: "",
+      finalizationForm: {
+        competitionId: "",
+        result: ""
+      }
+    };
+
+    let competitionFinalizationMounted = false;
+    const competitionFinalizationViewModel = window.Vue.reactive({
+      ...defaultCompetitionFinalizationViewState,
+      finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
+    });
+    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+
+    const detail = createCompetitionDetailController(app, {
+      showCombatForm,
+      deleteCombat,
+      editCurrentCompetition,
+      showCompetitionFinalizationForm
+    });
+    const {
+      getCurrentCompetition,
+      navigateBackFromCompetition,
+      openCompetition,
+      openCompetitionFromClubDetail,
+      openCompetitionFromJudokaProfile,
+      deleteCurrentCompetition
+    } = detail;
+
+    const form = createCompetitionFormController(app, {
+      openCompetition,
+      showCombatForm
+    });
+    const {
+      cancelCompetitionForm,
+      getCompetitionOwnerRequiredMessage,
+      getJudokaSecondaryText,
+      hideCompetitionOwnerOptions,
+      resolveCompetitionOwnerSelection,
+      saveCompetition,
+      selectCompetitionOwner,
+      showCompetitionForm,
+      showCompetitionOwnerOptions,
+      updateCompetitionOwnerText
+    } = form;
+
+    function editCurrentCompetition() {
+      if (!state.currentCompetition) {
+        showError({ message: "Compétition introuvable." });
+        return;
+      }
+
+      showCompetitionForm(state.currentCompetition.competitionId);
+    }
+
+    function ensureCompetitionFinalizationViewModel() {
+      if (competitionFinalizationMounted) {
+        return;
+      }
+      competitionFinalizationMounted = true;
+      ui.mountViewModel(
+        "competitionFinalizationView",
+        competitionFinalizationViewModel,
+        {
+          cancelCompetitionFinalizationForm,
+          finalizeCompetition
+        },
+        { isSubmitting }
+      );
+    }
+
+    function showCompetitionFinalizationForm() {
+      clearMessage();
+      ensureCompetitionFinalizationViewModel();
+      if (!state.currentCompetition) {
+        showError({ message: "Compétition introuvable." });
+        return;
+      }
+
+      competitionFinalizationViewModel.finalizationSubtitle = state.currentCompetition.name || "";
+      Object.assign(competitionFinalizationViewModel.finalizationForm, {
+        competitionId: state.currentCompetition.competitionId || "",
+        result: state.currentCompetition.result || ""
+      });
+      showView("competitionFinalizationView");
+    }
+
+    function cancelCompetitionFinalizationForm() {
+      showView("competitionView");
+    }
+
+    function finalizeCompetition() {
+      ensureCompetitionFinalizationViewModel();
+      const competitionId = competitionFinalizationViewModel.finalizationForm.competitionId;
+      const result = competitionFinalizationViewModel.finalizationForm.result;
+
+      app.runServer(
+        "finalizeCompetition",
+        [competitionId, result],
+        (response) => {
+          showSuccess(response.message);
+          openCompetition(response.competitionId || competitionId, true);
+        },
+        showError
+      );
     }
 
     return {

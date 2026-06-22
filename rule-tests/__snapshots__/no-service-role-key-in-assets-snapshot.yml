@@ -1,0 +1,14 @@
+id: no-service-role-key-in-assets
+snapshots:
+  const key = config.SUPABASE_SERVICE_ROLE_KEY;:
+    labels:
+    - source: SUPABASE_SERVICE_ROLE_KEY
+      style: primary
+      start: 19
+      end: 44
+  const key = runtimeConfig.serviceRoleKey;:
+    labels:
+    - source: serviceRoleKey
+      style: primary
+      start: 26
+      end: 40

@@ -1,0 +1,5 @@
+id: no-repository-require-in-api
+valid:
+  - 'const { CompetitionRow } = require("../core/repositories/types");'
+invalid:
+  - 'const { CompetitionsRepository } = require("../core/repositories/competitions.repository");'

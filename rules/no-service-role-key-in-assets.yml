@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-service-role-key-in-assets
+message: assets/ is shipped to the browser; it must never reference the Supabase service role key. Use the anon key and route privileged operations through /api/rpc instead.
+severity: error
+language: TypeScript
+files:
+  - "assets/**"
+rule:
+  any:
+    - kind: identifier
+      regex: "^(SUPABASE_SERVICE_ROLE_KEY|serviceRoleKey)$"
+    - kind: property_identifier
+      regex: "^(SUPABASE_SERVICE_ROLE_KEY|serviceRoleKey)$"

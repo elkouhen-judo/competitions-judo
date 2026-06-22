@@ -1,0 +1,8 @@
+id: no-repository-require-in-api
+snapshots:
+  const { CompetitionsRepository } = require("../core/repositories/competitions.repository");:
+    labels:
+    - source: require("../core/repositories/competitions.repository")
+      style: primary
+      start: 35
+      end: 90

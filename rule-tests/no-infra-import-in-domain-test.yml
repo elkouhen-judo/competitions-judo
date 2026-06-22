@@ -1,0 +1,5 @@
+id: no-infra-import-in-domain
+valid:
+  - 'import { PersonName } from "./access/person-name";'
+invalid:
+  - 'import { getSupabaseClient } from "../infra/supabase-client";'

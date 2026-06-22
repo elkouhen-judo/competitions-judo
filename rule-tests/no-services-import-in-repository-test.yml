@@ -1,0 +1,5 @@
+id: no-services-import-in-repository
+valid:
+  - 'import type { CompetitionModel } from "../domain/competitions/competition";'
+invalid:
+  - 'import { askCoachAssistant } from "../services/coach-assistant-search";'

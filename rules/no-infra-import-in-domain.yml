@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-infra-import-in-domain
+message: Domain code must stay free of infrastructure clients (Supabase, Anthropic, etc.). Inject the dependency through a repository or service instead.
+severity: error
+language: TypeScript
+files:
+  - "core/domain/**"
+rule:
+  kind: import_statement
+  has:
+    field: source
+    regex: "infra/"

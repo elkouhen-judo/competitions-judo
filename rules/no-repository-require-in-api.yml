@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-repository-require-in-api
+message: Vercel API handlers must not require() repository implementations directly. Go through core/services instead, or require "repositories/types" if you only need the DTO shape.
+severity: error
+language: JavaScript
+files:
+  - "api/**"
+rule:
+  pattern: require($SOURCE)
+constraints:
+  SOURCE:
+    regex: "repositories/"
+    not:
+      regex: "repositories/types"

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-direct-supabase-auth-call-outside-app-auth
+message: Only assets/app-auth.ts may call the Supabase Auth REST API directly. Use the exported auth helpers from app-auth.ts instead.
+severity: error
+language: TypeScript
+files:
+  - "assets/**"
+ignores:
+  - "assets/app-auth.ts"
+rule:
+  kind: template_string
+  regex: "auth/v1"

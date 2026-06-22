@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+
+id: no-core-require-outside-gateway-in-api
+message: Only api/_core.js may require the core/ composition root directly. Require "./_core" instead.
+severity: error
+language: JavaScript
+files:
+  - "api/**"
+ignores:
+  - "api/_core.js"
+rule:
+  pattern: require($SOURCE)
+constraints:
+  SOURCE:
+    regex: "\\.\\./core"
