@@ -19,6 +19,7 @@ import type {
   CoachAssistantMatch,
   CoachAssistantResponse,
   CoachChatFilters,
+  CoachChatHistoryMessage,
   CoachDashboard,
   CoachDashboardFilters,
   RpcMethods
@@ -132,10 +133,11 @@ export default function createCoachDashboardService(
 
   async function askCoachAssistant(
     email: string,
-    question: string
+    question: string,
+    history: CoachChatHistoryMessage[] = []
   ): Promise<CoachAssistantResponse> {
     await requireCoach(email, "Assistant coach réservé aux coachs.");
-    return coachAssistantSearch.ask(question, await loadCoachChatDatasets());
+    return coachAssistantSearch.ask(question, await loadCoachChatDatasets(), history);
   }
 
   async function searchCombats(

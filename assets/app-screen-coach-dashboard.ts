@@ -307,7 +307,9 @@
       window.mountKirokuCoachChatWidget({
         elementId: "coachChatWidget",
         getAccessToken: () =>
-          app.auth.getValidVercelSession().then((session) => session?.access_token || "")
+          app.auth.getValidVercelSession().then((session) => session?.access_token || ""),
+        onSelectJudoka: (judokaId) => screens.judoka.showJudokaProfile(judokaId),
+        onSelectCompetition: (competitionId) => screens.competition.openCompetition(competitionId)
       });
     }
 

@@ -5,6 +5,8 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 interface MountCoachChatWidgetOptions {
   elementId: string;
   getAccessToken: () => Promise<string>;
+  onSelectJudoka: (judokaId: string) => void;
+  onSelectCompetition: (competitionId: string) => void;
 }
 
 interface CoachMatch {
@@ -30,17 +32,73 @@ const GREETING_MESSAGE = {
   ]
 };
 
-function renderMatchCard(match: CoachMatch): VNode {
+function renderMatchHeading(
+  match: CoachMatch,
+  onSelectJudoka: (judokaId: string) => void,
+  onSelectCompetition: (competitionId: string) => void
+): VNode {
+  if (match.judokaId) {
+    return h(
+      "button",
+      {
+        type: "button",
+        class: "coach-assistant-result-name",
+        onClick: () => onSelectJudoka(match.judokaId)
+      },
+      match.judokaName
+    );
+  }
+  if (match.competitionId) {
+    return h(
+      "button",
+      {
+        type: "button",
+        class: "coach-assistant-result-name",
+        onClick: () => onSelectCompetition(match.competitionId)
+      },
+      match.judokaName
+    );
+  }
+  return h("strong", null, match.judokaName);
+}
+
+function renderMatchCompetitionLabel(
+  match: CoachMatch,
+  onSelectCompetition: (competitionId: string) => void
+): VNode | null {
+  if (!match.competitionName && !match.competitionDate) {
+    return null;
+  }
+  const content = [
+    match.competitionName,
+    match.competitionName && match.competitionDate ? " · " : "",
+    match.competitionDate
+  ];
+  // The competition is already the clickable heading when there's no judoka on the row
+  // (competition-entity matches) — only add a second click target when judoka owns the heading.
+  if (match.judokaId && match.competitionId) {
+    return h(
+      "button",
+      {
+        type: "button",
+        class: "coach-assistant-result-competition",
+        onClick: () => onSelectCompetition(match.competitionId)
+      },
+      content
+    );
+  }
+  return h("span", null, content);
+}
+
+function renderMatchCard(
+  match: CoachMatch,
+  onSelectJudoka: (judokaId: string) => void,
+  onSelectCompetition: (competitionId: string) => void
+): VNode {
   const key = `${match.competitionId}-${match.judokaId}-${match.opponent}-${match.scoreLabel}`;
   return h("div", { key, class: "coach-assistant-result" }, [
-    h("strong", null, match.judokaName),
-    match.competitionName || match.competitionDate
-      ? h("span", null, [
-          match.competitionName,
-          match.competitionName && match.competitionDate ? " · " : "",
-          match.competitionDate
-        ])
-      : null,
+    renderMatchHeading(match, onSelectJudoka, onSelectCompetition),
+    renderMatchCompetitionLabel(match, onSelectCompetition),
     match.result || match.opponent
       ? h("span", null, [
           match.result,
@@ -53,7 +111,12 @@ function renderMatchCard(match: CoachMatch): VNode {
   ]);
 }
 
-function renderMessagePart(part: UIMessage["parts"][number], index: number): VNode | null {
+function renderMessagePart(
+  part: UIMessage["parts"][number],
+  index: number,
+  onSelectJudoka: (judokaId: string) => void,
+  onSelectCompetition: (competitionId: string) => void
+): VNode | null {
   if (part.type === "text") {
     return h("p", { key: index }, part.text);
   }
@@ -63,7 +126,7 @@ function renderMessagePart(part: UIMessage["parts"][number], index: number): VNo
       return h(
         "div",
         { key: index, class: "coach-assistant-results" },
-        matches.map(renderMatchCard)
+        matches.map((match) => renderMatchCard(match, onSelectJudoka, onSelectCompetition))
       );
     }
   }
@@ -108,7 +171,9 @@ function mountKirokuCoachChatWidget(options: MountCoachChatWidgetOptions) {
                       : "coach-assistant-message-system"
                   ]
                 },
-                message.parts.map((part, index) => renderMessagePart(part, index))
+                message.parts.map((part, index) =>
+                  renderMessagePart(part, index, options.onSelectJudoka, options.onSelectCompetition)
+                )
               )
             ),
             chat.status === "submitted" || chat.status === "streaming"

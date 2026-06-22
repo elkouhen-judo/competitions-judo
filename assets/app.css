@@ -1383,6 +1383,43 @@
       color: var(--muted);
     }
 
+    .coach-assistant-result-name {
+      justify-self: start;
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+    }
+
+    .coach-assistant-result-name:hover,
+    .coach-assistant-result-name:focus-visible {
+      text-decoration-color: currentColor;
+    }
+
+    .coach-assistant-result-competition {
+      justify-self: start;
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+    }
+
+    .coach-assistant-result-competition:hover,
+    .coach-assistant-result-competition:focus-visible {
+      text-decoration-color: currentColor;
+    }
+
     .coach-assistant-loading {
       color: var(--muted);
       font-size: 14px;
