@@ -25,6 +25,8 @@ const entryPoints = [
   "core/domain/competitions/ne-waza-type.ts",
   "core/domain/competitions/combat-score-value.ts",
   "core/domain/competitions/combat-score.ts",
+  "core/domain/competitions/combat-technique-breakdown.ts",
+  "core/domain/competitions/combat-decision-breakdown.ts",
   "core/domain/competitions/combat.ts",
   "core/domain/competition-results.ts",
   "core/domain/category-reference.ts",

@@ -36,7 +36,8 @@ test("mcp-server tools/list exposes the real read tool catalog, including combat
       "competitions:read",
       "competitions:write",
       "combats:read",
-      "combats:write"
+      "combats:write",
+      "coach-dashboard:read"
     ]),
     { method: "tools/list" }
   );
@@ -58,6 +59,28 @@ test("mcp-server tools/list exposes the real read tool catalog, including combat
   assert.equal(combatsSearch.inputSchema.properties.filters.properties.result.type, "string");
   assert.equal(combatsSearch.inputSchema.properties.limit.default, 50);
   assert.equal(combatsSearch.inputSchema.properties.limit.maximum, 100);
+});
+
+test("mcp-server hides coach dashboard from parent-scoped sports tokens", async () => {
+  const service = createMcpServerService({
+    methods: /** @type {any} */ ({}),
+    getJudokas: async () => []
+  });
+
+  const { tools } = await service.handleRequest(
+    createClaims([
+      "judokas:read",
+      "competitions:read",
+      "competitions:write",
+      "combats:read",
+      "combats:write"
+    ]),
+    { method: "tools/list" }
+  );
+  const toolNames = tools.map((tool) => tool.name);
+
+  assert.equal(toolNames.includes("combats.search"), true);
+  assert.equal(toolNames.includes("coach.dashboard"), false);
 });
 
 test("mcp-server tools/list only exposes tools allowed by the caller scopes", async () => {

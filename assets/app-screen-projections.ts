@@ -150,17 +150,8 @@
       isPending: false
     }));
 
-    const pendingCards: ManagedUserCard[] = (pendingInvitations || []).map((invitation) => ({
-      judokaId: "",
-      fullName: invitation.email || "Invitation",
-      accountEmail: invitation.email || "Non renseigné",
-      roleLabel: `En attente d'inscription · ${invitation.invitedProfileType === "PARENT" ? "Parent" : "Judoka"}`,
-      isAdmin: false,
-      isCurrentUser: false,
-      isPending: true
-    }));
-
-    const allCards = [...registeredCards, ...pendingCards];
+    void pendingInvitations;
+    const allCards = registeredCards;
     const normalizedSearch = (search || "").toLowerCase();
     const filteredUsers = !normalizedSearch
       ? allCards
@@ -183,6 +174,41 @@
       canShowPreviousUsersPage: safeCurrentPage > 1,
       canShowNextUsersPage: safeCurrentPage < totalPages,
       hasUsers: Boolean(filteredUsers.length)
+    };
+  }
+
+  function projectAccessInvitations(
+    pendingInvitations: AccessInvitation[] | null | undefined,
+    search: string,
+    currentPage: number,
+    pageSize: number
+  ) {
+    const invitationCards: ManagedUserCard[] = (pendingInvitations || []).map((invitation) => ({
+      judokaId: "",
+      fullName: invitation.email || "Invitation",
+      accountEmail: invitation.email || "Non renseigné",
+      roleLabel: `En attente d'inscription · ${invitation.invitedProfileType === "PARENT" ? "Parent" : "Judoka"}`,
+      isAdmin: false,
+      isCurrentUser: false,
+      isPending: true
+    }));
+    const normalizedSearch = (search || "").toLowerCase();
+    const filteredInvitations = !normalizedSearch
+      ? invitationCards
+      : invitationCards.filter((card) => card.accountEmail.toLowerCase().includes(normalizedSearch));
+    const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
+    const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+
+    return {
+      invitations: filteredInvitations.slice(startIndex, startIndex + pageSize),
+      invitationsSummary: `${filteredInvitations.length} invitation(s)${search ? " trouvée(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      invitationsEmptyMessage: search
+        ? `Aucune invitation trouvée pour "${search}".`
+        : "Aucune invitation en attente.",
+      canShowPreviousInvitationsPage: safeCurrentPage > 1,
+      canShowNextInvitationsPage: safeCurrentPage < totalPages,
+      hasInvitations: Boolean(filteredInvitations.length)
     };
   }
 
@@ -396,6 +422,7 @@
     paginateList,
     projectCompetitionCombats,
     projectCompetitionDetail,
+    projectAccessInvitations,
     projectManagedAdmins,
     projectManagedUsers
   };

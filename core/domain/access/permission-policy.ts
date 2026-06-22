@@ -117,6 +117,7 @@ export function canManageCombatFor(
   idJudoka: unknown,
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
+  if (isAdmin(user)) return false;
   if (isCoach(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
@@ -141,6 +142,7 @@ export function canManageCompetition(
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
+  if (isAdmin(user)) return false;
   if (isCoach(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, ownerJudokaId);

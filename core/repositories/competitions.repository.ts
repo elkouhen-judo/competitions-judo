@@ -9,7 +9,12 @@ interface CompetitionFinalization {
 
 export interface CompetitionsRepository {
   detachFromClubCompetition(idCompetition: string): Promise<CompetitionRow | null>;
-  existsForJudoka(idJudoka: string): Promise<CompetitionRow | null>;
+  existsForJudoka(
+    idJudoka: string,
+    name?: string,
+    competitionDate?: string,
+    excludedCompetitionId?: string
+  ): Promise<CompetitionRow | null>;
   getById(idCompetition: string): Promise<CompetitionRow | null>;
   insert(competition: CompetitionModel, idCompetition: string): Promise<CompetitionRow | null>;
   listAll(): Promise<CompetitionRow[]>;
@@ -101,10 +106,25 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function existsForJudoka(idJudoka: string): Promise<CompetitionRow | null> {
+  async function existsForJudoka(
+    idJudoka: string,
+    name?: string,
+    competitionDate?: string,
+    excludedCompetitionId?: string
+  ): Promise<CompetitionRow | null> {
+    const filters = [`select=id_competition,club_competition_id`, eqFilter("id_judoka", idJudoka)];
+    if (name) {
+      filters.push(eqFilter("nom", name));
+    }
+    if (competitionDate) {
+      filters.push(eqFilter("date", competitionDate));
+    }
+    if (excludedCompetitionId) {
+      filters.push(`id_competition=neq.${encodeURIComponent(excludedCompetitionId)}`);
+    }
     return supabaseSelectOne<CompetitionRow>(
       "competitions",
-      `select=id_competition&${eqFilter("id_judoka", idJudoka)}`
+      filters.join("&")
     );
   }
 

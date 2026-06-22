@@ -565,6 +565,14 @@ function createTestCompetitionsService({
           ids.map(String).includes(String(competition.id_judoka))
         ),
       getById: async (id) => competitionsByCompetitionId[id] || null,
+      existsForJudoka: async (idJudoka, name, competitionDate, excludedCompetitionId) =>
+        Object.values(competitionsByCompetitionId).find(
+          (competition) =>
+            String(competition.id_judoka) === String(idJudoka) &&
+            String(competition.nom || "") === String(name || "") &&
+            String(competition.date || "") === String(competitionDate || "") &&
+            String(competition.id_competition || "") !== String(excludedCompetitionId || "")
+        ) || null,
       insert: async (draft, idCompetition) => {
         calls.inserted.push({ draft, idCompetition });
         const row = { ...draft, competitionId: idCompetition };
@@ -734,6 +742,32 @@ test("saveCompetition rejects editing a competition owned by another judoka", as
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
+  test("saveCompetition rejects duplicate standalone competitions for the same judoka", async () => {
+    const { service } = createTestCompetitionsService({
+      competitionsByCompetitionId: {
+        COMP1: {
+          id_competition: "COMP1",
+          id_judoka: "JUDO1",
+          nom: "Tournoi Nantes",
+          date: "2026-06-14",
+          categorie_age: "Cadet",
+          club_competition_id: null
+        }
+      },
+      getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+    });
+
+    await assert.rejects(
+      () =>
+        service.methods.saveCompetition("judoka@example.com", {
+          name: "Tournoi Nantes",
+          competitionDate: "2026-06-14",
+          ageCategory: "Cadet"
+        }),
+      /déjà une compétition individuelle/
+    );
+  });
+
   await assert.rejects(
     () =>
       service.methods.saveCompetition("judoka@example.com", {
@@ -774,6 +808,26 @@ test("finalizeCompetition records the final ranking for the competition owner", 
 test("finalizeCompetition requires a competition id", async () => {
   const { service } = createTestCompetitionsService({
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
+  });
+
+  test("finalizeCompetition rejects an admin requester", async () => {
+    const { service } = createTestCompetitionsService({
+      competitionsByCompetitionId: {
+        COMP1: {
+          id_competition: "COMP1",
+          id_judoka: "JUDO1",
+          nom: "Tournoi",
+          date: "2026-06-14",
+          categorie_age: "Cadet"
+        }
+      },
+      getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+    });
+
+    await assert.rejects(
+      () => service.methods.finalizeCompetition("admin@example.com", "COMP1", "1er"),
+      /Finalisation de cette compétition non autorisée/
+    );
   });
 
   await assert.rejects(
@@ -959,6 +1013,7 @@ test("getCoachDashboard computes stats filtered by competition and age category"
 
   const allResult = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(allResult.stats.totalCombats, 3);
+  assert.equal(allResult.stats.analyzedCompetitions, 2);
   assert.deepEqual(allResult.availableCompetitions, [
     {
       competitionId: "COMP1",
@@ -1037,6 +1092,7 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     ageCategory: "Cadet"
   });
   assert.equal(ageFiltered.stats.totalCombats, 2);
+  assert.equal(ageFiltered.stats.analyzedCompetitions, 1);
   assert.equal(ageFiltered.stats.tachiWazaIpponVictories, 1);
   assert.deepEqual(ageFiltered.stats.podiumsByLevel[0], {
     level: "Départemental",
@@ -1059,6 +1115,7 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     competitionIds: ["COMP2"]
   });
   assert.equal(competitionFiltered.stats.totalCombats, 1);
+  assert.equal(competitionFiltered.stats.analyzedCompetitions, 1);
   assert.equal(competitionFiltered.stats.victories, 1);
   assert.equal(competitionFiltered.availableCompetitions.length, 2);
 
@@ -1067,6 +1124,7 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     dateTo: "2026-03-15"
   });
   assert.equal(exactDateFiltered.stats.totalCombats, 1);
+  assert.equal(exactDateFiltered.stats.analyzedCompetitions, 1);
   assert.equal(exactDateFiltered.stats.victories, 1);
   assert.deepEqual(exactDateFiltered.availableCompetitions, [
     {
@@ -1082,6 +1140,7 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     dateTo: "2026-02-28"
   });
   assert.equal(dateRangeFiltered.stats.totalCombats, 2);
+  assert.equal(dateRangeFiltered.stats.analyzedCompetitions, 1);
   assert.deepEqual(dateRangeFiltered.availableCompetitions, [
     {
       competitionId: "COMP1",
@@ -1958,6 +2017,20 @@ test("deleteCombat requires a combat id", async () => {
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
+  test("deleteCombat rejects an admin requester", async () => {
+    const { service } = createTestCombatsService({
+      combatsById: {
+        CB1: { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "V" }
+      },
+      getDomainUserContext: domainContextFor("ADMIN1", "ADMIN")
+    });
+
+    await assert.rejects(
+      () => service.methods.deleteCombat("admin@example.com", "CB1"),
+      /Suppression de ce combat non autorisée/
+    );
+  });
+
   await assert.rejects(
     () => service.methods.deleteCombat("judoka@example.com", ""),
     /Combat obligatoire/
@@ -2272,6 +2345,8 @@ test("getAccessibleJudokaProfile rejects when the target judoka does not exist",
 function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, judokasByName = {}) {
   const calls = {
     inserted: [],
+    removedUsers: [],
+    removedCompetitionsByJudoka: [],
     invitations: [],
     links: [],
     updated: [],
@@ -2287,6 +2362,10 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
   const adminUser = { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN" };
 
   const service = createAdminService({
+    competitionsRepository: {
+      listByJudoka: async (idJudoka) => [],
+      removeByJudoka: async (idJudoka) => calls.removedCompetitionsByJudoka.push(idJudoka)
+    },
     invitationsRepository: {
       getByEmail: async (email) => {
         calls.lookups.invitationByEmail.push(email);
@@ -2334,6 +2413,10 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
       update: async (idJudoka, changes) => {
         calls.updated.push({ idJudoka, changes });
         return null;
+      },
+      remove: async (idJudoka) => {
+        calls.removedUsers.push(idJudoka);
+        return null;
       }
     },
     parentLinksRepository: {
@@ -2362,6 +2445,7 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
     createHandedness,
     createWeightCategory,
     createYearInCategory,
+    getCurrentDate: () => "2026-06-21",
     normalizeEmail: (value) =>
       String(value || "")
         .trim()
@@ -3144,6 +3228,35 @@ test("importUsersCsv updates an existing managed judoka's age category when re-i
 
   assert.equal(summary.success, true);
   assert.deepEqual(calls.updated, [{ idJudoka: "CHILD2", changes: { ageCategory: "Cadet" } }]);
+  assert.match(summary.results[0].message, /mis à jour/);
+});
+
+test("importUsersCsv updates an existing managed judoka's role when re-imported by name", async () => {
+  const { service, calls } = createTestAdminService(
+    {},
+    {},
+    {
+      "rayane|el kouhen": {
+        id_judoka: "CHILD2",
+        profile_type: "JUDOKA",
+        role: "COACH",
+        prenom: "Rayane",
+        nom: "El Kouhen",
+        categorie_age: "Minime"
+      }
+    }
+  );
+
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,role,ageCategory\n" +
+    "JUDOKA,Rayane,El Kouhen,,,NORMAL,Cadet\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.success, true);
+  assert.deepEqual(calls.updated, [
+    { idJudoka: "CHILD2", changes: { accessRole: "NORMAL", ageCategory: "Cadet" } }
+  ]);
   assert.match(summary.results[0].message, /mis à jour/);
 });
 

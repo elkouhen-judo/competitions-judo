@@ -91,40 +91,63 @@
           </div>
         </div>
 
-        <div class="section">
+        <div class="section" v-if="Number(seasonWins)">
           <div class="section-heading">
             <div>
-              <h3>Bilan des combats
-                <span class="tooltip" tabindex="0" aria-label="Détaille la manière dont les combats se terminent pour repérer les points forts et axes de travail.">
+              <h3>Mode de victoire
+                <span class="tooltip" tabindex="0" aria-label="Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des victoires.">
                   <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Détaille la manière dont les combats se terminent pour repérer les points forts et axes de travail.</span>
+                  <span class="tooltip-content" aria-hidden="true">Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des victoires.</span>
                 </span>
               </h3>
               <p class="subtitle">Tendances sur la saison sélectionnée.</p>
             </div>
           </div>
-          <div class="combat-profile-grid">
-            <div class="stat-card stat-card-success">
-              <span class="stat-label">Victoires ippon</span>
-              <span class="stat-value">{{ combatProfile.victoryIppon }}</span>
-            </div>
-            <div class="stat-card stat-card-success">
-              <span class="stat-label">Victoires aux points ou décision</span>
-              <span class="stat-value">{{ combatProfile.victoryDecision }}</span>
-            </div>
-            <div class="stat-card stat-card-danger">
-              <span class="stat-label">Défaites ippon</span>
-              <span class="stat-value">{{ combatProfile.lossIppon }}</span>
-            </div>
-            <div class="stat-card stat-card-danger">
-              <span class="stat-label">Défaites aux points ou décision</span>
-              <span class="stat-value">{{ combatProfile.lossDecision }}</span>
+          <div class="stats-grid">
+            <div v-for="entry in victoriesByDecisionType" :key="entry.decisionType" class="stat-card stat-card-success">
+              <span class="stat-label">{{ entry.decisionType }}</span>
+              <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
             </div>
           </div>
-          <div v-if="hasCombatProfileExtras" class="profile-extra-row">
-            <span v-if="Number(combatProfile.draws)" class="result-badge">Égalités {{ combatProfile.draws }}</span>
-            <span v-if="Number(combatProfile.penalties)" class="result-badge">Pénalités {{ combatProfile.penalties }}</span>
-            <span v-if="Number(combatProfile.forfeits)" class="result-badge">Forfaits {{ combatProfile.forfeits }}</span>
+        </div>
+
+        <div class="section" v-if="Number(seasonLosses)">
+          <div class="section-heading">
+            <div>
+              <h3>Mode de défaite
+                <span class="tooltip" tabindex="0" aria-label="Répartition des défaites de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Répartition des défaites de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.</span>
+                </span>
+              </h3>
+              <p class="subtitle">Tendances sur la saison sélectionnée.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div v-for="entry in defeatsByDecisionType" :key="entry.decisionType" class="stat-card stat-card-danger">
+              <span class="stat-label">{{ entry.decisionType }}</span>
+              <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" v-if="hasTopWinTechniques">
+          <div class="section-heading">
+            <div>
+              <h3>Top prises de victoire
+                <span class="tooltip" tabindex="0" aria-label="Les prises marquées le plus souvent dans les combats gagnés sur la saison sélectionnée.">
+                  <span class="tooltip-trigger" aria-hidden="true">i</span>
+                  <span class="tooltip-content" aria-hidden="true">Les prises marquées le plus souvent dans les combats gagnés sur la saison sélectionnée.</span>
+                </span>
+              </h3>
+              <p class="subtitle">Les 3 prises les plus efficaces sur la saison sélectionnée.</p>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div v-for="(entry, index) in topWinTechniques" :key="entry.technique" class="stat-card" :class="{ 'stat-card-success': index === 0 }">
+              <span class="stat-label">{{ index + 1 }}. {{ entry.technique }}</span>
+              <span class="stat-value">{{ entry.count }}</span>
+            </div>
           </div>
         </div>
 

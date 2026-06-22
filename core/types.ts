@@ -150,16 +150,16 @@ export interface SeasonBounds {
   label: string;
 }
 
-export interface CombatProfile {
-  victoryIppon: number;
-  victoryDecision: number;
-  lossIppon: number;
-  lossDecision: number;
-  lossPenalty: number;
-  lossForfeit: number;
-  draws: number;
-  penalties: number;
-  forfeits: number;
+export interface DecisionBreakdownEntry {
+  decisionType: string;
+  count: number;
+  total: number;
+  rate: number;
+}
+
+export interface TechniqueBreakdownEntry {
+  technique: string;
+  count: number;
 }
 
 export interface CompetitionResultBadge {
@@ -172,13 +172,6 @@ export interface CoachDashboardFilters {
   dateFrom?: string;
   dateTo?: string;
   ageCategory?: string;
-}
-
-export interface CoachDashboardDecisionBreakdownEntry {
-  decisionType: string;
-  count: number;
-  total: number;
-  rate: number;
 }
 
 export interface CoachDashboardLateralMatchupBreakdownEntry {
@@ -227,13 +220,14 @@ export interface CoachDashboardStats {
   tachiWazaIpponVictoryRate: number;
   neWazaIpponVictories: number;
   neWazaIpponVictoryRate: number;
-  victoriesByDecisionType: CoachDashboardDecisionBreakdownEntry[];
-  defeatsByDecisionType: CoachDashboardDecisionBreakdownEntry[];
+  victoriesByDecisionType: DecisionBreakdownEntry[];
+  defeatsByDecisionType: DecisionBreakdownEntry[];
   byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
   judokasByGender: CoachDashboardGenderBreakdownEntry[];
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
   dataQualityIssues: CoachDashboardQualityIssueEntry[];
   podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
+  topWinTechniques: TechniqueBreakdownEntry[];
 }
 
 export interface CoachDashboardCompetitionOption {
@@ -319,7 +313,9 @@ export interface JudokaProfile {
   judoka: Judoka;
   season: SeasonBounds;
   lastCompetition: JudokaProfileLastCompetition | null;
-  combatProfile: CombatProfile;
+  victoriesByDecisionType: DecisionBreakdownEntry[];
+  defeatsByDecisionType: DecisionBreakdownEntry[];
+  topWinTechniques: TechniqueBreakdownEntry[];
   competitionResults: SeasonCompetitionResult[];
   seasonCombatCount: number;
   seasonCompetitionCount: number;
@@ -345,7 +341,8 @@ export type McpScope =
   | "competitions:read"
   | "competitions:write"
   | "combats:read"
-  | "combats:write";
+  | "combats:write"
+  | "coach-dashboard:read";
 
 export interface McpTokenClaims {
   sub: string;

@@ -1479,21 +1479,8 @@
       border-left: 4px solid var(--accent);
     }
 
-    .combat-profile-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
     .compact-stats-grid .stat-value {
       font-size: 20px;
-    }
-
-    .profile-extra-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
     }
 
     .season-nav {

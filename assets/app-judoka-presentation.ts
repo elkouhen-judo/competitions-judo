@@ -2,19 +2,6 @@
   type JudokaProfile = import("./types").JudokaProfile;
   type JudokaProfilePresentationHelpers = import("./types").JudokaProfilePresentationHelpers;
   type JudokaProfileViewModel = import("./types").JudokaProfileViewModel;
-  type CombatProfile = NonNullable<JudokaProfile["combatProfile"]>;
-
-  const emptyCombatProfile: CombatProfile = {
-    victoryIppon: 0,
-    victoryDecision: 0,
-    lossIppon: 0,
-    lossDecision: 0,
-    lossPenalty: 0,
-    lossForfeit: 0,
-    draws: 0,
-    penalties: 0,
-    forfeits: 0
-  };
 
   function createJudokaProfileViewModel(
     profile: JudokaProfile | null,
@@ -41,7 +28,9 @@
       seasonLosses,
       seasonDraws,
       victoryRate,
-      combatProfile,
+      victoriesByDecisionType,
+      defeatsByDecisionType,
+      topWinTechniques,
       competitionResults
     } = profile;
     const highlightedCompetition =
@@ -58,7 +47,6 @@
     const gender = judoka.gender || "";
     const yearInCategory = judoka.yearInCategory ? `${judoka.yearInCategory}e année` : "";
     const handedness = judoka.handedness || "";
-    const normalizedCombatProfile = combatProfile || emptyCombatProfile;
 
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
@@ -80,22 +68,10 @@
       heroYearInCategory: yearInCategory,
       heroHandedness: handedness,
       heroSeason: `Saison ${season.label}`,
-      combatProfile: {
-        victoryIppon: String(normalizedCombatProfile.victoryIppon || 0),
-        victoryDecision: String(normalizedCombatProfile.victoryDecision || 0),
-        lossIppon: String(normalizedCombatProfile.lossIppon || 0),
-        lossDecision: String(normalizedCombatProfile.lossDecision || 0),
-        lossPenalty: String(normalizedCombatProfile.lossPenalty || 0),
-        lossForfeit: String(normalizedCombatProfile.lossForfeit || 0),
-        draws: String(normalizedCombatProfile.draws || 0),
-        penalties: String(normalizedCombatProfile.penalties || 0),
-        forfeits: String(normalizedCombatProfile.forfeits || 0)
-      },
-      hasCombatProfileExtras: Boolean(
-        Number(normalizedCombatProfile.draws || 0) ||
-        Number(normalizedCombatProfile.penalties || 0) ||
-        Number(normalizedCombatProfile.forfeits || 0)
-      ),
+      victoriesByDecisionType: victoriesByDecisionType || [],
+      defeatsByDecisionType: defeatsByDecisionType || [],
+      topWinTechniques: topWinTechniques || [],
+      hasTopWinTechniques: Boolean((topWinTechniques || []).length),
       competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
         competitionId: result.competitionId || "",
         name: result.name || "Compétition",

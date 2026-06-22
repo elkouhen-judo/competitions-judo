@@ -1,8 +1,9 @@
 import { isLossCombatResult, isVictoryCombatResult } from "./competitions/combat-result";
+import { computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
+import { computeDecisionBreakdown } from "./competitions/combat-decision-breakdown";
 import type {
   Combat,
   Competition,
-  CombatProfile,
   CompetitionCombatRecord,
   CompetitionResultBadge,
   Judoka,
@@ -55,7 +56,6 @@ export function buildJudokaProfileSnapshot({
   const victoryRate = seasonCombats.length
     ? Math.round((seasonWins / seasonCombats.length) * 100)
     : 0;
-  const combatProfile = buildCombatProfile(seasonCombats);
 
   const competitionResults: SeasonCompetitionResult[] = seasonCompetitions.map((c) => ({
     competitionId: c.competitionId,
@@ -82,7 +82,9 @@ export function buildJudokaProfileSnapshot({
     judoka,
     season: bounds,
     lastCompetition: lastCompetitionSummary,
-    combatProfile,
+    victoriesByDecisionType: computeDecisionBreakdown(seasonCombats, "Victoire"),
+    defeatsByDecisionType: computeDecisionBreakdown(seasonCombats, "Défaite"),
+    topWinTechniques: computeTopWinTechniques(seasonCombats),
     competitionResults,
     seasonCombatCount: seasonCombats.length,
     seasonCompetitionCount: seasonCompetitions.length,
@@ -91,40 +93,6 @@ export function buildJudokaProfileSnapshot({
     seasonDraws,
     victoryRate
   };
-}
-
-function buildCombatProfile(combats: Combat[]): CombatProfile {
-  const stats: CombatProfile = {
-    victoryIppon: 0,
-    victoryDecision: 0,
-    lossIppon: 0,
-    lossDecision: 0,
-    lossPenalty: 0,
-    lossForfeit: 0,
-    draws: 0,
-    penalties: 0,
-    forfeits: 0
-  };
-
-  combats.forEach((combat) => {
-    const decisionType = String(combat.victoryType || "");
-    if (isVictoryCombatResult(combat.result)) {
-      if (decisionType === "Ippon") stats.victoryIppon += 1;
-      if (decisionType === "Décision") stats.victoryDecision += 1;
-    } else if (isLossCombatResult(combat.result)) {
-      if (decisionType === "Ippon") stats.lossIppon += 1;
-      if (decisionType === "Décision") stats.lossDecision += 1;
-      if (decisionType === "Hansoku-make") stats.lossPenalty += 1;
-      if (decisionType === "Forfait") stats.lossForfeit += 1;
-    } else {
-      stats.draws += 1;
-    }
-
-    if (decisionType === "Hansoku-make") stats.penalties += 1;
-    if (decisionType === "Forfait") stats.forfeits += 1;
-  });
-
-  return stats;
 }
 
 function getCompetitionCombatRecord(

@@ -87,7 +87,7 @@
       const base = window.KirokuScreenProjections.projectCompetitionCombats(state.currentCombats, {
         formatResultat,
         normalizeDisplayName,
-        showJudoka: state.isCoach,
+        showJudoka: true,
         canEdit: state.canEditCurrentCompetition
       });
       const competitionId = state.currentCompetition?.competitionId || "";
@@ -98,7 +98,7 @@
         {
           formatResultat,
           normalizeDisplayName,
-          showJudoka: state.isCoach,
+          showJudoka: true,
           canEdit: state.canEditCurrentCompetition,
           judokas: state.judokas,
           getJudokaDisplayName

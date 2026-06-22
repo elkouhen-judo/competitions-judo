@@ -312,7 +312,7 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
       description:
         "Statistiques agrégées des combats (taux de victoire, répartition par décision, par garde adverse, " +
         "par niveau de compétition, par genre, etc.) pour le tableau de bord coach, optionnellement filtrées.",
-      scope: "combats:read",
+      scope: "coach-dashboard:read",
       inputSchema: { type: "object", properties: { filters: COACH_DASHBOARD_FILTERS_SCHEMA } },
       async handler(email, args) {
         return methods.getCoachDashboard(email, (args.filters as never) || {});
