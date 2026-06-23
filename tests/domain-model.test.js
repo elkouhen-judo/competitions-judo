@@ -444,7 +444,7 @@ test("combat domain enforces allowed results and required identifiers", () => {
   assert.equal(combat.draft.result, "Victoire");
   assert.equal(combat.victoryType, "Ippon");
   assert.deepEqual(combat.scores, [
-    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }
+    { category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Ippon" }
   ]);
   assert.equal(combat.notes, "Bon rythme");
   assert.equal("id_judoka" in combat, false);
@@ -627,14 +627,17 @@ test("tachi-waza technique domain normalizes known aliases and accepts free text
 });
 
 test("ne-waza type domain normalizes aliases and rejects unknown values", () => {
-  assert.equal(normalizeNeWazaType("cle"), "Clé");
-  assert.equal(normalizeNeWazaType("Étranglement"), "Étranglement");
-  assert.equal(normalizeNeWazaType("osaekomi"), "Osaekomi");
+  assert.equal(normalizeNeWazaType("cle"), "Juji-gatame");
+  assert.equal(normalizeNeWazaType("Clé"), "Juji-gatame");
+  assert.equal(normalizeNeWazaType("Étranglement"), "Hadaka-jime");
+  assert.equal(normalizeNeWazaType("Hadaka-jime"), "Hadaka-jime");
+  assert.equal(normalizeNeWazaType("osaekomi"), "Hon-gesa-gatame");
+  assert.equal(normalizeNeWazaType("Osaekomi"), "Hon-gesa-gatame");
   assert.equal(normalizeNeWazaType("inconnu"), "");
 
   assert.equal(createNeWazaType(""), "");
   assert.equal(createNeWazaType(undefined), "");
-  assert.equal(createNeWazaType("Clé"), "Clé");
+  assert.equal(createNeWazaType("Juji-gatame"), "Juji-gatame");
   assert.throws(() => createNeWazaType("inconnu"), /Action au sol invalide/);
 });
 
@@ -659,11 +662,11 @@ test("combat score domain enforces the conditional sub-field per category", () =
     }
   );
   assert.deepEqual(
-    createCombatScore({ category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" }),
+    createCombatScore({ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }),
     {
       category: "Ne-waza",
       technique: "",
-      neWazaType: "Osaekomi",
+      neWazaType: "Hon-gesa-gatame",
       value: "Waza-ari"
     }
   );
@@ -686,7 +689,7 @@ test("combat score domain enforces the conditional sub-field per category", () =
   assert.equal(
     createCombatScores([
       { category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" },
-      { category: "Ne-waza", neWazaType: "Clé", value: "Ippon" }
+      { category: "Ne-waza", neWazaType: "Juji-gatame", value: "Ippon" }
     ]).length,
     2
   );
@@ -710,7 +713,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       judokaHandedness: "Gaucher",
       result: "Victoire",
       victoryType: "Ippon",
-      scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }],
+      scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Ippon" }],
       opponentStance: "Gaucher",
       competitionLevel: "National"
     },
@@ -845,7 +848,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       }
     ],
     topWinTechniques: [
-      { technique: "Osaekomi", count: 1 },
+      { technique: "Hon-gesa-gatame", count: 1 },
       { technique: "Seoi-nage", count: 1 }
     ]
   });
@@ -957,7 +960,7 @@ test("coach dashboard statistics domain only counts an ippon victory when the sc
       result: "Victoire",
       victoryType: "Ippon",
       scores: [
-        { category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" },
+        { category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" },
         { category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }
       ]
     }
@@ -1009,8 +1012,8 @@ test("coach dashboard statistics domain ranks the top 3 winning techniques, igno
     { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }] },
     { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Waza-ari" }] },
     { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" }] },
-    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }] },
-    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Waza-ari" }] },
+    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Ippon" }] },
+    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }] },
     { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }] },
     { result: "Défaite", scores: [{ category: "Tachi-waza", technique: "O-soto-gari", value: "Ippon" }] },
     { result: "Victoire", scores: [] }
@@ -1018,7 +1021,7 @@ test("coach dashboard statistics domain ranks the top 3 winning techniques, igno
 
   assert.deepEqual(computeCoachDashboardStats(combats).topWinTechniques, [
     { technique: "Uchi-mata", count: 3 },
-    { technique: "Osaekomi", count: 2 },
+    { technique: "Hon-gesa-gatame", count: 2 },
     { technique: "Seoi-nage", count: 1 }
   ]);
 });
@@ -1162,7 +1165,7 @@ test("season statistics domain ranks the judoka's top winning techniques for the
         competitionId: "COMP1",
         result: "V",
         victoryType: "Ippon",
-        scores: [{ category: "Ne-waza", neWazaType: "Osaekomi", value: "Ippon" }]
+        scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Ippon" }]
       },
       {
         combatId: "CB4",
@@ -1180,7 +1183,7 @@ test("season statistics domain ranks the judoka's top winning techniques for the
 
   assert.deepEqual(snapshot.topWinTechniques, [
     { technique: "Uchi-mata", count: 2 },
-    { technique: "Osaekomi", count: 1 }
+    { technique: "Hon-gesa-gatame", count: 1 }
   ]);
 });
 
