@@ -78,7 +78,10 @@ const COMPETITION_FILTER_PROPERTIES: JsonSchema = {
 const COMBAT_FILTER_PROPERTIES: JsonSchema = {
   ...JUDOKA_FILTER_PROPERTIES,
   ...COMPETITION_FILTER_PROPERTIES,
-  neWazaType: { type: "string", enum: NE_WAZA_TYPES },
+  neWazaType: {
+    type: "string",
+    description: `Nom de technique au sol libre ou suggéré (${NE_WAZA_TYPES.join(", ")}).`
+  },
   opponent: {
     type: "string",
     description:

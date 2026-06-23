@@ -626,19 +626,19 @@ test("tachi-waza technique domain normalizes known aliases and accepts free text
   assert.equal(createTachiWazaTechnique("uchi mata inconnu"), "uchi mata inconnu");
 });
 
-test("ne-waza type domain normalizes aliases and rejects unknown values", () => {
+test("ne-waza type domain normalizes known aliases and accepts free text", () => {
   assert.equal(normalizeNeWazaType("cle"), "Juji-gatame");
   assert.equal(normalizeNeWazaType("Clé"), "Juji-gatame");
   assert.equal(normalizeNeWazaType("Étranglement"), "Hadaka-jime");
   assert.equal(normalizeNeWazaType("Hadaka-jime"), "Hadaka-jime");
   assert.equal(normalizeNeWazaType("osaekomi"), "Hon-gesa-gatame");
   assert.equal(normalizeNeWazaType("Osaekomi"), "Hon-gesa-gatame");
-  assert.equal(normalizeNeWazaType("inconnu"), "");
+  assert.equal(normalizeNeWazaType("technique inconnue"), "technique inconnue");
 
   assert.equal(createNeWazaType(""), "");
   assert.equal(createNeWazaType(undefined), "");
   assert.equal(createNeWazaType("Juji-gatame"), "Juji-gatame");
-  assert.throws(() => createNeWazaType("inconnu"), /Action au sol invalide/);
+  assert.equal(createNeWazaType("technique inconnue"), "technique inconnue");
 });
 
 test("combat score value domain normalizes aliases and rejects unknown values", () => {
@@ -692,6 +692,10 @@ test("combat score domain enforces the conditional sub-field per category", () =
       { category: "Ne-waza", neWazaType: "Juji-gatame", value: "Ippon" }
     ]).length,
     2
+  );
+  assert.equal(
+    createCombatScore({ category: "Ne-waza", neWazaType: "Technique au sol inventée", value: "Yuko" }).neWazaType,
+    "Technique au sol inventée"
   );
 });
 

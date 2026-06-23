@@ -3,7 +3,7 @@ export const COACH_CHAT_STRUCTURED_JSON_PROMPT = String.raw`Tu es un parseur de 
 Règles :
 * Retourne uniquement un objet JSON avec les clés \`entity\`, \`filters\`, \`limit\`.
 * \`limit\` = 10 par défaut, sauf si l'utilisateur en demande un autre (max 100).
-* N'invente jamais une clé de filtre ou une valeur absente des listes ci-dessous.
+* N'invente jamais une clé de filtre. Pour les champs libres (\`opponent\`, \`tachiWazaTechnique\`, \`neWazaType\`, \`text\`), reprends uniquement les mots demandés par l'utilisateur.
 * Si la question utilise un pronom ou une référence implicite (« il », « elle », « lui », « ce judoka », « cette compétition »…), résous-la avec les messages précédents de la conversation et utilise le nom propre identifié dans \`filters.text\`.
 
 \`entity\` choisit la FORME de la réponse, pas seulement le sujet :
@@ -16,12 +16,12 @@ Règles :
 Filtres disponibles, quelle que soit l'entité choisie :
 * judoka : \`ageCategory\` (Poussinet, Poussin, Benjamin, Minime, Cadet, Junior, Senior, Vétéran), \`beltColor\` (Blanc, Blanc-Jaune, Jaune, Jaune-Orange, Orange, Orange-Vert, Vert, Vert-Bleu, Bleu, Bleu-Marron, Marron, Noir 1er à 5e Dan), \`categoryYear\` ("1"/"2"/"3"), \`gender\` (Homme, Femme), \`handedness\` (Droitier, Gaucher), \`text\` (tableau : prénom/nom du judoka recherché)
 * compétition : \`competitionDate\` (AAAA-MM-JJ ou "today"), \`competitionLevel\` (Départemental, Régional, National, International)
-* combat : \`opponent\` (nom de l'ADVERSAIRE uniquement, jamais le judoka), \`opponentStance\` (Droitier, Gaucher), \`result\` (Victoire, Défaite, Egalité), \`victoryType\` (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait, Hiki wake), \`neWazaType\` (Hon-gesa-gatame, Kuzure-kesa-gatame, Yoko-shiho-gatame, Tate-shiho-gatame, Kami-shiho-gatame, Juji-gatame, Ude-garami, Hadaka-jime, Okuri-eri-jime, Kata-juji-jime), \`tachiWazaTechnique\` (nom libre de technique debout, ex. Seoi-nage), \`scoreValue\` (Ippon, Waza-ari, Yuko)
+* combat : \`opponent\` (nom de l'ADVERSAIRE uniquement, jamais le judoka), \`opponentStance\` (Droitier, Gaucher), \`result\` (Victoire, Défaite, Egalité), \`victoryType\` (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait, Hiki wake), \`neWazaType\` (nom libre de technique au sol, ex. Hon-gesa-gatame), \`tachiWazaTechnique\` (nom libre de technique debout, ex. Seoi-nage), \`scoreValue\` (Ippon, Waza-ari, Yuko)
 
 Règles des filtres :
 * Le judoka recherché va dans \`text\` (toujours un tableau), jamais dans \`opponent\`.
-* N'invente jamais un filtre ou une valeur ; omets ce qui n'est pas demandé.
-* Valeurs métier exactes ci-dessus, même orthographe et casse.
+* N'invente jamais un filtre ; omets ce qui n'est pas demandé.
+* Valeurs métier exactes ci-dessus, même orthographe et casse. Les noms de techniques libres gardent l'orthographe demandée.
 * « aujourd'hui » → \`competitionDate: "today"\`
 
 Exemples :
@@ -40,11 +40,11 @@ Règles :
 * Appelle TOUJOURS exactement un seul outil, même pour une question vague ou générale.
 * Jamais d'outil d'écriture, jamais de texte libre ni de markdown : uniquement l'appel à l'outil et ses arguments.
 * \`limit\` = 10 par défaut, sauf si l'utilisateur en demande un autre (max 100).
-* N'utilise jamais une clé de filtre ou une valeur métier absente de la liste de l'outil choisi.
+* N'utilise jamais une clé de filtre absente de la liste de l'outil choisi. Pour les champs libres (\`opponent\`, \`tachiWazaTechnique\`, \`neWazaType\`, \`text\`), reprends uniquement les mots demandés par l'utilisateur.
 * Si la question utilise un pronom ou une référence implicite (« il », « elle », « lui », « ce judoka », « cette compétition »…), résous-la avec les messages précédents de la conversation et utilise le nom propre identifié dans \`filters.text\`.
 
 Chaque outil accepte TOUS les filtres ci-dessous ; seule la FORME du résultat change :
-\`ageCategory\` (Poussinet, Poussin, Benjamin, Minime, Cadet, Junior, Senior, Vétéran), \`beltColor\` (Blanc, Blanc-Jaune, Jaune, Jaune-Orange, Orange, Orange-Vert, Vert, Vert-Bleu, Bleu, Bleu-Marron, Marron, Noir 1er à 5e Dan), \`categoryYear\` ("1"/"2"/"3"), \`gender\` (Homme, Femme), \`handedness\` (Droitier, Gaucher), \`competitionDate\` (AAAA-MM-JJ ou "today"), \`competitionLevel\` (Départemental, Régional, National, International), \`opponent\` (nom de l'ADVERSAIRE uniquement, jamais le judoka), \`opponentStance\` (Droitier, Gaucher), \`result\` (Victoire, Défaite, Egalité), \`victoryType\` (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait, Hiki wake), \`neWazaType\` (Hon-gesa-gatame, Kuzure-kesa-gatame, Yoko-shiho-gatame, Tate-shiho-gatame, Kami-shiho-gatame, Juji-gatame, Ude-garami, Hadaka-jime, Okuri-eri-jime, Kata-juji-jime), \`tachiWazaTechnique\` (nom libre de technique debout, ex. Seoi-nage), \`scoreValue\` (Ippon, Waza-ari, Yuko), \`text\` (tableau : prénom/nom du judoka concerné, jamais l'adversaire).
+\`ageCategory\` (Poussinet, Poussin, Benjamin, Minime, Cadet, Junior, Senior, Vétéran), \`beltColor\` (Blanc, Blanc-Jaune, Jaune, Jaune-Orange, Orange, Orange-Vert, Vert, Vert-Bleu, Bleu, Bleu-Marron, Marron, Noir 1er à 5e Dan), \`categoryYear\` ("1"/"2"/"3"), \`gender\` (Homme, Femme), \`handedness\` (Droitier, Gaucher), \`competitionDate\` (AAAA-MM-JJ ou "today"), \`competitionLevel\` (Départemental, Régional, National, International), \`opponent\` (nom de l'ADVERSAIRE uniquement, jamais le judoka), \`opponentStance\` (Droitier, Gaucher), \`result\` (Victoire, Défaite, Egalité), \`victoryType\` (Ippon, Waza-ari, Yuko, Décision, Hansoku-make, Forfait, Hiki wake), \`neWazaType\` (nom libre de technique au sol, ex. Hon-gesa-gatame), \`tachiWazaTechnique\` (nom libre de technique debout, ex. Seoi-nage), \`scoreValue\` (Ippon, Waza-ari, Yuko), \`text\` (tableau : prénom/nom du judoka concerné, jamais l'adversaire).
 
 Outils :
 * \`mcp_judokas_search\` — une ligne par judoka.
@@ -58,8 +58,8 @@ Choix de l'outil :
 Règles de construction des filtres :
 * Le prénom ou le nom du judoka recherché va toujours dans \`filters.text\` (tableau, ex. \`["Mehdi"]\`), jamais dans \`filters.opponent\` (réservé à l'adversaire).
 * Si aucun filtre n'est demandé, utilise \`filters: {}\` : ne refuse jamais d'appeler l'outil par manque de filtre.
-* N'invente jamais un filtre ou une valeur absente des listes ci-dessus ; si une information est absente, ne renseigne pas le filtre.
-* Valeurs métier exactes ci-dessus, même orthographe et casse.
+* N'invente jamais un filtre ; si une information est absente, ne renseigne pas le filtre.
+* Valeurs métier exactes ci-dessus, même orthographe et casse. Les noms de techniques libres gardent l'orthographe demandée.
 * Si l'utilisateur dit « aujourd'hui », utilise \`competitionDate: "today"\`.
 
 Exemples :

@@ -105,19 +105,12 @@
                         <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
                       </datalist>
                     </template>
-                    <select v-else-if="score.category === 'Ne-waza'" v-model="score.neWazaType">
-                      <option value="">Technique au sol</option>
-                      <option value="Hon-gesa-gatame">Hon-gesa-gatame</option>
-                      <option value="Kuzure-kesa-gatame">Kuzure-kesa-gatame</option>
-                      <option value="Yoko-shiho-gatame">Yoko-shiho-gatame</option>
-                      <option value="Tate-shiho-gatame">Tate-shiho-gatame</option>
-                      <option value="Kami-shiho-gatame">Kami-shiho-gatame</option>
-                      <option value="Juji-gatame">Juji-gatame</option>
-                      <option value="Ude-garami">Ude-garami</option>
-                      <option value="Hadaka-jime">Hadaka-jime</option>
-                      <option value="Okuri-eri-jime">Okuri-eri-jime</option>
-                      <option value="Kata-juji-jime">Kata-juji-jime</option>
-                    </select>
+                    <template v-else-if="score.category === 'Ne-waza'">
+                      <input type="text" list="neWazaTechniqueSuggestions" v-model.trim="score.neWazaType" placeholder="Technique au sol (ex. Hon-gesa-gatame)">
+                      <datalist id="neWazaTechniqueSuggestions">
+                        <option v-for="technique in neWazaTechniques" :key="technique" :value="technique"></option>
+                      </datalist>
+                    </template>
                     <select v-else disabled>
                       <option value="">Choisir debout ou au sol</option>
                     </select>
