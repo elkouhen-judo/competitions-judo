@@ -264,6 +264,8 @@ export interface CoachAssistantMatch {
   judokaId: string;
   judokaName: string;
   beltColor: string;
+  gender: string;
+  yearInCategory: string;
   competitionId: string;
   competitionName: string;
   competitionDate: string;

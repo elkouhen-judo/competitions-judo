@@ -162,6 +162,8 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
             judokaId: String(combat.id_judoka || ""),
             judokaName: formatJudokaName(judoka),
             beltColor: String(judoka?.couleur_ceinture || ""),
+            gender: String(judoka?.genre || ""),
+            yearInCategory: judoka?.annee_categorie ? `${judoka.annee_categorie}e année` : "",
             competitionId: String(combat.id_competition || ""),
             competitionName: String(competition?.nom || "Compétition"),
             competitionDate: String(competition?.date || ""),
@@ -574,6 +576,8 @@ function searchCoachCompetitions(
       judokaId: "",
       judokaName: String(competition.nom || "Compétition"),
       beltColor: "",
+      gender: "",
+      yearInCategory: "",
       competitionId: String(competition.id_competition || ""),
       competitionName: String(competition.nom || ""),
       competitionDate: String(competition.date || ""),
@@ -759,6 +763,8 @@ function toAssistantMatch(
     judokaId: String(judoka?.id_judoka || combat?.id_judoka || ""),
     judokaName: formatJudokaName(judoka),
     beltColor: String(judoka?.couleur_ceinture || ""),
+    gender: String(judoka?.genre || ""),
+    yearInCategory: judoka?.annee_categorie ? `${judoka.annee_categorie}e année` : "",
     competitionId: String(competition?.id_competition || combat?.id_competition || ""),
     competitionName: String(competition?.nom || ""),
     competitionDate: String(competition?.date || ""),
@@ -887,6 +893,8 @@ function buildJudokaListMatches(
     nom?: string;
     categorie_age?: string;
     couleur_ceinture?: string;
+    genre?: string;
+    annee_categorie?: string;
   }>,
   competitionRows: Array<{
     id_competition?: string;
@@ -934,6 +942,8 @@ function buildJudokaListMatches(
         judokaId: String(judoka.id_judoka || ""),
         judokaName: formatJudokaName(judoka),
         beltColor: String(judoka.couleur_ceinture || ""),
+        gender: String(judoka.genre || ""),
+        yearInCategory: judoka.annee_categorie ? `${judoka.annee_categorie}e année` : "",
         competitionId: combatInfo?.competitionId || "",
         competitionName: combatInfo?.competitionName || "",
         competitionDate: combatInfo?.competitionDate || "",
