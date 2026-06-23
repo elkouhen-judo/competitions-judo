@@ -69,7 +69,7 @@ const GREETING_MESSAGE = {
   parts: [
     {
       type: "text" as const,
-      text: "Mode bêta. Essaie : « Trouve les judokas qui ont gagné par Osaekomi »."
+      text: "Mode bêta. Essaie : « Trouve les judokas qui ont gagné par Hon-gesa-gatame »."
     }
   ]
 };
@@ -293,7 +293,7 @@ function mountKirokuCoachChatWidget(options: MountCoachChatWidgetOptions) {
                   id: "coachAssistantQuestion",
                   type: "search",
                   autocomplete: "off",
-                  placeholder: "Ex. Trouve les judokas qui ont gagné par Osaekomi",
+                  placeholder: "Ex. Trouve les judokas qui ont gagné par Hon-gesa-gatame",
                   value: question.value,
                   onInput: (event: Event) => {
                     question.value = (event.target as HTMLInputElement).value;

@@ -5,6 +5,7 @@ import {
 import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import type { CombatRow, CombatScoreRow, CompetitionRow, JudokaRow } from "../repositories/types";
 import { formatCompetitionRankingDisplay } from "../domain/competition-results";
+import { normalizeNeWazaType } from "../domain/competitions/ne-waza-type";
 import type {
   CoachAssistantMatch,
   CoachAssistantResponse,
@@ -86,7 +87,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
     if (!query) {
       return {
         answer:
-          "Pose une question sur les combats enregistrés, par exemple : « Trouve les judokas qui ont gagné par Osaekomi ».",
+          "Pose une question sur les combats enregistrés, par exemple : « Trouve les judokas qui ont gagné par Hon-gesa-gatame ».",
         matches: [],
         beta: true
       };
@@ -143,7 +144,7 @@ export function createCoachAssistantSearch(deps: CoachAssistantSearchDeps): Coac
       .flatMap((combat): CoachAssistantMatch[] => {
         const scores = scoresByCombatId.get(String(combat.id_combat)) || [];
         const matchingScores = requestedNeWazaType
-          ? scores.filter((score) => String(score.type_ne_waza || "") === requestedNeWazaType)
+          ? scores.filter((score) => scoreMatchesNeWazaType(score, requestedNeWazaType))
           : scores;
         if (requestedNeWazaType && !matchingScores.length) {
           return [];
@@ -406,7 +407,7 @@ function buildCoachChatQueryWithoutDateResolution(
     competitionLevel: String(filters.competitionLevel || "").trim() || undefined,
     gender: String(filters.gender || "").trim() || undefined,
     handedness: String(filters.handedness || "").trim() || undefined,
-    neWazaType: String(filters.neWazaType || "").trim() || undefined,
+    neWazaType: normalizeNeWazaType(filters.neWazaType) || undefined,
     opponent: String(filters.opponent || "").trim() || undefined,
     opponentStance: String(filters.opponentStance || "").trim() || undefined,
     result: String(filters.result || "").trim() || undefined,
@@ -725,7 +726,7 @@ function matchesCombatFilters(
   }
   if (
     query.filters.neWazaType &&
-    !scores.some((score) => String(score.type_ne_waza || "") === query.filters.neWazaType)
+    !scores.some((score) => scoreMatchesNeWazaType(score, query.filters.neWazaType || ""))
   ) {
     return false;
   }
@@ -844,14 +845,29 @@ function resolveRequestedResult(query: string): string {
 }
 
 function resolveRequestedNeWazaType(query: string): string {
+  const knownTechnique = [
+    "hon gesa gatame",
+    "kuzure kesa gatame",
+    "yoko shiho gatame",
+    "tate shiho gatame",
+    "kami shiho gatame",
+    "juji gatame",
+    "ude garami",
+    "hadaka jime",
+    "okuri eri jime",
+    "kata juji jime"
+  ].find((technique) => query.includes(technique));
+  if (knownTechnique) {
+    return normalizeNeWazaType(knownTechnique);
+  }
   if (/o+a?sae?komi|immobilisation/.test(query)) {
-    return "Osaekomi";
+    return "Hon-gesa-gatame";
   }
   if (/etranglement/.test(query)) {
-    return "Étranglement";
+    return "Hadaka-jime";
   }
   if (/\bcle\b|cle de bras/.test(query)) {
-    return "Clé";
+    return "Juji-gatame";
   }
   return "";
 }
@@ -976,7 +992,13 @@ function formatJudokaListAnswer(
 }
 
 function isNeWazaAliasTerm(term: string): boolean {
-  return /o+a?sae?komi|immobilisation|etranglement|\bcle\b/.test(term);
+  return /o+a?sae?komi|immobilisation|etranglement|\bcle\b|hon|gesa|kuzure|yoko|shiho|tate|kami|juji|ude|garami|hadaka|jime|okuri|eri|kata/.test(term);
+}
+
+function scoreMatchesNeWazaType(score: CombatScoreRow, neWazaType: string): boolean {
+  const normalizedType = normalizeNeWazaType(score.type_ne_waza);
+  const normalizedTechnique = normalizeNeWazaType(score.technique);
+  return normalizedType === neWazaType || normalizedTechnique === neWazaType;
 }
 
 function buildAssistantSearchText(
@@ -1043,7 +1065,7 @@ function formatJudokaName(judoka: { prenom?: string; nom?: string } | undefined)
 function formatScoreLabel(score: CombatScoreRow): string {
   const detail =
     String(score.categorie || "") === "Ne-waza"
-      ? String(score.type_ne_waza || "Au sol")
+      ? String(normalizeNeWazaType(score.type_ne_waza) || normalizeNeWazaType(score.technique) || "Au sol")
       : String(score.technique || "Debout");
   return [detail, score.valeur].filter(Boolean).join(" · ");
 }

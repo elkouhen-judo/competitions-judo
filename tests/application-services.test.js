@@ -1194,9 +1194,9 @@ test("askCoachAssistant finds judokas who won by osaekomi", async () => {
       ]
     },
     combatScoresByCombatId: {
-      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
-      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
-      CB3: [{ id_combat: "CB3", categorie: "Ne-waza", type_ne_waza: "Clé", valeur: "Waza-ari" }]
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }],
+      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }],
+      CB3: [{ id_combat: "CB3", categorie: "Ne-waza", type_ne_waza: "Juji-gatame", valeur: "Waza-ari" }]
     },
     judokaRows: [
       { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand" },
@@ -1215,7 +1215,7 @@ test("askCoachAssistant finds judokas who won by osaekomi", async () => {
   assert.match(result.answer, /1 judoka/);
   assert.equal(result.matches.length, 1);
   assert.equal(result.matches[0].judokaName, "Aya Durand");
-  assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
+  assert.equal(result.matches[0].scoreLabel, "Hon-gesa-gatame · Ippon");
 });
 
 test("askCoachAssistant finds a judoka's combats by name when asked to list them", async () => {
@@ -1513,7 +1513,7 @@ test("askCoachAssistant uses Anthropic structured intent to choose judoka or com
       ]
     },
     combatScoresByCombatId: {
-      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }]
     },
     judokaRows: [
       { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
@@ -1534,7 +1534,7 @@ test("askCoachAssistant uses Anthropic structured intent to choose judoka or com
     ...sharedData,
     anthropicResponse: JSON.stringify({
       entity: "combats",
-      filters: { result: "Victoire", neWazaType: "Osaekomi" },
+      filters: { result: "Victoire", neWazaType: "Hon-gesa-gatame" },
       limit: 10
     })
   }).service;
@@ -1555,7 +1555,7 @@ test("askCoachAssistant uses Anthropic structured intent to choose judoka or com
   assert.match(combatResult.answer, /combat/);
   assert.equal(combatResult.matches.length, 1);
   assert.equal(combatResult.matches[0].result, "Victoire");
-  assert.equal(combatResult.matches[0].scoreLabel, "Osaekomi · Ippon");
+  assert.equal(combatResult.matches[0].scoreLabel, "Hon-gesa-gatame · Ippon");
 });
 
 test("askCoachAssistant keeps a judokas query grouped by judoka (one row per judoka, not per combat) when filtered by a combat-only attribute", async () => {
@@ -1592,8 +1592,8 @@ test("askCoachAssistant keeps a judokas query grouped by judoka (one row per jud
       ]
     },
     combatScoresByCombatId: {
-      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }],
-      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }],
+      CB2: [{ id_combat: "CB2", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }]
     },
     judokaRows: [
       { id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" },
@@ -1602,7 +1602,7 @@ test("askCoachAssistant keeps a judokas query grouped by judoka (one row per jud
     getDomainUserContext: domainContextFor("COACH1", "COACH"),
     anthropicResponse: JSON.stringify({
       entity: "judokas",
-      filters: { neWazaType: "Osaekomi" },
+      filters: { neWazaType: "Hon-gesa-gatame" },
       limit: 10
     })
   });
@@ -1636,7 +1636,7 @@ test("askCoachAssistant exposes the application's real MCP tool catalog to Anthr
       ]
     },
     combatScoresByCombatId: {
-      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Osaekomi", valeur: "Ippon" }]
+      CB1: [{ id_combat: "CB1", categorie: "Ne-waza", type_ne_waza: "Hon-gesa-gatame", valeur: "Ippon" }]
     },
     judokaRows: [{ id_judoka: "JUDO1", prenom: "Aya", nom: "Durand", categorie_age: "Minime" }],
     anthropicToolDefinitions,
@@ -1646,7 +1646,7 @@ test("askCoachAssistant exposes the application's real MCP tool catalog to Anthr
         {
           function: {
             name: "mcp_combats_search",
-            arguments: JSON.stringify({ filters: { result: "Victoire", neWazaType: "Osaekomi" } })
+            arguments: JSON.stringify({ filters: { result: "Victoire", neWazaType: "Hon-gesa-gatame" } })
           }
         }
       ]
@@ -1660,7 +1660,7 @@ test("askCoachAssistant exposes the application's real MCP tool catalog to Anthr
   );
 
   assert.equal(result.matches.length, 1);
-  assert.equal(result.matches[0].scoreLabel, "Osaekomi · Ippon");
+  assert.equal(result.matches[0].scoreLabel, "Hon-gesa-gatame · Ippon");
 
   const toolNames = anthropicToolDefinitions[0].map((tool) => tool.name);
   assert.deepEqual(
@@ -2042,12 +2042,12 @@ test("ajouterCombat records a combat the judoka is allowed to manage", async () 
   assert.equal(calls.inserted[0].draft.opponentStance, "Gaucher");
   assert.equal(calls.inserted[0].draft.result, "Victoire");
   assert.deepEqual(calls.inserted[0].draft.scores, [
-    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }
+    { category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Ippon" }
   ]);
   assert.deepEqual(calls.scores, [
     {
       idCombat: "CB_NEW",
-      scores: [{ category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Ippon" }]
+      scores: [{ category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Ippon" }]
     }
   ]);
 });

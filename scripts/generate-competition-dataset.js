@@ -23,11 +23,11 @@ const TACHI_WAZA = [
   "Tani-otoshi"
 ];
 const NE_WAZA = [
-  ["Osaekomi", "Hon-gesa-gatame"],
-  ["Osaekomi", "Yoko-shiho-gatame"],
-  ["Osaekomi", "Tate-shiho-gatame"],
-  ["Étranglement", "Hadaka-jime"],
-  ["Clé", "Juji-gatame"]
+  "Hon-gesa-gatame",
+  "Yoko-shiho-gatame",
+  "Tate-shiho-gatame",
+  "Hadaka-jime",
+  "Juji-gatame"
 ];
 const OPPONENT_LAST_NAMES = [
   "Dubois",
@@ -326,13 +326,13 @@ function createScores(combatId, result, decisionType, random) {
   for (let index = 0; index < scoreCount; index += 1) {
     const useNeWaza = random() < 0.3;
     if (useNeWaza) {
-      const [neWazaType, technique] = pick(NE_WAZA, random);
+      const technique = pick(NE_WAZA, random);
       scoreRows.push({
         id_combat_score: `${combatId}_S${index}`,
         id_combat: combatId,
         categorie: "Ne-waza",
         technique,
-        type_ne_waza: neWazaType,
+        type_ne_waza: technique,
         valeur: index === 0 ? decisionType : "Waza-ari",
         ordre: index
       });

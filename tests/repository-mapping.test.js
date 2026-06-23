@@ -268,7 +268,7 @@ test("combat scores repository replaces a combat's scores with deterministic ids
 
   await combatScoresRepository.replaceForCombat("CB1", [
     { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Ippon" },
-    { category: "Ne-waza", technique: "", neWazaType: "Osaekomi", value: "Waza-ari" }
+    { category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }
   ]);
 
   assert.deepEqual(calls, [
@@ -294,7 +294,7 @@ test("combat scores repository replaces a combat's scores with deterministic ids
         id_combat: "CB1",
         categorie: "Ne-waza",
         technique: "",
-        type_ne_waza: "Osaekomi",
+        type_ne_waza: "Hon-gesa-gatame",
         valeur: "Waza-ari",
         ordre: 1
       }
