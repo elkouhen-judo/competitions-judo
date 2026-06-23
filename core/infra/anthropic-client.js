@@ -1,8 +1,22 @@
-const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION = "2023-06-01";
-const MAX_TOKENS = 1024;
+const { createAnthropic } = require("@ai-sdk/anthropic");
+const { generateText, jsonSchema, APICallError } = require("ai");
 
-function createAnthropicClient({ getAnthropicApiKey, getAnthropicModel }) {
+const MAX_OUTPUT_TOKENS = 1024;
+
+function defaultCreateModel(apiKey, model) {
+  return createAnthropic({ apiKey })(model);
+}
+
+function toAiSdkTools(tools) {
+  return Object.fromEntries(
+    tools.map((toolDef) => [
+      toolDef.name,
+      { description: toolDef.description, inputSchema: jsonSchema(toolDef.input_schema || {}) }
+    ])
+  );
+}
+
+function createAnthropicClient({ getAnthropicApiKey, getAnthropicModel, createModel = defaultCreateModel }) {
   async function createMessage(messages, options = {}) {
     const apiKey = getAnthropicApiKey();
     if (!apiKey) {
@@ -14,41 +28,33 @@ function createAnthropicClient({ getAnthropicApiKey, getAnthropicModel }) {
       .filter((message) => message.role !== "system")
       .map((message) => ({ role: message.role, content: message.content }));
 
-    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": ANTHROPIC_VERSION,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: getAnthropicModel(),
-        max_tokens: MAX_TOKENS,
+    let result;
+    try {
+      result = await generateText({
+        model: createModel(apiKey, getAnthropicModel()),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
+        maxRetries: 0,
         temperature: 0,
         ...(system ? { system } : {}),
         messages: conversation,
-        ...(options.tools ? { tools: options.tools, tool_choice: { type: "any" } } : {})
-      })
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      const error = /** @type {Error & { anthropicStatus?: number }} */ (
-        new Error(`Erreur Anthropic ${response.status} : ${body}`)
-      );
-      error.anthropicStatus = response.status;
+        ...(options.tools ? { tools: toAiSdkTools(options.tools), toolChoice: "required" } : {})
+      });
+    } catch (error) {
+      if (APICallError.isInstance(error)) {
+        const wrapped = /** @type {Error & { anthropicStatus?: number }} */ (
+          new Error(`Erreur Anthropic ${error.statusCode} : ${error.responseBody || error.message}`)
+        );
+        wrapped.anthropicStatus = error.statusCode;
+        throw wrapped;
+      }
       throw error;
     }
 
-    const payload = await response.json();
-    const blocks = Array.isArray(payload?.content) ? payload.content : [];
-    const textBlock = blocks.find((block) => block.type === "text");
-    const toolUseBlocks = blocks.filter((block) => block.type === "tool_use");
     return {
-      content: String(textBlock?.text || "").trim(),
-      toolCalls: toolUseBlocks.map((block) => ({
-        id: block.id,
-        function: { name: block.name, arguments: JSON.stringify(block.input || {}) }
+      content: String(result.text || "").trim(),
+      toolCalls: result.toolCalls.map((call) => ({
+        id: call.toolCallId,
+        function: { name: call.toolName, arguments: JSON.stringify(call.input || {}) }
       }))
     };
   }

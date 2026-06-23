@@ -13,6 +13,8 @@ interface CoachMatch {
   judokaId: string;
   judokaName: string;
   beltColor: string;
+  gender: string;
+  yearInCategory: string;
   competitionId: string;
   competitionName: string;
   competitionDate: string;
@@ -39,6 +41,26 @@ function getBeltEmoji(beltColor: string): string {
     .map((color) => BELT_EMOJI_BY_BASE_COLOR[color.trim()])
     .filter(Boolean)
     .join("");
+}
+
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return "?";
+  }
+  if (words.length === 1) {
+    return words[0]!.slice(0, 2).toUpperCase();
+  }
+  return (words[0]!.charAt(0) + words[words.length - 1]!.charAt(0)).toUpperCase();
+}
+
+const RESULT_BADGE_MODIFIER_BY_RESULT: Record<string, string> = {
+  Victoire: "result-v",
+  Défaite: "result-d"
+};
+
+function resultBadgeModifier(result: string): string {
+  return RESULT_BADGE_MODIFIER_BY_RESULT[result] || "";
 }
 
 const GREETING_MESSAGE = {
@@ -82,12 +104,52 @@ function renderMatchHeading(
   return h("strong", null, match.judokaName);
 }
 
-function renderMatchBeltBadge(match: CoachMatch): VNode | null {
+function renderMatchAvatar(match: CoachMatch): VNode | null {
+  if (!match.judokaId) {
+    return null;
+  }
+  return h("span", { class: "hero-avatar coach-assistant-avatar", "aria-hidden": "true" }, getInitials(match.judokaName));
+}
+
+function renderMatchBeltChip(match: CoachMatch): VNode | null {
   if (!match.judokaId || !match.beltColor) {
     return null;
   }
   const emoji = getBeltEmoji(match.beltColor);
-  return h("span", { class: "coach-assistant-result-belt" }, emoji ? `${emoji} ${match.beltColor}` : match.beltColor);
+  return h("span", { class: "result-badge" }, emoji ? `${emoji} ${match.beltColor}` : match.beltColor);
+}
+
+function renderMatchAgeCategoryChip(match: CoachMatch, hasCombatData: boolean): VNode | null {
+  if (hasCombatData || !match.scoreLabel) {
+    return null;
+  }
+  return h("span", { class: "result-badge" }, match.scoreLabel);
+}
+
+function renderMatchYearInCategoryChip(match: CoachMatch): VNode | null {
+  if (!match.judokaId || !match.yearInCategory) {
+    return null;
+  }
+  return h("span", { class: "result-badge" }, match.yearInCategory);
+}
+
+function renderMatchGenderChip(match: CoachMatch): VNode | null {
+  if (!match.judokaId || !match.gender) {
+    return null;
+  }
+  return h("span", { class: "result-badge" }, match.gender);
+}
+
+function renderMatchOutcome(match: CoachMatch): VNode {
+  const detailParts = [match.opponent ? `contre ${match.opponent}` : null, match.victoryType, match.scoreLabel].filter(
+    (part): part is string => Boolean(part)
+  );
+  return h("div", { class: "coach-assistant-outcome" }, [
+    match.result
+      ? h("span", { class: `result-badge ${resultBadgeModifier(match.result)}`.trim() }, match.result)
+      : null,
+    detailParts.length ? h("span", { class: "coach-assistant-outcome-detail" }, detailParts.join(" · ")) : null
+  ]);
 }
 
 function renderMatchCompetitionLabel(
@@ -124,19 +186,24 @@ function renderMatchCard(
   onSelectCompetition: (competitionId: string) => void
 ): VNode {
   const key = `${match.competitionId}-${match.judokaId}-${match.opponent}-${match.scoreLabel}`;
-  return h("div", { key, class: "coach-assistant-result" }, [
-    renderMatchHeading(match, onSelectJudoka, onSelectCompetition),
-    renderMatchBeltBadge(match),
+  const hasCombatData = Boolean(match.result || match.opponent);
+  const chips = [
+    renderMatchAgeCategoryChip(match, hasCombatData),
+    renderMatchYearInCategoryChip(match),
+    renderMatchGenderChip(match),
+    renderMatchBeltChip(match)
+  ].filter((chip): chip is VNode => chip !== null);
+  const cardClass = match.judokaId ? "coach-assistant-result coach-assistant-result-judoka" : "coach-assistant-result";
+  return h("div", { key, class: cardClass }, [
+    h("div", { class: "coach-assistant-result-head" }, [
+      renderMatchAvatar(match),
+      h("div", { class: "coach-assistant-result-heading-group" }, [
+        renderMatchHeading(match, onSelectJudoka, onSelectCompetition),
+        chips.length ? h("div", { class: "coach-assistant-result-chips" }, chips) : null
+      ])
+    ]),
     renderMatchCompetitionLabel(match, onSelectCompetition),
-    match.result || match.opponent
-      ? h("span", null, [
-          match.result,
-          match.result && match.opponent ? " contre " : "",
-          match.opponent,
-          match.victoryType ? ` · ${match.victoryType}` : ""
-        ])
-      : null,
-    match.scoreLabel ? h("span", null, match.scoreLabel) : null
+    hasCombatData ? renderMatchOutcome(match) : null
   ]);
 }
 

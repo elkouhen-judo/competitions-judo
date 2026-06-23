@@ -145,14 +145,17 @@
     h2,
     h3,
     .hero-title {
-      font-family: inherit;
-      letter-spacing: 0;
-      line-height: 1.1;
-      font-weight: 700;
+      font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
+      letter-spacing: 0.01em;
+      line-height: 1.05;
+      font-weight: 800;
+      text-transform: uppercase;
     }
 
     .card-title {
+      font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
       font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
     h1 {
@@ -1370,17 +1373,41 @@
 
     .coach-assistant-result {
       display: grid;
-      gap: 2px;
-      padding: 9px;
+      gap: 6px;
+      padding: 10px;
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border-radius: var(--radius-card);
       background: #ffffff;
       color: var(--text);
       font-size: 13px;
     }
 
+    .coach-assistant-result-judoka {
+      border-left: 3px solid var(--hajime);
+    }
+
     .coach-assistant-result span {
       color: var(--muted);
+    }
+
+    .coach-assistant-result-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-avatar.coach-assistant-avatar {
+      flex: 0 0 auto;
+      width: 48px;
+      height: 48px;
+      font-size: 17px;
+      letter-spacing: 0.01em;
+    }
+
+    .coach-assistant-result-heading-group {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
     }
 
     .coach-assistant-result-name {
@@ -1389,9 +1416,12 @@
       background: none;
       padding: 0;
       margin: 0;
-      font: inherit;
-      font-weight: 700;
-      color: var(--primary);
+      font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
+      font-size: 19px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      font-weight: 800;
+      color: var(--text);
       cursor: pointer;
       text-decoration: underline;
       text-decoration-color: transparent;
@@ -1403,6 +1433,20 @@
       text-decoration-color: currentColor;
     }
 
+    .coach-assistant-result-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .coach-assistant-result-chips .result-badge,
+    .coach-assistant-outcome .result-badge {
+      min-width: auto;
+      white-space: nowrap;
+      padding: 3px 10px;
+      font-size: 12px;
+    }
+
     .coach-assistant-result-competition {
       justify-self: start;
       border: none;
@@ -1410,16 +1454,34 @@
       padding: 0;
       margin: 0;
       font: inherit;
+      font-size: 12.5px;
       color: var(--muted);
       cursor: pointer;
       text-decoration: underline;
       text-decoration-color: transparent;
     }
 
+    span.coach-assistant-result-competition {
+      cursor: default;
+      text-decoration: none;
+    }
+
     button.coach-assistant-result-competition:hover:not(:disabled),
     .coach-assistant-result-competition:focus-visible {
       background: none;
       text-decoration-color: currentColor;
+    }
+
+    .coach-assistant-outcome {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .coach-assistant-outcome-detail {
+      font-size: 12.5px;
+      color: var(--muted);
     }
 
     .coach-assistant-loading {
@@ -1670,9 +1732,9 @@
 
     .mode-tabs {
       display: flex;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 0;
       margin: 0;
-      gap: 4px;
+      gap: 6px;
       background: transparent;
       border-radius: 0;
       padding: 0;
@@ -1687,17 +1749,19 @@
     .mode-tab {
       flex: 0 0 auto;
       width: auto;
-      padding: 10px 14px 9px;
+      padding: 9px 16px;
       border: none;
-      border-bottom: 2px solid transparent;
       background: transparent;
       color: var(--muted);
-      font-weight: 600;
-      font-size: 0.875rem;
+      font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
       cursor: pointer;
-      border-radius: 0;
+      border-radius: 999px;
       min-height: 36px;
-      transition: color 160ms, border-color 160ms;
+      transition: background-color 160ms, color 160ms;
       text-align: center;
       touch-action: manipulation;
       white-space: nowrap;
@@ -1705,19 +1769,17 @@
 
     .mode-tabs .mode-tab:hover:not(:disabled) {
       color: var(--primary);
-      background: transparent;
-      transform: none;
+      background: rgba(23, 61, 54, 0.08);
     }
 
     .mode-tabs .mode-tab-active {
-      background: transparent;
-      color: var(--primary);
-      border-bottom-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
     }
 
     .mode-tabs .mode-tab-active:hover:not(:disabled) {
-      background: transparent;
-      color: var(--primary);
+      background: var(--primary-hover);
+      color: #ffffff;
     }
 
     .coach-sub-tabs {
@@ -1728,7 +1790,6 @@
     .coach-sub-tabs .mode-tab {
       flex: 0 0 auto;
       width: auto;
-      padding: 10px 14px 9px;
       scroll-snap-align: start;
     }
 
