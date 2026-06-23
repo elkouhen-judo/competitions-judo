@@ -970,8 +970,20 @@ test("combat form screen is mounted through Vue 3 for the progressive screen mig
     /<datalist id="tachiWazaTechniqueSuggestions">[\s\S]*v-for="technique in tachiWazaTechniques"/
   );
   assert.match(
+    bundle,
+    /<template v-else-if="score\.category === 'Ne-waza'">[\s\S]*type="text" list="neWazaTechniqueSuggestions" v-model\.trim="score\.neWazaType" placeholder="Technique au sol/
+  );
+  assert.match(
+    bundle,
+    /<datalist id="neWazaTechniqueSuggestions">[\s\S]*v-for="technique in neWazaTechniques"/
+  );
+  assert.match(
     client,
     /const tachiWazaTechniques = window\.Vue\.computed\(\(\) => TACHI_WAZA_TECHNIQUES\)/
+  );
+  assert.match(
+    client,
+    /const neWazaTechniques = window\.Vue\.computed\(\(\) => NE_WAZA_TECHNIQUES\)/
   );
   assert.match(
     bundle,

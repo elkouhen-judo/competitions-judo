@@ -27,6 +27,19 @@
     "Yoko-tomoe-nage"
   ];
 
+  const neWazaTechniques = [
+    "Hon-gesa-gatame",
+    "Kuzure-kesa-gatame",
+    "Yoko-shiho-gatame",
+    "Tate-shiho-gatame",
+    "Kami-shiho-gatame",
+    "Juji-gatame",
+    "Ude-garami",
+    "Hadaka-jime",
+    "Okuri-eri-jime",
+    "Kata-juji-jime"
+  ];
+
   function createEmptyCombatScoreRow(): CombatScoreFormRow {
     return { category: "", technique: "", neWazaType: "", value: "" };
   }
@@ -41,6 +54,7 @@
   window.KirokuCompetitionFormHelpers = {
     createEmptyCombatScoreRow,
     isCombatScoreRowComplete,
+    neWazaTechniques,
     tachiWazaTechniques
   };
 })();

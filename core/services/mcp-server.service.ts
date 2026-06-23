@@ -113,8 +113,7 @@ const COMBAT_SCORE_SCHEMA: JsonSchema = {
     },
     neWazaType: {
       type: "string",
-      enum: NE_WAZA_TYPES,
-      description: "Action au sol."
+      description: `Nom de l'action au sol, libre ou parmi les suggestions : ${NE_WAZA_TYPES.join(", ")}.`
     },
     value: { type: "string", enum: SCORE_VALUES, description: "Point marqué." }
   },

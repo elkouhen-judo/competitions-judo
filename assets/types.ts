@@ -502,6 +502,7 @@ export interface CombatScoreFormRow {
 export interface CompetitionFormHelpers {
   createEmptyCombatScoreRow(): CombatScoreFormRow;
   isCombatScoreRowComplete(score: CombatScoreFormRow): boolean;
+  neWazaTechniques: string[];
   tachiWazaTechniques: string[];
 }
 

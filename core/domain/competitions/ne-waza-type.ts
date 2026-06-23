@@ -1,14 +1,4 @@
-export type NeWazaType =
-  | "Hon-gesa-gatame"
-  | "Kuzure-kesa-gatame"
-  | "Yoko-shiho-gatame"
-  | "Tate-shiho-gatame"
-  | "Kami-shiho-gatame"
-  | "Juji-gatame"
-  | "Ude-garami"
-  | "Hadaka-jime"
-  | "Okuri-eri-jime"
-  | "Kata-juji-jime";
+export type NeWazaType = string;
 
 export const NE_WAZA_TYPES: NeWazaType[] = [
   "Hon-gesa-gatame",
@@ -57,11 +47,16 @@ function normalizeNeWazaTypeKey(value: unknown): string {
     .trim()
     .toLocaleLowerCase("fr-FR")
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[-\s]+/g, " ");
 }
 
 export function normalizeNeWazaType(value: unknown): NeWazaType | "" {
-  return NE_WAZA_TYPE_ALIASES.get(normalizeNeWazaTypeKey(value)) || "";
+  const rawValue = String(value || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+  return NE_WAZA_TYPE_ALIASES.get(normalizeNeWazaTypeKey(rawValue)) || rawValue;
 }
 
 export function createNeWazaType(value: unknown): NeWazaType | "" {
@@ -70,9 +65,5 @@ export function createNeWazaType(value: unknown): NeWazaType | "" {
     return "";
   }
 
-  const neWazaType = normalizeNeWazaType(rawValue);
-  if (!neWazaType) {
-    throw new Error("Action au sol invalide.");
-  }
-  return neWazaType;
+  return normalizeNeWazaType(rawValue);
 }

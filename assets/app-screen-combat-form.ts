@@ -7,6 +7,7 @@
   const {
     createEmptyCombatScoreRow,
     isCombatScoreRowComplete,
+    neWazaTechniques: NE_WAZA_TECHNIQUES,
     tachiWazaTechniques: TACHI_WAZA_TECHNIQUES
   } = window.KirokuCompetitionFormHelpers;
 
@@ -41,6 +42,7 @@
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const combatDecisionOptions = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result));
     const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
+    const neWazaTechniques = window.Vue.computed(() => NE_WAZA_TECHNIQUES);
     const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
     const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
       const form = combatFormViewModel.combatForm;
@@ -106,6 +108,7 @@
           combatFormScoreIssues,
           combatFormOpponentStanceIssues,
           isSubmitting,
+          neWazaTechniques,
           showCombatDecisionBlock,
           tachiWazaTechniques
         }
