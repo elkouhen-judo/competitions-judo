@@ -6,6 +6,7 @@
     "postinstall": "npm run build:styles && npm run build:assets && npm run build:core",
     "pretest": "npm run build:styles && npm run build:assets && npm run build:core",
     "test": "node --test tests/*.test.js",
+    "test:offline": "npm run build:styles && npm run build:assets && node --test tests/offline-playwright.test.js",
     "test:ast": "ast-grep test",
     "test:coverage": "npm run build:styles && npm run build:assets && npm run build:core && node --test --experimental-test-coverage tests/*.test.js",
     "format": "prettier --write \"**/*.js\"",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^25.9.3",
     "esbuild": "^0.28.1",
     "eslint": "^10.4.1",

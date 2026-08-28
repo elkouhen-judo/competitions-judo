@@ -150,7 +150,7 @@ test("combat cards expose result as a first-class badge", () => {
 
 test("small-screen layout is the base and desktop is progressive", () => {
   assert.match(bundle, /@media \(min-width: 721px\)/);
-  assert.match(bundle, /\.topbar\s*\{[\s\S]*?padding: 12px 12px 8px;/);
+  assert.match(bundle, /\.topbar\s*\{[\s\S]*?padding: 16px 16px 14px;/);
   assert.match(bundle, /class="brand-logo"/);
   assert.match(bundle, /class="brand-logo-mark"/);
   assert.match(bundle, /class="brand-logo-belt"/);

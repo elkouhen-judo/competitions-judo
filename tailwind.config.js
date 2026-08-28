@@ -48,7 +48,7 @@ module.exports = {
           "Helvetica",
           "sans-serif"
         ],
-        display: ["Big Shoulders Text", "Atkinson Hyperlegible", "sans-serif"]
+        display: ["Avenir Next", "Atkinson Hyperlegible", "system-ui", "sans-serif"]
       }
     }
   },

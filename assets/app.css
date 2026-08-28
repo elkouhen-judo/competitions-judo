@@ -555,26 +555,26 @@ video {
 }
 
 :root {
-  --bg: #f7f7f4;
+  --bg: #f7f6f3;
   --panel: #ffffff;
-  --text: #111111;
-  --muted: #746f64;
-  --line: #e4e4df;
-  --primary: #173d36;
-  --primary-hover: #0f2d28;
-  --accent: #0f6d5c;
-  --accent-soft: #e4f4ef;
-  --hajime: #b7352d;
-  --hajime-soft: #f8e6e2;
-  --tatami: #eff1ea;
-  --tatami-line: #d9ddd1;
-  --surface: #fbfbf8;
+  --text: #242321;
+  --muted: #787774;
+  --line: #eae9e5;
+  --primary: #242321;
+  --primary-hover: #403e3a;
+  --accent: #346538;
+  --accent-soft: #edf3ec;
+  --hajime: #9f2f2d;
+  --hajime-soft: #fdebec;
+  --tatami: #f1f1ed;
+  --tatami-line: #deddd8;
+  --surface: #fbfbfa;
   --radius: 6px;
   --radius-card: 8px;
   --danger: #9f2f2d;
   --danger-hover: #7d2422;
   --danger-soft: #fdebec;
-  --button-focus-ring: rgba(15, 109, 92, 0.22);
+  --button-focus-ring: rgba(52, 101, 56, 0.22);
   --button-primary-bg: var(--primary);
   --button-primary-bg-hover: var(--primary-hover);
   --button-primary-text: #ffffff;
@@ -596,8 +596,8 @@ video {
   --silver-soft: #f4f5f7;
   --bronze: #9c6532;
   --bronze-soft: #f9efe6;
-  --soft: #f2f3ee;
-  --shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
+  --soft: #f2f1ed;
+  --shadow: 0 2px 8px rgba(17, 17, 17, 0.035);
 }
 
 html {
@@ -616,7 +616,7 @@ body {
   line-height: 1.5rem;
   color: var(--text);
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
 h1, h2, h3, p {
@@ -628,11 +628,10 @@ h1,
     h2,
     h3,
     .hero-title {
-  font-family: Big Shoulders Text, Atkinson Hyperlegible, sans-serif;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  line-height: 1.05;
+  font-family: Avenir Next, Atkinson Hyperlegible, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
 input, select, textarea, button, .button {
@@ -667,6 +666,257 @@ label {
   color: var(--muted);
 }
 
+body {
+  background: var(--bg);
+  letter-spacing: -0.005em;
+}
+
+.app-shell {
+  max-width: 1120px;
+}
+
+.topbar {
+  gap: 16px;
+  padding: 18px 0 16px;
+  background: transparent;
+  border-bottom-color: var(--line);
+}
+
+.brand {
+  gap: 10px;
+}
+
+.brand-logo {
+  border-color: var(--text);
+}
+
+.brand-copy h1 {
+  margin-bottom: 2px;
+  font-size: 22px;
+  letter-spacing: -0.035em;
+}
+
+.user-pill {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.panel {
+  border-top: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.dash-hero {
+  gap: 20px;
+  padding: 26px 0 0;
+  background: transparent;
+  border-bottom: 0;
+}
+
+.mode-tabs {
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-tab {
+  padding: 10px 0 12px;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.mode-tabs .mode-tab:hover:not(:disabled),
+  .mode-tabs .mode-tab-active,
+  .mode-tabs .mode-tab-active:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text);
+}
+
+.mode-tabs .mode-tab-active {
+  border-bottom: 2px solid var(--accent);
+}
+
+.home-context-card {
+  margin: 0;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+}
+
+.home-context-label,
+  .coach-home-card-kicker {
+  color: var(--accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.home-context-value {
+  font-size: clamp(1.6rem, 5vw, 2.35rem);
+  letter-spacing: -0.04em;
+}
+
+.panel-body {
+  padding: 30px 0 40px;
+}
+
+.section {
+  margin-top: 38px;
+  padding-top: 30px;
+  border-top-color: var(--line);
+}
+
+.section-heading {
+  margin-bottom: 18px;
+}
+
+.section-heading h3 {
+  padding-left: 0;
+  border-left: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.035em;
+}
+
+.coach-home-grid {
+  gap: 0 28px;
+}
+
+.coach-home-card {
+  gap: 22px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 22px 0 24px;
+}
+
+.coach-home-card:first-child {
+  border-top-color: var(--text);
+}
+
+.parent-home-card,
+  .parent-home-card:hover {
+  border-top-color: var(--line);
+}
+
+.coach-home-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.coach-home-card h4 {
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+}
+
+.coach-home-card p {
+  max-width: 34rem;
+  line-height: 1.55;
+}
+
+#homeAdminActions {
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+#homeAdminActions button {
+  min-height: 52px;
+}
+
+#homeAdminActions .home-context-action {
+  border-radius: 6px;
+}
+
+.list {
+  gap: 0;
+}
+
+.list > .card {
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.competition-card {
+  border-top: 1px solid var(--line);
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+}
+
+.competition-card::before {
+  display: none;
+}
+
+.card-button,
+  .competition-open-button {
+  padding: 20px 0;
+  background: transparent;
+}
+
+.card-button:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.meta-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.card-open-hint {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+input, select, textarea {
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+button, .button {
+  font-weight: 600;
+}
+
+.button-secondary {
+  background: transparent;
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: var(--soft);
+}
+
+@media (min-width: 721px) {
+  .app-shell {
+    padding-top: 24px;
+  }
+
+  .panel {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .coach-home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-body {
+    padding-top: 38px;
+  }
+}
+
 .app-shell {
   max-width: 980px;
   margin: 0 auto;
@@ -676,9 +926,9 @@ label {
 .topbar {
   display: grid;
   gap: 8px;
-  padding: 12px 12px 8px;
+  padding: 16px 16px 14px;
   margin-bottom: 0;
-  background: var(--panel);
+  background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
 }
 
@@ -690,15 +940,15 @@ label {
 }
 
 .brand-logo {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--primary);
+  background: var(--text);
   box-shadow: none;
   border: 1px solid rgba(15, 45, 40, 0.28);
 }
@@ -738,7 +988,7 @@ label {
 }
 
 .card-title {
-  font-family: Big Shoulders Text, Atkinson Hyperlegible, sans-serif;
+  font-family: Avenir Next, Atkinson Hyperlegible, system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
@@ -918,8 +1168,8 @@ h3 {
 .panel-header {
   display: grid;
   gap: 12px;
-  padding: 20px 16px;
-  background: var(--tatami);
+  padding: 24px 16px;
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
@@ -997,11 +1247,11 @@ button, .button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 52px;
+  min-height: 48px;
   border: 1px solid transparent;
   background: var(--button-primary-bg);
   color: var(--button-primary-text);
-  padding: 13px 15px;
+  padding: 11px 15px;
   cursor: pointer;
   font-weight: bold;
   border-radius: 6px;
@@ -1254,7 +1504,7 @@ button:focus-visible,
   content: "";
   display: block;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--accent), var(--hajime));
+  background: var(--accent);
 }
 
 .card-button {
@@ -1371,7 +1621,8 @@ button:focus-visible,
 }
 
 .competition-summary {
-  border-left: 4px solid var(--hajime);
+  border-left: 0;
+  border-top: 3px solid var(--hajime);
 }
 
 .form-grid {
@@ -1969,9 +2220,8 @@ button:focus-visible,
   background: none;
   padding: 0;
   margin: 0;
-  font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
+  font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
   font-size: 19px;
-  text-transform: uppercase;
   line-height: 1.05;
   font-weight: 800;
   color: var(--text);
@@ -2135,7 +2385,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 }
 
 .parent-home-card {
-  border-left-color: var(--primary);
+  border-top-color: var(--primary);
 }
 
 .coach-home-card-head {
@@ -2152,7 +2402,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--accent-soft);
   color: var(--accent);
 }
@@ -2184,7 +2434,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 
 .section-heading h3 {
   padding-left: 10px;
-  border-left: 4px solid var(--accent);
+  border-left: 3px solid var(--accent);
 }
 
 .compact-stats-grid .stat-value {
@@ -2242,7 +2492,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 .dash-hero {
   padding: 14px;
   border-bottom: 1px solid var(--line);
-  background: var(--tatami);
+  background: var(--surface);
   display: grid;
   gap: 12px;
 }
@@ -2307,11 +2557,10 @@ button.coach-assistant-result-competition:hover:not(:disabled),
   border: none;
   background: transparent;
   color: var(--muted);
-  font-family: 'Big Shoulders Text', 'Atkinson Hyperlegible', sans-serif;
+  font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
   font-weight: 700;
   font-size: 0.8125rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   cursor: pointer;
   border-radius: 999px;
   min-height: 36px;
@@ -2323,7 +2572,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 
 .mode-tabs .mode-tab:hover:not(:disabled) {
   color: var(--primary);
-  background: rgba(23, 61, 54, 0.08);
+  background: var(--accent-soft);
 }
 
 .mode-tabs .mode-tab-active {
@@ -2571,8 +2820,8 @@ button.coach-assistant-result-competition:hover:not(:disabled),
   }
 
   .brand-logo {
-    width: 54px;
-    height: 54px;
+    width: 48px;
+    height: 48px;
   }
 
   .user-pill {
@@ -2590,7 +2839,7 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 
   .panel {
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 10px;
     box-shadow: none;
   }
 
@@ -3256,3 +3505,227 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 .filter {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+
+body {
+  background: var(--bg);
+  letter-spacing: -0.005em;
+}
+
+.app-shell {
+  max-width: 1120px;
+}
+
+.topbar {
+  padding: 18px 0 16px;
+  background: transparent;
+}
+
+.brand-copy h1 {
+  margin-bottom: 2px;
+  font-size: 22px;
+  letter-spacing: -0.035em;
+}
+
+.user-pill {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.dash-hero {
+  gap: 20px;
+  padding: 26px 0 0;
+  background: transparent;
+  border-bottom: 0;
+}
+
+.mode-tabs {
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-tab {
+  padding: 10px 0 12px;
+  border-radius: 0;
+  font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mode-tabs .mode-tab:hover:not(:disabled),
+  .mode-tabs .mode-tab-active,
+  .mode-tabs .mode-tab-active:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text);
+}
+
+.mode-tabs .mode-tab-active {
+  border-bottom: 2px solid var(--accent);
+}
+
+.home-context-card {
+  margin: 0;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+}
+
+.home-context-value {
+  font-size: clamp(1.6rem, 5vw, 2.35rem);
+  letter-spacing: -0.04em;
+}
+
+.panel-body {
+  padding: 30px 0 40px;
+}
+
+.section {
+  margin-top: 38px;
+  padding-top: 30px;
+}
+
+.section-heading {
+  margin-bottom: 18px;
+}
+
+.section-heading h3 {
+  padding-left: 0;
+  border-left: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.035em;
+}
+
+.coach-home-grid {
+  gap: 16px;
+  align-items: stretch;
+}
+
+.coach-home-card,
+  .coach-home-card:first-child,
+  .parent-home-card,
+  .parent-home-card:hover {
+  display: grid;
+  min-width: 0;
+  min-height: 216px;
+  align-content: start;
+  gap: 22px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 22px;
+  overflow: hidden;
+  position: relative;
+}
+
+.coach-home-card:first-child {
+  border-top-color: var(--text);
+}
+
+.parent-home-card, .parent-home-card:hover {
+  border-top-color: var(--primary);
+}
+
+.coach-home-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
+.coach-home-card h4 {
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+}
+
+#homeAdminActions {
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+#homeAdminActions button {
+  min-height: 52px;
+}
+
+.list {
+  gap: 0;
+}
+
+.list > .card {
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.competition-card {
+  display: block;
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+}
+
+.competition-card::before {
+  display: none;
+}
+
+.card-button, .competition-open-button {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding: 20px 0;
+  background: transparent;
+}
+
+.card-button:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.meta-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.card-open-hint {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 721px) {
+  .app-shell {
+    padding-top: 24px;
+  }
+
+  .coach-home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel-body {
+    padding-top: 38px;
+  }
+}
+
+/* Override final : cette couche passe après les composants historiques afin
+   que la nouvelle direction visuelle reste prioritaire sans réécrire les vues. */
+
+/* ── Direction visuelle contemporaine ─────────────────────────────────────
+   La hiérarchie vient de l'espace, de la typographie et de quelques accents
+   sémantiques. Les composants restent volontairement plats et tactiles.
+*/
