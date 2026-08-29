@@ -16,4 +16,5 @@ Index court des documents de ce dossier. Voir `AGENTS.md` à la racine pour le w
 | `spec.md` | Règles fonctionnelles, rôles, écrans, critères d'acceptation (`REQ-*`, `COMP-*`, `CBT-*`, ...) | Tout changement de comportement métier ou d'écran |
 | `spec-tech.md` | Architecture, modèle de données, auth, sécurité, configuration, déploiement | Changement touchant l'architecture, les données, l'auth, la sécurité ou le déploiement |
 | `supabase-schema.md` | Schéma Supabase, tables, relations, migration initiale | Travail sur le schéma ou les migrations |
+| `backup-restore.md` | Backup local quotidien et restauration Supabase | Exploitation des sauvegardes locales |
 | `codebase-memory-mcp.md` | Prompt d'analyse d'impact (architecte senior) : composants touchés, flux, risques, tests, plan de déploiement et rollback | Avant un changement à fort rayon d'impact (services, repositories, API, flux asynchrones) |
