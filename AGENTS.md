@@ -17,6 +17,10 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 9. **Signaler toute incertitude ou régression.** Ne pas masquer un échec préexistant, une hypothèse ou un comportement non vérifié.
 10. **Déployer uniquement dans le périmètre demandé.** Vérifier le build et les tests avant tout déploiement, puis contrôler l'environnement publié.
 
+### Règle de validation préalable
+
+Pour chaque demande, rédiger une fiche de demande synthétique précisant l'objectif, le périmètre, les utilisateurs concernés, les livrables attendus, les critères de validation et les éventuelles hypothèses. Demander la validation explicite de cette fiche avant toute modification de fichier, exécution de test, appel externe ou déploiement.
+
 ## Documentation
 
 Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'index complet :
