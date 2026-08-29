@@ -98,68 +98,6 @@
     }
 }
 
-/* Override final : cette couche passe après les composants historiques afin
-   que la nouvelle direction visuelle reste prioritaire sans réécrire les vues. */
-@layer utilities {
-  body { background: var(--bg); letter-spacing: -0.005em; }
-  .app-shell { max-width: 1120px; }
-  .topbar { padding: 18px 0 16px; background: transparent; }
-  .brand-copy h1 { margin-bottom: 2px; font-size: 22px; letter-spacing: -0.035em; }
-  .user-pill { border: 0; background: transparent; padding: 0; }
-  .panel { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
-  .dash-hero { gap: 20px; padding: 26px 0 0; background: transparent; border-bottom: 0; }
-  .mode-tabs { gap: 20px; border-bottom: 1px solid var(--line); }
-  .mode-tab { padding: 10px 0 12px; border-radius: 0; font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 0.875rem; letter-spacing: 0; text-transform: none; }
-  .mode-tabs .mode-tab:hover:not(:disabled),
-  .mode-tabs .mode-tab-active,
-  .mode-tabs .mode-tab-active:hover:not(:disabled) { background: transparent; color: var(--text); }
-  .mode-tabs .mode-tab-active { border-bottom: 2px solid var(--accent); }
-  .home-context-card { margin: 0; padding: 0 0 4px; border: 0; background: transparent; }
-  .home-context-value { font-size: clamp(1.6rem, 5vw, 2.35rem); letter-spacing: -0.04em; }
-  .panel-body { padding: 30px 0 40px; }
-  .section { margin-top: 38px; padding-top: 30px; }
-  .section-heading { margin-bottom: 18px; }
-  .section-heading h3 { padding-left: 0; border-left: 0; font-size: 1.35rem; letter-spacing: -0.035em; }
-  .coach-home-grid { gap: 16px; align-items: stretch; }
-  .coach-home-card,
-  .coach-home-card:first-child,
-  .parent-home-card,
-  .parent-home-card:hover {
-    display: grid;
-    min-width: 0;
-    min-height: 216px;
-    align-content: start;
-    gap: 22px;
-    border: 1px solid var(--line);
-    border-top: 3px solid var(--accent);
-    border-radius: 10px;
-    background: var(--panel);
-    padding: 22px;
-    overflow: hidden;
-    position: relative;
-  }
-  .coach-home-card:first-child { border-top-color: var(--text); }
-  .parent-home-card, .parent-home-card:hover { border-top-color: var(--primary); }
-  .coach-home-card-icon { width: 34px; height: 34px; border-radius: 8px; }
-  .coach-home-card h4 { font-size: 1.2rem; letter-spacing: -0.025em; }
-  #homeAdminActions { gap: 10px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
-  #homeAdminActions button { min-height: 52px; }
-  .list { gap: 0; }
-  .list > .card { border-bottom: 1px solid var(--line); border-radius: 0; }
-  .competition-card { display: block; min-width: 0; border-top: 1px solid var(--line); border-left: 0; border-right: 0; background: transparent; }
-  .competition-card::before { display: none; }
-  .card-button, .competition-open-button { display: block; position: relative; width: 100%; min-width: 0; padding: 20px 0; background: transparent; }
-  .card-button:hover:not(:disabled) { background: transparent; border-color: transparent; }
-  .card-title { font-size: 1.05rem; letter-spacing: -0.015em; }
-  .meta-label { font-size: 0.68rem; letter-spacing: 0.06em; }
-  .card-open-hint { color: var(--text); font-size: 0.8rem; }
-  @media (min-width: 721px) {
-    .app-shell { padding-top: 24px; }
-    .coach-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .panel-body { padding-top: 38px; }
-  }
-}
-
 /* ── Direction visuelle contemporaine ─────────────────────────────────────
    La hiérarchie vient de l'espace, de la typographie et de quelques accents
    sémantiques. Les composants restent volontairement plats et tactiles.
@@ -415,9 +353,7 @@
       padding-top: 38px;
     }
   }
-}
 
-@layer components {
     .app-shell {
       max-width: 980px;
       margin: 0 auto;
@@ -2938,12 +2874,74 @@
     }
 }
 
+/* ── Overrides de direction ───────────────────────────────────────────────
+   Cette couche unique reste après tous les composants historiques afin de
+   préserver la direction visuelle sans dupliquer les vues HTML.
+*/
+@layer utilities {
+  body { background: var(--bg); letter-spacing: -0.005em; }
+  .app-shell { max-width: 1120px; }
+  .topbar { padding: 18px 0 16px; background: transparent; }
+  .brand-copy h1 { margin-bottom: 2px; font-size: 22px; letter-spacing: -0.035em; }
+  .user-pill { border: 0; background: transparent; padding: 0; }
+  .panel { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+  .dash-hero { gap: 20px; padding: 26px 0 0; background: transparent; border-bottom: 0; }
+  .mode-tabs { gap: 20px; border-bottom: 1px solid var(--line); }
+  .mode-tab { padding: 10px 0 12px; border-radius: 0; font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 0.875rem; letter-spacing: 0; text-transform: none; }
+  .mode-tabs .mode-tab:hover:not(:disabled),
+  .mode-tabs .mode-tab-active,
+  .mode-tabs .mode-tab-active:hover:not(:disabled) { background: transparent; color: var(--text); }
+  .mode-tabs .mode-tab-active { border-bottom: 2px solid var(--accent); }
+  .home-context-card { margin: 0; padding: 0 0 4px; border: 0; background: transparent; }
+  .home-context-value { font-size: clamp(1.6rem, 5vw, 2.35rem); letter-spacing: -0.04em; }
+  .panel-body { padding: 30px 0 40px; }
+  .section { margin-top: 38px; padding-top: 30px; }
+  .section-heading { margin-bottom: 18px; }
+  .section-heading h3 { padding-left: 0; border-left: 0; font-size: 1.35rem; letter-spacing: -0.035em; }
+  .coach-home-grid { gap: 16px; align-items: stretch; }
+  .coach-home-card,
+  .coach-home-card:first-child,
+  .parent-home-card,
+  .parent-home-card:hover {
+    display: grid;
+    min-width: 0;
+    min-height: 216px;
+    align-content: start;
+    gap: 22px;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: 10px;
+    background: var(--panel);
+    padding: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .coach-home-card:first-child { border-top-color: var(--text); }
+  .parent-home-card, .parent-home-card:hover { border-top-color: var(--primary); }
+  .coach-home-card-icon { width: 34px; height: 34px; border-radius: 8px; }
+  .coach-home-card h4 { font-size: 1.2rem; letter-spacing: -0.025em; }
+  #homeAdminActions { gap: 10px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
+  #homeAdminActions button { min-height: 52px; }
+  .list { gap: 0; }
+  .list > .card { border-bottom: 1px solid var(--line); border-radius: 0; }
+  .competition-card { display: block; min-width: 0; border-top: 1px solid var(--line); border-left: 0; border-right: 0; background: transparent; }
+  .competition-card::before { display: none; }
+  .card-button, .competition-open-button { display: block; position: relative; width: 100%; min-width: 0; padding: 20px 0; background: transparent; }
+  .card-button:hover:not(:disabled) { background: transparent; border-color: transparent; }
+  .card-title { font-size: 1.05rem; letter-spacing: -0.015em; }
+  .meta-label { font-size: 0.68rem; letter-spacing: 0.06em; }
+  .card-open-hint { color: var(--text); font-size: 0.8rem; }
+  @media (min-width: 721px) {
+    .app-shell { padding-top: 24px; }
+    .coach-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .panel-body { padding-top: 38px; }
+  }
+
 /* ── Bordures structurelles communes ──────────────────────────────────────
    Les overrides mobile/desktop ne doivent pas faire disparaître la limite
    visuelle des écrans et des widgets principaux. Les contrôles secondaires,
    onglets et barres d'action restent volontairement sans bordure propre.
 */
-@layer utilities {
   .panel,
   .dash-hero,
   .home-context-card,
