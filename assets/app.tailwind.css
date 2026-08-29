@@ -2937,3 +2937,68 @@
       margin-bottom: 4px;
     }
 }
+
+/* ── Bordures structurelles communes ──────────────────────────────────────
+   Les overrides mobile/desktop ne doivent pas faire disparaître la limite
+   visuelle des écrans et des widgets principaux. Les contrôles secondaires,
+   onglets et barres d'action restent volontairement sans bordure propre.
+*/
+@layer utilities {
+  .panel,
+  .dash-hero,
+  .home-context-card,
+  .coach-home-card,
+  .parent-home-card,
+  .card,
+  .competition-card,
+  .summary,
+  .empty-state,
+  .filter-bar,
+  .list-summary,
+  .dashboard-summary-card,
+  .coach-assistant-section,
+  .coach-chat-widget {
+    border: 1px solid var(--line);
+  }
+
+  .panel,
+  .dash-hero,
+  .home-context-card,
+  .coach-home-card,
+  .parent-home-card,
+  .card,
+  .competition-card,
+  .summary,
+  .empty-state,
+  .filter-bar,
+  .list-summary,
+  .dashboard-summary-card,
+  .coach-assistant-section,
+  .coach-chat-widget {
+    border-radius: var(--radius-card);
+  }
+
+  .panel {
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  .dash-hero,
+  .home-context-card,
+  .coach-home-card,
+  .parent-home-card,
+  .filter-bar,
+  .list-summary,
+  .coach-assistant-section,
+  .coach-chat-widget {
+    background: var(--surface);
+  }
+
+  .competition-card {
+    background: var(--panel);
+  }
+
+  .panel-header {
+    border-bottom: 1px solid var(--line);
+  }
+}
