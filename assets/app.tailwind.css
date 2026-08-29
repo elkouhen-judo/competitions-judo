@@ -2062,6 +2062,29 @@
       background: var(--surface);
     }
 
+    .dashboard-loading-state {
+      display: grid;
+      gap: 12px;
+      padding: 14px 0;
+    }
+
+    .dashboard-loading-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .dashboard-loading-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .dashboard-loading-card {
+      min-height: 92px;
+      padding: 12px;
+    }
+
     /* Skeleton loading cards */
     @keyframes sk-shimmer {
       0% { background-position: -200% 0; }
@@ -2355,6 +2378,10 @@
       }
 
       .dashboard-summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .dashboard-loading-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
@@ -2918,22 +2945,22 @@
     align-content: start;
     gap: 22px;
     border: 1px solid var(--line);
-    border-top: 3px solid var(--accent);
+    border-left: 2px solid var(--tatami-line);
     border-radius: 10px;
     background: var(--panel);
     padding: 22px;
     overflow: hidden;
     position: relative;
   }
-  .coach-home-card:first-child { border-top-color: var(--text); }
-  .parent-home-card, .parent-home-card:hover { border-top-color: var(--primary); }
+  .coach-home-card:first-child { border-left-color: var(--tatami-line); }
+  .parent-home-card, .parent-home-card:hover { border-left-color: var(--tatami-line); }
   .coach-home-card-icon { width: 34px; height: 34px; border-radius: 8px; }
   .coach-home-card h4 { font-size: 1.2rem; letter-spacing: -0.025em; }
   #homeAdminActions { gap: 10px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
   #homeAdminActions button { min-height: 52px; }
   .list { gap: 0; }
   .list > .card { border-bottom: 1px solid var(--line); border-radius: 0; }
-  .competition-card { display: block; min-width: 0; border-top: 1px solid var(--line); border-left: 0; border-right: 0; background: transparent; }
+  .competition-card { display: block; min-width: 0; border: 1px solid var(--line); border-left: 2px solid var(--tatami-line); background: transparent; }
   .competition-card::before { display: none; }
   .card-button, .competition-open-button { display: block; position: relative; width: 100%; min-width: 0; padding: 20px 0; background: transparent; }
   .card-button:hover:not(:disabled) { background: transparent; border-color: transparent; }
@@ -3007,5 +3034,237 @@
 
   .panel-header {
     border-bottom: 1px solid var(--line);
+  }
+
+  .competition-summary,
+  .coach-performance-summary,
+  .dashboard-summary-card {
+    border-radius: 10px;
+  }
+
+  .competition-summary {
+    border-left: 2px solid var(--tatami-line);
+    background: var(--surface);
+    padding: 16px;
+  }
+
+  .coach-performance-summary {
+    border-left: 2px solid var(--tatami-line);
+    background: var(--accent-soft);
+    padding: 16px;
+  }
+
+  .dashboard-summary-card {
+    border-left: 2px solid var(--tatami-line);
+    padding: 16px;
+  }
+
+  .dashboard-summary-grid {
+    gap: 8px;
+  }
+
+  .dashboard-summary-insight {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(52, 101, 56, 0.2);
+  }
+
+  .dashboard-loading-state {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Les accents doivent rester après la normalisation commune des cartes. */
+  .competition-card {
+    border-left: 2px solid var(--tatami-line);
+  }
+
+  .coach-home-card,
+  .coach-home-card:first-child,
+  .parent-home-card,
+  .parent-home-card:hover {
+    border-left: 2px solid var(--tatami-line);
+  }
+
+  .coach-home-card:first-child {
+    border-left-color: var(--tatami-line);
+  }
+
+  .parent-home-card,
+  .parent-home-card:hover {
+    border-left-color: var(--tatami-line);
+  }
+
+  @media (min-width: 721px) {
+    .app-shell { max-width: 1120px; }
+    .stats-grid { gap: 10px; }
+    .stat-card { padding: 12px; }
+    .dashboard-summary-card { padding: 18px; }
+  }
+
+  /* Direction moderne : sport premium, surfaces calmes et accents maîtrisés. */
+  :root {
+    --bg: #f3f5f7;
+    --panel: #ffffff;
+    --surface: #ffffff;
+    --text: #18212b;
+    --muted: #65717d;
+    --line: #e1e6eb;
+    --primary: #18212b;
+    --primary-hover: #2a3744;
+    --accent: #c62828;
+    --accent-soft: #fff0f0;
+    --tatami: #f4f6f8;
+    --tatami-line: #d7dde3;
+    --radius: 10px;
+    --radius-card: 14px;
+    --button-focus-ring: rgba(198, 40, 40, 0.2);
+  }
+
+  body {
+    font-family: 'Avenir Next', 'Helvetica Neue', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .app-shell {
+    max-width: 1180px;
+    padding-bottom: 48px;
+  }
+
+  .topbar {
+    padding-top: 22px;
+    padding-bottom: 20px;
+    border-bottom-color: var(--line);
+  }
+
+  .brand-logo {
+    border-color: var(--text);
+    border-radius: 12px;
+  }
+
+  .brand-copy h1 {
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  .panel {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .panel-header {
+    padding: 30px 0 20px;
+    border-bottom: 0;
+    background: transparent;
+  }
+
+  .panel-header > div:first-child > h2 {
+    border-left-width: 4px;
+    border-left-color: var(--accent);
+    font-size: clamp(1.65rem, 4vw, 2.2rem);
+  }
+
+  .panel-body {
+    padding: 0 0 40px;
+  }
+
+  .dash-hero {
+    padding-top: 22px;
+  }
+
+  .mode-tabs {
+    gap: 24px;
+  }
+
+  .mode-tab {
+    font-weight: 600;
+  }
+
+  .section {
+    margin-top: 32px;
+    padding-top: 26px;
+    border-top-color: var(--line);
+  }
+
+  .section-heading h3 {
+    font-size: 1.2rem;
+    border-left-width: 3px;
+    border-left-color: var(--accent);
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .card,
+  .summary,
+  .stat-card,
+  .filter-bar,
+  .list-summary,
+  .coach-assistant-section,
+  .coach-chat-widget,
+  .empty-state {
+    border-color: var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
+  }
+
+  .coach-home-card,
+  .parent-home-card {
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
+  }
+
+  .coach-home-card:first-child {
+    border-top-color: var(--accent);
+  }
+
+  button,
+  .button,
+  input,
+  select,
+  textarea {
+    border-radius: 10px;
+  }
+
+  button,
+  .button {
+    font-weight: 650;
+  }
+
+  .button-secondary {
+    border-color: var(--line);
+    background: var(--panel);
+  }
+
+  .competition-card {
+    border-color: var(--line);
+    border-left: 3px solid var(--tatami-line);
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    margin-bottom: 10px;
+  }
+
+  .competition-card .card-button,
+  .competition-card .competition-open-button {
+    padding: 18px;
+  }
+
+  @media (min-width: 721px) {
+    .panel-header {
+      padding-top: 36px;
+    }
+
+    .panel-body {
+      padding-bottom: 56px;
+    }
   }
 }
