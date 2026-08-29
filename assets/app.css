@@ -3722,10 +3722,58 @@ body {
   }
 }
 
+.panel,
+  .dash-hero,
+  .home-context-card,
+  .coach-home-card,
+  .parent-home-card,
+  .card,
+  .competition-card,
+  .summary,
+  .empty-state,
+  .filter-bar,
+  .list-summary,
+  .dashboard-summary-card,
+  .coach-assistant-section,
+  .coach-chat-widget {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.panel {
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.dash-hero,
+  .home-context-card,
+  .coach-home-card,
+  .parent-home-card,
+  .filter-bar,
+  .list-summary,
+  .coach-assistant-section,
+  .coach-chat-widget {
+  background: var(--surface);
+}
+
+.competition-card {
+  background: var(--panel);
+}
+
+.panel-header {
+  border-bottom: 1px solid var(--line);
+}
+
 /* Override final : cette couche passe après les composants historiques afin
    que la nouvelle direction visuelle reste prioritaire sans réécrire les vues. */
 
 /* ── Direction visuelle contemporaine ─────────────────────────────────────
    La hiérarchie vient de l'espace, de la typographie et de quelques accents
    sémantiques. Les composants restent volontairement plats et tactiles.
+*/
+
+/* ── Bordures structurelles communes ──────────────────────────────────────
+   Les overrides mobile/desktop ne doivent pas faire disparaître la limite
+   visuelle des écrans et des widgets principaux. Les contrôles secondaires,
+   onglets et barres d'action restent volontairement sans bordure propre.
 */
