@@ -10,7 +10,9 @@ cp .backup/.env.example .backup/.env.prod
 cp .backup/.env.example .backup/.env.dev
 ```
 
-Renseigner dans chaque fichier la chaîne PostgreSQL du projet correspondant, récupérée depuis Supabase > Connect. Ne jamais la mettre dans Git, dans Vercel ou dans une capture d’écran.
+Renseigner dans chaque fichier `SUPABASE_PROJECT_REF` avec la référence du projet Supabase correspondant. La CLI Supabase authentifiée sur le Mac fournit alors l’accès nécessaire au backup.
+
+Pour la restauration, ajouter aussi `SUPABASE_DB_URL` avec la chaîne PostgreSQL du projet, récupérée depuis Supabase > Connect. Ne jamais mettre cette chaîne dans Git, dans Vercel ou dans une capture d’écran.
 
 ## Backup quotidien
 
