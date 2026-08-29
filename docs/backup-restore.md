@@ -40,6 +40,14 @@ La restauration par défaut cible l’environnement indiqué par `--target`. Ell
 CONFIRM_RESTORE=yes npm run db:restore -- --environment=prod --target=dev --backup=latest
 ```
 
+Pour remplacer toutes les données applicatives de dev avant import :
+
+```sh
+CONFIRM_RESTORE=yes npm run db:restore -- --environment=prod --target=dev --backup=latest --clean=true
+```
+
+Avec `SUPABASE_PROJECT_REF`, la restauration passe par la session CLI Supabase authentifiée. Avec `SUPABASE_DB_URL`, elle utilise `psql`.
+
 Pour restaurer la production, ajouter une seconde confirmation :
 
 ```sh
