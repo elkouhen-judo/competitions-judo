@@ -3597,6 +3597,14 @@ body {
   margin-bottom: 18px;
 }
 
+.section-heading > div {
+  padding-left: 13px;
+}
+
+.section-heading > div > h3 {
+  margin-left: -13px;
+}
+
 .section-heading h3 {
   padding-left: 10px;
   border-left: 3px solid var(--accent);
