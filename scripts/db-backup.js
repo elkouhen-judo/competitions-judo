@@ -17,7 +17,7 @@ function argument(name, fallback = "") {
 
 function readEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
-    throw new Error(`Configuration absente : ${filePath}\nCopiez .backup/.env.example puis renseignez SUPABASE_DB_URL.`);
+    throw new Error(`Configuration absente : ${filePath}\nCopiez .backup/.env.example puis renseignez SUPABASE_PROJECT_REF ou SUPABASE_DB_URL.`);
   }
 
   const values = {};
@@ -70,7 +70,8 @@ function main() {
   const configPath = path.join(configRoot, `.env.${environment}`);
   const config = readEnvFile(configPath);
   const databaseUrl = process.env[`SUPABASE_DB_URL_${environment.toUpperCase()}`] || config.SUPABASE_DB_URL;
-  if (!databaseUrl) throw new Error(`SUPABASE_DB_URL absent de ${configPath}.`);
+  const projectRef = process.env[`SUPABASE_PROJECT_REF_${environment.toUpperCase()}`] || config.SUPABASE_PROJECT_REF;
+  if (!databaseUrl && !projectRef) throw new Error(`SUPABASE_PROJECT_REF ou SUPABASE_DB_URL absent de ${configPath}.`);
 
   const environmentRoot = path.join(backupRoot, environment);
   fs.mkdirSync(environmentRoot, { recursive: true, mode: 0o700 });
@@ -83,11 +84,12 @@ function main() {
   fs.writeFileSync(lockPath, `${process.pid}\n`, { mode: 0o600 });
 
   try {
-    const supabase = process.env.SUPABASE_CLI_BIN || "supabase";
-    const common = ["db", "dump", "--db-url", databaseUrl];
-    run(supabase, [...common, "--file", path.join(outputDirectory, "schema.sql")]);
-    run(supabase, [...common, "--data-only", "--use-copy", "--file", path.join(outputDirectory, "data.sql")]);
-    run(supabase, [...common, "--role-only", "--file", path.join(outputDirectory, "roles.sql")]);
+    const supabase = process.env.SUPABASE_CLI_BIN || (fs.existsSync("/opt/homebrew/bin/supabase") ? "/opt/homebrew/bin/supabase" : "supabase");
+    const common = ["db", "dump", projectRef ? "--project-ref" : "--db-url", projectRef || databaseUrl];
+    const commandEnv = { SUPABASE_CLI_TELEMETRY_OPTOUT: "1" };
+    run(supabase, [...common, "--file", path.join(outputDirectory, "schema.sql")], { env: commandEnv });
+    run(supabase, [...common, "--data-only", "--use-copy", "--file", path.join(outputDirectory, "data.sql")], { env: commandEnv });
+    run(supabase, [...common, "--role-only", "--file", path.join(outputDirectory, "roles.sql")], { env: commandEnv });
 
     const files = ["schema.sql", "data.sql", "roles.sql"];
     const manifest = {
