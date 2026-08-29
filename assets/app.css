@@ -3722,6 +3722,12 @@ body {
   }
 }
 
+/* ── Bordures structurelles communes ──────────────────────────────────────
+   Les overrides mobile/desktop ne doivent pas faire disparaître la limite
+   visuelle des écrans et des widgets principaux. Les contrôles secondaires,
+   onglets et barres d'action restent volontairement sans bordure propre.
+*/
+
 .panel,
   .dash-hero,
   .home-context-card,
@@ -3764,16 +3770,12 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-/* Override final : cette couche passe après les composants historiques afin
-   que la nouvelle direction visuelle reste prioritaire sans réécrire les vues. */
-
 /* ── Direction visuelle contemporaine ─────────────────────────────────────
    La hiérarchie vient de l'espace, de la typographie et de quelques accents
    sémantiques. Les composants restent volontairement plats et tactiles.
 */
 
-/* ── Bordures structurelles communes ──────────────────────────────────────
-   Les overrides mobile/desktop ne doivent pas faire disparaître la limite
-   visuelle des écrans et des widgets principaux. Les contrôles secondaires,
-   onglets et barres d'action restent volontairement sans bordure propre.
+/* ── Overrides de direction ───────────────────────────────────────────────
+   Cette couche unique reste après tous les composants historiques afin de
+   préserver la direction visuelle sans dupliquer les vues HTML.
 */
