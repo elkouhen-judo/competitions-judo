@@ -61,6 +61,7 @@ function createInitialState(): KirokuAppState {
   const initialDataCachePrefix = "kiroku_initial_data:";
   const lastInitialDataCacheKey = "kiroku_initial_data:last";
   const competitionDetailCachePrefix = "kiroku_competition_detail:";
+  const judokaProfileCachePrefix = "kiroku_judoka_profile:";
   const pendingOperationsStoragePrefix = "kiroku_pending_ops:";
 
   interface HeaderViewModel {
@@ -461,6 +462,13 @@ function createInitialState(): KirokuAppState {
 
           if (String(method) === "getCompetitionDetail") {
             saveCompetitionDetailCache(getCurrentUserEmailKey(), payload.result as unknown as CompetitionDetail);
+          } else if (String(method) === "getJudokaProfile") {
+            saveJudokaProfileCache(
+              getCurrentUserEmailKey(),
+              String(args[0] || ""),
+              args[1] as number | undefined,
+              payload.result
+            );
           }
 
           success?.(payload.result);
@@ -658,6 +666,36 @@ function createInitialState(): KirokuAppState {
       }
     }
 
+    function getJudokaProfileCacheKey(email: string, judokaId: string, seasonStartYear?: number) {
+      const season = seasonStartYear === undefined ? "current" : String(seasonStartYear);
+      return email && judokaId ? `${judokaProfileCachePrefix}${email}:${judokaId}:${season}` : "";
+    }
+
+    function saveJudokaProfileCache(
+      email: string,
+      judokaId: string,
+      seasonStartYear: number | undefined,
+      data: unknown
+    ) {
+      const key = getJudokaProfileCacheKey(email, judokaId, seasonStartYear);
+      if (!key) return;
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (_error) {
+        // Cache storage is opportunistic; connected usage must keep working without it.
+      }
+    }
+
+    function readJudokaProfileCache(email: string, judokaId: string, seasonStartYear?: number) {
+      const key = getJudokaProfileCacheKey(email, judokaId, seasonStartYear);
+      if (!key) return null;
+      try {
+        return JSON.parse(localStorage.getItem(key) || "null");
+      } catch (_error) {
+        return null;
+      }
+    }
+
     function getPendingOperationsStorageKey(email: string) {
       return email ? `${pendingOperationsStoragePrefix}${email}` : "";
     }
@@ -740,6 +778,7 @@ function createInitialState(): KirokuAppState {
     function cancelPendingOperation(operationId: string) {
       state.pendingOperations = state.pendingOperations.filter((op) => op.id !== operationId);
       persistPendingOperations();
+      syncOfflineStatusHeader();
     }
 
     function canManageJudokaLocally(judokaId: unknown): boolean {
@@ -801,6 +840,16 @@ function createInitialState(): KirokuAppState {
           success?.(cached as unknown as RpcClientResult<M>);
           return;
         }
+      } else if (methodName === "getJudokaProfile") {
+        const cached = readJudokaProfileCache(
+          getCurrentUserEmailKey(),
+          String(methodArgs[0] || ""),
+          methodArgs[1] as number | undefined
+        );
+        if (cached) {
+          success?.(cached as RpcClientResult<M>);
+          return;
+        }
       } else if (isOfflineQueueableMethod(methodName)) {
         const scopeError = getLocalOfflineMutationError(methodName, methodArgs);
         if (scopeError) {
@@ -810,6 +859,19 @@ function createInitialState(): KirokuAppState {
         }
 
         const op = upsertPendingOperation(methodName, methodArgs);
+        if (methodName === "finalizeCompetition") {
+          const competitionId = String(methodArgs[0] || "");
+          const result = String(methodArgs[1] || "");
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === competitionId
+              ? { ...competition, result }
+              : competition
+          );
+          if (state.currentCompetition && String(state.currentCompetition.competitionId) === competitionId) {
+            state.currentCompetition = { ...state.currentCompetition, result };
+          }
+        }
+        syncOfflineStatusHeader();
         const queuedResult = {
           success: true,
           message: "Enregistré localement. En attente de synchronisation.",
@@ -819,7 +881,9 @@ function createInitialState(): KirokuAppState {
         return;
       }
 
-      const offlineError = new Error("Connexion indisponible. Réessayez quand le réseau revient.");
+      const offlineError = new Error(
+        "Cette action nécessite une connexion. Les données déjà chargées restent disponibles hors connexion."
+      );
       failure ? failure(offlineError) : showError(offlineError);
     }
 
@@ -831,6 +895,7 @@ function createInitialState(): KirokuAppState {
       for (const op of pending) {
         op.status = "syncing";
         persistPendingOperations();
+        syncOfflineStatusHeader();
 
         await runServerWithOptions(
           op.type,
@@ -843,11 +908,14 @@ function createInitialState(): KirokuAppState {
                 ? String((error as { message?: unknown }).message || "")
                 : String(error || "");
             persistPendingOperations();
+            syncOfflineStatusHeader();
+            showError(op.errorMessage);
           },
           { bypassOfflineQueue: true }
         );
       }
 
+      syncOfflineStatusHeader();
       if (state.currentCompetition) {
         screens.competition.openCompetition(state.currentCompetition.competitionId, true);
       }
@@ -892,7 +960,7 @@ function createInitialState(): KirokuAppState {
         showHeader: true,
         userName: ui.getJudokaDisplayName(state.currentUser) || "",
         roleLabel,
-        showOfflineStatus: state.isUsingCachedData || !state.isOnline,
+        showOfflineStatus: state.isUsingCachedData || !state.isOnline || state.pendingOperations.length > 0,
         offlineStatusText: getOfflineStatusText()
       });
       screens.home.applyInitialData();
@@ -902,22 +970,44 @@ function createInitialState(): KirokuAppState {
     }
 
     function getOfflineStatusText() {
+      const pendingCount = state.pendingOperations.filter(
+        (op) => op.status === "pending" || op.status === "syncing"
+      ).length;
+      const failedCount = state.pendingOperations.filter((op) => op.status === "failed").length;
+
+      if (failedCount) {
+        return `${failedCount} modification${failedCount > 1 ? "s" : ""} à vérifier`;
+      }
+
+      if (pendingCount && state.isOnline) {
+        return `Synchronisation de ${pendingCount} modification${pendingCount > 1 ? "s" : ""}…`;
+      }
+
+      if (pendingCount && !state.isOnline) {
+        return `Hors connexion - ${pendingCount} modification${pendingCount > 1 ? "s" : ""} enregistrée${pendingCount > 1 ? "s" : ""} localement`;
+      }
+
       if (state.isUsingCachedData) {
         const cachedDate = ui.formatDateTime(state.cachedDataLoadedAt);
-        return cachedDate
+        const cachedText = cachedDate
           ? `Hors connexion - données du ${cachedDate}`
           : "Hors connexion - données du dernier chargement";
+        return state.isOnline ? cachedText : `${cachedText} · modifications locales conservées`;
       }
 
       if (!state.isOnline) {
-        return "Hors connexion - actions bloquées";
+        return "Hors connexion - mode local activé";
       }
 
       return "";
     }
 
     function syncOfflineStatusHeader() {
-      headerViewModel.showOfflineStatus = Boolean(headerViewModel.showHeader) && (state.isUsingCachedData || !state.isOnline);
+      const hasPendingOperations = state.pendingOperations.some(
+        (op) => op.status === "pending" || op.status === "syncing" || op.status === "failed"
+      );
+      headerViewModel.showOfflineStatus = Boolean(headerViewModel.showHeader) &&
+        (state.isUsingCachedData || !state.isOnline || hasPendingOperations);
       headerViewModel.offlineStatusText = getOfflineStatusText();
     }
 
@@ -1080,6 +1170,7 @@ function createInitialState(): KirokuAppState {
       const prefixes = [
         initialDataCachePrefix,
         competitionDetailCachePrefix,
+        judokaProfileCachePrefix,
         pendingOperationsStoragePrefix,
         "kiroku_supabase_session"
       ];
@@ -1122,7 +1213,6 @@ function createInitialState(): KirokuAppState {
       window.addEventListener("offline", () => {
         state.isOnline = false;
         syncOfflineStatusHeader();
-        showError({ message: "Connexion perdue. Les actions seront bloquées jusqu'au retour du réseau." });
       });
     }
 

@@ -4,6 +4,19 @@
 
 Tu es un développeur senior assisté par IA. Livre des changements simples, testés et cohérents avec l'existant.
 
+## Les 10 commandements
+
+1. **Ne rien faire si la demande n'est pas claire.** Poser les questions nécessaires avant toute modification ou action externe.
+2. **Comprendre le besoin avant le code.** Reformuler l'objectif, les utilisateurs concernés et le résultat attendu.
+3. **Respecter les règles du produit.** Vérifier les spécifications, les rôles, les cas limites et les critères d'acceptation concernés.
+4. **Modifier le minimum nécessaire.** Préserver l'existant, éviter les dépendances inutiles et supprimer le code devenu mort.
+5. **Vérifier le comportement attendu.** Tester les parcours fonctionnels concernés, leurs cas nominaux, leurs erreurs et leurs états vides, puis consigner les résultats.
+6. **Vérifier l'adéquation au besoin.** Confirmer que le résultat répond au problème utilisateur et pas seulement au symptôme technique.
+7. **Valider l'interface visuellement.** Après toute modification UI, auditer les écrans concernés sur mobile et desktop avec des captures avant/après.
+8. **Ne pas déclarer une tâche terminée sans preuve.** Fournir les tests exécutés, les vérifications réalisées et les limites restantes.
+9. **Signaler toute incertitude ou régression.** Ne pas masquer un échec préexistant, une hypothèse ou un comportement non vérifié.
+10. **Déployer uniquement dans le périmètre demandé.** Vérifier le build et les tests avant tout déploiement, puis contrôler l'environnement publié.
+
 ## Documentation
 
 Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'index complet :
@@ -58,6 +71,13 @@ Utilise les outils classiques (`rg`/`ripgrep`, `find`, `grep`) comme moyen princ
 
 ## Workflow
 
+Avant de démarrer une tâche :
+
+- Ne pas commencer l'implémentation si la demande est ambiguë ou si plusieurs interprétations peuvent modifier sensiblement le résultat.
+- Identifier précisément les points qui empêchent de cadrer la tâche.
+- Poser les questions nécessaires et attendre les réponses avant de modifier des fichiers ou d'exécuter des actions externes.
+- Si la demande est suffisamment claire, avancer avec les hypothèses minimales et les signaler lorsqu'elles influencent le résultat.
+
 Avant de modifier :
 
 - Utiliser `rg`/`ripgrep` pour localiser les classes, fonctions, modules, services, dépendances ou flux métier pertinents.
@@ -77,6 +97,8 @@ Pendant la modification :
 Après la modification :
 
 - Lancer `npm test` (build + tests inclus via `pretest`).
+- Pour toute modification UI, capturer une copie d'écran avant et après à 375 px et sur desktop dans `output/playwright/`, puis comparer visuellement le rendu.
+- Une assertion CSS ou un test DOM seul ne valide pas une correction visuelle.
 - Mettre à jour `docs/spec.md` quand une règle, un écran ou un flux utilisateur change.
 - Mettre à jour `docs/spec-tech.md` quand architecture, données, auth, sécurité ou déploiement changent.
 - Vérifier `git status`.

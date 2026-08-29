@@ -34,7 +34,7 @@
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
     const { state, screens, ui, notifications } = app;
-    const { cleanText, showView } = ui;
+    const { cleanText, formatDate, showView } = ui;
     const { showError } = notifications;
 
     const defaultCoachDashboardForm = {
@@ -166,6 +166,14 @@
         : "Statistiques agrégées sur une ou plusieurs compétitions"
     );
 
+    function formatCoachDashboardDate(value: unknown) {
+      const formatted = formatDate(value);
+      if (!formatted) {
+        return "Date non renseignée";
+      }
+      return formatted;
+    }
+
     function ensureCoachDashboardViewModel() {
       if (coachDashboardMounted) {
         return;
@@ -186,7 +194,8 @@
           removeCoachDashboardCompetition,
           showCoachJudoka,
           showCoachDashboard,
-          showCoachChat
+          showCoachChat,
+          formatCoachDashboardDate
         },
         {
           isSubmitting,

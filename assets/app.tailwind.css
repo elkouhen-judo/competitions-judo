@@ -1363,21 +1363,6 @@
       color: var(--muted);
     }
 
-    /* Opération hors-ligne pas encore synchronisée (OFF-005/OFF-006) */
-    .badge-pending {
-      background: var(--warning-soft);
-      border-color: var(--warning);
-      color: var(--warning);
-    }
-
-    .pending-sync-note {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
     /* ── Podium / classement (domaine core) ── */
 
     /* 1er — or */
@@ -2922,18 +2907,51 @@
   .home-context-card { margin: 0; padding: 0 0 4px; border: 0; background: transparent; }
   .home-context-value { font-size: clamp(1.6rem, 5vw, 2.35rem); letter-spacing: -0.04em; }
   .panel-body { padding: 30px 0 40px; }
-  .panel-header > div:first-child { padding-left: 13px; }
-  .panel-header > div:first-child > h2 { margin-left: -13px; padding-left: 10px; border-left: 3px solid var(--accent); }
+  .panel-header > div:first-child { padding-left: 0; }
+  .panel-header > div:first-child > h2 {
+    margin-left: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--accent);
+  }
+  .panel-header > div:first-child > .subtitle { padding-left: 13px; }
   .section { margin-top: 38px; padding-top: 30px; }
   .section-heading { margin-bottom: 18px; }
-  .section-heading > div { padding-left: 13px; }
-  .section-heading > div > h3 { margin-left: -13px; }
+  .section-heading > div { padding-left: 0; }
+  .section-heading > div > h3 { margin-left: 0; }
+  .section-heading > div > .subtitle { padding-left: 13px; }
   .section-heading h3 {
     padding-left: 10px;
     border-left: 3px solid var(--accent);
     font-size: 1.35rem;
     letter-spacing: -0.035em;
   }
+
+  .form-section-heading h3,
+  .stat-label,
+  .meta-label {
+    border-left: 2px solid var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  label:not(.checkbox-row) {
+    border-left: 2px solid var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  .combat-section-kicker,
+  .combat-score-row-title {
+    border-left: 2px solid var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  #combatFormView .form-section-heading .subtitle {
+    padding-left: 15px;
+  }
+
+  #combatFormView .field-hint {
+    padding-left: 15px;
+  }
+
   .coach-home-grid { gap: 16px; align-items: stretch; }
   .coach-home-card,
   .coach-home-card:first-child,
@@ -3159,8 +3177,8 @@
   }
 
   .brand-logo {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .brand-copy h1 {
@@ -3230,14 +3248,16 @@
   }
 
   .mode-tabs {
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: center;
     gap: 24px;
-    padding-top: 6px;
+    min-height: 48px;
+    padding: 0;
   }
 
   .mode-tab {
     min-height: 44px;
-    padding: 12px 14px 14px;
+    padding: 10px 14px;
     font-weight: 600;
   }
 
@@ -3251,6 +3271,36 @@
     font-size: 1.2rem;
     border-left-width: 3px;
     border-left-color: var(--accent);
+  }
+
+  .form-section-heading h3,
+  .stat-label,
+  .meta-label {
+    border-left-width: 2px;
+    border-left-color: var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  label:not(.checkbox-row) {
+    border-left-width: 2px;
+    border-left-color: var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  .combat-section-kicker,
+  .combat-score-row-title {
+    border-left-width: 2px;
+    border-left-color: var(--tatami-line);
+    padding-left: 13px;
+  }
+
+  #combatFormView .form-section-heading .subtitle {
+    padding-left: 15px;
+  }
+
+  #combatFormView .panel-body > .form-section:not(.combat-quick-section) {
+    margin-left: 9px;
+    margin-right: 9px;
   }
 
   .subtitle {
@@ -3315,14 +3365,39 @@
     padding: 18px;
   }
 
+  #combatFormView .combat-quick-section {
+    border-color: var(--line);
+    background: var(--panel);
+    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
+  }
+
+  @media (min-width: 721px) {
+    #combatFormView .form-actions {
+      flex-direction: row;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    #combatFormView .mobile-action-bar {
+      position: static;
+      margin: 24px 0 0;
+      padding: 0;
+      background: transparent;
+      border: 0;
+    }
+  }
+
   @media (min-width: 721px) {
     .topbar {
       gap: 16px;
     }
 
     .brand-logo {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
     }
 
     .brand-copy h1 {

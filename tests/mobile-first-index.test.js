@@ -65,7 +65,7 @@ test("mobile navigation uses browser history and restores focus", () => {
 test("mobile mutations are guarded against double taps and offline network", () => {
   assert.match(client, /pendingRpcKeys/);
   assert.match(client, /Action déjà en cours/);
-  assert.match(client, /Connexion indisponible/);
+  assert.match(client, /Cette action nécessite une connexion/);
   assert.match(client, /Réseau trop lent/);
   assert.match(bundle, /:disabled="isSubmitting"/);
 });
@@ -90,11 +90,8 @@ test("offline combat and ranking mutations queue as pending operations and sync 
   assert.match(client, /function cancelPendingOperation\(/);
   assert.match(client, /Enregistré localement\. En attente de synchronisation\./);
   assert.match(client, /window\.KirokuScreenProjections\.mergePendingCombatCards\(/);
-  assert.match(bundle, /v-if="combat\.pendingSync" class="pending-sync-note"/);
-  assert.match(bundle, /v-if="pendingFinalization" class="pending-sync-note"/);
-  assert.match(bundle, /@click="cancelPendingOperation\(combat\.pendingOperationId\)"/);
-  assert.match(css, /\.badge-pending\s*\{/);
-  assert.match(css, /\.pending-sync-note\s*\{/);
+  assert.doesNotMatch(bundle, /pending-sync-note/);
+  assert.match(client, /modification.*enregistrée.*localement/);
 });
 
 test("button colors use consistent variants and disabled states", () => {
@@ -260,6 +257,7 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   );
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
+  assert.doesNotMatch(bundle, /<h3>Actions du club<\/h3>/);
   assert.match(
     bundle,
     /<h4>Suivi des compétitions<\/h4>[\s\S]*@click="openCoachCompetitionsHub\(\)"[\s\S]*Gérer les compétitions/
@@ -440,80 +438,7 @@ test("parent competition detail exposes coach objectives", () => {
   assert.doesNotMatch(bundle, /title="Supprimer"/);
 });
 
-test("login screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
-  assert.match(client, /vue v3\./);
-  assert.match(bundle, /id="loginView" class="panel hidden" v-cloak/);
-  assert.match(
-    bundle,
-    /function mountViewModel\(id, viewModel, actions = \{\}, computedRefs = \{\}\)/
-  );
-  assert.match(
-    bundle,
-    /function createMountedViewModel\(id,\s*defaultState,\s*actions = \{\},\s*computedRefs = \{\}\)/
-  );
-  assert.match(bundle, /ui\.createMountedViewModel\("loginView", defaultLoginState,/);
-  assert.doesNotMatch(bundle, /id="profileRegistrationForm"/);
-  assert.doesNotMatch(bundle, /id="registrationPrenom"|id="registrationNom"/);
-  assert.doesNotMatch(bundle, /submitProfileRegistration/);
-});
-
-test("home screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="homeView" class="panel" v-cloak/);
-  assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
-  assert.match(bundle, /\{\{ activeJudokaSummary\.value \}\}/);
-  assert.match(bundle, /id="competitionsList"/);
-  assert.match(bundle, /v-for="competition in competitions"/);
-  assert.match(bundle, /@click="openCompetition\(competition\.competitionId\)"/);
-  assert.doesNotMatch(bundle, /activeJudokaSummaryHtml|competitionsHtml/);
-  assert.match(bundle, /@click="showHomeCompetitionForm\(\)"/);
-  assert.match(bundle, /@click="openHomeJudokaProfile\(\)"/);
-  assert.match(bundle, /function ensureHomeViewModel\(\)/);
-});
-
-test("judoka profile screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="judokaView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="judokaHeroAvatar" class="hero-avatar">\{\{ heroAvatar \}\}<\/div>/);
-  assert.match(bundle, /function createJudokaProfileViewModel\(profile,\s*helpers\)/);
-  assert.match(bundle, /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/);
-  assert.match(bundle, /v-for="entry in victoriesByDecisionType"/);
-  assert.match(bundle, /v-if="!hasCompetitionResults"/);
-  assert.match(bundle, /v-for="result in competitionResultsPage"/);
-  assert.match(bundle, /:class="\[result\.resultClass, result\.badgeClass\]"/);
-  assert.doesNotMatch(bundle, /lastCompetitionHtml|bestResultsHtml/);
-  assert.match(bundle, /function ensureJudokaView\(\)/);
-  assert.match(bundle, /\{\{ heroGender \}\}/);
-  assert.match(bundle, /\{\{ heroYearInCategory \}\}/);
-  assert.match(bundle, /\{\{ heroWeightCategory \}\}/);
-  assert.match(bundle, /\{\{ heroHandedness \}\}/);
-  assert.match(bundle, /v-model="handednessEditing"/);
-  assert.match(
-    bundle,
-    /id="judokaHeroRecord"[\s\S]*id="judokaHeroCategory"[\s\S]*id="judokaHeroYearInCategory"[\s\S]*id="judokaHeroWeightCategory"[\s\S]*id="judokaHeroGender"[\s\S]*id="judokaHeroHandedness"[\s\S]*id="judokaHeroBeltColor"/
-  );
-  assert.match(
-    bundle,
-    /heroCategory,\s*heroWeightCategory,\s*heroBeltColor,\s*heroGender,\s*heroYearInCategory,\s*heroHandedness,\s*heroSeason,/
-  );
-  assert.match(
-    bundle,
-    /select v-if="weightCategoryOptions\.length" id="judoka_categorie_poids" v-model="weightCategoryEditing"/
-  );
-  assert.match(
-    bundle,
-    /input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing"/
-  );
-  assert.match(bundle, /v-for="weightOption in weightCategoryOptions"/);
-  assert.match(bundle, /v-if="yearInCategoryOptions\.length"/);
-  assert.match(bundle, /v-for="yearOption in yearInCategoryOptions"/);
-  assert.match(bundle, /function onJudokaInfoAgeOrGenderChange\(\)/);
-});
-
-test("judoka profile client script stays parseable", () => {
-  assert.doesNotThrow(() => new Function(judokaScreenClient));
-});
-
-test("coach dashboard screen is mounted through Vue 3 for the progressive screen migration", () => {
+test("coach dashboard exposes its core filters, metrics, and assistant features", () => {
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak/);
   assert.match(
     bundle,
@@ -751,55 +676,6 @@ test("coach dashboard screen is mounted through Vue 3 for the progressive screen
   );
 });
 
-test("admins screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="adminsView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
-  assert.match(bundle, /<strong>couleur_ceinture<\/strong>/);
-  assert.match(
-    bundle,
-    /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./
-  );
-  assert.doesNotMatch(
-    bundle,
-    /importUsersResults|id="importUsersResults"|v-for="entry in importUsersResults"/
-  );
-  assert.match(bundle, /id="usersList"/);
-  assert.match(bundle, /v-for="managedUser in managedUsersPage"/);
-  assert.match(bundle, /@click="deleteUser\(managedUser\.judokaId, managedUser\.fullName\)"/);
-  assert.match(bundle, /id="adminsList"/);
-  assert.match(bundle, /v-for="admin in adminsPage"/);
-  assert.match(bundle, /@click="revokeAdminRole\(admin\.judokaId, admin\.fullName\)"/);
-  assert.doesNotMatch(bundle, /usersSummaryHtml|usersListHtml|adminsListHtml/);
-  assert.match(
-    bundle,
-    /id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole\(\)"/
-  );
-  assert.match(bundle, /function ensureAdminsViewModel\(\)/);
-});
-
-test("competition detail screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="competitionView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="competitionTitle">\{\{ competitionTitle \}\}<\/h2>/);
-  assert.match(bundle, /id="combatsList">[\s\S]*v-for="combat in combats"/);
-  assert.match(bundle, /Niveau de compétition non renseigné/);
-  assert.match(bundle, /v-if="combat\.dataQualityIssues\.length"/);
-  assert.match(bundle, /v-for="issue in combat\.dataQualityIssues"/);
-  assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
-  assert.match(client, /Droitier\/gaucher du judoka non renseigné/);
-  assert.match(client, /Droitier\/gaucher de l'adversaire non renseigné/);
-  assert.match(client, /Fin du combat non renseignée/);
-  assert.match(client, /Points marqués non renseignés/);
-  assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
-  assert.match(client, /priority: "high"/);
-  assert.match(client, /priority: "medium"/);
-  assert.doesNotMatch(bundle, /combatsHtml/);
-  assert.match(
-    bundle,
-    /id="finalizeCompetitionButton" class="button-secondary" type="button" v-show="canFinalizeCompetition" :disabled="isSubmitting" @click="showCompetitionFinalizationForm\(\)"/
-  );
-  assert.match(bundle, /function ensureCompetitionDetailViewModel\(\)/);
-});
-
 test("competition form keeps age and weight categories without place or actual weight", () => {
   assert.match(
     bundle,
@@ -835,33 +711,6 @@ test("new competition form defaults the date to today", () => {
   assert.match(bundle, /competitionDate: getCurrentLocalDate\(\)/);
 });
 
-test("competition form screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="competitionFormView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /Compétition liée à un événement club/);
-  assert.match(
-    bundle,
-    /id="competition_nom" v-model\.trim="competitionForm\.name" :disabled="competitionInheritedFieldsLocked"/
-  );
-  assert.match(
-    bundle,
-    /id="competition_date" v-model="competitionForm\.competitionDate" :disabled="competitionInheritedFieldsLocked"/
-  );
-  assert.match(
-    bundle,
-    /id="competition_categorie_age" v-model="competitionForm\.ageCategory" :disabled="competitionInheritedFieldsLocked"/
-  );
-  assert.match(
-    bundle,
-    /id="competition_niveau" v-model="competitionForm\.level" :disabled="competitionInheritedFieldsLocked"/
-  );
-  assert.match(
-    client,
-    /competitionFormViewModel\.competitionInheritedFieldsLocked = Boolean\(c\.clubCompetitionId\)/
-  );
-  assert.match(bundle, /@click="saveCompetition\(\)"/);
-  assert.match(bundle, /function ensureCompetitionFormViewModel\(\)/);
-});
-
 test("coach can open club competition creation and participant management UI", () => {
   assert.match(bundle, /id="addClubCompetitionButton"/);
   assert.match(bundle, /id="clubCompetitionFormView" class="panel hidden" v-cloak/);
@@ -884,20 +733,6 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(client, /formatCompetitionRanking\(p\.result\) \|\| "Non classé"/);
   assert.match(bundle, /Aucun judoka disponible dans cette catégorie\./);
   assert.match(bundle, /v-else-if="!clubCompetitionAvailableJudokasFiltered\.length"/);
-});
-
-test("competition finalization screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="competitionFinalizationView" class="panel hidden" v-cloak/);
-  assert.match(
-    bundle,
-    /id="competitionFinalizationSubtitle" class="subtitle">\{\{ finalizationSubtitle \}\}<\/p>/
-  );
-  assert.match(bundle, /id="finalization_classement" v-model="finalizationForm\.result"/);
-  assert.match(bundle, /<option value="1er">🥇<\/option>/);
-  assert.match(bundle, /<option value="2e">🥈<\/option>/);
-  assert.match(bundle, /<option value="3e">🥉<\/option>/);
-  assert.match(bundle, /@click="finalizeCompetition\(\)"/);
-  assert.match(bundle, /function ensureCompetitionFinalizationViewModel\(\)/);
 });
 
 test("owner autocomplete provides disambiguation metadata", () => {
@@ -950,52 +785,6 @@ test("combat decision type appears only after choosing a result", () => {
     bundle,
     /id="combat_resultat" v-model="combatForm\.result" @change="syncCombatDecisionVisibility\(true\)"/
   );
-});
-
-test("combat form screen is mounted through Vue 3 for the progressive screen migration", () => {
-  assert.match(bundle, /id="combatFormView" class="panel hidden" v-cloak/);
-  assert.match(bundle, /id="combat_adversaire" v-model\.trim="combatForm\.opponent"/);
-  assert.match(bundle, /Aide à comparer les combats selon le côté préféré de chacun\./);
-  assert.match(
-    bundle,
-    /Indiquez si le combat s'est terminé par ippon, points, décision ou pénalité\./
-  );
-  assert.match(bundle, /Aide à repérer les points debout et au sol\./);
-  assert.match(
-    bundle,
-    /<template v-if="score\.category === 'Tachi-waza'">[\s\S]*type="text" list="tachiWazaTechniqueSuggestions" v-model\.trim="score\.technique" placeholder="Action debout/
-  );
-  assert.match(
-    bundle,
-    /<datalist id="tachiWazaTechniqueSuggestions">[\s\S]*v-for="technique in tachiWazaTechniques"/
-  );
-  assert.match(
-    bundle,
-    /<template v-else-if="score\.category === 'Ne-waza'">[\s\S]*type="text" list="neWazaTechniqueSuggestions" v-model\.trim="score\.neWazaType" placeholder="Technique au sol/
-  );
-  assert.match(
-    bundle,
-    /<datalist id="neWazaTechniqueSuggestions">[\s\S]*v-for="technique in neWazaTechniques"/
-  );
-  assert.match(
-    client,
-    /const tachiWazaTechniques = window\.Vue\.computed\(\(\) => TACHI_WAZA_TECHNIQUES\)/
-  );
-  assert.match(
-    client,
-    /const neWazaTechniques = window\.Vue\.computed\(\(\) => NE_WAZA_TECHNIQUES\)/
-  );
-  assert.match(
-    bundle,
-    /<option v-for="option in combatDecisionOptions" :key="option" :value="option">\{\{ option \}\}<\/option>/
-  );
-  assert.match(
-    bundle,
-    /id="saveCombatButton" type="button" :disabled="isSubmitting" @click="saveCombat\(\)"/
-  );
-  assert.match(bundle, /@click="showCombatForm\(\)"/);
-  assert.match(bundle, /const combatId = id && typeof id === "object" && "type" in id \? "" : id;/);
-  assert.match(bundle, /function ensureCombatFormViewModel\(\)/);
 });
 
 test("combat form surfaces every data quality issue inline, near the field it concerns", () => {

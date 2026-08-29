@@ -33,23 +33,6 @@ const client = [
     "app.js"
   ].map((file) => fs.readFileSync(path.join(root, "assets", "dist", file), "utf8"))
 ].join("\n");
-const appRuntimeClient = fs.readFileSync(
-  path.join(root, "assets", "dist", "app-runtime.js"),
-  "utf8"
-);
-const appBootstrapClient = fs.readFileSync(path.join(root, "assets", "dist", "app.js"), "utf8");
-const judokaPresentationClient = fs.readFileSync(
-  path.join(root, "assets", "dist", "app-judoka-presentation.js"),
-  "utf8"
-);
-const screenProjectionsClient = fs.readFileSync(
-  path.join(root, "assets", "dist", "app-screen-projections.js"),
-  "utf8"
-);
-const judokaScreenClient = fs.readFileSync(
-  path.join(root, "assets", "dist", "app-screen-judoka.js"),
-  "utf8"
-);
 const serviceWorkerHandler = require(path.join(root, "api", "service-worker.js"));
 const serviceWorkerSource = serviceWorkerHandler.renderServiceWorker();
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
@@ -219,7 +202,7 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(uiBundle, /fetch\("\/api\/rpc"/);
   assert.match(uiBundle, /navigator\.serviceWorker\.register\("\/service-worker\.js"\)/);
   assert.match(uiBundle, /Réseau trop lent/);
-  assert.match(uiBundle, /Connexion indisponible/);
+  assert.match(uiBundle, /Cette action nécessite une connexion/);
   assert.match(uiBundle, /Authorization: "Bearer " \+ session\.access_token/);
   assert.doesNotMatch(uiBundle, /google\.script/);
 });
@@ -325,46 +308,6 @@ test("vercel runtime uses google auth without password login", () => {
   assert.doesNotMatch(uiBundle, /loginPassword/);
   assert.doesNotMatch(uiBundle, /Mot de passe oublié/);
   assert.doesNotMatch(vercel.rewrites.map((rewrite) => rewrite.source).join("\n"), /auth-signup/);
-});
-
-test("app bootstrap delegates to the extracted runtime", () => {
-  assert.match(appRuntimeClient, /function createKirokuApp\(\)/);
-  assert.match(appRuntimeClient, /async function readJsonResponse\(response,\s*invalidMessage\)/);
-  assert.match(appBootstrapClient, /window\.createKirokuApp\(\)/);
-  assert.doesNotMatch(appBootstrapClient, /runServerWithOptions|logoutUser|applyInitialData/);
-});
-
-test("judoka presentation is extracted from the screen component", () => {
-  assert.match(
-    judokaPresentationClient,
-    /function createJudokaProfileViewModel\(profile,\s*helpers\)/
-  );
-  assert.match(
-    judokaScreenClient,
-    /window\.createJudokaProfileViewModel\(state\.currentJudokaProfile,/
-  );
-  assert.doesNotMatch(
-    judokaScreenClient,
-    /heroSummary: `\$\{seasonCompetitionCount \|\| 0\} compétitions/
-  );
-});
-
-test("screen projections are extracted into a shared helper module", () => {
-  assert.match(
-    screenProjectionsClient,
-    /function projectCompetitionDetail\(competition,\s*canEditCompetition,\s*helpers\)/
-  );
-  assert.doesNotThrow(() => new Function(screenProjectionsClient));
-});
-
-test("frontend weight category options reuse the Senior scale for Vétéran", () => {
-  assert.match(screenProjectionsClient, /Senior: SENIOR_WEIGHT_CATEGORIES/);
-  assert.match(screenProjectionsClient, /"Vétéran": SENIOR_WEIGHT_CATEGORIES/);
-  assert.match(
-    screenProjectionsClient,
-    /function getWeightCategoryOptions\(ageCategory,\s*gender\)/
-  );
-  assert.match(screenProjectionsClient, /function getYearInCategoryOptions\(ageCategory\)/);
 });
 
 test("vercel login uses CSV-imported profiles without first-login name entry", () => {

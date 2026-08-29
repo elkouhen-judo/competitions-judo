@@ -209,14 +209,14 @@ This specification does not define:
 ### 3.9 Offline usage rules
 
 - **OFF-001**: After a first successful connected load, the application shall remain openable offline and shall display the latest locally available data for the connected user's known scope.
-- **OFF-002**: Offline data shall be clearly identified as data from the latest successful load; the UI shall not present cached data as freshly synchronized.
+- **OFF-002**: Offline data shall be clearly identified in one global status area as data from the latest successful load; entities shall not each carry a stale or unsynchronized badge.
 - **OFF-003**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, and club competition creation or update shall be unavailable offline.
 - **OFF-004**: Coach dashboard and beta coach chat results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
 - **OFF-005**: A `JUDOKA`, `PARENT`, or `COACH` may create or update combats offline only inside the locally known authorized scope.
 - **OFF-006**: A `JUDOKA`, `PARENT`, or `COACH` may save a final ranking offline for an individual competition inside the locally known authorized scope.
 - **OFF-007**: Offline mutations shall be stored as pending operations and synchronized when network access returns.
-- **OFF-008**: Pending offline operations shall remain visible in the UI until they are synchronized, rejected, cancelled, or corrected by the user.
-- **OFF-009**: If a pending offline operation is rejected during synchronization because permissions, validation rules, or source data changed, the operation shall remain visible with an actionable error instead of being silently discarded.
+- **OFF-008**: Pending offline operations shall be summarized in one global synchronization status until they are synchronized, rejected, cancelled, or corrected by the user.
+- **OFF-009**: If a pending offline operation is rejected during synchronization because permissions, validation rules, or source data changed, the global status and notification shall expose an actionable error instead of silently discarding the operation.
 
 ### 3.10 Coach dashboard rules
 
@@ -281,9 +281,9 @@ This specification does not define:
 - **AC-028**: Given the mobile layout, when primary actions are displayed, then controls remain textual, touch-friendly, and visible.
 - **AC-029**: Given an application notification on the current screen, when the UI reports it, then the message is shown as a dismissible toast without shifting the main screen layout.
 - **AC-030**: Given a previously connected user opens the app offline, when cached data exists for that user, then the app displays it with an explicit offline/stale-data indicator.
-- **AC-031**: Given a connected user records a combat while offline inside their known scope, when the save action is submitted, then the combat is shown as pending synchronization and no backend success is claimed.
+- **AC-031**: Given a connected user records a combat while offline inside their known scope, when the save action is submitted, then the combat is available locally, the global status reports a pending synchronization, and no backend success is claimed.
 - **AC-032**: Given pending offline operations exist, when network access returns, then the app replays them through the authenticated backend API and clears the pending state only after server confirmation.
-- **AC-033**: Given a pending offline operation is rejected during synchronization, when the error is displayed, then the user can keep, edit, or cancel the local operation.
+- **AC-033**: Given a pending offline operation is rejected during synchronization, when the error is displayed, then the operation remains in local storage and the global status exposes the failure for correction.
 - **AC-034**: Given the user is offline, when they attempt an admin, deletion, import, login, or club competition participant-management action, then the action is blocked with an explicit offline message.
 - **AC-035**: Given a connected `COACH`, when dashboard filters are set by competition, age category, or date range, then the displayed rates and counts are computed only from combats matching the active filters.
 - **AC-036**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.

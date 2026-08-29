@@ -56,7 +56,7 @@
               </label>
               <div v-if="coachDashboardSelectedCompetitions.length" class="competition-chip-list">
                 <span v-for="competition in coachDashboardSelectedCompetitions" :key="competition.competitionId" class="competition-chip">
-                  {{ competition.name }} — {{ competition.competitionDate }}
+                  {{ competition.name }} — {{ formatCoachDashboardDate(competition.competitionDate) }}
                   <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${competition.name}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
                 </span>
               </div>
@@ -65,7 +65,7 @@
                 <div v-if="!coachDashboardCompetitionSuggestions.length" class="empty-state">Aucune compétition trouvée.</div>
                 <div v-else class="list">
                   <button v-for="option in coachDashboardCompetitionSuggestions" :key="option.competitionId" type="button" class="checkbox-row competition-suggestion" @click="addCoachDashboardCompetition(option.competitionId)">
-                    <span>{{ option.name }} — {{ option.competitionDate }}</span>
+                    <span>{{ option.name }} — {{ formatCoachDashboardDate(option.competitionDate) }}</span>
                   </button>
                 </div>
               </div>
@@ -89,7 +89,15 @@
               <h3>Analyse des combats</h3>
             </div>
           </div>
-          <div v-if="isLoadingCoachDashboardStats" class="empty-state">Chargement des statistiques...</div>
+          <div v-if="isLoadingCoachDashboardStats" class="dashboard-loading-state" aria-busy="true">
+            <span class="dashboard-loading-label">Mise à jour des statistiques…</span>
+            <div class="dashboard-loading-grid">
+              <div v-for="index in 4" :key="index" class="sk-card dashboard-loading-card">
+                <div class="sk-line sk-meta"></div>
+                <div class="sk-line sk-title"></div>
+              </div>
+            </div>
+          </div>
           <div v-else-if="!coachDashboardStats || !coachDashboardStats.totalCombats" class="empty-state">Aucun combat trouvé pour ces filtres.</div>
         </div>
 

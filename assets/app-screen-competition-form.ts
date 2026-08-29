@@ -77,21 +77,6 @@
       };
     });
 
-    const pendingFinalization = window.Vue.computed(() => {
-      const competitionId = state.currentCompetition?.competitionId || "";
-      if (!competitionId) {
-        return null;
-      }
-      return (
-        state.pendingOperations.find(
-          (op) =>
-            op.type === "finalizeCompetition" &&
-            op.competitionId === competitionId &&
-            op.status !== "synced"
-        ) || null
-      );
-    });
-
     const competitionTitle = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return "Chargement...";
       return competitionDetailProjection.value?.competitionTitle ?? "Compétition";
@@ -100,11 +85,6 @@
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
     const competitionResult = window.Vue.computed(() => {
-      const pending = pendingFinalization.value;
-      if (pending) {
-        const pendingResult = String((pending.payload[1] as string) || "");
-        return pendingResult ? `${pendingResult} · en attente de synchronisation` : "";
-      }
       return competitionDetailProjection.value?.competitionResult ?? "";
     });
     const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
@@ -189,7 +169,6 @@
           competitionSportSummary,
           showCoachAssessment,
           canEditCoachAssessment,
-          pendingFinalization
         }
       );
     }
@@ -750,6 +729,10 @@
         [competitionId, result],
         (response) => {
           showSuccess(response.message);
+          if (response.message.includes("Enregistré localement")) {
+            showView("competitionView");
+            return;
+          }
           openCompetition(response.competitionId || competitionId, true);
         },
         showError
