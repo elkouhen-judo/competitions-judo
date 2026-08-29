@@ -169,6 +169,17 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-011**: Each deployment environment (production, dev) shall use its own dedicated Supabase project (own `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, own Google OAuth redirect URI, own copy of the schema migration); environment variables and data shall never be shared across Supabase projects.
 - **CFG-012**: Environment configuration shall provide `MCP_JWT_SECRET`; `MCP_TOKEN_TTL_SECONDS` is optional and configures the MCP token lifetime when set.
 - **CFG-013**: `ANTHROPIC_API_KEY` is optional and enables the beta coach chat natural-language parser. `ANTHROPIC_MODEL` is optional and defaults to the cheapest configured Claude model when unset.
+- **CFG-014**: Local Supabase backups shall use environment-specific PostgreSQL connection strings stored outside Git, retain seven timestamped backup directories, and require explicit confirmation before restoration.
+
+### 3.7 Backup and restoration
+
+- **BKP-001**: The local backup job shall export the Supabase schema, data, and exportable roles into `backups/supabase/<environment>/<timestamp>/`.
+- **BKP-002**: Each backup shall include a SHA-256 manifest for integrity verification.
+- **BKP-003**: The macOS cron job shall run the production backup daily and retain the seven most recent successful backups.
+- **BKP-004**: Restoration shall require an explicit confirmation and shall require an additional confirmation for production targets.
+- **BKP-005**: Restoration shall preserve environment separation by requiring an explicit source and target environment.
+- **BKP-006**: Backup connection strings and generated backup data shall remain outside version control.
+- **BKP-007**: Supabase Auth configuration, API keys, and Storage objects shall be treated as separate recovery items and shall not be assumed to be restored by the local database dump.
 
 ## 4. Interfaces & Data Contracts
 
