@@ -772,7 +772,7 @@ test("vercel runtime lets the connected user log out", () => {
   );
   assert.match(
     css,
-    /\.logout-button\s*\{[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;/
+    /\.logout-button\s*\{[\s\S]*?height:\s*44px;[\s\S]*?min-height:\s*44px;[\s\S]*?max-height:\s*44px;/
   );
   assert.match(uiBundle, /id="userInfo"/);
   assert.match(
