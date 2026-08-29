@@ -4021,10 +4021,14 @@ body {
 }
 
 .mode-tabs {
+  justify-content: center;
   gap: 24px;
+  padding-top: 6px;
 }
 
 .mode-tab {
+  min-height: 44px;
+  padding: 12px 14px 14px;
   font-weight: 600;
 }
 
