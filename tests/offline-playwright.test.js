@@ -185,6 +185,8 @@ test("l'application recharge les données locales hors connexion", async (t) => 
   await waitForApp(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await context.setOffline(true);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator(".offline-status")).toHaveText(/Hors connexion/);
   await page.reload();
   await waitForApp(page);
 
@@ -212,7 +214,7 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
   await context.setOffline(true);
   await page.selectOption("#finalization_classement", "1er");
   await page.getByRole("button", { name: "Enregistrer" }).click();
-  await page.getByText("En attente de synchronisation", { exact: true }).waitFor();
+  await expect(page.locator(".offline-status")).toHaveText(/modification enregistrée localement/);
 
   const pending = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("kiroku_pending_ops:offline@example.com"))
@@ -223,8 +225,6 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
 
   await context.setOffline(false);
   await expect(page.getByText("Classement 1er", { exact: true })).toBeVisible({ timeout: 5000 });
-  await expect(page.getByText("En attente de synchronisation", { exact: true })).toHaveCount(0, {
-    timeout: 5000
-  });
+  await expect(page.locator(".offline-status")).toHaveCount(0, { timeout: 5000 });
   assert.equal(rpcCalls.filter((call) => call.method === "finalizeCompetition").length, 1);
 });
