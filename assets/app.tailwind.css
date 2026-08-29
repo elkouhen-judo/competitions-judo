@@ -2895,6 +2895,8 @@
   .home-context-card { margin: 0; padding: 0 0 4px; border: 0; background: transparent; }
   .home-context-value { font-size: clamp(1.6rem, 5vw, 2.35rem); letter-spacing: -0.04em; }
   .panel-body { padding: 30px 0 40px; }
+  .panel-header > div:first-child { padding-left: 13px; }
+  .panel-header > div:first-child > h2 { margin-left: -13px; padding-left: 10px; border-left: 3px solid var(--accent); }
   .section { margin-top: 38px; padding-top: 30px; }
   .section-heading { margin-bottom: 18px; }
   .section-heading > div { padding-left: 13px; }
