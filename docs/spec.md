@@ -192,6 +192,7 @@ This specification does not define:
 - **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
 - **UIX-020**: The judoka profile view shall remain readable and actionable on mobile.
 - **UIX-021**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
+- **UIX-022**: The home screen shall use the same action-card journey for `COACH`, `PARENT`, and `JUDOKA`; each profile keeps its current actions and content while navigation starts from explicit activity cards.
 - **UIX-022**: The judoka performance hero labels shall follow a logical sports-reading order: season, age category, year within category, weight category, gender, garde, then belt color.
 - **UIX-023**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
 - **UIX-024**: Home widgets shall not repeat the active tab label as a standalone title; when an active tab or useful context card already identifies the view, the redundant home header shall be hidden.
@@ -200,11 +201,18 @@ This specification does not define:
 - **UIX-027**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, combats with scores, and finalization status.
 - **UIX-028**: For `PARENT`, the competition detail screen shall show the coach follow-up block so objectives set by the coach are visible on the judoka's competition.
 - **UIX-029**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
+- **UIX-030**: An action card shall open its useful destination or corresponding section directly, without requiring an intermediate mode change.
+- **UIX-031**: Changing home mode shall preserve the active judoka; an explicit selection action may reset that context.
+- **UIX-032**: The coach dashboard shall provide direct navigation between Statistics and Coach assistant from the current view.
+- **UIX-033**: Autocomplete options shall be usable with keyboard and touch interactions.
+- **UIX-034**: View URLs shall include the navigation context required to restore a journey after reload.
 - **UIX-030**: On the competition detail screen, each combat card shall list every data-entry quality issue detected on that combat — missing combat ending, an `Ippon` decision with no matching `Ippon` score, no scores recorded, missing judoka right/left side, and missing opponent right/left side — each tagged with a priority level ("Haute" for the missing combat ending and the inconsistent Ippon decision, "Moyenne" for the other criteria) shown alongside the message.
 - **UIX-031**: The combat form shall surface the same data-entry quality issues live while editing, scoped to the fields it owns (combat ending, inconsistent Ippon decision, scores, opponent right/left side — judoka right/left side is edited on the judoka profile, not shown here), with the same priority levels, once a result has been selected. Each issue shall be displayed inline next to the field it concerns (combat-ending issues under "Comment le combat s'est terminé", score issues under "Points marqués", opponent right/left side issues under "Adversaire droitier ou gaucher") rather than grouped in a single block, so it stays visible while the coach is actively filling that field.
 - **UIX-032**: Coach-facing and parent-facing helper copy shall use plain sports-field language ("bilan coach", "relire le combat", "points marqués", "debout et au sol", "droitier ou gaucher") instead of technical dashboard wording where possible.
 - **UIX-033**: The admin CSV import screen shall present import requirements as a short checklist and downloadable example rather than a long inline column description.
 - **UIX-034**: Opening an existing combat in the mobile form shall preserve the recorded result and shall not autofocus the result field when a result is already set. The form shall focus the first useful missing detail instead.
+- **UIX-036**: Combat creation actions shall remain hidden while a competition detail is loading and shall require a loaded, editable parent competition before opening the combat form.
+- **UIX-035**: Profile home hubs shall expose actions and navigation only; upcoming events, summaries, and result lists shall be displayed in their dedicated destination screens.
 
 ### 3.9 Offline usage rules
 

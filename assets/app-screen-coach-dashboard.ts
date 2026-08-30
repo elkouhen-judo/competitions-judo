@@ -195,6 +195,7 @@
           showCoachJudoka,
           showCoachDashboard,
           showCoachChat,
+          selectCoachDashboardTab,
           formatCoachDashboardDate
         },
         {
@@ -354,6 +355,17 @@
       coachDashboardViewModel.coachDashboardStats = null;
       showView("coachDashboardView", { routeState: { coachDashboardTab: tab } });
       if (tab === "stats") {
+        fetchCoachDashboardStats();
+      }
+    }
+
+    function selectCoachDashboardTab(tab: "stats" | "chat") {
+      ensureCoachDashboardViewModel();
+      coachDashboardViewModel.activeCoachDashboardTab = tab;
+      showView("coachDashboardView", { routeState: { coachDashboardTab: tab }, preserveScroll: true });
+      if (tab === "chat") {
+        mountCoachChatWidget();
+      } else if (!coachDashboardViewModel.coachDashboardStats) {
         fetchCoachDashboardStats();
       }
     }

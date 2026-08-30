@@ -740,23 +740,11 @@ body {
   border-bottom: 2px solid var(--accent);
 }
 
-.home-context-card {
-  margin: 0;
-  padding: 0 0 4px;
-  border: 0;
-  background: transparent;
-}
-
 .home-context-label,
   .coach-home-card-kicker {
   color: var(--accent);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-}
-
-.home-context-value {
-  font-size: clamp(1.6rem, 5vw, 2.35rem);
-  letter-spacing: -0.04em;
 }
 
 .panel-body {
@@ -1386,33 +1374,6 @@ button:focus-visible,
 
 .filter-bar input {
   margin: 0;
-}
-
-.home-context-card {
-  margin-bottom: 16px;
-}
-
-.home-context-copy {
-  display: grid;
-  gap: 6px;
-}
-
-.home-context-label {
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.home-context-value {
-  font-size: 20px;
-  font-weight: bold;
-  line-height: 1.25;
-}
-
-.home-context-meta {
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .button-copy {
@@ -2351,7 +2312,8 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 }
 
 .coach-home-section,
-    .parent-home-section {
+    .parent-home-section,
+    .judoka-home-section {
   border-top: 0;
   margin-top: 0;
   padding-top: 0;
@@ -2433,33 +2395,6 @@ button.coach-assistant-result-competition:hover:not(:disabled),
 }
 
 /* ── Événement temporel ── */
-
-.this-weekend-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--warning-soft);
-  color: var(--warning);
-  border-radius: 9999px;
-  padding: 2px 9px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-.this-weekend-badge::before {
-  content: "";
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-  animation: badge-live 2s ease-in-out infinite;
-}
 
 @keyframes badge-live {
   0%, 100% {
@@ -3583,18 +3518,6 @@ body {
   border-bottom: 2px solid var(--accent);
 }
 
-.home-context-card {
-  margin: 0;
-  padding: 0 0 4px;
-  border: 0;
-  background: transparent;
-}
-
-.home-context-value {
-  font-size: clamp(1.6rem, 5vw, 2.35rem);
-  letter-spacing: -0.04em;
-}
-
 .panel-body {
   padding: 30px 0 40px;
 }
@@ -4047,9 +3970,13 @@ body {
 }
 
 .mode-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   padding: 10px 14px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .section {

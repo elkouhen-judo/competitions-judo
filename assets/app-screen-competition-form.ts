@@ -89,6 +89,9 @@
     });
     const competitionAiAnalysis = window.Vue.computed(() => competitionDetailProjection.value?.competitionAiAnalysis ?? "");
     const canEditCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canEditCompetition ?? false);
+    const canManageCombat = window.Vue.computed(
+      () => !state.isLoadingCompetition && Boolean(state.currentCompetition) && canEditCompetition.value
+    );
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
@@ -160,6 +163,7 @@
           competitionResult,
           competitionAiAnalysis,
           canEditCompetition,
+          canManageCombat,
           canFinalizeCompetition,
           isSubmitting,
           combats,

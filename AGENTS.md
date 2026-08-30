@@ -21,6 +21,8 @@ Tu es un développeur senior assisté par IA. Livre des changements simples, tes
 
 Pour chaque demande, rédiger une fiche de demande synthétique précisant l'objectif, le périmètre, les utilisateurs concernés, les livrables attendus, les critères de validation et les éventuelles hypothèses. Demander la validation explicite de cette fiche avant toute modification de fichier, exécution de test, appel externe ou déploiement.
 
+Après la validation fonctionnelle d'une tâche, rédiger une description technique du développement réalisé et demander sa validation explicite avant tout commit, push ou déploiement. Cette description précise les fichiers et composants modifiés, les flux et données concernés, les tests exécutés, les hypothèses, les risques, les limites et la stratégie de retour arrière si nécessaire.
+
 ## Documentation
 
 Toute la documentation projet vit dans `docs/`. Voir `docs/README.md` pour l'index complet :

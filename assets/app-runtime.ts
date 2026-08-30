@@ -168,18 +168,37 @@ function createInitialState(): KirokuAppState {
     }
 
     function getViewFromHash(hash: string): ViewId | "" {
-      const slug = String(hash || "").replace(/^#\/?/, "");
+      const slug = String(hash || "").replace(/^#\/?/, "").split("?", 1)[0];
       const found = viewIds.find((viewId) => viewId.replace(/View$/, "").toLowerCase() === slug);
       return found || "";
     }
 
-    function getViewHash(id: ViewId) {
-      return `#${id.replace(/View$/, "").toLowerCase()}`;
+    function getHashNavigationState(hash: string): Partial<NavigationSnapshot> {
+      const query = String(hash || "").split("?")[1] || "";
+      const params = new URLSearchParams(query);
+      return {
+        homeMode: params.get("mode") || undefined,
+        homeFilterJudokaId: params.get("judoka") || undefined,
+        competitionId: params.get("competition") || undefined,
+        clubCompetitionId: params.get("clubCompetition") || undefined,
+        coachDashboardTab: params.get("tab") === "chat" ? "chat" : undefined
+      };
+    }
+
+    function getViewHash(id: ViewId, navigationState: NavigationSnapshot) {
+      const params = new URLSearchParams();
+      if (id === "homeView" && navigationState.homeMode) params.set("mode", navigationState.homeMode);
+      if (navigationState.homeFilterJudokaId) params.set("judoka", navigationState.homeFilterJudokaId);
+      if (navigationState.competitionId) params.set("competition", navigationState.competitionId);
+      if (navigationState.clubCompetitionId) params.set("clubCompetition", navigationState.clubCompetitionId);
+      if (id === "coachDashboardView" && navigationState.coachDashboardTab) params.set("tab", navigationState.coachDashboardTab);
+      const query = params.toString();
+      return `#${id.replace(/View$/, "").toLowerCase()}${query ? `?${query}` : ""}`;
     }
 
     function syncHistory(id: ViewId, replace: boolean, navigationState: NavigationSnapshot) {
       const stateValue = { kirokuView: id, kirokuNavigation: navigationState };
-      const url = getViewHash(id);
+      const url = getViewHash(id, navigationState);
       if (replace || !hasNavigationState) {
         window.history.replaceState(stateValue, "", url);
         hasNavigationState = true;
@@ -187,6 +206,7 @@ function createInitialState(): KirokuAppState {
       }
 
       if (window.history.state && window.history.state.kirokuView === id) {
+        window.history.replaceState(stateValue, "", url);
         return;
       }
 
@@ -302,7 +322,7 @@ function createInitialState(): KirokuAppState {
       const restored =
         readHistoryNavigationState(window.history.state) ||
         readSavedNavigationState() ||
-        normalizeNavigationSnapshot({ viewId: getViewFromHash(window.location.hash) });
+        normalizeNavigationSnapshot({ viewId: getViewFromHash(window.location.hash), ...getHashNavigationState(window.location.hash) });
       showRestoredNavigationState(restored, { replace: true });
     }
 

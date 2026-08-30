@@ -73,6 +73,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-011**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
 - **VCL-012**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
 - **VCL-013**: Browser reads without a local snapshot and mutations outside the offline queue shall fail explicitly when offline; supported offline mutations shall be queued locally, and slow mobile requests shall abort with a user-facing error.
+- **VCL-020**: The client router shall encode shareable navigation context in the URL hash and restore it after reload.
 - **VCL-014**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
 - **VCL-015**: Offline mutation replay shall call the same authenticated `/api/rpc` methods used by connected actions; no offline path shall bypass server-side authorization or validation.
 - **VCL-016**: Cached business data and pending offline operations shall be partitioned by authenticated user identity so a later user on the same browser cannot read another user's sports data.

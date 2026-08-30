@@ -16,6 +16,9 @@
     const { $, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
     const { getCurrentCompetition, openCompetition } = deps;
+    const canManageCombat = window.Vue.computed(
+      () => !state.isLoadingCompetition && Boolean(state.currentCompetition) && state.canEditCurrentCompetition
+    );
 
     const defaultCombatForm = {
       combatId: "",
@@ -117,6 +120,10 @@
 
     function showCombatForm(id?: string | Event) {
       clearMessage();
+      if (!canManageCombat.value) {
+        showError({ message: "Attends le chargement de la compétition avant d'ajouter un combat." });
+        return;
+      }
       ensureCombatFormViewModel();
       resetCombatForm();
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
