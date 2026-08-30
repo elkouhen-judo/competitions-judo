@@ -161,9 +161,9 @@ test("small-screen layout is the base and desktop is progressive", () => {
 test("admin competition management stays visible on mobile", () => {
   assert.match(
     bundle,
-    /id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions"/
+    /id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions && !showJudokaHub"/
   );
-  assert.match(bundle, /id="homeActiveJudokaSummary" class="summary home-context-card"/);
+  assert.doesNotMatch(bundle, /id="homeActiveJudokaSummary"/);
   assert.match(
     bundle,
     /id="competitionAdminActions" class="competition-management-actions" v-show="canEditCompetition"/
@@ -173,7 +173,7 @@ test("admin competition management stays visible on mobile", () => {
   assert.match(bundle, /id="deleteCompetitionButton"/);
   assert.match(
     bundle,
-    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*Ajouter un combat/
+    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*v-show="canManageCombat"[\s\S]*Ajouter un combat/
   );
   assert.doesNotMatch(
     bundle,
@@ -181,7 +181,23 @@ test("admin competition management stays visible on mobile", () => {
   );
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionDetail\(/);
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionCombats\(/);
+  assert.match(bundle, /canManageCombat/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
+});
+
+test("home profiles use the same activity-card journey", () => {
+  assert.match(client, /const showJudokaHub = window\.Vue\.computed\(\(\) => getCurrentMode\(\) === "judoka"\);/);
+  assert.match(bundle, /<div v-if="showJudokaHub" class="section judoka-home-section">/);
+  const judokaHubMarkup = bundle.match(/<div v-if="showJudokaHub" class="section judoka-home-section">[\s\S]*?<div v-if="showParentHub"/)?.[0] || "";
+  assert.doesNotMatch(judokaHubMarkup, /<h3>Mon parcours<\/h3>/);
+  assert.doesNotMatch(judokaHubMarkup, /Choisissez l'action à lancer\./);
+  assert.match(bundle, /<h4>Mes compétitions<\/h4>/);
+  assert.match(bundle, /@click="showHomeCompetitionForm\(\)">/);
+  assert.match(bundle, /<h4>Ma progression<\/h4>/);
+  assert.match(bundle, /@click="openHomeJudokaProfile\(\)">/);
+  assert.match(bundle, /class="coach-home-grid"/);
+  assert.match(bundle, /class="card coach-home-card parent-home-card"/);
+  assert.match(bundle, /class="card coach-home-card"/);
 });
 
 test("club competition creation keeps age category without weight category", () => {
@@ -205,7 +221,6 @@ test("family home keeps the active judoka competition context", () => {
     /return \(mode === "coachJudoka" \|\| mode === "family"\) && state\.judokas\.length > 0;/
   );
   assert.match(bundle, /filterPlaceholder: "Choisir un judoka\.\.\."/);
-  assert.match(bundle, /label: "Judoka actif"/);
   assert.match(
     bundle,
     /getCurrentMode\(\) === "coachJudoka" \? "Judoka consulté" : "Judoka actif"/
@@ -253,7 +268,7 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   );
   assert.match(
     bundle,
-    /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showActiveJudokaSummary\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/
+    /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/
   );
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
@@ -288,7 +303,7 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   assert.doesNotMatch(bundle, /const firstCoachJudoka = mode === "coach"/);
 });
 
-test("coach judoka view shows the selected judoka competition history", () => {
+test("coach judoka view keeps the selected judoka actions separate from data", () => {
   assert.match(bundle, /homeTitle: "Judoka"/);
   assert.match(bundle, /if \(mode === "coachJudoka"\) \{/);
   assert.match(
@@ -297,8 +312,8 @@ test("coach judoka view shows the selected judoka competition history", () => {
   );
   assert.match(bundle, /const emptyMsg = mode === "coachJudoka"/);
   assert.match(bundle, /Aucune compétition enregistrée pour ce judoka\./);
-  assert.match(bundle, /Aucune compétition planifiée pour ce judoka\./);
-  assert.match(bundle, /Sélectionnez un judoka pour voir ses compétitions à venir\./);
+  assert.match(bundle, /profileButtonText: "Voir la fiche"/);
+  assert.doesNotMatch(bundle, /<h3>À venir<\/h3>/);
 });
 
 test("admin management screen is available in the mobile action flow", () => {
@@ -744,8 +759,8 @@ test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /@blur="hideHomeFilterOptions\(\)"/);
   assert.match(bundle, /@blur="hideCompetitionOwnerOptions\(\)"/);
   assert.match(client, /showHomeFilterOptions,\s*hideHomeFilterOptions,/);
-  assert.match(bundle, /@mousedown\.prevent="selectCompetitionOwner\(option\)"/);
-  assert.match(bundle, /@mousedown\.prevent="selectFilterJudoka\(option\)"/);
+  assert.match(bundle, /type="button" class="autocomplete-option" @click="selectCompetitionOwner\(option\)"/);
+  assert.match(bundle, /type="button" class="autocomplete-option" @click="selectFilterJudoka\(option\)"/);
   assert.match(client, /function hideHomeFilterOptions\(\)/);
   assert.match(client, /function hideCompetitionOwnerOptions\(\)/);
   assert.match(client, /refreshHomeFilterOptions\(""\)/);

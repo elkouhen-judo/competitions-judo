@@ -1799,7 +1799,8 @@
     }
 
     .coach-home-section,
-    .parent-home-section {
+    .parent-home-section,
+    .judoka-home-section {
       border-top: 0;
       margin-top: 0;
       padding-top: 0;
@@ -3256,9 +3257,13 @@
   }
 
   .mode-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
     padding: 10px 14px;
     font-weight: 600;
+    line-height: 1.2;
   }
 
   .section {

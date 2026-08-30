@@ -4,6 +4,10 @@
           <button type="button" class="mode-tab" @click="showCoachHome()">Accueil coach</button>
           <button type="button" class="mode-tab" @click="showPersonalSpace()">Mon espace</button>
         </nav>
+        <nav class="mode-tabs coach-dashboard-tabs" aria-label="Section du tableau de bord">
+          <button type="button" class="mode-tab" :class="{ 'mode-tab-active': activeCoachDashboardTab === 'stats' }" @click="selectCoachDashboardTab('stats')">Statistiques</button>
+          <button type="button" class="mode-tab" :class="{ 'mode-tab-active': activeCoachDashboardTab === 'chat' }" @click="selectCoachDashboardTab('chat')">Assistant coach</button>
+        </nav>
       </div>
       <div class="panel-body">
         <div v-show="activeCoachDashboardTab === 'chat'" class="section coach-assistant-section" aria-label="Assistant coach bêta">

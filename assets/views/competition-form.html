@@ -17,12 +17,12 @@
             <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="hideCompetitionOwnerOptions()">
             <div class="autocomplete-dropdown" id="competition_judoka_dropdown" v-show="showOwnerOptions">
               <div v-if="!ownerOptions.length" class="autocomplete-empty">Aucun résultat</div>
-              <div v-for="option in ownerOptions" :key="option.judokaId" class="autocomplete-option" @mousedown.prevent="selectCompetitionOwner(option)">
+              <button v-for="option in ownerOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectCompetitionOwner(option)">
                 <div class="autocomplete-option-copy">
                   <strong>{{ option.name }}</strong>
                   <span class="autocomplete-option-meta">{{ option.meta }}</span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
         </div>

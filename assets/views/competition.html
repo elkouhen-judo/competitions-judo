@@ -124,7 +124,7 @@
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               <p class="empty-action-title">Aucun combat</p>
               <p class="empty-action-body">{{ combatsEmptyMessage }}</p>
-              <div v-if="canEditCompetition" class="empty-action-actions">
+              <div v-if="canManageCombat" class="empty-action-actions">
                 <button type="button" :disabled="isSubmitting" @click="showCombatForm()">Ajouter le premier combat</button>
               </div>
             </div>
@@ -167,7 +167,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
               Finaliser
             </button>
-            <button type="button" v-show="canEditCompetition" :disabled="isSubmitting" @click="showCombatForm()">
+            <button type="button" v-show="canManageCombat" :disabled="isSubmitting" @click="showCombatForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
               Ajouter un combat
             </button>

@@ -21,25 +21,18 @@
             {{ subMode.label }}
           </button>
         </nav>
-        <div v-if="showActiveJudokaSummary" id="homeActiveJudokaSummary" class="summary home-context-card">
-          <div class="home-context-copy">
-            <span class="home-context-label">{{ activeJudokaSummary.label }}</span>
-            <span class="home-context-value">{{ activeJudokaSummary.value }}</span>
-            <span class="home-context-meta">{{ activeJudokaSummary.meta }}</span>
-          </div>
-        </div>
         <div v-if="canFilterByJudoka" id="homeFilters" class="filter-bar">
           <label id="homeFilterLabel" for="filterJudokaText">{{ homeFilterLabel }}</label>
           <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">
               <div v-if="!filterOptions.length" class="autocomplete-empty">Aucun résultat</div>
-              <div v-for="option in filterOptions" :key="option.judokaId" class="autocomplete-option" @mousedown.prevent="selectFilterJudoka(option)">
+              <button v-for="option in filterOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectFilterJudoka(option)">
                 <div class="autocomplete-option-copy">
                   <strong>{{ option.name }}</strong>
                   <span class="autocomplete-option-meta">{{ option.meta }}</span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -49,6 +42,40 @@
       </div>
 
       <div class="panel-body">
+        <div v-if="showJudokaHub" class="section judoka-home-section">
+          <div class="coach-home-grid">
+            <article class="card coach-home-card">
+              <div class="coach-home-card-head">
+                <div class="coach-home-card-copy">
+                  <span class="coach-home-card-kicker">Compétitions</span>
+                  <h4>Mes compétitions</h4>
+                  <p>Ajouter une compétition, préparer les rendez-vous à venir et consulter mes résultats.</p>
+                </div>
+                <span class="coach-home-card-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M7 5H4a2 2 0 0 0 0 4h1"></path><path d="M17 5h3a2 2 0 0 1 0 4h-1"></path></svg>
+                </span>
+              </div>
+              <button type="button" @click="showHomeCompetitionForm()">Nouvelle compétition</button>
+            </article>
+            <article class="card coach-home-card">
+              <div class="coach-home-card-head">
+                <div class="coach-home-card-copy">
+                  <span class="coach-home-card-kicker">Progression</span>
+                  <h4>Ma progression</h4>
+                  <p>Consulter ma saison, mon bilan de combats et mes classements.</p>
+                </div>
+                <span class="coach-home-card-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M17 7h4v4"></path></svg>
+                </span>
+              </div>
+              <button type="button" class="button-secondary" @click="openHomeJudokaProfile()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"></path><path d="M17 7h4v4"></path></svg>
+                {{ profileButtonText }}
+              </button>
+            </article>
+          </div>
+        </div>
+
         <div v-if="showParentHub" class="section parent-home-section">
           <div class="section-heading">
             <div>
@@ -198,7 +225,7 @@
         </div>
 
         <!-- Primary CTA + secondary actions -->
-        <div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions">
+        <div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions && !showJudokaHub">
           <button id="addCompetitionButton" v-if="canCreateCompetition" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
             <span class="button-copy">
@@ -223,43 +250,7 @@
             </button>
           </div>
         </div>
-        <div v-if="showHomeActions" class="section">
-          <div class="section-heading">
-            <div>
-              <h3>À venir</h3>
-              <p class="subtitle">Les prochains rendez-vous à préparer.</p>
-            </div>
-          </div>
-          <div v-if="!hasUpcomingEvents" class="empty-action">
-            <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <p class="empty-action-title">Aucun rendez-vous planifié</p>
-            <p class="empty-action-body">{{ upcomingEmptyMessage }}</p>
-            <div v-if="canCreateCompetition || canCreateClubCompetition" class="empty-action-actions">
-              <button v-if="canCreateCompetition" type="button" :disabled="actionDisabled" @click="showHomeCompetitionForm()">Ajouter une compétition</button>
-              <button v-else-if="canCreateClubCompetition" type="button" @click="showClubCompetitionForm()">Créer une compétition club</button>
-            </div>
-          </div>
-          <div v-else class="list">
-            <article v-for="ev in upcomingEvents" :key="ev.id" class="card competition-card">
-              <button class="card-button competition-open-button" type="button" @click="openUpcomingEvent(ev.id, ev.isClub)">
-                <span class="competition-card-button-copy">
-                  <span class="card-title">
-                    {{ ev.name }}
-                    <span v-if="ev.isThisWeekend" class="this-weekend-badge">Ce weekend</span>
-                  </span>
-                  <span class="card-meta">
-                    <span class="meta-row">
-                      <span class="meta-label">Date</span>
-                      <span class="meta-value">{{ ev.date }}</span>
-                    </span>
-                  </span>
-                  <span class="card-open-hint">Ouvrir</span>
-                </span>
-              </button>
-            </article>
-          </div>
-        </div>
-        <div v-if="showClubCompetitionsSection" class="section">
+        <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
           <div class="section-heading">
             <div>
               <h3>Derniers résultats</h3>
@@ -306,7 +297,7 @@
           </div>
         </div>
 
-        <div v-if="showCompetitionsSection" class="section">
+        <div v-if="showCompetitionsSection" id="homeCompetitionsSection" class="section">
           <div class="section-heading">
             <div>
               <h3 id="homeCompetitionsTitle">{{ competitionsTitle }}</h3>
