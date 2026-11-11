@@ -12,6 +12,7 @@
     }
 
     const {
+      formatCompetitionName,
       formatCompetitionRanking,
       formatDate,
       getClassementBadgeClass,
@@ -79,7 +80,7 @@
       hasTopWinTechniques: Boolean((topWinTechniques || []).length),
       competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
         competitionId: result.competitionId || "",
-        name: result.name || "Compétition",
+        name: formatCompetitionName(result.name) || "Compétition",
         date: formatDate(result.competitionDate),
         result: formatCompetitionRanking(result.result) || "Non classé",
         resultClass: getClassementBadgeClass(result.result),

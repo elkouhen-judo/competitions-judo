@@ -102,6 +102,7 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     competitionId: String(pick(combat, "competitionId", "id_competition") || ""),
     opponent: String(pick(combat, "opponent", "adversaire") || ""),
     opponentStance: String(pick(combat, "opponentStance", "garde_adversaire") || ""),
+    stage: String(pick(combat, "stage", "etape") || ""),
     result: normalizeCanonicalCombatResult(pick(combat, "result", "resultat")),
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
     scores: Array.isArray(rawScores) ? rawScores.map(toCanonicalCombatScore) : [],

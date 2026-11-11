@@ -1,6 +1,7 @@
 import { createCombatResult, type CombatResult } from "./combat-result";
 import { createCombatDecisionType, type CombatDecisionType } from "./combat-decision-type";
 import { createOpponentStance, type OpponentStance } from "./opponent-stance";
+import { createCombatStage, type CombatStage } from "./combat-stage";
 import { createCombatScores, type CombatScoreDraft } from "./combat-score";
 import { createCombatId, createCompetitionId, createJudokaId } from "../shared/identity";
 
@@ -10,6 +11,7 @@ export interface CombatInput {
   combatId?: unknown;
   opponent?: unknown;
   opponentStance?: unknown;
+  stage?: unknown;
   result?: unknown;
   victoryType?: unknown;
   scores?: unknown;
@@ -19,6 +21,7 @@ export interface CombatInput {
 export interface CombatDraft {
   opponent: string;
   opponentStance: OpponentStance;
+  stage: CombatStage;
   result: CombatResult;
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
@@ -32,6 +35,7 @@ export interface CombatModel {
   draft: CombatDraft;
   opponent: string;
   opponentStance: OpponentStance;
+  stage: CombatStage;
   result: CombatResult;
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
@@ -51,6 +55,7 @@ export function createCombatDraft(combat: CombatInput = {}): CombatDraft {
   return {
     opponent: String(combat.opponent || ""),
     opponentStance: createOpponentStance(combat.opponentStance),
+    stage: createCombatStage(combat.stage),
     result,
     victoryType,
     scores: createCombatScores(combat.scores),
@@ -71,6 +76,7 @@ export function createCombat(combat: CombatInput): CombatModel {
     draft,
     opponent: draft.opponent,
     opponentStance: draft.opponentStance,
+    stage: draft.stage,
     result: draft.result,
     victoryType: draft.victoryType,
     scores: draft.scores,

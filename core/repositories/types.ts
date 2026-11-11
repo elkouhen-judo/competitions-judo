@@ -57,6 +57,7 @@ export interface CombatRow {
   id_competition: string;
   adversaire: string;
   garde_adversaire?: string;
+  etape?: string;
   resultat: string;
   type_victoire: string;
   deroule: string;

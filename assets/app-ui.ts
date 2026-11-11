@@ -104,6 +104,47 @@
     return value ? String(value) : "";
   }
 
+  // Noms de compétition saisis tout en majuscules (ou tout en minuscules) : affichage en casse
+  // de titre à la française (« TOURNOI LABEL A CADETS DE LAMBALLE » → « Tournoi Label A Cadets de
+  // Lamballe »). Un nom déjà saisi en casse mixte est affiché tel quel.
+  const COMPETITION_NAME_SMALL_WORDS = new Set([
+    "de", "du", "des", "la", "le", "les", "et", "à", "au", "aux", "en", "sur", "sous", "pour", "par"
+  ]);
+
+  function capitalizeWordPart(part: string) {
+    return part ? part.charAt(0).toLocaleUpperCase("fr") + part.slice(1) : part;
+  }
+
+  // « ille-et-vilaine » → « Ille-et-Vilaine » : les petits mots internes restent en minuscule.
+  function capitalizeCompoundWord(word: string) {
+    return word
+      .split("-")
+      .map((part, index) => (index > 0 && COMPETITION_NAME_SMALL_WORDS.has(part) ? part : capitalizeWordPart(part)))
+      .join("-");
+  }
+
+  function formatCompetitionName(value: unknown) {
+    const name = String(value || "").trim().replace(/\s+/g, " ");
+    const hasUpper = /\p{Lu}/u.test(name);
+    const hasLower = /\p{Ll}/u.test(name);
+    if (hasUpper && hasLower) return name;
+    return name
+      .toLocaleLowerCase("fr")
+      .split(" ")
+      .map((word, index) => {
+        if (index > 0 && COMPETITION_NAME_SMALL_WORDS.has(word)) return word;
+        if (/^\p{L}$/u.test(word)) return word.toLocaleUpperCase("fr");
+        // d'… / l'… : élision en minuscule, mot suivant capitalisé.
+        const elision = /^([dl])(['’])(.+)$/u.exec(word);
+        if (elision) {
+          const article = index > 0 ? elision[1] : elision[1].toLocaleUpperCase("fr");
+          return `${article}${elision[2]}${capitalizeCompoundWord(elision[3])}`;
+        }
+        return capitalizeCompoundWord(word);
+      })
+      .join(" ");
+  }
+
   function formatCompetitionRanking(value: unknown) {
     const normalized = String(value || "").trim();
     // Le texte reste lisible sans l'emoji (lecteurs d'écran, polices sans emoji).
@@ -199,6 +240,7 @@
     cleanText,
     formatDate,
     formatDateTime,
+    formatCompetitionName,
     formatCompetitionRanking,
     formatResultat,
     getClassementBadgeClass,

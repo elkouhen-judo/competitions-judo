@@ -1001,6 +1001,14 @@
       min-width: 0;
     }
 
+    .combat-stage {
+      margin: 0 0 4px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
     .opponent-stance {
       font-size: 13px;
       font-weight: 400;

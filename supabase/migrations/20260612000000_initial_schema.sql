@@ -176,6 +176,16 @@ alter table public.combats
   add column if not exists garde_adversaire text not null default '';
 
 alter table public.combats
+  add column if not exists etape text not null default '';
+
+alter table public.combats
+  drop constraint if exists combats_etape_check;
+
+alter table public.combats
+  add constraint combats_etape_check
+  check (etape in ('', 'Poule', '1/32', '1/16', '1/8', '1/4', '1/2', 'Finale', 'Repêchage', 'Place de 3'));
+
+alter table public.combats
   drop column if exists categorie_technique;
 
 alter table public.judokas

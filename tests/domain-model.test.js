@@ -1439,3 +1439,26 @@ test("normalizeBeltColor ramène la casse et les accents à la couleur proposée
   assert.equal(normalizeBeltColor("Rouge"), "Rouge");
   assert.equal(normalizeBeltColor(null), "");
 });
+
+test("combat round is optional, normalized and validated", () => {
+  const { createCombatStage, getCombatStageOrder } = require("../core/domain/competitions/combat-stage");
+  assert.equal(createCombatStage(""), "");
+  assert.equal(createCombatStage("1/4 de finale"), "1/4");
+  assert.equal(createCombatStage("demi-finale"), "1/2");
+  assert.equal(createCombatStage("repechage"), "Repêchage");
+  assert.equal(createCombatStage("Place de 3"), "Place de 3");
+  assert.throws(() => createCombatStage("Quart de poule"), /Étape du combat invalide/);
+  assert.ok(getCombatStageOrder("Poule") < getCombatStageOrder("1/8"));
+  assert.ok(getCombatStageOrder("1/2") < getCombatStageOrder("Finale"));
+
+  const combat = createCombat({
+    competitionId: "COMP1",
+    judokaId: "J1",
+    stage: "1/8",
+    result: "Victoire",
+    victoryType: "Ippon"
+  });
+  assert.equal(combat.stage, "1/8");
+  assert.equal(combat.draft.stage, "1/8");
+  assert.equal(createCombat({ competitionId: "COMP1", judokaId: "J1", result: "Egalité" }).stage, "");
+});

@@ -416,7 +416,7 @@
 
   function createKirokuHomeScreen(app: KirokuApp) {
     const { defaultListPageSize, state, screens, ui, notifications } = app;
-    const { cleanText, formatDate, getJudokaDisplayName, showView } = ui;
+    const { cleanText, formatCompetitionName, formatDate, getJudokaDisplayName, showView } = ui;
     const { showError } = notifications;
     const defaultHomeViewState = {
       filterJudokaText: "",
@@ -635,7 +635,7 @@
         const judoka = byId.get(String(c.ownerJudokaId));
         return {
           competitionId: c.competitionId || "",
-          name: c.name || "Compétition",
+          name: formatCompetitionName(c.name) || "Compétition",
           date: formatDate(c.competitionDate),
           judokaName: judoka ? getJudokaDisplayName(judoka) : "",
           showJudoka: false,
@@ -705,7 +705,7 @@
             : "À compléter";
         return {
           clubCompetitionId: cc.clubCompetitionId || "",
-          name: cc.name || "Compétition",
+          name: formatCompetitionName(cc.name) || "Compétition",
           date: formatDate(cc.competitionDate),
           participantCount,
           rankedCount,
@@ -760,7 +760,7 @@
           ).length;
           return {
             clubCompetitionId: cc.clubCompetitionId || "",
-            name: cc.name || "Compétition",
+            name: formatCompetitionName(cc.name) || "Compétition",
             dayLabel: cc.competitionDate === today ? "Aujourd'hui" : formatDate(cc.competitionDate),
             isToday: cc.competitionDate === today,
             participantLabel: `${participantCount} participant${participantCount > 1 ? "s" : ""}`

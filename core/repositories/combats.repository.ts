@@ -52,6 +52,7 @@ function toCombatRecord(combat: CombatModel): Record<string, unknown> {
     id_competition: combat.competitionId,
     adversaire: draft.opponent,
     garde_adversaire: draft.opponentStance,
+    etape: draft.stage || "",
     resultat: draft.result,
     type_victoire: draft.victoryType,
     deroule: draft.notes

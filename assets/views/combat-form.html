@@ -11,12 +11,20 @@
         <div class="form-section combat-quick-section">
           <div class="form-section-heading">
             <div>
-              <span class="combat-section-kicker">Étape 1</span>
+              <span class="combat-section-kicker">Partie 1</span>
               <h3>Saisie rapide</h3>
               <p class="subtitle">Renseignez l'essentiel juste après le combat.</p>
             </div>
           </div>
           <div class="form-grid combat-fast-grid">
+            <div>
+              <label for="combat_etape">Étape dans la compétition</label>
+              <select id="combat_etape" v-model="combatForm.stage">
+                <option value="">Non spécifié</option>
+                <option v-for="option in combatStageOptions" :key="option" :value="option">{{ option }}</option>
+              </select>
+            </div>
+
             <div>
               <label for="combat_resultat">Résultat</label>
               <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
@@ -52,7 +60,7 @@
         <div class="form-section">
           <div class="form-section-heading">
             <div>
-              <span class="combat-section-kicker">Étape 2</span>
+              <span class="combat-section-kicker">Partie 2</span>
               <h3>Détails du combat</h3>
               <p class="subtitle">Complétez ce qui aide le coach à relire le combat.</p>
             </div>
@@ -137,7 +145,7 @@
         <div class="form-section">
           <div class="form-section-heading">
             <div>
-              <span class="combat-section-kicker">Étape 3</span>
+              <span class="combat-section-kicker">Partie 3</span>
               <h3>Analyse</h3>
               <p class="subtitle">Ajoutez le contexte utile pour le prochain entraînement.</p>
             </div>

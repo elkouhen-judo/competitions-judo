@@ -40,6 +40,7 @@
     const {
       cleanText,
       formatDate,
+      formatCompetitionName,
       formatCompetitionRanking,
       getClassementBadgeClass,
       getCurrentLocalDate,
@@ -369,7 +370,7 @@
             ageCategory: cc.categorie_age || "",
             level: cc.niveau || ""
           });
-          clubCompetitionDetailViewModel.clubCompetitionDetailTitle = cc.nom || "Compétition club";
+          clubCompetitionDetailViewModel.clubCompetitionDetailTitle = formatCompetitionName(cc.nom) || "Compétition club";
           clubCompetitionDetailViewModel.clubCompetitionDetailSummary = [
             formatDate(cc.date),
             cc.categorie_age,

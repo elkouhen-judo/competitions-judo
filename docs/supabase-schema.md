@@ -63,3 +63,5 @@ Une fois le schéma créé, l'étape suivante sera de préparer les exports CSV 
 3. `Combats`
 
 Cet ordre respecte les clés étrangères.
+
+`public.combats` stocke aussi `etape` : le tour du combat dans la compétition (`Poule`, `1/32`, `1/16`, `1/8`, `1/4`, `1/2`, `Repêchage`, `Place de 3`, `Finale`, ou vide), contraint par `combats_etape_check`.

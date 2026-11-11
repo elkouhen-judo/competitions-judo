@@ -125,6 +125,7 @@ test("repositories map domain objects to supabase records", async () => {
         id_competition: "COMP1",
         adversaire: "",
         garde_adversaire: "",
+        etape: "",
         resultat: "V",
         type_victoire: "",
         deroule: ""
@@ -212,6 +213,7 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_competition: "COMP1",
         adversaire: "Lee",
         garde_adversaire: "",
+        etape: "",
         resultat: "Victoire",
         type_victoire: "Ippon",
         deroule: ""
@@ -226,6 +228,7 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_competition: "COMP1",
         adversaire: "Lee",
         garde_adversaire: "",
+        etape: "",
         resultat: "V",
         type_victoire: "Ippon",
         deroule: ""
@@ -240,6 +243,7 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_competition: "COMP1",
         adversaire: "Lee",
         garde_adversaire: "",
+        etape: "",
         resultat: "Défaite",
         type_victoire: "Décision",
         deroule: ""
@@ -254,6 +258,7 @@ test("combats repository retries legacy result codes when the remote constraint 
         id_competition: "COMP1",
         adversaire: "Lee",
         garde_adversaire: "",
+        etape: "",
         resultat: "D",
         type_victoire: "Décision",
         deroule: ""

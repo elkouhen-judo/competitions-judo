@@ -127,6 +127,7 @@
             </div>
             <div v-else class="list">
               <article v-for="combat in combats" :key="combat.combatId" class="card combat-card">
+                <p v-if="combat.stage" class="combat-stage">{{ combat.stage }}</p>
                 <div class="combat-header">
                   <p class="card-title">{{ combat.opponent }}<span v-if="combat.opponentStance" class="opponent-stance"> · {{ combat.opponentStance }}</span></p>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">

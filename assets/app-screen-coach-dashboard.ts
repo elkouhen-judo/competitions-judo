@@ -187,7 +187,8 @@
           removeCoachDashboardCompetition,
           showCoachJudoka,
           showCoachDashboard,
-          formatCoachDashboardDate
+          formatCoachDashboardDate,
+          formatCompetitionName: ui.formatCompetitionName
         },
         {
           isSubmitting,

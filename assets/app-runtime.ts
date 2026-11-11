@@ -335,6 +335,21 @@ function createInitialState(): KirokuAppState {
         screens.competition.openCompetition(restored.competitionId, true);
         return;
       }
+      // Un formulaire lié à une compétition (combat, modification, finalisation) ne peut pas être
+      // reconstruit après un rechargement : on rouvre la compétition plutôt qu'un formulaire vide
+      // rattaché à aucune compétition.
+      if (
+        restored.viewId === "combatFormView" ||
+        restored.viewId === "competitionFormView" ||
+        restored.viewId === "competitionFinalizationView"
+      ) {
+        if (restored.competitionId) {
+          screens.competition.openCompetition(restored.competitionId, true);
+        } else {
+          showHome();
+        }
+        return;
+      }
       if (restored.viewId === "judokaView" && restored.judokaId) {
         screens.judoka.showJudokaProfile(restored.judokaId, true);
         return;

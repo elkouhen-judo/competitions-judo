@@ -49,6 +49,11 @@ test("supabase schema includes role and result constraints", () => {
   );
 });
 
+test("supabase schema stores the combat round", () => {
+  assert.match(schema, /add column if not exists etape text not null default ''/i);
+  assert.match(schema, /combats_etape_check[\s\S]*etape in \('', 'Poule', '1\/32', '1\/16', '1\/8', '1\/4', '1\/2', 'Finale', 'Repêchage', 'Place de 3'\)/i);
+});
+
 test("supabase schema stores opponent stance on combats", () => {
   assert.match(schema, /add column if not exists garde_adversaire text not null default ''/i);
 });

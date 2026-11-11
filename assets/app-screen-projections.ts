@@ -212,6 +212,13 @@
     };
   }
 
+  const COMBAT_STAGE_ORDER = ["Poule", "1/32", "1/16", "1/8", "1/4", "1/2", "Repêchage", "Place de 3", "Finale"];
+
+  function getCombatStageOrder(stage: string): number {
+    const index = COMBAT_STAGE_ORDER.indexOf(stage);
+    return index === -1 ? COMBAT_STAGE_ORDER.length : index;
+  }
+
   function projectCompetitionDetail(
     competition: Competition,
     canEditCompetition: boolean,
@@ -288,6 +295,7 @@
       competitionId: c.competitionId || "",
       opponent: c.opponent || "Adversaire non renseigné",
       opponentStance: c.opponentStance || "",
+      stage: c.stage || "",
       judokaHandedness: c.judokaHandedness || "",
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
@@ -300,10 +308,16 @@
       notes: c.notes || "Aucun déroulé renseigné"
     }));
 
+    // Quand chaque combat a son tour renseigné, on les présente dans l'ordre du tableau.
+    const allStaged = projectedCombats.length > 1 && projectedCombats.every((combat) => combat.stage);
+    const orderedCombats = allStaged
+      ? [...projectedCombats].sort((a, b) => getCombatStageOrder(a.stage) - getCombatStageOrder(b.stage))
+      : projectedCombats;
+
     return {
-      combats: projectedCombats,
+      combats: orderedCombats,
       combatsEmptyMessage: projectedCombats.length ? "" : "Aucun combat pour cette compétition.",
-      hasCombats: projectedCombats.length > 0,
+      hasCombats: orderedCombats.length > 0,
       isLoadingCombats: false
     };
   }
@@ -315,6 +329,7 @@
       combatId?: string;
       opponent?: string;
       opponentStance?: string;
+      stage?: string;
       result?: string;
       victoryType?: string;
       scores?: CombatReadModel["scores"];
@@ -336,6 +351,7 @@
       competitionId: op.competitionId,
       opponent: payload.opponent || "",
       opponentStance: payload.opponentStance || "",
+      stage: payload.stage || "",
       result: (payload.result as CombatReadModel["result"]) || "Victoire",
       victoryType: payload.victoryType || "",
       scores: payload.scores || [],
@@ -350,6 +366,7 @@
       competitionId: combatLike.competitionId,
       opponent: combatLike.opponent || "Adversaire non renseigné",
       opponentStance: combatLike.opponentStance || "",
+      stage: combatLike.stage || "",
       judokaHandedness: combatLike.judokaHandedness || "",
       result: helpers.formatResultat(combatLike.result),
       resultClass: `result-${String(combatLike.result || "").toLowerCase()}`,

@@ -780,7 +780,8 @@ test("combat decision type appears only after choosing a result", () => {
   assert.match(bundle, /id="combatDecisionBlock" :class="\{ hidden: !showCombatDecisionBlock \}"/);
   assert.match(bundle, /function getCombatDecisionOptions\(result\)/);
   assert.match(bundle, /function getCombatFormFocusTarget\(isEditingExistingCombat\)/);
-  assert.match(bundle, /!isEditingExistingCombat \|\| !form\.result/);
+  assert.match(bundle, /if \(!isEditingExistingCombat\) \{\s*return "combat_etape";\s*\}\s*if \(!form\.result\) \{\s*return "combat_resultat";/);
+  assert.match(bundle, /preventScroll: target === "saveCombatButton"/);
   assert.match(bundle, /return "combat_adversaire"/);
   assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
   assert.match(bundle, /if \(result === "Victoire" \|\| result === "Défaite"\)/);

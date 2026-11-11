@@ -20,8 +20,12 @@
       () => !state.isLoadingCompetition && Boolean(state.currentCompetition) && state.canEditCurrentCompetition
     );
 
+    // Même liste et même ordre que le domaine (core/domain/competitions/combat-stage).
+    const combatStageOptions = window.Vue.computed(() => ["Poule", "1/32", "1/16", "1/8", "1/4", "1/2", "Repêchage", "Place de 3", "Finale"]);
+
     const defaultCombatForm = {
       combatId: "",
+      stage: "",
       opponent: "",
       opponentStance: "",
       result: "",
@@ -107,6 +111,7 @@
         },
         {
           combatDecisionOptions,
+          combatStageOptions,
           combatFormVictoryTypeIssues,
           combatFormScoreIssues,
           combatFormOpponentStanceIssues,
@@ -127,7 +132,7 @@
       ensureCombatFormViewModel();
       resetCombatForm();
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
-      const competitionName = getCurrentCompetition().name;
+      const competitionName = ui.formatCompetitionName(getCurrentCompetition().name);
       let isEditingExistingCombat = false;
 
       if (combatId) {
@@ -146,6 +151,7 @@
         });
         Object.assign(combatFormViewModel.combatForm, {
           combatId: combat.combatId || "",
+          stage: combat.stage || "",
           opponent: combat.opponent || "",
           opponentStance: combat.opponentStance || "",
           result: combat.result || "",
@@ -168,12 +174,20 @@
       }
 
       showView("combatFormView");
-      window.Vue.nextTick(() => $(getCombatFormFocusTarget(isEditingExistingCombat)).focus());
+      window.Vue.nextTick(() => {
+        const target = getCombatFormFocusTarget(isEditingExistingCombat);
+        // Le bouton Enregistrer est en bas du formulaire : le focaliser ne doit pas faire défiler la page,
+        // sinon le haut du formulaire (tour, résultat) sort de l'écran à l'ouverture.
+        $(target).focus({ preventScroll: target === "saveCombatButton" });
+      });
     }
 
     function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
       const form = combatFormViewModel.combatForm;
-      if (!isEditingExistingCombat || !form.result) {
+      if (!isEditingExistingCombat) {
+        return "combat_etape";
+      }
+      if (!form.result) {
         return "combat_resultat";
       }
       if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
@@ -181,6 +195,9 @@
       }
       if (!form.opponent) {
         return "combat_adversaire";
+      }
+      if (!form.stage) {
+        return "combat_etape";
       }
       if (!form.opponentStance) {
         return "combat_garde_adversaire";
@@ -249,6 +266,7 @@
       return {
         competitionId: competition.competitionId,
         judokaId: competition.ownerJudokaId,
+        stage: combatFormViewModel.combatForm.stage,
         opponent: combatFormViewModel.combatForm.opponent,
         opponentStance: combatFormViewModel.combatForm.opponentStance,
         result,

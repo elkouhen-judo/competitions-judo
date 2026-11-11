@@ -26,7 +26,7 @@
     }
   ) {
     const { state, ui, notifications } = app;
-    const { formatDate, formatResultat, getJudokaDisplayName, normalizeDisplayName, showView } = ui;
+    const { formatCompetitionName, formatDate, formatResultat, getJudokaDisplayName, normalizeDisplayName, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
     const { showCombatForm, deleteCombat, editCurrentCompetition, showCompetitionFinalizationForm } = deps;
 
@@ -79,7 +79,7 @@
 
     const competitionTitle = window.Vue.computed(() => {
       if (state.isLoadingCompetition) return "Chargement...";
-      return competitionDetailProjection.value?.competitionTitle ?? "Compétition";
+      return formatCompetitionName(competitionDetailProjection.value?.competitionTitle) || "Compétition";
     });
     // Le sous-titre nomme le judoka concerné (coach et parent consultent plusieurs participations).
     const competitionSubtitle = window.Vue.computed(() => {
@@ -757,7 +757,7 @@
         return;
       }
 
-      competitionFinalizationViewModel.finalizationSubtitle = state.currentCompetition.name || "";
+      competitionFinalizationViewModel.finalizationSubtitle = ui.formatCompetitionName(state.currentCompetition.name);
       Object.assign(competitionFinalizationViewModel.finalizationForm, {
         competitionId: state.currentCompetition.competitionId || "",
         result: state.currentCompetition.result || ""

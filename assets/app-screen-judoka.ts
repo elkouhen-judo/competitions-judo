@@ -5,6 +5,7 @@
   function createKirokuJudokaScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
     const {
+      formatCompetitionName,
       formatCompetitionRanking,
       formatDate,
       getClassementBadgeClass,
@@ -71,6 +72,7 @@
       return (
         window.createJudokaProfileViewModel(state.currentJudokaProfile, {
           formatDate,
+          formatCompetitionName,
           formatCompetitionRanking,
           getClassementBadgeClass,
           getJudokaDisplayName,

@@ -156,6 +156,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     }
     await shot("03-form-empty");
 
+    await page.selectOption("#combat_etape", "Repêchage");
     await page.selectOption("#combat_resultat", "Victoire");
     await page.selectOption("#combat_type_victoire", "Ippon");
     await page.fill("#combat_adversaire", "Camille Durand");
@@ -184,8 +185,23 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
+    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
     await expect(page.getByText("O-soto-gari · Ippon", { exact: true })).toBeVisible();
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     await shot("05-saved");
+
+    // Ouverture en modification d'un combat complet : le haut du formulaire (tour) reste visible.
+    await page.evaluate("window.scrollTo({ top: document.body.scrollHeight })");
+    await page.getByRole("button", { name: "Modifier le combat" }).click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
+    await expect(page.locator("#combat_etape")).toHaveValue("Repêchage");
+    await expect(page.locator("#combat_etape")).toBeInViewport();
+    await shot("06-edit");
+
+    // Rechargement pendant la modification : on revient sur la compétition, pas sur un formulaire vide.
+    await page.reload();
+    await expect(page.locator("#competitionView")).toBeVisible();
+    await expect(page.locator("#combatFormView")).toBeHidden();
+    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
   });
 }

@@ -7,6 +7,7 @@ import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "../domain/category-re
 import { COMPETITION_RESULTS } from "../domain/competition-results";
 import { COMBAT_RESULTS } from "../domain/competitions/combat-result";
 import { OPPONENT_STANCES } from "../domain/competitions/opponent-stance";
+import { COMBAT_STAGES } from "../domain/competitions/combat-stage";
 import { SCORE_CATEGORIES } from "../domain/competitions/combat-score-category";
 import { SCORE_VALUES } from "../domain/competitions/combat-score-value";
 import { NE_WAZA_TYPES } from "../domain/competitions/ne-waza-type";
@@ -130,6 +131,7 @@ const COMBAT_SCHEMA: JsonSchema = {
     competitionId: { type: "string", description: "Identifiant de la compétition à laquelle ce combat appartient." },
     opponent: { type: "string", description: "Nom de l'adversaire." },
     opponentStance: { type: "string", enum: OPPONENT_STANCES, description: "Adversaire droitier ou gaucher (optionnel)." },
+    stage: { type: "string", enum: COMBAT_STAGES, description: "Étape du combat dans la compétition : poule, tour du tableau, repêchage, place de 3 ou finale (optionnel)." },
     result: { type: "string", enum: COMBAT_RESULTS, description: "Résultat du combat pour le judoka." },
     victoryType: {
       type: "string",

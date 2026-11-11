@@ -47,8 +47,8 @@
               </label>
               <div v-if="coachDashboardSelectedCompetitions.length" class="competition-chip-list">
                 <span v-for="competition in coachDashboardSelectedCompetitions" :key="competition.competitionId" class="competition-chip">
-                  {{ competition.name }} — {{ formatCoachDashboardDate(competition.competitionDate) }}
-                  <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${competition.name}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
+                  {{ formatCompetitionName(competition.name) }} — {{ formatCoachDashboardDate(competition.competitionDate) }}
+                  <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${formatCompetitionName(competition.name)}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
                 </span>
               </div>
               <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher une compétition par nom ou date..." autocomplete="off" v-model="competitionSearchText">
@@ -56,7 +56,7 @@
                 <div v-if="!coachDashboardCompetitionSuggestions.length" class="empty-state">Aucune compétition trouvée.</div>
                 <div v-else class="list">
                   <button v-for="option in coachDashboardCompetitionSuggestions" :key="option.competitionId" type="button" class="checkbox-row competition-suggestion" @click="addCoachDashboardCompetition(option.competitionId)">
-                    <span>{{ option.name }} — {{ formatCoachDashboardDate(option.competitionDate) }}</span>
+                    <span>{{ formatCompetitionName(option.name) }} — {{ formatCoachDashboardDate(option.competitionDate) }}</span>
                   </button>
                 </div>
               </div>

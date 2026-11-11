@@ -49,6 +49,7 @@ export interface Combat {
   competitionId: string;
   opponent: string;
   opponentStance?: string;
+  stage?: string;
   result: "Victoire" | "Défaite" | "Egalité";
   victoryType?: string;
   scores: CombatScore[];
