@@ -2607,6 +2607,10 @@ button:focus-visible,
   visibility: visible;
 }
 
+.collapse {
+  visibility: collapse;
+}
+
 .relative {
   position: relative;
 }
@@ -2619,12 +2623,24 @@ button:focus-visible,
   display: inline;
 }
 
+.table {
+  display: table;
+}
+
 .hidden {
   display: none;
 }
 
+.border-collapse {
+  border-collapse: collapse;
+}
+
 .resize {
   resize: both;
+}
+
+.underline {
+  text-decoration-line: underline;
 }
 
 .filter {
@@ -3417,6 +3433,19 @@ button,
   color: var(--text);
   font-weight: 600;
   text-align: left;
+}
+
+.page-menu-list a {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.login-privacy-link a {
+  color: var(--muted);
+  text-decoration: underline;
 }
 
 .page-menu-list button:hover:not(:disabled),

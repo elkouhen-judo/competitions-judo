@@ -8,6 +8,7 @@ export const TACHI_WAZA_TECHNIQUES = [
   "Uchi-mata",
   "Harai-goshi",
   "Tai-otoshi",
+  "Tani-otoshi",
   "Tomoe-nage",
   "Sumi-gaeshi",
   "Kata-guruma",

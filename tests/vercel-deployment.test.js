@@ -159,6 +159,14 @@ test("vercel config routes the app shell and rpc endpoint", () => {
     destination: "/api/mcp-oauth"
   });
   assert.deepEqual(vercel.rewrites[10], {
+    source: "/confidentialite",
+    destination: "/api/privacy"
+  });
+  assert.deepEqual(vercel.rewrites[11], {
+    source: "/rgpd",
+    destination: "/api/privacy"
+  });
+  assert.deepEqual(vercel.rewrites[12], {
     source: "/(.*)",
     destination: "/api/app"
   });
@@ -859,4 +867,27 @@ test("service worker never intercepts the downloadable CSV template, even as a n
     serviceWorkerSource,
     /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
   );
+});
+
+test("vercel serves a public RGPD page linked from the login screen and the account menu", () => {
+  const privacyHandler = require(path.join(root, "api", "privacy.js"));
+  const rewrites = vercel.rewrites.map((rule) => `${rule.source}->${rule.destination}`);
+  assert.ok(rewrites.indexOf("/confidentialite->/api/privacy") < rewrites.indexOf("/(.*)->/api/app"));
+  assert.ok(rewrites.includes("/rgpd->/api/privacy"));
+  assert.match(html, /href="\/confidentialite"[^>]*>Données personnelles \(RGPD\)/);
+  assert.match(html, /id="privacyLink" href="\/confidentialite"/);
+
+  const previous = process.env.RGPD_CONTACT_EMAIL;
+  delete process.env.RGPD_CONTACT_EMAIL;
+  const withoutContact = privacyHandler.renderPrivacyHtml();
+  assert.match(withoutContact, /<h1>Données personnelles<\/h1>/);
+  assert.match(withoutContact, /Vos droits/);
+  assert.match(withoutContact, /cnil\.fr/);
+  assert.doesNotMatch(withoutContact, /mailto:/);
+  process.env.RGPD_CONTACT_EMAIL = "contact@example.com<script>";
+  const withContact = privacyHandler.renderPrivacyHtml();
+  assert.match(withContact, /mailto:contact@example\.com&lt;script&gt;/);
+  assert.doesNotMatch(withContact, /<script>/);
+  if (previous === undefined) delete process.env.RGPD_CONTACT_EMAIL;
+  else process.env.RGPD_CONTACT_EMAIL = previous;
 });

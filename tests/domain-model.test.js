@@ -1446,3 +1446,10 @@ test("combat round is optional, normalized and validated", () => {
   assert.equal(combat.draft.stage, "1/8");
   assert.equal(createCombat({ competitionId: "COMP1", judokaId: "J1", result: "Egalité" }).stage, "");
 });
+
+test("tani-otoshi is a standing technique distinct from tai-otoshi", () => {
+  const { TACHI_WAZA_TECHNIQUES, normalizeTachiWazaTechnique } = require("../core/domain/competitions/tachi-waza-technique");
+  assert.ok(TACHI_WAZA_TECHNIQUES.includes("Tani-otoshi"));
+  assert.equal(normalizeTachiWazaTechnique("tani otoshi"), "Tani-otoshi");
+  assert.equal(normalizeTachiWazaTechnique("tai otoshi"), "Tai-otoshi");
+});

@@ -26,6 +26,7 @@
             <button v-if="showPersonalSpaceLink" type="button" role="menuitem" @click="openPersonalSpace()">Mon espace</button>
             <button v-if="showFamilyLink" type="button" role="menuitem" @click="openFamilySpace()">Ma famille</button>
             <button v-if="showAdminLink" type="button" role="menuitem" @click="openAccessManagement()">Gestion des accès</button>
+            <a id="privacyLink" href="/confidentialite" role="menuitem">Données personnelles</a>
             <button id="logoutButton" type="button" role="menuitem" @click="logoutUser()">Se déconnecter</button>
           </div>
         </details>

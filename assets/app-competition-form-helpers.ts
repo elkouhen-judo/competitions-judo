@@ -16,6 +16,7 @@
     "Uchi-mata",
     "Harai-goshi",
     "Tai-otoshi",
+    "Tani-otoshi",
     "Tomoe-nage",
     "Sumi-gaeshi",
     "Kata-guruma",

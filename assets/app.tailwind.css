@@ -3285,6 +3285,19 @@
     text-align: left;
   }
 
+  .page-menu-list a {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    text-decoration: none;
+  }
+
+  .login-privacy-link a {
+    color: var(--muted);
+    text-decoration: underline;
+  }
+
   .page-menu-list button:hover:not(:disabled),
   .page-menu-list a:hover {
     background: var(--soft);

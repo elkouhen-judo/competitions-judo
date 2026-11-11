@@ -48,6 +48,14 @@
       "destination": "/api/mcp-oauth"
     },
     {
+      "source": "/confidentialite",
+      "destination": "/api/privacy"
+    },
+    {
+      "source": "/rgpd",
+      "destination": "/api/privacy"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/app"
     }
