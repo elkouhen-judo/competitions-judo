@@ -21,6 +21,16 @@
             {{ subMode.label }}
           </button>
         </nav>
+        <nav v-if="showParentSubTabs" class="mode-tabs parent-sub-tabs" aria-label="Navigation parent">
+          <button
+            v-for="subMode in parentSubModes"
+            :key="subMode.key"
+            type="button"
+            :class="['mode-tab', { 'mode-tab-active': currentHomeMode === subMode.key }]"
+            @click="handleModeTabClick(subMode.key)">
+            {{ subMode.label }}
+          </button>
+        </nav>
         <div v-if="canFilterByJudoka" id="homeFilters" class="filter-bar">
           <label id="homeFilterLabel" for="filterJudokaText">{{ homeFilterLabel }}</label>
           <div class="autocomplete-wrapper">

@@ -267,7 +267,7 @@ test("coach home stays club-centered and separate from judoka consultation", () 
   );
   assert.match(
     bundle,
-    /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/
+    /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showParentSubTabs\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/
   );
   assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
   assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);

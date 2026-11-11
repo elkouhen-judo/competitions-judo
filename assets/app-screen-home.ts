@@ -115,6 +115,15 @@
       { key: "judoka", label: "Mon espace" }
     ]);
 
+    // Compte uniquement parent : une seule entrée de mode, donc pas d'onglets principaux.
+    // Ces sous-onglets garantissent le retour vers l'accueil parent depuis la liste des compétitions.
+    const parentSubModes = window.Vue.computed(() => [
+      { key: "parentHome", label: "Accueil parent" },
+      { key: "family", label: "Compétitions" }
+    ]);
+    const showParentSubTabs = window.Vue.computed(
+      () => state.isParent && availableModes.value.length <= 1 && getCurrentMode() === "family"
+    );
     const showModeTabs = window.Vue.computed(() => availableModes.value.length > 1);
     const currentHomeMode = window.Vue.computed(() => getCurrentMode());
     const showCoachSubTabs = window.Vue.computed(
@@ -153,6 +162,7 @@
       () =>
         (showModeTabs.value && !showCoachSubTabs.value) ||
         showCoachSubTabs.value ||
+        showParentSubTabs.value ||
         canFilterByJudoka.value ||
         showHomeContextTitle.value
     );
@@ -364,6 +374,8 @@
       isPrimaryModeActive,
       availableModes,
       coachSubModes,
+      parentSubModes,
+      showParentSubTabs,
       showModeTabs,
       currentHomeMode,
       showCoachSubTabs,
@@ -435,6 +447,12 @@
     function getAccessibleHomeJudokas() {
       if (!state.currentUser) return [];
       if (getCurrentMode() === "judoka") return [state.currentUser];
+      // Un profil PARENT n'a pas de pratique sportive : seuls ses enfants sont sélectionnables.
+      if (state.currentUser.profileType === "PARENT" && !state.isCoach) {
+        const selfId = String(state.currentUser.judokaId || "");
+        const children = state.judokas.filter((j) => String(j.judokaId) !== selfId);
+        if (children.length > 0) return children;
+      }
       return state.judokas.length > 0 ? state.judokas : [state.currentUser];
     }
 
@@ -511,6 +529,8 @@
       isPrimaryModeActive,
       availableModes,
       coachSubModes,
+      parentSubModes,
+      showParentSubTabs,
       showModeTabs,
       currentHomeMode,
       showCoachSubTabs,
@@ -779,6 +799,8 @@
       const homeComputedRefs = {
         availableModes,
         coachSubModes,
+        parentSubModes,
+        showParentSubTabs,
         showModeTabs,
         showCoachSubTabs,
         currentHomeMode,
