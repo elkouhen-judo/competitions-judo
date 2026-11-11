@@ -891,3 +891,15 @@ test("vercel serves a public RGPD page linked from the login screen and the acco
   if (previous === undefined) delete process.env.RGPD_CONTACT_EMAIL;
   else process.env.RGPD_CONTACT_EMAIL = previous;
 });
+
+test("the app ships its Ayumi icons for the browser tab and the home screen", () => {
+  const manifestHandler = require(path.join(root, "api", "manifest.js"));
+  assert.match(html, /<link rel="icon" href="\/favicon\.ico"/);
+  assert.match(html, /<link rel="apple-touch-icon" href="\/assets\/icons\/apple-touch-icon\.png">/);
+  assert.match(html, /<meta name="apple-mobile-web-app-title" content="Ayumi">/);
+  const icons = manifestHandler.manifest.icons;
+  assert.deepEqual(icons.map((icon) => `${icon.sizes}:${icon.purpose}`), ["192x192:any", "512x512:any", "512x512:maskable"]);
+  for (const file of ["favicon.ico", ...icons.map((icon) => icon.src.slice(1)), "assets/icons/apple-touch-icon.png", "assets/icons/icon-32.png"]) {
+    assert.ok(fs.statSync(path.join(root, file)).size > 0, `${file} manquant`);
+  }
+});

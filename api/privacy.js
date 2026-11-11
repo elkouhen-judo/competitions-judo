@@ -29,6 +29,8 @@ function renderPrivacyHtml() {
   <meta name="theme-color" content="#f3f5fa">
   <title>Données personnelles - Ayumi</title>
   <link rel="stylesheet" href="/api/styles">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <style>
     body { background: var(--bg); color: var(--text, #1f2937); }
     .privacy { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.6; }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <!-- Icône Ayumi : tatami bleu nuit, ceinture bleue, kanji 歩 (« pas, progression »). -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#0e1a2b"/>
+  <path d="M12 12h40M12 26h40M12 40h40M12 12v40M32 12v40M52 12v40" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+  <path d="M14 50h36" fill="none" stroke="#1f4fd8" stroke-linecap="round" stroke-width="5"/>
+  <text x="32" y="40.5" text-anchor="middle" fill="#ffffff" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',sans-serif" font-size="30" font-weight="700">歩</text>
+</svg>

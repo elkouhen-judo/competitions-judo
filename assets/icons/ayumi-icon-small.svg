@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <!-- Variante petite taille (onglet du navigateur) : sans grille, kanji agrandi. -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#0e1a2b"/>
+  <path d="M12 54h40" fill="none" stroke="#1f4fd8" stroke-linecap="round" stroke-width="6"/>
+  <text x="32" y="44" text-anchor="middle" fill="#ffffff" font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',sans-serif" font-size="42" font-weight="700">歩</text>
+</svg>
