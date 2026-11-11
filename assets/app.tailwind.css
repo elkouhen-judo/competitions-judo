@@ -4145,6 +4145,26 @@
     letter-spacing: 0.04em;
   }
 
+  /* Prises faites : même lecture que les prises subies, en vert. */
+  .combat-scored-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-scored {
+    background: var(--success-soft);
+    border-color: transparent;
+    color: var(--success);
+  }
+
+  .combat-scored-label,
+  .combat-conceded-label {
+    min-width: 4.5em;
+  }
+
   .badge-conceded {
     background: var(--danger-soft);
     border-color: transparent;

@@ -208,6 +208,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
     await expect(page.getByText("O-soto-gari · Ippon", { exact: true })).toBeVisible();
     await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText("Uchi-mata · Waza-ari");
+    await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText("O-soto-gari · Ippon");
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     await shot("05-saved");
 
