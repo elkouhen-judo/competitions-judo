@@ -16,6 +16,7 @@
     resultClass: string;
     combatSummary: string;
     hasCombats: boolean;
+    hasResult: boolean;
   }
 
   // Ordre d'affichage des participants : podium d'abord, puis places suivantes, non classés en dernier.
@@ -389,17 +390,19 @@
                 resultClass: getClassementBadgeClass(p.result),
                 combatSummary: formatCombatSummary(record),
                 hasCombats: Boolean(record && record.total),
+                hasResult: Boolean(cleanText(p.result)),
                 order: getRankingOrder(p.result)
               };
             })
             .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
-            .map(({ competitionId, judokaName, result, resultClass, combatSummary, hasCombats }) => ({
+            .map(({ competitionId, judokaName, result, resultClass, combatSummary, hasCombats, hasResult }) => ({
               competitionId,
               judokaName,
               result,
               resultClass,
               combatSummary,
-              hasCombats
+              hasCombats,
+              hasResult
             }));
           clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
             Boolean(cc.date) && String(cc.date) <= new Date().toISOString().slice(0, 10);
@@ -423,13 +426,6 @@
     function saveClubCompetitionDetails() {
       ensureClubCompetitionDetailViewModel();
       const form = clubCompetitionDetailViewModel.clubCompetitionDetailForm;
-      if (
-        clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked &&
-        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.length
-      ) {
-        showError("Les participants sont verrouillés car la compétition est terminée.");
-        return;
-      }
       app.runServer(
         "saveClubCompetition",
         [
@@ -455,12 +451,11 @@
       competitionId: string,
       judokaName: string
     ) {
-      if (clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked) {
-        showError("Les participants sont verrouillés car la compétition est terminée.");
-        return;
-      }
+      const isPast = clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked;
       app.confirmAndRun({
-        message: `Retirer ${judokaName} de cette compétition club ? La compétition n'a pas encore eu lieu : sa participation individuelle sera définitivement supprimée.`,
+        message: isPast
+          ? `Retirer ${judokaName} de cette compétition club ? Aucun combat ni classement n'a été saisi : sa participation sera définitivement supprimée.`
+          : `Retirer ${judokaName} de cette compétition club ? La compétition n'a pas encore eu lieu : sa participation individuelle sera définitivement supprimée.`,
         method: "detachClubCompetitionParticipant",
         args: [clubCompetitionId, competitionId],
         onSuccess: (response) => {

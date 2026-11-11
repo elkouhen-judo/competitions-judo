@@ -91,19 +91,12 @@ export default function createClubCompetitionsService(
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
     const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
-    const participantsLocked = existing.some(isCompetitionFinished);
 
+    // Saisie a posteriori : l'ajout de judokas reste possible après la date de la compétition.
     const participantJudokaIds =
       Array.isArray(input.participantJudokaIds) && input.participantJudokaIds.length
         ? input.participantJudokaIds
         : undefined;
-    if (
-      isEditing &&
-      participantsLocked &&
-      (participantJudokaIds || []).some((judokaId) => !existingJudokaIds.has(String(judokaId)))
-    ) {
-      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
-    }
 
     const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds });
 
@@ -234,7 +227,21 @@ export default function createClubCompetitionsService(
       throw new Error("Participation introuvable.");
     }
     if (isCompetitionFinished(event)) {
-      throw new Error("Les participants sont verrouillés car la compétition est terminée.");
+      // Compétition passée : on ne retire qu'une participation vide (ajout par erreur lors d'une
+      // saisie a posteriori), jamais une participation qui porte des combats ou un classement.
+      const combats = combatsRepository
+        ? await combatsRepository.listByCompetitionIds([String(idCompetition)])
+        : null;
+      if (!combats || combats.length || String(participation.classement || "").trim()) {
+        throw new Error(
+          "Ce judoka a déjà des combats ou un classement saisis pour cette compétition passée : il ne peut pas être retiré."
+        );
+      }
+      await competitionsRepository.remove(idCompetition);
+      return {
+        success: true,
+        message: "La participation, sans combat ni classement, a été supprimée."
+      };
     }
     await competitionsRepository.remove(idCompetition);
     return {

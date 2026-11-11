@@ -724,9 +724,9 @@ test("coach can open club competition creation and participant management UI", (
   );
   assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
   assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
-  assert.match(bundle, /Compétition passée ou en cours — les participants sont verrouillés/);
-  assert.match(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
-  assert.match(bundle, /v-if="clubCompetitionDetailEditing && !clubCompetitionParticipantsLocked" class="card-actions"/);
+  assert.match(bundle, /Compétition passée ou en cours — saisie a posteriori possible/);
+  assert.doesNotMatch(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
+  assert.match(bundle, /v-if="clubCompetitionDetailEditing && \(!clubCompetitionParticipantsLocked \|\| \(!p\.hasCombats && !p\.hasResult\)\)" class="card-actions"/);
   assert.match(bundle, /@click="startClubCompetitionDetailEdit\(\)"/);
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);

@@ -17,7 +17,7 @@
       </div>
       <div class="panel-body">
         <div v-if="clubCompetitionParticipantsLocked && clubCompetitionDetailEditing" class="status-banner status-banner-warning">
-          Compétition passée ou en cours — les participants sont verrouillés. Les informations, combats, résultats et bilans restent modifiables.
+          Compétition passée ou en cours — saisie a posteriori possible : ajoutez les judokas oubliés puis leurs combats. Un participant ne peut être retiré que s'il n'a ni combat ni classement.
         </div>
 
         <div class="section">
@@ -43,7 +43,7 @@
                     <span class="card-open-hint">Voir les combats</span>
                   </span>
                 </button>
-                <div v-if="clubCompetitionDetailEditing && !clubCompetitionParticipantsLocked" class="card-actions">
+                <div v-if="clubCompetitionDetailEditing && (!clubCompetitionParticipantsLocked || (!p.hasCombats && !p.hasResult))" class="card-actions">
                   <button class="button-danger" type="button" :disabled="isSubmitting" @click="confirmDetachClubParticipant(clubCompetitionDetailForm.clubCompetitionId, p.competitionId, p.judokaName)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M18 8l4 4-4 4"></path><path d="M22 12H11"></path></svg>
                     Retirer {{ p.judokaName }}
@@ -104,7 +104,7 @@
           </div>
         </div>
 
-        <div v-if="!clubCompetitionParticipantsLocked" class="section">
+        <div class="section">
           <div class="section-heading">
             <div>
               <h3>Ajouter des judokas
