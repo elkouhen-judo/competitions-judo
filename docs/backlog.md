@@ -1,362 +1,297 @@
-# Backlog UX
+# Backlog ergonomie
 
-Issu de la revue ergonomique du 11/11/2026 (gabarits `assets/views/*.html` et captures `screenshots/`).
+Issu de la revue du 11/11/2026. L'application a été parcourue en local sur données fictives, en mobile (390 × 844) pour les profils judoka, parent et coach + admin, et en bureau (1280 × 860) pour le coach.
 
-- Priorité : P1 (bloque le parcours principal), P2 (gêne récurrente), P3 (confort).
-- Effort : S (≤ 1 jour), M (2-3 jours), L (≥ 1 semaine, touche le schéma).
-- Les identifiants suivent la convention `DOMAINE-ACTION-N`.
+- Priorité : P1 (gêne le parcours principal), P2 (gêne récurrente), P3 (confort).
+- Effort : S (≤ 1 jour), M (2-3 jours), L (≥ 1 semaine).
+- Chaque story donne le constat observé, la règle visée et le critère d'acceptation.
+
+## Vue d'ensemble
+
+Le parcours principal est « ouvrir la compétition du jour → saisir un combat → saisir le classement ». Il fonctionne, mais il est alourdi par quatre défauts transverses :
+
+1. **Trop de boutons pleine largeur.** Retour, Modifier et Supprimer occupent le haut de chaque fiche ; chaque carte de combat porte deux boutons.
+2. **Saisie par menus déroulants.** Le formulaire de combat demande 4 à 6 listes déroulantes, au bord du tatami.
+3. **Barre d'actions collante trop haute.** Deux boutons empilés masquent environ 130 px de contenu, dont des champs de formulaire.
+4. **Accueils explicatifs.** Les cartes de l'accueil décrivent les fonctions au lieu de montrer l'état du jour ; la liste utile passe sous la ligne de flottaison.
+
+## Avancement au 11/11/2026
+
+Les 34 stories sont implémentées (tests : 279/279, parcours visuel judoka, parent et coach sans erreur). Écarts assumés par rapport au texte des stories :
+
+| Story | Écart |
+|---|---|
+| NAV-2 | Onglets coach : « Accueil », « Compétitions », « Judokas », « Stats ». « Mon espace » rejoint le menu du compte avec « Ma famille » et « Gestion des accès », pour garder l'accès aux judokas en un geste. |
+| NAV-3 | Squelette de l'accueil et affichage immédiat du cache. Le temps de réponse du serveur lui-même n'a pas été mesuré ni optimisé. |
+| FICHE-2 | Les places proposées sont 1er, 2e, 3e, 5e, 7e et Non classé ; une valeur historique (4e, 6e, 8e) reste affichée. |
+| STATS-1 | La tuile « Saisies à compléter » compte les combats du critère le plus fréquent (les critères se recoupent). |
+| UI-5 | Le débordement n'a pas été reproduit ; `overflow-x: clip` sur la page l'empêche sans casser les barres collantes. |
+| UI-7 | Le script de parcours reste hors dépôt (données fictives) ; les tests Playwright du dépôt couvrent la saisie de combat, le parcours parent et la finalisation hors ligne. |
+
+Reste à faire hors backlog : vérifier sur un vrai téléphone la barre collante du formulaire de combat et le menu « ⋯ » (fermeture au toucher extérieur).
 
 ## Ordre de traitement proposé
 
-| Lot | Contenu | Stories |
+| Lot | Objectif | Stories |
 |---|---|---|
-| 1 | Saisie rapide et finitions | COMBAT-SAISIE-1 à 3, COMBAT-ALERTE-1, NAV-ACTIONS-1, COMBAT-CARTE-1, UI-FINITION-1 à 5 |
-| 2 | Navigation et fiche compétition | NAV-BARRE-1, NAV-ACCUEIL-1 et 2, NAV-SUPPRESSION-1, COMPETITION-FICHE-1 et 2, COMPETITION-COACH-1, COMPETITION-CLASSEMENT-1 et 2 |
-| 3 | Modèle judo | COMBAT-CONCEDE-1, COMBAT-SHIDO-1, COMBAT-TOUR-1, CLUB-CATEGORIE-1 |
-| 4 | Coach et admin | DASHBOARD-SYNTHESE-1, DASHBOARD-GRAPHIQUE-1, DASHBOARD-DETAIL-1, CLUB-DETAIL-1, ADMIN-PAGE-1, ADMIN-IMPORT-1 |
-| Transverse | Refactoring du thème A « Blanc & Bleu » | THEME-TOKENS-1, THEME-SURCOUCHE-1, THEME-COULEURS-1, THEME-TYPO-1, THEME-FORMES-1, THEME-COMPOSANTS-1, THEME-PWA-1, THEME-VALIDATION-1, DOC-CAPTURES-1 |
+| 1 | Saisir un combat vite et sans erreur | COMBAT-1 à COMBAT-5, BARRE-1 |
+| 2 | Alléger les fiches et la navigation | NAV-1 à NAV-4, FICHE-1 à FICHE-5 |
+| 3 | Accueils orientés action | ACCUEIL-1 à ACCUEIL-4, LISTE-1, LISTE-2 |
+| 4 | Coach et admin | CLUB-1 à CLUB-3, STATS-1, STATS-2, ADMIN-1, ADMIN-2 |
+| 5 | Finitions | UI-1 à UI-7 |
 
 ## 1. Saisie d'un combat
 
-### COMBAT-SAISIE-1 — Boutons segmentés pour le résultat et la décision (P1, S)
+### COMBAT-1 — Boutons au lieu des menus déroulants (P1, M)
 
-- Besoin : le parent ou le coach saisit un combat d'une main, au bord du tatami.
+- Constat : Étape, Résultat, « Comment le combat s'est terminé » et « Adversaire droitier ou gaucher » sont quatre listes déroulantes. Chaque choix coûte deux gestes.
 - Règle : Résultat s'affiche en trois boutons (Victoire, Défaite, Égalité).
-- Règle : la décision s'affiche en boutons dès qu'un résultat est choisi.
-- Acceptation : aucun menu déroulant dans la section « Saisie rapide ».
+- Règle : la décision et la garde adverse s'affichent en boutons.
+- Règle : l'étape s'affiche en pastilles défilantes (Poule, 1/16, 1/8, 1/4, 1/2, Repêchage, Place de 3, Finale).
+- Acceptation : la partie « Saisie rapide » ne contient aucun menu déroulant.
 - Acceptation : chaque bouton mesure au moins 44 px de haut.
 - Fichiers : `assets/views/combat-form.html`, `assets/app-screen-combat-form.ts`.
 
-### COMBAT-SAISIE-2 — Ligne de score pré-créée depuis la décision (P1, S)
+### COMBAT-2 — Champs obligatoires et erreurs sur le champ (P1, S)
 
-- Besoin : ne pas saisir deux fois la même information.
-- Règle : choisir Ippon, Waza-ari ou Yuko crée une ligne de score avec cette valeur.
-- Règle : seule la technique reste à renseigner.
-- Acceptation : l'alerte « Ippon indiqué, mais aucun point Ippon détaillé » n'apparaît plus après une saisie nominale.
-- Cas limite : une ligne de score déjà saisie n'est pas écrasée.
+- Constat : rien n'indique que Résultat est obligatoire. Un formulaire vide part au serveur et l'erreur s'affiche en bandeau flottant, loin du champ.
+- Règle : le formulaire vérifie Résultat avant l'envoi.
+- Règle : le message d'erreur s'affiche sous le champ concerné, qui reçoit le focus.
+- Règle : même traitement pour le nom de la compétition et pour le club, le nom et la catégorie d'une compétition club.
+- Acceptation : enregistrer un formulaire vide n'appelle pas le serveur.
+- Fichiers : `assets/app-screen-combat-form.ts`, `assets/app-screen-competition-form.ts`, `assets/app-screen-club-competition.ts`.
 
-### COMBAT-SAISIE-3 — Enregistrer et saisir le suivant (P1, S)
+### COMBAT-3 — Enregistrer et saisir le suivant (P1, S)
 
-- Besoin : enchaîner les combats d'une poule.
-- Règle : un second bouton enregistre puis rouvre un formulaire vide sur la même compétition.
-- Acceptation : un toast confirme l'enregistrement du combat précédent.
+- Constat : après un enregistrement, il faut revenir à la fiche puis rouvrir « Ajouter un combat ».
+- Règle : un second bouton « Enregistrer et saisir le suivant » rouvre un formulaire vide.
+- Règle : l'étape suivante est proposée (Poule reste Poule, 1/4 propose 1/2).
+- Acceptation : trois combats se saisissent sans repasser par la fiche.
 
-### COMBAT-ALERTE-1 — Alertes de qualité cliquables (P2, M)
+### COMBAT-4 — Carte de combat cliquable, sans boutons (P1, S)
 
-- Besoin : corriger une saisie incomplète sans chercher le champ.
-- Règle : toucher une alerte ouvre le formulaire du combat sur le champ concerné.
-- Acceptation : le champ ciblé reçoit le focus.
-- Dépendance : COMBAT-CARTE-1.
+- Constat : chaque carte porte « Modifier le combat » et « Supprimer le combat » en pleine largeur. Quatre combats font 2 900 px de haut sur mobile.
+- Règle : toucher la carte ouvre la modification.
+- Règle : la suppression se fait depuis le formulaire de modification.
+- Règle : la ligne « Judoka » et la mention « Aucun déroulé renseigné » disparaissent de la carte.
+- Acceptation : une carte de combat sans note tient en 120 px de haut au plus.
+- Fichiers : `assets/views/competition.html`, `assets/views/combat-form.html`.
 
-### COMBAT-CARTE-1 — Carte combat cliquable (P2, S)
+### COMBAT-5 — Alertes de saisie en langage courant (P2, S)
 
-- Règle : toucher la carte ouvre l'édition du combat.
-- Règle : « Supprimer le combat » se trouve dans l'écran d'édition.
-- Acceptation : la carte ne contient plus de bouton pleine largeur.
+- Constat : les alertes affichent « MOYENNE Points marqués non renseignés ». Le niveau de priorité ne parle pas à un parent.
+- Règle : l'alerte s'affiche « À compléter : points marqués ».
+- Règle : toucher l'alerte ouvre le formulaire sur le champ concerné.
+- Acceptation : aucun libellé « Haute » ou « Moyenne » n'est visible sur la fiche.
 
-## 2. Modèle judo
+### BARRE-1 — Barre d'actions sur une seule ligne (P1, S)
 
-### COMBAT-CONCEDE-1 — Points concédés (P1, L)
+- Constat : la barre collante empile deux boutons (Enregistrer et Annuler, ou Finaliser et Ajouter un combat). Elle masque le champ Niveau du formulaire compétition et la liste des participants du formulaire club.
+- Règle : la barre collante porte une seule ligne : action principale large, action secondaire compacte.
+- Règle : le contenu garde une marge basse égale à la hauteur de la barre.
+- Acceptation : aucun champ n'est masqué par la barre en 390 × 844.
+- Fichiers : `assets/app.css`, vues de formulaire.
 
-- Besoin : savoir sur quelle technique le judoka perd.
-- Règle : chaque ligne de score porte un côté (marqué ou concédé).
-- Règle : la fiche judoka et le tableau de bord affichent les techniques concédées les plus fréquentes.
-- Acceptation : les combats existants restent lisibles, avec leurs scores côté « marqué ».
-- Impact : schéma Supabase, `combat-score`, statistiques et outils MCP.
+## 2. Navigation et fiches
 
-### COMBAT-SHIDO-1 — Shidos des deux combattants (P2, M)
+### NAV-1 — Retour en flèche, actions dans un menu (P1, M)
 
-- Règle : le formulaire propose 0 à 3 shidos pour le judoka et pour l'adversaire.
-- Règle : un hansoku-make distingue le cumul de shidos de la faute directe.
-- Acceptation : le tableau de bord affiche le nombre moyen de shidos par combat.
+- Constat : Retour, Modifier et Supprimer sont trois boutons pleine largeur en haut de la fiche compétition. Ils occupent 170 px et exposent la suppression au premier plan.
+- Règle : le retour devient une flèche à gauche du titre, sur tous les écrans.
+- Règle : Modifier et Supprimer passent dans un menu « ⋯ » à droite du titre.
+- Acceptation : le premier contenu de la fiche commence à moins de 160 px du haut en mobile.
+- Fichiers : toutes les vues de `assets/views/`.
 
-### COMBAT-TOUR-1 — Tour et golden score (P2, M)
+### NAV-2 — Onglets coach identiques partout (P1, S)
 
-- Règle : un combat porte un tour facultatif (Poule, Tableau, Repêchage, Place de 3e, Finale).
-- Règle : un combat porte un indicateur golden score.
-- Acceptation : la liste des combats suit l'ordre de saisie et affiche le tour.
+- Constat : l'accueil coach affiche « Accueil coach, Mon espace, Gestion des accès ». L'écran des statistiques affiche « Accueil coach, Mon espace, Statistiques ». Le troisième onglet est rogné à 390 px.
+- Règle : les mêmes onglets s'affichent sur tous les écrans coach : Accueil, Compétitions, Statistiques, Mon espace.
+- Règle : « Gestion des accès » passe dans le menu du compte.
+- Acceptation : aucun onglet n'est rogné à 390 px.
+- Fichiers : `assets/app-screen-home.ts`, `assets/views/home.html`, `assets/views/coach-dashboard.html`.
 
-### CLUB-CATEGORIE-1 — Plusieurs catégories d'âge par compétition club (P2, L)
+### NAV-3 — Chargement visible (P1, S)
 
-- Besoin : un tournoi réunit souvent plusieurs catégories le même jour.
-- Règle : une compétition club accepte une ou plusieurs catégories d'âge.
-- Règle : la liste des judokas proposés couvre toutes les catégories choisies.
-- Acceptation : le coach crée un seul événement pour Benjamins et Minimes.
-- Impact : schéma, héritage des champs vers les compétitions individuelles.
+- Constat : à l'ouverture sur l'environnement dev, la page reste vide environ cinq secondes, avec le seul en-tête.
+- Règle : un squelette de l'accueil s'affiche pendant le chargement.
+- Règle : les données en cache s'affichent tout de suite, puis se mettent à jour.
+- Acceptation : aucun écran vide de plus de 300 ms.
+- Fichiers : `assets/app-runtime.ts`.
 
-### COMPETITION-CLASSEMENT-1 — Libellés du classement (P3, S)
+### NAV-4 — En-tête compact (P2, S)
 
-- Règle : les options affichent le rang en toutes lettres (« 1er », « 2e », « 3e »).
-- Acceptation : aucune option ne repose sur un emoji seul.
+- Constat : le rôle « COACH · ADMIN · JUDOKA » s'affiche sur trois lignes et repousse le sous-titre. Le bouton de déconnexion est exposé, sans confirmation.
+- Règle : l'en-tête affiche le nom et un seul rôle, sur une ligne.
+- Règle : la déconnexion et « Gestion des accès » passent dans un menu ouvert par le nom.
+- Acceptation : l'en-tête mesure 64 px de haut au plus en mobile.
+- Fichiers : `assets/views/header.html`, `assets/app-runtime.ts`.
 
-## 3. Navigation
+### FICHE-1 — Compétition à venir sans actions de résultat (P1, S)
 
-### NAV-BARRE-1 — Barre de navigation basse fixe (P1, M)
+- Constat : une compétition du 05/12 propose « Finaliser » et « Ajouter un combat », avec l'état vide « Aucun combat ».
+- Règle : avant la date, la fiche affiche le délai (« dans 24 jours »), les informations et l'objectif du coach.
+- Règle : les actions de combat et de classement apparaissent le jour J.
+- Acceptation : aucune action de saisie de résultat sur une compétition future.
+- Fichiers : `assets/views/competition.html`, `assets/app-screen-projections.ts`.
 
-- Besoin : savoir où l'on est et changer de section en un geste.
-- Règle : la barre affiche Accueil, Compétitions, Judokas et Stats selon le rôle.
-- Règle : l'entrée active est marquée sur tous les écrans.
-- Acceptation : les onglets de mode ne changent plus de libellés d'un écran à l'autre.
-- Cas limite : un utilisateur multi-rôle change de rôle depuis l'Accueil.
+### FICHE-2 — Classement saisi sur la fiche (P1, S)
 
-### NAV-ACCUEIL-1 — Accueil coach orienté état du jour (P2, M)
+- Constat : « Finaliser » ouvre un écran à part qui ne contient qu'une liste déroulante. Le mot ne dit pas qu'il s'agit du classement.
+- Règle : le bouton s'appelle « Saisir le classement ».
+- Règle : le classement se choisit sur la fiche, en boutons (1er, 2e, 3e, 5e, 7e, Non classé).
+- Acceptation : l'écran `competitionFinalizationView` est supprimé.
+- Fichiers : `assets/views/competition.html`, `assets/views/competition-finalization.html`.
 
-- Règle : l'accueil affiche la prochaine compétition, les bilans à rédiger et les combats à compléter.
-- Règle : chaque compteur ouvre la liste correspondante.
-- Acceptation : l'accueil ne contient plus de carte purement descriptive.
-- Dépendance : NAV-BARRE-1.
+### FICHE-3 — Synthèse sans redondance (P2, S)
 
-### NAV-ACCUEIL-2 — Accueil parent et judoka (P2, M)
+- Constat : la date figure dans le sous-titre et dans le bloc d'informations. Le bilan affiche « 3V · 1D · 0N ». La catégorie affiche « Cadet · -60kg ».
+- Règle : le bloc d'informations tient en une ligne de pastilles (catégorie, poids, niveau, classement).
+- Règle : les compteurs à zéro sont masqués (« 3V · 1D »).
+- Règle : le poids s'écrit « -60 kg ».
+- Acceptation : la synthèse d'une compétition terminée tient en 200 px de haut en mobile.
 
-- Règle : l'accueil affiche le judoka actif, sa prochaine compétition et son dernier résultat.
-- Règle : le changement de judoka se fait depuis l'en-tête.
-- Acceptation : la carte « Judoka actif » disparaît.
+### FICHE-4 — Objectif et bilan du coach enregistrés automatiquement (P2, S)
 
-### NAV-ACTIONS-1 — Retour en flèche et menu d'actions (P2, S)
+- Constat : le coach a deux boutons, « Enregistrer l'objectif » et « Enregistrer le bilan », en plus de celui de la barre.
+- Règle : chaque champ s'enregistre à la sortie du champ, avec la mention « Enregistré ».
+- Acceptation : la section « Suivi coach » ne contient aucun bouton.
 
-- Règle : le retour est une flèche dans la barre haute.
-- Règle : Modifier et Supprimer se trouvent dans un menu « ⋯ ».
-- Acceptation : aucun bouton pleine largeur ne précède le contenu de la fiche compétition.
+### FICHE-5 — Fiche de progression lisible (P2, M)
 
-### NAV-SUPPRESSION-1 — Confirmation de suppression intégrée (P2, S)
+- Constat : la page dépasse la largeur de l'écran en mobile (439 px pour 390). Les répartitions s'affichent en tuiles « 4/6 (67 %) ». « Précédente » occupe une ligne entière. « Modifier le profil » est en bas de page.
+- Règle : aucun défilement horizontal.
+- Règle : les modes de victoire et de défaite s'affichent en barres horizontales.
+- Règle : la saison se change par deux flèches autour de son libellé.
+- Règle : « Modifier le profil » passe dans le menu « ⋯ » du titre.
+- Acceptation : `document.documentElement.scrollWidth` égale la largeur de la fenêtre à 390 px.
+- Fichiers : `assets/views/judoka.html`, `assets/app-screen-judoka.ts`, `assets/app.css`.
 
-- Règle : la confirmation s'affiche dans l'application, sans `window.confirm`.
-- Règle : le message nomme la conséquence (nombre de combats supprimés).
-- Fichier : `assets/app-runtime.ts:1216`.
+## 3. Accueils et listes
 
-## 4. Fiche compétition
+### ACCUEIL-1 — Accueil judoka : la liste d'abord (P1, S)
 
-### COMPETITION-FICHE-1 — Ordre des sections selon l'état (P1, M)
+- Constat : deux cartes explicatives (« Ajouter une compétition », « Ma progression ») occupent le premier écran. La liste des compétitions commence à 550 px.
+- Règle : l'accueil s'ouvre sur la compétition du jour ou la prochaine, puis la liste.
+- Règle : « Nouvelle compétition » et « Ma fiche » deviennent deux boutons sur une ligne.
+- Acceptation : la première compétition est visible sans défilement en 390 × 844.
+- Fichiers : `assets/views/home.html`, `assets/app-screen-home.ts`.
 
-- Règle : compétition à venir : objectif en tête.
-- Règle : compétition en cours : combats et ajout en tête.
-- Règle : compétition terminée : classement et bilan en tête.
-- Acceptation : « Ajouter un combat » est visible sans défilement le jour J.
+### ACCUEIL-2 — Accueil parent : choisir l'enfant en un geste (P1, M)
 
-### COMPETITION-FICHE-2 — Synthèse sans redondance (P3, S)
+- Constat : le parent passe par « Choisir un judoka », puis une liste déroulante. « Voir la fiche » est grisé tant qu'aucun enfant n'est choisi. Le choix est perdu au rechargement.
+- Règle : l'accueil affiche une pastille par enfant ; toucher une pastille affiche ses compétitions.
+- Règle : le dernier enfant choisi est mémorisé sur l'appareil.
+- Règle : les onglets « Accueil parent » et « Compétitions » disparaissent.
+- Acceptation : un parent de deux enfants ouvre la compétition du jour en deux gestes.
+- Acceptation : aucun bouton grisé sur l'accueil.
 
-- Règle : la tuile « Statut » disparaît quand le classement figure déjà dans l'en-tête.
-- Règle : « Combats avec points » devient « Combats détaillés ».
+### ACCUEIL-3 — Accueil coach : l'état du jour (P2, M)
 
-### COMPETITION-COACH-1 — Enregistrement automatique de l'objectif et du bilan (P3, S)
+- Constat : sous le bloc « Aujourd'hui », trois cartes décrivent les fonctions. Le filtre Club occupe une carte entière en haut de chaque écran.
+- Règle : l'accueil liste ce qui attend le coach : compétition du jour, classements à saisir, bilans à écrire.
+- Règle : le filtre Club devient une pastille dans la ligne d'onglets.
+- Acceptation : chaque ligne de l'accueil ouvre l'écran où l'action se fait.
 
-- Règle : le texte s'enregistre à la sortie du champ.
-- Acceptation : un indicateur « Enregistré » remplace les deux boutons.
-- Cas limite : hors ligne, le texte reste dans le champ et l'échec est signalé.
+### ACCUEIL-4 — Un seul bouton d'ajout sur l'état vide (P3, S)
 
-### COMPETITION-CLASSEMENT-2 — Classement saisi sur la fiche (P2, S)
+- Constat : « Mon espace » sans compétition affiche « Nouvelle compétition » et « Ajouter la première compétition ».
+- Règle : l'état vide porte le seul bouton d'ajout.
 
-- Règle : le classement se choisit sur la fiche, sans écran dédié.
-- Règle : un classement déjà saisi reste modifiable au même endroit.
-- À vérifier : `canFinalizeCompetition` passe à faux dès qu'un résultat existe (`assets/app-screen-projections.ts:234`).
+### LISTE-1 — Cartes de compétition utiles (P2, S)
 
-## 5. Coach et admin
+- Constat : chaque carte affiche une ligne « Date » et un lien « Ouvrir les combats → ». Une compétition passée n'affiche ni classement ni bilan. Une compétition passée sans classement n'affiche aucun rappel.
+- Règle : la carte affiche le nom, la date en clair (« sam. 5 déc. »), le classement et le bilan (« 🥉 3e · 3V 1D »).
+- Règle : une compétition passée sans classement affiche « Classement à saisir ».
+- Règle : toute la carte est cliquable ; le lien texte disparaît.
+- Acceptation : cinq compétitions tiennent sur un écran de 844 px.
 
-### DASHBOARD-SYNTHESE-1 — Tableau de bord sans doublon (P2, S)
+### LISTE-2 — Sections « À venir » et « Passées » (P2, S)
 
-- Règle : chaque indicateur n'apparaît qu'une fois.
-- Règle : la phrase de synthèse ouvre l'écran.
-- Constat : « Compétitions analysées », « Combats analysés » et le taux de victoire sont affichés deux fois.
+- Constat : la liste mélange les compétitions à venir et passées ; l'ordre est expliqué par une phrase.
+- Règle : deux intertitres, « À venir » et « Passées », remplacent la phrase.
 
-### DASHBOARD-GRAPHIQUE-1 — Répartitions en barres (P3, M)
+## 4. Coach et admin
 
-- Règle : modes de victoire, modes de défaite et gardes s'affichent en barres horizontales.
-- Acceptation : chaque barre conserve son libellé et sa valeur chiffrée.
+### CLUB-1 — Classements saisis depuis le suivi club (P1, M)
 
-### DASHBOARD-DETAIL-1 — Chiffres cliquables (P2, M)
+- Constat : pour classer dix judokas, le coach ouvre dix fiches.
+- Règle : le suivi club propose le classement de chaque participant, en boutons sur sa ligne.
+- Acceptation : le coach classe tous les participants sans quitter l'écran.
+- Fichiers : `assets/views/club-competition-detail.html`, `assets/app-screen-club-competition.ts`.
 
-- Règle : toucher un indicateur ouvre la liste des combats concernés.
-- Règle : « Fiabilité des données » ouvre la liste des combats à compléter.
+### CLUB-2 — Formulaire de compétition club (P2, S)
 
-### CLUB-DETAIL-1 — Participants d'abord (P2, M)
+- Constat : le club n'est pas présélectionné, même quand un club est filtré sur l'accueil. La liste des judokas est masquée par la barre d'actions. En modification, « Aucun résultat. » s'affiche avant toute recherche.
+- Règle : le club filtré sur l'accueil est présélectionné.
+- Règle : la liste des judokas s'affiche dès qu'une catégorie est choisie, au-dessus de la barre.
+- Règle : le message d'absence de résultat n'apparaît qu'après une recherche.
 
-- Règle : le détail d'une compétition club s'ouvre sur les participants et leur avancement.
-- Règle : l'édition des informations se trouve derrière « Modifier ».
-- Acceptation : un participant affiche son nombre de combats saisis et son classement.
+### CLUB-3 — Compteurs de la liste club (P3, S)
 
-### ADMIN-PAGE-1 — Gestion des accès en onglets (P3, M)
+- Constat : « 3 participant(s) · 3 classement(s) · 3 podium(s) ».
+- Règle : les compteurs s'accordent (« 1 participant », « 3 participants »).
+- Règle : la recherche devient un champ simple, sans carte.
 
-- Règle : Utilisateurs, Invitations, Admins et Import sont quatre onglets.
-- Acceptation : « Ajouter un admin » est accessible sans défilement dans son onglet.
+### STATS-1 — Statistiques sans doublon (P2, M)
 
-### ADMIN-IMPORT-1 — Colonnes d'import lisibles (P3, S)
+- Constat : la page fait 3 100 px en mobile et douze sections. « Compétitions analysées » et « Combats analysés » figurent deux fois ; le taux de victoire trois fois. « Nat. 1×🥈 » est illisible.
+- Règle : chaque chiffre figure une seule fois.
+- Règle : la synthèse garde quatre chiffres : combats, taux de victoire, podiums, saisies à compléter.
+- Règle : les podiums s'affichent en toutes lettres (« National : 1 deuxième place »).
+- Acceptation : la page fait moins de 2 000 px en mobile.
+- Fichiers : `assets/views/coach-dashboard.html`, `assets/app-screen-coach-dashboard.ts`.
 
-- Règle : l'aide décrit chaque colonne en français courant.
-- Règle : le nom technique figure seulement dans le fichier d'exemple.
+### STATS-2 — Répartitions en barres (P3, M)
 
-## 6. Finitions
+- Constat : les modes de victoire, de défaite et les gardes s'affichent en tuiles de texte.
+- Règle : chaque répartition s'affiche en barres horizontales avec le nombre et le pourcentage.
 
-### UI-FINITION-1 — Espace dans la pastille utilisateur (P3, S)
+### ADMIN-1 — Gestion des accès en sections (P2, M)
 
-- Constat : « Alex MARTIN- ADMIN · PARENT ».
+- Constat : import, clubs, utilisateurs, invitations et admins se suivent sur une page de 4 500 px en mobile.
+- Règle : la page s'organise en quatre onglets : Utilisateurs, Clubs, Invitations, Import.
+- Règle : la suppression d'un utilisateur passe dans le menu « ⋯ » de sa ligne.
+- Acceptation : chaque onglet tient en moins de deux écrans pour dix utilisateurs.
+- Fichiers : `assets/views/admins.html`, `assets/app-screen-admins.ts`.
 
-### UI-FINITION-2 — Typographie des dates (P3, S)
+### ADMIN-2 — Import guidé (P3, S)
 
-- Règle : les dates utilisent la police du texte courant.
+- Constat : cinq paragraphes de consignes précèdent le bouton d'import.
+- Règle : les consignes se replient derrière « Format du fichier ».
+- Règle : le fichier d'exemple est un bouton, à côté du choix du fichier.
 
-### UI-FINITION-3 — Marges des listes (P3, S)
+## 5. Finitions
 
-- Règle : le contenu des listes respecte la marge intérieure du panneau.
+### UI-1 — Icônes d'aide « i » (P2, S)
 
-### UI-FINITION-4 — Accords au pluriel (P3, S)
+- Constat : presque chaque titre et chaque tuile porte une icône « i » de 14 px, difficile à toucher.
+- Règle : l'aide reste sur les indicateurs calculés ; elle disparaît des titres évidents.
+- Règle : la zone tactile de l'icône mesure 44 px.
 
-- Règle : les libellés s'accordent selon le nombre (« 1 participant », « 2 participants »).
+### UI-2 — Dates en clair (P3, S)
 
-### UI-FINITION-5 — Largeur des badges (P3, S)
+- Règle : les dates s'affichent « sam. 5 déc. 2026 » ; les compétitions proches ajoutent « dans 3 jours ».
 
-- Règle : un badge prend la largeur de son texte.
+### UI-3 — Casse des noms de personnes (P3, S)
 
-## Transverse — Refactoring du thème A « Blanc & Bleu »
+- Constat : le même judoka s'affiche « Hugo DURAND » dans le titre et « Hugo Durand » dans la carte de combat.
+- Règle : un seul format, « Hugo Durand », dans toute l'application.
 
-Décision : la piste A est retenue. Maquette de référence : https://claude.ai/artifact/2qcgEaWewv5w1mdMVD2dDo (artboard « A · Blanc & Bleu »).
+### UI-4 — Libellés d'ajout cohérents (P3, S)
 
-Principe : le refactoring change l'apparence, pas le comportement. Aucun gabarit `assets/views/*.html` ne change de structure dans ce volet. Les nouveaux composants (barre basse, boutons segmentés) sont livrés par leurs stories fonctionnelles et stylés ici.
+- Constat : la même action s'appelle « Ajouter une compétition », « Nouvelle compétition » et « Ajouter la première compétition ».
+- Règle : « Nouvelle compétition » partout.
 
-Ordre : THEME-TOKENS-1, THEME-SURCOUCHE-1, THEME-COULEURS-1, THEME-TYPO-1, THEME-FORMES-1, THEME-COMPOSANTS-1, THEME-PWA-1, THEME-VALIDATION-1.
+### UI-5 — Défilement horizontal des statistiques (P2, S)
 
-### Avancement au 11/11/2026
+- Constat : la capture de l'écran des statistiques mesure 456 px de large pour une fenêtre de 390 px.
+- Règle : vérifier puis supprimer tout débordement horizontal.
 
-| Story | Statut | Écart ou reste à faire |
-|---|---|---|
-| THEME-TOKENS-1 | Fait | — |
-| THEME-SURCOUCHE-1 | Fait | Les trois surcouches sont remplacées par une seule couche « Thème A » en fin de fichier. Les règles historiques de la couche `components` restent en place (structure). L'étape « rendu identique avant palette » a été sautée. |
-| THEME-COULEURS-1 | Fait | 11 `rgba()` restent pour des voiles et ombres translucides. |
-| THEME-TYPO-1 | Fait, avec écart | Police chargée par Google Fonts comme l'était Atkinson, pas auto-hébergée. Hors ligne sans cache, repli sur la police système. |
-| THEME-FORMES-1 | Fait | — |
-| THEME-COMPOSANTS-1 | Fait pour l'existant | Barre basse et boutons segmentés attendent NAV-BARRE-1 et COMBAT-SAISIE-1. |
-| THEME-PWA-1 | Fait | Logo vérifié sur captures mobile et desktop. |
-| THEME-VALIDATION-1 | Voir compte rendu | Écrans non capturés : admin, tableau de bord coach, fiche judoka, compétition club. |
+### UI-6 — Réponse vide du serveur (P3, S)
 
-Corrections faites en chemin :
+- Constat : une réponse vide à un enregistrement affiche « Cannot read properties of null (reading 'message') ».
+- Règle : le message devient « L'enregistrement a échoué. Réessayez. »
 
-- Les badges de résultat n'étaient jamais colorés : l'application génère `result-victoire`, `result-défaite`, `result-egalité`, la feuille ne stylait que `result-v/d/e`.
-- La pastille utilisateur affichait « Alex MARTIN- ADMIN » : nom et rôle sont désormais deux éléments distincts (`assets/views/header.html`).
-- Un cadre gris apparaissait autour de l'écran d'accueil : anneau de focus programmatique du panneau.
-- Les tests `label-borders-playwright` et `combat-creation-visual` imposaient un filet gauche sur chaque libellé. Ils vérifient désormais son absence.
+### UI-7 — Captures de référence (P3, S)
 
-### Valeurs cibles
-
-| Variable | Actuel (ligne 6) | Surcouche (ligne 3125) | Cible A |
-|---|---|---|---|
-| `--bg` | `#f7f6f3` | `#f3f5f7` | `#F3F5FA` |
-| `--panel` | `#ffffff` | `#ffffff` | `#FFFFFF` |
-| `--surface` | `#fbfbfa` | `#ffffff` | `#FFFFFF` |
-| `--text` | `#242321` | `#18212b` | `#0E1A2B` |
-| `--muted` | `#787774` | `#65717d` | `#4E5A6C` |
-| `--line` | `#eae9e5` | `#e1e6eb` | `#E3E8F0` |
-| `--primary` | `#242321` | `#18212b` | `#0E1A2B` |
-| `--primary-hover` | `#403e3a` | `#2a3744` | `#1B2A40` |
-| `--accent` | `#346538` | `#c62828` | `#1F4FD8` |
-| `--accent-soft` | `#edf3ec` | `#fff0f0` | `#E8EEFC` |
-| `--tatami` | `#f1f1ed` | `#f4f6f8` | `#F3F5FA` |
-| `--tatami-line` | `#deddd8` | `#d7dde3` | `#E3E8F0` |
-| `--radius` | `6px` | `10px` | `12px` |
-| `--radius-card` | `8px` | `14px` | `16px` |
-| `--button-focus-ring` | vert 22 % | rouge 20 % | `rgba(31, 79, 216, 0.25)` |
-
-- Les variables `--danger*`, `--warning*`, `--gold*`, `--silver*` et `--bronze*` gardent leur valeur.
-- `--success` et `--success-soft` restent verts pour les messages de confirmation.
-- Le badge « Victoire » utilise `--accent`, pas `--success`.
-- Hypothèse : les valeurs `--primary-hover` et `--accent-soft` ne figurent pas sur la maquette, elles sont dérivées.
-
-### THEME-TOKENS-1 — Un seul bloc de variables (P2, S)
-
-- Constat : `assets/app.tailwind.css` définit `:root` deux fois (lignes 6 et 3125).
-- Constat : le second bloc écrase 15 variables du premier.
-- Règle : un seul bloc `:root` porte les valeurs cibles A.
-- Règle : trois variables s'ajoutent : `--radius-pill: 999px`, `--font-body`, `--font-heading`.
-- Acceptation : `grep -c ":root" assets/app.tailwind.css` renvoie 1.
-- Acceptation : `tailwind.config.js` continue de pointer sur les variables, sans valeur en dur.
-
-### THEME-SURCOUCHE-1 — Fusionner la surcouche « Direction moderne » (P2, M)
-
-- Constat : les lignes 3125 à 3428 redéfinissent `body`, `.app-shell`, `.topbar` et d'autres règles déjà écrites plus haut.
-- Règle : chaque sélecteur n'est défini qu'à un endroit, hors variantes responsive.
-- Règle : en cas de conflit, la valeur de la surcouche gagne, car c'est elle qui s'affiche aujourd'hui.
-- Acceptation : le rendu avant et après fusion est identique sur les captures, avant application de la palette A.
-- Risque : une règle de la surcouche dépend de l'ordre de déclaration. Vérifier écran par écran.
-
-### THEME-COULEURS-1 — Supprimer les couleurs en dur (P2, M)
-
-- Constat : 31 codes hexadécimaux et 19 `rgba()` figurent hors des blocs `:root`.
-- Règle : toute couleur de composant passe par une variable.
-- Règle : les ombres et voiles utilisent `color-mix()` ou une variable dédiée.
-- Exception : le logo Google de l'écran de connexion garde ses couleurs de marque.
-- Acceptation : aucun code hexadécimal hors `:root` dans `assets/app.tailwind.css`.
-
-### THEME-TYPO-1 — Police Plus Jakarta Sans (P2, M)
-
-- Constat : cinq piles de polices coexistent (Georgia ligne 418, Avenir Next lignes 1649, 1986, 2903 et 3144).
-- Constat : `Index.html` charge Atkinson Hyperlegible, que `body` n'utilise plus.
-- Règle : `--font-body` et `--font-heading` valent `'Plus Jakarta Sans', system-ui, sans-serif`.
-- Règle : toutes les déclarations `font-family` utilisent ces deux variables.
-- Règle : graisses utilisées : 500 (texte), 600 (libellés), 700 (boutons), 800 (titres).
-- Règle : la police est servie par l'application, pas par Google Fonts, pour fonctionner hors ligne.
-- Acceptation : hors ligne, les titres s'affichent en Plus Jakarta Sans après une première visite.
-- Fichiers : `assets/app.tailwind.css`, `tailwind.config.js`, `Index.html`, `api/service-worker.js`.
-- À arbitrer : Atkinson Hyperlegible avait été choisie pour sa lisibilité. Confirmer son abandon.
-
-### THEME-FORMES-1 — Surfaces, rayons et ombres (P2, M)
-
-- Règle : une carte est une surface blanche sans bordure, posée sur `--bg`.
-- Règle : les cartes utilisent `--radius-card`, les champs et boutons `--radius`, les badges et puces `--radius-pill`.
-- Règle : `--shadow` vaut `none`. Seule la barre d'action collante garde une séparation par `--line`.
-- Règle : les lignes `.meta-row` ne portent plus de filet entre elles à l'intérieur d'une carte.
-- Acceptation : aucune carte n'est imbriquée dans un panneau bordé (double cadre visible sur les captures actuelles).
-
-### THEME-COMPOSANTS-1 — Composants aux couleurs A (P2, M)
-
-- Bouton primaire : fond `--primary`, texte blanc, hauteur 52 px, graisse 700.
-- Bouton secondaire : fond `--panel`, texte `--text`, sans bordure sur `--bg`.
-- Bouton danger : texte `--danger` sur `--danger-soft`, jamais en pleine largeur à côté d'un bouton primaire.
-- Badge résultat : « Victoire » plein `--accent` texte blanc, « Défaite » contour 1,5 px texte `--text`, « Égalité » fond `--accent-soft`.
-- Puce méta (date, catégorie, poids, niveau) : fond `--panel`, `--radius-pill`, graisse 600.
-- Tuile statistique : fond `--panel`. La tuile mise en avant (classement) prend le fond `--accent` et un texte blanc.
-- Onglets et barre basse : entrée active en `--accent` graisse 800, entrées inactives en `--muted`.
-- Boutons segmentés : rail `--bg`, segment actif `--accent` texte blanc.
-- Alertes de qualité : inchangées (`--warning*`, `--danger*`).
-- Dépendances : NAV-BARRE-1 (barre basse), COMBAT-SAISIE-1 (boutons segmentés).
-- Acceptation : le résultat d'un combat se distingue sans la couleur (plein contre contour, plus le libellé).
-
-### THEME-PWA-1 — Couleurs de l'application installée (P3, S)
-
-- Règle : `theme-color` de `Index.html` passe de `#242321` à `#F3F5FA`.
-- Règle : dans `api/manifest.js`, `theme_color` passe de `#111111` à `#F3F5FA` et `background_color` de `#fbfbfa` à `#F3F5FA`.
-- Règle : `CACHE_NAME` de `api/service-worker.js` est incrémenté pour diffuser les nouveaux styles.
-- À vérifier : l'icône de l'application et le logo `.brand-logo` restent lisibles sur le nouveau fond.
-
-### THEME-VALIDATION-1 — Tests et captures (P2, M)
-
-- Règle : `npm test` passe. Quatre tests lisent `assets/app.css` : `mobile-first-index`, `label-borders-playwright`, `combat-creation-visual`, `vercel-deployment`.
-- Constat : `mobile-first-index.test.js:98` vérifie `--button-primary-bg: var(--primary)`. Cette ligne doit rester.
-- Règle : chaque écran est capturé avant et après, en mobile (390 px) et en desktop.
-- Règle : tout texte atteint un contraste de 4,5:1, y compris `--muted` sur `--bg`.
-- Règle : les états focus, désactivé, erreur et chargement (squelettes) sont contrôlés sur chaque composant.
-- Retour arrière : le refactoring est livré en un commit par story, réversible isolément.
-
-### DOC-CAPTURES-1 — Régénérer les captures (P3, S)
-
-- Constat : les captures 02, 03 et 04 sont identiques.
-- Constat : la section « À venir » des captures n'existe plus dans `home.html`.
-- Règle : les captures couvrent mobile et desktop pour chaque écran.
-
-## Tour des parcours du 11/11/2026 — corrections livrées
-
-Constats issus du tour coach (env dev réel), parent et judoka (banc local). Les douze axes ci-dessous sont implémentés.
-
-| Story | Correction | Statut |
-|---|---|---|
-| NAV-ACCUEIL-1 (partiel) | Bloc « Jour J » en tête de l'accueil coach : compétitions club du jour et des 6 jours suivants, ouvertes en un geste | Fait |
-| COMPETITION-FICHE-1 | Le jour J ou sans combat, la section Combats passe en premier ; un seul bouton d'ajout ; synthèse masquée sans combat ; tuile Statut masquée quand le classement est connu | Fait |
-| COMPETITION-TITRE-1 | Sous-titre de la fiche : nom du judoka et date | Fait |
-| NAV-SELECTEUR-1 | Sélecteur de judoka : lignes claires, catégorie au lieu de l'e-mail ou de l'ID, tri par catégorie puis nom, aucune présélection pour le coach, adresse mise à jour au choix | Fait |
-| JUDOKA-CEINTURE-1 | Couleur de ceinture normalisée à la lecture, à l'import et à l'enregistrement (`core/domain/access/belt-color.ts`) | Fait ; les données existantes restent en minuscules en base tant qu'elles ne sont pas réenregistrées |
-| COMBAT-CONCEDE-1 (étape 1) | Points affichés « Points marqués par le judoka » ; aide du formulaire précisant de ne pas saisir les points adverses | Fait ; le modèle des points concédés reste à faire |
-| CLUB-LISTE-1 | Recherche par nom ou date ; aucun « bilan manquant » avant la date ; plus de défilement automatique à l'ouverture | Fait |
-| CLUB-DETAIL-1 | Détail club en lecture : participants triés par classement avec bilan de combats ; édition, ajout, retrait et suppression derrière « Modifier » | Fait |
-| COMPETITION-CLASSEMENT-1 | Médailles accompagnées du rang en texte (« 🥇 1er ») | Fait |
-| COMPETITION-PREREMPLI-1 | Catégorie d'âge et poids préremplis depuis le profil du judoka | Fait |
-| JUDOKA-FICHE-1 | Nom et saison affichés une seule fois ; modes à zéro masqués ; profil derrière « Modifier le profil » ; « 1re année » | Fait |
-| DASHBOARD-SYNTHESE-1 (partiel) | Statistiques : aucun filtre appliqué d'office, filtres repliés avec résumé, onglet actif visible | Fait |
-| NAV-ACCUEIL-2 (partiel) | Parent : pas d'onglet « Mon espace » pour un compte uniquement parent ; enfant présélectionné seulement s'il est seul | Fait |
-
+- Règle : le script de parcours (judoka, parent, coach, mobile et bureau) est ajouté à `tests/e2e/` et régénère les captures avant chaque lot.

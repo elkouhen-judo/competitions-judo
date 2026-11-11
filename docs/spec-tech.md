@@ -82,7 +82,9 @@ This specification does not redefine product behavior already described in `docs
 
 ### 3.3 Data model constraints
 
-- **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `club_competitions`, `competitions`, and `combats`.
+- **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `clubs`, `coach_clubs`, `club_competitions`, `competitions`, and `combats`.
+- **DAT-001a**: `clubs.id_club` is the club business identifier; `clubs.nom` is unique case-insensitively. `judokas.club_id` optionally references the judoka's club, `club_competitions.club_id` references the owning club, and `coach_clubs (id_coach, id_club)` links a coach to the clubs they coach. Club references use `on delete restrict`; a club can only be deleted once empty.
+- **DAT-001b**: `judokas.is_admin` stores admin rights independently of `judokas.role`, so a `COACH` can also be admin. A user is admin when `role = ADMIN` or `is_admin = true`.
 - **DAT-002**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
 - **DAT-003**: `club_competitions.id_club_competition` is the club event business identifier.
 - **DAT-004**: Business identifiers shall remain text fields.
@@ -100,7 +102,7 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-016**: `judokas.profile_type` shall store the immutable underlying profile type among `JUDOKA` and `PARENT`.
 - **DAT-017**: `judokas.role` shall store the structural access level among `NORMAL`, `COACH`, and `ADMIN`.
 - **DAT-018**: If privileged rights are revoked, `judokas.role` shall resolve back to `NORMAL` without changing `judokas.profile_type`.
-- **DAT-019**: Fresh deployments shall seed the initial `ADMIN` user `Alex DURAND` with email `admin@example.com`.
+- **DAT-019**: The migration shall not seed any user account nor contain personal data. The first admin is designated by a one-off query setting `judokas.is_admin = true` on an existing profile.
 - **DAT-020**: `judokas.annee_naissance` shall remain absent; the application shall not store judoka birth years for privacy reasons.
 - **DAT-021**: `judokas.categorie_age` shall store the age category as a text field among `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, or empty string.
 - **DAT-022**: `judokas.genre` shall store the judoka's gender as a text field among `Homme`, `Femme`, or empty string.
@@ -128,6 +130,7 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-008**: The backend shall validate the access token through Supabase `/auth/v1/user`.
 - **AUTH-009**: The backend shall resolve the verified email from Supabase before applying business permissions.
 - **AUTH-010**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
+- **AUTH-010a**: A coach's sports scope shall be resolved server-side as the judokas whose `club_id` belongs to the coach's `coach_clubs` (plus their own profile), carried by the same managed-judoka scope as parents; every service (competitions, combats, club competitions, dashboard, combat search, MCP) shall filter on it.
 - **AUTH-011**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
 - **AUTH-012**: Backend profile registration shall reject any email that is neither already linked to a judoka profile nor present in `access_invitations`.
 - **AUTH-013**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither linked to an existing imported profile nor present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.

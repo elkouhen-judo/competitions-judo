@@ -1,15 +1,20 @@
     <section id="judokaView" class="panel hidden" v-cloak>
-      <div class="panel-header">
-        <div>
+      <div class="panel-header page-header">
+        <button class="icon-button page-back" type="button" aria-label="Retour" title="Retour" @click="showHome()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="page-title">
           <h2 id="judokaProfileTitle">{{ profileTitle }}</h2>
           <p id="judokaProfileSubtitle" class="subtitle">{{ profileSubtitle }}</p>
         </div>
-        <div class="competition-header-actions">
-          <button class="button-secondary" type="button" @click="showHome()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Retour
-          </button>
-        </div>
+        <details v-if="canEditJudokaInfo" class="page-menu">
+          <summary class="icon-button" aria-label="Actions sur le profil" title="Actions">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+          </summary>
+          <div class="page-menu-list" role="menu">
+            <button type="button" role="menuitem" @click="startProfileEdit()">Modifier le profil</button>
+          </div>
+        </details>
       </div>
       <div class="panel-body">
         <div id="judokaHero" class="judoka-hero">
@@ -27,139 +32,64 @@
           </div>
         </div>
         <div class="section">
-          <div class="section-heading">
-            <div>
-              <h3>Résumé performance
-                <span class="tooltip" tabindex="0" aria-label="Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement.</span>
-                </span>
-              </h3>
-              <p id="judokaSeasonLabel" class="subtitle">{{ seasonLabel }}</p>
-            </div>
-            <div class="season-nav">
-              <button v-if="canShowPreviousSeason" class="button-secondary" type="button" @click="showPreviousSeason()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Précédente
-              </button>
-              <button v-if="canShowNextSeason" class="button-secondary" type="button" @click="showNextSeason()">
-                Suivante
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-              </button>
-            </div>
+          <div class="season-switch">
+            <button class="icon-button" type="button" aria-label="Saison précédente" :disabled="!canShowPreviousSeason" @click="showPreviousSeason()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <p id="judokaSeasonLabel" class="season-switch-label">{{ seasonLabel }}</p>
+            <button class="icon-button" type="button" aria-label="Saison suivante" :disabled="!canShowNextSeason" @click="showNextSeason()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
           </div>
-          <div class="stats-grid">
-            <div class="stat-card stat-card-highlight">
-              <span class="stat-label">Compétitions
-                <span class="tooltip" tabindex="0" aria-label="Nombre de compétitions rattachées au judoka sur la saison affichée.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Nombre de compétitions rattachées au judoka sur la saison affichée.</span>
-                </span>
-              </span>
-              <span id="judokaSeasonCompetitionCount" class="stat-value">{{ seasonCompetitionCount }}</span>
+          <div class="dashboard-kpis">
+            <div class="mini-stat">
+              <span id="judokaSeasonCompetitionCount" class="mini-stat-value">{{ seasonCompetitionCount }}</span>
+              <span class="mini-stat-label">Compétitions</span>
             </div>
-            <div class="stat-card">
-              <span class="stat-label">Combats
-                <span class="tooltip" tabindex="0" aria-label="Nombre total de combats saisis dans les compétitions de la saison affichée.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Nombre total de combats saisis dans les compétitions de la saison affichée.</span>
-                </span>
-              </span>
-              <span id="judokaSeasonCombatCount" class="stat-value">{{ seasonCombatCount }}</span>
+            <div class="mini-stat">
+              <span id="judokaSeasonCombatCount" class="mini-stat-value">{{ seasonCombatCount }}</span>
+              <span class="mini-stat-label">Combats</span>
             </div>
-            <div class="stat-card stat-card-highlight">
-              <span class="stat-label">Bilan
-                <span class="tooltip" tabindex="0" aria-label="Répartition des combats gagnés, perdus et nuls sur la saison affichée.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Répartition des combats gagnés, perdus et nuls sur la saison affichée.</span>
-                </span>
-              </span>
-              <span id="judokaSeasonBalance" class="stat-value">{{ seasonWins }}V · {{ seasonLosses }}D · {{ seasonDraws }}N</span>
+            <div class="mini-stat">
+              <span id="judokaSeasonBalance" class="mini-stat-value">{{ seasonRecord }}</span>
+              <span class="mini-stat-label">Bilan</span>
             </div>
-            <div class="stat-card stat-card-success">
-              <span class="stat-label">Taux de victoire
-                <span class="tooltip" tabindex="0" aria-label="Pourcentage de victoires parmi les combats gagnés ou perdus. Les nuls ne sont pas comptés dans le calcul.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Pourcentage de victoires parmi les combats gagnés ou perdus. Les nuls ne sont pas comptés dans le calcul.</span>
-                </span>
-              </span>
-              <span id="judokaVictoryRate" class="stat-value">{{ victoryRate }}</span>
+            <div class="mini-stat">
+              <span id="judokaVictoryRate" class="mini-stat-value">{{ victoryRate }}</span>
+              <span class="mini-stat-label">Victoires</span>
             </div>
           </div>
         </div>
 
         <div class="section" v-if="Number(seasonWins)">
-          <div class="section-heading">
-            <div>
-              <h3>Mode de victoire
-                <span class="tooltip" tabindex="0" aria-label="Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des victoires.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des victoires.</span>
-                </span>
-              </h3>
-              <p class="subtitle">Tendances sur la saison sélectionnée.</p>
-            </div>
-          </div>
-          <div class="stats-grid">
-            <div v-for="entry in victoriesByDecisionType" :key="entry.decisionType" class="stat-card stat-card-success">
-              <span class="stat-label">{{ entry.decisionType }}</span>
-              <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="section" v-if="Number(seasonLosses)">
-          <div class="section-heading">
-            <div>
-              <h3>Mode de défaite
-                <span class="tooltip" tabindex="0" aria-label="Répartition des défaites de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Répartition des défaites de ce judoka selon la manière dont le combat s'est terminé, en pourcentage du total des défaites.</span>
-                </span>
-              </h3>
-              <p class="subtitle">Tendances sur la saison sélectionnée.</p>
-            </div>
-          </div>
-          <div class="stats-grid">
-            <div v-for="entry in defeatsByDecisionType" :key="entry.decisionType" class="stat-card stat-card-danger">
-              <span class="stat-label">{{ entry.decisionType }}</span>
-              <span class="stat-value">{{ entry.count }}/{{ entry.total }} ({{ entry.rate }}%)</span>
-            </div>
-          </div>
+          <h3>Fin des combats gagnés</h3>
+          <ul class="bar-list">
+            <li v-for="entry in victoriesByDecisionType" :key="entry.decisionType">
+              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.count }} ({{ entry.rate }}%)</span></div>
+              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
+            </li>
+          </ul>
         </div>
 
         <div class="section" v-if="hasTopWinTechniques">
-          <div class="section-heading">
-            <div>
-              <h3>Top techniques de victoire
-                <span class="tooltip" tabindex="0" aria-label="Les techniques marquées le plus souvent dans les combats gagnés sur la saison sélectionnée.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Les techniques marquées le plus souvent dans les combats gagnés sur la saison sélectionnée.</span>
-                </span>
-              </h3>
-              <p class="subtitle">Les 3 techniques les plus efficaces sur la saison sélectionnée.</p>
-            </div>
-          </div>
-          <div class="stats-grid">
-            <div v-for="(entry, index) in topWinTechniques" :key="entry.technique" class="stat-card" :class="{ 'stat-card-success': index === 0 }">
-              <span class="stat-label">{{ index + 1 }}. {{ entry.technique }}</span>
-              <span class="stat-value">{{ entry.count }}</span>
-            </div>
-          </div>
+          <h3>Techniques qui gagnent</h3>
+          <ol class="technique-list">
+            <li v-for="entry in topWinTechniques" :key="entry.technique"><span>{{ entry.technique }}</span><span class="bar-row-value">{{ entry.count }}</span></li>
+          </ol>
+        </div>
+
+        <div class="section" v-if="Number(seasonLosses)">
+          <h3>Fin des combats perdus</h3>
+          <ul class="bar-list">
+            <li v-for="entry in defeatsByDecisionType" :key="entry.decisionType">
+              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.count }} ({{ entry.rate }}%)</span></div>
+              <div class="bar-track bar-track-loss" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
+            </li>
+          </ul>
         </div>
 
         <div class="section">
-          <div class="section-heading">
-            <div>
-              <h3>Résultats compétition
-                <span class="tooltip" tabindex="0" aria-label="Liste les compétitions de la saison avec le classement et le bilan de combats saisis.">
-                  <span class="tooltip-trigger" aria-hidden="true">i</span>
-                  <span class="tooltip-content" aria-hidden="true">Liste les compétitions de la saison avec le classement et le bilan de combats saisis.</span>
-                </span>
-              </h3>
-              <p class="subtitle">Classements et bilans par tournoi.</p>
-            </div>
-          </div>
+          <h3>Compétitions de la saison</h3>
           <div id="judokaCompetitionResults">
             <div v-if="!hasCompetitionResults" class="empty-action">
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
@@ -167,27 +97,14 @@
               <p class="empty-action-body">Les résultats de la saison sélectionnée apparaîtront ici.</p>
             </div>
             <div v-else class="list">
-              <article v-for="result in competitionResultsPage" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card performance-result-card">
-                <div class="performance-result-header">
-                  <p class="card-title">{{ result.name }}</p>
-                  <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
-                </div>
-                <div class="card-meta">
-                  <div class="meta-row">
-                    <span class="meta-label">Date</span>
-                    <span class="meta-value">{{ result.date }}</span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-label">Combats</span>
-                    <span class="meta-value">{{ result.combatRecord }}</span>
-                  </div>
-                </div>
-                <div v-if="result.competitionId" class="card-actions">
-                  <button class="button-secondary" type="button" @click="openCompetitionFromProfile(result.competitionId)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    Voir les combats
-                  </button>
-                </div>
+              <article v-for="result in competitionResultsPage" :key="result.competitionId || `${result.name}-${result.date}-${result.result}`" class="card competition-card">
+                <button class="card-button competition-open-button" type="button" :disabled="!result.competitionId" @click="openCompetitionFromProfile(result.competitionId)">
+                  <span class="competition-card-row">
+                    <span class="card-title">{{ result.name }}</span>
+                    <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
+                  </span>
+                  <span class="competition-card-date">{{ result.date }}<span v-if="result.combatRecord"> · {{ result.combatRecord }}</span></span>
+                </button>
               </article>
             </div>
             <div v-if="competitionResultsTotalPages > 1" class="list-summary">
@@ -199,10 +116,7 @@
             </div>
           </div>
         </div>
-        <div v-if="canEditJudokaInfo && !profileEditing" class="section">
-          <button class="button-secondary" type="button" @click="startProfileEdit()">Modifier le profil</button>
-        </div>
-        <div v-if="canEditJudokaInfo && profileEditing" class="section">
+        <div v-if="canEditJudokaInfo && profileEditing" id="judokaProfileEditSection" class="section">
           <div class="section-heading">
             <div>
               <h3>Profil judoka

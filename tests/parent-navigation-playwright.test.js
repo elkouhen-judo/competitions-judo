@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { chromium } = require("@playwright/test");
+const { chromium, expect } = require("@playwright/test");
 
 const root = path.join(__dirname, "..");
 const clientHandler = require(path.join(root, "api", "client.js"));
@@ -73,7 +73,7 @@ async function startServer() {
   return { server, url: `http://127.0.0.1:${server.address().port}` };
 }
 
-test("un compte parent revient à l'accueil parent et ne se voit pas parmi ses enfants", async () => {
+test("un compte parent choisit l'enfant en un geste, ne se voit pas parmi ses enfants et retrouve son dernier choix", async () => {
   const { server, url } = await startServer();
   const browser = await chromium.launch({ headless: true });
   try {
@@ -85,18 +85,23 @@ test("un compte parent revient à l'accueil parent et ne se voit pas parmi ses e
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
 
-    await page.getByRole("button", { name: "Gérer les compétitions" }).click();
-    const parentTabs = page.getByRole("navigation", { name: "Navigation parent" });
-    await parentTabs.waitFor({ state: "visible" });
+    // ACCUEIL-2 : une pastille par enfant, le parent n'en fait pas partie, un enfant est déjà choisi.
+    const pills = page.locator("#homeChildPills [role='radio']");
+    await expect(pills).toHaveCount(2);
+    const labels = await pills.allInnerTexts();
+    assert.ok(labels.every((text) => !/Claire/.test(text)), "le parent ne doit pas être proposé comme judoka");
+    await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Hugo");
+    assert.equal(await page.locator("#homeView button:disabled").count(), 0, "aucun bouton grisé sur l'accueil");
 
-    await page.locator("#filterJudokaText").focus();
-    const options = await page.locator("#filterJudokaDropdown .autocomplete-option").allInnerTexts();
-    assert.equal(options.length, 2, `options inattendues : ${options.join(" | ")}`);
-    assert.ok(options.every((text) => !/Claire/.test(text)), "le parent ne doit pas être proposé comme judoka");
+    await pills.filter({ hasText: "Nina" }).click();
+    await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Nina");
+    await expect(page.locator("#openHomeJudokaProfileButton")).toContainText("Fiche de Nina");
 
-    await parentTabs.getByRole("button", { name: "Accueil parent" }).click();
-    await page.getByRole("button", { name: "Gérer les compétitions" }).waitFor({ state: "visible" });
-    assert.equal(await parentTabs.isVisible(), false);
+    // Le dernier enfant choisi est mémorisé sur l'appareil.
+    await page.evaluate(() => sessionStorage.clear());
+    await page.reload();
+    await page.locator("#homeChildPills").waitFor({ state: "visible" });
+    await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Nina");
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));

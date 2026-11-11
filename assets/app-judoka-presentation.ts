@@ -62,12 +62,17 @@
       seasonWins: String(seasonWins || 0),
       seasonLosses: String(seasonLosses || 0),
       seasonDraws: String(seasonDraws || 0),
+      // Bilan sans compteurs à zéro : « 7V 1D ».
+      seasonRecord:
+        [seasonWins ? `${seasonWins}V` : "", seasonLosses ? `${seasonLosses}D` : "", seasonDraws ? `${seasonDraws}N` : ""]
+          .filter(Boolean)
+          .join(" ") || "—",
       victoryRate: `${victoryRate || 0}%`,
       heroAvatar: getJudokaInitials(judoka),
       heroName: getJudokaDisplayName(judoka) || "Judoka",
       heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
       heroCategory: ageCategory || "Catégorie à renseigner",
-      heroWeightCategory: weightCategory,
+      heroWeightCategory: String(weightCategory || "").trim().replace(/\s*kg$/i, " kg"),
       heroBeltColor: beltColor,
       heroGender: gender,
       heroYearInCategory: yearInCategory,
@@ -85,7 +90,7 @@
         result: formatCompetitionRanking(result.result) || "Non classé",
         resultClass: getClassementBadgeClass(result.result),
         badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
-        combatRecord: result.combatRecord ? result.combatRecord.label : "0V · 0D"
+        combatRecord: result.combatRecord && result.combatRecord.total ? result.combatRecord.label.replace(/ · /g, " ") : ""
       })),
       hasCompetitionResults: Boolean((competitionResults || []).length)
     };

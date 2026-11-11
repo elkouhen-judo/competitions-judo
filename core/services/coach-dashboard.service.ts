@@ -3,7 +3,8 @@ import { createCoachAssistantSearch, type CoachChatDatasets } from "./coach-assi
 import {
   filterCompetitionsByScope,
   filterCompetitionsBySelection,
-  loadCoachDashboardCombats
+  loadCoachDashboardCombats,
+  filterCompetitionsByOwners
 } from "./coach-dashboard-loader";
 import { toCanonicalCompetition } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
@@ -72,17 +73,29 @@ export default function createCoachDashboardService(
   } = deps;
   const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate });
 
-  async function requireCoach(email: string, message: string): Promise<void> {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
+  // Retourne les judokas visibles par le coach : ceux de ses clubs, ou d'un seul club si clubId est fourni.
+  async function requireCoach(email: string, message: string, clubId?: string): Promise<string[]> {
+    const { domainUser, judokas, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     if (domainUser.accessRole !== "COACH") {
       throw new Error(message);
     }
+    const selectedClubId = String(clubId || "").trim();
+    if (!selectedClubId) {
+      return judokas.map((judoka) => String(judoka.id_judoka));
+    }
+    if (!coachClubIds.includes(selectedClubId)) {
+      throw new Error("Club introuvable.");
+    }
+    return judokas
+      .filter((judoka) => String(judoka.club_id || "") === selectedClubId)
+      .map((judoka) => String(judoka.id_judoka));
   }
 
-  async function loadCoachChatDatasets(): Promise<CoachChatDatasets> {
+  async function loadCoachChatDatasets(allowedJudokaIds: string[]): Promise<CoachChatDatasets> {
+    const allowed = new Set(allowedJudokaIds);
     const [competitionRows, judokaRows] = await Promise.all([
-      competitionsRepository.listAll(),
-      judokasRepository.listAll()
+      competitionsRepository.listAll().then((rows) => filterCompetitionsByOwners(rows, allowedJudokaIds)),
+      judokasRepository.listAll().then((rows) => rows.filter((row) => allowed.has(String(row.id_judoka))))
     ]);
     const combatRowsByCompetition = await Promise.all(
       competitionRows.map((competition) => combatsRepository.listByCompetition(competition.id_competition))
@@ -103,13 +116,14 @@ export default function createCoachDashboardService(
     email: string,
     filters: CoachDashboardFilters = {}
   ): Promise<CoachDashboard> {
-    await requireCoach(email, "Tableau de bord réservé aux coachs.");
+    const allowedJudokaIds = await requireCoach(email, "Tableau de bord réservé aux coachs.", filters.clubId);
     const [combats, allCompetitionRows] = await Promise.all([
       loadCoachDashboardCombats(
         { combatsRepository, combatScoresRepository, competitionsRepository, judokasRepository },
-        filters
+        filters,
+        allowedJudokaIds
       ),
-      competitionsRepository.listAll()
+      competitionsRepository.listAll().then((rows) => filterCompetitionsByOwners(rows, allowedJudokaIds))
     ]);
     const competitionsInScope = filterCompetitionsBySelection(
       filterCompetitionsByScope(allCompetitionRows, filters),
@@ -128,8 +142,8 @@ export default function createCoachDashboardService(
     filters: CoachChatFilters = {},
     limit?: number
   ): Promise<{ matches: CoachAssistantMatch[] }> {
-    await requireCoach(email, "Recherche de combats réservée aux coachs.");
-    return coachAssistantSearch.searchCombats(filters, limit, await loadCoachChatDatasets());
+    const allowedJudokaIds = await requireCoach(email, "Recherche de combats réservée aux coachs.");
+    return coachAssistantSearch.searchCombats(filters, limit, await loadCoachChatDatasets(allowedJudokaIds));
   }
 
   return {

@@ -1,30 +1,32 @@
     <section id="clubCompetitionDetailView" class="panel hidden" v-cloak>
-      <div class="panel-header">
-        <div>
+      <div class="panel-header page-header">
+        <button class="icon-button page-back" type="button" aria-label="Retour" title="Retour" @click="cancelClubCompetitionDetail()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="page-title">
           <h2>{{ clubCompetitionDetailTitle }}</h2>
           <p class="subtitle">{{ clubCompetitionDetailSummary || "Compétition club" }}</p>
         </div>
-        <div class="competition-header-actions">
-          <button class="button-secondary" type="button" @click="cancelClubCompetitionDetail()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Retour
-          </button>
-          <button v-if="!clubCompetitionDetailEditing" class="button-secondary" type="button" :disabled="isSubmitting" @click="startClubCompetitionDetailEdit()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            Modifier
-          </button>
-        </div>
+        <details v-if="!clubCompetitionDetailEditing" class="page-menu">
+          <summary class="icon-button" aria-label="Actions sur la compétition club" title="Actions">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+          </summary>
+          <div class="page-menu-list" role="menu">
+            <button type="button" role="menuitem" :disabled="isSubmitting" @click="startClubCompetitionDetailEdit()">Modifier ou ajouter des judokas</button>
+            <button type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="confirmDeleteClubCompetition()">Supprimer la compétition club</button>
+          </div>
+        </details>
       </div>
       <div class="panel-body">
         <div v-if="clubCompetitionParticipantsLocked && clubCompetitionDetailEditing" class="status-banner status-banner-warning">
-          Compétition passée ou en cours — saisie a posteriori possible : ajoutez les judokas oubliés puis leurs combats. Un participant ne peut être retiré que s'il n'a ni combat ni classement.
+          Saisie après coup possible : ajoutez les judokas oubliés. Un participant ne se retire que s'il n'a ni combat ni classement.
         </div>
 
         <div class="section">
           <div class="section-heading">
             <div>
               <h3>Participants ({{ clubCompetitionCurrentParticipants.length }})</h3>
-              <p class="subtitle">Classés du podium aux non classés. Touchez un judoka pour saisir ses combats et son classement.</p>
+              <p class="subtitle">{{ clubCompetitionParticipantsLocked ? "Touchez une place pour classer, un nom pour saisir les combats." : "Touchez un judoka pour ouvrir sa fiche." }}</p>
             </div>
           </div>
           <div id="clubDetailParticipantsList">
@@ -32,20 +34,28 @@
             <div v-else class="list">
               <article v-for="p in clubCompetitionParticipantsPage" :key="p.competitionId" class="card competition-card participant-card">
                 <button class="card-button competition-open-button" type="button" @click="openCompetitionFromClubDetail(p.competitionId)">
-                  <span class="competition-card-button-copy">
-                    <span class="performance-result-header">
-                      <span class="card-title">{{ p.judokaName }}</span>
-                      <span class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
-                    </span>
-                    <span class="coach-club-summary">
-                      <span :class="{ 'coach-summary-warning': !p.hasCombats }">{{ p.combatSummary }}</span>
-                    </span>
-                    <span class="card-open-hint">Voir les combats</span>
+                  <span class="competition-card-row">
+                    <span class="card-title">{{ p.judokaName }}</span>
+                    <span v-if="p.result" class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
                   </span>
+                  <span class="competition-card-date" :class="{ 'coach-summary-warning': !p.hasCombats }">{{ p.combatSummary }}</span>
                 </button>
+                <div v-if="clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing" class="choice-chips participant-ranking" role="radiogroup" :aria-label="'Classement de ' + p.judokaName">
+                  <button
+                    v-for="option in clubRankingOptions"
+                    :key="option.value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="p.rawResult === option.value ? 'true' : 'false'"
+                    :aria-label="option.value"
+                    :class="['choice-chip', 'choice-chip-compact', { 'choice-active': p.rawResult === option.value }]"
+                    :disabled="isSubmitting"
+                    @click="setClubParticipantRanking(p.competitionId, option.value)">
+                    {{ option.label }}
+                  </button>
+                </div>
                 <div v-if="clubCompetitionDetailEditing && (!clubCompetitionParticipantsLocked || (!p.hasCombats && !p.hasResult))" class="card-actions">
                   <button class="button-danger" type="button" :disabled="isSubmitting" @click="confirmDetachClubParticipant(clubCompetitionDetailForm.clubCompetitionId, p.competitionId, p.judokaName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M18 8l4 4-4 4"></path><path d="M22 12H11"></path></svg>
                     Retirer {{ p.judokaName }}
                   </button>
                 </div>
@@ -113,13 +123,12 @@
               <p class="subtitle">Ajoutez les judokas manquants de la même catégorie.</p>
             </div>
           </div>
-          <div class="filter-bar">
-            <label for="clubDetailJudokaSearch">Rechercher</label>
-            <input type="search" id="clubDetailJudokaSearch" placeholder="Nom du judoka..." autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
+          <div v-if="clubCompetitionAvailableJudokas.length > 5" class="list-search">
+            <input type="search" id="clubDetailJudokaSearch" aria-label="Rechercher un judoka" placeholder="Rechercher un judoka…" autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
           </div>
           <div id="clubDetailAvailableJudokas">
             <div v-if="!clubCompetitionAvailableJudokas.length" class="empty-state">Aucun judoka disponible dans cette catégorie.</div>
-            <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">Aucun résultat.</div>
+            <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>
             <div v-else class="list">
               <label v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" class="checkbox-row">
                 <input type="checkbox" :value="j.judokaId" v-model="clubCompetitionNewJudokaIds">
@@ -136,17 +145,11 @@
           </div>
         </div>
 
-        <div class="form-actions mobile-action-bar">
+        <div class="form-actions mobile-action-bar action-bar-inline">
           <button class="button-secondary" type="button" @click="cancelClubCompetitionDetailEdit()">Annuler</button>
-          <button id="saveClubCompetitionDetailButton" type="button" :disabled="isSubmitting" @click="saveClubCompetitionDetails()">Enregistrer</button>
+          <button id="saveClubCompetitionDetailButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="saveClubCompetitionDetails()">Enregistrer</button>
         </div>
 
-        <div class="section danger-zone">
-          <button class="button-danger" type="button" :disabled="isSubmitting" @click="confirmDeleteClubCompetition()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            Supprimer la compétition club
-          </button>
-        </div>
         </template>
       </div>
     </section>

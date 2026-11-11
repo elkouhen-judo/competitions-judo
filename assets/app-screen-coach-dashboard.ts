@@ -6,12 +6,6 @@
   const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
   const COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT = 8;
   const PODIUM_LEVEL_PRIORITY = ["International", "National", "Régional", "Départemental"];
-  const PODIUM_LEVEL_LABELS: Record<string, string> = {
-    International: "Int.",
-    National: "Nat.",
-    Régional: "Rég.",
-    Départemental: "Dép."
-  };
   const PODIUM_PLACE_PRIORITY = ["1er", "2e", "3e"];
   const PODIUM_PLACE_EMOJIS: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
 
@@ -38,7 +32,8 @@
     const { showError } = notifications;
 
     const defaultCoachDashboardForm = {
-      // Aucun filtre appliqué d'office : le coach voit tout le club, puis affine.
+      // Aucun filtre appliqué d'office : le coach voit tous ses clubs, puis affine.
+      clubId: "",
       ageCategory: "",
       dateFrom: "",
       dateTo: "",
@@ -84,30 +79,46 @@
     const coachDashboardTopWinTechniques = window.Vue.computed(
       () => coachDashboardViewModel.coachDashboardStats?.topWinTechniques || []
     );
-    const coachDashboardTopPodiumLevel = window.Vue.computed(() => {
-      const entries = coachDashboardPodiumsByLevel.value;
-      const podiumHighlights: string[] = [];
-      for (const level of PODIUM_LEVEL_PRIORITY) {
-        const entry = entries.find((candidate) => candidate.level === level);
-        if (!entry) {
-          continue;
-        }
-        for (const place of PODIUM_PLACE_PRIORITY) {
-          const podium = entry.podiums.find((candidate) => candidate.place === place);
-          const podiumCount = Number(podium?.count || 0);
-          if (podiumCount > 0) {
-            podiumHighlights.push(`${PODIUM_LEVEL_LABELS[level] || level} ${podiumCount}x${PODIUM_PLACE_EMOJIS[place]}`);
-            break;
-          }
-        }
-      }
-      return podiumHighlights.length ? podiumHighlights.join("\n") : "Aucun podium";
+    // STATS-1 : podiums écrits en toutes lettres, par niveau (« National : 1 deuxième place »).
+    const PODIUM_PLACE_WORDS: Record<string, [string, string]> = {
+      "1er": ["première place", "premières places"],
+      "2e": ["deuxième place", "deuxièmes places"],
+      "3e": ["troisième place", "troisièmes places"]
+    };
+    const coachDashboardPodiumLines = window.Vue.computed(() =>
+      [...coachDashboardPodiumsByLevel.value]
+        .sort((a, b) => PODIUM_LEVEL_PRIORITY.indexOf(a.level) - PODIUM_LEVEL_PRIORITY.indexOf(b.level))
+        .map((entry) => {
+          const parts = PODIUM_PLACE_PRIORITY.map((place) => {
+            const count = Number(entry.podiums.find((podium) => podium.place === place)?.count || 0);
+            const words = PODIUM_PLACE_WORDS[place] || [place, place];
+            return count ? `${PODIUM_PLACE_EMOJIS[place]} ${count} ${count > 1 ? words[1] : words[0]}` : "";
+          }).filter(Boolean);
+          return { level: entry.level, text: parts.join(" · ") };
+        })
+        .filter((line) => line.text)
+    );
+    const coachDashboardPodiumTotal = window.Vue.computed(() =>
+      coachDashboardPodiumsByLevel.value.reduce(
+        (total, entry) => total + entry.podiums.reduce((sum, podium) => sum + Number(podium.count || 0), 0),
+        0
+      )
+    );
+    // STATS-2 : les techniques s'affichent en barres relatives à la plus fréquente.
+    const coachDashboardTopWinTechniqueBars = window.Vue.computed(() => {
+      const entries = coachDashboardTopWinTechniques.value;
+      const max = Math.max(1, ...entries.map((entry) => entry.count));
+      return entries.map((entry) => ({ ...entry, rate: Math.round((entry.count / max) * 100) }));
     });
     const coachDashboardTopQualityIssue = window.Vue.computed(() =>
       coachDashboardDataQualityIssues.value.reduce(
         (topIssue, issue) => (!topIssue || issue.rate > topIssue.rate ? issue : topIssue),
         null as CoachDashboardStats["dataQualityIssues"][number] | null
       )
+    );
+    // Combats concernés par le critère de saisie le plus fréquent (les critères se recoupent).
+    const coachDashboardIncompleteCount = window.Vue.computed(() =>
+      coachDashboardDataQualityIssues.value.reduce((max, issue) => Math.max(max, issue.count), 0)
     );
     const coachDashboardMainQualityIssue = window.Vue.computed(() => {
       const issue = coachDashboardTopQualityIssue.value;
@@ -120,7 +131,7 @@
       }
       const qualityIssue = coachDashboardTopQualityIssue.value;
       if (qualityIssue) {
-        return `Priorité saisie : ${qualityIssue.label.toLowerCase()} concerne ${qualityIssue.count} combat(s).`;
+        return `À compléter en priorité : ${qualityIssue.label.toLowerCase()} (${ui.pluralize(qualityIssue.count, "combat")}).`;
       }
       if (stats.victoryRate >= 60) {
         return "Point fort : le taux de victoire est favorable sur ce périmètre.";
@@ -180,7 +191,6 @@
           resetCoachDashboardFilters,
           scheduleCoachDashboardRefresh,
           showCoachHome,
-          showPersonalSpace,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
           addCoachDashboardCompetition,
@@ -199,17 +209,31 @@
           coachDashboardJudokasByHandedness,
           coachDashboardDataQualityIssues,
           coachDashboardPodiumsByLevel,
-          coachDashboardTopPodiumLevel,
+          coachDashboardPodiumLines,
+          coachDashboardPodiumTotal,
           coachDashboardTopWinTechniques,
+          coachDashboardTopWinTechniqueBars,
           coachDashboardMainQualityIssue,
+          coachDashboardIncompleteCount,
           coachDashboardSummaryInsight,
           coachDashboardSelectedCompetitions,
           coachDashboardCompetitionSuggestions,
           coachDashboardTitle,
-          coachDashboardSubtitle
+          coachDashboardSubtitle,
+          showCoachDashboardClubFilter,
+          coachDashboardClubOptions,
+          coachDashboardClubName
         }
       );
     }
+
+    // Filtre club : proposé aux coachs de plusieurs clubs uniquement.
+    const showCoachDashboardClubFilter = window.Vue.computed(() => state.clubs.length > 1);
+    const coachDashboardClubOptions = window.Vue.computed(() => state.clubs);
+    const coachDashboardClubName = window.Vue.computed(() => {
+      const club = state.clubs.find((candidate) => candidate.clubId === coachDashboardViewModel.coachDashboardForm.clubId);
+      return club ? club.name : "";
+    });
 
     function fetchCoachDashboardStats() {
       const dateFrom = coachDashboardViewModel.coachDashboardForm.dateFrom;
@@ -226,6 +250,7 @@
         "getCoachDashboard",
         [
           {
+            clubId: coachDashboardViewModel.coachDashboardForm.clubId,
             dateFrom: coachDashboardViewModel.coachDashboardForm.dateFrom,
             dateTo: coachDashboardViewModel.coachDashboardForm.dateTo,
             ageCategory: coachDashboardViewModel.coachDashboardForm.ageCategory,
@@ -324,6 +349,8 @@
         coachDashboardRefreshTimer = null;
       }
       Object.assign(coachDashboardViewModel.coachDashboardForm, defaultCoachDashboardForm, {
+        // Les statistiques s'ouvrent sur le club choisi à l'accueil.
+        clubId: state.selectedClubId || "",
         competitionIds: [] as string[]
       });
       coachDashboardViewModel.competitionSearchText = "";
@@ -342,10 +369,6 @@
 
     function showCoachHome() {
       showCoachHomeMode("coachHome");
-    }
-
-    function showPersonalSpace() {
-      showCoachHomeMode("judoka");
     }
 
     function showCoachCompetitions() {

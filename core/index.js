@@ -43,6 +43,10 @@ const createParentLinksRepository =
   /** @type {typeof import("./repositories/parent-links.repository").default} */ (
     /** @type {unknown} */ (require("../core-dist/repositories/parent-links.repository.js").default)
   );
+const createClubsRepository =
+  /** @type {typeof import("./repositories/clubs.repository").default} */ (
+    /** @type {unknown} */ (require("../core-dist/repositories/clubs.repository.js").default)
+  );
 const createUserContextService =
   /** @type {typeof import("./services/user-context.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/user-context.service.js").default)
@@ -54,6 +58,9 @@ const createClubCompetitionsService =
   /** @type {typeof import("./services/club-competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/club-competitions.service.js").default)
   );
+const createClubsService = /** @type {typeof import("./services/clubs.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/clubs.service.js").default)
+);
 const createCompetitionsService =
   /** @type {typeof import("./services/competitions.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/competitions.service.js").default)
@@ -133,10 +140,12 @@ const combatsRepository = createCombatsRepository(repositoryDeps);
 const combatScoresRepository = createCombatScoresRepository(repositoryDeps);
 const invitationsRepository = createInvitationsRepository(repositoryDeps);
 const parentLinksRepository = createParentLinksRepository(repositoryDeps);
+const clubsRepository = createClubsRepository(repositoryDeps);
 
 const userContextService = createUserContextService({
   judokasRepository,
   parentLinksRepository,
+  clubsRepository,
   normalizeEmail: text.normalizeEmail,
   assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
   createManagedJudokaScope,
@@ -146,6 +155,7 @@ const userContextService = createUserContextService({
 });
 
 const adminService = createAdminService({
+  clubsRepository,
   competitionsRepository,
   invitationsRepository,
   judokasRepository,
@@ -227,6 +237,15 @@ const registrationService = createRegistrationService({
   supabaseRpc: supabaseClient.supabaseRpc
 });
 
+const clubsService = createClubsService({
+  clubsRepository,
+  clubCompetitionsRepository,
+  judokasRepository,
+  userContextService,
+  isAdmin: permissions.isAdmin,
+  buildClubId: ids.buildClubId
+});
+
 const mcpAuthService = createMcpAuthService({
   userContextService,
   isCoach: permissions.isCoach,
@@ -250,28 +269,62 @@ async function getInitialData(email) {
     }
   }
 
-  const { user, judokas, managedJudokaScope, domainUser } =
+  const { user, judokas, managedJudokaScope, domainUser, coachClubIds = [] } =
     await userContextService.getDomainUserContext(email);
   const admin = permissions.isAdmin(domainUser);
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
 
-  const clubCompetitionsRaw = coach ? await clubCompetitionsRepository.listAll() : [];
+  // Un coach ne voit que les compétitions club et les clubs qu'il coache.
+  const clubCompetitionsRaw = coach ? await clubCompetitionsRepository.listByClubIds(coachClubIds) : [];
   const clubCompetitions = clubCompetitionsRaw.map((cc) => ({
     clubCompetitionId: cc.id_club_competition,
     name: cc.nom,
-    competitionDate: cc.date
+    competitionDate: cc.date,
+    clubId: cc.club_id || ""
   }));
+  const coachClubIdSet = new Set(coachClubIds.map(String));
+  const clubs = coach
+    ? (await clubsRepository.listAll())
+        .filter((club) => coachClubIdSet.has(String(club.id_club)))
+        .map((club) => ({ clubId: club.id_club, name: club.nom }))
+    : [];
+
+  const competitions = await competitionsService.getCompetitionsForUser(user, managedJudokaScope);
 
   return {
     user: toCanonicalJudoka(user),
     isAdmin: admin,
     isCoach: coach,
     isParent: parent,
-    competitions: await competitionsService.getCompetitionsForUser(user, managedJudokaScope),
+    competitions,
+    combatRecords: await getCombatRecords(competitions),
     clubCompetitions,
+    clubs,
     judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : []
   };
+}
+
+// Bilan des combats par compétition, affiché sur les cartes de l'accueil (« 3V 1D »).
+async function getCombatRecords(competitions) {
+  const ids = (competitions || []).map((competition) => competition.competitionId).filter(Boolean);
+  if (!ids.length || typeof combatsRepository.listByCompetitionIds !== "function") {
+    return {};
+  }
+  const rows = await combatsRepository.listByCompetitionIds(ids);
+  /** @type {Record<string, { total: number; wins: number; losses: number; draws: number }>} */
+  const records = {};
+  rows.forEach((combat) => {
+    const key = String(combat.id_competition);
+    const record = records[key] || { total: 0, wins: 0, losses: 0, draws: 0 };
+    const result = String(combat.resultat || "");
+    record.total += 1;
+    if (result === "Victoire") record.wins += 1;
+    else if (result === "Défaite") record.losses += 1;
+    else if (result) record.draws += 1;
+    records[key] = record;
+  });
+  return records;
 }
 
 /** @type {import("./types").RpcMethods} */
@@ -281,6 +334,7 @@ const methods = {
   ...registrationService.methods,
   ...adminService.methods,
   ...clubCompetitionsService.methods,
+  ...clubsService.methods,
   ...competitionsService.methods,
   ...combatsService.methods,
   ...coachDashboardService.methods

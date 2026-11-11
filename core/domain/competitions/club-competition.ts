@@ -7,6 +7,7 @@ import { createJudokaId, createOptionalCompetitionId } from "../shared/identity"
 
 export interface ClubCompetitionInput extends CompetitionInput {
   participantJudokaIds?: unknown[] | undefined;
+  clubId?: unknown;
 }
 
 export interface ClubCompetitionModel {
@@ -15,6 +16,7 @@ export interface ClubCompetitionModel {
   competitionDate: string;
   ageCategory: AgeCategory;
   level: string;
+  clubId: string;
   participantJudokaIds: string[];
 }
 
@@ -41,6 +43,7 @@ export function createClubCompetition(event: ClubCompetitionInput = {}): ClubCom
     competitionDate: details.competitionDate,
     ageCategory: details.ageCategory,
     level: details.level,
+    clubId: String(event.clubId || "").trim(),
     participantJudokaIds: event.participantJudokaIds
       ? createClubCompetitionParticipantIds(event.participantJudokaIds)
       : []

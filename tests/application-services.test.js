@@ -98,7 +98,7 @@ test("coach creates a club competition with linked judoka participations", async
     },
     judokasRepository: {
       listByIds: async (ids) =>
-        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime" }))
+        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime", club_id: "NANTES" }))
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -108,7 +108,8 @@ test("coach creates a club competition with linked judoka participations", async
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -151,6 +152,7 @@ test("editing a club competition resynchronizes existing linked participations",
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
+      getById: async () => ({ id_club_competition: "CLUB1", club_id: "NANTES" }),
       update: async (id, event) => calls.push(["updateClub", id, event])
     },
     competitionsRepository: {
@@ -173,7 +175,7 @@ test("editing a club competition resynchronizes existing linked participations",
     },
     judokasRepository: {
       listByIds: async (ids) =>
-        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime" }))
+        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime", club_id: "NANTES" }))
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -183,7 +185,8 @@ test("editing a club competition resynchronizes existing linked participations",
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -212,6 +215,7 @@ test("editing a club competition resynchronizes existing linked participations",
       competitionDate: "2026-06-14",
       ageCategory: "Minime",
       level: "National",
+      clubId: "NANTES",
       participantJudokaIds: ["J1"]
     }
   ]);
@@ -223,7 +227,8 @@ test("editing a club competition resynchronizes existing linked participations",
   assert.equal(calls[1][2].name, "Tournoi Nantes");
   assert.equal(calls[1][2].competitionDate, "2026-06-14");
   assert.equal(calls[1][2].ageCategory, "Minime");
-  assert.equal(calls[1][2].weightCategory, "");
+  // La catégorie de poids de la participation est conservée lors de la resynchronisation.
+  assert.equal(calls[1][2].weightCategory, "-46kg");
   assert.equal(calls[1][2].level, "National");
   assert.equal(calls[1][2].result, "");
 });
@@ -253,7 +258,8 @@ test("admin cannot create a club competition", async () => {
           profile_type: "JUDOKA",
           role: "ADMIN"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -296,7 +302,8 @@ test("coach cannot add a judoka outside the club competition age category", asyn
           id_judoka: id,
           prenom: `P${id}`,
           nom: "TEST",
-          categorie_age: id === "J1" ? "Minime" : "Cadet"
+          categorie_age: id === "J1" ? "Minime" : "Cadet",
+          club_id: "NANTES"
         }))
     },
     userContextService: {
@@ -307,7 +314,8 @@ test("coach cannot add a judoka outside the club competition age category", asyn
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -334,7 +342,7 @@ test("detaching a participant from a club competition that has not started yet d
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
-      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14", club_id: "NANTES" })
     },
     competitionsRepository: {
       getById: async () => ({
@@ -354,7 +362,8 @@ test("detaching a participant from a club competition that has not started yet d
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -375,6 +384,7 @@ test("editing a finished club competition still allows adding participants (late
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
+      getById: async () => ({ id_club_competition: "CLUB1", club_id: "NANTES" }),
       update: async (id, event) => calls.push(["updateClub", id, event])
     },
     competitionsRepository: {
@@ -395,7 +405,7 @@ test("editing a finished club competition still allows adding participants (late
     },
     judokasRepository: {
       listByIds: async (ids) =>
-        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime" }))
+        ids.map((id) => ({ id_judoka: id, prenom: `P${id}`, nom: "TEST", categorie_age: "Minime", club_id: "NANTES" }))
     },
     userContextService: {
       getDomainUserContext: async () => ({
@@ -405,7 +415,8 @@ test("editing a finished club competition still allows adding participants (late
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -433,7 +444,7 @@ test("finished club competition blocks detaching a participant with combats", as
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
-      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14", club_id: "NANTES" })
     },
     competitionsRepository: {
       getById: async () => ({
@@ -456,7 +467,8 @@ test("finished club competition blocks detaching a participant with combats", as
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -474,7 +486,7 @@ test("finished club competition allows detaching an empty participation", async 
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
-      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" })
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14", club_id: "NANTES" })
     },
     competitionsRepository: {
       getById: async () => ({
@@ -497,7 +509,8 @@ test("finished club competition allows detaching an empty participation", async 
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -513,7 +526,7 @@ test("deleting a club competition detaches linked individual competitions", asyn
   const calls = [];
   const service = createClubCompetitionsService({
     clubCompetitionsRepository: {
-      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14" }),
+      getById: async () => ({ id_club_competition: "CLUB1", nom: "Tournoi", date: "2026-06-14", club_id: "NANTES" }),
       remove: async (id) => calls.push(["removeClub", id])
     },
     competitionsRepository: {
@@ -531,7 +544,8 @@ test("deleting a club competition detaches linked individual competitions", asyn
           profile_type: "JUDOKA",
           role: "COACH"
         }),
-        managedJudokaScope: createManagedJudokaScope([])
+        managedJudokaScope: createManagedJudokaScope([]),
+        coachClubIds: ["NANTES"]
       })
     },
     canManageClubCompetition: permissions.canManageClubCompetition
@@ -955,7 +969,15 @@ function createTestCoachDashboardService({
     judokasRepository: {
       listAll: async () => judokaRows
     },
-    userContextService: { getDomainUserContext }
+    userContextService: {
+      // Par défaut, tous les judokas des jeux de données appartiennent aux clubs du coach.
+      getDomainUserContext: async (email) => {
+        const context = await getDomainUserContext(email);
+        const ownerRows = competitionRows.map((row) => ({ id_judoka: row.id_judoka }));
+        const judokas = context.judokas && context.judokas.length ? context.judokas : [...judokaRows, ...ownerRows];
+        return { ...context, judokas };
+      }
+    }
   });
 
   return { service };
@@ -1290,7 +1312,7 @@ test("deleteCompetition rejects when the competition does not exist", async () =
   );
 });
 
-test("getCompetitionsForUser returns every competition for a coach but only owned ones for a judoka", async () => {
+test("getCompetitionsForUser returns club judokas' competitions for a coach but only owned ones for a judoka", async () => {
   const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi A", date: "2026-06-14" },
@@ -1300,9 +1322,19 @@ test("getCompetitionsForUser returns every competition for a coach but only owne
 
   const coachResults = await service.getCompetitionsForUser(
     { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
-    createManagedJudokaScope([])
+    createManagedJudokaScope(["JUDO1", "JUDO2"])
   );
   assert.equal(coachResults.length, 2);
+
+  // Coach d'un club où seul JUDO1 est licencié : la compétition de JUDO2 (autre club) n'apparaît pas.
+  const singleClubCoachResults = await service.getCompetitionsForUser(
+    { id_judoka: "COACH2", profile_type: "JUDOKA", role: "COACH" },
+    createManagedJudokaScope(["JUDO1"])
+  );
+  assert.deepEqual(
+    singleClubCoachResults.map((competition) => competition.competitionId),
+    ["COMP1"]
+  );
 
   const judokaResults = await service.getCompetitionsForUser(
     { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" },
@@ -1326,7 +1358,8 @@ test("getCompetitionDetail enriches combats with judoka display names, scores, a
       CB1: [{ id_combat: "CB1", categorie: "Tachi-waza", technique: "Seoi-nage", valeur: "Ippon" }]
     },
     getDomainUserContext: domainContextFor("COACH1", "COACH", {
-      judokas: [{ id_judoka: "JUDO1", prenom: "Hugo", nom: "durand" }]
+      judokas: [{ id_judoka: "JUDO1", prenom: "Hugo", nom: "durand" }],
+      managedJudokaScope: createManagedJudokaScope(["JUDO1"])
     })
   });
 
@@ -1339,6 +1372,22 @@ test("getCompetitionDetail enriches combats with judoka display names, scores, a
   assert.equal(detail.isCoach, true);
   assert.equal(detail.canManageCompetition, true);
   assert.equal(detail.hasInheritedClubCompetitionFields, false);
+});
+
+test("getCompetitionDetail refuses a coach for a judoka outside their clubs", async () => {
+  const { service } = createTestCompetitionsService({
+    competitionsByCompetitionId: {
+      COMP1: { id_competition: "COMP1", id_judoka: "OTHER_CLUB_JUDOKA", nom: "Tournoi", date: "2026-06-14" }
+    },
+    getDomainUserContext: domainContextFor("COACH1", "COACH", {
+      managedJudokaScope: createManagedJudokaScope(["JUDO1"])
+    })
+  });
+
+  await assert.rejects(
+    () => service.methods.getCompetitionDetail("coach@example.com", "COMP1"),
+    /Accès refusé/
+  );
 });
 
 test("getCompetitionDetail exposes inherited club competition fields", async () => {
@@ -1686,18 +1735,24 @@ test("registerProfile defaults to JUDOKA and empty names when the invitation/pro
 function createTestUserContextService(
   judokasByEmail = {},
   judokasById = {},
-  parentLinksByParent = {}
+  parentLinksByParent = {},
+  clubIdsByCoach = {}
 ) {
   return createUserContextService({
     judokasRepository: {
       getByEmail: async (email) => judokasByEmail[String(email || "").toLowerCase()] || null,
       listAll: async () => Object.values(judokasById),
       getById: async (idJudoka) => judokasById[idJudoka] || null,
-      listByIds: async (ids) => ids.map((id) => judokasById[id]).filter(Boolean)
+      listByIds: async (ids) => ids.map((id) => judokasById[id]).filter(Boolean),
+      listByClubIds: async (clubIds) =>
+        Object.values(judokasById).filter((judoka) => clubIds.includes(String(judoka.club_id || "")))
     },
     parentLinksRepository: {
       listByParent: async (idParent) =>
         (parentLinksByParent[idParent] || []).map((idJudoka) => ({ id_judoka: idJudoka }))
+    },
+    clubsRepository: {
+      listClubIdsByCoach: async (idCoach) => clubIdsByCoach[idCoach] || []
     },
     normalizeEmail,
     assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
@@ -1734,7 +1789,7 @@ test("getCurrentUserContext rejects an email with no matching account", async ()
   );
 });
 
-test("getCurrentUserContext gives a coach visibility into every judoka", async () => {
+test("getCurrentUserContext limits a coach to the judokas of the clubs they coach", async () => {
   const service = createTestUserContextService(
     {
       "coach@example.com": {
@@ -1746,13 +1801,33 @@ test("getCurrentUserContext gives a coach visibility into every judoka", async (
     },
     {
       COACH1: { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH" },
-      JUDO1: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL" }
-    }
+      JUDO1: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL", club_id: "NANTES" },
+      JUDO2: { id_judoka: "JUDO2", profile_type: "JUDOKA", role: "NORMAL", club_id: "RENNES" },
+      JUDO3: { id_judoka: "JUDO3", profile_type: "JUDOKA", role: "NORMAL", club_id: "ANGERS" },
+      NOCLUB: { id_judoka: "NOCLUB", profile_type: "JUDOKA", role: "NORMAL" }
+    },
+    {},
+    { COACH1: ["NANTES", "RENNES"] }
   );
 
   const context = await service.getCurrentUserContext("coach@example.com");
 
-  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka).sort(), ["COACH1", "JUDO1"]);
+  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka).sort(), ["COACH1", "JUDO1", "JUDO2"]);
+  assert.deepEqual(context.coachClubIds, ["NANTES", "RENNES"]);
+  assert.equal(context.managedJudokaScope.includes("JUDO1"), true);
+  assert.equal(context.managedJudokaScope.includes("JUDO3"), false);
+  assert.equal(context.managedJudokaScope.includes("NOCLUB"), false);
+});
+
+test("getCurrentUserContext gives a coach without club only their own profile", async () => {
+  const service = createTestUserContextService(
+    { "coach@example.com": { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH", email: "coach@example.com" } },
+    { JUDO1: { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL", club_id: "NANTES" } }
+  );
+
+  const context = await service.getCurrentUserContext("coach@example.com");
+
+  assert.deepEqual(context.judokas.map((judoka) => judoka.id_judoka), ["COACH1"]);
 });
 
 test("getCurrentUserContext builds a managed scope for a parent including themself and their children", async () => {
@@ -1876,6 +1951,8 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
     links: [],
     updated: [],
     removedInvitations: [],
+    clubAssignments: [],
+    coachClubs: [],
     lookups: {
       currentUser: [],
       judokaByEmail: [],
@@ -1887,6 +1964,11 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
   const adminUser = { id_judoka: "ADMIN1", profile_type: "JUDOKA", role: "ADMIN" };
 
   const service = createAdminService({
+    clubsRepository: {
+      listAll: async () => [{ id_club: "NANTES", nom: "Judo Club Nantes" }],
+      listClubIdsByCoach: async () => [],
+      replaceCoachClubs: async (idCoach, clubIds) => calls.coachClubs.push([idCoach, clubIds])
+    },
     competitionsRepository: {
       listByJudoka: async (idJudoka) => [],
       removeByJudoka: async (idJudoka) => calls.removedCompetitionsByJudoka.push(idJudoka)
@@ -1939,6 +2021,7 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         calls.updated.push({ idJudoka, changes });
         return null;
       },
+      setClub: async (idJudoka, idClub) => calls.clubAssignments.push([idJudoka, idClub]),
       remove: async (idJudoka) => {
         calls.removedUsers.push(idJudoka);
         return null;
@@ -2937,4 +3020,25 @@ test("importUsersCsv processes the bundled sample file: children link, the alrea
     calls.inserted.map((call) => call.extras && call.extras.couleur_ceinture),
     ["Orange", "Jaune", "Marron"]
   );
+  // Colonne club : les trois judokas rejoignent le Judo Club Nantes, et le coach coache ce club.
+  assert.equal(calls.clubAssignments.length, 3);
+  assert.ok(calls.clubAssignments.every(([, idClub]) => idClub === "NANTES"));
+  assert.equal(calls.coachClubs.length, 1);
+  assert.deepEqual(calls.coachClubs[0][1], ["NANTES"]);
+});
+
+test("importUsersCsv rejects an unknown club or a club on a parent row without writing", async () => {
+  const { service, calls } = createTestAdminService();
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,club\n" +
+    "JUDOKA,Lina,Martin,,,Club Fantôme\n" +
+    "PARENT,Sophie,Martin,sophie.martin@example.com,,Judo Club Nantes\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.failed, 2);
+  assert.match(summary.results[0].message, /Club inconnu : Club Fantôme/);
+  assert.match(summary.results[1].message, /PARENT n'appartient pas à un club/);
+  assert.deepEqual(calls.inserted, []);
+  assert.deepEqual(calls.clubAssignments, []);
 });

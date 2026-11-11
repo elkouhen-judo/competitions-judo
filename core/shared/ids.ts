@@ -4,6 +4,10 @@ export function buildJudokaId(): string {
   return `JUDO${randomUUID().replace(/-/g, "")}`;
 }
 
+export function buildClubId(): string {
+  return `CLUB${randomUUID().replace(/-/g, "")}`;
+}
+
 export function buildCompetitionId(): string {
   return `COMP${Date.now()}`;
 }

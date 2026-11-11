@@ -120,11 +120,14 @@
     };
   }
 
+  function isAdminUser(user: Judoka): boolean {
+    return user.accessRole === "ADMIN" || user.adminAccess === true;
+  }
+
   function getUserRoleLabel(user: Judoka): string {
     const profileTypeLabel = user.profileType === "PARENT" ? "Parent" : "Judoka";
-    if (user.accessRole === "ADMIN") return `Admin · ${profileTypeLabel}`;
-    if (user.accessRole === "COACH") return `Coach · ${profileTypeLabel}`;
-    return profileTypeLabel;
+    const roles = [user.accessRole === "COACH" ? "Coach" : "", isAdminUser(user) ? "Admin" : ""].filter(Boolean);
+    return [...roles, profileTypeLabel].join(" · ");
   }
 
   function projectManagedUsers(
@@ -143,11 +146,13 @@
       fullName: getJudokaDisplayName(user) || user.accountEmail || "Utilisateur",
       accountEmail: user.accountEmail || "Non renseigné",
       roleLabel: getUserRoleLabel(user),
-      isAdmin: user.accessRole === "ADMIN",
+      isAdmin: isAdminUser(user),
       isCurrentUser: Boolean(
         currentUser && String(currentUser.judokaId) === String(user.judokaId)
       ),
-      isPending: false
+      isPending: false,
+      clubId: user.clubId || "",
+      canHaveClub: user.profileType !== "PARENT"
     }));
 
     void pendingInvitations;
@@ -190,7 +195,9 @@
       roleLabel: `En attente d'inscription · ${invitation.invitedProfileType === "PARENT" ? "Parent" : "Judoka"}`,
       isAdmin: false,
       isCurrentUser: false,
-      isPending: true
+      isPending: true,
+      clubId: "",
+      canHaveClub: false
     }));
     const normalizedSearch = (search || "").toLowerCase();
     const filteredInvitations = !normalizedSearch
@@ -225,9 +232,8 @@
     helpers: { formatDate(value: unknown): string }
   ) {
     const { formatDate } = helpers;
-    const ageWeightLabel = [competition.ageCategory, competition.weightCategory]
-      .filter(Boolean)
-      .join(" · ");
+    const weight = String(competition.weightCategory || "").trim().replace(/\s*kg$/i, " kg");
+    const ageWeightLabel = [competition.ageCategory, weight].filter(Boolean).join(" · ");
     const hasResult = Boolean(String(competition.result || "").trim());
 
     return {
@@ -258,23 +264,23 @@
   ): CombatDataQualityIssue[] {
     const issues: CombatDataQualityIssue[] = [];
     if (!combat.victoryType) {
-      issues.push({ label: "Fin du combat non renseignée", priority: "high" });
+      issues.push({ label: "Fin du combat non renseignée", shortLabel: "fin du combat", priority: "high", field: "victoryType" });
     }
     const hasMissingIpponScore =
       combat.result === "Victoire" &&
       combat.victoryType === "Ippon" &&
       !hasMatchingIpponScore(combat);
     if (hasMissingIpponScore) {
-      issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", priority: "high" });
+      issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", shortLabel: "détail du point Ippon", priority: "high", field: "scores" });
     }
     if (!(combat.scores || []).length && !hasMissingIpponScore) {
-      issues.push({ label: "Points marqués non renseignés", priority: "medium" });
+      issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
     }
     if (helpers.showJudoka && !combat.judokaHandedness) {
-      issues.push({ label: "Droitier/gaucher du judoka non renseigné", priority: "medium" });
+      issues.push({ label: "Droitier/gaucher du judoka non renseigné", shortLabel: "garde du judoka (profil)", priority: "medium" });
     }
     if (!combat.opponentStance) {
-      issues.push({ label: "Droitier/gaucher de l'adversaire non renseigné", priority: "medium" });
+      issues.push({ label: "Droitier/gaucher de l'adversaire non renseigné", shortLabel: "garde de l'adversaire", priority: "medium", field: "opponentStance" });
     }
     return issues;
   }
@@ -305,7 +311,7 @@
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),
-      notes: c.notes || "Aucun déroulé renseigné"
+      notes: c.notes || ""
     }));
 
     // Quand chaque combat a son tour renseigné, on les présente dans l'ordre du tableau.
@@ -376,7 +382,7 @@
       judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: op.type === "updateCombat" && Boolean(helpers.canEdit),
-      notes: combatLike.notes || "Aucun déroulé renseigné",
+      notes: combatLike.notes || "",
       pendingSync: true,
       pendingError: op.errorMessage,
       pendingOperationId: op.id

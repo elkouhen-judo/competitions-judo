@@ -524,19 +524,90 @@ alter table public.club_competitions
   drop column if exists categorie_poids;
 
 
-insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
-values (
-  'JUDO_ADMIN_SEED',
-  'admin@example.com',
-  'Alex',
-  'DURAND',
-  'ADMIN',
-  'JUDOKA'
-)
-on conflict (email) do update
-set
-  prenom = excluded.prenom,
-  nom = excluded.nom,
-  role = excluded.role,
-  profile_type = excluded.profile_type,
-  updated_at = now();
+-- Aucun compte n'est créé par la migration : le premier admin est désigné par une requête
+-- ponctuelle (update public.judokas set is_admin = true where email = '<email>').
+
+-- Clubs : un judoka appartient à au plus un club, un coach coache un ou plusieurs clubs,
+-- une compétition club appartient à un club. L'accès coach est limité aux judokas de ses clubs.
+create table if not exists public.clubs (
+  id_club text primary key,
+  nom text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint clubs_nom_not_blank check (btrim(nom) <> '')
+);
+
+create unique index if not exists clubs_nom_unique_idx on public.clubs (lower(btrim(nom)));
+
+create table if not exists public.coach_clubs (
+  id_coach text not null,
+  id_club text not null,
+  primary key (id_coach, id_club),
+  constraint coach_clubs_id_coach_fkey
+    foreign key (id_coach) references public.judokas (id_judoka)
+    on update cascade on delete cascade,
+  constraint coach_clubs_id_club_fkey
+    foreign key (id_club) references public.clubs (id_club)
+    on update cascade on delete cascade
+);
+
+alter table public.judokas
+  add column if not exists club_id text;
+
+alter table public.judokas
+  drop constraint if exists judokas_club_id_fkey;
+
+alter table public.judokas
+  add constraint judokas_club_id_fkey
+  foreign key (club_id) references public.clubs (id_club)
+  on update cascade on delete restrict;
+
+create index if not exists judokas_club_id_idx on public.judokas (club_id);
+
+-- Droit admin indépendant du rôle : un coach peut aussi être admin.
+alter table public.judokas
+  add column if not exists is_admin boolean not null default false;
+
+alter table public.club_competitions
+  add column if not exists club_id text;
+
+alter table public.club_competitions
+  drop constraint if exists club_competitions_club_id_fkey;
+
+alter table public.club_competitions
+  add constraint club_competitions_club_id_fkey
+  foreign key (club_id) references public.clubs (id_club)
+  on update cascade on delete restrict;
+
+create index if not exists club_competitions_club_id_idx on public.club_competitions (club_id);
+
+drop trigger if exists clubs_set_updated_at on public.clubs;
+create trigger clubs_set_updated_at
+before update on public.clubs
+for each row
+execute function public.set_updated_at();
+
+alter table public.clubs enable row level security;
+alter table public.coach_clubs enable row level security;
+
+drop policy if exists "Service role access on clubs" on public.clubs;
+create policy "Service role access on clubs"
+on public.clubs
+for all
+to service_role
+using (true)
+with check (true);
+
+drop policy if exists "Service role access on coach_clubs" on public.coach_clubs;
+create policy "Service role access on coach_clubs"
+on public.coach_clubs
+for all
+to service_role
+using (true)
+with check (true);
+
+revoke all on table public.clubs from anon, authenticated;
+revoke all on table public.coach_clubs from anon, authenticated;
+
+grant select, insert, update, delete on table public.clubs to service_role;
+grant select, insert, update, delete on table public.coach_clubs to service_role;

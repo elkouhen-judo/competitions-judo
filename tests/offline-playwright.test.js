@@ -210,10 +210,9 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
   await waitForApp(page);
   await page.getByRole("button", { name: competition.name }).click();
   await page.locator("#competitionView").waitFor({ state: "visible" });
-  await page.getByRole("button", { name: "Finaliser" }).click();
+  // FICHE-2 : le classement se choisit directement sur la fiche.
   await context.setOffline(true);
-  await page.selectOption("#finalization_classement", "1er");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.locator("#competitionRankingSection").getByRole("radio", { name: /1er/ }).click();
   await expect(page.locator(".offline-status")).toHaveText(/modification enregistrée localement/);
 
   const pending = await page.evaluate(() =>
@@ -224,7 +223,7 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
   assert.equal(pending[0].status, "pending");
 
   await context.setOffline(false);
-  await expect(page.locator("#competitionClassement")).toHaveText("1er", { timeout: 5000 });
+  await expect(page.locator("#competitionClassement")).toHaveText(/1er/, { timeout: 5000 });
   await expect(page.locator(".offline-status")).toHaveCount(0, { timeout: 5000 });
   assert.equal(rpcCalls.filter((call) => call.method === "finalizeCompetition").length, 1);
 });

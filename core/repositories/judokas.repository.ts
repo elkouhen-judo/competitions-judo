@@ -40,6 +40,10 @@ export interface JudokasRepository {
   listAdmins(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
   listByIds(ids: string[]): Promise<JudokaRow[]>;
+  listByClubIds(clubIds: string[]): Promise<JudokaRow[]>;
+  countByClub(idClub: string): Promise<number>;
+  setClub(idJudoka: string, idClub: string | null): Promise<void>;
+  setAdminFlag(idJudoka: string, isAdmin: boolean): Promise<void>;
   remove(idJudoka: string): Promise<void>;
   saveJudokaInfo(
     idJudoka: string,
@@ -131,7 +135,10 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   }
 
   async function listAdmins(): Promise<JudokaRow[]> {
-    return supabaseSelect<JudokaRow>("judokas", "select=*&role=eq.ADMIN&order=nom.asc,prenom.asc");
+    return supabaseSelect<JudokaRow>(
+      "judokas",
+      "select=*&or=(role.eq.ADMIN,is_admin.is.true)&order=nom.asc,prenom.asc"
+    );
   }
 
   async function listByIds(ids: string[]): Promise<JudokaRow[]> {
@@ -189,6 +196,33 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return supabaseInsert<JudokaRow>("judokas", record);
   }
 
+  async function listByClubIds(clubIds: string[]): Promise<JudokaRow[]> {
+    const ids = [...new Set((clubIds || []).map(String).filter(Boolean))];
+    if (!ids.length) {
+      return [];
+    }
+    return supabaseSelect<JudokaRow>(
+      "judokas",
+      `select=*&club_id=in.(${ids.map(encodeURIComponent).join(",")})&order=nom.asc,prenom.asc`
+    );
+  }
+
+  async function countByClub(idClub: string): Promise<number> {
+    const rows = await supabaseSelect<Pick<JudokaRow, "id_judoka">>(
+      "judokas",
+      `select=id_judoka&${eqFilter("club_id", idClub)}`
+    );
+    return rows.length;
+  }
+
+  async function setClub(idJudoka: string, idClub: string | null): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { club_id: idClub || null });
+  }
+
+  async function setAdminFlag(idJudoka: string, isAdmin: boolean): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { is_admin: Boolean(isAdmin) });
+  }
+
   async function update(
     idJudoka: string,
     judokaChanges: JudokaChangesInput
@@ -231,6 +265,10 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     listAdmins,
     listAll,
     listByIds,
+    listByClubIds,
+    countByClub,
+    setClub,
+    setAdminFlag,
     remove,
     saveJudokaInfo,
     update

@@ -1,6 +1,6 @@
 {
   "mcp": {
-    "command": "/Users/dev/.local/bin/codebase-memory-mcp",
+    "command": "codebase-memory-mcp",
     "args": [],
     "transport": "stdio"
   },

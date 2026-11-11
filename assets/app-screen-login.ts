@@ -115,6 +115,12 @@
         return;
       }
 
+      // NAV-3 : les données en cache s'affichent tout de suite, puis se mettent à jour.
+      const showedCachedData = app.loadCachedInitialData();
+      if (showedCachedData) {
+        app.restoreNavigationState();
+      }
+
       app.runServerWithOptions(
         "getInitialData",
         [],
@@ -125,9 +131,14 @@
           }
 
           applyInitialData(data);
-          app.restoreNavigationState();
+          if (!showedCachedData) {
+            app.restoreNavigationState();
+          }
         },
         (error) => {
+          if (showedCachedData) {
+            return;
+          }
           if (app.loadCachedInitialData()) {
             app.restoreNavigationState();
             return;

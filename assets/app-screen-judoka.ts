@@ -56,6 +56,7 @@
       seasonWins: "0",
       seasonLosses: "0",
       seasonDraws: "0",
+      seasonRecord: "—",
       victoryRate: "0%",
       victoriesByDecisionType: [],
       defeatsByDecisionType: [],
@@ -71,7 +72,8 @@
       }
       return (
         window.createJudokaProfileViewModel(state.currentJudokaProfile, {
-          formatDate,
+          // UI-2 : dates en clair sur la fiche.
+          formatDate: ui.formatDateLong,
           formatCompetitionName,
           formatCompetitionRanking,
           getClassementBadgeClass,
@@ -107,6 +109,7 @@
     );
     const seasonCombatCount = window.Vue.computed(() => judokaProfile.value.seasonCombatCount);
     const seasonWins = window.Vue.computed(() => judokaProfile.value.seasonWins);
+    const seasonRecord = window.Vue.computed(() => judokaProfile.value.seasonRecord);
     const seasonLosses = window.Vue.computed(() => judokaProfile.value.seasonLosses);
     const seasonDraws = window.Vue.computed(() => judokaProfile.value.seasonDraws);
     const victoryRate = window.Vue.computed(() => judokaProfile.value.victoryRate);
@@ -259,6 +262,9 @@
           saveJudokaInfo,
           startProfileEdit: () => {
             judokaLocalState.profileEditing = true;
+            window.Vue.nextTick(() =>
+              document.getElementById("judokaProfileEditSection")?.scrollIntoView({ behavior: "smooth", block: "start" })
+            );
           },
           cancelProfileEdit: () => {
             judokaLocalState.profileEditing = false;
@@ -285,6 +291,7 @@
           seasonCompetitionCount,
           seasonCombatCount,
           seasonWins,
+          seasonRecord,
           seasonLosses,
           seasonDraws,
           victoryRate,

@@ -4,6 +4,8 @@ import type { ManagedJudokaScope } from "../../types";
 
 export interface UserLike {
   accessRole?: unknown;
+  /** Droit admin indépendant du rôle (un coach peut aussi être admin). */
+  adminAccess?: unknown;
   profileType?: unknown;
   judokaId?: unknown;
 }
@@ -27,7 +29,12 @@ export interface AccessScope {
 }
 
 export function isAdmin(user: UserLike | null | undefined): boolean {
-  return isAdminRole(user && user.accessRole);
+  return isAdminRole(user && user.accessRole) || Boolean(user && user.adminAccess === true);
+}
+
+/** Admin sans rôle coach : gère les accès mais pas les données sportives. */
+function isAdminOnly(user: UserLike | null | undefined): boolean {
+  return isAdmin(user) && !isCoach(user);
 }
 
 export function isCoach(user: UserLike | null | undefined): boolean {
@@ -101,11 +108,8 @@ export function resolveJudokaDataAccess(
   user: UserLike | null | undefined,
   managedJudokaScope: ManagedJudokaScope | undefined
 ): AccessScope {
-  if (hasClubReadAccess(user)) {
-    return createAccessScope("ALL");
-  }
-
-  if (isParent(user)) {
+  // Un coach ne voit que les judokas de ses clubs : son périmètre est porté par managedJudokaScope.
+  if (isCoach(user) || isParent(user)) {
     return createAccessScope("MANAGED", { managedJudokaScope });
   }
 
@@ -117,8 +121,8 @@ export function canManageCombatFor(
   idJudoka: unknown,
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
+  if (isCoach(user)) return isInManagedScope(managedJudokaScope, idJudoka);
   if (isAdmin(user)) return false;
-  if (isCoach(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
   }
@@ -142,8 +146,8 @@ export function canManageCompetition(
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
+  if (isCoach(user)) return isInManagedScope(managedJudokaScope, ownerJudokaId);
   if (isAdmin(user)) return false;
-  if (isCoach(user)) return true;
   if (isParent(user)) {
     return isInManagedScope(managedJudokaScope, ownerJudokaId);
   }
@@ -166,8 +170,7 @@ export function canAccessJudokaProfile(
   idJudoka: unknown,
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
-  if (hasClubReadAccess(user)) return true;
-  if (isParent(user)) {
+  if (hasClubReadAccess(user) || isParent(user)) {
     return isInManagedScope(managedJudokaScope, idJudoka);
   }
   return String(getUserJudokaId(user)) === String(idJudoka);
@@ -189,8 +192,7 @@ export function canAccessCompetition(
   managedJudokaScope: ManagedJudokaScope | null | undefined
 ): boolean {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
-  if (hasClubReadAccess(user)) return true;
-  if (isParent(user)) {
+  if (hasClubReadAccess(user) || isParent(user)) {
     return isInManagedScope(managedJudokaScope, ownerJudokaId);
   }
   return String(getUserJudokaId(user)) === String(ownerJudokaId);
@@ -214,7 +216,7 @@ export function resolveCompetitionOwnerId(
 ): string {
   const ownerJudokaId = getCompetitionOwnerJudokaId(competition);
 
-  if (isAdmin(user)) throw new Error("Gestion des compétitions réservée aux coachs.");
+  if (isAdminOnly(user)) throw new Error("Gestion des compétitions réservée aux coachs.");
 
   if (isParent(user)) {
     if (!ownerJudokaId) throw new Error("Judoka participant obligatoire.");

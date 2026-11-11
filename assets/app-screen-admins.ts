@@ -9,8 +9,18 @@
     const defaultAdminsViewState = {
       adminEmail: "",
       importUsersFileName: "",
-      importUsersCsvContent: ""
+      importUsersCsvContent: "",
+      // ADMIN-1 : la gestion des accès s'organise en quatre onglets.
+      adminTab: "users",
+      newClubName: "",
+      renamingClubId: "",
+      renamingClubName: ""
     };
+    // Clubs et coachs (gestion des clubs, réservée aux admins).
+    const clubsData = window.Vue.reactive({
+      clubs: [] as Array<{ clubId: string; name: string; coachIds: string[]; judokaCount: number }>,
+      coaches: [] as Array<{ judokaId: string; firstName: string; lastName: string; accountEmail: string }>
+    });
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
 
     const adminsProjection = window.Vue.computed(() =>
@@ -79,6 +89,31 @@
     const hasAccessInvitations = window.Vue.computed(
       () => accessInvitationsProjection.value.hasInvitations
     );
+    const clubOptions = window.Vue.computed(() =>
+      clubsData.clubs.map((club) => ({ clubId: club.clubId, name: club.name }))
+    );
+    const clubCards = window.Vue.computed(() =>
+      clubsData.clubs.map((club) => {
+        const coachNames = clubsData.coaches
+          .filter((coach) => club.coachIds.includes(coach.judokaId))
+          .map((coach) => getJudokaDisplayName(coach) || coach.accountEmail);
+        return {
+          clubId: club.clubId,
+          name: club.name,
+          judokaLabel: `${club.judokaCount} judoka${club.judokaCount > 1 ? "s" : ""}`,
+          coachLabel: coachNames.length ? coachNames.join(", ") : "Aucun coach",
+          canDelete: club.judokaCount === 0 && club.coachIds.length === 0
+        };
+      })
+    );
+    const coachCards = window.Vue.computed(() =>
+      clubsData.coaches.map((coach) => ({
+        judokaId: coach.judokaId,
+        fullName: getJudokaDisplayName(coach) || coach.accountEmail || "Coach",
+        clubIds: clubsData.clubs.filter((club) => club.coachIds.includes(coach.judokaId)).map((club) => club.clubId)
+      }))
+    );
+    const hasClubs = window.Vue.computed(() => clubsData.clubs.length > 0);
 
     function ensureAdminsViewModel() {
       if (adminsViewModel) {
@@ -104,9 +139,22 @@
           showNextAccessInvitationsPage,
           showPreviousAccessInvitationsPage,
           showHome: () => app.showHome && app.showHome(),
-          updateUsersSearch
+          updateUsersSearch,
+          createClub,
+          startRenameClub,
+          cancelRenameClub,
+          saveRenameClub,
+          deleteClub,
+          toggleCoachClub,
+          setUserClub
         },
         {
+          adminTabs: window.Vue.computed(() => [
+            { key: "users", label: "Utilisateurs" },
+            { key: "clubs", label: "Clubs" },
+            { key: "invitations", label: "Invitations" },
+            { key: "import", label: "Import" }
+          ]),
           admins,
           hasAdmins,
           adminsPage: adminsPaginationRefs.page,
@@ -129,7 +177,11 @@
           canShowPreviousAccessInvitationsPage,
           canShowNextAccessInvitationsPage,
           hasAccessInvitations,
-          isSubmitting
+          isSubmitting,
+          clubOptions,
+          clubCards,
+          coachCards,
+          hasClubs
         }
       );
     }
@@ -214,10 +266,97 @@
           state.accessInvitationsCurrentPage = 1;
           ensureAdminsViewModel();
           resetAdminForm();
-          showView("adminsView");
+          loadClubs(() => showView("adminsView"));
         },
         showError
       );
+    }
+
+    function loadClubs(onLoaded?: () => void) {
+      app.runServer(
+        "getClubsManagement",
+        [],
+        (data) => {
+          clubsData.clubs = Array.isArray(data.clubs) ? data.clubs : [];
+          clubsData.coaches = Array.isArray(data.coaches) ? data.coaches : [];
+          if (onLoaded) onLoaded();
+        },
+        showError
+      );
+    }
+
+    // Après une modification de club, on recharge la gestion (utilisateurs et clubs) pour rester cohérent.
+    function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClub">(
+      method: M,
+      args: import("./types").RpcClientArgs<M>
+    ) {
+      app.runServer(
+        method,
+        args,
+        (response) => {
+          showSuccess((response as { message?: string }).message || "Modification enregistrée.");
+          app.reloadInitialDataAndShowAdmins();
+        },
+        showError
+      );
+    }
+
+    function createClub() {
+      const viewModel = getAdminsViewModel();
+      const name = cleanText(viewModel.newClubName);
+      if (!name) {
+        showError({ message: "Saisissez le nom du club." });
+        return;
+      }
+      viewModel.newClubName = "";
+      runClubAction("saveClub", [{ name }]);
+    }
+
+    function startRenameClub(clubId: string, name: string) {
+      const viewModel = getAdminsViewModel();
+      viewModel.renamingClubId = clubId;
+      viewModel.renamingClubName = name;
+    }
+
+    function cancelRenameClub() {
+      const viewModel = getAdminsViewModel();
+      viewModel.renamingClubId = "";
+      viewModel.renamingClubName = "";
+    }
+
+    function saveRenameClub() {
+      const viewModel = getAdminsViewModel();
+      const clubId = viewModel.renamingClubId;
+      const name = cleanText(viewModel.renamingClubName);
+      if (!clubId || !name) {
+        showError({ message: "Saisissez le nouveau nom du club." });
+        return;
+      }
+      cancelRenameClub();
+      runClubAction("saveClub", [{ clubId, name }]);
+    }
+
+    function deleteClub(clubId: string, name: string) {
+      app.confirmAndRun({
+        message: `Supprimer le club "${name}" ?`,
+        method: "deleteClub",
+        args: [clubId],
+        onSuccess: (response) => {
+          showSuccess(response.message);
+          app.reloadInitialDataAndShowAdmins();
+        }
+      });
+    }
+
+    function toggleCoachClub(coachId: string, clubId: string, checked: boolean) {
+      const coach = coachCards.value.find((card) => card.judokaId === coachId);
+      const current = coach ? coach.clubIds : [];
+      const next = checked ? [...new Set([...current, clubId])] : current.filter((id) => id !== clubId);
+      runClubAction("setCoachClubs", [coachId, next]);
+    }
+
+    function setUserClub(judokaId: string, clubId: string) {
+      runClubAction("setJudokaClub", [judokaId, clubId || null]);
     }
 
     function updateUsersSearch(value: string) {

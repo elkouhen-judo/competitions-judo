@@ -21,7 +21,20 @@
     );
 
     // Même liste et même ordre que le domaine (core/domain/competitions/combat-stage).
-    const combatStageOptions = window.Vue.computed(() => ["Poule", "1/32", "1/16", "1/8", "1/4", "1/2", "Repêchage", "Place de 3", "Finale"]);
+    const COMBAT_STAGES = ["Poule", "1/32", "1/16", "1/8", "1/4", "1/2", "Repêchage", "Place de 3", "Finale"];
+    const combatStageOptions = window.Vue.computed(() => COMBAT_STAGES);
+    const combatResultOptions = window.Vue.computed(() => [
+      { value: "Victoire", label: "Victoire", className: "choice-win" },
+      { value: "Défaite", label: "Défaite", className: "choice-loss" },
+      { value: "Egalité", label: "Égalité", className: "choice-draw" }
+    ]);
+    const combatStanceOptions = window.Vue.computed(() => ["Droitier", "Gaucher"]);
+    const combatScoreValues = window.Vue.computed(() => ["Ippon", "Waza-ari", "Yuko"]);
+    const combatScoreCategories = window.Vue.computed(() => [
+      { value: "Tachi-waza", label: "Debout" },
+      { value: "Ne-waza", label: "Au sol" }
+    ]);
+    const DECISION_SCORE_VALUES = ["Ippon", "Waza-ari", "Yuko"];
 
     const defaultCombatForm = {
       combatId: "",
@@ -42,7 +55,8 @@
 
     const combatFormViewModel = window.Vue.reactive({
       ...defaultCombatFormViewState,
-      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[] }
+      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[] },
+      combatFormErrors: { result: "" }
     });
     let combatFormMounted = false;
 
@@ -58,7 +72,7 @@
       }
       const issues: CombatDataQualityIssue[] = [];
       if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
-        issues.push({ label: "Fin du combat non renseignée", priority: "high", field: "victoryType" });
+        issues.push({ label: "Fin du combat non renseignée", shortLabel: "fin du combat", priority: "high", field: "victoryType" });
       }
       const hasMissingIpponScore =
         form.result === "Victoire" &&
@@ -67,16 +81,18 @@
       if (hasMissingIpponScore) {
         issues.push({
           label: "Ippon indiqué, mais aucun point Ippon détaillé",
+          shortLabel: "détail du point Ippon",
           priority: "high",
           field: "scores"
         });
       }
       if (!form.scores.length && !hasMissingIpponScore) {
-        issues.push({ label: "Points marqués non renseignés", priority: "medium", field: "scores" });
+        issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
       }
       if (!form.opponentStance) {
         issues.push({
           label: "Droitier/gaucher de l'adversaire non renseigné",
+          shortLabel: "garde de l'adversaire",
           priority: "medium",
           field: "opponentStance"
         });
@@ -104,14 +120,25 @@
         {
           addCombatScoreRow,
           cancelCombatForm,
+          deleteCombatFromForm,
           onCombatScoreCategoryChange,
           removeCombatScoreRow,
           saveCombat,
+          saveCombatAndNext,
+          selectCombatDecision,
+          selectCombatResult,
+          selectCombatScoreCategory,
+          selectCombatStage,
+          selectCombatStance,
           syncCombatDecisionVisibility
         },
         {
           combatDecisionOptions,
+          combatResultOptions,
+          combatScoreCategories,
+          combatScoreValues,
           combatStageOptions,
+          combatStanceOptions,
           combatFormVictoryTypeIssues,
           combatFormScoreIssues,
           combatFormOpponentStanceIssues,
@@ -123,7 +150,7 @@
       );
     }
 
-    function showCombatForm(id?: string | Event) {
+    function showCombatForm(id?: string | Event, focusField?: string) {
       clearMessage();
       if (!canManageCombat.value) {
         showError({ message: "Attends le chargement de la compétition avant d'ajouter un combat." });
@@ -175,7 +202,7 @@
 
       showView("combatFormView");
       window.Vue.nextTick(() => {
-        const target = getCombatFormFocusTarget(isEditingExistingCombat);
+        const target = focusField || getCombatFormFocusTarget(isEditingExistingCombat);
         // Le bouton Enregistrer est en bas du formulaire : le focaliser ne doit pas faire défiler la page,
         // sinon le haut du formulaire (tour, résultat) sort de l'écran à l'ouverture.
         $(target).focus({ preventScroll: target === "saveCombatButton" });
@@ -185,7 +212,7 @@
     function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
       const form = combatFormViewModel.combatForm;
       if (!isEditingExistingCombat) {
-        return "combat_etape";
+        return form.stage ? "combat_resultat" : "combat_etape";
       }
       if (!form.result) {
         return "combat_resultat";
@@ -210,8 +237,21 @@
       showView("competitionView");
     }
 
+    // COMBAT-2 : le résultat est vérifié avant tout appel serveur, l'erreur s'affiche sous le champ.
+    function validateCombatForm(): boolean {
+      combatFormViewModel.combatFormErrors.result = combatFormViewModel.combatForm.result
+        ? ""
+        : "Choisissez le résultat du combat.";
+      if (combatFormViewModel.combatFormErrors.result) {
+        window.Vue.nextTick(() => $("combat_resultat").focus());
+        return false;
+      }
+      return true;
+    }
+
     function saveCombat() {
       ensureCombatFormViewModel();
+      if (!validateCombatForm()) return;
       const idCombat = combatFormViewModel.combatForm.combatId;
 
       if (idCombat) {
@@ -221,7 +261,72 @@
       }
     }
 
-    function addCombat() {
+    // COMBAT-3 : enregistre puis rouvre un formulaire vide avec l'étape suivante proposée.
+    function saveCombatAndNext() {
+      ensureCombatFormViewModel();
+      if (!validateCombatForm()) return;
+      const nextStage = getNextCombatStage(combatFormViewModel.combatForm.stage, combatFormViewModel.combatForm.result);
+      addCombat(() => {
+        showCombatForm();
+        combatFormViewModel.combatForm.stage = nextStage;
+        window.Vue.nextTick(() => $("combat_resultat").focus());
+      });
+    }
+
+    function getNextCombatStage(stage: string, result: string): string {
+      if (!stage || stage === "Poule" || stage === "Finale" || stage === "Place de 3") return stage === "Poule" ? "Poule" : "";
+      if (result === "Défaite") {
+        if (stage === "1/2" || stage === "Repêchage") return "Place de 3";
+        if (stage === "1/4") return "Repêchage";
+        return "";
+      }
+      if (stage === "Repêchage") return "Place de 3";
+      const next: Record<string, string> = { "1/32": "1/16", "1/16": "1/8", "1/8": "1/4", "1/4": "1/2", "1/2": "Finale" };
+      return next[stage] || "";
+    }
+
+    function selectCombatStage(stage: string) {
+      const form = combatFormViewModel.combatForm;
+      form.stage = form.stage === stage ? "" : stage;
+    }
+
+    function selectCombatResult(result: string) {
+      combatFormViewModel.combatForm.result = result;
+      combatFormViewModel.combatFormErrors.result = "";
+      syncCombatDecisionVisibility(true);
+    }
+
+    // COMBAT-1 : la fin du combat crée la ligne de point correspondante pour ne pas saisir deux fois.
+    function selectCombatDecision(decision: string) {
+      const form = combatFormViewModel.combatForm;
+      form.victoryType = form.victoryType === decision && form.result !== "Egalité" ? "" : decision;
+      if (
+        form.result === "Victoire" &&
+        DECISION_SCORE_VALUES.includes(form.victoryType) &&
+        !form.scores.some((score) => score.value === form.victoryType)
+      ) {
+        form.scores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
+      }
+    }
+
+    function selectCombatStance(stance: string) {
+      const form = combatFormViewModel.combatForm;
+      form.opponentStance = form.opponentStance === stance ? "" : stance;
+    }
+
+    function selectCombatScoreCategory(index: number, category: string) {
+      const score = combatFormViewModel.combatForm.scores[index];
+      if (!score) return;
+      score.category = category;
+      onCombatScoreCategoryChange(index);
+    }
+
+    function deleteCombatFromForm() {
+      const combatId = combatFormViewModel.combatForm.combatId;
+      if (combatId) deleteCombat(combatId);
+    }
+
+    function addCombat(afterReload?: () => void) {
       if (!state.currentCompetition) {
         showError({ message: "Ouvre une compétition avant d'ajouter un combat." });
         return;
@@ -236,7 +341,7 @@
         (response) => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(competitionId, true);
+          openCompetition(competitionId, true, afterReload);
         },
         showError
       );
@@ -337,6 +442,7 @@
       Object.assign(combatFormViewModel.combatForm, defaultCombatForm, {
         scores: [] as CombatScoreFormRow[]
       });
+      combatFormViewModel.combatFormErrors.result = "";
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",
         combatFormSubtitle: "Combat de la compétition en cours",

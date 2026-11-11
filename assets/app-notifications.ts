@@ -10,16 +10,25 @@
     leaving: boolean;
   }
 
+  // UI-6 : une erreur technique du navigateur (réponse vide, propriété absente) ne s'affiche
+  // jamais telle quelle.
+  const TECHNICAL_ERROR_PATTERN = /cannot read propert|undefined is not|is not a function|is not an object|unexpected token|failed to fetch/i;
+
+  function toReadableMessage(message: string): string {
+    if (!message.trim()) return "L'opération a échoué. Réessayez.";
+    return TECHNICAL_ERROR_PATTERN.test(message) ? "L'opération a échoué. Réessayez." : message;
+  }
+
   function getErrorMessage(error: unknown): string {
     if (typeof error === "string") {
-      return error;
+      return toReadableMessage(error);
     }
 
     if (error && typeof error === "object" && "message" in error) {
-      return String((error as { message?: unknown }).message || "");
+      return toReadableMessage(String((error as { message?: unknown }).message || ""));
     }
 
-    return String(error || "");
+    return toReadableMessage(String(error || ""));
   }
 
   function createKirokuNotifications(): NotificationsApi {

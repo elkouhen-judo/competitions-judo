@@ -48,8 +48,9 @@ This specification does not define:
 | Kiroku | The application described by this specification. |
 | Judoka | A club member profile that owns competitions and combats. |
 | Parent | A user profile allowed to manage linked child judokas (read/write). |
-| Coach | A user profile with sports access to all club judokas, competitions, combats, and global event dashboards. |
-| Admin | A user profile responsible for access governance: invitations and structural role management. |
+| Club | A judo club. A judoka belongs to at most one club; a coach coaches one or more clubs. |
+| Coach | A user profile with sports access to the judokas, competitions, combats, and dashboards of the clubs they coach. |
+| Admin | A user profile responsible for access governance: invitations, structural roles, and clubs. |
 | Competition | An event that can be shared at the club level, containing combats for one or more judokas. |
 | Combat | A single match linked to one competition and one judoka. |
 | Mobile first | Design approach where the small-screen layout is the base layout. |
@@ -67,10 +68,22 @@ This specification does not define:
 
 - **ROL-001**: A `JUDOKA` profile can access only its own competitions, combats, and statistics.
 - **ROL-002**: A `PARENT` profile can access and edit data of linked child judokas.
-- **ROL-003**: A `COACH` profile has read access to all judokas, competitions, and stats within the club, and can manage club competition events and their linked sports data. They cannot manage invitations.
-- **ROL-004**: An `ADMIN` profile manages invitations and structural roles only. Admin rights do not include coach sports permissions and shall not allow creating, updating, finalizing, or deleting competitions or combats.
+- **ROL-003**: A `COACH` profile has access to the judokas of the clubs they coach, to those judokas' competitions, combats, and stats, and can manage the club competition events of those clubs and their linked sports data. They cannot manage invitations.
+- **ROL-004**: An `ADMIN` profile manages invitations, structural roles, and clubs only. Admin rights alone do not include coach sports permissions and shall not allow creating, updating, finalizing, or deleting competitions or combats.
+- **ROL-004a**: Admin rights are a separate flag: a `COACH` can also be admin and then keeps all coach permissions for their clubs. Granting admin rights to a coach shall not remove the coach role.
 - **ROL-005**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
 - **ROL-006**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
+
+### 3.2a Club rules
+
+- **CLUB-001**: A judoka belongs to at most one club. A judoka without a club is visible to no coach; parents and the judoka keep their usual access.
+- **CLUB-002**: A coach is assigned to one or more clubs and only sees and manages the judokas of those clubs, their individual competitions and combats (including those recorded by parents), and the club competitions of those clubs.
+- **CLUB-003**: Access follows the judoka's current club: after a transfer, the new club's coaches see the full history and the former club's coaches lose access.
+- **CLUB-004**: A club competition belongs to exactly one club, fixed at creation. Only judokas of that club can be entered. A coach of a single club does not choose the club; a coach of several clubs must choose it.
+- **CLUB-005**: Any request on a judoka, competition, combat, club competition, or dashboard outside the coach's clubs shall be refused server-side (screens, API, and MCP alike); another club's club competition is reported as not found.
+- **CLUB-006**: Only admins manage clubs: create, rename (unique name, case-insensitive), assign coaches, set or clear a judoka's club. A club can only be deleted when it has no judoka, no coach, and no club competition.
+- **CLUB-007**: The CSV import accepts an optional `club` column holding an existing club name. A `JUDOKA` row is assigned to that club; a coach row also coaches it. An unknown club or a club on a `PARENT` row fails that row without writing.
+- **CLUB-008**: A coach of several clubs gets a club filter ("Tous mes clubs" by default) on the coach home and the coach dashboard; it narrows club competitions, the judoka selector, and statistics.
 
 ### 3.3 Competition rules
 
@@ -183,23 +196,22 @@ This specification does not define:
 - **UIX-009**: Deletions shall require explicit confirmation.
 - **UIX-010**: After create or update operations, the application shall refresh relevant data and display the affected item.
 - **UIX-011**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
-- **UIX-012**: For `PARENT`, the home screen shall open on a parent hub exposing three explicit cards: "Gérer les compétitions", "Choisir un judoka", and "Voir la fiche".
-- **UIX-013**: For `PARENT`, the parent hub shall keep an active judoka context selected by default, using the first linked child when possible.
+- **UIX-012**: For `PARENT`, the home screen shall open on the family space: one pill per child, then that child's competitions grouped as « À venir » and « Passées », with « Nouvelle compétition » and the child's profile on one line.
+- **UIX-013**: For `PARENT`, a child shall always be selected: the last child chosen on the device, otherwise the first child. The parent profile itself is never offered as a child.
 - **UIX-014**: For `PARENT`, competition creation shall require an active family profile before the creation form is opened.
-- **UIX-015**: For `COACH`, the home screen shall open on a coach hub exposing three explicit cards: "Gérer les compétitions", "Rechercher un judoka", and "Voir les statistiques". For `ADMIN`, the home screen shall expose access governance without sports management actions.
-- **UIX-016**: For `COACH`, the top coach navigation shall stay limited to returning to "Accueil coach" and "Mon espace"; detailed coach actions shall be launched from the coach hub cards instead of duplicated as top navigation tabs.
+- **UIX-015**: For `COACH`, the home screen shall list what is waiting: club competitions of the week, rankings to enter and coach reviews to write; each line opens the club competition. For `ADMIN`, access governance is reached from the account menu.
+- **UIX-016**: For `COACH`, the same four tabs shall be shown on every coach screen: « Accueil », « Compétitions », « Judokas » and « Stats ». « Mon espace », « Ma famille » and « Gestion des accès » are in the account menu opened from the header.
 - **UIX-017**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
 - **UIX-018**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
 - **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.
 - **UIX-020**: The judoka profile view shall remain readable and actionable on mobile.
 - **UIX-021**: The judoka profile view should visually emphasize performance through a dedicated summary hero and highlighted season statistics.
-- **UIX-022**: The home screen shall use the same action-card journey for `COACH`, `PARENT`, and `JUDOKA`; each profile keeps its current actions and content while navigation starts from explicit activity cards.
 - **UIX-022**: The judoka performance hero labels shall follow a logical sports-reading order: season, age category, year within category, weight category, gender, garde, then belt color.
 - **UIX-023**: Competition and season results should use distinct visual badges and lightweight motion cues while remaining readable on mobile.
 - **UIX-024**: Home widgets shall not repeat the active tab label as a standalone title; when an active tab or useful context card already identifies the view, the redundant home header shall be hidden.
 - **UIX-025**: Competition cards in lists shall use a uniform open-only interaction. Destructive competition deletion shall be handled from the competition detail screen, not from list cards.
 - **UIX-026**: Coach competition cards should expose immediate follow-up signals: participant count, ranking progress, podium count, and missing coach reviews when available.
-- **UIX-027**: The competition detail screen should show a compact sports summary before the combat list, including record, victory rate, combats with scores, and finalization status.
+- **UIX-027**: The competition detail screen shall show pills (countdown, category, level, ranking), then a compact record (wins and losses without zero counters, victory rate, detailed combats). Before the competition date, it shows the coach objective and no result entry; from the competition date, the ranking is chosen on the page with buttons.
 - **UIX-028**: For `PARENT`, the competition detail screen shall show the coach follow-up block so objectives set by the coach are visible on the judoka's competition.
 - **UIX-029**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
 - **UIX-030**: An action card shall open its useful destination or corresponding section directly, without requiring an intermediate mode change.
@@ -213,7 +225,7 @@ This specification does not define:
 - **UIX-033**: The admin CSV import screen shall present import requirements as a short checklist and downloadable example rather than a long inline column description.
 - **UIX-034**: Opening an existing combat in the mobile form shall preserve the recorded result and shall not autofocus the result field when a result is already set. The form shall focus the first useful missing detail instead.
 - **UIX-036**: Combat creation actions shall remain hidden while a competition detail is loading and shall require a loaded, editable parent competition before opening the combat form.
-- **UIX-035**: Profile home hubs shall expose actions and navigation only; upcoming events, summaries, and result lists shall be displayed in their dedicated destination screens.
+- **UIX-035**: Each home shall open on its useful content (competition list, children pills or coach to-do list) rather than on explanatory cards.
 - **UIX-037**: Competition lists in destination screens shall include competitions dated today or later, listed first by ascending date with an « Aujourd'hui » or « À venir » badge, followed by past competitions from most recent to oldest.
 
 ### 3.9 Offline usage rules

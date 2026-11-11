@@ -83,5 +83,5 @@ What Kiroku is not:
 ## Further Notes
 
 - This PRD replaces `docs/produit.md` as the canonical product-vision document. The detailed, ID-tagged functional rules (`REQ-*`, `COMP-*`, `CBT-*`, `CHD-*`, `STA-*`, `AUTH-*`, `UIX-*`, `DASH-*`, `MCP-*`, `AC-*`) live in `docs/spec.md`, and the detailed technical contracts (`ARC-*`, `VCL-*`, `DAT-*`, `AUTH-*`, `SEC-*`, `CFG-*`) live in `docs/spec-tech.md`. Both remain the source of truth consulted and updated per `AGENTS.md`'s workflow for any change touching business rules or architecture; this PRD is not, and intentionally does not duplicate them feature-by-feature.
-- The initial ADMIN seed account is `admin@example.com` (Alex DURAND), seeded on fresh deployments.
+- No account is seeded by the migration; the first admin is designated by a one-off query on an existing profile (`judokas.is_admin = true`).
 - MVP success is measured operationally: a parent can log a competition and 3 combats from the stands in under 3 minutes; a coach can see the weekend's full club results in 2 clicks the following Monday or at the dojo; submitted combat volume grows weekly without coach intervention.

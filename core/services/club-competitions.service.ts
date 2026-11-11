@@ -69,6 +69,32 @@ export default function createClubCompetitionsService(
     return rows;
   }
 
+  // Une compétition club n'est visible et modifiable que par les coachs de son club.
+  // Une compétition club d'un autre club (ou sans club) est traitée comme introuvable.
+  function assertClubAccessible(clubId: unknown, coachClubIds: string[]): string {
+    const id = String(clubId || "");
+    if (!id || !coachClubIds.includes(id)) {
+      throw new Error("Compétition club introuvable.");
+    }
+    return id;
+  }
+
+  async function getAccessibleEvent(idClubCompetition: string, coachClubIds: string[]) {
+    const event = await clubCompetitionsRepository.getById(idClubCompetition);
+    if (!event) {
+      throw new Error("Compétition club introuvable.");
+    }
+    assertClubAccessible(event.club_id, coachClubIds);
+    return event;
+  }
+
+  function assertParticipantsInClub(rows: JudokaRow[], clubId: string): void {
+    const outside = rows.filter((row) => String(row.club_id || "") !== clubId);
+    if (outside.length) {
+      throw new Error("Tous les judokas sélectionnés doivent appartenir au club de la compétition.");
+    }
+  }
+
   function assertParticipantsMatchAgeCategory(rows: JudokaRow[], ageCategory: string): void {
     const invalid = rows.filter((row) => String(row.categorie_age || "") !== ageCategory);
     if (invalid.length) {
@@ -82,11 +108,20 @@ export default function createClubCompetitionsService(
   }
 
   async function saveClubCompetition(email: string, input: ClubCompetitionInput) {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
+    const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
 
     const isEditing = Boolean(input.clubCompetitionId);
     const clubCompetitionId = String(input.clubCompetitionId || buildClubCompetitionId());
+    // Le club d'une compétition est fixé à la création ; un coach d'un seul club n'a pas à le choisir.
+    const requestedClubId = String(input.clubId || "") || (coachClubIds.length === 1 ? coachClubIds[0] : "");
+    const clubId = isEditing
+      ? (await getAccessibleEvent(clubCompetitionId, coachClubIds)).club_id || ""
+      : requestedClubId;
+    if (!clubId) {
+      throw new Error("Club de la compétition obligatoire.");
+    }
+    assertClubAccessible(clubId, coachClubIds);
     const existing = isEditing
       ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
       : [];
@@ -98,7 +133,7 @@ export default function createClubCompetitionsService(
         ? input.participantJudokaIds
         : undefined;
 
-    const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds });
+    const event = createClubCompetition({ ...input, clubCompetitionId, participantJudokaIds, clubId });
 
     if (!isEditing && !event.participantJudokaIds.length) {
       throw new Error("Au moins un judoka doit être sélectionné.");
@@ -108,6 +143,8 @@ export default function createClubCompetitionsService(
     ];
     if (allParticipantJudokaIds.length) {
       const participantRows = await assertParticipantIdsExist(allParticipantJudokaIds);
+      const newParticipantRows = participantRows.filter((row) => !existingJudokaIds.has(String(row.id_judoka)));
+      assertParticipantsInClub(newParticipantRows, clubId);
       assertParticipantsMatchAgeCategory(participantRows, event.ageCategory);
     }
 
@@ -125,7 +162,7 @@ export default function createClubCompetitionsService(
           name: event.name,
           competitionDate: event.competitionDate,
           ageCategory: event.ageCategory,
-          weightCategory: "",
+          weightCategory: participation.categorie_poids || "",
           level: event.level,
           result: participation.classement || ""
         },
@@ -160,12 +197,9 @@ export default function createClubCompetitionsService(
   }
 
   async function getClubCompetitionDetail(email: string, idClubCompetition: string) {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
+    const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
-    const event = await clubCompetitionsRepository.getById(idClubCompetition);
-    if (!event) {
-      throw new Error("Compétition club introuvable.");
-    }
+    const event = await getAccessibleEvent(idClubCompetition, coachClubIds);
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
     const judokas = await judokasRepository.listByIds(participations.map((row) => row.id_judoka));
     const combats = combatsRepository
@@ -191,12 +225,9 @@ export default function createClubCompetitionsService(
   }
 
   async function deleteClubCompetition(email: string, idClubCompetition: string) {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
+    const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
-    const event = await clubCompetitionsRepository.getById(idClubCompetition);
-    if (!event) {
-      throw new Error("Compétition club introuvable.");
-    }
+    await getAccessibleEvent(idClubCompetition, coachClubIds);
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
     for (const participation of participations) {
       await competitionsRepository.detachFromClubCompetition(participation.id_competition);
@@ -213,12 +244,9 @@ export default function createClubCompetitionsService(
     idClubCompetition: string,
     idCompetition: string
   ) {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
+    const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
-    const event = await clubCompetitionsRepository.getById(idClubCompetition);
-    if (!event) {
-      throw new Error("Compétition club introuvable.");
-    }
+    const event = await getAccessibleEvent(idClubCompetition, coachClubIds);
     const participation = await competitionsRepository.getById(idCompetition);
     if (
       !participation ||

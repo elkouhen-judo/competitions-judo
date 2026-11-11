@@ -1,6 +1,9 @@
     <section id="combatFormView" class="panel hidden" v-cloak>
-      <div class="panel-header">
-        <div>
+      <div class="panel-header page-header">
+        <button class="icon-button page-back" type="button" aria-label="Retour à la compétition" title="Retour" @click="cancelCombatForm()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="page-title">
           <h2 id="combatFormTitle">{{ combatFormTitle }}</h2>
           <p id="combatFormSubtitle" class="subtitle">{{ combatFormSubtitle }}</p>
         </div>
@@ -11,160 +14,180 @@
         <div class="form-section combat-quick-section">
           <div class="form-section-heading">
             <div>
-              <span class="combat-section-kicker">Partie 1</span>
               <h3>Saisie rapide</h3>
-              <p class="subtitle">Renseignez l'essentiel juste après le combat.</p>
+              <p class="subtitle">L'essentiel, juste après le combat.</p>
             </div>
           </div>
-          <div class="form-grid combat-fast-grid">
-            <div>
-              <label for="combat_etape">Étape dans la compétition</label>
-              <select id="combat_etape" v-model="combatForm.stage">
-                <option value="">Non spécifié</option>
-                <option v-for="option in combatStageOptions" :key="option" :value="option">{{ option }}</option>
-              </select>
-            </div>
 
-            <div>
-              <label for="combat_resultat">Résultat</label>
-              <select id="combat_resultat" v-model="combatForm.result" @change="syncCombatDecisionVisibility(true)">
-                <option value="">Choisir</option>
-                <option value="Victoire">Victoire</option>
-                <option value="Défaite">Défaite</option>
-                <option value="Egalité">Egalité</option>
-              </select>
-            </div>
-
-            <div id="combatDecisionBlock" :class="{ hidden: !showCombatDecisionBlock }">
-              <label for="combat_type_victoire">Comment le combat s'est terminé</label>
-              <select id="combat_type_victoire" v-model="combatForm.victoryType">
-                <option value="">Non spécifié</option>
-                <option v-for="option in combatDecisionOptions" :key="option" :value="option">{{ option }}</option>
-              </select>
-              <p class="field-hint">Indiquez si le combat s'est terminé par ippon, points, décision ou pénalité.</p>
-              <div v-if="combatFormVictoryTypeIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur le type de décision">
-                <span v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
-                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
-                  {{ issue.label }}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label for="combat_adversaire">Adversaire</label>
-              <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse">
+          <div class="choice-field">
+            <span class="choice-label" id="combat_etape_label">Étape</span>
+            <div id="combat_etape" class="choice-chips" role="radiogroup" aria-labelledby="combat_etape_label" tabindex="-1">
+              <button
+                v-for="option in combatStageOptions"
+                :key="option"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.stage === option ? 'true' : 'false'"
+                :class="['choice-chip', { 'choice-active': combatForm.stage === option }]"
+                @click="selectCombatStage(option)">
+                {{ option }}
+              </button>
             </div>
           </div>
-        </div>
 
-        <div class="form-section">
-          <div class="form-section-heading">
-            <div>
-              <span class="combat-section-kicker">Partie 2</span>
-              <h3>Détails du combat</h3>
-              <p class="subtitle">Complétez ce qui aide le coach à relire le combat.</p>
+          <div class="choice-field">
+            <span class="choice-label" id="combat_resultat_label">Résultat <span class="required-mark" aria-hidden="true">*</span></span>
+            <div
+              id="combat_resultat"
+              class="choice-segmented choice-segmented-3"
+              role="radiogroup"
+              aria-labelledby="combat_resultat_label"
+              aria-required="true"
+              :aria-invalid="combatFormErrors.result ? 'true' : 'false'"
+              :aria-describedby="combatFormErrors.result ? 'combat_resultat_error' : null"
+              tabindex="-1">
+              <button
+                v-for="option in combatResultOptions"
+                :key="option.value"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.result === option.value ? 'true' : 'false'"
+                :class="['choice-button', option.className, { 'choice-active': combatForm.result === option.value }]"
+                @click="selectCombatResult(option.value)">
+                {{ option.label }}
+              </button>
             </div>
+            <p v-if="combatFormErrors.result" id="combat_resultat_error" class="field-error" role="alert">{{ combatFormErrors.result }}</p>
           </div>
-          <div class="form-grid">
-            <div>
-              <label for="combat_garde_adversaire">Adversaire droitier ou gaucher</label>
-              <select id="combat_garde_adversaire" v-model="combatForm.opponentStance">
-                <option value="">Non spécifié</option>
-                <option value="Droitier">Droitier</option>
-                <option value="Gaucher">Gaucher</option>
-              </select>
-              <p class="field-hint">Aide à comparer les combats selon le côté préféré de chacun.</p>
-              <div v-if="combatFormOpponentStanceIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur la garde adversaire">
-                <span v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
-                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
-                  {{ issue.label }}
-                </span>
-              </div>
+
+          <div id="combatDecisionBlock" class="choice-field" :class="{ hidden: !showCombatDecisionBlock }">
+            <span class="choice-label" id="combat_type_victoire_label">Fin du combat</span>
+            <div id="combat_type_victoire" class="choice-segmented choice-segmented-3" role="radiogroup" aria-labelledby="combat_type_victoire_label" tabindex="-1">
+              <button
+                v-for="option in combatDecisionOptions"
+                :key="option"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.victoryType === option ? 'true' : 'false'"
+                :class="['choice-button', { 'choice-active': combatForm.victoryType === option }]"
+                @click="selectCombatDecision(option)">
+                {{ option }}
+              </button>
             </div>
-            <div class="full-row combat-score-block">
-              <div class="combat-score-header">
-                <div>
-                  <label>Points marqués par le judoka</label>
-                  <p class="field-hint">Uniquement les points du judoka, même en cas de défaite. Les points de l'adversaire ne se saisissent pas ici.</p>
-                </div>
-                <span class="result-badge">{{ combatForm.scores.length }} technique(s)</span>
-              </div>
-              <div v-if="!combatForm.scores.length" class="combat-score-empty">
-                Ajoutez une technique seulement si un point a été marqué.
-              </div>
-              <div class="combat-score-rows">
-                <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
-                  <div class="combat-score-row-header">
-                    <span class="combat-score-row-title">Technique {{ index + 1 }}</span>
-                    <button class="button-danger compact-button" type="button" @click="removeCombatScoreRow(index)">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                      Retirer
-                    </button>
-                  </div>
-                  <div class="combat-score-row-fields">
-                    <select v-model="score.category" @change="onCombatScoreCategoryChange(index)">
-                      <option value="">Debout ou au sol</option>
-                      <option value="Tachi-waza">Debout</option>
-                      <option value="Ne-waza">Au sol</option>
-                    </select>
-                    <template v-if="score.category === 'Tachi-waza'">
-                      <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" placeholder="Action debout (ex. Seoi-nage)">
-                      <datalist id="tachiWazaTechniqueSuggestions">
-                        <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
-                      </datalist>
-                    </template>
-                    <template v-else-if="score.category === 'Ne-waza'">
-                      <input type="text" list="neWazaTechniqueSuggestions" v-model.trim="score.neWazaType" placeholder="Technique au sol (ex. Hon-gesa-gatame)">
-                      <datalist id="neWazaTechniqueSuggestions">
-                        <option v-for="technique in neWazaTechniques" :key="technique" :value="technique"></option>
-                      </datalist>
-                    </template>
-                    <select v-else disabled>
-                      <option value="">Choisir debout ou au sol</option>
-                    </select>
-                    <select v-model="score.value">
-                      <option value="">Point marqué</option>
-                      <option value="Ippon">Ippon</option>
-                      <option value="Waza-ari">Waza-ari</option>
-                      <option value="Yuko">Yuko</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter une technique</button>
-              <div v-if="combatFormScoreIssues.length" class="metric-missing-list" aria-label="Problème de saisie sur les techniques marquées">
-                <span v-for="issue in combatFormScoreIssues" :key="issue.label" class="metric-warning" :class="{ 'metric-warning-high': issue.priority === 'high' }">
-                  <span class="metric-warning-priority">{{ issue.priority === 'high' ? 'Haute' : 'Moyenne' }}</span>
-                  {{ issue.label }}
-                </span>
-              </div>
-            </div>
+            <ul v-if="combatFormVictoryTypeIssues.length" class="field-todo-list" aria-label="À compléter sur la fin du combat">
+              <li v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
+            </ul>
+          </div>
+
+          <div class="choice-field">
+            <label for="combat_adversaire">Adversaire</label>
+            <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse" autocomplete="off">
           </div>
         </div>
 
         <div class="form-section">
           <div class="form-section-heading">
             <div>
-              <span class="combat-section-kicker">Partie 3</span>
-              <h3>Analyse</h3>
-              <p class="subtitle">Ajoutez le contexte utile pour le prochain entraînement.</p>
+              <h3>Détails</h3>
+              <p class="subtitle">Ce qui aide le coach à relire le combat.</p>
             </div>
           </div>
-          <div class="form-grid">
-            <div class="full-row">
-              <label for="combat_deroule">Notes sur le combat</label>
-              <textarea id="combat_deroule" rows="4" placeholder="Ex : bon départ, difficulté contre un gaucher, projection tentée..." v-model.trim="combatForm.notes"></textarea>
+
+          <div class="choice-field">
+            <span class="choice-label" id="combat_garde_adversaire_label">Garde de l'adversaire</span>
+            <div id="combat_garde_adversaire" class="choice-segmented choice-segmented-2" role="radiogroup" aria-labelledby="combat_garde_adversaire_label" tabindex="-1">
+              <button
+                v-for="option in combatStanceOptions"
+                :key="option"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.opponentStance === option ? 'true' : 'false'"
+                :class="['choice-button', { 'choice-active': combatForm.opponentStance === option }]"
+                @click="selectCombatStance(option)">
+                {{ option }}
+              </button>
             </div>
+            <ul v-if="combatFormOpponentStanceIssues.length" class="field-todo-list" aria-label="À compléter sur la garde adverse">
+              <li v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
+            </ul>
+          </div>
+
+          <div id="combat_points" class="combat-score-block" tabindex="-1">
+            <div class="combat-score-header">
+              <span class="choice-label">Points marqués par le judoka</span>
+              <p class="field-hint">Uniquement ses points, même en cas de défaite.</p>
+            </div>
+            <div class="combat-score-rows">
+              <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
+                <div class="combat-score-row-header">
+                  <span class="combat-score-row-title">Point {{ index + 1 }}</span>
+                  <button class="icon-button" type="button" :aria-label="'Retirer le point ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur du point ' + (index + 1)">
+                  <button
+                    v-for="value in combatScoreValues"
+                    :key="value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="score.value === value ? 'true' : 'false'"
+                    :class="['choice-button', { 'choice-active': score.value === value }]"
+                    @click="score.value = value">
+                    {{ value }}
+                  </button>
+                </div>
+                <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-label="'Debout ou au sol, point ' + (index + 1)">
+                  <button
+                    v-for="category in combatScoreCategories"
+                    :key="category.value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="score.category === category.value ? 'true' : 'false'"
+                    :class="['choice-button', { 'choice-active': score.category === category.value }]"
+                    @click="selectCombatScoreCategory(index, category.value)">
+                    {{ category.label }}
+                  </button>
+                </div>
+                <template v-if="score.category === 'Tachi-waza'">
+                  <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" :aria-label="'Technique debout, point ' + (index + 1)" placeholder="Technique (ex. Seoi-nage)">
+                </template>
+                <template v-else-if="score.category === 'Ne-waza'">
+                  <input type="text" list="neWazaTechniqueSuggestions" v-model.trim="score.neWazaType" :aria-label="'Technique au sol, point ' + (index + 1)" placeholder="Technique (ex. Hon-gesa-gatame)">
+                </template>
+              </div>
+            </div>
+            <datalist id="tachiWazaTechniqueSuggestions">
+              <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
+            </datalist>
+            <datalist id="neWazaTechniqueSuggestions">
+              <option v-for="technique in neWazaTechniques" :key="technique" :value="technique"></option>
+            </datalist>
+            <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter un point</button>
+            <ul v-if="combatFormScoreIssues.length" class="field-todo-list" aria-label="À compléter sur les points marqués">
+              <li v-for="issue in combatFormScoreIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
+            </ul>
+          </div>
+
+          <div class="choice-field">
+            <label for="combat_deroule">Notes</label>
+            <textarea id="combat_deroule" rows="3" placeholder="Ex : bon départ, difficulté contre un gaucher, projection tentée..." v-model.trim="combatForm.notes"></textarea>
           </div>
         </div>
 
-        <div class="form-actions mobile-action-bar">
-          <button class="button-secondary" type="button" @click="cancelCombatForm()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
-            Annuler
+        <div v-if="combatForm.combatId" class="danger-zone">
+          <button id="deleteCombatButton" class="button-danger" type="button" :disabled="isSubmitting" @click="deleteCombatFromForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Supprimer ce combat
           </button>
-          <button id="saveCombatButton" type="button" :disabled="isSubmitting" @click="saveCombat()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        </div>
+
+        <div class="form-actions mobile-action-bar action-bar-inline">
+          <button v-if="combatForm.combatId" class="button-secondary action-bar-cancel" type="button" @click="cancelCombatForm()">Annuler</button>
+          <button v-if="!combatForm.combatId" id="saveAndNextCombatButton" class="button-secondary" type="button" :disabled="isSubmitting" @click="saveCombatAndNext()">
+            Enregistrer + suivant
+          </button>
+          <button id="saveCombatButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="saveCombat()">
             <span id="saveCombatButtonText">{{ saveCombatButtonText }}</span>
           </button>
         </div>

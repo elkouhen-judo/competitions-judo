@@ -341,10 +341,8 @@ test("vercel login uses CSV-imported profiles without first-login name entry", (
     /alter table public\.club_competitions\s+drop column if exists categorie_poids/i
   );
   assert.match(supabaseSchema, /create or replace function public\.register_profile/i);
-  assert.match(
-    supabaseSchema,
-    /'admin@example\.com'[\s\S]*'Alex'[\s\S]*'DURAND'[\s\S]*'ADMIN'/i
-  );
+  assert.doesNotMatch(supabaseSchema, /values\s*\(\s*'JUDO_[A-Z_]+',\s*'[^']+@/i);
+  assert.match(supabaseSchema, /Aucun compte n'est créé par la migration/);
 });
 
 test("successful initial load leaves the login view", () => {
@@ -357,23 +355,22 @@ test("judoka home keeps competition creation available", () => {
   assert.doesNotMatch(uiBundle, /<h3>À venir<\/h3>/);
   assert.match(
     uiBundle,
-    /id="addCompetitionButton" v-if="canCreateCompetition" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/
+    /id="addCompetitionButton" v-if="showAddCompetitionAction" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/
   );
   assert.match(uiBundle, /id="addCompetitionButtonText"/);
-  assert.match(uiBundle, /id="addCompetitionButtonMeta"/);
   assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
   assert.match(uiBundle, /function resolveCompetitionOwnerSelection\(\)/);
   assert.match(uiBundle, /function getCompetitionOwnerRequiredMessage\(\)/);
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
-  assert.match(uiBundle, /showError\(\{ message: getCompetitionOwnerRequiredMessage\(\) \}\);/);
+  assert.match(uiBundle, /errors\.owner = competition\.ownerJudokaId \? "" : getCompetitionOwnerRequiredMessage\(\);/);
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.doesNotMatch(uiBundle, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
   assert.match(uiBundle, /showHomeActions = window\.Vue\.computed\(/);
   assert.match(
     uiBundle,
-    /<div id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions && !showJudokaHub">[\s\S]*?<h3 id="homeCompetitionsTitle">\{\{ competitionsTitle \}\}<\/h3>/
+    /<div id="homeAdminActions" class="home-actions-row" v-show="showHomeActions">[\s\S]*?id="homeCompetitionsSection"/
   );
-  assert.match(uiBundle, /v-for="competition in competitions"/);
+  assert.match(uiBundle, /v-for="competition in group\.items"/);
   assert.doesNotMatch(uiBundle, /activeJudokaSummaryHtml|competitionsHtml/);
   assert.match(
     uiBundle,
@@ -417,12 +414,9 @@ test("competition persistence keeps categories and omits removed place and actua
     competitionsService,
     /await competitionsRepository\.updateResult\(idCompetition,\s*finalization\);/
   );
-  assert.match(uiBundle, /id="competitionFinalizationView" class="panel hidden"/);
-  assert.match(
-    uiBundle,
-    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton" class="button-secondary" type="button" v-show="canFinalizeCompetition" :disabled="isSubmitting" @click="showCompetitionFinalizationForm\(\)"[\s\S]*Ajouter un combat/
-  );
-  assert.match(uiBundle, /function finalizeCompetition\(\)/);
+  // FICHE-2 : le classement se saisit sur la fiche, sans écran de finalisation dédié.
+  assert.doesNotMatch(uiBundle, /id="competitionFinalizationView"|finalizeCompetitionButton/);
+  assert.match(uiBundle, /function saveCompetitionRanking\(result\)/);
   assert.match(uiBundle, /"finalizeCompetition",\s*\[\s*competitionId,\s*result\s*\]/);
   assert.doesNotMatch(uiBundle, /id="competition_classement"/);
   assert.doesNotMatch(uiBundle, /id="competition_result"/);
@@ -485,11 +479,11 @@ test("admin can manage admins from a dedicated screen", () => {
     adminService,
     /async function grantAdminRole\(email: string,\s*targetEmail: string\)/
   );
-  assert.match(adminService, /createJudoka\(toCanonicalJudoka\(target\)\)\.grantAdminRole\(\)/);
-  assert.match(
-    adminService,
-    /createJudoka\(toCanonicalJudoka\(target\)\)\.revokeAdminRole\(user\.id_judoka\)/
-  );
+  assert.match(adminService, /const targetModel = createJudoka\(toCanonicalJudoka\(target\)\);/);
+  assert.match(adminService, /targetModel\.grantAdminRole\(\)/);
+  assert.match(adminService, /targetModel\.revokeAdminRole\(user\.id_judoka\)/);
+  // Un coach promu admin garde son rôle coach : le droit admin est un indicateur séparé.
+  assert.match(adminService, /judokasRepository\.setAdminFlag\(target\.id_judoka, true\)/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("ADMIN"\) \};/);
   assert.match(judokaDomain, /return \{ accessRole: createRole\("NORMAL"\) \};/);
   assert.match(adminService, /async function revokeAdminRole\(email: string,\s*idJudoka: string\)/);
@@ -557,22 +551,17 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     uiBundle,
     /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile\(\)"/
   );
-  assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
+  assert.match(uiBundle, /id="openHomeJudokaProfileButtonText"/);
   assert.match(uiBundle, /id="judokaView" class="panel hidden"/);
   assert.match(uiBundle, /id="judokaHeroAvatar"/);
   assert.match(uiBundle, /id="judokaHeroRecord"/);
   assert.doesNotMatch(uiBundle, /id="judokaHeroName"/);
   assert.match(uiBundle, /function openHomeJudokaProfile\(\)/);
-  assert.match(uiBundle, /Sélectionnez un judoka actif pour ouvrir sa fiche/);
-  assert.match(
-    uiBundle,
-    /Sélectionnez votre profil ou l'un de vos enfants comme judoka actif pour ouvrir la fiche/
-  );
-  assert.match(uiBundle, /Aucun résultat enregistré pour votre périmètre/);
-  assert.match(uiBundle, /Résumé performance/);
-  assert.match(uiBundle, /Mode de victoire/);
-  assert.match(uiBundle, /Mode de défaite/);
-  assert.match(uiBundle, /Résultats compétition/);
+  assert.match(uiBundle, /Choisissez d'abord un judoka\./);
+  assert.doesNotMatch(uiBundle, /votre périmètre/);
+  assert.match(uiBundle, /Fin des combats gagnés/);
+  assert.match(uiBundle, /Fin des combats perdus/);
+  assert.match(uiBundle, /Compétitions de la saison/);
   assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
   assert.match(uiBundle, /id="judokaSeasonBalance"/);
   assert.match(uiBundle, /id="judokaVictoryRate"/);
@@ -582,9 +571,10 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /rank-silver/);
   assert.match(uiBundle, /rank-bronze/);
   assert.match(uiBundle, /function showJudokaProfile\(idJudoka,\s*keepMessage\)/);
+  // UI-3 : un seul format de nom, « Hugo Durand ».
   assert.match(
     uiBundle,
-    /return \[normalizeDisplayName\(j && j\.firstName\), normalizeLastName\(j && j\.lastName\)\]\s*\.filter\(Boolean\)\s*\.join\(" "\);/
+    /return \[normalizeDisplayName\(j && j\.firstName\), normalizeDisplayName\(j && j\.lastName\)\]\s*\.filter\(Boolean\)\s*\.join\(" "\);/
   );
   assert.match(
     userContextService,
@@ -594,7 +584,9 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
     userContextService,
     /managedJudokaScope = createManagedJudokaScope\(managedJudokaIds\);/
   );
-  assert.match(userContextService, /return \{ user, judokas, managedJudokaScope \};/);
+  assert.match(userContextService, /return \{ user, judokas, managedJudokaScope, coachClubIds \};/);
+  // Un coach ne voit que les judokas des clubs qu'il coache.
+  assert.match(userContextService, /coachClubIds = await clubsRepository\.listClubIdsByCoach\(user\.id_judoka\);/);
   assert.match(
     userContextService,
     /assertCanAccessJudokaProfile\(toCanonicalJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/
@@ -658,7 +650,7 @@ test("admin role does not inherit coach sports management permissions", () => {
   );
   assert.match(
     permissions,
-    /if \(isAdmin\(user\)\) throw new Error\("Gestion des compétitions réservée aux coachs\."\);/
+    /if \(isAdminOnly\(user\)\) throw new Error\("Gestion des compétitions réservée aux coachs\."\);/
   );
   assert.match(
     permissions,
@@ -713,25 +705,19 @@ test("vercel runtime lets the connected user log out", () => {
     css,
     /\.user-pill\s*\{[\s\S]*?padding:\s*0 10px;[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;[\s\S]*?line-height:\s*1;[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/
   );
-  assert.match(
-    css,
-    /\.logout-button\s*\{[\s\S]*?height:\s*44px;[\s\S]*?min-height:\s*44px;[\s\S]*?max-height:\s*44px;/
-  );
-  assert.match(uiBundle, /id="userInfo"/);
+  // NAV-4 : nom et rôle ouvrent le menu du compte, qui porte la déconnexion.
+  assert.match(uiBundle, /<details id="accountMenu" class="page-menu account-menu">/);
   assert.match(
     uiBundle,
-    /id="userInfo" class="user-pill"><strong>\{\{ userName \}\}<\/strong> <span class="user-pill-role">\{\{ roleLabel \}\}<\/span><\/div>/
+    /<summary id="userInfo" class="user-pill" aria-label="Menu du compte">\s*<strong>\{\{ userName \}\}<\/strong>\s*<span class="user-pill-role">\{\{ roleLabel \}\}<\/span>/
   );
-  assert.match(
-    uiBundle,
-    /id="logoutButton" type="button" class="button-secondary logout-button" @click="logoutUser\(\)"/
-  );
+  assert.match(uiBundle, /id="logoutButton" type="button" role="menuitem" @click="logoutUser\(\)">Se déconnecter/);
+  assert.match(uiBundle, /@click="openAccessManagement\(\)">Gestion des accès/);
   assert.match(uiBundle, /showHeader: false/);
   assert.match(uiBundle, /function setHeaderVisible\(visible\)/);
   assert.match(uiBundle, /app\.setHeaderVisible\(false\);/);
   assert.doesNotMatch(uiBundle, /onclick="logoutUser\(\)"/);
   assert.doesNotMatch(uiBundle, /document\.querySelector\("header"\)\.classList/);
-  assert.match(uiBundle, /aria-label="Déconnexion"/);
   assert.match(uiBundle, /id="toastLayer" class="toast-layer"/);
   assert.match(uiBundle, /getJudokaDisplayName\(state\.currentUser\)/);
   assert.match(uiBundle, /const toneClass = type === "success" \? "success" : "error";/);
@@ -822,9 +808,11 @@ test("vercel api keeps supabase api key usage server side", () => {
   );
   assert.match(
     coreIndex,
-    /const \{ user, judokas, managedJudokaScope, domainUser \} =\s*await userContextService\.getDomainUserContext\(email\);/
+    /const \{ user, judokas, managedJudokaScope, domainUser, coachClubIds = \[\] \} =\s*await userContextService\.getDomainUserContext\(email\);/
   );
-  assert.match(client, /state\.isCoach\s*\?\s*`COACH · \$\{profileTypeLabel\}`/);
+  // Un coach peut aussi être admin : l'en-tête affiche les deux rôles.
+  // NAV-4 : un seul rôle affiché dans l'en-tête.
+  assert.match(client, /const roleLabel = state\.isCoach\s*\? "Coach"\s*: state\.currentUser\?\.profileType === "PARENT"/);
   assert.match(sessionAuth, /\/auth\/v1\/user/);
   assert.match(
     competitionsService,

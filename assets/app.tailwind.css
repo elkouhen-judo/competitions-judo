@@ -3197,3 +3197,927 @@
     }
   }
 }
+
+/* ===================================================================
+   Revue ergonomique du 11/11/2026 (docs/backlog.md)
+   Composants partagés : en-tête de page, menu d'actions, boutons de
+   choix, barre d'actions sur une ligne, pastilles, « À compléter ».
+   =================================================================== */
+@layer utilities {
+  /* NAV-1 : flèche retour à gauche du titre, actions dans un menu « ⋯ ». */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .page-header .page-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .page-header .page-title h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .icon-button {
+    flex: none;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text);
+    box-shadow: none;
+  }
+
+  .icon-button:hover:not(:disabled) {
+    background: var(--soft);
+  }
+
+  .page-back {
+    margin-left: -10px;
+  }
+
+  .page-menu {
+    position: relative;
+    flex: none;
+  }
+
+  .page-menu > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .page-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .page-menu-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    display: grid;
+    min-width: 220px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    box-shadow: 0 12px 32px rgba(14, 26, 43, 0.14);
+  }
+
+  .page-menu-list button,
+  .page-menu-list a {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .page-menu-list button:hover:not(:disabled),
+  .page-menu-list a:hover {
+    background: var(--soft);
+  }
+
+  .page-menu-list .page-menu-danger {
+    color: var(--danger);
+  }
+
+  /* COMBAT-1 : boutons de choix au lieu des menus déroulants. */
+  .choice-field {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .choice-field > label,
+  .choice-label {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .required-mark {
+    color: var(--danger);
+  }
+
+  .choice-segmented {
+    display: grid;
+    gap: 8px;
+  }
+
+  .choice-segmented-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .choice-segmented-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .choice-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .choice-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .choice-button,
+  .choice-chip {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .choice-button {
+    padding: 8px 6px;
+    font-size: 0.92rem;
+  }
+
+  .choice-chip {
+    flex: none;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+
+  .choice-button,
+  .choice-chip {
+    width: auto;
+  }
+
+  .choice-button:hover:not(:disabled):not(.choice-active),
+  .choice-chip:hover:not(:disabled):not(.choice-active) {
+    border-color: var(--accent);
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  .choice-button.choice-active:hover,
+  .choice-chip.choice-active:hover,
+  .choice-button.choice-active:focus,
+  .choice-chip.choice-active:focus {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .choice-button.choice-win.choice-active:hover,
+  .choice-button.choice-win.choice-active:focus {
+    border-color: var(--success);
+    background: var(--success);
+  }
+
+  .choice-button.choice-loss.choice-active:hover,
+  .choice-button.choice-loss.choice-active:focus {
+    border-color: var(--danger);
+    background: var(--danger);
+  }
+
+  .choice-button.choice-active,
+  .choice-chip.choice-active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .choice-button.choice-win.choice-active {
+    border-color: var(--success);
+    background: var(--success);
+  }
+
+  .choice-button.choice-loss.choice-active {
+    border-color: var(--danger);
+    background: var(--danger);
+  }
+
+  .choice-button.choice-draw.choice-active {
+    border-color: var(--muted);
+    background: var(--muted);
+  }
+
+  [role="radiogroup"][aria-invalid="true"] .choice-button {
+    border-color: var(--danger);
+  }
+
+  /* COMBAT-2 : erreur sous le champ concerné. */
+  .field-error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  input[aria-invalid="true"],
+  select[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  /* COMBAT-5 : « À compléter » en langage courant, cliquable. */
+  .field-todo-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .field-todo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 1px dashed var(--warning);
+    border-radius: var(--radius-pill);
+    background: var(--warning-soft);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: none;
+  }
+
+  button.field-todo:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+
+  .danger-zone {
+    margin-top: 8px;
+  }
+
+  .danger-zone .button-danger {
+    width: 100%;
+  }
+
+  /* BARRE-1 : une seule ligne, action principale large. */
+  .mobile-action-bar.action-bar-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-bar-inline > button {
+    width: auto;
+    min-width: 0;
+  }
+
+  .action-bar-inline > .action-bar-primary {
+    flex: 1;
+  }
+
+  .action-bar-inline > .button-secondary {
+    flex: none;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  #combatFormView .mobile-action-bar.action-bar-inline {
+    position: sticky;
+    margin: 16px -16px 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  /* Le contenu n'est jamais masqué par la barre collante. */
+  .panel-body:has(> .mobile-action-bar),
+  .panel-body:has(.competition-combats-section > .mobile-action-bar) {
+    padding-bottom: 8px;
+  }
+
+  /* FICHE-3 : synthèse en pastilles. */
+  .competition-summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill-accent {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .pill-todo {
+    border-style: dashed;
+    border-color: var(--warning);
+    background: var(--warning-soft);
+  }
+
+  .competition-sport-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mini-stat {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .mini-stat-value {
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+
+  .mini-stat-label {
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  /* COMBAT-4 : carte de combat cliquable, compacte. */
+  .card-clickable {
+    cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .card-clickable:hover,
+  .card-clickable:focus-visible {
+    border-color: var(--accent);
+  }
+
+  .card-clickable:focus-visible {
+    outline: 3px solid var(--button-focus-ring);
+  }
+
+  .combat-card {
+    gap: 8px;
+  }
+
+  .combat-heading {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .combat-heading .combat-stage {
+    margin: 0;
+  }
+
+  .combat-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .combat-scores-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .combat-comment {
+    margin: 0;
+  }
+
+  .combat-pending {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* FICHE-4 : enregistrement automatique. */
+  .coach-assessment-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .autosave-status {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .competition-ranking-section .choice-chips {
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 721px) {
+    #combatFormView .mobile-action-bar.action-bar-inline {
+      position: static;
+      margin: 24px 0 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .action-bar-inline {
+      justify-content: flex-end;
+    }
+
+    .action-bar-inline > .action-bar-primary {
+      flex: none;
+      min-width: 200px;
+    }
+
+    .combat-fast-grid {
+      grid-template-columns: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* NAV-4 : en-tête compact, menu du compte. */
+  .account-menu > summary.user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: min(52vw, 240px);
+    min-height: 44px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--panel);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .account-menu > summary.user-pill strong {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
+  }
+
+  .account-menu > summary.user-pill .user-pill-role {
+    display: inline;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  /* NAV-2 : quatre onglets coach sans rognage à 390 px. */
+  .coach-sub-tabs {
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .coach-sub-tabs .mode-tab {
+    flex: 1 1 auto;
+    padding: 9px 10px;
+    text-align: center;
+  }
+
+  .dash-hero {
+    display: grid;
+    gap: 10px;
+  }
+
+  .club-filter-inline {
+    display: flex;
+  }
+
+  .pill-select {
+    width: auto;
+    min-height: 36px;
+    padding: 4px 32px 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  /* ACCUEIL-2 : pastilles des enfants. */
+  .child-pills-block {
+    margin-bottom: 14px;
+  }
+
+  .child-pills .choice-chip {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .chip-meta {
+    font-size: 0.74rem;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  /* ACCUEIL-1 : actions sur une ligne au-dessus de la liste. */
+  .home-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .home-actions-row > button {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    min-height: 48px;
+  }
+
+  #homeAdminActions button {
+    min-height: 48px;
+  }
+
+  /* ACCUEIL-3 : agenda coach. */
+  .coach-agenda {
+    display: grid;
+    gap: 4px;
+  }
+
+  .coach-agenda-group h3,
+  .list-group-title {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .agenda-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 60px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    box-shadow: none;
+  }
+
+  .agenda-item:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--panel);
+  }
+
+  .agenda-item-now {
+    border-color: var(--accent);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+
+  .agenda-item-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .agenda-item-meta {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* LISTE-1 / LISTE-2 : cartes compactes groupées. */
+  .list-search {
+    margin: 0 0 14px;
+  }
+
+  .list-group + .list-group {
+    margin-top: 18px;
+  }
+
+  .competition-card .competition-open-button {
+    display: grid;
+    justify-content: stretch;
+    justify-items: stretch;
+    align-items: start;
+    gap: 4px;
+    width: 100%;
+    padding: 12px 14px;
+    text-align: left;
+  }
+
+  .competition-card .competition-open-button > * {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .competition-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 8px;
+  }
+
+  .competition-card-row .card-title {
+    flex: 1 1 60%;
+    min-width: 0;
+  }
+
+  .competition-card-date {
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 500;
+  }
+
+  .competition-card-facts {
+    justify-content: flex-start;
+    color: var(--text);
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+
+  .competition-card-now {
+    border-color: var(--accent);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+
+  .pill-now {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .pill.pill-accent,
+  .pill.pill-now,
+  .pill.pill-todo {
+    min-height: 26px;
+    padding: 2px 10px;
+    font-size: 0.76rem;
+  }
+
+  @media (min-width: 721px) {
+    .home-actions-row {
+      justify-content: flex-start;
+    }
+
+    .home-actions-row > button {
+      flex: none;
+      min-width: 200px;
+    }
+  }
+}
+
+@layer utilities {
+  /* STATS-1 / STATS-2 : synthèse en quatre chiffres, répartitions en barres. */
+  .dashboard-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mini-stat-todo {
+    background: var(--warning-soft);
+  }
+
+  .dashboard-summary-insight {
+    margin: 10px 0 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .podium-lines {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bar-list {
+    display: grid;
+    gap: 10px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .bar-row-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .bar-row-value {
+    flex: none;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar-track {
+    height: 8px;
+    margin-top: 4px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--soft);
+  }
+
+  .bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+  }
+
+  .bar-track-todo .bar-fill {
+    background: var(--warning);
+  }
+
+  .dashboard-effectif {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  #coachDashboardView .section h3 {
+    margin: 0;
+  }
+
+  @media (min-width: 721px) {
+    .dashboard-kpis {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* UI-1 : zone tactile de 44 px autour des icônes d'aide. */
+  .info-tip,
+  .tooltip {
+    position: relative;
+  }
+
+  .info-tip::after,
+  .tooltip::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
+  }
+
+  /* UI-5 : aucun débordement horizontal. */
+  /* « clip » ne crée pas de conteneur de défilement : les barres collantes restent actives. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  .panel,
+  .panel-body {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@layer utilities {
+  /* FICHE-5 : fiche de progression. */
+  .season-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .season-switch-label {
+    margin: 0;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .season-switch .icon-button:disabled {
+    visibility: hidden;
+  }
+
+  .technique-list {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding-left: 20px;
+  }
+
+  .technique-list li {
+    display: list-item;
+  }
+
+  .technique-list li > span:first-child {
+    font-weight: 600;
+  }
+
+  .technique-list li > .bar-row-value {
+    float: right;
+  }
+
+  .bar-track-loss .bar-fill {
+    background: var(--danger);
+  }
+
+  .judoka-hero,
+  .hero-copy,
+  .hero-badges {
+    min-width: 0;
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #judokaView .section h3 {
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  /* ADMIN-1 / ADMIN-2 */
+  .admin-card {
+    position: relative;
+  }
+
+  .card-menu {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+
+  .admin-card .card-title {
+    padding-right: 44px;
+  }
+
+  .csv-import-help > summary {
+    min-height: 44px;
+    padding: 10px 0;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .import-file-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .import-file-row input[type="file"] {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* CLUB-1 : classement sur la ligne du participant. */
+  .participant-ranking {
+    padding: 0 14px 12px;
+  }
+
+  .choice-chip-compact {
+    min-width: 44px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+  }
+}

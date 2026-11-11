@@ -20,6 +20,15 @@ export interface Judoka {
   gender: string;
   yearInCategory: string;
   handedness: string;
+  /** Club du judoka ("" si non rattaché). */
+  clubId?: string;
+  /** Droit admin indépendant du rôle (un coach peut aussi être admin). */
+  adminAccess?: boolean;
+}
+
+export interface Club {
+  clubId: string;
+  name: string;
 }
 
 export interface Competition {
@@ -83,6 +92,8 @@ export interface UserContext {
   user: JudokaRow;
   judokas: JudokaRow[];
   managedJudokaScope: ManagedJudokaScope;
+  /** Clubs coachés par l'utilisateur (vide si l'utilisateur n'est pas coach). */
+  coachClubIds?: string[];
 }
 
 /**
@@ -107,6 +118,11 @@ export interface AdminsManagement {
   admins: Judoka[];
   users: Judoka[];
   accessInvitations: AccessInvitation[];
+}
+
+export interface ClubsManagement {
+  clubs: { clubId: string; name: string; coachIds: string[]; judokaCount: number }[];
+  coaches: Pick<Judoka, "judokaId" | "firstName" | "lastName" | "accountEmail">[];
 }
 
 export interface UserImportRowResult {
@@ -171,6 +187,8 @@ export interface CompetitionResultBadge {
 }
 
 export interface CoachDashboardFilters {
+  /** Limite les statistiques à un des clubs du coach. */
+  clubId?: string;
   competitionIds?: string[];
   dateFrom?: string;
   dateTo?: string;
@@ -331,7 +349,11 @@ export interface InitialData {
   isCoach: boolean;
   isParent: boolean;
   competitions: Competition[];
-  clubCompetitions: { clubCompetitionId: string; name: string; competitionDate: string }[];
+  /** Bilan des combats saisis, indexé par identifiant de compétition. */
+  combatRecords?: Record<string, { total: number; wins: number; losses: number; draws: number }>;
+  clubCompetitions: { clubCompetitionId: string; name: string; competitionDate: string; clubId?: string }[];
+  /** Clubs coachés par l'utilisateur (vide si l'utilisateur n'est pas coach). */
+  clubs?: Club[];
   judokas: Judoka[];
 }
 
@@ -398,6 +420,16 @@ export interface RpcMethods {
   grantAdminRole: (email: string, targetEmail: string) => Promise<OperationResult>;
   /** Retire le rôle administrateur d'un judoka. */
   revokeAdminRole: (email: string, idJudoka: string) => Promise<OperationResult>;
+  /** Liste les clubs (avec leurs coachs et leur nombre de judokas) et les coachs. Admin uniquement. */
+  getClubsManagement: (email: string) => Promise<ClubsManagement>;
+  /** Crée un club, ou le renomme si clubId est fourni. Admin uniquement. */
+  saveClub: (email: string, input: { clubId?: string; name?: string }) => Promise<OperationResult>;
+  /** Supprime un club sans judoka, sans coach et sans compétition. Admin uniquement. */
+  deleteClub: (email: string, idClub: string) => Promise<OperationResult>;
+  /** Remplace la liste des clubs coachés par un coach. Admin uniquement. */
+  setCoachClubs: (email: string, idCoach: string, clubIds: string[]) => Promise<OperationResult>;
+  /** Rattache un judoka à un club (ou l'en retire avec null). Admin uniquement. */
+  setJudokaClub: (email: string, idJudoka: string, idClub: string | null) => Promise<OperationResult>;
   /** Importe des profils JUDOKA/PARENT en masse depuis un fichier CSV. */
   importUsersCsv: (email: string, csvContent: string) => Promise<UserImportSummary>;
   /** Supprime une compétition de club. */

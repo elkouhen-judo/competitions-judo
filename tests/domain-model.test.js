@@ -94,35 +94,19 @@ test("permission policy derives access from immutable profile type and role", ()
     /Accès refusé/
   );
 
-  const coachAccess = permissions.resolveJudokaDataAccess(
-    { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-    createManagedJudokaScope([])
-  );
-  assert.equal(coachAccess.kind, "ALL");
-  assert.equal(coachAccess.canManageJudoka("OTHER"), true);
-  assert.equal(
-    permissions.canManageCompetition(
-      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-      { ownerJudokaId: "OTHER" },
-      createManagedJudokaScope([])
-    ),
-    true
-  );
-  assert.equal(
-    permissions.canManageCombatFor(
-      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-      "OTHER",
-      createManagedJudokaScope([])
-    ),
-    true
-  );
-  assert.doesNotThrow(() =>
-    permissions.assertCanAccessJudokaProfile(
-      { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" },
-      "OTHER",
-      createManagedJudokaScope([])
-    )
-  );
+  // Un coach accède aux judokas de ses clubs (portés par son managedJudokaScope), pas aux autres.
+  const coach = { judokaId: "COACH1", profileType: "JUDOKA", accessRole: "COACH" };
+  const coachClubScope = createManagedJudokaScope(["CLUB_JUDOKA"]);
+  const coachAccess = permissions.resolveJudokaDataAccess(coach, coachClubScope);
+  assert.equal(coachAccess.kind, "MANAGED");
+  assert.equal(coachAccess.canManageJudoka("CLUB_JUDOKA"), true);
+  assert.equal(coachAccess.canManageJudoka("OTHER"), false);
+  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "CLUB_JUDOKA" }, coachClubScope), true);
+  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "OTHER" }, coachClubScope), false);
+  assert.equal(permissions.canManageCombatFor(coach, "CLUB_JUDOKA", coachClubScope), true);
+  assert.equal(permissions.canManageCombatFor(coach, "OTHER", coachClubScope), false);
+  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(coach, "CLUB_JUDOKA", coachClubScope));
+  assert.throws(() => permissions.assertCanAccessJudokaProfile(coach, "OTHER", coachClubScope), /Accès refusé/);
 });
 
 test("club competition domain normalizes event details and participant ids", () => {
@@ -182,7 +166,7 @@ test("permission policy grants coach sports management without admin invitations
   const admin = { judokaId: "A1", profileType: "JUDOKA", accessRole: "ADMIN" };
   assert.equal(permissions.canManageClubCompetition(coach), true);
   assert.equal(
-    permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope([])),
+    permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope(["J1"])),
     true
   );
   assert.equal(permissions.canManageClubCompetition(admin), false);

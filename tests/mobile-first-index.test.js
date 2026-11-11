@@ -43,10 +43,14 @@ test("competition cards avoid redundant mobile action rows", () => {
   assert.equal(bundle.includes('<span class="meta-value">Ouvrir</span>'), false);
 });
 
-test("mobile action bars are available for primary form and detail actions", () => {
+test("mobile action bars hold one line with a wide primary action", () => {
   assert.match(bundle, /\.mobile-action-bar\s*\{/);
-  assert.match(bundle, /class="mobile-action-bar primary-action"/);
-  assert.match(bundle, /class="form-actions mobile-action-bar"/);
+  assert.match(bundle, /\.mobile-action-bar\.action-bar-inline\s*\{[\s\S]*?flex-direction:\s*row;/);
+  assert.match(bundle, /\.action-bar-inline > \.action-bar-primary\s*\{[\s\S]*?flex:\s*1;/);
+  assert.match(bundle, /class="mobile-action-bar primary-action action-bar-inline"/);
+  assert.match(bundle, /class="form-actions mobile-action-bar action-bar-inline"/);
+  assert.match(bundle, /id="saveCombatButton" class="action-bar-primary"/);
+  assert.match(bundle, /id="saveCompetitionButton" class="action-bar-primary"/);
 });
 
 test("mobile navigation uses browser history and restores focus", () => {
@@ -157,46 +161,32 @@ test("small-screen layout is the base and desktop is progressive", () => {
   );
 });
 
-test("admin competition management stays visible on mobile", () => {
-  assert.match(
-    bundle,
-    /id="homeAdminActions" class="toolbar admin-actions" v-show="showHomeActions && !showJudokaHub"/
-  );
-  assert.doesNotMatch(bundle, /id="homeActiveJudokaSummary"/);
-  assert.match(
-    bundle,
-    /id="competitionAdminActions" class="competition-management-actions" v-show="canEditCompetition"/
-  );
-  assert.match(bundle, /id="editCompetitionButton"/);
-  assert.match(bundle, /id="finalizeCompetitionButton"/);
-  assert.match(bundle, /id="deleteCompetitionButton"/);
-  assert.match(
-    bundle,
-    /<div class="mobile-action-bar primary-action">[\s\S]*id="finalizeCompetitionButton"[\s\S]*v-show="canManageCombat"[\s\S]*Ajouter un combat/
-  );
-  assert.doesNotMatch(
-    bundle,
-    /id="competitionAdminActions" class="competition-management-actions"[\s\S]*id="finalizeCompetitionButton"[\s\S]*id="deleteCompetitionButton"/
-  );
+test("competition actions live in a « ⋯ » menu and the ranking is chosen on the page", () => {
+  assert.match(bundle, /<details v-if="canEditCompetition" id="competitionAdminActions" class="page-menu">/);
+  assert.match(bundle, /id="editCompetitionButton"[^>]*role="menuitem"[\s\S]*?Modifier la compétition/);
+  assert.match(bundle, /id="deleteCompetitionButton"[^>]*role="menuitem"[^>]*class="page-menu-danger"/);
+  assert.doesNotMatch(bundle, /id="finalizeCompetitionButton"/);
+  assert.doesNotMatch(bundle, /id="competitionFinalizationView"/);
+  assert.match(bundle, /id="competitionRankingSection"/);
+  assert.match(bundle, /@click="saveCompetitionRanking\(option\.value\)"/);
+  assert.match(client, /\["1er", "2e", "3e", "5e", "7e", "Non classé"\]/);
+  assert.match(bundle, /<div v-if="canManageCombat" class="mobile-action-bar primary-action action-bar-inline">[\s\S]*id="addCombatButton"[\s\S]*Ajouter un combat/);
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionDetail\(/);
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionCombats\(/);
-  assert.match(bundle, /canManageCombat/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
 });
 
-test("home profiles use the same activity-card journey", () => {
-  assert.match(client, /const showJudokaHub = window\.Vue\.computed\(\(\) => getCurrentMode\(\) === "judoka"\);/);
-  assert.match(bundle, /<div v-if="showJudokaHub" class="section judoka-home-section">/);
-  const judokaHubMarkup = bundle.match(/<div v-if="showJudokaHub" class="section judoka-home-section">[\s\S]*?<div v-if="showParentHub"/)?.[0] || "";
-  assert.doesNotMatch(judokaHubMarkup, /<h3>Mon parcours<\/h3>/);
-  assert.doesNotMatch(judokaHubMarkup, /Choisissez l'action à lancer\./);
-  assert.match(bundle, /<h4>Ajouter une compétition<\/h4>/);
-  assert.match(bundle, /@click="showHomeCompetitionForm\(\)">/);
-  assert.match(bundle, /<h4>Ma progression<\/h4>/);
-  assert.match(bundle, /@click="openHomeJudokaProfile\(\)">/);
-  assert.match(bundle, /class="coach-home-grid"/);
-  assert.match(bundle, /class="card coach-home-card parent-home-card"/);
-  assert.match(bundle, /class="card coach-home-card"/);
+test("judoka home opens on the competition list with its actions on one line", () => {
+  assert.doesNotMatch(bundle, /v-if="showJudokaHub"|class="coach-home-grid"|parent-home-card"/);
+  assert.match(bundle, /id="homeAdminActions" class="home-actions-row" v-show="showHomeActions"/);
+  assert.match(bundle, /id="addCompetitionButton" v-if="showAddCompetitionAction"/);
+  assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
+  // ACCUEIL-4 : sans compétition, seul l'état vide porte le bouton d'ajout.
+  assert.match(client, /showAddCompetitionAction = window\.Vue\.computed\(\(\) => canCreateCompetition\.value && hasCompetitions\(\)\)/);
+  // LISTE-2 : deux intertitres au lieu d'une phrase d'explication.
+  assert.match(client, /title: "À venir"/);
+  assert.match(client, /title: "Passées"/);
+  assert.doesNotMatch(bundle, /À venir en tête, puis les résultats/);
 });
 
 test("club competition creation keeps age category without weight category", () => {
@@ -208,111 +198,39 @@ test("club competition creation keeps age category without weight category", () 
   assert.doesNotMatch(client, /clubCompetitionWeightCategoryOptions/);
 });
 
-test("family home keeps the active judoka competition context", () => {
-  assert.doesNotMatch(bundle, /if \(\(state\.isAdmin \|\| state\.isParent\) && !activeJudoka\) \{/);
-  assert.match(bundle, /let filteredComps = state\.competitions;/);
-  assert.match(
-    bundle,
-    /if \(activeJudokaId\) \{\s*filteredComps = state\.competitions\.filter\(\s*\(?c\)? => String\(c\.ownerJudokaId\) === String\(activeJudokaId\)\s*\);/
-  );
-  assert.match(
-    bundle,
-    /return \(mode === "coachJudoka" \|\| mode === "family"\) && state\.judokas\.length > 0;/
-  );
-  assert.match(bundle, /filterPlaceholder: "Choisir un judoka\.\.\."/);
-  assert.match(
-    bundle,
-    /getCurrentMode\(\) === "coachJudoka" \? "Judoka consulté" : "Judoka actif"/
-  );
-  assert.match(bundle, /Sélectionnez un judoka pour voir ses résultats\./);
-  assert.match(bundle, /modes\.push\(\{ key: "parentHome", label: "Parent" \}\);/);
-  assert.match(
-    bundle,
-    /if \(modeKey === "parentHome"\) \{\s*return \["parentHome", "family"\]\.includes\(getCurrentMode\(\)\);/
-  );
-  assert.match(bundle, /state\.homeMode = "parentHome";/);
-  assert.match(bundle, /<h3>Accueil parent[\s\S]*class="tooltip"/);
-  assert.match(bundle, /Espace parent centré sur l'enfant sélectionné/);
-  assert.match(bundle, /Ouvre la liste des compétitions filtrée sur le judoka actif/);
-  assert.match(bundle, /Change l'enfant actif/);
-  assert.match(bundle, /Affiche la progression du judoka actif/);
-  assert.match(
-    bundle,
-    /<h4>Suivi des compétitions[\s\S]*\{\{ parentCompetitionsHubButtonText \}\}/
-  );
-  assert.match(client, /formatParentCompetitionsHubButtonText\(getHomeActiveJudoka\(\)\)/);
-  assert.match(client, /Gérer les compétitions \$\{prefix\}\$\{firstName\}/);
-  assert.match(bundle, /<h4>Judoka actif[\s\S]*@click="openParentJudokaSelectionHub\(\)"/);
-  assert.match(bundle, /<h4>Fiche de progression[\s\S]*@click="openParentProfileHub\(\)"/);
-  assert.doesNotMatch(bundle, /Moi ou mes enfants/);
+test("family home shows one pill per child and remembers the last child", () => {
+  assert.match(bundle, /id="homeChildPills" class="choice-chips child-pills" role="radiogroup" aria-label="Enfant suivi"/);
+  assert.match(bundle, /@click="selectFilterJudoka\(child\)"/);
+  assert.match(client, /kiroku_last_child_/);
+  assert.match(client, /function rememberChild\(judokaId\)/);
+  assert.match(client, /children\.find\(\(j\) => String\(j\.judokaId\) === remembered\) \|\| children\[0\] \|\| null/);
+  assert.match(client, /\.filter\(\(j\) => String\(j\.judokaId\) !== selfId\)/);
+  assert.doesNotMatch(bundle, /parentSubModes|openParentJudokaSelectionHub|Accueil parent/);
+  assert.match(client, /mode === "parentHome" \? "family" : mode/);
+  assert.match(client, /\{ key: "family", label: "Famille" \}/);
 });
 
-test("coach home stays club-centered and separate from judoka consultation", () => {
-  assert.match(bundle, /modes\.push\(\{ key: "coachHome", label: "Coach" \}\);/);
+test("coach screens share the same four tabs and the home lists what is waiting", () => {
   assert.match(
-    bundle,
-    /coachSubModes = window\.Vue\.computed\(\(\) => \[[\s\S]*key: "coachHome",\s*label: "Accueil coach"[\s\S]*key: "judoka",\s*label: "Mon espace"/
+    client,
+    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil" \},\s*\{ key: "coach", label: "Compétitions" \},\s*\{ key: "coachJudoka", label: "Judokas" \},\s*\{ key: "coachDashboard", label: "Stats" \}\s*\]\)/
   );
-  assert.doesNotMatch(bundle, /key: "coach",\s*label: "Compétitions club"/);
-  assert.doesNotMatch(bundle, /key: "coachJudoka",\s*label: "Judoka"/);
-  assert.match(
-    bundle,
-    /state\.isCoach && \["coachHome", "judoka", "coach", "coachJudoka"\]\.includes\(getCurrentMode\(\)\)/
-  );
-  assert.match(bundle, /v-if="showModeTabs && !showCoachSubTabs" class="mode-tabs"/);
-  assert.match(bundle, /v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs"/);
-  assert.match(
-    bundle,
-    /showHomeContextTitle = window\.Vue\.computed\(\s*\(\) => !\["admin", "judoka", "family", "parentHome", "coachHome"\]\.includes\(getCurrentMode\(\)\) && !showCoachSubTabs\.value\s*\)/
-  );
-  assert.match(
-    bundle,
-    /showHomeHero = window\.Vue\.computed\(\s*\(\) => showModeTabs\.value && !showCoachSubTabs\.value \|\| showCoachSubTabs\.value \|\| showParentSubTabs\.value \|\| canFilterByJudoka\.value \|\| showHomeContextTitle\.value\s*\)/
-  );
-  assert.match(bundle, /<div v-if="showHomeHero" class="dash-hero">/);
-  assert.match(bundle, /v-else-if="showHomeContextTitle" class="dash-context-line"/);
-  assert.doesNotMatch(bundle, /<h3>Actions du club<\/h3>/);
-  assert.match(
-    bundle,
-    /<h4>Suivi des compétitions<\/h4>[\s\S]*@click="openCoachCompetitionsHub\(\)"[\s\S]*Gérer les compétitions/
-  );
-  assert.match(
-    bundle,
-    /<h4>Judoka actif<\/h4>[\s\S]*@click="openCoachJudokaHub\(\)"[\s\S]*Choisir un judoka/
-  );
-  assert.match(
-    bundle,
-    /<h4>Bilan de saison<\/h4>[\s\S]*@click="openCoachStatsHub\(\)"[\s\S]*Voir les statistiques/
-  );
-  assert.match(client, /function openCoachStatsHub\(\)/);
-  assert.match(bundle, /isPrimaryModeActive\(mode\.key\)/);
-  assert.match(bundle, /if \(getCurrentMode\(\) === "coachHome"\) return "";/);
-  assert.match(bundle, /if \(getCurrentMode\(\) === "coach"\) return "";/);
-  assert.match(
-    bundle,
-    /showClubCompetitionsSection = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) === "coach"\s*\)/
-  );
-  assert.match(bundle, /homeTitle: "Coach"[\s\S]*showCompetitionsSection: false/);
-  assert.match(bundle, /homeTitle: "Compétition"[\s\S]*showCompetitionsSection: false/);
-  assert.match(
-    bundle,
-    /canOpenJudokaProfile = window\.Vue\.computed\(\s*\(\) => getCurrentMode\(\) !== "coachHome" && getCurrentMode\(\) !== "coach"\s*\)/
-  );
-  assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
-  assert.doesNotMatch(bundle, /const firstCoachJudoka = mode === "coach"/);
+  assert.match(bundle, /<nav v-if="showCoachSubTabs" class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">/);
+  assert.match(bundle, /@click="showCoachHome\(\)">Accueil<\/button>[\s\S]*@click="showCoachCompetitions\(\)">Compétitions<\/button>[\s\S]*@click="showCoachJudoka\(\)">Judokas<\/button>[\s\S]*aria-current="page">Stats<\/button>/);
+  assert.doesNotMatch(bundle, /label: "Gestion des accès"/);
+  assert.match(bundle, /class="coach-agenda"/);
+  assert.match(client, /title: "Cette semaine"/);
+  assert.match(client, /title: "Classements à saisir"/);
+  assert.match(client, /title: "Bilans à écrire"/);
+  assert.match(bundle, /@click="openClubCompetition\(item\.clubCompetitionId\)"/);
+  assert.match(bundle, /id="homeClubFilter" class="pill-select"/);
 });
 
-test("coach judoka view keeps the selected judoka actions separate from data", () => {
-  assert.match(bundle, /homeTitle: "Judoka"/);
-  assert.match(bundle, /if \(mode === "coachJudoka"\) \{/);
-  assert.match(
-    bundle,
-    /if \(\(mode === "coachJudoka" \|\| mode === "family"\) && !activeJudokaId\) \{/
-  );
-  assert.match(bundle, /const emptyMsg = mode === "coachJudoka"/);
+test("coach judoka tab keeps an explicit judoka picker without preselection", () => {
+  assert.match(client, /canFilterByJudoka = window\.Vue\.computed\(\(\) => getCurrentMode\(\) === "coachJudoka" && state\.judokas\.length > 0\)/);
+  assert.match(client, /if \(mode !== "coachJudoka"\) \{\s*const children = getChildren\(\);/);
   assert.match(bundle, /Aucune compétition enregistrée pour ce judoka\./);
-  assert.match(bundle, /profileButtonText: "Voir la fiche"/);
-  assert.doesNotMatch(bundle, /<h3>À venir<\/h3>/);
+  assert.match(client, /profileButtonText: firstName \? `Fiche de \$\{firstName\}` : "Voir la fiche"/);
 });
 
 test("admin management screen is available in the mobile action flow", () => {
@@ -327,52 +245,30 @@ test("admin management screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="saveAdminButton"/);
 });
 
-test("judoka profile screen is available in the mobile action flow", () => {
-  assert.match(bundle, /id="openHomeJudokaProfileButton"/);
-  assert.match(bundle, /Ma fiche/);
-  assert.match(bundle, /id="openHomeJudokaProfileButtonMeta"/);
-  assert.match(bundle, /id="addCompetitionButtonMeta"/);
-  assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
-  assert.match(bundle, /id="judokaHeroRecord" class="result-badge"/);
-  assert.match(bundle, /Judoka actif/);
-  assert.match(bundle, /Compétitions du judoka actif/);
+test("judoka profile reads as a season summary with bars and tappable results", () => {
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
-  assert.match(bundle, /Résumé performance/);
-  assert.match(
-    bundle,
-    /Indicateurs calculés sur la saison sélectionnée pour cette fiche judoka uniquement/
-  );
-  assert.match(bundle, /Nombre de compétitions rattachées au judoka sur la saison affichée/);
-  assert.match(bundle, /Pourcentage de victoires parmi les combats gagnés ou perdus/);
-  assert.match(bundle, /Mode de victoire/);
-  assert.match(bundle, /Mode de défaite/);
-  assert.match(
-    bundle,
-    /Répartition des victoires de ce judoka selon la manière dont le combat s'est terminé/
-  );
-  assert.match(bundle, /id="judokaCompetitionResults"/);
-  assert.match(bundle, /Liste les compétitions de la saison avec le classement/);
-  assert.match(bundle, /:key="result\.competitionId \|\|/);
+  assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
+  assert.match(bundle, /class="season-switch"[\s\S]*aria-label="Saison précédente"[\s\S]*id="judokaSeasonLabel"[\s\S]*aria-label="Saison suivante"/);
+  assert.match(bundle, /id="judokaSeasonBalance" class="mini-stat-value">\{\{ seasonRecord \}\}/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
-  assert.match(bundle, /id="judokaSeasonBalance"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
+  assert.match(bundle, /v-if="Number\(seasonWins\)"/);
+  assert.match(bundle, /v-if="Number\(seasonLosses\)"/);
+  assert.match(bundle, /<h3>Fin des combats gagnés<\/h3>[\s\S]*class="bar-list"/);
+  assert.match(bundle, /id="judokaCompetitionResults"/);
+  assert.match(bundle, /:key="result\.competitionId \|\|/);
+  assert.match(bundle, /@click="openCompetitionFromProfile\(result\.competitionId\)"/);
+  assert.match(bundle, /role="menuitem" @click="startProfileEdit\(\)">Modifier le profil/);
   assert.match(bundle, /id="judoka_couleur_ceinture"/);
-  assert.match(bundle, /Informations utilisées pour qualifier les analyses/);
   assert.match(bundle, /<label for="judoka_lateralite">Garde<\/label>/);
   assert.match(judokaScreenClient, /const isManagedProfile = /);
   assert.match(
     judokaScreenClient,
     /\(\) => state\.isCoach \|\| state\.isAdmin \|\| isOwnProfile\.value \|\| isManagedProfile\.value/
   );
-  assert.match(bundle, /Taux de victoire/);
-  assert.match(bundle, /v-if="Number\(seasonWins\)"/);
-  assert.match(bundle, /v-if="Number\(seasonLosses\)"/);
   assert.match(judokaScreenClient, /formatCompetitionRanking/);
   assert.match(bundle, /class="result-badge classement-badge"[\s\S]*\{\{ result\.result \}\}/);
-  assert.match(bundle, /id="competitionFinalizationView" class="panel hidden"/);
-  assert.match(bundle, /id="finalization_classement"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
-  assert.match(client, /finalizationResult === "Non classé"/);
 });
 
 test("judoka forms do not expose birth year fields", () => {
@@ -385,299 +281,95 @@ test("home action buttons share one stable height", () => {
   assert.match(bundle, /#homeAdminActions button\s*\{[\s\S]*?min-height:\s*64px;/);
 });
 
-test("competition header actions share one aligned action row", () => {
-  assert.match(bundle, /class="competition-header-actions"/);
-  assert.doesNotMatch(
-    bundle,
-    /<div class="toolbar">\s*<button class="button-secondary" onclick="showHome\(\)">Retour<\/button>\s*<div id="competitionAdminActions" class="toolbar admin-actions hidden">/
-  );
-  assert.match(bundle, /\.competition-header-actions\s*\{/);
-  assert.match(bundle, /\.competition-management-actions\s*\{/);
+test("every screen header uses a back arrow next to the title", () => {
+  const backArrows = bundle.match(/class="icon-button page-back"/g) || [];
+  assert.ok(backArrows.length >= 7, `flèches retour trouvées : ${backArrows.length}`);
+  assert.doesNotMatch(bundle, /class="competition-header-actions"/);
+  assert.match(bundle, /\.page-header\s*\{/);
+  assert.match(bundle, /\.page-menu-list\s*\{/);
   assert.match(bundle, /\.judoka-hero\s*\{/);
   assert.match(bundle, /\.classement-badge\s*\{/);
+  assert.match(client, /details\.page-menu\[open\]/);
 });
 
-test("competition list cards stay open-only without destructive actions", () => {
+test("competition list cards open on a single tap and show ranking and record", () => {
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
-  assert.match(bundle, /Ouvrir les combats/);
-  assert.doesNotMatch(client, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
+  assert.doesNotMatch(bundle, /Ouvrir les combats|card-open-hint/);
+  assert.match(bundle, /\{\{ competition\.resultLabel \}\}/);
+  assert.match(bundle, /\{\{ competition\.recordLabel \}\}/);
+  assert.match(bundle, /v-if="competition\.needsRanking" class="pill pill-todo">Classement à saisir/);
+  assert.match(client, /needsRanking: c\.competitionDate < today && !result/);
   assert.doesNotMatch(
     bundle,
     /@click="deleteCompetitionFromList\(competition\.competitionId, competition\.name\)"/
   );
-  assert.doesNotMatch(
-    bundle,
-    /@click="deleteClubCompetitionFromList\(cc\.clubCompetitionId, cc\.name\)"/
-  );
   assert.doesNotMatch(client, /function deleteCompetitionFromList\(id,\s*name\)/);
-  assert.doesNotMatch(bundle, /<button class="card card-button"[\s\S]*?<button/);
 });
 
-test("mobile actions stay explicit instead of icon-only", () => {
-  assert.match(bundle, /id="editCompetitionButton"[\s\S]*Modifier la compétition/);
-  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*Supprimer la compétition/);
-  assert.match(
-    bundle,
-    /@click="showCombatForm\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Modifier le combat\s*<\/button>/
-  );
-  assert.match(
-    bundle,
-    /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer le combat\s*<\/button>/
-  );
-  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*?>[\s\S]*?Supprimer la compétition\s*<\/button>/);
+test("combat cards open on tap and destructive actions are labelled", () => {
+  assert.match(bundle, /class="card combat-card"[\s\S]*?:role="combat\.canEdit \? 'button' : null"[\s\S]*?@click="combat\.canEdit && showCombatForm\(combat\.combatId\)"/);
+  assert.match(bundle, /:aria-label="combat\.canEdit \? 'Modifier le combat contre ' \+ combat\.opponent : null"/);
+  assert.doesNotMatch(bundle, /Modifier le combat\s*<\/button>/);
+  assert.match(bundle, /id="deleteCombatButton"[\s\S]*?Supprimer ce combat/);
+  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*?>Supprimer la compétition<\/button>/);
+  assert.match(bundle, /aria-label="Actions sur la compétition"/);
 });
 
-test("parent competition detail exposes coach objectives", () => {
+test("coach objective and review save automatically when leaving the field", () => {
   assert.match(bundle, /v-if="showCoachAssessment" class="section coach-assessment-section"/);
   assert.match(
     client,
     /state\.isCoach \|\| state\.isParent \|\| state\.currentCompetition\.coachObjective/
   );
-  assert.match(bundle, /<label class="coach-assessment-label">Objectif<\/label>/);
+  assert.match(bundle, /id="coachObjectiveText"[^>]*@blur="saveCoachObjective\(\)"/);
+  assert.match(bundle, /id="coachReviewText"[^>]*@blur="saveCoachReview\(\)"/);
   assert.match(bundle, /\{\{ coachObjectiveText \}\}/);
-  assert.match(
-    bundle,
-    /class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachObjective\(\)"/
-  );
-  assert.match(
-    bundle,
-    /class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview\(\)"/
-  );
-  assert.doesNotMatch(bundle, /title="Éditer"/);
-  assert.doesNotMatch(bundle, /title="Supprimer"/);
+  assert.doesNotMatch(bundle, /coach-assessment-save/);
+  assert.match(client, /ref\.coachObjectiveStatus = "Enregistré";/);
+  assert.match(client, /if \(objective === \(state\.currentCompetition\.coachObjective \|\| ""\)\) return;/);
 });
 
-test("coach dashboard exposes its core filters and metrics without a chat", () => {
+test("coach dashboard exposes its core filters and readable metrics without a chat", () => {
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak/);
   assert.match(
     bundle,
     /const viewIds = \[\s*"loginView",\s*"homeView",\s*"judokaView",\s*"adminsView",\s*"coachDashboardView",\s*"competitionView"/
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
-  assert.doesNotMatch(bundle, /activeCoachDashboardTab/);
-  assert.match(
-    bundle,
-    /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/
-  );
+  assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/);
   assert.match(bundle, /class="mode-tabs coach-sub-tabs"/);
-  assert.match(bundle, /@click="showCoachHome\(\)">Accueil coach/);
-  assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
-  assert.doesNotMatch(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
-  assert.doesNotMatch(bundle, /@click="showCoachJudoka\(\)">Judoka/);
-  assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,500}<div class="panel-header">/);
-  assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,900}Retour/);
   assert.doesNotMatch(bundle, /coachChatWidget|Chat coach|api\/coach-chat|showCoachChat|mountCoachChatWidget/);
-  assert.match(
-    bundle,
-    /id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm\.dateFrom"/
-  );
-  assert.match(
-    bundle,
-    /id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm\.dateTo"/
-  );
-  assert.match(client, /dateFrom: coachDashboardViewModel\.coachDashboardForm\.dateFrom/);
-  assert.match(client, /dateTo: coachDashboardViewModel\.coachDashboardForm\.dateTo/);
+  assert.match(bundle, /id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm\.dateFrom"/);
+  assert.match(bundle, /id="coachDashboard_date_fin" type="date" v-model="coachDashboardForm\.dateTo"/);
   assert.match(client, /if \(dateFrom && dateTo && dateFrom > dateTo\) \{/);
   assert.match(client, /La date de début doit être antérieure ou égale à la date de fin\./);
-  assert.doesNotMatch(bundle, /coachDashboardYearOptions|coachDashboardForm\.categoryYear/);
-  assert.doesNotMatch(bundle, /coachDashboard_genre|coachDashboardForm\.gender"/);
-  assert.doesNotMatch(bundle, /coachDashboard_lateralite|coachDashboardForm\.handedness/);
   assert.match(
     bundle,
     /v-for="option in coachDashboardCompetitionSuggestions" :key="option\.competitionId"[\s\S]*@click="addCoachDashboardCompetition\(option\.competitionId\)"/
   );
-  assert.match(
-    bundle,
-    /v-for="competition in coachDashboardSelectedCompetitions" :key="competition\.competitionId"[\s\S]*@click="removeCoachDashboardCompetition\(competition\.competitionId\)"/
-  );
-  assert.ok(
-    bundle.indexOf('id="coachDashboard_date_debut"') <
-      bundle.indexOf('id="coachDashboardCompetitionSearch"'),
-    "the age/date filters should appear before the competition picker"
-  );
   assert.match(client, /competitionIds: getSelectedCoachDashboardCompetitionIds\(\)/);
-  assert.match(client, /function getSelectedCoachDashboardCompetitionIds\(\)/);
-  assert.match(
-    client,
-    /option\.competitionIds\?\.length \? option\.competitionIds : \[option\.competitionId\]/
-  );
-  assert.match(client, /availableCompetitions = response\.availableCompetitions/);
-  assert.match(
-    client,
-    /coachDashboardForm\.competitionIds = coachDashboardViewModel\.coachDashboardForm\.competitionIds\.filter/
-  );
-  assert.doesNotMatch(bundle, /applyCoachDashboardFilters|>Actualiser</);
   assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
   assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
-  assert.match(bundle, /<h3>Synthèse coach<\/h3>/);
-  assert.match(bundle, /L'essentiel avant de creuser les détails\./);
-  assert.match(
-    bundle,
-    /Pour chaque niveau, affiche la plus belle médaille obtenue et le nombre de podiums de cette médaille uniquement/
-  );
-  assert.match(bundle, /coachDashboardTopPodiumLevel/);
-  assert.match(
-    client,
-    /PODIUM_LEVEL_PRIORITY = \["International", "National", "Régional", "Départemental"\]/
-  );
-  assert.match(
-    client,
-    /PODIUM_LEVEL_LABELS = \{[\s\S]*International: "Int\."[\s\S]*National: "Nat\."[\s\S]*Régional: "Rég\."[\s\S]*Départemental: "Dép\."/
-  );
-  assert.match(client, /PODIUM_PLACE_PRIORITY = \["1er", "2e", "3e"\]/);
-  assert.match(client, /PODIUM_PLACE_EMOJIS = \{ "1er": "🥇", "2e": "🥈", "3e": "🥉" \}/);
-  assert.match(client, /const podiumCount = Number\(podium\?\.count \|\| 0\)/);
-  assert.match(
-    client,
-    /podiumHighlights\.push\(`\$\{PODIUM_LEVEL_LABELS\[level\] \|\| level\} \$\{podiumCount\}x\$\{PODIUM_PLACE_EMOJIS\[place\]\}`\)/
-  );
-  assert.match(client, /podiumHighlights\.join\("\\n"\)/);
-  assert.match(
-    bundle,
-    /class="stat-value stat-value-multiline">\{\{ coachDashboardTopPodiumLevel \}\}/
-  );
-  assert.match(client, /const coachDashboardTopQualityIssue = window\.Vue\.computed/);
-  assert.match(client, /issue\.rate > topIssue\.rate/);
-  assert.match(bundle, /coachDashboardMainQualityIssue/);
-  assert.match(bundle, /coachDashboardSummaryInsight/);
-  assert.match(bundle, /Compétitions analysées/);
-  assert.match(bundle, /\{\{ coachDashboardStats\.analyzedCompetitions \}\}/);
-  assert.ok(
-    bundle.indexOf("<h3>Synthèse coach</h3>") < bundle.indexOf("<h3>Podiums"),
-    "the dashboard summary should appear before detailed podium metrics"
-  );
-  assert.match(bundle, /<h3>Volume de combats<\/h3>/);
-  assert.match(bundle, /Volume calculé avec les filtres choisis\./);
-  assert.match(
-    bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par genre/
-  );
-  assert.match(
-    bundle,
-    /<span class="split-stat-label">Homme<\/span>[\s\S]*coachDashboardJudokasByGender\[0\]\?\.judokaCount \|\| 0/
-  );
-  assert.match(
-    bundle,
-    /<span class="split-stat-label">Femme<\/span>[\s\S]*coachDashboardJudokasByGender\[1\]\?\.judokaCount \|\| 0/
-  );
-  assert.match(
-    bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Judokas par garde/
-  );
-  assert.match(
-    bundle,
-    /<span class="split-stat-label">Droitier<\/span>[\s\S]*coachDashboardJudokasByHandedness\[0\]\?\.judokaCount \|\| 0/
-  );
-  assert.match(
-    bundle,
-    /<span class="split-stat-label">Gaucher<\/span>[\s\S]*coachDashboardJudokasByHandedness\[1\]\?\.judokaCount \|\| 0/
-  );
-  assert.match(bundle, /<h3>Podiums/);
-  assert.match(
-    bundle,
-    /v-for="entry in coachDashboardPodiumsByLevel" :key="entry\.level" class="stat-card stat-card-split"[\s\S]*\{\{ entry\.level \}\}[\s\S]*v-for="podium in entry\.podiums" :key="`\$\{entry\.level\}-\$\{podium\.place\}`"[\s\S]*\{\{ podium\.label \}\}[\s\S]*<span class="split-stat-value">\{\{ podium\.count \}\}<\/span>/
-  );
-  assert.match(bundle, /podium-split-grid/);
-  assert.doesNotMatch(bundle, /podium\.place === '1er' \}"[\s\S]{0,400}podium\.total/);
-  assert.match(client, /coachDashboardPodiumsByLevel/);
-  assert.match(bundle, /<h3>Profil de performance<\/h3>/);
-  assert.match(bundle, /Taux calculés avec les filtres choisis\./);
-  assert.doesNotMatch(bundle, /dashboard-subsection/);
-  assert.match(bundle, /<span class="stat-label">Victoires totales/);
-  assert.match(bundle, /<span class="stat-label">Victoires Ippon debout/);
-  assert.match(bundle, /<span class="stat-label">Victoires Ippon au sol/);
-  assert.doesNotMatch(bundle, /Défaites par hansoku-make<\/span>/);
-  assert.match(bundle, /<h3>Par garde<\/h3>/);
-  assert.match(bundle, /Taux de victoire selon la garde du judoka et de l'adversaire\./);
-  assert.match(bundle, /<span class="split-stat-label">Garde opposée<\/span>/);
-  assert.match(bundle, /<span class="split-stat-label">Même Garde<\/span>/);
-  assert.match(
-    bundle,
-    /\{\{ coachDashboardStats\.victories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.victoryRate \}\}%\)/
-  );
-  assert.match(
-    bundle,
-    /\{\{ coachDashboardStats\.tachiWazaIpponVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.tachiWazaIpponVictoryRate \}\}%\)/
-  );
-  assert.match(
-    bundle,
-    /\{\{ coachDashboardStats\.neWazaIpponVictories \}\}\/\{\{ coachDashboardStats\.totalCombats \}\} \(\{\{ coachDashboardStats\.neWazaIpponVictoryRate \}\}%\)/
-  );
-  assert.match(
-    bundle,
-    /v-for="entry in coachDashboardVictoriesByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
-  );
-  assert.match(
-    bundle,
-    /v-for="entry in coachDashboardDefeatsByType" :key="entry\.decisionType" class="stat-card"[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
-  );
-  assert.match(bundle, /<h3>Fiabilité des données<\/h3>/);
-  assert.match(
-    bundle,
-    /v-if="!coachDashboardDataQualityIssues\.length" class="empty-state">Aucune donnée à fiabiliser/
-  );
-  assert.match(
-    bundle,
-    /v-for="entry in coachDashboardDataQualityIssues" :key="entry\.criterion" class="stat-card"[\s\S]*\{\{ entry\.label \}\}[\s\S]*:aria-label="getDataQualityIssueDescription\(entry\.criterion\)"[\s\S]*\{\{ getDataQualityIssueDescription\(entry\.criterion\) \}\}[\s\S]*\{\{ entry\.count \}\}\/\{\{ entry\.total \}\} \(\{\{ entry\.rate \}\}%\)/
-  );
+  // STATS-1 : quatre chiffres de synthèse, chacun affiché une seule fois.
+  assert.match(bundle, /class="dashboard-kpis"/);
+  assert.equal((bundle.match(/coachDashboardStats\.analyzedCompetitions/g) || []).length, 1);
+  assert.equal((bundle.match(/\{\{ coachDashboardStats\.victoryRate \}\}%/g) || []).length, 1);
+  assert.doesNotMatch(bundle, /<h3>Volume de combats<\/h3>|<h3>Synthèse coach<\/h3>|coachDashboardTopPodiumLevel/);
+  assert.match(bundle, /v-for="line in coachDashboardPodiumLines"/);
+  assert.match(client, /"deuxième place", "deuxièmes places"/);
+  // STATS-2 : répartitions en barres.
+  assert.match(bundle, /v-for="entry in coachDashboardVictoriesByType"[\s\S]*class="bar-fill" :style="\{ width: entry\.rate \+ '%' \}"/);
+  assert.match(bundle, /v-for="entry in coachDashboardDefeatsByType"/);
+  assert.match(bundle, /v-for="entry in coachDashboardTopWinTechniqueBars"/);
+  assert.match(bundle, /v-for="entry in coachDashboardByLateralMatchup"/);
+  assert.match(bundle, /v-for="entry in coachDashboardDataQualityIssues" :key="entry\.criterion"[\s\S]*:aria-label="getDataQualityIssueDescription\(entry\.criterion\)"/);
   assert.match(client, /function getDataQualityIssueDescription\(criterion\)/);
   assert.match(client, /\(entry\) => entry\.count > 0/);
   assert.match(client, /inconsistentIppon:/);
-  assert.match(bundle, /class="info-tip" tabindex="0"/);
-  assert.match(bundle, /class="info-tip-bubble" aria-hidden="true"/);
-  assert.match(bundle, /\.tooltip,\s*\.info-tip\s*\{/);
-  assert.match(bundle, /\.tooltip-trigger\s*\{/);
-  assert.match(bundle, /\.tooltip-content,\s*\.info-tip-bubble\s*\{/);
-  assert.match(bundle, /--tooltip-shift-x/);
-  assert.match(bundle, /--tooltip-arrow-shift-x/);
-  assert.match(bundle, /\.tooltip:hover \.tooltip-content/);
-  assert.match(client, /function setupTooltipPositioning\(\)/);
-  assert.match(client, /getBoundingClientRect\(\)/);
+  assert.match(bundle, /\.bar-track\s*\{/);
   assert.match(bundle, /\.info-tip\s*\{/);
-  assert.match(bundle, /\.info-tip-bubble\s*\{/);
-  assert.match(
-    bundle,
-    /class="stat-card stat-card-split"[\s\S]*<span class="stat-label">Garde du judoka vs garde de l'adversaire[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[0\]\?\.victoryRate \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victories \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.combats \|\| 0[\s\S]*coachDashboardByLateralMatchup\[1\]\?\.victoryRate \|\| 0/
-  );
-  assert.doesNotMatch(bundle, /<h3>Par niveau/);
-  assert.doesNotMatch(client, /coachDashboardByCompetitionLevel/);
-  assert.doesNotMatch(bundle, /Performance selon la garde de l'adversaire/);
-  assert.doesNotMatch(bundle, /Performance selon la garde historique du judoka/);
-  assert.match(bundle, /\.stat-card-split\s*\{/);
-  assert.match(bundle, /\.split-stat-grid\s*\{/);
-  assert.match(bundle, /\.split-stat-label\s*\{/);
-  assert.doesNotMatch(bundle, /breakdown-row/);
-  assert.match(bundle, /function ensureCoachDashboardViewModel\(\)/);
-  assert.match(bundle, /@click="showCoachHome\(\)">Accueil coach/);
-  assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
-  assert.doesNotMatch(bundle, /@click="showCoachCompetitions\(\)">Compétitions club/);
-  assert.doesNotMatch(bundle, /@click="showCoachJudoka\(\)">Judoka/);
-  assert.doesNotMatch(bundle, /@click="showCoachDashboard\(\)">Tableau de bord/);
-  assert.doesNotMatch(bundle, /@click="showCoachChat\(\)">Chat/);
-  assert.match(client, /function showCoachHome\(\)/);
-
-  const coachDashboardSectionStart = bundle.indexOf('id="coachDashboardView"');
-  const dashboardSectionOrder = [
-    "<h3>Podiums",
-    "<h3>Volume de combats</h3>",
-    "<h3>Effectif engagé</h3>",
-    "<h3>Par garde</h3>",
-    "<h3>Profil de performance</h3>",
-    "<h3>Mode de victoire",
-    "<h3>Mode de défaite",
-    "<h3>Fiabilité des données</h3>"
-  ].map((marker) => bundle.indexOf(marker, coachDashboardSectionStart));
-  assert.ok(
-    dashboardSectionOrder.every((index) => index !== -1),
-    "every dashboard section heading should be present"
-  );
-  assert.ok(
-    dashboardSectionOrder.every(
-      (index, position) => position === 0 || dashboardSectionOrder[position - 1] < index
-    ),
-    "dashboard sections should follow the configured order"
-  );
+  assert.match(client, /function setupTooltipPositioning\(\)/);
 });
 
 test("competition form keeps age and weight categories without place or actual weight", () => {
@@ -703,11 +395,9 @@ test("competition form keeps age and weight categories without place or actual w
   assert.doesNotMatch(bundle, /competitionFormViewModel\.showCompetitionResultBlock = false;/);
   assert.doesNotMatch(bundle, /id="competition_lieu"/);
   assert.doesNotMatch(bundle, /id="competition_poids_pesee"/);
-  assert.match(bundle, /<span id="competitionAgePoids"/);
-  assert.match(
-    client,
-    /if \(!competition\.ageCategory\) \{\s*showError\(\{ message: "Sélectionnez une catégorie d'âge avant d'enregistrer la compétition\." \}\);\s*return;\s*\}/
-  );
+  assert.match(bundle, /<span v-if="ageWeightLabel" id="competitionAgePoids" class="pill">/);
+  assert.match(client, /errors\.ageCategory = competition\.ageCategory \? "" : "Choisissez la catégorie d'âge\.";/);
+  assert.match(bundle, /id="competition_categorie_age_error" class="field-error" role="alert"/);
 });
 
 test("new competition form defaults the date to today", () => {
@@ -724,7 +414,8 @@ test("coach can open club competition creation and participant management UI", (
   );
   assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
   assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
-  assert.match(bundle, /Compétition passée ou en cours — saisie a posteriori possible/);
+  assert.match(bundle, /Saisie après coup possible : ajoutez les judokas oubliés/);
+  assert.match(bundle, /@click="setClubParticipantRanking\(p\.competitionId, option\.value\)"/);
   assert.doesNotMatch(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
   assert.match(bundle, /v-if="clubCompetitionDetailEditing && \(!clubCompetitionParticipantsLocked \|\| \(!p\.hasCombats && !p\.hasResult\)\)" class="card-actions"/);
   assert.match(bundle, /@click="startClubCompetitionDetailEdit\(\)"/);
@@ -735,7 +426,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);
-  assert.match(client, /formatCompetitionRanking\(p\.result\) \|\| "Non classé"/);
+  assert.match(client, /formatCompetitionRanking\(p\.result\) \|\| ""/);
   assert.match(bundle, /Aucun judoka disponible dans cette catégorie\./);
   assert.match(bundle, /v-else-if="!clubCompetitionAvailableJudokasFiltered\.length"/);
 });
@@ -776,43 +467,44 @@ test("owner autocomplete provides disambiguation metadata", () => {
   assert.match(bundle, /function getJudokaSearchText\(judoka\)/);
 });
 
-test("combat decision type appears only after choosing a result", () => {
-  assert.match(bundle, /id="combatDecisionBlock" :class="\{ hidden: !showCombatDecisionBlock \}"/);
+test("combat quick entry uses buttons, checks the result first and offers « save and next »", () => {
+  assert.match(bundle, /id="combatDecisionBlock" class="choice-field" :class="\{ hidden: !showCombatDecisionBlock \}"/);
+  assert.match(bundle, /id="combat_resultat"[\s\S]*?role="radiogroup"[\s\S]*?aria-required="true"/);
+  assert.match(bundle, /@click="selectCombatResult\(option\.value\)"/);
+  assert.match(bundle, /@click="selectCombatStage\(option\)"/);
+  assert.match(bundle, /@click="selectCombatDecision\(option\)"/);
+  assert.match(bundle, /@click="selectCombatStance\(option\)"/);
+  assert.match(bundle, /\.choice-button,\s*\.choice-chip\s*\{\s*min-height:\s*44px;/);
   assert.match(bundle, /function getCombatDecisionOptions\(result\)/);
   assert.match(bundle, /function getCombatFormFocusTarget\(isEditingExistingCombat\)/);
-  assert.match(bundle, /if \(!isEditingExistingCombat\) \{\s*return "combat_etape";\s*\}\s*if \(!form\.result\) \{\s*return "combat_resultat";/);
   assert.match(bundle, /preventScroll: target === "saveCombatButton"/);
-  assert.match(bundle, /return "combat_adversaire"/);
-  assert.match(bundle, /function syncCombatDecisionVisibility\(clearValueWhenHidden\)/);
   assert.match(bundle, /if \(result === "Victoire" \|\| result === "Défaite"\)/);
-  assert.match(bundle, /if \(result === "Egalité"\)/);
   assert.match(bundle, /Hansoku-make/);
-  assert.match(
-    bundle,
-    /id="combat_resultat" v-model="combatForm\.result" @change="syncCombatDecisionVisibility\(true\)"/
-  );
+  // COMBAT-2 : le résultat est vérifié avant l'appel serveur, l'erreur s'affiche sous le champ.
+  assert.match(client, /"Choisissez le résultat du combat\."/);
+  assert.match(bundle, /id="combat_resultat_error" class="field-error" role="alert"/);
+  assert.match(client, /if \(!validateCombatForm\(\)\) return;/);
+  // COMBAT-3 : enregistrer et saisir le suivant, avec l'étape suivante proposée.
+  assert.match(bundle, /id="saveAndNextCombatButton"[\s\S]*?Enregistrer \+ suivant/);
+  assert.match(client, /const next = \{ "1\/32": "1\/16", "1\/16": "1\/8", "1\/8": "1\/4", "1\/4": "1\/2", "1\/2": "Finale" \};/);
+  // COMBAT-1 : la fin du combat crée la ligne de point correspondante.
+  assert.match(client, /form\.scores\.push\(\{ \.\.\.createEmptyCombatScoreRow\(\), value: form\.victoryType \}\);/);
 });
 
-test("combat form surfaces every data quality issue inline, near the field it concerns", () => {
-  assert.match(
-    bundle,
-    /id="combatDecisionBlock"[\s\S]*v-if="combatFormVictoryTypeIssues\.length"[\s\S]*v-for="issue in combatFormVictoryTypeIssues"/
-  );
-  assert.match(
-    bundle,
-    /id="combat_garde_adversaire"[\s\S]*v-if="combatFormOpponentStanceIssues\.length"[\s\S]*v-for="issue in combatFormOpponentStanceIssues"/
-  );
-  assert.match(
-    bundle,
-    /\+ Ajouter une technique[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/
-  );
-  assert.match(bundle, /'metric-warning-high': issue\.priority === 'high'/);
+test("combat form and cards show what is left to fill in plain words", () => {
+  assert.match(bundle, /id="combatDecisionBlock"[\s\S]*v-if="combatFormVictoryTypeIssues\.length"[\s\S]*v-for="issue in combatFormVictoryTypeIssues"/);
+  assert.match(bundle, /id="combat_garde_adversaire"[\s\S]*v-if="combatFormOpponentStanceIssues\.length"[\s\S]*v-for="issue in combatFormOpponentStanceIssues"/);
+  assert.match(bundle, /\+ Ajouter un point[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/);
+  assert.match(bundle, /À compléter : \{\{ issue\.shortLabel \}\}/);
+  assert.doesNotMatch(bundle, /issue\.priority === 'high' \? 'Haute' : 'Moyenne'/);
+  // COMBAT-5 : toucher « À compléter » sur une carte ouvre le formulaire sur le champ concerné.
+  assert.match(bundle, /@click\.stop="openCombatIssue\(combat\.combatId, issue\.field\)"/);
+  assert.match(client, /scores: "combat_points"/);
   assert.match(
     client,
     /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!form\.scores\.some\(\(score\) => score\.value === "Ippon"\)/
   );
   assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
   assert.match(client, /getCombatDecisionOptions\(form\.result\)\.length && !form\.victoryType/);
-  assert.doesNotMatch(bundle, /hasInconsistentIppon/);
-  assert.doesNotMatch(bundle, /v-if="combatFormDataQualityIssues\.length"/);
 });
+

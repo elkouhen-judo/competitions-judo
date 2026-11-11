@@ -2,11 +2,13 @@ import { toCanonicalJudoka } from "./domain-adapters";
 import type { JudokaRow } from "../repositories/types";
 import type { JudokasRepository } from "../repositories/judokas.repository";
 import type { ParentLinksRepository } from "../repositories/parent-links.repository";
+import type { ClubsRepository } from "../repositories/clubs.repository";
 import type { DomainUserContext, ManagedJudokaScope, UserContext } from "../types";
 
 export interface UserContextServiceDeps {
   judokasRepository: JudokasRepository;
   parentLinksRepository: ParentLinksRepository;
+  clubsRepository: Pick<ClubsRepository, "listClubIdsByCoach">;
   normalizeEmail: (value: unknown) => string;
   assertCanAccessJudokaProfile: (
     user: ReturnType<typeof toCanonicalJudoka> | null | undefined,
@@ -38,6 +40,7 @@ export default function createUserContextService(
   const {
     judokasRepository,
     parentLinksRepository,
+    clubsRepository,
     normalizeEmail,
     assertCanAccessJudokaProfile,
     createManagedJudokaScope,
@@ -82,9 +85,17 @@ export default function createUserContextService(
 
     let judokas: JudokaRow[] = [];
     let managedJudokaScope = createManagedJudokaScope([]);
+    let coachClubIds: string[] = [];
     const domainUser = toCanonicalJudoka(user);
 
-    if (isAdmin(domainUser) || isCoach(domainUser)) {
+    if (isCoach(domainUser)) {
+      // Un coach ne voit que les judokas des clubs qu'il coache (et son propre profil).
+      coachClubIds = await clubsRepository.listClubIdsByCoach(user.id_judoka);
+      const clubJudokas = await judokasRepository.listByClubIds(coachClubIds);
+      const includesSelf = clubJudokas.some((j) => String(j.id_judoka) === String(user.id_judoka));
+      judokas = includesSelf ? clubJudokas : [user, ...clubJudokas];
+      managedJudokaScope = createManagedJudokaScope(judokas.map((j) => String(j.id_judoka)));
+    } else if (isAdmin(domainUser)) {
       judokas = await getJudokas();
     } else if (isParent(domainUser)) {
       const children = await getParentManagedJudokas(user.id_judoka);
@@ -94,7 +105,7 @@ export default function createUserContextService(
       managedJudokaScope = createManagedJudokaScope(managedJudokaIds);
     }
 
-    return { user, judokas, managedJudokaScope };
+    return { user, judokas, managedJudokaScope, coachClubIds };
   }
 
   async function getDomainUserContext(email: string): Promise<DomainUserContext> {

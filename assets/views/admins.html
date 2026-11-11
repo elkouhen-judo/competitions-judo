@@ -1,50 +1,19 @@
     <section id="adminsView" class="panel hidden" v-cloak>
-      <div class="panel-header">
-        <div>
-          <h2>Gestion des utilisateurs</h2>
-          <p class="subtitle">Imports, comptes et droits admin du club</p>
-        </div>
-        <div class="competition-header-actions">
-          <button class="button-secondary" type="button" @click="showHome()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Retour
-          </button>
+      <div class="panel-header page-header">
+        <button class="icon-button page-back" type="button" aria-label="Retour" title="Retour" @click="showHome()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="page-title">
+          <h2>Gestion des accès</h2>
         </div>
       </div>
+      <div class="dash-hero">
+        <nav class="mode-tabs coach-sub-tabs" aria-label="Sections de la gestion des accès">
+          <button v-for="tab in adminTabs" :key="tab.key" type="button" :class="['mode-tab', { 'mode-tab-active': adminTab === tab.key }]" :aria-current="adminTab === tab.key ? 'page' : null" @click="adminTab = tab.key">{{ tab.label }}</button>
+        </nav>
+      </div>
       <div class="panel-body">
-        <div class="section">
-          <div class="section-heading">
-            <div>
-              <h3>Importer des profils (CSV)</h3>
-              <p class="subtitle">Ajoutez ou mettez à jour les judokas et parents en lot.</p>
-            </div>
-          </div>
-          <div class="csv-import-help">
-            <p class="field-hint">Avant d'importer, vérifiez ces points :</p>
-            <ul class="csv-checklist">
-              <li>Chaque ligne contient au minimum <strong>profileType</strong>, <strong>prenom</strong> et <strong>nom</strong>.</li>
-              <li>Pour rattacher un enfant, renseignez <strong>parentEmail</strong> même si le parent n'a pas encore activé son compte.</li>
-              <li>Les colonnes sportives sont facultatives : <strong>ageCategory</strong>, <strong>couleur_ceinture</strong>, <strong>genre</strong>, <strong>anneeCategorie</strong> et <strong>lateralite</strong>.</li>
-              <li>Un réimport met à jour les profils déjà connus au lieu de les compter comme des erreurs.</li>
-            </ul>
-          </div>
-          <a href="/sample-users-import.csv" download class="button-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Télécharger un exemple
-          </a>
-
-          <label for="importUsersFile">Fichier CSV</label>
-          <input type="file" id="importUsersFile" accept=".csv,text/csv" @change="handleImportUsersFileChange($event)">
-          <p v-if="importUsersFileName" class="field-hint">Fichier sélectionné : {{ importUsersFileName }}</p>
-
-          <div class="form-actions mobile-action-bar">
-            <button id="importUsersButton" type="button" :disabled="isSubmitting || !importUsersFileName" @click="importUsersCsv()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-              Importer
-            </button>
-          </div>
-        </div>
-
+        <div v-show="adminTab === 'users'" class="admin-tab-panel">
         <div class="section">
           <div class="section-heading">
             <div>
@@ -52,9 +21,8 @@
               <p class="subtitle">Comptes actifs.</p>
             </div>
           </div>
-          <div class="filter-bar">
-            <label for="usersFilter">Rechercher un utilisateur</label>
-            <input type="search" id="usersFilter" autocomplete="off" placeholder="Nom ou email" :value="usersSearch" @input="updateUsersSearch($event.target.value)">
+          <div class="list-search">
+            <input type="search" id="usersFilter" aria-label="Rechercher un utilisateur" autocomplete="off" placeholder="Rechercher : nom ou e-mail" :value="usersSearch" @input="updateUsersSearch($event.target.value)">
           </div>
           <div id="usersSummary">
             <div v-if="usersSummary" class="list-summary">
@@ -81,56 +49,22 @@
                     <span class="meta-value">{{ managedUser.roleLabel }}</span>
                   </div>
                 </div>
-                <div class="card-actions">
-                  <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
-                  <span v-else-if="managedUser.isAdmin" class="field-hint">Retirez d'abord les droits admin pour supprimer ce compte.</span>
-                  <button v-else class="button-danger" type="button" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Supprimer
-                  </button>
+                <div v-if="managedUser.canHaveClub && hasClubs" class="user-club-field">
+                  <label :for="'userClub-' + managedUser.judokaId">Club</label>
+                  <select :id="'userClub-' + managedUser.judokaId" :value="managedUser.clubId" :disabled="isSubmitting" @change="setUserClub(managedUser.judokaId, $event.target.value)">
+                    <option value="">Aucun club</option>
+                    <option v-for="club in clubOptions" :key="club.clubId" :value="club.clubId">{{ club.name }}</option>
+                  </select>
                 </div>
-              </article>
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-heading">
-            <div>
-              <h3>Invitations</h3>
-              <p class="subtitle">Invitations en attente.</p>
-            </div>
-          </div>
-          <div id="accessInvitationsSummary">
-            <div v-if="accessInvitationsSummary" class="list-summary">
-              <p class="list-summary-text">{{ accessInvitationsSummary }}</p>
-              <div class="list-summary-actions">
-                <button v-if="canShowPreviousAccessInvitationsPage" class="button-secondary" type="button" @click="showPreviousAccessInvitationsPage()">Page précédente</button>
-                <button v-if="canShowNextAccessInvitationsPage" class="button-secondary" type="button" @click="showNextAccessInvitationsPage()">Page suivante</button>
-              </div>
-            </div>
-          </div>
-          <div id="accessInvitationsList">
-            <div v-if="!hasAccessInvitations" class="empty-state">{{ accessInvitationsEmptyMessage }}</div>
-            <div v-else class="list">
-              <article v-for="invitation in accessInvitationsPage" :key="invitation.accountEmail" class="card admin-card">
-                <p class="card-title">{{ invitation.fullName }}</p>
-                <div class="card-meta">
-                  <div class="meta-row">
-                    <span class="meta-label">Email</span>
-                    <span class="meta-value">{{ invitation.accountEmail }}</span>
+                <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
+                <details v-else-if="!managedUser.isAdmin" class="page-menu card-menu">
+                  <summary class="icon-button" :aria-label="'Actions pour ' + managedUser.fullName" title="Actions">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+                  </summary>
+                  <div class="page-menu-list" role="menu">
+                    <button type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">Supprimer le compte</button>
                   </div>
-                  <div class="meta-row">
-                    <span class="meta-label">Rôle</span>
-                    <span class="meta-value">{{ invitation.roleLabel }}</span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(invitation.accountEmail, invitation.fullName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Annuler l'invitation
-                  </button>
-                </div>
+                </details>
               </article>
             </div>
           </div>
@@ -185,16 +119,160 @@
           <input type="email" id="admin_email" autocomplete="email" placeholder="email@example.com" v-model.trim="adminEmail">
           <p class="field-hint">Judoka déjà inscrit dans l'application</p>
 
-          <div class="form-actions mobile-action-bar">
+          <div class="form-actions action-bar-inline">
             <button class="button-secondary" type="button" @click="resetAdminForm()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 3v6h6"></path></svg>
               Réinitialiser
             </button>
-            <button id="saveAdminButton" type="button" :disabled="isSubmitting" @click="saveAdminRole()">
+            <button id="saveAdminButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="saveAdminRole()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
               Enregistrer
             </button>
           </div>
+        </div>
+
+        </div>
+        <div v-show="adminTab === 'clubs'" class="admin-tab-panel">
+        <div class="section" id="clubsSection">
+          <div class="section-heading">
+            <div>
+              <h3>Clubs</h3>
+              <p class="subtitle">Un judoka appartient à un club ; un coach ne voit que les judokas des clubs qu'il coache.</p>
+            </div>
+          </div>
+          <div class="form-grid club-create-row">
+            <div>
+              <label for="newClubName">Nouveau club</label>
+              <input type="text" id="newClubName" autocomplete="off" placeholder="Ex : Judo Club Nantes" v-model="newClubName" @keyup.enter="createClub()">
+            </div>
+            <div class="form-actions">
+              <button id="createClubButton" type="button" :disabled="isSubmitting || !newClubName.trim()" @click="createClub()">Créer le club</button>
+            </div>
+          </div>
+          <div id="clubsList">
+            <div v-if="!hasClubs" class="empty-state">Aucun club. Créez un club pour y rattacher des coachs et des judokas.</div>
+            <div v-else class="list">
+              <article v-for="club in clubCards" :key="club.clubId" class="card admin-card">
+                <template v-if="renamingClubId === club.clubId">
+                  <label :for="'renameClub-' + club.clubId">Nom du club</label>
+                  <input type="text" :id="'renameClub-' + club.clubId" v-model="renamingClubName" @keyup.enter="saveRenameClub()">
+                  <div class="card-actions">
+                    <button class="button-secondary" type="button" @click="cancelRenameClub()">Annuler</button>
+                    <button type="button" :disabled="isSubmitting" @click="saveRenameClub()">Enregistrer</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <p class="card-title">{{ club.name }}</p>
+                  <div class="card-meta">
+                    <div class="meta-row">
+                      <span class="meta-label">Judokas</span>
+                      <span class="meta-value">{{ club.judokaLabel }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-label">Coachs</span>
+                      <span class="meta-value">{{ club.coachLabel }}</span>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button class="button-secondary" type="button" :disabled="isSubmitting" @click="startRenameClub(club.clubId, club.name)">Renommer</button>
+                    <button v-if="club.canDelete" class="button-danger" type="button" :disabled="isSubmitting" @click="deleteClub(club.clubId, club.name)">Supprimer</button>
+                  </div>
+                </template>
+              </article>
+            </div>
+          </div>
+          <div v-if="hasClubs && coachCards.length" id="coachClubsList" class="coach-clubs">
+            <h4>Clubs coachés</h4>
+            <div class="list">
+              <article v-for="coach in coachCards" :key="coach.judokaId" class="card admin-card">
+                <p class="card-title">{{ coach.fullName }}</p>
+                <label v-for="club in clubOptions" :key="club.clubId" class="checkbox-row">
+                  <input type="checkbox" :checked="coach.clubIds.includes(club.clubId)" :disabled="isSubmitting" @change="toggleCoachClub(coach.judokaId, club.clubId, $event.target.checked)">
+                  <span>{{ club.name }}</span>
+                </label>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        </div>
+        <div v-show="adminTab === 'invitations'" class="admin-tab-panel">
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Invitations</h3>
+              <p class="subtitle">Invitations en attente.</p>
+            </div>
+          </div>
+          <div id="accessInvitationsSummary">
+            <div v-if="accessInvitationsSummary" class="list-summary">
+              <p class="list-summary-text">{{ accessInvitationsSummary }}</p>
+              <div class="list-summary-actions">
+                <button v-if="canShowPreviousAccessInvitationsPage" class="button-secondary" type="button" @click="showPreviousAccessInvitationsPage()">Page précédente</button>
+                <button v-if="canShowNextAccessInvitationsPage" class="button-secondary" type="button" @click="showNextAccessInvitationsPage()">Page suivante</button>
+              </div>
+            </div>
+          </div>
+          <div id="accessInvitationsList">
+            <div v-if="!hasAccessInvitations" class="empty-state">{{ accessInvitationsEmptyMessage }}</div>
+            <div v-else class="list">
+              <article v-for="invitation in accessInvitationsPage" :key="invitation.accountEmail" class="card admin-card">
+                <p class="card-title">{{ invitation.fullName }}</p>
+                <div class="card-meta">
+                  <div class="meta-row">
+                    <span class="meta-label">Email</span>
+                    <span class="meta-value">{{ invitation.accountEmail }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-label">Rôle</span>
+                    <span class="meta-value">{{ invitation.roleLabel }}</span>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(invitation.accountEmail, invitation.fullName)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Annuler l'invitation
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        </div>
+        <div v-show="adminTab === 'import'" class="admin-tab-panel">
+        <div class="section">
+          <div class="section-heading">
+            <div>
+              <h3>Importer des profils (CSV)</h3>
+              <p class="subtitle">Ajoutez ou mettez à jour les judokas et parents en lot.</p>
+            </div>
+          </div>
+          <details class="csv-import-help">
+            <summary>Format du fichier</summary>
+            <ul class="csv-checklist">
+              <li>Chaque ligne contient au minimum <strong>profileType</strong>, <strong>prenom</strong> et <strong>nom</strong>.</li>
+              <li>Pour rattacher un enfant, renseignez <strong>parentEmail</strong> même si le parent n'a pas encore activé son compte.</li>
+              <li>Les colonnes sportives sont facultatives : <strong>ageCategory</strong>, <strong>couleur_ceinture</strong>, <strong>genre</strong>, <strong>anneeCategorie</strong> et <strong>lateralite</strong>.</li>
+              <li>La colonne <strong>club</strong> est facultative : nom d'un club existant. Un coach importé avec un club coache ce club.</li>
+              <li>Un réimport met à jour les profils déjà connus au lieu de les compter comme des erreurs.</li>
+            </ul>
+          </details>
+          <label for="importUsersFile">Fichier CSV</label>
+          <div class="import-file-row">
+            <input type="file" id="importUsersFile" accept=".csv,text/csv" @change="handleImportUsersFileChange($event)">
+            <a href="/sample-users-import.csv" download class="button button-secondary">Fichier d'exemple</a>
+          </div>
+          <p v-if="importUsersFileName" class="field-hint">Fichier sélectionné : {{ importUsersFileName }}</p>
+
+          <div class="form-actions mobile-action-bar action-bar-inline">
+            <button id="importUsersButton" class="action-bar-primary" type="button" :disabled="isSubmitting || !importUsersFileName" @click="importUsersCsv()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Importer
+            </button>
+          </div>
+        </div>
+
         </div>
       </div>
     </section>

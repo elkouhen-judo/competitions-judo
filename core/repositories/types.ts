@@ -34,6 +34,18 @@ export interface JudokaRow {
   annee_categorie?: string;
   lateralite?: string;
   pending_parent_email?: string | null;
+  club_id?: string | null;
+  is_admin?: boolean;
+}
+
+export interface ClubRow {
+  id_club: string;
+  nom: string;
+}
+
+export interface CoachClubRow {
+  id_coach: string;
+  id_club: string;
 }
 
 export interface CompetitionRow {
@@ -79,6 +91,7 @@ export interface ClubCompetitionRow {
   date: string;
   categorie_age: string;
   niveau: string;
+  club_id?: string | null;
 }
 
 export interface AccessInvitationRow {

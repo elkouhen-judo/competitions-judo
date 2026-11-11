@@ -7,6 +7,7 @@ import {
   toJudokaRepositoryExtras,
   type ImportProfileOptions
 } from "./admin-import-mapping";
+import type { ClubsRepository } from "../repositories/clubs.repository";
 import type { AccessInvitationRow, JudokaRow } from "../repositories/types";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { InvitationsRepository } from "../repositories/invitations.repository";
@@ -37,6 +38,7 @@ type AdminMethods = Pick<
 >;
 
 export interface AdminServiceDeps {
+  clubsRepository?: Pick<ClubsRepository, "listAll" | "listClubIdsByCoach" | "replaceCoachClubs">;
   competitionsRepository: CompetitionsRepository;
   invitationsRepository: InvitationsRepository;
   judokasRepository: JudokasRepository;
@@ -69,6 +71,7 @@ interface UserImportContext {
 
 interface UserImportControllerDeps {
   judokasRepository: JudokasRepository;
+  clubsRepository?: Pick<ClubsRepository, "listAll" | "listClubIdsByCoach" | "replaceCoachClubs">;
   parentLinksRepository: ParentLinksRepository;
   userContextService: UserContextService;
   buildJudokaId: () => string;
@@ -90,6 +93,7 @@ interface UserImportControllerDeps {
 function createUserImportController(deps: UserImportControllerDeps) {
   const {
     judokasRepository,
+    clubsRepository,
     parentLinksRepository,
     userContextService,
     buildJudokaId,
@@ -521,6 +525,44 @@ function createUserImportController(deps: UserImportControllerDeps) {
     return { email: null, message: "Profil judoka créé." };
   }
 
+  // Colonne « club » facultative : nom d'un club existant (insensible à la casse).
+  function resolveImportClubId(clubs: { id_club: string; nom: string }[], row: Record<string, string>): string {
+    const clubName = cleanText(row.club);
+    if (!clubName) {
+      return "";
+    }
+    if (createProfileType(row.profiletype) === "PARENT") {
+      throw new Error("Un profil PARENT n'appartient pas à un club.");
+    }
+    const club = clubs.find(
+      (candidate) => cleanText(candidate.nom).toLocaleLowerCase("fr") === clubName.toLocaleLowerCase("fr")
+    );
+    if (!club) {
+      throw new Error(`Club inconnu : ${clubName}. Créez-le d'abord dans la gestion des clubs.`);
+    }
+    return String(club.id_club);
+  }
+
+  async function assignImportedJudokaToClub(row: Record<string, string>, clubId: string): Promise<void> {
+    const rawEmail = cleanText(row.email);
+    const judoka = rawEmail
+      ? await judokasRepository.getByEmail(normalizeEmail(rawEmail))
+      : await judokasRepository.getByName(cleanText(row.prenom), cleanText(row.nom));
+    if (!judoka) {
+      return;
+    }
+    if (String(judoka.club_id || "") !== clubId) {
+      await judokasRepository.setClub(judoka.id_judoka, clubId);
+    }
+    // Un coach importé avec un club coache ce club (en plus de ses clubs existants).
+    if (clubsRepository && String(judoka.role || "").toUpperCase() === "COACH") {
+      const coachClubIds = await clubsRepository.listClubIdsByCoach(judoka.id_judoka);
+      if (!coachClubIds.includes(clubId)) {
+        await clubsRepository.replaceCoachClubs(judoka.id_judoka, [...coachClubIds, clubId]);
+      }
+    }
+  }
+
   async function importUsersCsv(email: string, csvContent: string) {
     await requireAdminUser(email);
     const rows = parseCsv(String(csvContent || ""));
@@ -530,12 +572,17 @@ function createUserImportController(deps: UserImportControllerDeps) {
 
     const results: UserImportRowResult[] = [];
     const importContext = createUserImportContext();
+    const clubs = clubsRepository ? await clubsRepository.listAll() : [];
     for (let index = 0; index < rows.length; index += 1) {
       const rowNumber = index + 2;
       const row = rows[index];
       const label = `${cleanText(row.prenom)} ${cleanText(row.nom)}`.trim() || `ligne ${rowNumber}`;
       try {
+        const clubId = resolveImportClubId(clubs, row);
         const outcome = await importUserRow(importContext, row);
+        if (clubId) {
+          await assignImportedJudokaToClub(row, clubId);
+        }
         results.push({
           row: rowNumber,
           name: label,
@@ -567,6 +614,7 @@ function createUserImportController(deps: UserImportControllerDeps) {
 
 export default function createAdminService(deps: AdminServiceDeps): AdminService {
   const {
+    clubsRepository,
     competitionsRepository,
     invitationsRepository,
     judokasRepository,
@@ -611,6 +659,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
   const { importUsersCsv } = createUserImportController({
     judokasRepository,
+    clubsRepository,
     parentLinksRepository,
     userContextService,
     buildJudokaId,
@@ -645,10 +694,16 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       throw new Error("Aucun judoka trouvé avec cet email.");
     }
 
-    await judokasRepository.update(
-      target.id_judoka,
-      createJudoka(toCanonicalJudoka(target)).grantAdminRole()
-    );
+    const targetModel = createJudoka(toCanonicalJudoka(target));
+    if (targetModel.isCoach()) {
+      // Un coach devenu admin garde son rôle coach : le droit admin est un indicateur séparé.
+      if (targetModel.isAdmin()) {
+        throw new Error("Cet utilisateur est déjà admin.");
+      }
+      await judokasRepository.setAdminFlag(target.id_judoka, true);
+    } else {
+      await judokasRepository.update(target.id_judoka, targetModel.grantAdminRole());
+    }
 
     return {
       success: true,
@@ -671,10 +726,16 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       throw new Error("Admin introuvable.");
     }
 
-    await judokasRepository.update(
-      idJudoka,
-      createJudoka(toCanonicalJudoka(target)).revokeAdminRole(user.id_judoka)
-    );
+    const targetModel = createJudoka(toCanonicalJudoka(target));
+    if (!targetModel.isAdmin()) {
+      throw new Error("Admin introuvable.");
+    }
+    if (target.is_admin) {
+      await judokasRepository.setAdminFlag(idJudoka, false);
+    }
+    if (targetModel.accessRole === "ADMIN") {
+      await judokasRepository.update(idJudoka, targetModel.revokeAdminRole(user.id_judoka));
+    }
 
     return { success: true, message: "Droits admin retirés." };
   }
@@ -692,10 +753,10 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     const userContext = await userContextService.getCurrentUserContext(email);
     const { user, managedJudokaScope } = userContext;
     if (!idJudoka) throw new Error("Judoka obligatoire.");
-    const domainUser = createJudoka(toCanonicalJudoka(user));
     const isSelf = user.id_judoka === idJudoka;
+    // Coach : judokas de ses clubs ; parent : ses enfants. Les deux sont portés par managedJudokaScope.
     const isManagedJudoka = managedJudokaScope.includes(idJudoka);
-    if (!domainUser.isCoach() && !isSelf && !isManagedJudoka) {
+    if (!isSelf && !isManagedJudoka) {
       throw new Error("Modification de profil non autorisée.");
     }
     const targetJudoka = await judokasRepository.getById(idJudoka);
@@ -747,7 +808,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     if (!target) {
       throw new Error("Utilisateur introuvable.");
     }
-    if (target.role === "ADMIN") {
+    if (target.role === "ADMIN" || target.is_admin) {
       throw new Error("Retirez d'abord les droits admin avant de supprimer ce compte.");
     }
 

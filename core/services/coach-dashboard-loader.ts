@@ -76,13 +76,29 @@ function groupScoresByCombatId(scoreRows: CombatScoreRow[]): Map<string, CombatS
   return scoresByCombatId;
 }
 
+/** Ne garde que les compétitions des judokas visibles par le coach (judokas de ses clubs). */
+export function filterCompetitionsByOwners(
+  competitionRows: CompetitionRow[],
+  allowedJudokaIds: string[] | undefined
+): CompetitionRow[] {
+  if (!allowedJudokaIds) {
+    return competitionRows;
+  }
+  const allowed = new Set(allowedJudokaIds.map(String));
+  return competitionRows.filter((competition) => allowed.has(String(competition.id_judoka)));
+}
+
 export async function loadCoachDashboardCombats(
   deps: CoachDashboardLoaderDeps,
-  filters: CoachDashboardFilters = {}
+  filters: CoachDashboardFilters = {},
+  allowedJudokaIds?: string[]
 ) {
   validateCoachDashboardFilters(filters);
 
-  const allCompetitionRows = await deps.competitionsRepository.listAll();
+  const allCompetitionRows = filterCompetitionsByOwners(
+    await deps.competitionsRepository.listAll(),
+    allowedJudokaIds
+  );
   const competitionRows = filterCompetitionsBySelection(
     filterCompetitionsByScope(allCompetitionRows, filters),
     filters

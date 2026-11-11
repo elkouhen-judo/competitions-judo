@@ -156,15 +156,18 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     }
     await shot("03-form-empty");
 
-    await page.selectOption("#combat_etape", "Repêchage");
-    await page.selectOption("#combat_resultat", "Victoire");
-    await page.selectOption("#combat_type_victoire", "Ippon");
+    // Saisie rapide sans menu déroulant : étape, résultat et fin du combat se choisissent en un geste.
+    assert.equal(await page.locator("#combatFormView .combat-quick-section select").count(), 0);
+    await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
+    await page.locator("#combat_resultat").getByRole("radio", { name: "Victoire" }).click();
+    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Ippon" }).click();
     await page.fill("#combat_adversaire", "Camille Durand");
-    await page.selectOption("#combat_garde_adversaire", "Gaucher");
-    await page.getByRole("button", { name: "+ Ajouter une technique" }).click();
-    await page.locator(".combat-score-row select").nth(0).selectOption("Tachi-waza");
+    await page.locator("#combat_garde_adversaire").getByRole("radio", { name: "Gaucher" }).click();
+    // Choisir « Ippon » a créé la ligne de point : il ne reste que la technique à préciser.
+    await expect(page.locator(".combat-score-row")).toHaveCount(1);
+    await expect(page.locator(".combat-score-row [aria-checked='true']").first()).toHaveText("Ippon");
+    await page.locator(".combat-score-row").getByRole("radio", { name: "Debout" }).click();
     await page.locator(".combat-score-row input").fill("O-soto-gari");
-    await page.locator(".combat-score-row select").nth(1).selectOption("Ippon");
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
     const borderedLabels = await page.locator(
       ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
@@ -182,7 +185,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     assert.equal(actionOverlap, false);
     await shot("04-form-filled");
 
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await page.locator("#saveCombatButton").click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
     await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
@@ -192,9 +195,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
 
     // Ouverture en modification d'un combat complet : le haut du formulaire (tour) reste visible.
     await page.evaluate("window.scrollTo({ top: document.body.scrollHeight })");
-    await page.getByRole("button", { name: "Modifier le combat" }).click();
+    // La carte du combat s'ouvre en modification d'un simple toucher.
+    await page.locator("#competitionView .combat-card").first().click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combat_etape")).toHaveValue("Repêchage");
+    await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Repêchage");
     await expect(page.locator("#combat_etape")).toBeInViewport();
     await shot("06-edit");
 

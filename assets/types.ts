@@ -78,7 +78,6 @@ export type ViewId =
   | "clubCompetitionFormView"
   | "clubCompetitionDetailView"
   | "competitionFormView"
-  | "competitionFinalizationView"
   | "combatFormView"
   | "coachDashboardView";
 
@@ -104,8 +103,13 @@ export interface KirokuUi {
   formatCompetitionName(value: unknown): string;
   formatCompetitionRanking(value: unknown): string;
   formatDate(value: unknown): string;
+  formatDateLong(value: unknown): string;
   formatDateTime(value: unknown): string;
+  formatRecord(wins: number, losses: number, draws: number): string;
+  formatRelativeDay(value: unknown): string;
+  formatWeight(value: unknown): string;
   formatResultat(value: unknown): string;
+  getDaysFromToday(value: unknown): number | null;
   getClassementBadgeClass(value: unknown): string;
   getCompactJudokaLabel(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate(): string;
@@ -119,6 +123,7 @@ export interface KirokuUi {
   ): void;
   normalizeDisplayName(value: unknown): string;
   normalizeLastName(value: unknown): string;
+  pluralize(count: number, singular: string, plural?: string): string;
   showView(
     id: ViewId,
     options?: {
@@ -147,10 +152,15 @@ export interface ManagedUserCard {
   isAdmin: boolean;
   isCurrentUser: boolean;
   isPending: boolean;
+  /** Club du judoka ("" si aucun) ; les profils PARENT n'appartiennent à aucun club. */
+  clubId: string;
+  canHaveClub: boolean;
 }
 
 export interface CombatDataQualityIssue {
   label: string;
+  /** Libellé court affiché « À compléter : … » sur la carte et dans le formulaire. */
+  shortLabel?: string;
   priority: "high" | "medium";
   /** Which form field the issue relates to, so the combat form can show it inline while editing that field. */
   field?: "victoryType" | "scores" | "opponentStance";
@@ -321,7 +331,7 @@ export interface JudokaScreen {
 
 export interface CompetitionDetailDeps {
   deleteCombat(idCombat: string): void;
-  showCombatForm(idCombat?: string | Event): void;
+  showCombatForm(idCombat?: string | Event, focusField?: string): void;
 }
 
 export interface CompetitionDetailScreen {
@@ -340,7 +350,7 @@ export interface CombatFormDeps {
 export interface CombatFormScreen {
   bindEvents(): void;
   deleteCombat(idCombat: string): void;
-  showCombatForm(idCombat?: string | Event): void;
+  showCombatForm(idCombat?: string | Event, focusField?: string): void;
 }
 
 export interface ClubCompetitionDeps {
@@ -396,7 +406,13 @@ export interface KirokuAppState {
   isParent: boolean;
   homeMode: "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family";
   competitions: Competition[];
-  clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string }>;
+  /** Bilan des combats par compétition, pour les cartes de l'accueil. */
+  combatRecords: Record<string, { total: number; wins: number; losses: number; draws: number }>;
+  clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string; clubId?: string }>;
+  /** Clubs coachés par l'utilisateur connecté (vide si non coach). */
+  clubs: Array<{ clubId: string; name: string }>;
+  /** Club choisi pour filtrer l'espace coach ("" = tous ses clubs). */
+  selectedClubId: string;
   currentCompetition: CompetitionDetail["competition"] | null;
   judokas: Judoka[];
   currentCombats: CompetitionDetail["combats"];
@@ -514,6 +530,7 @@ export interface JudokaProfileViewModel {
   seasonWins: string;
   seasonLosses: string;
   seasonDraws: string;
+  seasonRecord: string;
   victoryRate: string;
   heroAvatar: string;
   heroName: string;

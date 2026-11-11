@@ -27,6 +27,8 @@ Le fichier crée les tables :
 - `public.competitions`
 - `public.combats`
 - `public.combat_scores`
+- `public.clubs`
+- `public.coach_clubs`
 
 Les identifiants existants sont conservés en `text` pour simplifier l'import depuis Google Sheets :
 
@@ -42,6 +44,9 @@ Les identifiants existants sont conservés en `text` pour simplifier l'import de
 - `combats.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_competition` référence `competitions.id_competition` avec `on delete cascade`.
 - `combat_scores.id_combat` référence `combats.id_combat` avec `on delete cascade` (une ligne par prise marquée, ordre préservé par la colonne `ordre`).
+- `judokas.club_id` référence optionnellement `clubs.id_club` (`on delete restrict`) : le club du judoka.
+- `club_competitions.club_id` référence `clubs.id_club` (`on delete restrict`) : le club propriétaire de la compétition club.
+- `coach_clubs (id_coach, id_club)` relie un coach (`judokas.id_judoka`) aux clubs qu'il coache, avec `on delete cascade` des deux côtés.
 
 La cascade permet de supprimer automatiquement les combats d'une compétition supprimée, et les prises marquées d'un combat supprimé.
 La suppression ou le détachement d'une compétition club conserve les compétitions individuelles via `club_competition_id = null`.
@@ -65,3 +70,5 @@ Une fois le schéma créé, l'étape suivante sera de préparer les exports CSV 
 Cet ordre respecte les clés étrangères.
 
 `public.combats` stocke aussi `etape` : le tour du combat dans la compétition (`Poule`, `1/32`, `1/16`, `1/8`, `1/4`, `1/2`, `Repêchage`, `Place de 3`, `Finale`, ou vide), contraint par `combats_etape_check`.
+
+`public.clubs` stocke les clubs (`id_club`, `nom` unique sans tenir compte de la casse). `public.judokas.is_admin` porte le droit admin indépendamment de `role`, pour qu'un coach puisse aussi être admin.

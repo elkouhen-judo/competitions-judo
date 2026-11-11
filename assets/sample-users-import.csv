@@ -1,5 +1,5 @@
-profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture,genre,anneeCategorie,lateralite
-PARENT,Claire,Durand,parent@example.com,,,,,,,
-JUDOKA,Hugo,Durand,,parent@example.com,,Minime,Orange,Homme,1,Droitier
-JUDOKA,Nina,Durand,,parent@example.com,,Minime,Jaune,Homme,2,Gaucher
-JUDOKA,Karim,Haddad,karim.haddad@example.com,,COACH,,Marron,Homme,,Droitier
+profileType,prenom,nom,email,parentEmail,role,ageCategory,couleur_ceinture,genre,anneeCategorie,lateralite,club
+PARENT,Claire,Durand,parent@example.com,,,,,,,,
+JUDOKA,Hugo,Durand,,parent@example.com,,Minime,Orange,Homme,1,Droitier,Judo Club Nantes
+JUDOKA,Nina,Durand,,parent@example.com,,Minime,Jaune,Homme,2,Gaucher,Judo Club Nantes
+JUDOKA,Karim,Haddad,karim.haddad@example.com,,COACH,,Marron,Homme,,Droitier,Judo Club Nantes

@@ -22,20 +22,22 @@
       showCombatForm: CompetitionDetailDeps["showCombatForm"];
       deleteCombat: CompetitionDetailDeps["deleteCombat"];
       editCurrentCompetition: () => void;
-      showCompetitionFinalizationForm: () => void;
     }
   ) {
     const { state, ui, notifications } = app;
     const { formatCompetitionName, formatDate, formatResultat, getJudokaDisplayName, normalizeDisplayName, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
-    const { showCombatForm, deleteCombat, editCurrentCompetition, showCompetitionFinalizationForm } = deps;
+    const { showCombatForm, deleteCombat, editCurrentCompetition } = deps;
 
     const defaultCompetitionDetailViewState = {
       coachObjectiveText: "",
-      coachReviewText: ""
+      coachReviewText: "",
+      coachObjectiveStatus: "",
+      coachReviewStatus: ""
     };
 
-    let competitionDetailRef: { coachObjectiveText: string; coachReviewText: string } | null = null;
+    type CompetitionDetailRef = typeof defaultCompetitionDetailViewState;
+    let competitionDetailRef: CompetitionDetailRef | null = null;
     let competitionDetailMounted = false;
     let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" | "judokaView" = "homeView";
 
@@ -90,7 +92,7 @@
         state.judokas.find((judoka) => String(judoka.judokaId) === ownerId) ||
         (String(state.currentUser?.judokaId || "") === ownerId ? state.currentUser : null);
       const ownerName = owner ? getJudokaDisplayName(owner) : "";
-      return [ownerName, formatDate(competition.competitionDate)].filter(Boolean).join(" · ");
+      return [ownerName, ui.formatDateLong(competition.competitionDate)].filter(Boolean).join(" · ");
     });
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
@@ -103,6 +105,24 @@
       () => !state.isLoadingCompetition && Boolean(state.currentCompetition) && canEditCompetition.value
     );
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
+    // FICHE-1 : avant la date, la fiche prépare la compétition ; les saisies de résultat arrivent le jour J.
+    const competitionTiming = window.Vue.computed(() => {
+      const days = ui.getDaysFromToday(state.currentCompetition?.competitionDate);
+      return {
+        isUpcoming: days !== null && days > 0,
+        isToday: days === 0,
+        relative: days !== null && days > 0 ? ui.formatRelativeDay(state.currentCompetition?.competitionDate) : ""
+      };
+    });
+    // FICHE-2 : le classement se choisit sur la fiche, sans écran dédié.
+    const rankingOptions = window.Vue.computed(() =>
+      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({ value, label: ui.formatCompetitionRanking(value) }))
+    );
+    const showRankingSection = window.Vue.computed(
+      () => Boolean(state.currentCompetition) && !state.isLoadingCompetition && canEditCompetition.value && !competitionTiming.value.isUpcoming
+    );
+    const competitionResultLabel = window.Vue.computed(() => ui.formatCompetitionRanking(state.currentCompetition?.result));
+    const competitionResultClass = window.Vue.computed(() => ui.getClassementBadgeClass(state.currentCompetition?.result));
     const competitionLevel = window.Vue.computed(() => state.currentCompetition?.level ?? "");
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     const combats = window.Vue.computed(() => {
@@ -130,6 +150,7 @@
       const draws = state.currentCombats.filter((combat) => combat.result === "Egalité").length;
       const scoredCombats = state.currentCombats.filter((combat) => (combat.scores || []).length > 0).length;
       const victoryRate = total ? Math.round((wins / total) * 100) : 0;
+      const record = ui.formatRecord(wins, losses, draws);
       const finalizationResult = state.currentCompetition?.result || "";
       const finalizationStatus = finalizationResult
         ? finalizationResult === "Non classé"
@@ -138,7 +159,7 @@
         : "À finaliser";
       return {
         total,
-        record: `${wins}V · ${losses}D · ${draws}N`,
+        record,
         victoryRate: `${victoryRate}%`,
         scoredCombats,
         finalizationStatus
@@ -167,8 +188,9 @@
           deleteCombat,
           editCurrentCompetition,
           navigateBackFromCompetition,
+          openCombatIssue,
+          saveCompetitionRanking,
           showCombatForm,
-          showCompetitionFinalizationForm,
           saveCoachObjective,
           saveCoachReview
         },
@@ -183,6 +205,11 @@
           canEditCompetition,
           canManageCombat,
           canFinalizeCompetition,
+          competitionResultClass,
+          competitionResultLabel,
+          competitionTiming,
+          rankingOptions,
+          showRankingSection,
           isSubmitting,
           combats,
           combatsEmptyMessage,
@@ -196,38 +223,80 @@
       );
     }
 
+    // FICHE-4 : objectif et bilan s'enregistrent à la sortie du champ, sans bouton ni notification.
     function saveCoachObjective() {
-      if (!competitionDetailRef) return;
-      const competitionId = getCurrentCompetition().competitionId;
-      const objective = competitionDetailRef.coachObjectiveText;
+      if (!competitionDetailRef || !state.currentCompetition) return;
+      const ref = competitionDetailRef;
+      const competitionId = state.currentCompetition.competitionId;
+      const objective = ref.coachObjectiveText;
+      if (objective === (state.currentCompetition.coachObjective || "")) return;
+      ref.coachObjectiveStatus = "Enregistrement…";
       app.runServer(
         "saveCoachObjective",
         [competitionId, objective],
-        (response) => {
-          showSuccess(response.message);
+        () => {
+          ref.coachObjectiveStatus = "Enregistré";
           if (state.currentCompetition) {
             state.currentCompetition = { ...state.currentCompetition, coachObjective: objective };
           }
+        },
+        (error) => {
+          ref.coachObjectiveStatus = "Non enregistré";
+          showError(error);
+        }
+      );
+    }
+
+    function saveCoachReview() {
+      if (!competitionDetailRef || !state.currentCompetition) return;
+      const ref = competitionDetailRef;
+      const competitionId = state.currentCompetition.competitionId;
+      const review = ref.coachReviewText;
+      if (review === (state.currentCompetition.coachReview || "")) return;
+      ref.coachReviewStatus = "Enregistrement…";
+      app.runServer(
+        "saveCoachReview",
+        [competitionId, review],
+        () => {
+          ref.coachReviewStatus = "Enregistré";
+          if (state.currentCompetition) {
+            state.currentCompetition = { ...state.currentCompetition, coachReview: review };
+          }
+        },
+        (error) => {
+          ref.coachReviewStatus = "Non enregistré";
+          showError(error);
+        }
+      );
+    }
+
+    function saveCompetitionRanking(result: string) {
+      if (!state.currentCompetition || state.currentCompetition.result === result) return;
+      const competitionId = state.currentCompetition.competitionId;
+      app.runServer(
+        "finalizeCompetition",
+        [competitionId, result],
+        (response) => {
+          showSuccess(response.message);
+          if (state.currentCompetition && String(state.currentCompetition.competitionId) === String(competitionId)) {
+            state.currentCompetition = { ...state.currentCompetition, result };
+          }
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
+          );
         },
         showError
       );
     }
 
-    function saveCoachReview() {
-      if (!competitionDetailRef) return;
-      const competitionId = getCurrentCompetition().competitionId;
-      const review = competitionDetailRef.coachReviewText;
-      app.runServer(
-        "saveCoachReview",
-        [competitionId, review],
-        (response) => {
-          showSuccess(response.message);
-          if (state.currentCompetition) {
-            state.currentCompetition = { ...state.currentCompetition, coachReview: review };
-          }
-        },
-        showError
-      );
+    // COMBAT-5 : toucher « À compléter » ouvre le combat sur le champ concerné.
+    const issueFieldTargets: Record<string, string> = {
+      victoryType: "combat_type_victoire",
+      scores: "combat_points",
+      opponentStance: "combat_garde_adversaire"
+    };
+    function openCombatIssue(combatId: string, field?: string) {
+      showCombatForm(combatId, field ? issueFieldTargets[field] : undefined);
     }
 
     function cancelPendingOperation(operationId: string) {
@@ -283,6 +352,8 @@
           if (competitionDetailRef) {
             competitionDetailRef.coachObjectiveText = data.competition.coachObjective || "";
             competitionDetailRef.coachReviewText = data.competition.coachReview || "";
+            competitionDetailRef.coachObjectiveStatus = "";
+            competitionDetailRef.coachReviewStatus = "";
           }
           onLoaded?.();
         },
@@ -351,12 +422,14 @@
       ownerJudokaId: "",
       ownerOptions: [] as CompetitionOwnerOption[],
       showOwnerOptions: false,
+      competitionFormErrors: { name: "", ageCategory: "", owner: "" },
       competitionForm: { ...defaultCompetitionForm }
     };
 
     let competitionFormMounted = false;
     const competitionFormViewModel = window.Vue.reactive({
       ...defaultCompetitionFormViewState,
+      competitionFormErrors: { name: "", ageCategory: "", owner: "" },
       competitionForm: { ...defaultCompetitionFormViewState.competitionForm }
     });
     let hideOwnerOptionsTimer: number | null = null;
@@ -396,6 +469,7 @@
     function showCompetitionForm(id?: string) {
       clearMessage();
       ensureCompetitionFormViewModel();
+      Object.assign(competitionFormViewModel.competitionFormErrors, { name: "", ageCategory: "", owner: "" });
       previousCompetitionFormView = state.currentCompetition ? "competitionView" : "homeView";
 
       if (id) {
@@ -422,7 +496,7 @@
         });
       } else {
         previousCompetitionFormView = "homeView";
-        competitionFormViewModel.competitionFormTitle = "Ajouter une compétition";
+        competitionFormViewModel.competitionFormTitle = "Nouvelle compétition";
         competitionFormViewModel.competitionInheritedFieldsLocked = false;
         const ownerId = app.screens.home.getHomeActiveJudokaId();
         setCompetitionOwnerField(ownerId);
@@ -441,6 +515,7 @@
     }
 
     function onCompetitionFormAgeCategoryChange() {
+      competitionFormViewModel.competitionFormErrors.ageCategory = "";
       if (!competitionFormViewModel.competitionForm.ageCategory) {
         competitionFormViewModel.competitionForm.weightCategory = "";
       } else if (
@@ -452,7 +527,7 @@
     }
 
     function getCompetitionOwnerRequiredMessage() {
-      return "Sélectionnez votre profil ou l'un de vos enfants avant d'enregistrer la compétition.";
+      return "Choisissez le judoka concerné.";
     }
 
     function saveCompetition() {
@@ -469,17 +544,25 @@
         ownerJudokaId: undefined as string | undefined
       };
 
-      if (!competition.ageCategory) {
-        showError({ message: "Sélectionnez une catégorie d'âge avant d'enregistrer la compétition." });
-        return;
-      }
-
+      // COMBAT-2 : champs obligatoires vérifiés avant l'envoi, erreur sous le champ concerné.
+      const errors = competitionFormViewModel.competitionFormErrors;
+      errors.name = cleanText(competition.name) ? "" : "Indiquez le nom de la compétition.";
+      errors.ageCategory = competition.ageCategory ? "" : "Choisissez la catégorie d'âge.";
+      errors.owner = "";
       if (state.isParent) {
         competition.ownerJudokaId = resolveCompetitionOwnerSelection();
-        if (!competition.ownerJudokaId) {
-          showError({ message: getCompetitionOwnerRequiredMessage() });
-          return;
-        }
+        errors.owner = competition.ownerJudokaId ? "" : getCompetitionOwnerRequiredMessage();
+      }
+      const firstInvalidField = errors.owner
+        ? "competition_judoka_text"
+        : errors.name
+          ? "competition_nom"
+          : errors.ageCategory
+            ? "competition_categorie_age"
+            : "";
+      if (firstInvalidField) {
+        window.Vue.nextTick(() => document.getElementById(firstInvalidField)?.focus());
+        return;
       }
 
       app.runServer(
@@ -652,6 +735,7 @@
       competitionFormViewModel.ownerJudokaId = option ? option.judokaId : "";
       competitionFormViewModel.ownerJudokaText = option ? option.name : "";
       competitionFormViewModel.showOwnerOptions = false;
+      competitionFormViewModel.competitionFormErrors.owner = "";
       if (option && !competitionFormViewModel.competitionForm.competitionId) {
         prefillCategoryFromJudoka(option.judokaId);
       }
@@ -672,31 +756,14 @@
   }
 
   function createKirokuCompetitionDetailScreen(app: KirokuApp, deps: CompetitionDetailDeps) {
-    const { state, ui, notifications } = app;
-    const { showView } = ui;
-    const { clearMessage, showError, showSuccess } = notifications;
+    const { state, notifications } = app;
+    const { showError } = notifications;
     const { showCombatForm, deleteCombat } = deps;
-
-    const defaultCompetitionFinalizationViewState = {
-      finalizationSubtitle: "",
-      finalizationForm: {
-        competitionId: "",
-        result: ""
-      }
-    };
-
-    let competitionFinalizationMounted = false;
-    const competitionFinalizationViewModel = window.Vue.reactive({
-      ...defaultCompetitionFinalizationViewState,
-      finalizationForm: { ...defaultCompetitionFinalizationViewState.finalizationForm }
-    });
-    const isSubmitting = window.Vue.computed(() => state.isSubmitting);
 
     const detail = createCompetitionDetailController(app, {
       showCombatForm,
       deleteCombat,
-      editCurrentCompetition,
-      showCompetitionFinalizationForm
+      editCurrentCompetition
     });
     const {
       getCurrentCompetition,
@@ -733,68 +800,10 @@
       showCompetitionForm(state.currentCompetition.competitionId);
     }
 
-    function ensureCompetitionFinalizationViewModel() {
-      if (competitionFinalizationMounted) {
-        return;
-      }
-      competitionFinalizationMounted = true;
-      ui.mountViewModel(
-        "competitionFinalizationView",
-        competitionFinalizationViewModel,
-        {
-          cancelCompetitionFinalizationForm,
-          finalizeCompetition
-        },
-        { isSubmitting }
-      );
-    }
-
-    function showCompetitionFinalizationForm() {
-      clearMessage();
-      ensureCompetitionFinalizationViewModel();
-      if (!state.currentCompetition) {
-        showError({ message: "Compétition introuvable." });
-        return;
-      }
-
-      competitionFinalizationViewModel.finalizationSubtitle = ui.formatCompetitionName(state.currentCompetition.name);
-      Object.assign(competitionFinalizationViewModel.finalizationForm, {
-        competitionId: state.currentCompetition.competitionId || "",
-        result: state.currentCompetition.result || ""
-      });
-      showView("competitionFinalizationView");
-    }
-
-    function cancelCompetitionFinalizationForm() {
-      showView("competitionView");
-    }
-
-    function finalizeCompetition() {
-      ensureCompetitionFinalizationViewModel();
-      const competitionId = competitionFinalizationViewModel.finalizationForm.competitionId;
-      const result = competitionFinalizationViewModel.finalizationForm.result;
-
-      app.runServer(
-        "finalizeCompetition",
-        [competitionId, result],
-        (response) => {
-          showSuccess(response.message);
-          if (response.message.includes("Enregistré localement")) {
-            showView("competitionView");
-            return;
-          }
-          openCompetition(response.competitionId || competitionId, true);
-        },
-        showError
-      );
-    }
-
     return {
-      cancelCompetitionFinalizationForm,
       cancelCompetitionForm,
       deleteCurrentCompetition,
       editCurrentCompetition,
-      finalizeCompetition,
       getCompetitionOwnerRequiredMessage,
       getCurrentCompetition,
       getJudokaSecondaryText,
@@ -806,7 +815,6 @@
       resolveCompetitionOwnerSelection,
       saveCompetition,
       selectCompetitionOwner,
-      showCompetitionFinalizationForm,
       showCompetitionForm,
       showCompetitionOwnerOptions,
       updateCompetitionOwnerText

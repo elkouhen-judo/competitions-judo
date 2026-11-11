@@ -1,6 +1,6 @@
 ruleDirs:
-- /Users/dev/competitions-judo/rules
+- rules
 testConfigs:
-- testDir: /Users/dev/competitions-judo/rule-tests
+- testDir: rule-tests
 utilDirs:
-- /Users/dev/competitions-judo/utils
+- utils

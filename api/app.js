@@ -37,7 +37,6 @@ const VIEW_PARTIAL_FILES = {
   "club-competition-detail": "club-competition-detail.html",
   "club-competition-form": "club-competition-form.html",
   "competition-form": "competition-form.html",
-  "competition-finalization": "competition-finalization.html",
   "combat-form": "combat-form.html"
 };
 

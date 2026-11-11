@@ -28,6 +28,9 @@ function createInitialState(): KirokuAppState {
     homeMode: "judoka",
     competitions: [],
     clubCompetitions: [],
+    clubs: [],
+    combatRecords: {},
+    selectedClubId: "",
     currentCompetition: null,
     judokas: [],
     currentCombats: [],
@@ -341,7 +344,7 @@ function createInitialState(): KirokuAppState {
       if (
         restored.viewId === "combatFormView" ||
         restored.viewId === "competitionFormView" ||
-        restored.viewId === "competitionFinalizationView"
+        String(restored.viewId) === "competitionFinalizationView"
       ) {
         if (restored.competitionId) {
           screens.competition.openCompetition(restored.competitionId, true);
@@ -977,15 +980,22 @@ function createInitialState(): KirokuAppState {
       state.isUsingCachedData = Boolean(cacheInfo.isCached);
       state.cachedDataLoadedAt = cacheInfo.cachedAt || "";
       state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
+      state.combatRecords = data.combatRecords && typeof data.combatRecords === "object" ? data.combatRecords : {};
       state.clubCompetitions = Array.isArray(data.clubCompetitions) ? data.clubCompetitions : [];
+      state.clubs = Array.isArray(data.clubs) ? data.clubs : [];
+      if (state.selectedClubId && !state.clubs.some((club) => club.clubId === state.selectedClubId)) {
+        state.selectedClubId = "";
+      }
       state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
       loadPendingOperationsForUser(getInitialDataCacheUserKey(data));
-      const profileTypeLabel = state.isParent ? "PARENT" : "JUDOKA";
-      const roleLabel = state.isAdmin
-        ? `ADMIN · ${profileTypeLabel}`
-        : state.isCoach
-          ? `COACH · ${profileTypeLabel}`
-          : profileTypeLabel;
+      // NAV-4 : un seul rôle affiché ; l'accès admin se voit dans le menu du compte.
+      const roleLabel = state.isCoach
+        ? "Coach"
+        : state.currentUser?.profileType === "PARENT"
+          ? "Parent"
+          : state.isAdmin
+            ? "Admin"
+            : "Judoka";
       Object.assign(headerViewModel, {
         showHeader: true,
         userName: ui.getJudokaDisplayName(state.currentUser) || "",
@@ -1116,9 +1126,24 @@ function createInitialState(): KirokuAppState {
       offlineStatusText: ""
     });
 
-    ui.mountViewModel("appHeader", headerViewModel, {
-      logoutUser
-    });
+    ui.mountViewModel(
+      "appHeader",
+      headerViewModel,
+      {
+        logoutUser,
+        openPersonalSpace: () => screens.home.setHomeMode("judoka"),
+        openFamilySpace: () => screens.home.setHomeMode("family"),
+        openAccessManagement: () => screens.admins.showAdminsManagement()
+      },
+      {
+        // Le coach retrouve « Mon espace » ici ; un compte uniquement parent n'en a pas.
+        showPersonalSpaceLink: window.Vue.computed(
+          () => state.isCoach && state.currentUser?.profileType !== "PARENT"
+        ),
+        showFamilyLink: window.Vue.computed(() => state.isCoach && state.isParent),
+        showAdminLink: window.Vue.computed(() => state.isAdmin)
+      }
+    );
 
     const screens = {} as AppScreens;
     const navigation = createNavigationController(ui, state, screens);

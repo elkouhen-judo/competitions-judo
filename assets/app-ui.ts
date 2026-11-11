@@ -11,7 +11,6 @@
     "clubCompetitionFormView",
     "clubCompetitionDetailView",
     "competitionFormView",
-    "competitionFinalizationView",
     "combatFormView"
   ] as const;
 
@@ -45,8 +44,9 @@
     return normalizeDisplayName(value).toLocaleUpperCase("fr-FR");
   }
 
+  // UI-3 : un seul format de nom dans toute l'application, « Hugo Durand ».
   function getJudokaDisplayName(j: Partial<Judoka> | null | undefined) {
-    return [normalizeDisplayName(j && j.firstName), normalizeLastName(j && j.lastName)]
+    return [normalizeDisplayName(j && j.firstName), normalizeDisplayName(j && j.lastName)]
       .filter(Boolean)
       .join(" ");
   }
@@ -74,6 +74,58 @@
     const src = /^\d{4}-\d{2}-\d{2}$/.test(str) ? str.replace(/-/g, "/") : str;
     const d = new Date(src);
     return isNaN(d.getTime()) ? str : d.toLocaleDateString("fr-FR");
+  }
+
+  function parseLocalDate(value: unknown): Date | null {
+    if (!value) return null;
+    const str = String(value);
+    const src = /^\d{4}-\d{2}-\d{2}$/.test(str) ? str.replace(/-/g, "/") : str;
+    const d = new Date(src);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // UI-2 : date en clair, « sam. 5 déc. 2026 ».
+  function formatDateLong(value: unknown) {
+    const d = parseLocalDate(value);
+    if (!d) return value ? String(value) : "";
+    return new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(d);
+  }
+
+  // Nombre de jours entre aujourd'hui (date locale) et la date donnée ; négatif dans le passé.
+  function getDaysFromToday(value: unknown): number | null {
+    const d = parseLocalDate(value);
+    if (!d) return null;
+    const today = parseLocalDate(getCurrentLocalDate()) as Date;
+    d.setHours(0, 0, 0, 0);
+    return Math.round((d.getTime() - today.getTime()) / 86400000);
+  }
+
+  function formatRelativeDay(value: unknown) {
+    const days = getDaysFromToday(value);
+    if (days === null) return "";
+    if (days === 0) return "aujourd'hui";
+    if (days === 1) return "demain";
+    if (days === -1) return "hier";
+    if (days > 1) return `dans ${days} jours`;
+    return `il y a ${-days} jours`;
+  }
+
+  // « -60kg » → « -60 kg ».
+  function formatWeight(value: unknown) {
+    return String(value || "")
+      .trim()
+      .replace(/\s*kg$/i, " kg");
+  }
+
+  // Bilan sans compteurs à zéro : « 3V 1D », « 4V ».
+  function formatRecord(wins: number, losses: number, draws: number) {
+    const parts = [wins ? `${wins}V` : "", losses ? `${losses}D` : "", draws ? `${draws}N` : ""].filter(Boolean);
+    return parts.join(" ") || "Aucun combat";
+  }
+
+  // UI : accords au pluriel, « 1 participant », « 3 participants ».
+  function pluralize(count: number, singular: string, plural?: string) {
+    return `${count} ${count > 1 ? plural || `${singular}s` : singular}`;
   }
 
   function toInputDate(value: unknown) {
@@ -239,7 +291,12 @@
     $,
     cleanText,
     formatDate,
+    formatDateLong,
     formatDateTime,
+    formatRecord,
+    formatRelativeDay,
+    formatWeight,
+    getDaysFromToday,
     formatCompetitionName,
     formatCompetitionRanking,
     formatResultat,
@@ -253,6 +310,7 @@
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,
+    pluralize,
     showView() {},
     toInputDate,
     viewIds

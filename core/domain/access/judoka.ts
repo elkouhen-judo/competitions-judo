@@ -10,6 +10,7 @@ export interface JudokaInput {
   accountEmail?: unknown;
   profileType?: unknown;
   accessRole?: unknown;
+  adminAccess?: unknown;
   firstName?: unknown;
   lastName?: unknown;
 }
@@ -46,6 +47,7 @@ export function createJudoka(user: JudokaInput = {}): JudokaModel {
   const profileType = createProfileType(user.profileType || "JUDOKA");
   const accessRole = createRole(user.accessRole || "NORMAL");
   const record = { judokaId, accountEmail, name, profileType, accessRole };
+  const adminAccess = user.adminAccess === true;
 
   return {
     ...record,
@@ -53,7 +55,7 @@ export function createJudoka(user: JudokaInput = {}): JudokaModel {
       return Boolean(record.accountEmail);
     },
     isAdmin() {
-      return record.accessRole === "ADMIN";
+      return record.accessRole === "ADMIN" || adminAccess;
     },
     isCoach() {
       return record.accessRole === "COACH";
