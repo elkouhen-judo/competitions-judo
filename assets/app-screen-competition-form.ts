@@ -81,7 +81,17 @@
       if (state.isLoadingCompetition) return "Chargement...";
       return competitionDetailProjection.value?.competitionTitle ?? "Compétition";
     });
-    const competitionSubtitle = window.Vue.computed(() => competitionDetailProjection.value?.competitionSubtitle ?? "");
+    // Le sous-titre nomme le judoka concerné (coach et parent consultent plusieurs participations).
+    const competitionSubtitle = window.Vue.computed(() => {
+      const competition = state.currentCompetition;
+      if (!competition || state.isLoadingCompetition) return "";
+      const ownerId = String(competition.ownerJudokaId || "");
+      const owner =
+        state.judokas.find((judoka) => String(judoka.judokaId) === ownerId) ||
+        (String(state.currentUser?.judokaId || "") === ownerId ? state.currentUser : null);
+      const ownerName = owner ? getJudokaDisplayName(owner) : "";
+      return [ownerName, formatDate(competition.competitionDate)].filter(Boolean).join(" · ");
+    });
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
     const competitionResult = window.Vue.computed(() => {
@@ -105,6 +115,14 @@
     });
     const hasCombats = window.Vue.computed(() => !state.isLoadingCompetition && combatsProjection.value.hasCombats);
     const isLoadingCombats = window.Vue.computed(() => state.isLoadingCompetition);
+    // Jour J : quand la compétition a lieu aujourd'hui (ou plus tard) ou n'a encore aucun combat,
+    // la saisie des combats passe avant la synthèse et le suivi coach.
+    const isCompetitionDayMode = window.Vue.computed(() => {
+      if (!canManageCombat.value) return false;
+      const date = String(state.currentCompetition?.competitionDate || "");
+      const today = new Date().toISOString().slice(0, 10);
+      return !combatsProjection.value.hasCombats || (Boolean(date) && date >= today);
+    });
     const competitionSportSummary = window.Vue.computed(() => {
       const total = state.currentCombats.length;
       const wins = state.currentCombats.filter((combat) => combat.result === "Victoire").length;
@@ -170,6 +188,7 @@
           combatsEmptyMessage,
           hasCombats,
           isLoadingCombats,
+          isCompetitionDayMode,
           competitionSportSummary,
           showCoachAssessment,
           canEditCoachAssessment,
@@ -405,11 +424,13 @@
         previousCompetitionFormView = "homeView";
         competitionFormViewModel.competitionFormTitle = "Ajouter une compétition";
         competitionFormViewModel.competitionInheritedFieldsLocked = false;
-        setCompetitionOwnerField(app.screens.home.getHomeActiveJudokaId());
+        const ownerId = app.screens.home.getHomeActiveJudokaId();
+        setCompetitionOwnerField(ownerId);
         Object.assign(competitionFormViewModel.competitionForm, {
           ...defaultCompetitionForm,
           competitionDate: getCurrentLocalDate()
         });
+        prefillCategoryFromJudoka(ownerId || String(state.currentUser?.judokaId || ""));
       }
 
       showView("competitionFormView");
@@ -545,12 +566,34 @@
       });
     }
 
+    // Information sportive utile pour distinguer deux judokas, jamais l'e-mail ni l'identifiant.
     function getJudokaSecondaryText(judoka: Judoka) {
-      if (cleanText(judoka.accountEmail)) {
-        return judoka.accountEmail;
-      }
+      return [judoka.ageCategory, judoka.weightCategory]
+        .map((value) => cleanText(value))
+        .filter(Boolean)
+        .join(" · ");
+    }
 
-      return `ID ${String(judoka.judokaId || "").slice(-6)}`;
+    // Préremplit catégorie d'âge et poids depuis le profil du judoka, sans écraser une saisie.
+    function prefillCategoryFromJudoka(idJudoka: string) {
+      const judoka =
+        state.judokas.find((j) => String(j.judokaId) === String(idJudoka)) ||
+        (String(state.currentUser?.judokaId || "") === String(idJudoka) ? state.currentUser : null);
+      if (!judoka) return;
+      const form = competitionFormViewModel.competitionForm;
+      if (!form.ageCategory && cleanText(judoka.ageCategory)) {
+        form.ageCategory = cleanText(judoka.ageCategory);
+      }
+      const profileWeight = cleanText(judoka.weightCategory);
+      if (!form.weightCategory && profileWeight && form.ageCategory === cleanText(judoka.ageCategory)) {
+        // Le profil peut écrire « -38 kg » quand la liste propose « -38kg » : on retient l'option exacte.
+        const compact = (value: string) => value.replace(/\s+/g, "").toLowerCase();
+        const options = competitionWeightCategoryOptions.value;
+        const matchingOption = options.find((option) => compact(option) === compact(profileWeight));
+        if (matchingOption || !options.length) {
+          form.weightCategory = matchingOption || profileWeight;
+        }
+      }
     }
 
     function getJudokaSearchText(judoka: Judoka) {
@@ -609,6 +652,9 @@
       competitionFormViewModel.ownerJudokaId = option ? option.judokaId : "";
       competitionFormViewModel.ownerJudokaText = option ? option.name : "";
       competitionFormViewModel.showOwnerOptions = false;
+      if (option && !competitionFormViewModel.competitionForm.competitionId) {
+        prefillCategoryFromJudoka(option.judokaId);
+      }
     }
 
     return {

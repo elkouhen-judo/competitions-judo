@@ -1,4 +1,4 @@
-const CACHE_NAME = "kiroku-app-shell-v6";
+const CACHE_NAME = "kiroku-app-shell-v8";
 const APP_SHELL_URLS = ["/", "/api/styles", "/api/client", "/manifest.webmanifest"];
 const BYPASS_URLS = ["/sample-users-import.csv"];
 
@@ -31,7 +31,6 @@ self.addEventListener("fetch", (event) => {
   if (
     request.method !== "GET" ||
     url.pathname === "/api/rpc" ||
-    url.pathname === "/api/coach-chat" ||
     BYPASS_URLS.includes(url.pathname)
   ) {
     return;

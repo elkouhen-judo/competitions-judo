@@ -135,34 +135,30 @@ test("vercel config routes the app shell and rpc endpoint", () => {
     destination: "/api/rpc"
   });
   assert.deepEqual(vercel.rewrites[4], {
-    source: "/api/coach-chat",
-    destination: "/api/coach-chat"
-  });
-  assert.deepEqual(vercel.rewrites[5], {
     source: "/mcp",
     destination: "/api/mcp"
   });
-  assert.deepEqual(vercel.rewrites[6], {
+  assert.deepEqual(vercel.rewrites[5], {
     source: "/mcp/authorize",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[7], {
+  assert.deepEqual(vercel.rewrites[6], {
     source: "/mcp/register",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[8], {
+  assert.deepEqual(vercel.rewrites[7], {
     source: "/mcp/token",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[9], {
+  assert.deepEqual(vercel.rewrites[8], {
     source: "/.well-known/oauth-authorization-server",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[10], {
+  assert.deepEqual(vercel.rewrites[9], {
     source: "/.well-known/oauth-protected-resource",
     destination: "/api/mcp-oauth"
   });
-  assert.deepEqual(vercel.rewrites[11], {
+  assert.deepEqual(vercel.rewrites[10], {
     source: "/(.*)",
     destination: "/api/app"
   });
@@ -564,7 +560,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /id="openHomeJudokaProfileButtonMeta"/);
   assert.match(uiBundle, /id="judokaView" class="panel hidden"/);
   assert.match(uiBundle, /id="judokaHeroAvatar"/);
-  assert.match(uiBundle, /id="judokaHeroSummary"/);
+  assert.match(uiBundle, /id="judokaHeroRecord"/);
+  assert.doesNotMatch(uiBundle, /id="judokaHeroName"/);
   assert.match(uiBundle, /function openHomeJudokaProfile\(\)/);
   assert.match(uiBundle, /Sélectionnez un judoka actif pour ouvrir sa fiche/);
   assert.match(
@@ -723,7 +720,7 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /id="userInfo"/);
   assert.match(
     uiBundle,
-    /id="userInfo" class="user-pill"><strong>\{\{ userName \}\}<\/strong> - \{\{ roleLabel \}\}<\/div>/
+    /id="userInfo" class="user-pill"><strong>\{\{ userName \}\}<\/strong> <span class="user-pill-role">\{\{ roleLabel \}\}<\/span><\/div>/
   );
   assert.match(
     uiBundle,
@@ -772,7 +769,7 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(coreIndex, /createCompetitionsService/);
   assert.match(coreIndex, /createCombatsService/);
   assert.match(coreIndex, /createCoachDashboardService/);
-  assert.match(coreIndex, /createAnthropicClient/);
+  assert.doesNotMatch(coreIndex, /createAnthropicClient|anthropic/i);
   assert.match(coreIndex, /core-dist\/services\/coach-dashboard\.service\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/judokas\.repository\.js/);
   assert.match(coreIndex, /core-dist\/repositories\/club-competitions\.repository\.js/);
@@ -789,7 +786,6 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./config/env.js",
       "./infra/supabase-client.js",
       "./infra/supabase-rest.js",
-      "./infra/anthropic-client.js",
       "./auth/session.js",
       "./auth/mcp-token.js",
       "./auth/permissions.js",
@@ -873,6 +869,6 @@ test("service worker never intercepts the downloadable CSV template, even as a n
   assert.match(serviceWorkerSource, /const BYPASS_URLS = \["\/sample-users-import\.csv"\];/);
   assert.match(
     serviceWorkerSource,
-    /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*url\.pathname === "\/api\/coach-chat" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
+    /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
   );
 });

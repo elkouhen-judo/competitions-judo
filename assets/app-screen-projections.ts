@@ -220,7 +220,7 @@
     const { formatDate } = helpers;
     const ageWeightLabel = [competition.ageCategory, competition.weightCategory]
       .filter(Boolean)
-      .join(" - ");
+      .join(" · ");
     const hasResult = Boolean(String(competition.result || "").trim());
 
     return {

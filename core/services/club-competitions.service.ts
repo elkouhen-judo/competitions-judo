@@ -2,6 +2,7 @@ import { toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
 import type { createClubCompetition, ClubCompetitionInput } from "../domain/competitions/club-competition";
 import type { createCompetition } from "../domain/competitions/competition";
 import type { ClubCompetitionsRepository } from "../repositories/club-competitions.repository";
+import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
 import type { JudokaRow } from "../repositories/types";
@@ -20,6 +21,8 @@ export interface ClubCompetitionsServiceDeps {
   clubCompetitionsRepository: ClubCompetitionsRepository;
   competitionsRepository: CompetitionsRepository;
   judokasRepository: JudokasRepository;
+  /** Facultatif : permet d'afficher le bilan des combats saisis par participant. */
+  combatsRepository?: Pick<CombatsRepository, "listByCompetitionIds">;
   userContextService: UserContextService;
   canManageClubCompetition: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
   buildClubCompetitionId: () => string;
@@ -40,6 +43,7 @@ export default function createClubCompetitionsService(
     clubCompetitionsRepository,
     competitionsRepository,
     judokasRepository,
+    combatsRepository,
     userContextService,
     canManageClubCompetition,
     buildClubCompetitionId,
@@ -171,10 +175,25 @@ export default function createClubCompetitionsService(
     }
     const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
     const judokas = await judokasRepository.listByIds(participations.map((row) => row.id_judoka));
+    const combats = combatsRepository
+      ? await combatsRepository.listByCompetitionIds(participations.map((row) => row.id_competition))
+      : [];
+    const combatRecords: Record<string, { total: number; wins: number; losses: number; draws: number }> = {};
+    combats.forEach((combat) => {
+      const key = String(combat.id_competition);
+      const record = combatRecords[key] || { total: 0, wins: 0, losses: 0, draws: 0 };
+      const result = String(combat.resultat || "");
+      record.total += 1;
+      if (result === "Victoire") record.wins += 1;
+      else if (result === "Défaite") record.losses += 1;
+      else if (result) record.draws += 1;
+      combatRecords[key] = record;
+    });
     return {
       clubCompetition: event,
       participations: participations.map(toCanonicalCompetition),
-      judokas: judokas.map(toCanonicalJudoka)
+      judokas: judokas.map(toCanonicalJudoka),
+      combatRecords
     };
   }
 

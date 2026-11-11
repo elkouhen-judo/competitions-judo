@@ -22,7 +22,8 @@
       genderEditing: "",
       yearInCategoryEditing: "",
       handednessEditing: "",
-      viewedJudokaId: ""
+      viewedJudokaId: "",
+      profileEditing: false
     });
 
     function getCurrentSeasonStartYear() {
@@ -183,6 +184,7 @@
           judokaLocalState.yearInCategoryEditing = data.judoka?.yearInCategory || "";
           judokaLocalState.handednessEditing = data.judoka?.handedness || "";
           judokaLocalState.viewedJudokaId = data.judoka?.judokaId || "";
+          judokaLocalState.profileEditing = false;
           state.judokaCompetitionResultsCurrentPage = 1;
           showView("judokaView");
         },
@@ -253,6 +255,12 @@
           openCompetitionFromProfile,
           onJudokaInfoAgeOrGenderChange,
           saveJudokaInfo,
+          startProfileEdit: () => {
+            judokaLocalState.profileEditing = true;
+          },
+          cancelProfileEdit: () => {
+            judokaLocalState.profileEditing = false;
+          },
           showPreviousSeason,
           showNextSeason,
           showCompetitionResultsPreviousPage,

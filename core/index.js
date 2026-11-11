@@ -1,13 +1,10 @@
 const {
   getSupabaseConfig,
-  getAnthropicApiKey,
-  getAnthropicModel,
   getMcpJwtSecret,
   getMcpTokenTtlSeconds
 } = require("./config/env.js");
 const { createSupabaseClient } = require("./infra/supabase-client.js");
 const { createSupabaseRest } = require("./infra/supabase-rest.js");
-const { createAnthropicClient } = require("./infra/anthropic-client.js");
 const createSessionAuth = require("./auth/session.js");
 const { createMcpTokenAuth, sha256Base64Url } = require("./auth/mcp-token.js");
 const permissions = require("./auth/permissions.js");
@@ -124,7 +121,6 @@ const mcpClientAuth = createMcpTokenAuth({
   getAudience: () => "kiroku-mcp-client",
   getTtlSeconds: () => 60 * 60 * 24 * 365 * 50
 });
-const anthropicClient = createAnthropicClient({ getAnthropicApiKey, getAnthropicModel });
 const repositoryDeps = {
   ...supabaseRest,
   eqFilter
@@ -171,6 +167,7 @@ const clubCompetitionsService = createClubCompetitionsService({
   clubCompetitionsRepository,
   competitionsRepository,
   judokasRepository,
+  combatsRepository,
   userContextService,
   canManageClubCompetition: permissions.canManageClubCompetition,
   buildClubCompetitionId: ids.buildCompetitionId,
@@ -183,7 +180,6 @@ const coachDashboardService = createCoachDashboardService({
   combatsRepository,
   combatScoresRepository,
   competitionsRepository,
-  anthropicClient,
   judokasRepository,
   userContextService
 });

@@ -4,26 +4,30 @@
 
 @layer base {
     :root {
-      --bg: #f7f6f3;
+      /* Thème A « Blanc & Bleu » */
+      --bg: #f3f5fa;
       --panel: #ffffff;
-      --text: #242321;
-      --muted: #787774;
-      --line: #eae9e5;
-      --primary: #242321;
-      --primary-hover: #403e3a;
-      --accent: #346538;
-      --accent-soft: #edf3ec;
+      --text: #0e1a2b;
+      --muted: #4e5a6c;
+      --line: #e3e8f0;
+      --primary: #0e1a2b;
+      --primary-hover: #1b2a40;
+      --accent: #1f4fd8;
+      --accent-soft: #e8eefc;
       --hajime: #9f2f2d;
       --hajime-soft: #fdebec;
-      --tatami: #f1f1ed;
-      --tatami-line: #deddd8;
-      --surface: #fbfbfa;
-      --radius: 6px;
-      --radius-card: 8px;
+      --tatami: #f3f5fa;
+      --tatami-line: #e3e8f0;
+      --surface: #ffffff;
+      --radius: 12px;
+      --radius-card: 16px;
+      --radius-pill: 999px;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
       --danger: #9f2f2d;
       --danger-hover: #7d2422;
       --danger-soft: #fdebec;
-      --button-focus-ring: rgba(52, 101, 56, 0.22);
+      --button-focus-ring: rgba(31, 79, 216, 0.25);
       --button-primary-bg: var(--primary);
       --button-primary-bg-hover: var(--primary-hover);
       --button-primary-text: #ffffff;
@@ -37,16 +41,19 @@
       --button-danger-text: var(--danger);
       --success: #346538;
       --success-soft: #edf3ec;
-      --warning: #956400;
+      --warning: #855a00;
       --warning-soft: #fbf3db;
       --gold: #b8912f;
       --gold-soft: #fff4d8;
+      --gold-text: #7a5c00;
       --silver: #6b7280;
-      --silver-soft: #f4f5f7;
+      --silver-soft: #eceef3;
+      --silver-line: #9aa3b0;
+      --silver-text: #3d4452;
       --bronze: #9c6532;
       --bronze-soft: #f9efe6;
-      --soft: #f2f1ed;
-      --shadow: 0 2px 8px rgba(17, 17, 17, 0.035);
+      --soft: #eef1f7;
+      --shadow: none;
     }
 
     html {
@@ -98,262 +105,11 @@
     }
 }
 
-/* ── Direction visuelle contemporaine ─────────────────────────────────────
-   La hiérarchie vient de l'espace, de la typographie et de quelques accents
-   sémantiques. Les composants restent volontairement plats et tactiles.
+/* ── Composants ───────────────────────────────────────────────────────────
+   Structure et comportements. L'apparence finale est fixée par la couche
+   « Thème A » en fin de fichier.
 */
 @layer components {
-  body {
-    background: var(--bg);
-    letter-spacing: -0.005em;
-  }
-
-  .app-shell {
-    max-width: 1120px;
-  }
-
-  .topbar {
-    gap: 16px;
-    padding: 18px 0 16px;
-    background: transparent;
-    border-bottom-color: var(--line);
-  }
-
-  .brand {
-    gap: 10px;
-  }
-
-  .brand-logo {
-    border-color: var(--text);
-  }
-
-  .brand-copy h1 {
-    margin-bottom: 2px;
-    font-size: 22px;
-    letter-spacing: -0.035em;
-  }
-
-  .user-pill {
-    border: 0;
-    background: transparent;
-    padding: 0;
-  }
-
-  .panel {
-    border-top: 0;
-    background: transparent;
-    overflow: visible;
-  }
-
-  .dash-hero {
-    gap: 20px;
-    padding: 26px 0 0;
-    background: transparent;
-    border-bottom: 0;
-  }
-
-  .mode-tabs {
-    gap: 20px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .mode-tab {
-    padding: 10px 0 12px;
-    border-radius: 0;
-    color: var(--muted);
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-align: left;
-  }
-
-  .mode-tabs .mode-tab:hover:not(:disabled),
-  .mode-tabs .mode-tab-active,
-  .mode-tabs .mode-tab-active:hover:not(:disabled) {
-    background: transparent;
-    color: var(--text);
-  }
-
-  .mode-tabs .mode-tab-active {
-    border-bottom: 2px solid var(--accent);
-  }
-
-  .home-context-card {
-    margin: 0;
-    padding: 0 0 4px;
-    border: 0;
-    background: transparent;
-  }
-
-  .home-context-label,
-  .coach-home-card-kicker {
-    color: var(--accent);
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-  }
-
-  .home-context-value {
-    font-size: clamp(1.6rem, 5vw, 2.35rem);
-    letter-spacing: -0.04em;
-  }
-
-  .panel-body {
-    padding: 30px 0 40px;
-  }
-
-  .section {
-    margin-top: 38px;
-    padding-top: 30px;
-    border-top-color: var(--line);
-  }
-
-  .section-heading {
-    margin-bottom: 18px;
-  }
-
-  .section-heading h3 {
-    padding-left: 0;
-    border-left: 0;
-    font-size: 1.35rem;
-    letter-spacing: -0.035em;
-  }
-
-  .coach-home-grid {
-    gap: 0 28px;
-  }
-
-  .coach-home-card {
-    gap: 22px;
-    border: 0;
-    border-top: 1px solid var(--line);
-    border-radius: 0;
-    background: transparent;
-    padding: 22px 0 24px;
-  }
-
-  .coach-home-card:first-child {
-    border-top-color: var(--text);
-  }
-
-  .parent-home-card,
-  .parent-home-card:hover {
-    border-top-color: var(--line);
-  }
-
-  .coach-home-card-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: var(--accent-soft);
-  }
-
-  .coach-home-card h4 {
-    font-size: 1.2rem;
-    letter-spacing: -0.025em;
-  }
-
-  .coach-home-card p {
-    max-width: 34rem;
-    line-height: 1.55;
-  }
-
-  #homeAdminActions {
-    gap: 10px;
-    margin-top: 30px;
-    padding-top: 24px;
-    border-top: 1px solid var(--line);
-  }
-
-  #homeAdminActions button {
-    min-height: 52px;
-  }
-
-  #homeAdminActions .home-context-action {
-    border-radius: 6px;
-  }
-
-  .list {
-    gap: 0;
-  }
-
-  .list > .card {
-    border-bottom: 1px solid var(--line);
-    border-radius: 0;
-  }
-
-  .competition-card {
-    border-top: 1px solid var(--line);
-    border-left: 0;
-    border-right: 0;
-    background: transparent;
-  }
-
-  .competition-card::before {
-    display: none;
-  }
-
-  .card-button,
-  .competition-open-button {
-    padding: 20px 0;
-    background: transparent;
-  }
-
-  .card-button:hover:not(:disabled) {
-    background: transparent;
-    border-color: transparent;
-  }
-
-  .card-title {
-    font-size: 1.05rem;
-    letter-spacing: -0.015em;
-  }
-
-  .meta-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-  }
-
-  .card-open-hint {
-    color: var(--text);
-    font-size: 0.8rem;
-  }
-
-  input, select, textarea {
-    border-radius: 6px;
-    background: var(--panel);
-  }
-
-  button, .button {
-    font-weight: 600;
-  }
-
-  .button-secondary {
-    background: transparent;
-  }
-
-  .button-secondary:hover:not(:disabled) {
-    background: var(--soft);
-  }
-
-  @media (min-width: 721px) {
-    .app-shell {
-      padding-top: 24px;
-    }
-
-    .panel {
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .coach-home-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .panel-body {
-      padding-top: 38px;
-    }
-  }
-
     .app-shell {
       max-width: 980px;
       margin: 0 auto;
@@ -387,7 +143,7 @@
       overflow: hidden;
       background: var(--text);
       box-shadow: none;
-      border: 1px solid rgba(15, 45, 40, 0.28);
+      border: 0;
     }
 
     .brand-logo-mark {
@@ -402,7 +158,7 @@
 
     .brand-logo-tatami {
       fill: none;
-      stroke: rgba(255, 253, 248, 0.22);
+      stroke: rgba(255, 255, 255, 0.22);
       stroke-width: 1.5;
     }
 
@@ -414,8 +170,8 @@
     }
 
     .brand-logo-mark text {
-      fill: #fffdf8;
-      font-family: Georgia, 'Times New Roman', serif;
+      fill: var(--panel);
+      font-family: var(--font-heading);
       font-size: 25px;
       font-weight: 700;
     }
@@ -470,10 +226,10 @@
     }
 
     .offline-status {
-      border: 1px solid #d8c36a;
+      border: 1px solid var(--warning);
       border-radius: 6px;
-      background: #fff8d9;
-      color: #5d4b00;
+      background: var(--warning-soft);
+      color: var(--warning);
       padding: 0 10px;
       height: 38px;
       min-height: 38px;
@@ -644,7 +400,7 @@
       min-height: 36px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #fff;
+      background: var(--panel);
       color: var(--text);
       font: inherit;
       font-weight: bold;
@@ -743,7 +499,7 @@
 
     .button-danger:hover:not(:disabled) {
       background: var(--button-danger-bg-hover);
-      border-color: #e4aaa3;
+      border-color: var(--button-danger-border);
       color: var(--danger-hover);
     }
 
@@ -753,7 +509,7 @@
     .autocomplete-dropdown {
       position: absolute;
       z-index: 200;
-      background: #fff;
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 6px;
       max-height: 220px;
@@ -913,7 +669,7 @@
       padding: 10px 12px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #ffffff;
+      background: var(--panel);
       font-weight: normal;
       transition: border-color 180ms ease, background-color 180ms ease;
     }
@@ -1003,7 +759,7 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 12px;
-      border-top: 1px solid #d9e2f0;
+      border-top: 1px solid var(--line);
       padding: 8px 0;
     }
 
@@ -1206,7 +962,7 @@
     .combat-score-empty {
       border: 1px dashed var(--line);
       border-radius: var(--radius);
-      background: #ffffff;
+      background: var(--panel);
       color: var(--muted);
       padding: 12px;
       font-size: 14px;
@@ -1276,7 +1032,7 @@
       border: 1px solid var(--warning);
       border-radius: 999px;
       background: var(--warning-soft);
-      color: #6f4b00;
+      color: var(--warning);
       padding: 4px 9px;
       font-size: 13px;
       font-weight: 700;
@@ -1317,7 +1073,7 @@
       min-width: 72px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: #fff;
+      background: var(--panel);
       color: var(--text);
       padding: 5px 11px;
       font-size: 13px;
@@ -1369,14 +1125,14 @@
     .rank-gold {
       background: var(--gold-soft);
       border-color: var(--gold);
-      color: #7a5c00;
+      color: var(--gold-text);
     }
 
     /* 2e — argent (contraste renforcé) */
     .rank-silver {
-      background: #eceef3;
-      border-color: #9aa3b0;
-      color: #3d4452;
+      background: var(--silver-soft);
+      border-color: var(--silver-line);
+      color: var(--silver-text);
     }
 
     /* 3e — bronze */
@@ -1407,7 +1163,7 @@
     }
 
     .danger-zone {
-      border-top: 1px solid #fecaca;
+      border-top: 1px solid var(--danger-soft);
       margin-top: 22px;
       padding-top: 16px;
     }
@@ -1497,8 +1253,7 @@
       background: var(--accent-soft);
     }
 
-    .coach-dashboard-stats-tab > .section:first-child,
-    .coach-assistant-section {
+    .coach-dashboard-stats-tab > .section:first-child {
       border-top: 0;
       margin-top: 0;
       padding-top: 0;
@@ -1528,7 +1283,7 @@
     .summary-metric {
       display: grid;
       gap: 5px;
-      border: 1px solid rgba(15, 109, 92, 0.18);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       background: rgba(255, 255, 255, 0.74);
       padding: 12px;
@@ -1553,189 +1308,6 @@
       color: var(--text);
       font-weight: 700;
       line-height: 1.35;
-    }
-
-    .beta-badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      margin-left: 6px;
-      padding: 3px 8px;
-      border: 1px solid var(--warning);
-      border-radius: 999px;
-      background: var(--warning-soft);
-      color: var(--warning);
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1;
-      vertical-align: middle;
-    }
-
-    .coach-assistant-thread {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .coach-assistant-message {
-      max-width: 100%;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-card);
-      padding: 10px 12px;
-      background: var(--surface);
-    }
-
-    .coach-assistant-message p {
-      margin: 0;
-    }
-
-    .coach-assistant-message-user {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #ffffff;
-    }
-
-    .coach-assistant-results {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .coach-assistant-result {
-      display: grid;
-      gap: 6px;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-card);
-      background: #ffffff;
-      color: var(--text);
-      font-size: 13px;
-    }
-
-    .coach-assistant-result-judoka {
-      border-left: 3px solid var(--hajime);
-    }
-
-    .coach-assistant-result span {
-      color: var(--muted);
-    }
-
-    .coach-assistant-result-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .hero-avatar.coach-assistant-avatar {
-      flex: 0 0 auto;
-      width: 48px;
-      height: 48px;
-      font-size: 17px;
-      letter-spacing: 0.01em;
-    }
-
-    .coach-assistant-result-heading-group {
-      display: grid;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .coach-assistant-result-name {
-      justify-self: start;
-      border: none;
-      background: none;
-      padding: 0;
-      margin: 0;
-      font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
-      font-size: 19px;
-      line-height: 1.05;
-      font-weight: 800;
-      color: var(--text);
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-color: transparent;
-    }
-
-    button.coach-assistant-result-name:hover:not(:disabled),
-    .coach-assistant-result-name:focus-visible {
-      background: none;
-      text-decoration-color: currentColor;
-    }
-
-    .coach-assistant-result-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .coach-assistant-result-chips .result-badge,
-    .coach-assistant-outcome .result-badge {
-      min-width: auto;
-      white-space: nowrap;
-      padding: 3px 10px;
-      font-size: 12px;
-    }
-
-    .coach-assistant-result-competition {
-      justify-self: start;
-      border: none;
-      background: none;
-      padding: 0;
-      margin: 0;
-      font: inherit;
-      font-size: 12.5px;
-      color: var(--muted);
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-color: transparent;
-    }
-
-    span.coach-assistant-result-competition {
-      cursor: default;
-      text-decoration: none;
-    }
-
-    button.coach-assistant-result-competition:hover:not(:disabled),
-    .coach-assistant-result-competition:focus-visible {
-      background: none;
-      text-decoration-color: currentColor;
-    }
-
-    .coach-assistant-outcome {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .coach-assistant-outcome-detail {
-      font-size: 12.5px;
-      color: var(--muted);
-    }
-
-    .coach-assistant-loading {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .coach-assistant-error {
-      border: 1px solid var(--danger);
-      background: var(--danger-soft);
-      color: var(--danger);
-      border-radius: var(--radius);
-      padding: 9px;
-      font-size: 13px;
-    }
-
-    .coach-assistant-form {
-      display: grid;
-      gap: 8px;
-    }
-
-    .coach-assistant-input-row {
-      display: grid;
-      gap: 8px;
     }
 
     .dashboard-competition-list {
@@ -1788,7 +1360,7 @@
     .coach-summary-warning {
       border-color: var(--warning);
       background: var(--warning-soft);
-      color: #6f4b00;
+      color: var(--warning);
     }
 
     .coach-card-status {
@@ -1983,7 +1555,7 @@
       border: none;
       background: transparent;
       color: var(--muted);
-      font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+      font-family: var(--font-body);
       font-weight: 700;
       font-size: 0.8125rem;
       letter-spacing: 0;
@@ -2003,12 +1575,12 @@
 
     .mode-tabs .mode-tab-active {
       background: var(--primary);
-      color: #ffffff;
+      color: var(--panel);
     }
 
     .mode-tabs .mode-tab-active:hover:not(:disabled) {
       background: var(--primary-hover);
-      color: #ffffff;
+      color: var(--panel);
     }
 
     .coach-sub-tabs {
@@ -2083,7 +1655,7 @@
       padding: 15px;
       display: grid;
       gap: 10px;
-      background: #fff;
+      background: var(--panel);
     }
 
     .sk-card:nth-child(2) .sk-line { animation-delay: 0.2s; }
@@ -2098,7 +1670,7 @@
 
     .sk-line {
       border-radius: 4px;
-      background: linear-gradient(90deg, var(--line) 25%, #e4eaf4 50%, var(--line) 75%);
+      background: linear-gradient(90deg, var(--line) 25%, var(--tatami) 50%, var(--line) 75%);
       background-size: 200% 100%;
       animation: sk-shimmer 1.6s ease-in-out infinite;
     }
@@ -2205,7 +1777,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 12px 14px;
-      background: #fff;
+      background: var(--panel);
       box-shadow: none;
     }
 
@@ -2377,16 +1949,6 @@
 
       .coach-home-card {
         align-content: space-between;
-      }
-
-      .coach-assistant-input-row {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: end;
-      }
-
-      .coach-assistant-input-row button {
-        width: auto;
-        min-width: 140px;
       }
 
       .mobile-action-bar {
@@ -2680,7 +2242,7 @@
       padding: 8px 10px;
       border-radius: var(--radius);
       background: var(--text);
-      color: #fff;
+      color: var(--panel);
       font-size: 12px;
       font-weight: normal;
       font-style: normal;
@@ -2738,7 +2300,7 @@
       align-items: center;
       justify-content: center;
       background: var(--primary);
-      color: #fff;
+      color: var(--panel);
       font-size: 24px;
       font-weight: bold;
       letter-spacing: 0.04em;
@@ -2790,14 +2352,14 @@
     .rank-1 {
       background: var(--gold-soft);
       border-color: var(--gold);
-      color: #7a5c00;
+      color: var(--gold-text);
     }
 
     /* 2e */
     .rank-2 {
-      background: #eceef3;
-      border-color: #9aa3b0;
-      color: #3d4452;
+      background: var(--silver-soft);
+      border-color: var(--silver-line);
+      color: var(--silver-text);
     }
 
     /* 3e */
@@ -2887,309 +2449,62 @@
     }
 }
 
-/* ── Overrides de direction ───────────────────────────────────────────────
-   Cette couche unique reste après tous les composants historiques afin de
-   préserver la direction visuelle sans dupliquer les vues HTML.
+/* ── Thème A « Blanc & Bleu » ─────────────────────────────────────────────
+   Couche unique et finale : elle remplace les directions visuelles empilées.
+   Surfaces blanches sans bordure posées sur un fond bleuté, accent bleu
+   judogi, typographie Plus Jakarta Sans. Les couleurs viennent de :root.
 */
 @layer utilities {
-  body { background: var(--bg); letter-spacing: -0.005em; }
-  .app-shell { max-width: 1120px; }
-  .topbar { padding: 18px 0 16px; background: transparent; }
-  .brand-copy h1 { margin-bottom: 2px; font-size: 22px; letter-spacing: -0.035em; }
-  .user-pill { border: 0; background: transparent; padding: 0; }
-  .panel { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
-  .dash-hero { gap: 20px; padding: 26px 0 0; background: transparent; border-bottom: 0; }
-  .mode-tabs { gap: 20px; border-bottom: 1px solid var(--line); }
-  .mode-tab { padding: 10px 0 12px; border-radius: 0; font-family: 'Avenir Next', 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 0.875rem; letter-spacing: 0; text-transform: none; }
-  .mode-tabs .mode-tab:hover:not(:disabled),
-  .mode-tabs .mode-tab-active,
-  .mode-tabs .mode-tab-active:hover:not(:disabled) { background: transparent; color: var(--text); }
-  .mode-tabs .mode-tab-active { border-bottom: 2px solid var(--accent); }
-  .home-context-card { margin: 0; padding: 0 0 4px; border: 0; background: transparent; }
-  .home-context-value { font-size: clamp(1.6rem, 5vw, 2.35rem); letter-spacing: -0.04em; }
-  .panel-body { padding: 30px 0 40px; }
-  .panel-header > div:first-child { padding-left: 0; }
-  .panel-header > div:first-child > h2 {
-    margin-left: 0;
-    padding-left: 10px;
-    border-left: 3px solid var(--accent);
-  }
-  .panel-header > div:first-child > .subtitle { padding-left: 13px; }
-  .section { margin-top: 38px; padding-top: 30px; }
-  .section-heading { margin-bottom: 18px; }
-  .section-heading > div { padding-left: 0; }
-  .section-heading > div > h3 { margin-left: 0; }
-  .section-heading > div > .subtitle { padding-left: 13px; }
-  .section-heading h3 {
-    padding-left: 10px;
-    border-left: 3px solid var(--accent);
-    font-size: 1.35rem;
-    letter-spacing: -0.035em;
-  }
-
-  .form-section-heading h3,
-  .stat-label,
-  .meta-label {
-    border-left: 2px solid var(--tatami-line);
-    padding-left: 13px;
-  }
-
-  label:not(.checkbox-row) {
-    border-left: 2px solid var(--tatami-line);
-    padding-left: 13px;
-  }
-
-  .combat-section-kicker,
-  .combat-score-row-title {
-    border-left: 2px solid var(--tatami-line);
-    padding-left: 13px;
-  }
-
-  #combatFormView .form-section-heading .subtitle {
-    padding-left: 15px;
-  }
-
-  #combatFormView .field-hint {
-    padding-left: 15px;
-  }
-
-  .coach-home-grid { gap: 16px; align-items: stretch; }
-  .coach-home-card,
-  .coach-home-card:first-child,
-  .parent-home-card,
-  .parent-home-card:hover {
-    display: grid;
-    min-width: 0;
-    min-height: 216px;
-    align-content: start;
-    gap: 22px;
-    border: 1px solid var(--line);
-    border-left: 2px solid var(--tatami-line);
-    border-radius: 10px;
-    background: var(--panel);
-    padding: 22px;
-    overflow: hidden;
-    position: relative;
-  }
-  .coach-home-card:first-child { border-left-color: var(--tatami-line); }
-  .parent-home-card, .parent-home-card:hover { border-left-color: var(--tatami-line); }
-  .coach-home-card-icon { width: 34px; height: 34px; border-radius: 8px; }
-  .coach-home-card h4 { font-size: 1.2rem; letter-spacing: -0.025em; }
-  #homeAdminActions { gap: 10px; margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
-  #homeAdminActions button { min-height: 52px; }
-  .list { gap: 0; }
-  .list > .card { border-bottom: 1px solid var(--line); border-radius: 0; }
-  .competition-card { display: block; min-width: 0; border: 1px solid var(--line); border-left: 2px solid var(--tatami-line); background: transparent; }
-  .competition-card::before { display: none; }
-  .card-button, .competition-open-button { display: block; position: relative; width: 100%; min-width: 0; padding: 20px 0; background: transparent; }
-  .card-button:hover:not(:disabled) { background: transparent; border-color: transparent; }
-  .card-title { font-size: 1.05rem; letter-spacing: -0.015em; }
-  .meta-label { font-size: 0.68rem; letter-spacing: 0.06em; }
-  .card-open-hint { color: var(--text); font-size: 0.8rem; }
-  @media (min-width: 721px) {
-    .app-shell { padding-top: 24px; }
-    .coach-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .panel-body { padding-top: 38px; }
-  }
-
-/* ── Bordures structurelles communes ──────────────────────────────────────
-   Les overrides mobile/desktop ne doivent pas faire disparaître la limite
-   visuelle des écrans et des widgets principaux. Les contrôles secondaires,
-   onglets et barres d'action restent volontairement sans bordure propre.
-*/
-  .panel,
-  .dash-hero,
-  .home-context-card,
-  .coach-home-card,
-  .parent-home-card,
-  .card,
-  .competition-card,
-  .summary,
-  .empty-state,
-  .filter-bar,
-  .list-summary,
-  .dashboard-summary-card,
-  .coach-assistant-section,
-  .coach-chat-widget {
-    border: 1px solid var(--line);
-  }
-
-  .panel,
-  .dash-hero,
-  .home-context-card,
-  .coach-home-card,
-  .parent-home-card,
-  .card,
-  .competition-card,
-  .summary,
-  .empty-state,
-  .filter-bar,
-  .list-summary,
-  .dashboard-summary-card,
-  .coach-assistant-section,
-  .coach-chat-widget {
-    border-radius: var(--radius-card);
-  }
-
-  .panel {
-    background: var(--panel);
-    overflow: hidden;
-  }
-
-  .dash-hero,
-  .home-context-card,
-  .coach-home-card,
-  .parent-home-card,
-  .filter-bar,
-  .list-summary,
-  .coach-assistant-section,
-  .coach-chat-widget {
-    background: var(--surface);
-  }
-
-  .competition-card {
-    background: var(--panel);
-  }
-
-  .panel-header {
-    border-bottom: 1px solid var(--line);
-  }
-
-  .competition-summary,
-  .coach-performance-summary,
-  .dashboard-summary-card {
-    border-radius: 10px;
-  }
-
-  .competition-summary {
-    border-left: 2px solid var(--tatami-line);
-    background: var(--surface);
-    padding: 16px;
-  }
-
-  .coach-performance-summary {
-    border-left: 2px solid var(--tatami-line);
-    background: var(--accent-soft);
-    padding: 16px;
-  }
-
-  .dashboard-summary-card {
-    border-left: 2px solid var(--tatami-line);
-    padding: 16px;
-  }
-
-  .dashboard-summary-grid {
-    gap: 8px;
-  }
-
-  .dashboard-summary-insight {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(52, 101, 56, 0.2);
-  }
-
-  .dashboard-loading-state {
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-
-  /* Les accents doivent rester après la normalisation commune des cartes. */
-  .competition-card {
-    border-left: 2px solid var(--tatami-line);
-  }
-
-  .coach-home-card,
-  .coach-home-card:first-child,
-  .parent-home-card,
-  .parent-home-card:hover {
-    border-left: 2px solid var(--tatami-line);
-  }
-
-  .coach-home-card:first-child {
-    border-left-color: var(--tatami-line);
-  }
-
-  .parent-home-card,
-  .parent-home-card:hover {
-    border-left-color: var(--tatami-line);
-  }
-
-  @media (min-width: 721px) {
-    .app-shell { max-width: 1120px; }
-    .stats-grid { gap: 10px; }
-    .stat-card { padding: 12px; }
-    .dashboard-summary-card { padding: 18px; }
-  }
-
-  /* Direction moderne : sport premium, surfaces calmes et accents maîtrisés. */
-  :root {
-    --bg: #f3f5f7;
-    --panel: #ffffff;
-    --surface: #ffffff;
-    --text: #18212b;
-    --muted: #65717d;
-    --line: #e1e6eb;
-    --primary: #18212b;
-    --primary-hover: #2a3744;
-    --accent: #c62828;
-    --accent-soft: #fff0f0;
-    --tatami: #f4f6f8;
-    --tatami-line: #d7dde3;
-    --radius: 10px;
-    --radius-card: 14px;
-    --button-focus-ring: rgba(198, 40, 40, 0.2);
-  }
-
+  /* Socle */
   body {
-    font-family: 'Avenir Next', 'Helvetica Neue', system-ui, sans-serif;
-    color: var(--text);
     background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    letter-spacing: 0;
+    word-spacing: 0.04em;
+  }
+
+  h1, h2, h3, h4, .hero-title, .card-title {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 
   .app-shell {
-    max-width: 1180px;
-    padding-bottom: 48px;
+    max-width: 1120px;
+    padding: 0 16px calc(48px + env(safe-area-inset-bottom));
   }
 
-  .topbar {
-    padding-top: 22px;
-    padding-bottom: 20px;
-    border-bottom-color: var(--line);
-  }
-
-  .brand-logo {
-    border-color: var(--text);
-    border-radius: 12px;
-  }
-
-  .brand-copy h1 {
-    font-size: 21px;
-    font-weight: 700;
-  }
-
+  /* En-tête */
   .topbar {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
+    padding: 16px 0 12px;
+    background: transparent;
+    border-bottom: 0;
   }
 
-  .brand {
-    gap: 10px;
-  }
+  .brand { gap: 10px; }
 
   .brand-logo {
     width: 36px;
     height: 36px;
+    border: 0;
+    border-radius: 10px;
   }
 
+  .brand-logo-field { fill: var(--primary); }
+  .brand-logo-belt { stroke: var(--accent); }
+  .brand-logo-mark text { fill: var(--panel); font-family: var(--font-heading); }
+
   .brand-copy h1 {
-    font-size: clamp(1rem, 4.5vw, 1.3rem);
+    margin-bottom: 0;
+    font-size: clamp(1rem, 4.5vw, 1.25rem);
+    font-weight: 800;
     white-space: nowrap;
   }
 
-  .brand-copy .subtitle {
-    font-size: 0.75rem;
-  }
+  .brand-copy .subtitle { font-size: 0.75rem; }
 
   .user-actions {
     width: auto;
@@ -3199,16 +2514,39 @@
   }
 
   .user-pill {
-    max-width: min(28vw, 150px);
+    display: block;
+    max-width: min(34vw, 180px);
     height: auto;
-    min-height: 44px;
-    padding: 4px 0;
+    min-height: 0;
+    max-height: none;
+    padding: 0;
     border: 0;
     background: transparent;
+    color: var(--muted);
     font-size: 0.72rem;
-    line-height: 1.25;
+    font-weight: 600;
+    line-height: 1.3;
     text-align: right;
     white-space: normal;
+  }
+
+  .user-pill strong,
+  .user-pill-role { display: block; }
+
+  .user-pill strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .user-pill-role {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  .logout-button {
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--panel);
   }
 
   .user-actions .offline-status {
@@ -3216,10 +2554,15 @@
     height: auto;
     min-height: 36px;
     max-width: 120px;
-    padding: 6px 8px;
+    padding: 6px 10px;
+    border-color: var(--warning);
+    border-radius: var(--radius);
+    background: var(--warning-soft);
+    color: var(--warning);
     white-space: normal;
   }
 
+  /* Écrans : le contenu est posé directement sur le fond */
   .panel {
     border: 0;
     border-radius: 0;
@@ -3228,156 +2571,605 @@
     overflow: visible;
   }
 
+  /* Le focus programmatique d'un écran (lecteurs d'écran) ne dessine pas de cadre. */
+  .panel:focus,
+  .panel:focus-visible { outline: none; }
+
   .panel-header {
-    padding: 30px 0 20px;
+    gap: 14px;
+    padding: 20px 0 8px;
     border-bottom: 0;
     background: transparent;
   }
 
   .panel-header > div:first-child > h2 {
-    border-left-width: 4px;
-    border-left-color: var(--accent);
-    font-size: clamp(1.65rem, 4vw, 2.2rem);
+    font-size: clamp(1.6rem, 6vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.12;
   }
 
-  .panel-body {
-    padding: 0 0 40px;
-  }
+  .panel-body { padding: 16px 0 40px; }
 
   .dash-hero {
-    padding-top: 22px;
+    gap: 16px;
+    padding: 12px 0 0;
+    border: 0;
+    background: transparent;
   }
 
+  /* Onglets : soulignement bleu sur l'entrée active */
   .mode-tabs {
-    justify-content: flex-start;
-    align-items: center;
-    gap: 24px;
+    gap: 22px;
     min-height: 48px;
-    padding: 0;
+    border-bottom: 1px solid var(--line);
   }
 
   .mode-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     min-height: 44px;
-    padding: 10px 14px;
+    padding: 10px 0 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
     font-weight: 600;
-    line-height: 1.2;
   }
 
-  .section {
-    margin-top: 32px;
-    padding-top: 26px;
-    border-top-color: var(--line);
+  .mode-tabs .mode-tab:hover:not(:disabled) {
+    background: transparent;
+    color: var(--text);
   }
+
+  .mode-tabs .mode-tab-active,
+  .mode-tabs .mode-tab-active:hover:not(:disabled) {
+    border-bottom-color: var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-weight: 800;
+  }
+
+  /* Sections et titres, sans filet décoratif */
+  .section {
+    margin-top: 28px;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .section-heading { margin-bottom: 12px; }
 
   .section-heading h3 {
-    font-size: 1.2rem;
-    border-left-width: 3px;
-    border-left-color: var(--accent);
+    padding-left: 0;
+    border-left: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
   }
 
-  .form-section-heading h3,
-  .stat-label,
-  .meta-label {
-    border-left-width: 2px;
-    border-left-color: var(--tatami-line);
-    padding-left: 13px;
+  .form-section {
+    padding: 20px 0 0;
+    border-top: 0;
   }
 
-  label:not(.checkbox-row) {
-    border-left-width: 2px;
-    border-left-color: var(--tatami-line);
-    padding-left: 13px;
-  }
-
-  .combat-section-kicker,
-  .combat-score-row-title {
-    border-left-width: 2px;
-    border-left-color: var(--tatami-line);
-    padding-left: 13px;
-  }
-
-  #combatFormView .form-section-heading .subtitle {
-    padding-left: 15px;
-  }
-
-  #combatFormView .panel-body > .form-section:not(.combat-quick-section) {
-    margin-left: 9px;
-    margin-right: 9px;
+  .form-section-heading h3 {
+    font-size: 1.05rem;
+    font-weight: 800;
   }
 
   .subtitle {
     color: var(--muted);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
+  label:not(.checkbox-row),
+  .stat-label,
+  .meta-label,
+  .split-stat-label,
+  .coach-assessment-label,
+  .combat-score-row-title {
+    padding-left: 0;
+    border-left: 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .combat-section-kicker,
+  .coach-home-card-kicker,
+  .hero-kicker {
+    padding-left: 0;
+    border-left: 0;
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .field-hint {
+    margin: -10px 0 18px;
+    color: var(--muted);
+  }
+
+  .combat-score-header .field-hint,
+  .form-section-heading .field-hint { margin: 2px 0 0; }
+
+  /* Champs et boutons */
+  input,
+  select,
+  textarea,
+  .coach-assessment-textarea {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus,
+  .coach-assessment-textarea:focus {
+    border-color: var(--accent);
+    outline: 3px solid var(--button-focus-ring);
+  }
+
+  button,
+  .button {
+    border-radius: var(--radius);
+    font-weight: 700;
+  }
+
+  .button-secondary,
+  .button-google {
+    border-color: var(--line);
+    background: var(--panel);
+  }
+
+  /* Action destructive : visible mais jamais au même poids que l'action principale. */
+  .button-danger {
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--danger);
+  }
+
+  .button-danger:hover:not(:disabled) {
+    border-color: var(--button-danger-border);
+    background: var(--danger-soft);
+  }
+
+  .checkbox-row { border-radius: var(--radius); background: var(--panel); }
+
+  /* Surfaces : blanches, sans bordure ni ombre */
   .card,
   .summary,
   .stat-card,
   .filter-bar,
   .list-summary,
-  .coach-assistant-section,
-  .coach-chat-widget,
-  .empty-state {
-    border-color: var(--line);
-    border-radius: var(--radius-card);
-    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
-  }
-
+  .empty-state,
+  .empty-action,
+  .judoka-hero,
+  .dashboard-summary-card,
   .coach-home-card,
-  .parent-home-card {
-    border: 1px solid var(--line);
-    border-top: 3px solid var(--accent);
+  .parent-home-card,
+  .csv-import-help,
+  .sk-card {
+    border: 0;
     border-radius: var(--radius-card);
     background: var(--panel);
-    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
+    box-shadow: none;
   }
 
-  .coach-home-card:first-child {
-    border-top-color: var(--accent);
+  .summary,
+  .stat-card,
+  .judoka-hero,
+  .dashboard-summary-card { padding: 16px; }
+
+  .competition-summary { gap: 0; }
+
+  .meta-row { border-top: 1px solid var(--line); }
+  .meta-row:first-of-type { border-top: 0; }
+
+  .card:hover,
+  .summary:hover,
+  .stat-card:hover {
+    transform: none;
+    box-shadow: none;
   }
 
-  button,
-  .button,
-  input,
-  select,
-  textarea {
-    border-radius: 10px;
+  .coach-performance-summary {
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
-  button,
-  .button {
-    font-weight: 650;
+  .stat-value,
+  .split-stat-value {
+    font-family: var(--font-heading);
+    font-weight: 800;
   }
 
-  .button-secondary {
-    border-color: var(--line);
-    background: var(--panel);
+  .stat-card-highlight,
+  .stat-card-success,
+  .stat-card-danger { background: var(--panel); }
+
+  .summary-metric {
+    border: 0;
+    background: var(--tatami);
+  }
+
+  .summary-metric-success { background: var(--success-soft); }
+  .summary-metric-warning { background: var(--warning-soft); }
+
+  .dashboard-summary-insight {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .dashboard-loading-state {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .empty-state,
+  .empty-action { color: var(--muted); }
+
+  .empty-action-icon {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .sk-line {
+    background: linear-gradient(90deg, var(--line) 25%, var(--tatami) 50%, var(--line) 75%);
+    background-size: 200% 100%;
+  }
+
+  /* Listes de compétitions */
+  .list { gap: 10px; }
+
+  .list > .card {
+    border-bottom: 0;
+    border-radius: var(--radius-card);
   }
 
   .competition-card {
-    border-color: var(--line);
-    border-left: 3px solid var(--tatami-line);
+    display: block;
+    min-width: 0;
+    border: 0;
     border-radius: var(--radius-card);
     background: var(--panel);
-    margin-bottom: 10px;
   }
 
-  .competition-card .card-button,
-  .competition-card .competition-open-button {
-    padding: 18px;
+  .competition-card::before { display: none; }
+
+  .card-button,
+  .competition-open-button {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 16px;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: transparent;
   }
 
-  #combatFormView .combat-quick-section {
-    border-color: var(--line);
+  .card-button:hover:not(:disabled) {
+    border-color: transparent;
+    background: var(--tatami);
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .card-open-hint {
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+
+  .coach-review-badge,
+  .coach-card-status { justify-self: start; }
+
+  /* Fiche compétition le jour J : les combats passent en premier. */
+  .competition-day-first {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .competition-day-first > .competition-combats-section {
+    order: -1;
+    margin-top: 0;
+  }
+
+  .competition-day-first > .competition-summary { margin-top: 28px; }
+
+  .combat-scores-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .combat-scores-label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  /* Listes d'autocomplétion : lignes claires, alignées à gauche (pas des boutons pleins). */
+  .autocomplete-dropdown {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: var(--panel);
-    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.04);
+    box-shadow: 0 8px 24px rgba(14, 26, 43, 0.08);
   }
+
+  .autocomplete-option {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--panel);
+    color: var(--text);
+    font-weight: 500;
+    text-align: left;
+  }
+
+  .autocomplete-option:hover:not(:disabled),
+  .autocomplete-option:focus-visible {
+    background: var(--accent-soft);
+    color: var(--text);
+    transform: none;
+  }
+
+  .autocomplete-option-copy strong { font-weight: 700; }
+
+  /* Jour J coach : compétitions de la semaine en tête de l'accueil */
+  .coach-today {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .coach-today-card {
+    display: grid;
+    justify-content: stretch;
+    justify-items: start;
+    gap: 2px;
+    min-height: 0;
+    padding: 16px 18px;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    color: var(--text);
+    text-align: left;
+  }
+
+  .coach-today-card:hover:not(:disabled) { background: var(--accent-soft); }
+
+  .coach-today-card-now {
+    background: var(--accent);
+    color: var(--panel);
+  }
+
+  .coach-today-card-now:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
+
+  .coach-today-day {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .coach-today-name {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .coach-today-meta { font-size: 0.85rem; font-weight: 600; opacity: 0.85; }
+
+  .list-search {
+    margin-bottom: 12px;
+    padding: 12px 16px 0;
+  }
+
+  .list-search input { margin: 6px 0 12px; }
+
+  .participant-card .card-actions { padding: 0 16px 16px; }
+
+  .coach-card-status-upcoming {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--panel);
+  }
+
+  /* Cases à cocher : taille propre, sans hériter de la hauteur des champs texte. */
+  .checkbox-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--accent);
+  }
+
+  /* Accueils */
+  .coach-home-grid {
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .coach-home-card,
+  .coach-home-card:first-child,
+  .parent-home-card,
+  .parent-home-card:hover {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 18px;
+    padding: 20px;
+    border: 0;
+  }
+
+  .coach-home-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .coach-home-card h4 {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  #homeAdminActions {
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  #homeAdminActions button { min-height: 56px; }
+  #homeAdminActions .home-context-action { border-radius: var(--radius-card); }
+
+  /* Fiche judoka */
+  .judoka-hero { border-left: 0; }
+
+  .hero-avatar {
+    border-radius: var(--radius-card);
+    background: var(--accent);
+  }
+
+  /* Badges : formes pleines ou contour pour se lire sans la couleur */
+  .result-badge {
+    border-radius: var(--radius-pill);
+    letter-spacing: 0;
+  }
+
+  /* Les classes longues sont celles que l'application génère (result-<résultat>). */
+  .result-victoire,
+  .result-v {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--panel);
+    letter-spacing: 0.02em;
+  }
+
+  .result-défaite,
+  .result-d {
+    border: 1.5px solid var(--muted);
+    background: var(--panel);
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .result-egalité,
+  .result-égalité,
+  .result-e {
+    border-color: var(--accent-soft);
+    background: var(--accent-soft);
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .badge-technique,
+  .rank-unclassified {
+    border-color: var(--tatami);
+    background: var(--tatami);
+    color: var(--muted);
+  }
+
+  .classement-badge {
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+
+  .competition-chip { background: var(--accent-soft); }
+
+  /* Saisie d'un combat : chaque étape est une carte */
+  #combatFormView .panel-body > .form-section,
+  .combat-quick-section {
+    margin: 12px 0 0;
+    padding: 16px;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--panel);
+  }
+
+  .combat-score-row,
+  .combat-score-empty {
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--tatami);
+  }
+
+  /* Barre d'action collante en mobile */
+  .mobile-action-bar {
+    margin-left: -16px;
+    margin-right: -16px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: none;
+  }
+
+  #combatFormView .mobile-action-bar {
+    position: static;
+    margin: 24px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .tooltip,
+  .info-tip { background: var(--accent-soft); color: var(--accent); }
 
   @media (min-width: 721px) {
-    #combatFormView .form-actions {
+    .app-shell { padding: 24px 24px 56px; }
+
+    .topbar { gap: 16px; }
+
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+    }
+
+    .brand-copy h1 { font-size: 21px; }
+
+    .user-pill {
+      max-width: 260px;
+      font-size: 0.875rem;
+    }
+
+    .panel {
+      border: 0;
+      border-radius: 0;
+    }
+
+    .panel-header { padding-top: 28px; }
+    .panel-body { padding: 20px 0 56px; }
+
+    .coach-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .stats-grid { gap: 10px; }
+
+    .mobile-action-bar {
+      margin: 14px 0 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .form-actions {
       flex-direction: row;
       justify-content: flex-end;
       gap: 12px;
@@ -3385,44 +3177,15 @@
     }
   }
 
-  @media (max-width: 720px) {
-    #combatFormView .mobile-action-bar {
-      position: static;
-      margin: 24px 0 0;
-      padding: 0;
-      background: transparent;
-      border: 0;
-    }
-  }
-
-  @media (min-width: 721px) {
-    .topbar {
-      gap: 16px;
+  @media (max-width: 360px) {
+    .app-shell {
+      padding-left: 12px;
+      padding-right: 12px;
     }
 
-    .brand-logo {
-      width: 52px;
-      height: 52px;
-    }
-
-    .brand-copy h1 {
-      font-size: 21px;
-    }
-
-    .user-pill {
-      max-width: 240px;
-      min-height: 38px;
-      font-size: 0.875rem;
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .panel-header {
-      padding-top: 36px;
-    }
-
-    .panel-body {
-      padding-bottom: 56px;
+    .mobile-action-bar {
+      margin-left: -12px;
+      margin-right: -12px;
     }
   }
 }

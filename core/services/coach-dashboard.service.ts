@@ -1,9 +1,5 @@
 import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics";
-import {
-  createCoachAssistantSearch,
-  type CoachChatDatasets,
-  type AnthropicClient
-} from "./coach-assistant-search";
+import { createCoachAssistantSearch, type CoachChatDatasets } from "./coach-assistant-search";
 import {
   filterCompetitionsByScope,
   filterCompetitionsBySelection,
@@ -17,16 +13,14 @@ import type { CompetitionsRepository } from "../repositories/competitions.reposi
 import type { JudokasRepository } from "../repositories/judokas.repository";
 import type {
   CoachAssistantMatch,
-  CoachAssistantResponse,
   CoachChatFilters,
-  CoachChatHistoryMessage,
   CoachDashboard,
   CoachDashboardFilters,
   RpcMethods
 } from "../types";
 import type { UserContextService } from "./user-context.service";
 
-type CoachDashboardMethods = Pick<RpcMethods, "askCoachAssistant" | "getCoachDashboard" | "searchCombats">;
+type CoachDashboardMethods = Pick<RpcMethods, "getCoachDashboard" | "searchCombats">;
 
 function buildCoachDashboardCompetitionOptions(competitionRows: CompetitionRow[]) {
   const optionsByKey = new Map<
@@ -57,7 +51,6 @@ export interface CoachDashboardServiceDeps {
   combatScoresRepository: CombatScoresRepository;
   competitionsRepository: CompetitionsRepository;
   getCurrentDate?: () => string;
-  anthropicClient?: AnthropicClient;
   judokasRepository: JudokasRepository;
   userContextService: UserContextService;
 }
@@ -74,11 +67,10 @@ export default function createCoachDashboardService(
     combatScoresRepository,
     competitionsRepository,
     getCurrentDate = () => new Date().toISOString().slice(0, 10),
-    anthropicClient,
     judokasRepository,
     userContextService
   } = deps;
-  const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate, anthropicClient });
+  const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate });
 
   async function requireCoach(email: string, message: string): Promise<void> {
     const { domainUser } = await userContextService.getDomainUserContext(email);
@@ -131,15 +123,6 @@ export default function createCoachDashboardService(
     };
   }
 
-  async function askCoachAssistant(
-    email: string,
-    question: string,
-    history: CoachChatHistoryMessage[] = []
-  ): Promise<CoachAssistantResponse> {
-    await requireCoach(email, "Assistant coach réservé aux coachs.");
-    return coachAssistantSearch.ask(question, await loadCoachChatDatasets(), history);
-  }
-
   async function searchCombats(
     email: string,
     filters: CoachChatFilters = {},
@@ -150,6 +133,6 @@ export default function createCoachDashboardService(
   }
 
   return {
-    methods: { askCoachAssistant, getCoachDashboard, searchCombats }
+    methods: { getCoachDashboard, searchCombats }
   };
 }

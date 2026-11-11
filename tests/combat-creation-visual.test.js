@@ -148,8 +148,8 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.getByRole("button", { name: "Ajouter un combat" }).click();
     await expect(page.locator("#combatFormView")).toBeVisible();
     await expect(page.locator("#combatFormView .combat-quick-section")).toHaveCSS(
-      "border-left-color",
-      "rgb(225, 230, 235)"
+      "background-color",
+      "rgb(255, 255, 255)"
     );
     if (name === "desktop") {
       await expect(page.locator("#combatFormView .form-actions")).toHaveCSS("flex-direction", "row");
@@ -165,14 +165,14 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.locator(".combat-score-row input").fill("O-soto-gari");
     await page.locator(".combat-score-row select").nth(1).selectOption("Ippon");
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
-    const borderlessLabels = await page.locator(
+    const borderedLabels = await page.locator(
       ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
     ).evaluateAll((elements) =>
       elements
-        .filter((element) => Number.parseFloat(getComputedStyle(element).borderLeftWidth) === 0)
+        .filter((element) => Number.parseFloat(getComputedStyle(element).borderLeftWidth) > 0)
         .map((element) => element.textContent.trim())
     );
-    assert.deepEqual(borderlessLabels, []);
+    assert.deepEqual(borderedLabels, []);
     const actionOverlap = await page.evaluate(() => {
       const actions = document.querySelector("#combatFormView .mobile-action-bar").getBoundingClientRect();
       const notes = document.querySelector("#combat_deroule").getBoundingClientRect();

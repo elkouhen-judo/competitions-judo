@@ -1430,3 +1430,12 @@ test("optional person name allows missing parts without throwing", () => {
   const partial = createOptionalPersonName({ firstName: " Aya " });
   assert.equal(partial.displayName(), "Aya");
 });
+
+test("normalizeBeltColor ramène la casse et les accents à la couleur proposée", () => {
+  const { normalizeBeltColor } = require("../core/domain/access/belt-color");
+  assert.equal(normalizeBeltColor("marron"), "Marron");
+  assert.equal(normalizeBeltColor(" blanc - jaune "), "Blanc-Jaune");
+  assert.equal(normalizeBeltColor("NOIR 1ER DAN"), "Noir 1er Dan");
+  assert.equal(normalizeBeltColor("Rouge"), "Rouge");
+  assert.equal(normalizeBeltColor(null), "");
+});

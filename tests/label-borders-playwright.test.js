@@ -86,14 +86,14 @@ for (const [name, viewport] of [
     await captureLogo(viewport, name);
   });
 
-  test(`les labels de section gardent une bordure gauche visible et alignée sur ${name}`, async () => {
+  test(`les labels de section n'ont pas de filet gauche décoratif et restent alignés sur ${name}`, async () => {
     const headings = await inspectHeadingBorders(viewport);
     assert.ok(headings.length > 0, "aucun label de widget trouvé dans le shell");
 
     for (const heading of headings) {
       assert.ok(
-        heading.borderLeftWidth > 0 && heading.borderLeftStyle !== "none",
-        `${name}: « ${heading.text} » doit avoir une bordure gauche visible`
+        heading.borderLeftWidth === 0 || heading.borderLeftStyle === "none",
+        `${name}: « ${heading.text} » ne doit pas avoir de bordure gauche (thème A)`
       );
       assert.ok(
         heading.left >= heading.containerLeft - 0.5,

@@ -14,12 +14,31 @@
     judokaName: string;
     result: string;
     resultClass: string;
+    combatSummary: string;
+    hasCombats: boolean;
+  }
+
+  // Ordre d'affichage des participants : podium d'abord, puis places suivantes, non classés en dernier.
+  const RANKING_ORDER: Record<string, number> = {
+    "1er": 1, "2e": 2, "3e": 3, "4e": 4, "5e": 5, "6e": 6, "7e": 7, "8e": 8, "non classé": 90
+  };
+
+  function getRankingOrder(value: unknown): number {
+    return RANKING_ORDER[String(value || "").trim().toLowerCase()] || 99;
+  }
+
+  function formatCombatSummary(record: { total: number; wins: number; losses: number; draws: number } | undefined) {
+    if (!record || !record.total) return "Aucun combat saisi";
+    const parts = [`${record.wins}V`, `${record.losses}D`];
+    if (record.draws) parts.push(`${record.draws}N`);
+    return `${record.total} combat${record.total > 1 ? "s" : ""} · ${parts.join(" ")}`;
   }
 
   function createKirokuClubCompetitionScreen(app: KirokuApp, deps: ClubCompetitionDeps) {
     const { defaultListPageSize, state, ui, notifications } = app;
     const {
       cleanText,
+      formatDate,
       formatCompetitionRanking,
       getClassementBadgeClass,
       getCurrentLocalDate,
@@ -44,6 +63,8 @@
     };
     const defaultClubCompetitionDetailViewState = {
       clubCompetitionDetailTitle: "Compétition club",
+      clubCompetitionDetailEditing: false,
+      clubCompetitionDetailSummary: "",
       clubCompetitionDetailForm: {
         clubCompetitionId: "",
         name: "",
@@ -177,6 +198,8 @@
         clubCompetitionDetailViewModel,
         {
           cancelClubCompetitionDetail,
+          startClubCompetitionDetailEdit,
+          cancelClubCompetitionDetailEdit,
           confirmDeleteClubCompetition,
           confirmDetachClubParticipant,
           openCompetitionFromClubDetail,
@@ -320,6 +343,8 @@
       clearMessage();
       ensureClubCompetitionDetailViewModel();
       clubCompetitionDetailViewModel.clubCompetitionDetailTitle = "Chargement...";
+      clubCompetitionDetailViewModel.clubCompetitionDetailSummary = "";
+      clubCompetitionDetailViewModel.clubCompetitionDetailEditing = false;
       clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = [];
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = [];
       clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked = false;
@@ -344,16 +369,38 @@
             level: cc.niveau || ""
           });
           clubCompetitionDetailViewModel.clubCompetitionDetailTitle = cc.nom || "Compétition club";
-          clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants =
-            data.participations.map((p) => {
+          clubCompetitionDetailViewModel.clubCompetitionDetailSummary = [
+            formatDate(cc.date),
+            cc.categorie_age,
+            cc.niveau
+          ]
+            .map((value) => cleanText(value))
+            .filter(Boolean)
+            .join(" · ");
+          const combatRecords = data.combatRecords || {};
+          clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = data.participations
+            .map((p) => {
               const judoka = judokasById.get(String(p.ownerJudokaId));
+              const record = combatRecords[String(p.competitionId || "")];
               return {
                 competitionId: p.competitionId || "",
                 judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
                 result: formatCompetitionRanking(p.result) || "Non classé",
-                resultClass: getClassementBadgeClass(p.result)
+                resultClass: getClassementBadgeClass(p.result),
+                combatSummary: formatCombatSummary(record),
+                hasCombats: Boolean(record && record.total),
+                order: getRankingOrder(p.result)
               };
-            });
+            })
+            .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
+            .map(({ competitionId, judokaName, result, resultClass, combatSummary, hasCombats }) => ({
+              competitionId,
+              judokaName,
+              result,
+              resultClass,
+              combatSummary,
+              hasCombats
+            }));
           clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
             Boolean(cc.date) && String(cc.date) <= new Date().toISOString().slice(0, 10);
           state.clubCompetitionParticipantsCurrentPage = 1;
@@ -425,6 +472,20 @@
 
     function cancelClubCompetitionDetail() {
       showView("homeView");
+    }
+
+    function startClubCompetitionDetailEdit() {
+      clubCompetitionDetailViewModel.clubCompetitionDetailEditing = true;
+    }
+
+    function cancelClubCompetitionDetailEdit() {
+      const clubCompetitionId =
+        clubCompetitionDetailViewModel.clubCompetitionDetailForm.clubCompetitionId;
+      if (clubCompetitionId) {
+        openClubCompetition(clubCompetitionId);
+      } else {
+        clubCompetitionDetailViewModel.clubCompetitionDetailEditing = false;
+      }
     }
 
     function confirmDeleteClubCompetition() {

@@ -16,7 +16,7 @@
             v-for="subMode in coachSubModes"
             :key="subMode.key"
             type="button"
-            :class="['mode-tab', { 'mode-tab-active': subMode.key === currentHomeMode }]"
+            :class="['mode-tab', { 'mode-tab-active': isPrimaryModeActive(subMode.key) }]"
             @click="handleModeTabClick(subMode.key)">
             {{ subMode.label }}
           </button>
@@ -30,7 +30,7 @@
               <button v-for="option in filterOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectFilterJudoka(option)">
                 <div class="autocomplete-option-copy">
                   <strong>{{ option.name }}</strong>
-                  <span class="autocomplete-option-meta">{{ option.meta }}</span>
+                  <span v-if="option.meta" class="autocomplete-option-meta">{{ option.meta }}</span>
                 </div>
               </button>
             </div>
@@ -48,7 +48,7 @@
               <div class="coach-home-card-head">
                 <div class="coach-home-card-copy">
                   <span class="coach-home-card-kicker">Compétitions</span>
-                  <h4>Mes compétitions</h4>
+                  <h4>Ajouter une compétition</h4>
                   <p>Ajouter une compétition, préparer les rendez-vous à venir et consulter mes résultats.</p>
                 </div>
                 <span class="coach-home-card-icon" aria-hidden="true">
@@ -156,6 +156,13 @@
         </div>
 
         <div v-if="showCoachHub" class="section coach-home-section">
+          <div v-if="coachUpcomingEvents.length" class="coach-today" aria-label="Compétitions à venir cette semaine">
+            <button v-for="event in coachUpcomingEvents" :key="event.clubCompetitionId" type="button" class="coach-today-card" :class="{ 'coach-today-card-now': event.isToday }" @click="openClubCompetition(event.clubCompetitionId)">
+              <span class="coach-today-day">{{ event.dayLabel }}</span>
+              <span class="coach-today-name">{{ event.name }}</span>
+              <span class="coach-today-meta">{{ event.participantLabel }} · Ouvrir le suivi →</span>
+            </button>
+          </div>
           <div class="coach-home-grid">
             <article class="card coach-home-card">
               <div class="coach-home-card-head">
@@ -205,22 +212,6 @@
                 Voir les statistiques
               </button>
             </article>
-            <article class="card coach-home-card">
-              <div class="coach-home-card-head">
-                <div class="coach-home-card-copy">
-                  <span class="coach-home-card-kicker">Assistant</span>
-                  <h4>Chat coach <span class="beta-badge">Bêta</span></h4>
-                  <p>Poser une question en langage naturel sur les judokas, compétitions ou combats enregistrés.</p>
-                </div>
-                <span class="coach-home-card-icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                </span>
-              </div>
-              <button type="button" class="button-secondary" @click="openCoachChatHub()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                Ouvrir le chat
-              </button>
-            </article>
           </div>
         </div>
 
@@ -253,9 +244,13 @@
         <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
           <div class="section-heading">
             <div>
-              <h3>Derniers résultats</h3>
-              <p class="subtitle">Suivi club et bilans à compléter.</p>
+              <h3>Compétitions club</h3>
+              <p class="subtitle">À venir en tête, puis le suivi des résultats et des bilans.</p>
             </div>
+          </div>
+          <div class="filter-bar list-search">
+            <label for="clubCompetitionsSearch">Rechercher une compétition</label>
+            <input type="search" id="clubCompetitionsSearch" placeholder="Nom ou date (jj/mm/aaaa)" autocomplete="off" :value="clubCompetitionsSearchText" @input="updateClubCompetitionsSearch($event.target.value)">
           </div>
           <div id="clubCompetitionsList">
             <div v-if="!hasClubCompetitions" class="empty-action">
@@ -281,7 +276,7 @@
                       <span>{{ cc.summary }}</span>
                       <span v-if="cc.missingCoachReviewCount" class="coach-summary-warning">{{ cc.missingCoachReviewCount }} bilan(s) coach manquant(s)</span>
                     </span>
-                    <span class="coach-card-status">{{ cc.statusLabel }}</span>
+                    <span class="coach-card-status" :class="{ 'coach-card-status-upcoming': cc.isUpcoming }">{{ cc.statusLabel }}</span>
                     <span class="card-open-hint">Ouvrir le suivi</span>
                   </span>
                 </button>
@@ -301,7 +296,7 @@
           <div class="section-heading">
             <div>
               <h3 id="homeCompetitionsTitle">{{ competitionsTitle }}</h3>
-              <p class="subtitle">Historique du judoka actif.</p>
+              <p class="subtitle">{{ competitionsSubtitle }}</p>
             </div>
           </div>
           <div id="competitionsList">
@@ -328,6 +323,7 @@
                         <span class="meta-value">{{ competition.judokaName }}</span>
                       </span>
                     </span>
+                    <span v-if="competition.upcomingLabel" class="coach-card-status coach-card-status-upcoming">{{ competition.upcomingLabel }}</span>
                     <span v-if="competition.hasCoachReview" class="coach-review-badge">Bilan coach</span>
                     <span class="card-open-hint">Ouvrir les combats</span>
                   </span>

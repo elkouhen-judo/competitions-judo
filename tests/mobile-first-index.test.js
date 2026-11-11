@@ -32,7 +32,6 @@ const client = [
     "app-screen-competition.js",
     "app-screen-admins.js",
     "app-screen-coach-dashboard.js",
-    "coach-chat-widget.js",
     "app-runtime.js",
     "app.js"
   ].map((file) => fs.readFileSync(path.join(__dirname, "..", "assets", "dist", file), "utf8"))
@@ -191,7 +190,7 @@ test("home profiles use the same activity-card journey", () => {
   const judokaHubMarkup = bundle.match(/<div v-if="showJudokaHub" class="section judoka-home-section">[\s\S]*?<div v-if="showParentHub"/)?.[0] || "";
   assert.doesNotMatch(judokaHubMarkup, /<h3>Mon parcours<\/h3>/);
   assert.doesNotMatch(judokaHubMarkup, /Choisissez l'action à lancer\./);
-  assert.match(bundle, /<h4>Mes compétitions<\/h4>/);
+  assert.match(bundle, /<h4>Ajouter une compétition<\/h4>/);
   assert.match(bundle, /@click="showHomeCompetitionForm\(\)">/);
   assert.match(bundle, /<h4>Ma progression<\/h4>/);
   assert.match(bundle, /@click="openHomeJudokaProfile\(\)">/);
@@ -336,7 +335,7 @@ test("judoka profile screen is available in the mobile action flow", () => {
   assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
   assert.match(bundle, /id="judokaHeroRecord" class="result-badge"/);
   assert.match(bundle, /Judoka actif/);
-  assert.match(bundle, /Résultats du judoka actif/);
+  assert.match(bundle, /Compétitions du judoka actif/);
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /Résumé performance/);
   assert.match(
@@ -426,11 +425,7 @@ test("mobile actions stay explicit instead of icon-only", () => {
     bundle,
     /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer le combat\s*<\/button>/
   );
-  assert.match(
-    bundle,
-    /@click="deleteCombat\(combat\.combatId\)"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/
-  );
-  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*?>[\s\S]*?Supprimer\s*<\/button>/);
+  assert.match(bundle, /id="deleteCompetitionButton"[\s\S]*?>[\s\S]*?Supprimer la compétition\s*<\/button>/);
 });
 
 test("parent competition detail exposes coach objectives", () => {
@@ -453,14 +448,14 @@ test("parent competition detail exposes coach objectives", () => {
   assert.doesNotMatch(bundle, /title="Supprimer"/);
 });
 
-test("coach dashboard exposes its core filters, metrics, and assistant features", () => {
+test("coach dashboard exposes its core filters and metrics without a chat", () => {
   assert.match(bundle, /id="coachDashboardView" class="panel hidden" v-cloak/);
   assert.match(
     bundle,
     /const viewIds = \[\s*"loginView",\s*"homeView",\s*"judokaView",\s*"adminsView",\s*"coachDashboardView",\s*"competitionView"/
   );
   assert.match(bundle, /v-model="coachDashboardForm\.ageCategory"/);
-  assert.match(bundle, /v-show="activeCoachDashboardTab === 'chat'"/);
+  assert.doesNotMatch(bundle, /activeCoachDashboardTab/);
   assert.match(
     bundle,
     /id="coachDashboardView" class="panel hidden" v-cloak>\s*<div class="dash-hero">/
@@ -470,15 +465,9 @@ test("coach dashboard exposes its core filters, metrics, and assistant features"
   assert.match(bundle, /@click="showPersonalSpace\(\)">Mon espace/);
   assert.doesNotMatch(bundle, /@click="showCoachCompetitions\(\)">Compétition/);
   assert.doesNotMatch(bundle, /@click="showCoachJudoka\(\)">Judoka/);
-  assert.match(bundle, /activeCoachDashboardTab === 'stats'/);
   assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,500}<div class="panel-header">/);
   assert.doesNotMatch(bundle, /id="coachDashboardView"[\s\S]{0,900}Retour/);
-  assert.match(client, /Chat coach — quota LLM limité/);
-  assert.match(bundle, /id="coachChatWidget"/);
-  assert.match(client, /id:"coachAssistantQuestion",type:"search"/);
-  assert.match(client, /function mountCoachChatWidget\(\)/);
-  assert.match(client, /function showCoachChat\(\)/);
-  assert.match(client, /api\/coach-chat/);
+  assert.doesNotMatch(bundle, /coachChatWidget|Chat coach|api\/coach-chat|showCoachChat|mountCoachChatWidget/);
   assert.match(
     bundle,
     /id="coachDashboard_date_debut" type="date" v-model="coachDashboardForm\.dateFrom"/
@@ -735,9 +724,10 @@ test("coach can open club competition creation and participant management UI", (
   );
   assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
   assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
-  assert.match(bundle, /Compétition terminée — les participants sont verrouillés/);
+  assert.match(bundle, /Compétition passée ou en cours — les participants sont verrouillés/);
   assert.match(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
-  assert.match(bundle, /:disabled="isSubmitting \|\| clubCompetitionParticipantsLocked"/);
+  assert.match(bundle, /v-if="clubCompetitionDetailEditing && !clubCompetitionParticipantsLocked" class="card-actions"/);
+  assert.match(bundle, /@click="startClubCompetitionDetailEdit\(\)"/);
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);

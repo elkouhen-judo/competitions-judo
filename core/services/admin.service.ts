@@ -1,3 +1,4 @@
+import { normalizeBeltColor } from "../domain/access/belt-color";
 import { toCanonicalJudoka, toInvitationReadModel } from "./domain-adapters";
 import {
   applyImportProfileUpdatesToRow,
@@ -343,7 +344,7 @@ function createUserImportController(deps: UserImportControllerDeps) {
     const rawEmail = cleanText(row.email);
     const rawParentEmail = cleanText(row.parentemail);
     const ageCategory = cleanText(row.agecategory);
-    const beltColor = cleanText(row.couleur_ceinture);
+    const beltColor = normalizeBeltColor(cleanText(row.couleur_ceinture));
     const gender = cleanText(row.genre);
     const yearInCategory = createYearInCategory(cleanText(row.anneecategorie), ageCategory);
     const handedness = createHandedness(cleanText(row.lateralite));
@@ -709,7 +710,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       idJudoka,
       String(ageCategory || ""),
       validatedWeightCategory,
-      String(beltColor || ""),
+      normalizeBeltColor(beltColor),
       String(gender || ""),
       validatedYearInCategory,
       validatedHandedness

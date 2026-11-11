@@ -3,24 +3,11 @@
         <nav class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
           <button type="button" class="mode-tab" @click="showCoachHome()">Accueil coach</button>
           <button type="button" class="mode-tab" @click="showPersonalSpace()">Mon espace</button>
-        </nav>
-        <nav class="mode-tabs coach-dashboard-tabs" aria-label="Section du tableau de bord">
-          <button type="button" class="mode-tab" :class="{ 'mode-tab-active': activeCoachDashboardTab === 'stats' }" @click="selectCoachDashboardTab('stats')">Statistiques</button>
-          <button type="button" class="mode-tab" :class="{ 'mode-tab-active': activeCoachDashboardTab === 'chat' }" @click="selectCoachDashboardTab('chat')">Assistant coach</button>
+          <span class="mode-tab mode-tab-active" aria-current="page">Statistiques</span>
         </nav>
       </div>
       <div class="panel-body">
-        <div v-show="activeCoachDashboardTab === 'chat'" class="section coach-assistant-section" aria-label="Assistant coach bêta">
-          <div class="section-heading">
-            <div>
-              <h3>Chat coach <span class="beta-badge">Bêta</span></h3>
-              <p class="subtitle">Recherche dans les attributs judoka, compétition, combat et scores enregistrés.</p>
-            </div>
-          </div>
-          <div id="coachChatWidget"></div>
-        </div>
-
-        <div v-show="activeCoachDashboardTab === 'stats'" class="coach-dashboard-stats-tab">
+        <div class="coach-dashboard-stats-tab">
         <div class="section">
           <div class="section-heading coach-filter-heading">
             <div>
@@ -84,6 +71,7 @@
             <span v-if="coachDashboardForm.dateFrom">Depuis {{ coachDashboardForm.dateFrom }}</span>
             <span v-if="coachDashboardForm.dateTo">Jusqu'au {{ coachDashboardForm.dateTo }}</span>
             <span v-if="coachDashboardForm.competitionIds.length">{{ coachDashboardForm.competitionIds.length }} compétition(s)</span>
+            <span v-if="!coachDashboardForm.ageCategory && !coachDashboardForm.dateFrom && !coachDashboardForm.dateTo && !coachDashboardForm.competitionIds.length">Tout le club, toutes catégories</span>
           </div>
         </div>
 

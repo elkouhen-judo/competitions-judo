@@ -46,6 +46,7 @@ function createInitialState(): KirokuAppState {
     homeFilterJudokaId: "",
     competitionsCurrentPage: 1,
     clubCompetitionsCurrentPage: 1,
+    clubCompetitionsSearchText: "",
     clubCompetitionParticipantsCurrentPage: 1,
     clubCompetitionAvailableJudokasCurrentPage: 1,
     clubCompetitionFormParticipantsCurrentPage: 1,
@@ -180,8 +181,7 @@ function createInitialState(): KirokuAppState {
         homeMode: params.get("mode") || undefined,
         homeFilterJudokaId: params.get("judoka") || undefined,
         competitionId: params.get("competition") || undefined,
-        clubCompetitionId: params.get("clubCompetition") || undefined,
-        coachDashboardTab: params.get("tab") === "chat" ? "chat" : undefined
+        clubCompetitionId: params.get("clubCompetition") || undefined
       };
     }
 
@@ -191,7 +191,6 @@ function createInitialState(): KirokuAppState {
       if (navigationState.homeFilterJudokaId) params.set("judoka", navigationState.homeFilterJudokaId);
       if (navigationState.competitionId) params.set("competition", navigationState.competitionId);
       if (navigationState.clubCompetitionId) params.set("clubCompetition", navigationState.clubCompetitionId);
-      if (id === "coachDashboardView" && navigationState.coachDashboardTab) params.set("tab", navigationState.coachDashboardTab);
       const query = params.toString();
       return `#${id.replace(/View$/, "").toLowerCase()}${query ? `?${query}` : ""}`;
     }
@@ -260,8 +259,7 @@ function createInitialState(): KirokuAppState {
           routeState.judokaId !== undefined
             ? routeState.judokaId
             : state.currentJudokaProfile?.judoka?.judokaId || "",
-        clubCompetitionId: routeState.clubCompetitionId || "",
-        coachDashboardTab: routeState.coachDashboardTab
+        clubCompetitionId: routeState.clubCompetitionId || ""
       };
     }
 
@@ -280,8 +278,7 @@ function createInitialState(): KirokuAppState {
         homeFilterJudokaId: String(candidate.homeFilterJudokaId || ""),
         competitionId: String(candidate.competitionId || ""),
         judokaId: String(candidate.judokaId || ""),
-        clubCompetitionId: String(candidate.clubCompetitionId || ""),
-        coachDashboardTab: candidate.coachDashboardTab === "chat" ? "chat" : "stats"
+        clubCompetitionId: String(candidate.clubCompetitionId || "")
       };
     }
 
@@ -351,9 +348,7 @@ function createInitialState(): KirokuAppState {
         return;
       }
       if (restored.viewId === "coachDashboardView" && state.isCoach) {
-        restored.coachDashboardTab === "chat"
-          ? screens.coachDashboard.showCoachChat()
-          : screens.coachDashboard.showCoachDashboard();
+        screens.coachDashboard.showCoachDashboard();
         return;
       }
       if (restored.viewId === "homeView") {

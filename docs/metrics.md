@@ -27,7 +27,7 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 | **Date début / fin**   | `dateFrom` / `dateTo` | **Étape 1 : Compétitions** | Filtre la table Compétitions sur le champ `date`. Si les deux dates sont renseignées, `dateFrom <= dateTo` est obligatoire. |
 | **Compétitions**       | `competitionIds`      | **Étape 1 : Compétitions** | Sélecteur multi-compétitions avec recherche texte (nom ou date) côté client. Filtre la table Compétitions sur les identifiants sélectionnés ; vide = toutes les compétitions. |
 
-*Note :* les filtres par genre (`gender`) et par garde (`handedness`) ont été retirés du tableau de bord ; `gender` ne subsiste que pour le chat coach (`CoachChatFilters`, périmètre distinct). Les statistiques "Judokas par genre"/"Judokas par garde" (section 3.2) restent inchangées — ce ne sont que les filtres qui ont été supprimés.
+*Note :* les filtres par genre (`gender`) et par garde (`handedness`) ont été retirés du tableau de bord ; `gender` ne subsiste que dans les filtres de la recherche MCP (`CoachChatFilters`, périmètre distinct). Les statistiques "Judokas par genre"/"Judokas par garde" (section 3.2) restent inchangées — ce ne sont que les filtres qui ont été supprimés.
 
 ### Logique d'exclusion et cas limites :
 1. **Étape 1 :** Les filtres `ageCategory`, `dateFrom`/`dateTo` et `competitionIds` restreignent d'abord la liste des **compétitions** éligibles, puis l'ensemble des combats correspondants est extrait sans filtre supplémentaire au niveau combat.

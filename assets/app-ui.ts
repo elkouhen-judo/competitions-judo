@@ -106,7 +106,8 @@
 
   function formatCompetitionRanking(value: unknown) {
     const normalized = String(value || "").trim();
-    const rankingLabels: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
+    // Le texte reste lisible sans l'emoji (lecteurs d'écran, polices sans emoji).
+    const rankingLabels: Record<string, string> = { "1er": "🥇 1er", "2e": "🥈 2e", "3e": "🥉 3e" };
     return rankingLabels[normalized] || normalized;
   }
 

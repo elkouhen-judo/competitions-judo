@@ -203,7 +203,7 @@ This specification does not define:
 - **UIX-029**: Combat and competition detail screens shall make dashboard metric inputs visible: judoka garde when available, opponent garde, competition level, decision type, and scoring techniques. Missing values that reduce dashboard metric quality shall be surfaced as explicit inline indicators.
 - **UIX-030**: An action card shall open its useful destination or corresponding section directly, without requiring an intermediate mode change.
 - **UIX-031**: Changing home mode shall preserve the active judoka; an explicit selection action may reset that context.
-- **UIX-032**: The coach dashboard shall provide direct navigation between Statistics and Coach assistant from the current view.
+- **UIX-032**: The coach dashboard shall provide direct navigation back to the coach home and the personal space from the current view.
 - **UIX-033**: Autocomplete options shall be usable with keyboard and touch interactions.
 - **UIX-034**: View URLs shall include the navigation context required to restore a journey after reload.
 - **UIX-030**: On the competition detail screen, each combat card shall list every data-entry quality issue detected on that combat — missing combat ending, an `Ippon` decision with no matching `Ippon` score, no scores recorded, missing judoka right/left side, and missing opponent right/left side — each tagged with a priority level ("Haute" for the missing combat ending and the inconsistent Ippon decision, "Moyenne" for the other criteria) shown alongside the message.
@@ -213,13 +213,14 @@ This specification does not define:
 - **UIX-034**: Opening an existing combat in the mobile form shall preserve the recorded result and shall not autofocus the result field when a result is already set. The form shall focus the first useful missing detail instead.
 - **UIX-036**: Combat creation actions shall remain hidden while a competition detail is loading and shall require a loaded, editable parent competition before opening the combat form.
 - **UIX-035**: Profile home hubs shall expose actions and navigation only; upcoming events, summaries, and result lists shall be displayed in their dedicated destination screens.
+- **UIX-037**: Competition lists in destination screens shall include competitions dated today or later, listed first by ascending date with an « Aujourd'hui » or « À venir » badge, followed by past competitions from most recent to oldest.
 
 ### 3.9 Offline usage rules
 
 - **OFF-001**: After a first successful connected load, the application shall remain openable offline and shall display the latest locally available data for the connected user's known scope.
 - **OFF-002**: Offline data shall be clearly identified in one global status area as data from the latest successful load; entities shall not each carry a stale or unsynchronized badge.
 - **OFF-003**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, and club competition creation or update shall be unavailable offline.
-- **OFF-004**: Coach dashboard and beta coach chat results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
+- **OFF-004**: Coach dashboard results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
 - **OFF-005**: A `JUDOKA`, `PARENT`, or `COACH` may create or update combats offline only inside the locally known authorized scope.
 - **OFF-006**: A `JUDOKA`, `PARENT`, or `COACH` may save a final ranking offline for an individual competition inside the locally known authorized scope.
 - **OFF-007**: Offline mutations shall be stored as pending operations and synchronized when network access returns.
@@ -245,7 +246,7 @@ This specification does not define:
 - **DASH-015**: The dashboard shall display the debout Ippon victory rate labeled "Victoires Ippon debout" (% of combats won where at least one recorded score has category `Tachi-waza` and value `Ippon`) and, symmetrically, the au sol Ippon victory rate labeled "Victoires Ippon au sol", each alongside its win count and the total combat count.
 - **DASH-016**: The dashboard shall display a breakdown of victories and of defeats by combat ending (`Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`), each as a count, the total count for that result (all victories or all defeats), and a percentage of that total.
 - **DASH-017**: The dashboard shall display a "Fiabilité des données" section, shown only when the active filtered scope has at least one combat, listing for each of 7 data-quality criteria (missing judoka right/left side, missing opponent right/left side, missing combat ending, no scores recorded, missing competition level, missing judoka gender, and an Ippon decision with no matching Ippon score) the affected combat count, the total combat count, and the percentage, in the format "compte/total (taux%)". Only criteria with at least one affected combat shall be shown; when none of the 7 criteria has any affected combat, the section shall display a message indicating no missing information was detected instead of an empty grid.
-- **DASH-018**: `COACH` users shall have access to a dedicated beta `Chat` tab in the coach navigation, separate from the dashboard statistics tab. The tab shall clearly display its beta status, indicate in the chat title that LLM quota is limited, and answer supported natural-language searches across recorded judoka, competition, combat, decision, notes, and score attributes, including finding judokas who won by `Hon-gesa-gatame`, listing judokas by age category, and listing judokas who fought today.
+- **DASH-018**: The application shall not offer a natural-language coach chat. Combat search for coaches is available only through the MCP `combats.search` tool.
 
 ### 3.11 Internal MCP access rules
 
@@ -295,7 +296,6 @@ This specification does not define:
 - **AC-034**: Given the user is offline, when they attempt an admin, deletion, import, login, or club competition participant-management action, then the action is blocked with an explicit offline message.
 - **AC-035**: Given a connected `COACH`, when dashboard filters are set by competition, age category, or date range, then the displayed rates and counts are computed only from combats matching the active filters.
 - **AC-036**: Given a connected `COACH`, when dashboard date filters are submitted with a start date after the end date, then the request is rejected with an explicit validation error and no misleading empty statistics are displayed.
-- **AC-037**: Given a connected `COACH`, when they ask the beta coach assistant for judokas who won by `Hon-gesa-gatame`, for `Minime` judokas, for judokas who fought today, or for terms matching recorded attributes, then the response lists matching judokas and combats from stored data only.
 - **AC-038**: Given an MCP client requests scopes outside the connected user's role perimeter, when the authorization or request is processed, then unsupported scopes are not granted and protected operations are rejected.
 - **AC-039**: Given an MCP OAuth request, when PKCE is missing/invalid or the redirect URI does not exactly match the registered client URI, then the request is rejected.
 

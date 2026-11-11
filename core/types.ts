@@ -142,6 +142,8 @@ export interface ClubCompetitionDetail {
   clubCompetition: ClubCompetitionRow;
   participations: Competition[];
   judokas: Judoka[];
+  /** Bilan des combats saisis, indexé par identifiant de participation. */
+  combatRecords?: Record<string, { total: number; wins: number; losses: number; draws: number }>;
 }
 
 export interface SeasonBounds {
@@ -273,17 +275,6 @@ export interface CoachAssistantMatch {
   result: string;
   victoryType: string;
   scoreLabel: string;
-}
-
-export interface CoachAssistantResponse {
-  answer: string;
-  matches: CoachAssistantMatch[];
-  beta: true;
-}
-
-export interface CoachChatHistoryMessage {
-  role: "user" | "assistant";
-  text: string;
 }
 
 export interface CompetitionCombatRecord {
@@ -458,12 +449,6 @@ export interface RpcMethods {
   updateCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Calcule les statistiques agrégées du tableau de bord coach selon les filtres fournis. */
   getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
-  /** Répond à une question simple du coach sur les judokas et combats enregistrés. */
-  askCoachAssistant: (
-    email: string,
-    question: string,
-    history?: CoachChatHistoryMessage[]
-  ) => Promise<CoachAssistantResponse>;
   /** Cherche des combats visibles par le coach selon des filtres structurés (outil MCP combats.search). */
   searchCombats: (
     email: string,

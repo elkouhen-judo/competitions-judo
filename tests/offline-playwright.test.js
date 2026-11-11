@@ -224,7 +224,7 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
   assert.equal(pending[0].status, "pending");
 
   await context.setOffline(false);
-  await expect(page.getByText("Classement 1er", { exact: true })).toBeVisible({ timeout: 5000 });
+  await expect(page.locator("#competitionClassement")).toHaveText("1er", { timeout: 5000 });
   await expect(page.locator(".offline-status")).toHaveCount(0, { timeout: 5000 });
   assert.equal(rpcCalls.filter((call) => call.method === "finalizeCompetition").length, 1);
 });

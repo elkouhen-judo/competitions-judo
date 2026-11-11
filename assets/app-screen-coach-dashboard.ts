@@ -38,7 +38,8 @@
     const { showError } = notifications;
 
     const defaultCoachDashboardForm = {
-      ageCategory: "Minime",
+      // Aucun filtre appliqué d'office : le coach voit tout le club, puis affine.
+      ageCategory: "",
       dateFrom: "",
       dateTo: "",
       competitionIds: [] as string[]
@@ -48,13 +49,11 @@
       coachDashboardForm: { ...defaultCoachDashboardForm, competitionIds: [] as string[] },
       availableCompetitions: [] as CoachDashboardCompetitionOption[],
       competitionSearchText: "",
-      activeCoachDashboardTab: "stats",
-      filtersExpanded: true,
+      filtersExpanded: false,
       coachDashboardStats: null as CoachDashboardStats | null,
       isLoadingCoachDashboardStats: false
     });
     let coachDashboardMounted = false;
-    let coachChatWidgetMounted = false;
     let coachDashboardRefreshTimer: number | null = null;
     let coachDashboardRequestId = 0;
 
@@ -155,15 +154,9 @@
         )
         .slice(0, COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT);
     });
-    const coachDashboardTitle = window.Vue.computed(() =>
-      coachDashboardViewModel.activeCoachDashboardTab === "chat"
-        ? "Chat coach — quota LLM limité"
-        : "Tableau de bord coach"
-    );
-    const coachDashboardSubtitle = window.Vue.computed(() =>
-      coachDashboardViewModel.activeCoachDashboardTab === "chat"
-        ? "Recherche bêta dans les informations des judokas et combats."
-        : "Statistiques agrégées sur une ou plusieurs compétitions"
+    const coachDashboardTitle = window.Vue.computed(() => "Tableau de bord coach");
+    const coachDashboardSubtitle = window.Vue.computed(
+      () => "Statistiques agrégées sur une ou plusieurs compétitions"
     );
 
     function formatCoachDashboardDate(value: unknown) {
@@ -194,8 +187,6 @@
           removeCoachDashboardCompetition,
           showCoachJudoka,
           showCoachDashboard,
-          showCoachChat,
-          selectCoachDashboardTab,
           formatCoachDashboardDate
         },
         {
@@ -309,20 +300,6 @@
       scheduleCoachDashboardRefresh();
     }
 
-    function mountCoachChatWidget() {
-      if (coachChatWidgetMounted) {
-        return;
-      }
-      coachChatWidgetMounted = true;
-      window.mountKirokuCoachChatWidget({
-        elementId: "coachChatWidget",
-        getAccessToken: () =>
-          app.auth.getValidVercelSession().then((session) => session?.access_token || ""),
-        onSelectJudoka: (judokaId) => screens.judoka.showJudokaProfile(judokaId),
-        onSelectCompetition: (competitionId) => screens.competition.openCompetition(competitionId)
-      });
-    }
-
     function resetCoachDashboardFilters() {
       if (coachDashboardRefreshTimer) {
         window.clearTimeout(coachDashboardRefreshTimer);
@@ -332,7 +309,6 @@
         competitionIds: [] as string[]
       });
       coachDashboardViewModel.competitionSearchText = "";
-      coachDashboardViewModel.activeCoachDashboardTab = "stats";
       fetchCoachDashboardStats();
     }
 
@@ -340,7 +316,7 @@
       coachDashboardViewModel.filtersExpanded = !coachDashboardViewModel.filtersExpanded;
     }
 
-    function showCoachDashboardMode(tab: "stats" | "chat") {
+    function showCoachDashboard() {
       ensureCoachDashboardViewModel();
       if (coachDashboardRefreshTimer) {
         window.clearTimeout(coachDashboardRefreshTimer);
@@ -350,33 +326,10 @@
         competitionIds: [] as string[]
       });
       coachDashboardViewModel.competitionSearchText = "";
-      coachDashboardViewModel.activeCoachDashboardTab = tab;
-      coachDashboardViewModel.filtersExpanded = true;
+      coachDashboardViewModel.filtersExpanded = false;
       coachDashboardViewModel.coachDashboardStats = null;
-      showView("coachDashboardView", { routeState: { coachDashboardTab: tab } });
-      if (tab === "stats") {
-        fetchCoachDashboardStats();
-      }
-    }
-
-    function selectCoachDashboardTab(tab: "stats" | "chat") {
-      ensureCoachDashboardViewModel();
-      coachDashboardViewModel.activeCoachDashboardTab = tab;
-      showView("coachDashboardView", { routeState: { coachDashboardTab: tab }, preserveScroll: true });
-      if (tab === "chat") {
-        mountCoachChatWidget();
-      } else if (!coachDashboardViewModel.coachDashboardStats) {
-        fetchCoachDashboardStats();
-      }
-    }
-
-    function showCoachDashboard() {
-      showCoachDashboardMode("stats");
-    }
-
-    function showCoachChat() {
-      showCoachDashboardMode("chat");
-      mountCoachChatWidget();
+      showView("coachDashboardView");
+      fetchCoachDashboardStats();
     }
 
     function showCoachHomeMode(mode: "judoka" | "coachHome" | "coach" | "coachJudoka") {
@@ -407,7 +360,6 @@
     }
 
     return {
-      showCoachChat,
       showCoachDashboard
     };
   }

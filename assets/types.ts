@@ -2,7 +2,6 @@ import type {
   AccessInvitation,
   AdminsManagement,
   ClubCompetitionDetail,
-  CoachAssistantResponse,
   CombatReadModel,
   CombatScore,
   Competition,
@@ -90,7 +89,6 @@ export interface NavigationSnapshot {
   competitionId?: string;
   judokaId?: string;
   clubCompetitionId?: string;
-  coachDashboardTab?: "stats" | "chat";
 }
 
 export interface KirokuUi {
@@ -369,10 +367,7 @@ export interface AdminsScreen {
 
 export interface CoachDashboardScreen {
   showCoachDashboard(): void;
-  showCoachChat(): void;
 }
-
-export type { CoachAssistantResponse };
 
 export interface LoginScreen {
   bindEvents(): void;
@@ -418,6 +413,7 @@ export interface KirokuAppState {
   homeFilterJudokaId: string;
   competitionsCurrentPage: number;
   clubCompetitionsCurrentPage: number;
+  clubCompetitionsSearchText: string;
   clubCompetitionParticipantsCurrentPage: number;
   clubCompetitionAvailableJudokasCurrentPage: number;
   clubCompetitionFormParticipantsCurrentPage: number;

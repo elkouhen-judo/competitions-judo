@@ -21,7 +21,7 @@
           </div>
         </div>
       </div>
-      <div class="panel-body">
+      <div class="panel-body competition-body" :class="{ 'competition-day-first': isCompetitionDayMode }">
         <div class="summary competition-summary">
           <div class="meta-row">
             <span class="meta-label">Date</span>
@@ -44,7 +44,7 @@
             <span id="competitionClassement" class="meta-value">{{ competitionResult }}</span>
           </div>
         </div>
-        <div class="section coach-performance-summary">
+        <div v-if="hasCombats" class="section coach-performance-summary">
           <div class="section-heading">
             <div>
               <h3>Synthèse sportive</h3>
@@ -60,10 +60,10 @@
               <span class="stat-value">{{ competitionSportSummary.victoryRate }}</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Combats avec points</span>
+              <span class="stat-label">Combats détaillés</span>
               <span class="stat-value">{{ competitionSportSummary.scoredCombats }}/{{ competitionSportSummary.total }}</span>
             </div>
-            <div class="stat-card">
+            <div v-if="!competitionResult" class="stat-card">
               <span class="stat-label">Statut</span>
               <span class="stat-value">{{ competitionSportSummary.finalizationStatus }}</span>
             </div>
@@ -90,7 +90,7 @@
             <button v-if="canEditCoachAssessment" class="button-secondary coach-assessment-save" type="button" :disabled="isSubmitting" @click="saveCoachReview()">Enregistrer le bilan</button>
           </div>
         </div>
-        <div class="section">
+        <div class="section competition-combats-section">
           <div class="section-heading">
             <div>
               <h3>Combats</h3>
@@ -124,9 +124,6 @@
               <svg class="empty-action-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               <p class="empty-action-title">Aucun combat</p>
               <p class="empty-action-body">{{ combatsEmptyMessage }}</p>
-              <div v-if="canManageCombat" class="empty-action-actions">
-                <button type="button" :disabled="isSubmitting" @click="showCombatForm()">Ajouter le premier combat</button>
-              </div>
             </div>
             <div v-else class="list">
               <article v-for="combat in combats" :key="combat.combatId" class="card combat-card">
@@ -135,9 +132,12 @@
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
                     <span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span>
                     <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
-                    <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-technique">{{ scoreLabel }}</span>
                   </div>
                 </div>
+                <p v-if="combat.scoreLabels.length" class="combat-scores-line">
+                  <span class="combat-scores-label">Points marqués par le judoka :</span>
+                  <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-technique">{{ scoreLabel }}</span>
+                </p>
                 <div v-if="combat.showJudoka" class="meta-row">
                   <span class="meta-label">Judoka</span>
                   <span class="meta-value">{{ combat.judokaDisplayName }}<span v-if="combat.judokaHandedness"> · {{ combat.judokaHandedness }}</span></span>

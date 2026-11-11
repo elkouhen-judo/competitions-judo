@@ -38,17 +38,8 @@ module.exports = {
         kiroku: "var(--shadow)"
       },
       fontFamily: {
-        body: [
-          "Atkinson Hyperlegible",
-          "system-ui",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Arial",
-          "Helvetica",
-          "sans-serif"
-        ],
-        display: ["Avenir Next", "Atkinson Hyperlegible", "system-ui", "sans-serif"]
+        body: ["var(--font-body)"],
+        display: ["var(--font-heading)"]
       }
     }
   },

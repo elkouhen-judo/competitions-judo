@@ -4,8 +4,8 @@ const manifest = {
   start_url: "/",
   scope: "/",
   display: "standalone",
-  background_color: "#fbfbfa",
-  theme_color: "#111111",
+  background_color: "#f3f5fa",
+  theme_color: "#f3f5fa",
   lang: "fr",
   description: "Suivi mobile-first des compétitions et combats de judo."
 };

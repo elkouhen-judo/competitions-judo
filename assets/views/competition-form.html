@@ -20,7 +20,7 @@
               <button v-for="option in ownerOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectCompetitionOwner(option)">
                 <div class="autocomplete-option-copy">
                   <strong>{{ option.name }}</strong>
-                  <span class="autocomplete-option-meta">{{ option.meta }}</span>
+                  <span v-if="option.meta" class="autocomplete-option-meta">{{ option.meta }}</span>
                 </div>
               </button>
             </div>

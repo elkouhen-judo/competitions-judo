@@ -45,12 +45,16 @@
       "";
     const beltColor = judoka.beltColor || "";
     const gender = judoka.gender || "";
-    const yearInCategory = judoka.yearInCategory ? `${judoka.yearInCategory}e année` : "";
+    const yearInCategory = judoka.yearInCategory
+      ? String(judoka.yearInCategory) === "1"
+        ? "1re année"
+        : `${judoka.yearInCategory}e année`
+      : "";
     const handedness = judoka.handedness || "";
 
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
-      profileSubtitle: `Saison ${season.label}`,
+      profileSubtitle: "Profil sportif et résultats",
       seasonLabel: `Saison ${season.label}`,
       seasonCompetitionCount: String(seasonCompetitionCount || 0),
       seasonCombatCount: String(seasonCombatCount || 0),
@@ -68,8 +72,9 @@
       heroYearInCategory: yearInCategory,
       heroHandedness: handedness,
       heroSeason: `Saison ${season.label}`,
-      victoriesByDecisionType: victoriesByDecisionType || [],
-      defeatsByDecisionType: defeatsByDecisionType || [],
+      // Les modes à zéro n'apportent rien et allongent la fiche.
+      victoriesByDecisionType: (victoriesByDecisionType || []).filter((entry) => Number(entry.count) > 0),
+      defeatsByDecisionType: (defeatsByDecisionType || []).filter((entry) => Number(entry.count) > 0),
       topWinTechniques: topWinTechniques || [],
       hasTopWinTechniques: Boolean((topWinTechniques || []).length),
       competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
