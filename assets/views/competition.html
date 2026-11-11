@@ -145,7 +145,7 @@
                   <span class="combat-scored-label">Marqué</span>
                   <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-scored">{{ scoreLabel }}</span>
                 </p>
-                <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Prises subies">
+                <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Points marqués par l'adversaire">
                   <span class="combat-conceded-label">Subi</span>
                   <span v-for="scoreLabel in combat.concededScoreLabels" :key="scoreLabel" class="result-badge badge-conceded">{{ scoreLabel }}</span>
                 </p>

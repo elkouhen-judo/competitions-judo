@@ -181,18 +181,18 @@
 
           <div id="combat_points_subis" class="combat-score-block" tabindex="-1">
             <div class="combat-score-header">
-              <span class="choice-label">Prises subies</span>
-              <p class="field-hint">Les points marqués par l'adversaire, même en cas de victoire.</p>
+              <span class="choice-label">Points marqués par l'adversaire</span>
+              <p class="field-hint">Uniquement ses points, même en cas de victoire.</p>
             </div>
             <div class="combat-score-rows">
               <div v-for="(score, index) in combatForm.concededScores" :key="index" class="combat-score-row">
                 <div class="combat-score-row-header">
-                  <span class="combat-score-row-title">Prise subie {{ index + 1 }}</span>
-                  <button class="icon-button" type="button" :aria-label="'Retirer la prise subie ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index, 'concededScores')">
+                  <span class="combat-score-row-title">Point {{ index + 1 }}</span>
+                  <button class="icon-button" type="button" :aria-label="'Retirer le point adverse ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index, 'concededScores')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   </button>
                 </div>
-                <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur de la prise subie ' + (index + 1)">
+                <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur du point adverse ' + (index + 1)">
                   <button
                     v-for="value in combatScoreValues"
                     :key="value"
@@ -204,7 +204,7 @@
                     {{ value }}
                   </button>
                 </div>
-                <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-label="'Debout ou au sol, prise subie ' + (index + 1)">
+                <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-label="'Debout ou au sol, point adverse ' + (index + 1)">
                   <button
                     v-for="category in combatScoreCategories"
                     :key="category.value"
@@ -221,7 +221,7 @@
                   <select
                     class="combat-technique-select"
                     :value="getScoreTechniqueSelectValue(score)"
-                    :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', prise subie ' + (index + 1)"
+                    :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', point adverse ' + (index + 1)"
                     @change="selectScoreTechnique(index, $event.target.value, 'concededScores')">
                     <option value="">Choisir la prise</option>
                     <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
@@ -240,7 +240,7 @@
                 </template>
               </div>
             </div>
-            <button class="button-secondary" type="button" @click="addCombatScoreRow('concededScores')">+ Ajouter une prise subie</button>
+            <button class="button-secondary" type="button" @click="addCombatScoreRow('concededScores')">+ Ajouter un point</button>
           </div>
 
           <div class="choice-field">

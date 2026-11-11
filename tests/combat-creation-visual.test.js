@@ -178,7 +178,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await techniqueSelect.selectOption("O-soto-gari");
     await expect(customTechnique).toHaveCount(0);
     // Prise subie : les points de l'adversaire se saisissent à part, comme les points marqués.
-    await page.getByRole("button", { name: "+ Ajouter une prise subie" }).click();
+    await page.locator("#combat_points_subis").getByRole("button", { name: "+ Ajouter un point" }).click();
     const concededRow = page.locator("#combat_points_subis .combat-score-row");
     await expect(concededRow).toHaveCount(1);
     await concededRow.getByRole("radio", { name: "Waza-ari" }).click();
