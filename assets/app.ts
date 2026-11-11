@@ -38,7 +38,7 @@
 
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("/service-worker.js").catch((error) => {
-        console.warn("[Kiroku] Service worker non enregistré.", error);
+        console.warn("[Ayumi] Service worker non enregistré.", error);
       });
     });
   }

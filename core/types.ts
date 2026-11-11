@@ -62,7 +62,7 @@ export interface Combat {
   result: "Victoire" | "Défaite" | "Egalité";
   victoryType?: string;
   scores: CombatScore[];
-  /** Points marqués par l'adversaire (prises subies). */
+  /** Points marqués par l'adversaire (techniques subies). */
   concededScores?: CombatScore[];
   notes?: string;
 }

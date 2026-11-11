@@ -1,12 +1,12 @@
 ---
-title: Kiroku Documentation Index
+title: Ayumi Documentation Index
 last_updated: 2026-06-23
 owner: competitions-judo
 tags:
   - index
 ---
 
-# Documentation - Kiroku
+# Documentation - Ayumi
 
 Index court des documents de ce dossier. Voir `AGENTS.md` à la racine pour le workflow agent et le routage par tâche.
 

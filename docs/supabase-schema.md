@@ -1,5 +1,5 @@
 ---
-title: Kiroku Supabase Schema Notes
+title: Ayumi Supabase Schema Notes
 date_created: 2026-06-10
 last_updated: 2026-06-18
 owner: competitions-judo

@@ -513,7 +513,7 @@ export interface CombatScoreFormRow {
   technique: string;
   neWazaType: string;
   value: string;
-  /** Saisie libre en cours (« Autre prise… »), même si le champ est encore vide. */
+  /** Saisie libre en cours (« Autre technique… »), même si le champ est encore vide. */
   customTechnique?: boolean;
 }
 

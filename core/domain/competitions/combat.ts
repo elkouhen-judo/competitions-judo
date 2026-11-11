@@ -26,7 +26,7 @@ export interface CombatDraft {
   result: CombatResult;
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
-  /** Points marqués par l'adversaire (prises subies). */
+  /** Points marqués par l'adversaire (techniques subies). */
   concededScores: CombatScoreDraft[];
   notes: string;
 }

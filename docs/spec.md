@@ -1,5 +1,5 @@
 ---
-title: Kiroku Functional Specification
+title: Ayumi Functional Specification
 version: 2.2
 date_created: 2026-06-11
 last_updated: 2026-06-21
@@ -13,11 +13,11 @@ tags:
 
 # Introduction
 
-This specification defines the functional behavior of Kiroku, a mobile-first application used to manage judo competitions and combats for a club.
+This specification defines the functional behavior of Ayumi, a mobile-first application used to manage judo competitions and combats for a club.
 
 ## 1. Purpose & Scope
 
-Kiroku allows a club to:
+Ayumi allows a club to:
 - manage judoka participation in competitions;
 - record combats for each competition;
 - let parents manage sports data for linked child judokas imported by the club;
@@ -45,7 +45,7 @@ This specification does not define:
 
 | Term | Definition |
 |---|---|
-| Kiroku | The application described by this specification. |
+| Ayumi | The application described by this specification. |
 | Judoka | A club member profile that owns competitions and combats. |
 | Parent | A user profile allowed to manage linked child judokas (read/write). |
 | Club | A judo club. A judoka belongs to at most one club; a coach coaches one or more clubs. |
@@ -124,7 +124,7 @@ This specification does not define:
 - **CBT-005**: A combat with result `Victoire` or `Défaite` shall record a decision type among `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, or `Forfait`. A combat with result `Egalité` shall use `Hiki wake`. Scoring technique entries remain optional and shall not replace the decision type.
 - **CBT-006**: A combat may optionally record the opponent's stance (`Droitier` or `Gaucher`).
 - **CBT-006a**: A combat may optionally record its round in the competition (`Poule`, `1/32`, `1/16`, `1/8`, `1/4`, `1/2`, `Repêchage`, `Place de 3`, `Finale`). The round is shown on the combat card; when every combat of a competition has a round, the combats are listed in that bracket order.
-- **CBT-007**: A combat may optionally record a list of scoring techniques ("prises marquées"), one entry per point scored during the combat, regardless of the combat result.
+- **CBT-007**: A combat may optionally record a list of scoring techniques ("techniques marquées"), one entry per point scored during the combat, regardless of the combat result.
 - **CBT-008**: Each scoring technique entry shall record a category (`Tachi-waza` or `Ne-waza`), shown to users as `Debout` or `Au sol`, and a value (`Ippon`, `Waza-ari`, or `Yuko`). When the category is `Tachi-waza`, the entry shall autocomplete known throw names while still accepting a free-text throw name typed by the user. When the category is `Ne-waza`, the entry shall autocomplete known ground technique names while still accepting a free-text ground technique name typed by the user.
 - **CBT-009**: A `JUDOKA` or `PARENT` can manage combats for their own scope. `COACH` users can manage combats for club competition participations.
 - **CBT-010**: Deleting a combat shall not delete its parent competition.
@@ -161,7 +161,7 @@ This specification does not define:
 
 - **AUTH-001**: The application shall provide Google login.
 - **AUTH-002**: The application shall keep the connected session after the OAuth callback.
-- **AUTH-003**: Application permissions shall come from the Kiroku user role, not from the Google account itself.
+- **AUTH-003**: Application permissions shall come from the Ayumi user role, not from the Google account itself.
 - **AUTH-004**: The login UI shall not expose password login.
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
 - **AUTH-006**: The connected header shall show user identity and provide an explicit logout action.
@@ -190,7 +190,7 @@ This specification does not define:
 - **UIX-003**: Main actions shall be visible, tactile, and explicit.
 - **UIX-004**: Action labels shall stay textual and explicit on mobile, not icon-only.
 - **UIX-005**: Desktop-specific layout shall be a progressive enhancement over the small-screen baseline.
-- **UIX-006**: The UI visual identity should use local Kiroku/dojo elements, including a local app mark, tatami-inspired surfaces, and restrained belt/podium accents; it shall not depend on a remote logo image.
+- **UIX-006**: The UI visual identity should use local Ayumi/dojo elements, including a local app mark, tatami-inspired surfaces, and restrained belt/podium accents; it shall not depend on a remote logo image.
 - **UIX-007**: The UI shall provide loading, empty, error, and success states.
 - **UIX-008**: Empty states that can be resolved by the current user shall include a direct contextual action, such as creating the first competition or adding the first combat.
 - **UIX-009**: Deletions shall require explicit confirmation.
@@ -263,12 +263,12 @@ This specification does not define:
 
 ### 3.11 Internal MCP access rules
 
-- **MCP-001**: The application shall expose a remote MCP server usable by standard MCP clients (e.g. Claude Desktop, Claude.ai connectors), open to any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, `JUDOKA`).
+- **MCP-001**: The application shall expose a remote MCP server usable by standard MCP clients (e.g. Claude Desktop, Claude.ai connectors), open to any authenticated Ayumi user (`COACH`, `ADMIN`, `PARENT`, `JUDOKA`).
 - **MCP-002**: The remote MCP endpoint shall implement the MCP JSON-RPC 2.0 wire protocol, including the `initialize` handshake, so that standard MCP clients can connect without bespoke client code.
 - **MCP-003**: MCP clients shall authenticate via an OAuth 2.1 authorization-code flow with mandatory PKCE (S256); the authorization step shall delegate to the existing Google/Supabase login rather than a separate credential.
 - **MCP-004**: The OAuth authorization server shall support unauthenticated discovery (`/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server`) and Dynamic Client Registration so that MCP clients can connect without manual configuration.
-- **MCP-005**: The backend shall mint a short-lived Kiroku-signed JWT MCP access token derived from the authenticated Kiroku user instead of exposing the Supabase session token directly to MCP clients.
-- **MCP-006**: The JWT MCP access token shall expire after a short duration and shall encode only scopes from the fixed Kiroku MCP scope vocabulary assigned at mint time for the caller's Kiroku role: full read/write sports scopes for `COACH`, access-governance scopes only for `ADMIN` with no judoka/competition/combat data scopes, and judoka/competition/combat read-write scopes limited to the caller's own perimeter (no club-wide dashboard access) for `PARENT` and `JUDOKA`.
+- **MCP-005**: The backend shall mint a short-lived Ayumi-signed JWT MCP access token derived from the authenticated Ayumi user instead of exposing the Supabase session token directly to MCP clients.
+- **MCP-006**: The JWT MCP access token shall expire after a short duration and shall encode only scopes from the fixed Ayumi MCP scope vocabulary assigned at mint time for the caller's Ayumi role: full read/write sports scopes for `COACH`, access-governance scopes only for `ADMIN` with no judoka/competition/combat data scopes, and judoka/competition/combat read-write scopes limited to the caller's own perimeter (no club-wide dashboard access) for `PARENT` and `JUDOKA`.
 - **MCP-007**: The remote MCP endpoint shall enforce the minted JWT MCP access token scopes on each request and shall expose only callable tools in `tools/list`, so a `PARENT` or `JUDOKA` caller can only read or write competitions/combats within their own managed scope and cannot reach the club-wide coach dashboard, and an `ADMIN` caller cannot reach judoka, competition, or combat data through MCP.
 
 ## 4. Acceptance Criteria

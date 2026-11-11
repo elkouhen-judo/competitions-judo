@@ -252,16 +252,16 @@ function renderAuthorizePage(res, { runtimeConfig, oauthRequest }) {
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Autoriser un client MCP — Kiroku</title>
+  <title>Autoriser un client MCP — Ayumi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
   <main style="max-width:480px;margin:48px auto;font-family:system-ui,sans-serif;padding:0 16px;">
-    <h1>Accès MCP Kiroku</h1>
+    <h1>Accès MCP Ayumi</h1>
     <div id="mcp-authorize-status">Vérification de la session…</div>
     <div id="mcp-authorize-consent" style="display:none;">
       <p id="mcp-authorize-identity"></p>
-      <p>Ce client souhaite accéder à votre compte Kiroku (lecture/écriture des compétitions et combats que vous gérez).</p>
+      <p>Ce client souhaite accéder à votre compte Ayumi (lecture/écriture des compétitions et combats que vous gérez).</p>
       <button id="mcp-authorize-allow" type="button">Autoriser</button>
       <button id="mcp-authorize-deny" type="button">Annuler</button>
     </div>

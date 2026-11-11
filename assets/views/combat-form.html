@@ -149,16 +149,16 @@
                     {{ category.label }}
                   </button>
                 </div>
-                <!-- COMBAT-TECH : liste des prises connues, « Autre prise… » ouvre une saisie libre. -->
+                <!-- COMBAT-TECH : liste des techniques connues, « Autre technique… » ouvre une saisie libre. -->
                 <template v-if="score.category === 'Tachi-waza' || score.category === 'Ne-waza'">
                   <select
                     class="combat-technique-select"
                     :value="getScoreTechniqueSelectValue(score)"
                     :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', point ' + (index + 1)"
                     @change="selectScoreTechnique(index, $event.target.value)">
-                    <option value="">Choisir la prise</option>
+                    <option value="">Choisir la technique</option>
                     <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
-                    <option :value="otherTechniqueValue">Autre prise…</option>
+                    <option :value="otherTechniqueValue">Autre technique…</option>
                   </select>
                   <input
                     v-if="isCustomScoreTechnique(score)"
@@ -167,8 +167,8 @@
                     type="text"
                     :value="getScoreTechnique(score)"
                     @input="setScoreTechnique(index, $event.target.value)"
-                    :aria-label="'Nom de la prise, point ' + (index + 1)"
-                    placeholder="Nom de la prise (ex. Sode-tsurikomi-goshi)"
+                    :aria-label="'Nom de la technique, point ' + (index + 1)"
+                    placeholder="Nom de la technique (ex. Sode-tsurikomi-goshi)"
                     autocomplete="off">
                 </template>
               </div>
@@ -216,16 +216,16 @@
                     {{ category.label }}
                   </button>
                 </div>
-                <!-- COMBAT-TECH : liste des prises connues, « Autre prise… » ouvre une saisie libre. -->
+                <!-- COMBAT-TECH : liste des techniques connues, « Autre technique… » ouvre une saisie libre. -->
                 <template v-if="score.category === 'Tachi-waza' || score.category === 'Ne-waza'">
                   <select
                     class="combat-technique-select"
                     :value="getScoreTechniqueSelectValue(score)"
                     :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', point adverse ' + (index + 1)"
                     @change="selectScoreTechnique(index, $event.target.value, 'concededScores')">
-                    <option value="">Choisir la prise</option>
+                    <option value="">Choisir la technique</option>
                     <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
-                    <option :value="otherTechniqueValue">Autre prise…</option>
+                    <option :value="otherTechniqueValue">Autre technique…</option>
                   </select>
                   <input
                     v-if="isCustomScoreTechnique(score)"
@@ -234,8 +234,8 @@
                     type="text"
                     :value="getScoreTechnique(score)"
                     @input="setScoreTechnique(index, $event.target.value, 'concededScores')"
-                    :aria-label="'Nom de la prise, point ' + (index + 1)"
-                    placeholder="Nom de la prise (ex. Sode-tsurikomi-goshi)"
+                    :aria-label="'Nom de la technique, point ' + (index + 1)"
+                    placeholder="Nom de la technique (ex. Sode-tsurikomi-goshi)"
                     autocomplete="off">
                 </template>
               </div>

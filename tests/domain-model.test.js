@@ -667,8 +667,8 @@ test("combat score domain enforces the conditional sub-field per category", () =
   assert.deepEqual(createCombatScores("not-an-array"), []);
   assert.deepEqual(createCombatScores(undefined), []);
   assert.equal(
-    createCombatScore({ category: "Tachi-waza", technique: "Prise inventée", value: "Yuko" }).technique,
-    "Prise inventée"
+    createCombatScore({ category: "Tachi-waza", technique: "Technique inventée", value: "Yuko" }).technique,
+    "Technique inventée"
   );
   assert.equal(
     createCombatScores([

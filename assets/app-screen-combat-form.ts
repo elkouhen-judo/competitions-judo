@@ -13,7 +13,7 @@
 
   const OTHER_TECHNIQUE_VALUE = "__autre__";
 
-  // « scores » : points marqués par le judoka ; « concededScores » : prises subies.
+  // « scores » : points marqués par le judoka ; « concededScores » : techniques subies.
   type ScoreListKey = "scores" | "concededScores";
 
   function createKirokuCombatFormScreen(app: KirokuApp, deps: CombatFormDeps) {
@@ -327,7 +327,7 @@
       ) {
         form.scores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
       }
-      // Défaite sur un point : la prise subie correspondante est préparée.
+      // Défaite sur un point : la technique subie correspondante est préparée.
       if (
         form.result === "Défaite" &&
         DECISION_SCORE_VALUES.includes(form.victoryType) &&
@@ -356,7 +356,7 @@
       onCombatScoreCategoryChange(index, list);
     }
 
-    // COMBAT-TECH : la prise se choisit dans la liste, ou se saisit librement via « Autre prise… ».
+    // COMBAT-TECH : la technique se choisit dans la liste, ou se saisit librement via « Autre technique… ».
     function getScoreTechniqueOptions(score: CombatScoreFormRow): string[] {
       return score.category === "Ne-waza" ? NE_WAZA_TECHNIQUES : TACHI_WAZA_TECHNIQUES;
     }

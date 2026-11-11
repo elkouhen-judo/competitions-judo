@@ -1,6 +1,6 @@
 const manifest = {
-  name: "Kiroku - Suivi de compétitions",
-  short_name: "Kiroku",
+  name: "Ayumi - Suivi de compétitions",
+  short_name: "Ayumi",
   start_url: "/",
   scope: "/",
   display: "standalone",

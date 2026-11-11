@@ -514,7 +514,7 @@ test("combat form lets the user pick a listed technique or type another one", ()
   const path = require("node:path");
   const view = fs.readFileSync(path.join(__dirname, "..", "assets", "views", "combat-form.html"), "utf8");
   const screen = fs.readFileSync(path.join(__dirname, "..", "assets", "dist", "app-screen-combat-form.js"), "utf8");
-  assert.match(view, /<select[\s\S]*?class="combat-technique-select"[\s\S]*?Autre prise…/);
+  assert.match(view, /<select[\s\S]*?class="combat-technique-select"[\s\S]*?Autre technique…/);
   assert.match(view, /v-if="isCustomScoreTechnique\(score\)"/);
   assert.doesNotMatch(view, /<datalist/);
   assert.match(screen, /function isCustomScoreTechnique\(score\)/);

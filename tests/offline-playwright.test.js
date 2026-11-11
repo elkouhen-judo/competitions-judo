@@ -93,7 +93,7 @@ async function startTestServer() {
 
     if (req.url === "/manifest.webmanifest") {
       res.writeHead(200, { "content-type": "application/manifest+json" });
-      res.end(JSON.stringify({ name: "Kiroku", start_url: "/" }));
+      res.end(JSON.stringify({ name: "Ayumi", start_url: "/" }));
       return;
     }
 

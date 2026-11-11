@@ -1,5 +1,5 @@
 ---
-title: Kiroku Product Requirements Document
+title: Ayumi Product Requirements Document
 version: 1.1
 date_created: 2026-06-17
 last_updated: 2026-06-18
@@ -10,9 +10,9 @@ tags:
   - vision
 ---
 
-# PRD - Kiroku
+# PRD - Ayumi
 
-This document is the canonical product-vision entry point for Kiroku: why it exists, the product principles it follows, and what is deliberately out of scope. It does not enumerate feature-level requirements — those are ID-tagged and kept current in `docs/spec.md` (`REQ-*`, `COMP-*`, `CBT-*`, `CHD-*`, `STA-*`, `AUTH-*`, `UIX-*`, `DASH-*`, `MCP-*`, `AC-*`) and `docs/spec-tech.md` (`ARC-*`, `VCL-*`, `DAT-*`, `AUTH-*`, `SEC-*`, `CFG-*`), which are the source of truth for implementation and are updated per change, as described in `AGENTS.md`.
+This document is the canonical product-vision entry point for Ayumi: why it exists, the product principles it follows, and what is deliberately out of scope. It does not enumerate feature-level requirements — those are ID-tagged and kept current in `docs/spec.md` (`REQ-*`, `COMP-*`, `CBT-*`, `CHD-*`, `STA-*`, `AUTH-*`, `UIX-*`, `DASH-*`, `MCP-*`, `AC-*`) and `docs/spec-tech.md` (`ARC-*`, `VCL-*`, `DAT-*`, `AUTH-*`, `SEC-*`, `CFG-*`), which are the source of truth for implementation and are updated per change, as described in `AGENTS.md`.
 
 ## Problem Statement
 
@@ -27,7 +27,7 @@ The coach is the one who needs this information most, but is the least available
 
 ## Solution
 
-Kiroku is a mobile-first competitive tracking notebook for a judo club, fed by families and consulted by the coach. It gives the coach an instant, centralized view of a judoka's competitive history, progression pace, and fighting profile, without imposing any administrative entry burden on them.
+Ayumi is a mobile-first competitive tracking notebook for a judo club, fed by families and consulted by the coach. It gives the coach an instant, centralized view of a judoka's competitive history, progression pace, and fighting profile, without imposing any administrative entry burden on them.
 
 Core product principles:
 
@@ -45,10 +45,10 @@ Primary usage loop:
 
 1. **Entry**: a parent creates a competition and logs their child's combats, one at a time.
 2. **Aggregation**: the system automatically updates the relevant judoka's profile and feeds the global Competition view.
-3. **Consultation**: the coach opens Kiroku to debrief the weekend or prepare a class.
+3. **Consultation**: the coach opens Ayumi to debrief the weekend or prepare a class.
 4. **Feedback**: the coach and judoka discuss concrete data on the mat.
 
-What Kiroku is not:
+What Ayumi is not:
 - A club administration tool (memberships, dues, attendance).
 - A social network or video analysis tool.
 - A messaging system.

@@ -1,5 +1,5 @@
 ---
-title: Kiroku Technical Specification
+title: Ayumi Technical Specification
 version: 1.4
 date_created: 2026-06-11
 last_updated: 2026-06-21
@@ -14,7 +14,7 @@ tags:
 
 # Introduction
 
-This specification defines the technical constraints, interfaces, data contracts, security rules, and validation criteria for Kiroku.
+This specification defines the technical constraints, interfaces, data contracts, security rules, and validation criteria for Ayumi.
 
 ## 1. Purpose & Scope
 
@@ -53,8 +53,8 @@ This specification does not redefine product behavior already described in `docs
 - **ARC-007**: Domain code should express business concepts through value objects and aggregate language such as `PersonName`, domain identifiers, competition/combat drafts, `ManagedJudokaScope`, and competition combat recording behavior.
 - **ARC-008**: Application services may normalize inbound and persistence records into canonical DTOs, but business invariants shall be enforced by domain factories, value objects, aggregate commands, and access scopes.
 - **ARC-009**: Browser screens may be migrated progressively to Vue 3 while preserving existing screen IDs and global action entry points until the full frontend migration is complete. The Vue 3 browser runtime shall be vendored locally and served through `/api/client` before screen scripts.
-- **ARC-010**: `api/mcp-oauth.js` shall implement the OAuth 2.1 authorization endpoint (`/mcp/authorize`, delegating end-user authentication to the existing Google/Supabase login), the token endpoint (`/mcp/token`, exchanging a PKCE-verified authorization code for a short-lived Kiroku-signed JWT MCP access token), Dynamic Client Registration (RFC 7591, `/mcp/register`, returning a self-contained signed `client_id` rather than persisting registrations server-side), and the unauthenticated `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` discovery metadata — consolidated into a single Vercel function to stay within the Hobby plan serverless function limit (see `tests/vercel-deployment.test.js`).
-- **ARC-011**: `api/mcp.js` shall expose a remote MCP server speaking JSON-RPC 2.0 over HTTP, secured by Kiroku-issued JWT MCP access tokens, independent from Supabase access tokens.
+- **ARC-010**: `api/mcp-oauth.js` shall implement the OAuth 2.1 authorization endpoint (`/mcp/authorize`, delegating end-user authentication to the existing Google/Supabase login), the token endpoint (`/mcp/token`, exchanging a PKCE-verified authorization code for a short-lived Ayumi-signed JWT MCP access token), Dynamic Client Registration (RFC 7591, `/mcp/register`, returning a self-contained signed `client_id` rather than persisting registrations server-side), and the unauthenticated `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` discovery metadata — consolidated into a single Vercel function to stay within the Hobby plan serverless function limit (see `tests/vercel-deployment.test.js`).
+- **ARC-011**: `api/mcp.js` shall expose a remote MCP server speaking JSON-RPC 2.0 over HTTP, secured by Ayumi-issued JWT MCP access tokens, independent from Supabase access tokens.
 - **ARC-012**: Structured combat search (`core/services/coach-assistant-search.ts`, `methods.searchCombats`) shall stay transport-agnostic and deterministic; it shall not call any LLM. It serves the MCP `combats.search` tool.
 
 ### 3.2 Vercel routing and runtime injection
@@ -140,9 +140,9 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-017**: Backend profile registration shall create only the initial invited profile.
 - **AUTH-018**: A child profile may store a verified email to support direct Google login without changing the child role to `PARENT`, `COACH`, or `ADMIN`.
 - **AUTH-019**: Child management mutations shall be restricted to users whose immutable `profile_type` is `PARENT`.
-- **AUTH-020**: MCP authentication shall chain Google login to Supabase session verification, then Kiroku email and role resolution, then OAuth 2.1 authorization-code issuance, then Kiroku-signed JWT MCP access token exchange.
-- **AUTH-021**: Any authenticated Kiroku user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
-- **AUTH-022**: MCP authorization shall assign scopes only from a fixed Kiroku MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, access-governance scopes only and no judoka/competition/combat scopes for `ADMIN`, judoka/competition/combat read-write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request and filter `tools/list` to callable tools only.
+- **AUTH-020**: MCP authentication shall chain Google login to Supabase session verification, then Ayumi email and role resolution, then OAuth 2.1 authorization-code issuance, then Ayumi-signed JWT MCP access token exchange.
+- **AUTH-021**: Any authenticated Ayumi user (`COACH`, `ADMIN`, `PARENT`, or `JUDOKA`) may obtain an MCP authorization code or access token; the scopes minted at the authorize step (not a hard rejection) are what constrain a `PARENT`/`JUDOKA` caller to their own perimeter.
+- **AUTH-022**: MCP authorization shall assign scopes only from a fixed Ayumi MCP scope vocabulary based on the resolved caller role (full sports read/write for `COACH`, access-governance scopes only and no judoka/competition/combat scopes for `ADMIN`, judoka/competition/combat read-write limited to the caller's own managed judokas for `PARENT`/`JUDOKA`), and `/api/mcp` shall enforce those scopes again on each authenticated MCP request and filter `tools/list` to callable tools only.
 - **AUTH-023**: The MCP token endpoint shall require PKCE (`code_verifier` matching the `code_challenge` bound to the authorization code via SHA-256) before issuing an access token; requests without a valid verifier shall be rejected with `invalid_grant`.
 - **AUTH-024**: The MCP authorization endpoint shall verify that the requested `redirect_uri` exactly matches one of the URIs registered for the `client_id`, and shall never redirect to an unregistered URI.
 

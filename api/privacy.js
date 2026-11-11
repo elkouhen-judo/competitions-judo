@@ -27,7 +27,7 @@ function renderPrivacyHtml() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f3f5fa">
-  <title>Données personnelles - Kiroku</title>
+  <title>Données personnelles - Ayumi</title>
   <link rel="stylesheet" href="/api/styles">
   <style>
     body { background: var(--bg); color: var(--text, #1f2937); }
@@ -46,15 +46,15 @@ function renderPrivacyHtml() {
 </head>
 <body>
   <main class="privacy">
-    <a class="privacy-back" href="/">← Retour à Kiroku</a>
+    <a class="privacy-back" href="/">← Retour à Ayumi</a>
     <h1>Données personnelles</h1>
     <p class="privacy-meta">Politique de confidentialité et droits RGPD · mise à jour le ${LAST_UPDATE}</p>
 
-    <h2>À quoi sert Kiroku</h2>
-    <p>Kiroku - 記録 permet aux judokas, à leurs parents et à leurs coachs de suivre les compétitions de judo : résultats, combats, classements et statistiques de saison. L'application n'affiche aucune publicité, ne vend aucune donnée et ne fait aucun suivi publicitaire.</p>
+    <h2>À quoi sert Ayumi</h2>
+    <p>Ayumi - 歩み permet aux judokas, à leurs parents et à leurs coachs de suivre les compétitions de judo : résultats, combats, classements et statistiques de saison. L'application n'affiche aucune publicité, ne vend aucune donnée et ne fait aucun suivi publicitaire.</p>
 
     <h2>Responsable du traitement</h2>
-    <p>Les données sont traitées par l'administrateur de l'application Kiroku, pour le compte du club de judo auquel les judokas sont rattachés. Pour toute question ou demande, contactez-le ${contact}.</p>
+    <p>Les données sont traitées par l'administrateur de l'application Ayumi, pour le compte du club de judo auquel les judokas sont rattachés. Pour toute question ou demande, contactez-le ${contact}.</p>
 
     <h2>Données collectées</h2>
     <ul>
@@ -63,7 +63,7 @@ function renderPrivacyHtml() {
       <li><strong>Liens familiaux</strong> : lien entre un parent et ses enfants judokas.</li>
       <li><strong>Activité sportive</strong> : compétitions, combats (adversaire, résultat, points marqués), classements, objectifs et bilans rédigés par le coach.</li>
     </ul>
-    <p>Aucune donnée bancaire, aucune donnée de santé et aucune photo ne sont collectées. Le mot de passe Google n'est jamais transmis à Kiroku.</p>
+    <p>Aucune donnée bancaire, aucune donnée de santé et aucune photo ne sont collectées. Le mot de passe Google n'est jamais transmis à Ayumi.</p>
 
     <h2>Finalités et bases légales</h2>
     <div class="privacy-table-wrap">
@@ -94,7 +94,7 @@ function renderPrivacyHtml() {
       <li><strong>Supabase</strong> : base de données et authentification, hébergées dans l'Union européenne (Irlande).</li>
       <li><strong>Vercel</strong> : hébergement de l'application web.</li>
       <li><strong>Google</strong> : connexion avec un compte Google, et polices de caractères (Google Fonts).</li>
-      <li><strong>Anthropic (Claude)</strong> : uniquement si un coach connecte de lui-même un assistant Claude à Kiroku. L'assistant peut alors lire les données que ce coach est autorisé à consulter, pour répondre à ses questions.</li>
+      <li><strong>Anthropic (Claude)</strong> : uniquement si un coach connecte de lui-même un assistant Claude à Ayumi. L'assistant peut alors lire les données que ce coach est autorisé à consulter, pour répondre à ses questions.</li>
     </ul>
     <p>Vercel, Google et Anthropic sont des sociétés américaines. Les transferts de données hors de l'Union européenne qui peuvent en résulter sont encadrés par le Data Privacy Framework UE–États-Unis ou par les clauses contractuelles types de la Commission européenne.</p>
 
@@ -106,7 +106,7 @@ function renderPrivacyHtml() {
     </ul>
 
     <h2>Stockage sur votre appareil</h2>
-    <p>Kiroku n'utilise aucun cookie publicitaire ni outil de mesure d'audience. L'application garde sur votre appareil votre session de connexion, une copie des données affichées pour fonctionner hors connexion, et quelques préférences d'affichage (par exemple le dernier enfant consulté). Ces éléments sont nécessaires au fonctionnement et sont effacés lorsque vous vous déconnectez ou videz les données du site.</p>
+    <p>Ayumi n'utilise aucun cookie publicitaire ni outil de mesure d'audience. L'application garde sur votre appareil votre session de connexion, une copie des données affichées pour fonctionner hors connexion, et quelques préférences d'affichage (par exemple le dernier enfant consulté). Ces éléments sont nécessaires au fonctionnement et sont effacés lorsque vous vous déconnectez ou videz les données du site.</p>
 
     <h2>Vos droits</h2>
     <p>Vous pouvez demander l'accès à vos données, leur rectification, leur effacement, la limitation de leur traitement, leur portabilité, et vous opposer à leur traitement. Écrivez ${contact}. Une réponse vous sera apportée dans un délai d'un mois.</p>
