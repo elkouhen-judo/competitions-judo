@@ -97,6 +97,7 @@ export function toCanonicalCombatScore(score: SourceRecord = {}): CombatScore {
 
 export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
   const rawScores = pick<SourceRecord[]>(combat, "scores", "scores");
+  const rawConcededScores = pick<SourceRecord[]>(combat, "concededScores", "concededScores");
 
   return {
     combatId: String(pick(combat, "combatId", "id_combat") || ""),
@@ -108,6 +109,7 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     result: normalizeCanonicalCombatResult(pick(combat, "result", "resultat")),
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
     scores: Array.isArray(rawScores) ? rawScores.map(toCanonicalCombatScore) : [],
+    concededScores: Array.isArray(rawConcededScores) ? rawConcededScores.map(toCanonicalCombatScore) : [],
     notes: String(pick(combat, "notes", "deroule") || "")
   };
 }

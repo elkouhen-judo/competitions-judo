@@ -5,7 +5,7 @@ import {
 } from "./domain-adapters";
 import type { createCompetition, createPersistedCompetition } from "../domain/competitions/competition";
 import type { CombatsRepository } from "../repositories/combats.repository";
-import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
+import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokaRow } from "../repositories/types";
 import type { Competition, CompetitionDetail, ManagedJudokaScope, RpcMethods } from "../types";
@@ -150,10 +150,14 @@ export default function createCompetitionsService(
       const idCombat = String(score.id_combat);
       scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
     });
-    filtered = filtered.map((combat) => ({
-      ...combat,
-      scores: scoresByCombatId.get(String(combat.id_combat)) || []
-    }));
+    filtered = filtered.map((combat) => {
+      const rows = scoresByCombatId.get(String(combat.id_combat)) || [];
+      return {
+        ...combat,
+        scores: rows.filter((row) => !isConcededScoreRow(row)),
+        concededScores: rows.filter(isConcededScoreRow)
+      };
+    });
 
     const judokas = access.isOwn() ? [] : contextJudokas.map(toCanonicalJudoka);
     const enriched = toCombatReadModelsWithJudokas(filtered, judokas, {

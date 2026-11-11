@@ -4288,6 +4288,32 @@ html,
   font-size: 0.82rem;
 }
 
+/* Prises subies : distinguées des points marqués sur la carte du combat. */
+
+.combat-conceded-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--danger);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-conceded {
+  background: var(--danger-soft);
+  border-color: transparent;
+  color: var(--danger);
+}
+
+#combat_points_subis {
+  margin-top: 4px;
+}
+
+/* Le champ qui reçoit le focus ne passe jamais sous la barre d'actions collée en bas. */
+
+html {
+  scroll-padding-bottom: 112px;
+}
+
 /* ── Composants ───────────────────────────────────────────────────────────
    Structure et comportements. L'apparence finale est fixée par la couche
    « Thème A » en fin de fichier.

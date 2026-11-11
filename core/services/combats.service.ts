@@ -63,7 +63,7 @@ export default function createCombatsService(deps: CombatsServiceDeps): CombatsS
 
     const idCombat = buildCombatId();
     await combatsRepository.insert(combatDraft, idCombat);
-    await combatScoresRepository.replaceForCombat(idCombat, combatDraft.scores);
+    await combatScoresRepository.replaceForCombat(idCombat, combatDraft.scores, combatDraft.concededScores);
 
     return { success: true, message: "Combat ajouté." };
   }
@@ -100,7 +100,7 @@ export default function createCombatsService(deps: CombatsServiceDeps): CombatsS
     const combatDraft = competition.recordCombat(domainCombat);
 
     await combatsRepository.update(combatId, combatDraft);
-    await combatScoresRepository.replaceForCombat(combatId, combatDraft.scores);
+    await combatScoresRepository.replaceForCombat(combatId, combatDraft.scores, combatDraft.concededScores);
 
     return { success: true, message: "Combat modifié." };
   }

@@ -212,6 +212,16 @@ create table if not exists public.combat_scores (
 create index if not exists combat_scores_id_combat_idx
   on public.combat_scores (id_combat);
 
+-- Points subis : le même tableau porte les points du judoka (JUDOKA) et ceux de l'adversaire (ADVERSAIRE).
+alter table public.combat_scores
+  add column if not exists camp text not null default 'JUDOKA';
+
+alter table public.combat_scores
+  drop constraint if exists combat_scores_camp_check;
+
+alter table public.combat_scores
+  add constraint combat_scores_camp_check check (camp in ('JUDOKA', 'ADVERSAIRE'));
+
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
   where email is not null;

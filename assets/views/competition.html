@@ -144,6 +144,10 @@
                 <p v-if="combat.scoreLabels.length" class="combat-scores-line" aria-label="Points marqués par le judoka">
                   <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-technique">{{ scoreLabel }}</span>
                 </p>
+                <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Prises subies">
+                  <span class="combat-conceded-label">Subi</span>
+                  <span v-for="scoreLabel in combat.concededScoreLabels" :key="scoreLabel" class="result-badge badge-conceded">{{ scoreLabel }}</span>
+                </p>
                 <div v-if="combat.dataQualityIssues.length" class="field-todo-list" aria-label="À compléter sur ce combat">
                   <button
                     v-for="issue in combat.dataQualityIssues"

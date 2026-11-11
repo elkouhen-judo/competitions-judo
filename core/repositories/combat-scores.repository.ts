@@ -6,22 +6,34 @@ const COMBAT_SCORE_SELECT_BATCH_SIZE = 100;
 export interface CombatScoresRepository {
   listByCombatId(idCombat: string): Promise<CombatScoreRow[]>;
   listByCombatIds(ids: string[]): Promise<CombatScoreRow[]>;
-  replaceForCombat(idCombat: string, scores: CombatScoreDraft[]): Promise<CombatScoreRow[]>;
+  replaceForCombat(
+    idCombat: string,
+    scores: CombatScoreDraft[],
+    concededScores?: CombatScoreDraft[]
+  ): Promise<CombatScoreRow[]>;
+}
+
+export const CONCEDED_SCORE_CAMP = "ADVERSAIRE";
+
+export function isConcededScoreRow(row: Pick<CombatScoreRow, "camp">): boolean {
+  return String(row.camp || "").toUpperCase() === CONCEDED_SCORE_CAMP;
 }
 
 function toCombatScoreRecord(
   idCombat: string,
   score: CombatScoreDraft,
-  index: number
+  index: number,
+  conceded = false
 ): Record<string, unknown> {
   return {
-    id_combat_score: `${idCombat}_S${index}`,
+    id_combat_score: `${idCombat}_${conceded ? "C" : "S"}${index}`,
     id_combat: idCombat,
     categorie: score.category,
     technique: score.technique || "",
     type_ne_waza: score.neWazaType || "",
     valeur: score.value,
-    ordre: index
+    ordre: index,
+    camp: conceded ? CONCEDED_SCORE_CAMP : "JUDOKA"
   };
 }
 
@@ -58,24 +70,29 @@ export default function createCombatScoresRepository(
 
   async function replaceForCombat(
     idCombat: string,
-    scores: CombatScoreDraft[]
+    scores: CombatScoreDraft[],
+    concededScores: CombatScoreDraft[] = []
   ): Promise<CombatScoreRow[]> {
     await supabaseDelete("combat_scores", eqFilter("id_combat", idCombat));
 
     const inserted: CombatScoreRow[] = [];
-    for (let index = 0; index < scores.length; index += 1) {
-      const score = scores[index];
-      if (!score) {
-        continue;
+    const insertAll = async (list: CombatScoreDraft[], conceded: boolean) => {
+      for (let index = 0; index < list.length; index += 1) {
+        const score = list[index];
+        if (!score) {
+          continue;
+        }
+        const row = await supabaseInsert<CombatScoreRow>(
+          "combat_scores",
+          toCombatScoreRecord(idCombat, score, index, conceded)
+        );
+        if (row) {
+          inserted.push(row);
+        }
       }
-      const row = await supabaseInsert<CombatScoreRow>(
-        "combat_scores",
-        toCombatScoreRecord(idCombat, score, index)
-      );
-      if (row) {
-        inserted.push(row);
-      }
-    }
+    };
+    await insertAll(scores, false);
+    await insertAll(concededScores, true);
     return inserted;
   }
 

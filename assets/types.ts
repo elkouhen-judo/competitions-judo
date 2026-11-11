@@ -177,6 +177,7 @@ export interface CompetitionCombatCard {
   result: string;
   victoryType?: string;
   scoreLabels: string[];
+  concededScoreLabels: string[];
   dataQualityIssues: CombatDataQualityIssue[];
   resultClass: string;
   judokaDisplayName: string;
@@ -512,6 +513,8 @@ export interface CombatScoreFormRow {
   technique: string;
   neWazaType: string;
   value: string;
+  /** Saisie libre en cours (« Autre prise… »), même si le champ est encore vide. */
+  customTechnique?: boolean;
 }
 
 export interface CompetitionFormHelpers {

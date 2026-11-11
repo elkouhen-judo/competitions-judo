@@ -9,7 +9,7 @@ import {
 import { toCanonicalCompetition } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CombatScoreRow, CompetitionRow } from "../repositories/types";
-import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
+import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
 import type {
@@ -105,7 +105,7 @@ export default function createCoachDashboardService(
       combatRows.map((combat) => combat.id_combat)
     );
     const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-    scoreRows.forEach((score) => {
+    scoreRows.filter((score) => !isConcededScoreRow(score)).forEach((score) => {
       const idCombat = String(score.id_combat);
       scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
     });

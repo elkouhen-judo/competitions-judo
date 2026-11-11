@@ -1453,3 +1453,18 @@ test("tani-otoshi is a standing technique distinct from tai-otoshi", () => {
   assert.equal(normalizeTachiWazaTechnique("tani otoshi"), "Tani-otoshi");
   assert.equal(normalizeTachiWazaTechnique("tai otoshi"), "Tai-otoshi");
 });
+
+test("a combat keeps the opponent's points (conceded scores) apart from the judoka's points", () => {
+  const { createCombat } = require("../core/domain/competitions/combat");
+  const combat = createCombat({
+    competitionId: "COMP1",
+    judokaId: "JUDO1",
+    result: "Défaite",
+    victoryType: "Ippon",
+    scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Waza-ari" }],
+    concededScores: [{ category: "Tachi-waza", technique: "uchi mata", value: "Ippon" }]
+  });
+  assert.deepEqual(combat.scores, [{ category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Waza-ari" }]);
+  assert.deepEqual(combat.draft.concededScores, [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Ippon" }]);
+  assert.deepEqual(createCombat({ competitionId: "COMP1", judokaId: "JUDO1", result: "Victoire", victoryType: "Décision" }).concededScores, []);
+});

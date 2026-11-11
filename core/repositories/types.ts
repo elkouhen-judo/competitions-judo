@@ -83,6 +83,8 @@ export interface CombatScoreRow {
   type_ne_waza: string;
   valeur: string;
   ordre: number;
+  /** JUDOKA : point marqué ; ADVERSAIRE : point subi. Absent sur les anciennes lignes. */
+  camp?: string;
 }
 
 export interface ClubCompetitionRow {

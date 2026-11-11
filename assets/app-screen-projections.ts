@@ -307,6 +307,7 @@
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
+      concededScoreLabels: (c.concededScores || []).map(formatCombatScoreLabel),
       dataQualityIssues: getCombatDataQualityIssues(c, helpers),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
@@ -339,6 +340,7 @@
       result?: string;
       victoryType?: string;
       scores?: CombatReadModel["scores"];
+      concededScores?: CombatReadModel["scores"];
       notes?: string;
     },
     helpers: {
@@ -361,6 +363,7 @@
       result: (payload.result as CombatReadModel["result"]) || "Victoire",
       victoryType: payload.victoryType || "",
       scores: payload.scores || [],
+      concededScores: payload.concededScores || [],
       notes: payload.notes || "",
       judokaDisplayName: judoka ? helpers.getJudokaDisplayName(judoka) : "",
       judokaHandedness: judoka ? judoka.handedness : ""
@@ -378,6 +381,7 @@
       resultClass: `result-${String(combatLike.result || "").toLowerCase()}`,
       victoryType: combatLike.victoryType || "",
       scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
+      concededScoreLabels: (combatLike.concededScores || []).map(formatCombatScoreLabel),
       dataQualityIssues: getCombatDataQualityIssues(combatLike, helpers),
       judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),

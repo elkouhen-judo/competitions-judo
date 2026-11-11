@@ -11,6 +11,11 @@
     tachiWazaTechniques: TACHI_WAZA_TECHNIQUES
   } = window.KirokuCompetitionFormHelpers;
 
+  const OTHER_TECHNIQUE_VALUE = "__autre__";
+
+  // « scores » : points marqués par le judoka ; « concededScores » : prises subies.
+  type ScoreListKey = "scores" | "concededScores";
+
   function createKirokuCombatFormScreen(app: KirokuApp, deps: CombatFormDeps) {
     const { state, ui, notifications } = app;
     const { $, showView } = ui;
@@ -44,6 +49,7 @@
       result: "",
       victoryType: "",
       scores: [] as CombatScoreFormRow[],
+      concededScores: [] as CombatScoreFormRow[],
       notes: ""
     };
     const defaultCombatFormViewState = {
@@ -55,7 +61,7 @@
 
     const combatFormViewModel = window.Vue.reactive({
       ...defaultCombatFormViewState,
-      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[] },
+      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[], concededScores: [] as CombatScoreFormRow[] },
       combatFormErrors: { result: "" }
     });
     let combatFormMounted = false;
@@ -65,6 +71,7 @@
     const showCombatDecisionBlock = window.Vue.computed(() => getCombatDecisionOptions(combatFormViewModel.combatForm.result).length > 0);
     const neWazaTechniques = window.Vue.computed(() => NE_WAZA_TECHNIQUES);
     const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
+    const otherTechniqueValue = window.Vue.computed(() => OTHER_TECHNIQUE_VALUE);
     const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
       const form = combatFormViewModel.combatForm;
       if (!form.result) {
@@ -121,6 +128,10 @@
           addCombatScoreRow,
           cancelCombatForm,
           deleteCombatFromForm,
+          getScoreTechnique,
+          getScoreTechniqueOptions,
+          getScoreTechniqueSelectValue,
+          isCustomScoreTechnique,
           onCombatScoreCategoryChange,
           removeCombatScoreRow,
           saveCombat,
@@ -130,6 +141,8 @@
           selectCombatScoreCategory,
           selectCombatStage,
           selectCombatStance,
+          selectScoreTechnique,
+          setScoreTechnique,
           syncCombatDecisionVisibility
         },
         {
@@ -144,6 +157,7 @@
           combatFormOpponentStanceIssues,
           isSubmitting,
           neWazaTechniques,
+          otherTechniqueValue,
           showCombatDecisionBlock,
           tachiWazaTechniques
         }
@@ -184,6 +198,12 @@
           result: combat.result || "",
           victoryType: combat.victoryType || "",
           scores: (combat.scores || []).map((score) => ({
+            category: score.category || "",
+            technique: score.technique || "",
+            neWazaType: score.neWazaType || "",
+            value: score.value || ""
+          })),
+          concededScores: (combat.concededScores || []).map((score) => ({
             category: score.category || "",
             technique: score.technique || "",
             neWazaType: score.neWazaType || "",
@@ -307,6 +327,14 @@
       ) {
         form.scores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
       }
+      // Défaite sur un point : la prise subie correspondante est préparée.
+      if (
+        form.result === "Défaite" &&
+        DECISION_SCORE_VALUES.includes(form.victoryType) &&
+        !form.concededScores.some((score) => score.value === form.victoryType)
+      ) {
+        form.concededScores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
+      }
     }
 
     function selectCombatStance(stance: string) {
@@ -314,11 +342,61 @@
       form.opponentStance = form.opponentStance === stance ? "" : stance;
     }
 
-    function selectCombatScoreCategory(index: number, category: string) {
-      const score = combatFormViewModel.combatForm.scores[index];
+    function getScoreList(list: ScoreListKey = "scores"): CombatScoreFormRow[] {
+      return list === "concededScores"
+        ? combatFormViewModel.combatForm.concededScores
+        : combatFormViewModel.combatForm.scores;
+    }
+
+    function selectCombatScoreCategory(index: number, category: string, list: ScoreListKey = "scores") {
+      const score = getScoreList(list)[index];
       if (!score) return;
+      if (score.category !== category) score.customTechnique = false;
       score.category = category;
-      onCombatScoreCategoryChange(index);
+      onCombatScoreCategoryChange(index, list);
+    }
+
+    // COMBAT-TECH : la prise se choisit dans la liste, ou se saisit librement via « Autre prise… ».
+    function getScoreTechniqueOptions(score: CombatScoreFormRow): string[] {
+      return score.category === "Ne-waza" ? NE_WAZA_TECHNIQUES : TACHI_WAZA_TECHNIQUES;
+    }
+
+    function getScoreTechnique(score: CombatScoreFormRow): string {
+      return score.category === "Ne-waza" ? score.neWazaType : score.technique;
+    }
+
+    function isCustomScoreTechnique(score: CombatScoreFormRow): boolean {
+      const technique = getScoreTechnique(score);
+      return Boolean(score.customTechnique) || (Boolean(technique) && !getScoreTechniqueOptions(score).includes(technique));
+    }
+
+    function getScoreTechniqueSelectValue(score: CombatScoreFormRow): string {
+      return isCustomScoreTechnique(score) ? OTHER_TECHNIQUE_VALUE : getScoreTechnique(score);
+    }
+
+    function setScoreTechnique(index: number, value: string, list: ScoreListKey = "scores") {
+      const score = getScoreList(list)[index];
+      if (!score) return;
+      const technique = String(value || "").trim();
+      if (score.category === "Ne-waza") score.neWazaType = technique;
+      else score.technique = technique;
+    }
+
+    function selectScoreTechnique(index: number, value: string, list: ScoreListKey = "scores") {
+      const score = getScoreList(list)[index];
+      if (!score) return;
+      if (value === OTHER_TECHNIQUE_VALUE) {
+        score.customTechnique = true;
+        setScoreTechnique(index, "", list);
+        const inputId = list === "concededScores" ? `combat_custom_technique_concededScores_${index}` : `combat_custom_technique_${index}`;
+        window.Vue.nextTick(() => {
+          const input = document.getElementById(inputId);
+          if (input) input.focus();
+        });
+        return;
+      }
+      score.customTechnique = false;
+      setScoreTechnique(index, value, list);
     }
 
     function deleteCombatFromForm() {
@@ -378,6 +456,7 @@
         victoryType:
           result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
         scores: combatFormViewModel.combatForm.scores.filter(isCombatScoreRowComplete),
+        concededScores: combatFormViewModel.combatForm.concededScores.filter(isCombatScoreRowComplete),
         notes: combatFormViewModel.combatForm.notes,
         combatId: undefined as string | undefined
       };
@@ -419,19 +498,19 @@
       }
     }
 
-    function addCombatScoreRow() {
+    function addCombatScoreRow(list: ScoreListKey = "scores") {
       ensureCombatFormViewModel();
-      combatFormViewModel.combatForm.scores.push(createEmptyCombatScoreRow());
+      getScoreList(list).push(createEmptyCombatScoreRow());
     }
 
-    function removeCombatScoreRow(index: number) {
+    function removeCombatScoreRow(index: number, list: ScoreListKey = "scores") {
       ensureCombatFormViewModel();
-      combatFormViewModel.combatForm.scores.splice(index, 1);
+      getScoreList(list).splice(index, 1);
     }
 
-    function onCombatScoreCategoryChange(index: number) {
+    function onCombatScoreCategoryChange(index: number, list: ScoreListKey = "scores") {
       ensureCombatFormViewModel();
-      const score = combatFormViewModel.combatForm.scores[index];
+      const score = getScoreList(list)[index];
       if (!score) return;
       if (score.category !== "Tachi-waza") score.technique = "";
       if (score.category !== "Ne-waza") score.neWazaType = "";
@@ -440,7 +519,8 @@
     function resetCombatForm() {
       ensureCombatFormViewModel();
       Object.assign(combatFormViewModel.combatForm, defaultCombatForm, {
-        scores: [] as CombatScoreFormRow[]
+        scores: [] as CombatScoreFormRow[],
+        concededScores: [] as CombatScoreFormRow[]
       });
       combatFormViewModel.combatFormErrors.result = "";
       Object.assign(combatFormViewModel, {

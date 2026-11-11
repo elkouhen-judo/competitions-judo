@@ -167,7 +167,24 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator(".combat-score-row")).toHaveCount(1);
     await expect(page.locator(".combat-score-row [aria-checked='true']").first()).toHaveText("Ippon");
     await page.locator(".combat-score-row").getByRole("radio", { name: "Debout" }).click();
-    await page.locator(".combat-score-row input").fill("O-soto-gari");
+    // Prise absente de la liste : « Autre prise… » ouvre un champ libre, choisir une prise connue le referme.
+    const techniqueSelect = page.locator(".combat-score-row select.combat-technique-select");
+    await techniqueSelect.selectOption("__autre__");
+    const customTechnique = page.locator(".combat-score-row .combat-technique-custom");
+    await expect(customTechnique).toBeFocused();
+    await customTechnique.fill("Sode-tsurikomi-goshi");
+    await expect(techniqueSelect).toHaveValue("__autre__");
+    await shot("04a-custom-technique");
+    await techniqueSelect.selectOption("O-soto-gari");
+    await expect(customTechnique).toHaveCount(0);
+    // Prise subie : les points de l'adversaire se saisissent à part, comme les points marqués.
+    await page.getByRole("button", { name: "+ Ajouter une prise subie" }).click();
+    const concededRow = page.locator("#combat_points_subis .combat-score-row");
+    await expect(concededRow).toHaveCount(1);
+    await concededRow.getByRole("radio", { name: "Waza-ari" }).click();
+    await concededRow.getByRole("radio", { name: "Debout" }).click();
+    await concededRow.locator("select.combat-technique-select").selectOption("Uchi-mata");
+    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(1);
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
     const borderedLabels = await page.locator(
       ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
@@ -190,6 +207,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
     await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
     await expect(page.getByText("O-soto-gari · Ippon", { exact: true })).toBeVisible();
+    await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText("Uchi-mata · Waza-ari");
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     await shot("05-saved");
 

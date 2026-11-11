@@ -15,6 +15,7 @@ export interface CombatInput {
   result?: unknown;
   victoryType?: unknown;
   scores?: unknown;
+  concededScores?: unknown;
   notes?: unknown;
 }
 
@@ -25,6 +26,8 @@ export interface CombatDraft {
   result: CombatResult;
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
+  /** Points marqués par l'adversaire (prises subies). */
+  concededScores: CombatScoreDraft[];
   notes: string;
 }
 
@@ -39,6 +42,7 @@ export interface CombatModel {
   result: CombatResult;
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
+  concededScores: CombatScoreDraft[];
   notes: string;
 }
 
@@ -59,6 +63,7 @@ export function createCombatDraft(combat: CombatInput = {}): CombatDraft {
     result,
     victoryType,
     scores: createCombatScores(combat.scores),
+    concededScores: createCombatScores(combat.concededScores),
     notes: String(combat.notes || "")
   };
 }
@@ -80,6 +85,7 @@ export function createCombat(combat: CombatInput): CombatModel {
     result: draft.result,
     victoryType: draft.victoryType,
     scores: draft.scores,
+    concededScores: draft.concededScores,
     notes: draft.notes
   };
 }

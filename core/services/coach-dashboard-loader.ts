@@ -1,6 +1,6 @@
 import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
-import type { CombatScoresRepository } from "../repositories/combat-scores.repository";
+import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { CombatScoreRow, CompetitionRow } from "../repositories/types";
 import type { JudokasRepository } from "../repositories/judokas.repository";
@@ -69,7 +69,8 @@ export function filterCompetitionsBySelection(
 
 function groupScoresByCombatId(scoreRows: CombatScoreRow[]): Map<string, CombatScoreRow[]> {
   const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-  scoreRows.forEach((score) => {
+  // Les statistiques portent sur les points marqués : les points subis sont écartés.
+  scoreRows.filter((score) => !isConcededScoreRow(score)).forEach((score) => {
     const idCombat = String(score.id_combat);
     scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
   });

@@ -149,24 +149,98 @@
                     {{ category.label }}
                   </button>
                 </div>
-                <template v-if="score.category === 'Tachi-waza'">
-                  <input type="text" list="tachiWazaTechniqueSuggestions" v-model.trim="score.technique" :aria-label="'Technique debout, point ' + (index + 1)" placeholder="Technique (ex. Seoi-nage)">
-                </template>
-                <template v-else-if="score.category === 'Ne-waza'">
-                  <input type="text" list="neWazaTechniqueSuggestions" v-model.trim="score.neWazaType" :aria-label="'Technique au sol, point ' + (index + 1)" placeholder="Technique (ex. Hon-gesa-gatame)">
+                <!-- COMBAT-TECH : liste des prises connues, « Autre prise… » ouvre une saisie libre. -->
+                <template v-if="score.category === 'Tachi-waza' || score.category === 'Ne-waza'">
+                  <select
+                    class="combat-technique-select"
+                    :value="getScoreTechniqueSelectValue(score)"
+                    :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', point ' + (index + 1)"
+                    @change="selectScoreTechnique(index, $event.target.value)">
+                    <option value="">Choisir la prise</option>
+                    <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
+                    <option :value="otherTechniqueValue">Autre prise…</option>
+                  </select>
+                  <input
+                    v-if="isCustomScoreTechnique(score)"
+                    :id="'combat_custom_technique_' + index"
+                    class="combat-technique-custom"
+                    type="text"
+                    :value="getScoreTechnique(score)"
+                    @input="setScoreTechnique(index, $event.target.value)"
+                    :aria-label="'Nom de la prise, point ' + (index + 1)"
+                    placeholder="Nom de la prise (ex. Sode-tsurikomi-goshi)"
+                    autocomplete="off">
                 </template>
               </div>
             </div>
-            <datalist id="tachiWazaTechniqueSuggestions">
-              <option v-for="technique in tachiWazaTechniques" :key="technique" :value="technique"></option>
-            </datalist>
-            <datalist id="neWazaTechniqueSuggestions">
-              <option v-for="technique in neWazaTechniques" :key="technique" :value="technique"></option>
-            </datalist>
             <button class="button-secondary" type="button" @click="addCombatScoreRow()">+ Ajouter un point</button>
             <ul v-if="combatFormScoreIssues.length" class="field-todo-list" aria-label="À compléter sur les points marqués">
               <li v-for="issue in combatFormScoreIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
             </ul>
+          </div>
+
+          <div id="combat_points_subis" class="combat-score-block" tabindex="-1">
+            <div class="combat-score-header">
+              <span class="choice-label">Prises subies</span>
+              <p class="field-hint">Les points marqués par l'adversaire, même en cas de victoire.</p>
+            </div>
+            <div class="combat-score-rows">
+              <div v-for="(score, index) in combatForm.concededScores" :key="index" class="combat-score-row">
+                <div class="combat-score-row-header">
+                  <span class="combat-score-row-title">Prise subie {{ index + 1 }}</span>
+                  <button class="icon-button" type="button" :aria-label="'Retirer la prise subie ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index, 'concededScores')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur de la prise subie ' + (index + 1)">
+                  <button
+                    v-for="value in combatScoreValues"
+                    :key="value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="score.value === value ? 'true' : 'false'"
+                    :class="['choice-button', { 'choice-active': score.value === value }]"
+                    @click="score.value = value">
+                    {{ value }}
+                  </button>
+                </div>
+                <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-label="'Debout ou au sol, prise subie ' + (index + 1)">
+                  <button
+                    v-for="category in combatScoreCategories"
+                    :key="category.value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="score.category === category.value ? 'true' : 'false'"
+                    :class="['choice-button', { 'choice-active': score.category === category.value }]"
+                    @click="selectCombatScoreCategory(index, category.value, 'concededScores')">
+                    {{ category.label }}
+                  </button>
+                </div>
+                <!-- COMBAT-TECH : liste des prises connues, « Autre prise… » ouvre une saisie libre. -->
+                <template v-if="score.category === 'Tachi-waza' || score.category === 'Ne-waza'">
+                  <select
+                    class="combat-technique-select"
+                    :value="getScoreTechniqueSelectValue(score)"
+                    :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', prise subie ' + (index + 1)"
+                    @change="selectScoreTechnique(index, $event.target.value, 'concededScores')">
+                    <option value="">Choisir la prise</option>
+                    <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
+                    <option :value="otherTechniqueValue">Autre prise…</option>
+                  </select>
+                  <input
+                    v-if="isCustomScoreTechnique(score)"
+                    :id="'combat_custom_technique_concededScores_' + index"
+                    class="combat-technique-custom"
+                    type="text"
+                    :value="getScoreTechnique(score)"
+                    @input="setScoreTechnique(index, $event.target.value, 'concededScores')"
+                    :aria-label="'Nom de la prise, point ' + (index + 1)"
+                    placeholder="Nom de la prise (ex. Sode-tsurikomi-goshi)"
+                    autocomplete="off">
+                </template>
+              </div>
+            </div>
+            <button class="button-secondary" type="button" @click="addCombatScoreRow('concededScores')">+ Ajouter une prise subie</button>
           </div>
 
           <div class="choice-field">
