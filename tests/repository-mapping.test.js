@@ -8,7 +8,7 @@ const createClubCompetitionsRepository = require("../core/repositories/club-comp
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
 const createParentLinksRepository = require("../core/repositories/parent-links.repository");
-const { toCanonicalCombat, toCombatReadModelsWithJudokas } = require("../core/services/domain-adapters");
+const { toCanonicalCombat, toCanonicalCombatScore, toCombatReadModelsWithJudokas } = require("../core/services/domain-adapters");
 const { createCombat } = require("../core/domain/competitions/combat");
 
 function createRepositoryDeps(calls, options = {}) {
@@ -324,6 +324,34 @@ test("combat scores repository replaces a combat's scores with deterministic ids
       }
     ]
   ]);
+});
+
+test("COMBAT-CHRONO : le rang global du point est écrit dans ordre, tous camps confondus", async () => {
+  const calls = [];
+  const combatScoresRepository = createCombatScoresRepository(createRepositoryDeps(calls));
+
+  await combatScoresRepository.replaceForCombat(
+    "CB1",
+    [
+      { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Waza-ari", order: 0 },
+      { category: "", technique: "", neWazaType: "", value: "Yuko", order: 2 }
+    ],
+    [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Waza-ari", order: 1 }]
+  );
+
+  const inserted = calls.filter((call) => call[0] === "insert").map((call) => [call[2].camp, call[2].ordre, call[2].categorie]);
+  assert.deepEqual(inserted, [
+    ["JUDOKA", 0, "Tachi-waza"],
+    ["JUDOKA", 2, ""],
+    ["ADVERSAIRE", 1, "Tachi-waza"]
+  ]);
+  assert.deepEqual(toCanonicalCombatScore({ categorie: "", technique: "", type_ne_waza: "", valeur: "Yuko", ordre: 2 }), {
+    category: "",
+    technique: "",
+    neWazaType: "",
+    value: "Yuko",
+    order: 2
+  });
 });
 
 test("combat scores repository batches score lookup by combat ids", async () => {
@@ -671,6 +699,9 @@ test("COMBAT-SCORE : le score officiel est écrit sur 6 colonnes, effacé avec n
   );
   assert.equal(cleared.score_judoka_ippon, null);
   assert.equal(cleared.score_adversaire_yuko, null);
+  // COMBAT-SHIDO : les shidos suivent le score (0 par défaut, null si le score est effacé).
+  assert.deepEqual([scored.score_judoka_shido, scored.score_adversaire_shido], [0, 0]);
+  assert.equal(cleared.score_judoka_shido, null);
   assert.equal("score_judoka_ippon" in untouched, false);
 });
 
@@ -695,6 +726,21 @@ test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colon
       score_adversaire_wazaari: 1,
       score_adversaire_yuko: 0
     }).officialScore,
-    { judoka: { ippon: 1, wazaAri: 0, yuko: 2 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0 } }
+    { judoka: { ippon: 1, wazaAri: 0, yuko: 2, shido: 0 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0, shido: 0 } }
+  );
+  // COMBAT-SHIDO : les shidos sont relus avec le score.
+  assert.deepEqual(
+    toCanonicalCombat({
+      ...row,
+      score_judoka_ippon: 0,
+      score_judoka_wazaari: 1,
+      score_judoka_yuko: 0,
+      score_adversaire_ippon: 0,
+      score_adversaire_wazaari: 0,
+      score_adversaire_yuko: 0,
+      score_judoka_shido: 1,
+      score_adversaire_shido: 2
+    }).officialScore,
+    { judoka: { ippon: 0, wazaAri: 1, yuko: 0, shido: 1 }, opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 2 } }
   );
 });

@@ -109,7 +109,11 @@ const DATA_QUALITY_CRITERIA: Array<{
   {
     criterion: "scores",
     label: "Points marqués non renseignés",
-    isMissing: (combat) => !(combat.scores || []).length
+    // Seule une victoire aux points (Ippon, Waza-ari, Yuko) exige un point du judoka.
+    isMissing: (combat) =>
+      isVictoryCombatResult(combat.result) &&
+      ["Ippon", "Waza-ari", "Yuko"].includes(String(combat.victoryType || "")) &&
+      !(combat.scores || []).length
   },
   {
     criterion: "competitionLevel",

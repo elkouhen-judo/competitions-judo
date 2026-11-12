@@ -487,19 +487,23 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
   // COMBAT-3 : enregistrer et saisir le suivant, avec l'étape suivante proposée.
   assert.match(bundle, /id="saveAndNextCombatButton"[\s\S]*?Enregistrer \+ suivant/);
   assert.match(client, /const next = \{ "1\/32": "1\/16", "1\/16": "1\/8", "1\/8": "1\/4", "1\/4": "1\/2", "1\/2": "Finale" \};/);
-  // COMBAT-1 : la fin du combat crée la ligne de point correspondante, dans le bon camp.
-  assert.match(client, /form\.points\.push\(\{ \.\.\.createEmptyCombatScoreRow\(\), camp, value: form\.victoryType \}\);/);
+  // COMBAT-1 : la fin du combat ajoute le point correspondant en fin de déroulé, dans le bon camp.
+  assert.match(client, /form\.points\.push\(createPointRow\(camp, form\.victoryType, \{ autoFromDecision: true \}\)\);/);
   // COMBAT-SCORE : score officiel IWY - IWY dans la saisie rapide.
   assert.match(bundle, /id="combat_score"[\s\S]*?@click="changeCombatOfficialScore\(side\.key, valueKey\.key, 1\)"/);
-  // COMBAT-PTS : une seule liste de points, chacun avec « Marqué par ».
-  assert.match(bundle, /v-for="\(score, index\) in combatForm\.points"[\s\S]*?Marqué par/);
+  // COMBAT-CHRONO : la saisie suit le combat (avant, pendant, fin) et le déroulé se réordonne.
+  assert.match(bundle, /<h3>Avant le combat<\/h3>[\s\S]*<h3>Le combat<\/h3>[\s\S]*<h3>Fin du combat<\/h3>/);
+  assert.match(bundle, /v-for="\(score, index\) in combatForm\.points"[\s\S]*?moveCombatPoint\(index, -1\)/);
+  assert.match(bundle, /@keydown="onChoiceKeydown"/);
+  // COMBAT-QUIT : quitter un formulaire modifié demande confirmation.
+  assert.match(client, /Quitter sans enregistrer \?/);
   assert.doesNotMatch(bundle, /combat_points_subis/);
 });
 
 test("combat form and cards show what is left to fill in plain words", () => {
   assert.match(bundle, /id="combatDecisionBlock"[\s\S]*v-if="combatFormVictoryTypeIssues\.length"[\s\S]*v-for="issue in combatFormVictoryTypeIssues"/);
   assert.match(bundle, /id="combat_garde_adversaire"[\s\S]*v-if="combatFormOpponentStanceIssues\.length"[\s\S]*v-for="issue in combatFormOpponentStanceIssues"/);
-  assert.match(bundle, /\+ Ajouter un point[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/);
+  assert.match(bundle, /id="combat_points"[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/);
   assert.match(bundle, /À compléter : \{\{ issue\.shortLabel \}\}/);
   assert.doesNotMatch(bundle, /issue\.priority === 'high' \? 'Haute' : 'Moyenne'/);
   // COMBAT-5 : toucher « À compléter » sur une carte ouvre le formulaire sur le champ concerné.
@@ -519,9 +523,11 @@ test("combat form lets the user pick a listed technique or type another one", ()
   const path = require("node:path");
   const view = fs.readFileSync(path.join(__dirname, "..", "assets", "views", "combat-form.html"), "utf8");
   const screen = fs.readFileSync(path.join(__dirname, "..", "assets", "dist", "app-screen-combat-form.js"), "utf8");
-  assert.match(view, /<select[\s\S]*?class="combat-technique-select"[\s\S]*?Autre technique…/);
+  assert.match(view, /<select[\s\S]*?class="combat-technique-select"[\s\S]*?Autre technique debout…[\s\S]*?Autre technique au sol…/);
   assert.match(view, /v-if="isCustomScoreTechnique\(score\)"/);
-  assert.doesNotMatch(view, /<datalist/);
+  // Seul l'adversaire propose des suggestions libres ; la technique reste une liste groupée.
+  assert.match(view, /<datalist id="combat_adversaire_suggestions">/);
+  assert.equal((view.match(/<datalist/g) || []).length, 1);
   assert.match(screen, /function isCustomScoreTechnique\(score\)/);
   assert.match(screen, /function selectScoreTechnique\(index, value\)/);
 });

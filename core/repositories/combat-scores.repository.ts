@@ -32,7 +32,7 @@ function toCombatScoreRecord(
     technique: score.technique || "",
     type_ne_waza: score.neWazaType || "",
     valeur: score.value,
-    ordre: index,
+    ordre: score.order ?? index,
     camp: conceded ? CONCEDED_SCORE_CAMP : "JUDOKA"
   };
 }

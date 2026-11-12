@@ -338,6 +338,7 @@
       ensureCompetitionDetailViewModel();
       state.currentCompetition = null;
       state.currentCombats = [];
+      state.currentCombatSuggestions = null;
       state.isLoadingCompetition = true;
       showView("competitionView", { routeState: { competitionId: id } });
 
@@ -347,6 +348,7 @@
         (data: CompetitionDetail) => {
           state.currentCompetition = data.competition;
           state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
+          state.currentCombatSuggestions = data.combatSuggestions || null;
           state.canEditCurrentCompetition = Boolean(data.canEditCompetition);
           state.isLoadingCompetition = false;
           if (competitionDetailRef) {

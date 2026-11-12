@@ -69,6 +69,12 @@ test("supabase schema stores combat scores in a dedicated table", () => {
     schema,
     /combat_scores_categorie_check[\s\S]*categorie in \('Tachi-waza', 'Ne-waza'\)/i
   );
+  // COMBAT-TECH-OPT et COMBAT-SHIDO.
+  assert.match(schema, /add constraint combat_scores_categorie_check check \(categorie in \('Tachi-waza', 'Ne-waza', ''\)\)/i);
+  assert.match(
+    schema,
+    /combats_shido_check[\s\S]*score_judoka_shido is null or score_judoka_shido between 0 and 3/i
+  );
   assert.match(
     schema,
     /combat_scores_valeur_check[\s\S]*valeur in \('Ippon', 'Waza-ari', 'Yuko'\)/i

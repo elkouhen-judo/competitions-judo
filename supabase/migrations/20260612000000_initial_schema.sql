@@ -246,6 +246,27 @@ alter table public.combats
     )
   );
 
+-- COMBAT-SHIDO : shidos de chaque camp, rattachés au score officiel (null = score non renseigné).
+alter table public.combats
+  add column if not exists score_judoka_shido smallint,
+  add column if not exists score_adversaire_shido smallint;
+
+alter table public.combats
+  drop constraint if exists combats_shido_check;
+
+alter table public.combats
+  add constraint combats_shido_check check (
+    (score_judoka_shido is null or score_judoka_shido between 0 and 3)
+    and (score_adversaire_shido is null or score_adversaire_shido between 0 and 3)
+  );
+
+-- COMBAT-TECH-OPT : un point peut être enregistré avant de connaître la technique (catégorie vide).
+alter table public.combat_scores
+  drop constraint if exists combat_scores_categorie_check;
+
+alter table public.combat_scores
+  add constraint combat_scores_categorie_check check (categorie in ('Tachi-waza', 'Ne-waza', ''));
+
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
   where email is not null;

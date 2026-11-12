@@ -8,7 +8,7 @@ import type { CombatsRepository } from "../repositories/combats.repository";
 import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokaRow } from "../repositories/types";
-import type { Competition, CompetitionDetail, ManagedJudokaScope, RpcMethods } from "../types";
+import type { CombatSuggestions, Competition, CompetitionDetail, ManagedJudokaScope, RpcMethods } from "../types";
 import type { UserContextService } from "./user-context.service";
 
 interface JudokaDataAccess {
@@ -109,6 +109,32 @@ export default function createCompetitionsService(
     return records.map(toCanonicalCompetition);
   }
 
+  // COMBAT-SUGG : adversaires déjà rencontrés et techniques déjà marquées par le judoka, du plus fréquent au moins fréquent.
+  async function loadCombatSuggestions(judokaId: string): Promise<CombatSuggestions> {
+    if (!judokaId) {
+      return { opponents: [], techniques: [] };
+    }
+    const combats = await combatsRepository.listByJudoka(judokaId);
+    const scores = await combatScoresRepository.listByCombatIds(combats.map((combat) => combat.id_combat));
+    const rankByFrequency = (values: string[], limit: number) => {
+      const counts = new Map<string, number>();
+      values.map((value) => value.trim()).filter(Boolean).forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+      return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"))
+        .slice(0, limit)
+        .map(([value]) => value);
+    };
+    return {
+      opponents: rankByFrequency(combats.map((combat) => String(combat.adversaire || "")), 50),
+      techniques: rankByFrequency(
+        scores
+          .filter((score) => !isConcededScoreRow(score))
+          .map((score) => String(score.categorie === "Ne-waza" ? score.type_ne_waza : score.technique || "")),
+        8
+      )
+    };
+  }
+
   async function getCompetitionDetail(email: string, idCompetition: string): Promise<CompetitionDetail> {
     const {
       judokas: contextJudokas,
@@ -165,14 +191,20 @@ export default function createCompetitionsService(
         `${judoka.firstName} ${normalizeLastName(judoka.lastName)}`
     });
 
+    const canEdit = canManageCompetition(domainUser, domainCompetition, managedJudokaScope);
+    const combatSuggestions = canEdit
+      ? await loadCombatSuggestions(String(domainCompetition.ownerJudokaId || ""))
+      : { opponents: [], techniques: [] };
+
     return {
       competition: toCanonicalCompetition(competitionRecord),
       combats: enriched,
+      combatSuggestions,
       isAdmin: domainUser.accessRole === "ADMIN",
       isCoach: domainUser.accessRole === "COACH",
       isParent: access.isManaged(),
-      canManageCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
-      canEditCompetition: canManageCompetition(domainUser, domainCompetition, managedJudokaScope),
+      canManageCompetition: canEdit,
+      canEditCompetition: canEdit,
       hasInheritedClubCompetitionFields: Boolean(domainCompetition.clubCompetitionId),
       judokas
     };

@@ -8,32 +8,39 @@ export interface CombatScoreInput {
   technique?: unknown;
   neWazaType?: unknown;
   value?: unknown;
+  order?: unknown;
 }
 
 export interface CombatScoreDraft {
-  category: CombatScoreCategory;
+  /** "" : technique non précisée (debout ou au sol inconnu). */
+  category: CombatScoreCategory | "";
   technique: TachiWazaTechnique | "";
   neWazaType: NeWazaType | "";
   value: CombatScoreValue;
+  /** COMBAT-CHRONO : rang du point dans le combat, tous camps confondus. */
+  order?: number;
 }
 
+function createScoreOrder(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const order = Number(value);
+  return Number.isInteger(order) && order >= 0 ? order : undefined;
+}
+
+// COMBAT-TECH-OPT : seule la valeur est obligatoire ; la technique peut rester à préciser.
 export function createCombatScore(score: CombatScoreInput = {}): CombatScoreDraft {
-  const category = createCombatScoreCategory(score.category);
+  const category = String(score.category || "").trim() ? createCombatScoreCategory(score.category) : "";
   const value = createCombatScoreValue(score.value);
+  const order = createScoreOrder(score.order);
+  const withOrder = (draft: CombatScoreDraft): CombatScoreDraft => (order === undefined ? draft : { ...draft, order });
 
   if (category === "Tachi-waza") {
-    const technique = createTachiWazaTechnique(score.technique);
-    if (!technique) {
-      throw new Error("Nom de l'action obligatoire pour un point debout.");
-    }
-    return { category, technique, neWazaType: "", value };
+    return withOrder({ category, technique: createTachiWazaTechnique(score.technique), neWazaType: "", value });
   }
-
-  const neWazaType = createNeWazaType(score.neWazaType);
-  if (!neWazaType) {
-    throw new Error("Action au sol obligatoire pour un point au sol.");
+  if (category === "Ne-waza") {
+    return withOrder({ category, technique: "", neWazaType: createNeWazaType(score.neWazaType), value });
   }
-  return { category, technique: "", neWazaType, value };
+  return withOrder({ category: "", technique: "", neWazaType: "", value });
 }
 
 export function createCombatScores(scores: unknown): CombatScoreDraft[] {

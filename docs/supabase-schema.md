@@ -71,7 +71,9 @@ Cet ordre respecte les clés étrangères.
 
 `public.combats` stocke aussi `etape` : le tour du combat dans la compétition (`Poule`, `1/32`, `1/16`, `1/8`, `1/4`, `1/2`, `Repêchage`, `Place de 3`, `Finale`, ou vide), contraint par `combats_etape_check`.
 
-`public.combats` stocke le score officiel IWY - IWY sur six colonnes `smallint` : `score_judoka_ippon`, `score_judoka_wazaari`, `score_judoka_yuko`, `score_adversaire_ippon`, `score_adversaire_wazaari`, `score_adversaire_yuko`. Elles sont toutes nulles (score non renseigné) ou toutes entre 0 et 9, contrainte `combats_score_check`.
+`public.combats` stocke le score officiel IWY - IWY sur six colonnes `smallint` : `score_judoka_ippon`, `score_judoka_wazaari`, `score_judoka_yuko`, `score_adversaire_ippon`, `score_adversaire_wazaari`, `score_adversaire_yuko`. Elles sont toutes nulles (score non renseigné) ou toutes entre 0 et 9, contrainte `combats_score_check` (l'application limite l'Ippon à 1). `score_judoka_shido` et `score_adversaire_shido` (`smallint`, null ou 0 à 3, contrainte `combats_shido_check`) portent les shidos.
+
+`public.combat_scores.ordre` est le rang du point dans le combat, tous camps confondus (les anciens points ont un rang par camp). `categorie` peut être vide : point enregistré sans technique (contrainte `combat_scores_categorie_check`).
 
 `public.combat_scores.camp` indique qui a marqué le point : `JUDOKA` ou `ADVERSAIRE` (`combat_scores_camp_check`).
 

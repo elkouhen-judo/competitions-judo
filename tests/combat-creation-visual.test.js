@@ -86,7 +86,14 @@ async function startServer() {
         if (request.method === "getInitialData") {
           result = { user, isAdmin: false, isCoach: false, isParent: false, competitions: [competition], clubCompetitions: [], judokas: [user] };
         } else if (request.method === "getCompetitionDetail") {
-          result = { competition, combats, canEditCompetition: true, canFinalizeCompetition: true, canDeleteCompetition: true };
+          result = {
+            competition,
+            combats,
+            combatSuggestions: { opponents: ["Camille Durand", "Inès Robert"], techniques: ["Uchi-mata"] },
+            canEditCompetition: true,
+            canFinalizeCompetition: true,
+            canDeleteCompetition: true
+          };
         } else if (request.method === "ajouterCombat") {
           const input = request.args[0];
           const combat = {
@@ -135,7 +142,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
       await new Promise((resolve) => server.close(resolve));
     });
 
-    const shot = (step) => page.screenshot({ path: `output/playwright/combat-flow-${name}-${step}.png`, fullPage: true });
+    const shot = (step) => page.screenshot({ path: `output/playwright/combat-flow-${name}-${step}.png`, fullPage: true, animations: "disabled" });
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
     await expect(page.getByText(competition.name, { exact: true })).toBeVisible();
@@ -156,60 +163,66 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     }
     await shot("03-form-empty");
 
-    // Saisie rapide sans menu déroulant : étape, résultat et fin du combat se choisissent en un geste.
+    // COMBAT-CHRONO : avant le combat, sans menu déroulant ; toutes les étapes sont visibles.
     assert.equal(await page.locator("#combatFormView .combat-quick-section select").count(), 0);
+    const stageOverflow = await page.locator("#combat_etape").evaluate((element) => element.scrollWidth > element.clientWidth);
+    assert.equal(stageOverflow, false);
     await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
-    await page.locator("#combat_resultat").getByRole("radio", { name: "Victoire" }).click();
-    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Ippon" }).click();
+    await expect(page.locator("#combat_adversaire_suggestions option")).toHaveCount(2);
     await page.fill("#combat_adversaire", "Camille Durand");
     await page.locator("#combat_garde_adversaire").getByRole("radio", { name: "Gaucher" }).click();
-    // Choisir « Ippon » a créé la ligne de point : il ne reste que la technique à préciser.
-    await expect(page.locator(".combat-score-row")).toHaveCount(1);
-    await expect(page.locator(".combat-score-row").getByRole("radiogroup", { name: "Valeur du point 1" }).locator("[aria-checked='true']")).toHaveText("Ippon");
-    await page.locator(".combat-score-row").getByRole("radio", { name: "Debout" }).click();
-    // Technique absente de la liste : « Autre technique… » ouvre un champ libre, choisir une technique connue le referme.
-    const techniqueSelect = page.locator(".combat-score-row select.combat-technique-select");
-    await techniqueSelect.selectOption("__autre__");
-    const customTechnique = page.locator(".combat-score-row .combat-technique-custom");
-    await expect(customTechnique).toBeFocused();
-    await customTechnique.fill("Sode-tsurikomi-goshi");
-    await expect(techniqueSelect).toHaveValue("__autre__");
-    await shot("04a-custom-technique");
-    await techniqueSelect.selectOption("O-soto-gari");
-    await expect(customTechnique).toHaveCount(0);
-    // COMBAT-PTS : une seule liste ; le point créé par la victoire est au judoka, le suivant est attribué à l'adversaire.
-    await expect(page.locator(".combat-score-row").first().getByRole("radio", { name: "Judoka, point 1" })).toHaveAttribute("aria-checked", "true");
-    assert.equal(await page.locator("#combat_points_subis").count(), 0);
-    await expect(page.locator("#combat_points").getByRole("button", { name: "+ Ajouter un point" })).toHaveCount(1);
-    await page.locator("#combat_points").getByRole("button", { name: "+ Ajouter un point" }).click();
-    const concededRow = page.locator("#combat_points .combat-score-row").nth(1);
-    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(2);
-    await concededRow.getByRole("radio", { name: "Adversaire, point 2" }).click();
-    await concededRow.getByRole("radio", { name: "Waza-ari" }).click();
-    await concededRow.getByRole("radio", { name: "Debout" }).click();
-    await concededRow.locator("select.combat-technique-select").selectOption("Uchi-mata");
 
-    // COMBAT-SCORE : score officiel IWY - IWY, non renseigné tant qu'aucun compteur n'est touché.
+    // Pendant le combat : chaque + ajoute l'action à la fin du déroulé ; le score en est le décompte.
     const scoreSummary = page.locator("#combat_score .combat-official-score-summary");
+    const timelineRows = page.locator("#combat_points .combat-score-row");
     await expect(scoreSummary).toHaveText("Non renseigné");
     await expect(page.getByRole("button", { name: "Retirer un Ippon au judoka" })).toBeDisabled();
-    await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
-    await expect(scoreSummary).toHaveText("1 0 0 - 0 0 0");
-    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
-    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
     await page.getByRole("button", { name: "Ajouter un Waza-ari à l'adversaire" }).click();
+    await expect(scoreSummary).toHaveText("0 0 0 - 0 1 0");
+    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
+    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
     await page.getByRole("button", { name: "Ajouter un Yuko à l'adversaire" }).click();
     await page.getByRole("button", { name: "Retirer un Yuko à l'adversaire" }).click();
-    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0");
-    // « Effacer » remet le score à non renseigné.
-    await page.locator("#combat_score").getByRole("button", { name: "Effacer" }).click();
-    await expect(scoreSummary).toHaveText("Non renseigné");
-    for (const name of ["Ajouter un Ippon au judoka", "Ajouter un Yuko au judoka", "Ajouter un Yuko au judoka", "Ajouter un Waza-ari à l'adversaire"]) {
-      await page.getByRole("button", { name }).click();
-    }
-    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0");
+    await page.getByRole("button", { name: "Ajouter un Shido à l'adversaire" }).click();
+    await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
+    await expect(page.getByRole("button", { name: "Ajouter un Ippon au judoka" })).toBeDisabled();
+    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
+    await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
+      "Adversaire · Waza-ari",
+      "Léa · Yuko",
+      "Léa · Yuko",
+      "Léa · Ippon"
+    ]);
+    // Une action saisie dans le désordre se remet à sa place.
+    await page.getByRole("button", { name: "Reculer l'action 1" }).click();
+    await expect(timelineRows.nth(1).locator(".combat-point-badge")).toHaveText("Adversaire · Waza-ari");
+    await page.getByRole("button", { name: "Avancer l'action 2" }).click();
+    await expect(timelineRows.first().locator(".combat-point-badge")).toHaveText("Adversaire · Waza-ari");
+
+    // Technique : liste groupée (debout ou au sol déduit), favoris du judoka, ou saisie libre.
+    await timelineRows.first().locator("select.combat-technique-select").selectOption("T:Uchi-mata");
+    const ipponSelect = timelineRows.nth(3).locator("select.combat-technique-select");
+    await expect(ipponSelect.locator("optgroup[label='Déjà marquées par le judoka'] option")).toHaveText(["Uchi-mata"]);
+    await ipponSelect.selectOption("T:__autre__");
+    const customTechnique = timelineRows.nth(3).locator(".combat-technique-custom");
+    await expect(customTechnique).toBeFocused();
+    await customTechnique.fill("Sode-tsurikomi-goshi");
+    await expect(ipponSelect).toHaveValue("T:__autre__");
+    await shot("04a-custom-technique");
+    await ipponSelect.selectOption("T:O-soto-gari");
+    await expect(customTechnique).toHaveCount(0);
     const scoreOverflow = await page.locator("#combat_score").evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(scoreOverflow, false);
+
+    // Fin du combat : « Victoire par Ippon » ne double pas le point déjà dans le déroulé.
+    await page.locator("#combat_resultat").getByRole("radio", { name: "Victoire" }).click();
+    await expect(page.locator("#combat_type_victoire_label")).toHaveText("Victoire par");
+    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Ippon" }).click();
+    await expect(timelineRows).toHaveCount(4);
+    // Les Yuko sans technique sont gardés et signalés, pas perdus.
+    await expect(page.locator("#combat_points .field-todo")).toHaveText("À compléter : technique d'un point");
+    const hansokuHeight = await page.locator("#combat_type_victoire").getByRole("radio", { name: "Hansoku-make" }).evaluate((element) => element.getBoundingClientRect().height);
+    assert.ok(hansokuHeight <= 46, `Hansoku-make sur une ligne (hauteur ${hansokuHeight})`);
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
     const borderedLabels = await page.locator(
       ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
@@ -231,10 +244,13 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
     await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
-    await expect(page.getByText("O-soto-gari · Ippon", { exact: true })).toBeVisible();
     await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText("Uchi-mata · Waza-ari");
-    await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText("O-soto-gari · Ippon");
-    await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText("1 0 2 - 0 1 0");
+    await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText([
+      "Technique non précisée · Yuko",
+      "Technique non précisée · Yuko",
+      "O-soto-gari · Ippon"
+    ]);
+    await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     await shot("05-saved");
 
@@ -245,11 +261,26 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatFormView")).toBeVisible();
     await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Repêchage");
     await expect(page.locator("#combat_etape")).toBeInViewport();
-    // Rouvert : score et points retrouvent leur camp.
-    await expect(page.locator("#combat_score .combat-official-score-summary")).toHaveText("1 0 2 - 0 1 0");
-    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(2);
-    await expect(page.getByRole("radio", { name: "Adversaire, point 2" })).toHaveAttribute("aria-checked", "true");
+    // Rouvert : score, shidos et déroulé dans l'ordre du combat.
+    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
+    await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
+      "Adversaire · Waza-ari",
+      "Léa · Yuko",
+      "Léa · Yuko",
+      "Léa · Ippon"
+    ]);
     await shot("06-edit");
+
+    // COMBAT-QUIT : quitter avec des modifications demande confirmation.
+    await page.fill("#combat_deroule", "Note modifiée");
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await expect(page.locator("#competitionView")).toBeVisible();
+    await page.locator("#competitionView .combat-card").first().click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
 
     // Rechargement pendant la modification : on revient sur la compétition, pas sur un formulaire vide.
     await page.reload();

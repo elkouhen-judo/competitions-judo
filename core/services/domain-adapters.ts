@@ -88,12 +88,17 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
 }
 
 export function toCanonicalCombatScore(score: SourceRecord = {}): CombatScore {
-  return {
+  const canonical: CombatScore = {
     category: String(pick(score, "category", "categorie") || ""),
     technique: String(pick(score, "technique", "technique") || ""),
     neWazaType: String(pick(score, "neWazaType", "type_ne_waza") || ""),
     value: String(pick(score, "value", "valeur") || "")
   };
+  const order = pick(score, "order", "ordre");
+  if (order !== undefined && order !== null && order !== "") {
+    canonical.order = Number(order);
+  }
+  return canonical;
 }
 
 function toCanonicalOfficialScore(combat: SourceRecord): CombatOfficialScore | null {
@@ -108,15 +113,17 @@ function toCanonicalOfficialScore(combat: SourceRecord): CombatOfficialScore | n
     "score_judoka_yuko",
     "score_adversaire_ippon",
     "score_adversaire_wazaari",
-    "score_adversaire_yuko"
+    "score_adversaire_yuko",
+    "score_judoka_shido",
+    "score_adversaire_shido"
   ];
   if (columns.every((column) => record[column] === null || record[column] === undefined)) {
     return null;
   }
-  const [ji, jw, jy, ai, aw, ay] = columns.map((column) => Number(record[column] || 0));
+  const [ji, jw, jy, ai, aw, ay, js, os] = columns.map((column) => Number(record[column] || 0));
   return {
-    judoka: { ippon: ji, wazaAri: jw, yuko: jy },
-    opponent: { ippon: ai, wazaAri: aw, yuko: ay }
+    judoka: { ippon: ji, wazaAri: jw, yuko: jy, shido: js },
+    opponent: { ippon: ai, wazaAri: aw, yuko: ay, shido: os }
   };
 }
 

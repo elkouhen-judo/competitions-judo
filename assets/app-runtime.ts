@@ -34,6 +34,7 @@ function createInitialState(): KirokuAppState {
     currentCompetition: null,
     judokas: [],
     currentCombats: [],
+    currentCombatSuggestions: null,
     currentJudokaProfile: null,
     managedAdmins: [],
     managedUsers: [],

@@ -42,7 +42,7 @@ function shouldRetryWithLegacyResult(error: unknown, record: Record<string, unkn
   );
 }
 
-// COMBAT-SCORE : score IWY - IWY à plat sur 6 colonnes ; null partout = non renseigné.
+// COMBAT-SCORE : score IWY - IWY et shidos à plat sur 8 colonnes ; null partout = non renseigné.
 // Score absent (undefined) : colonnes non envoyées, la valeur en base est conservée.
 function toOfficialScoreColumns(score: CombatOfficialScore | null | undefined): Record<string, number | null> {
   if (score === undefined) {
@@ -54,7 +54,9 @@ function toOfficialScoreColumns(score: CombatOfficialScore | null | undefined): 
     score_judoka_yuko: score ? score.judoka.yuko : null,
     score_adversaire_ippon: score ? score.opponent.ippon : null,
     score_adversaire_wazaari: score ? score.opponent.wazaAri : null,
-    score_adversaire_yuko: score ? score.opponent.yuko : null
+    score_adversaire_yuko: score ? score.opponent.yuko : null,
+    score_judoka_shido: score ? score.judoka.shido ?? 0 : null,
+    score_adversaire_shido: score ? score.opponent.shido ?? 0 : null
   };
 }
 

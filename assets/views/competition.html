@@ -147,11 +147,11 @@
                 </p>
                 <p v-if="combat.scoreLabels.length" class="combat-scores-line combat-scored-line" aria-label="Points marqués par le judoka">
                   <span class="combat-scored-label">Marqué</span>
-                  <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-scored">{{ scoreLabel }}</span>
+                  <span v-for="(scoreLabel, scoreIndex) in combat.scoreLabels" :key="scoreIndex" class="result-badge badge-scored">{{ scoreLabel }}</span>
                 </p>
                 <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Points marqués par l'adversaire">
                   <span class="combat-conceded-label">Subi</span>
-                  <span v-for="scoreLabel in combat.concededScoreLabels" :key="scoreLabel" class="result-badge badge-conceded">{{ scoreLabel }}</span>
+                  <span v-for="(scoreLabel, scoreIndex) in combat.concededScoreLabels" :key="scoreIndex" class="result-badge badge-conceded">{{ scoreLabel }}</span>
                 </p>
                 <div v-if="combat.dataQualityIssues.length" class="field-todo-list" aria-label="À compléter sur ce combat">
                   <button

@@ -419,6 +419,8 @@ export interface KirokuAppState {
   currentCompetition: CompetitionDetail["competition"] | null;
   judokas: Judoka[];
   currentCombats: CompetitionDetail["combats"];
+  /** COMBAT-SUGG : adversaires et techniques déjà saisis pour le judoka de la compétition ouverte. */
+  currentCombatSuggestions: NonNullable<CompetitionDetail["combatSuggestions"]> | null;
   currentJudokaProfile: JudokaProfile | null;
   managedAdmins: AdminsManagement["admins"];
   managedUsers: AdminsManagement["users"];
@@ -519,12 +521,23 @@ export interface CombatScoreFormRow {
   camp?: string;
   /** Saisie libre en cours (« Autre technique… »), même si le champ est encore vide. */
   customTechnique?: boolean;
+  /** Clé stable de la ligne dans le déroulé (réordonnable). */
+  key?: number;
+  /** Point ajouté par « Victoire par / Défaite par », retiré si la décision change avant d'être précisé. */
+  autoFromDecision?: boolean;
+}
+
+export interface CombatTechniqueFamily {
+  label: string;
+  techniques: string[];
 }
 
 export interface CompetitionFormHelpers {
   createEmptyCombatScoreRow(): CombatScoreFormRow;
   isCombatScoreRowComplete(score: CombatScoreFormRow): boolean;
+  neWazaFamilies: CombatTechniqueFamily[];
   neWazaTechniques: string[];
+  tachiWazaFamilies: CombatTechniqueFamily[];
   tachiWazaTechniques: string[];
 }
 

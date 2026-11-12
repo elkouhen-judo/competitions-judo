@@ -79,6 +79,8 @@ export interface CombatRow {
   score_adversaire_ippon?: number | null;
   score_adversaire_wazaari?: number | null;
   score_adversaire_yuko?: number | null;
+  score_judoka_shido?: number | null;
+  score_adversaire_shido?: number | null;
 }
 
 export interface CombatScoreRow {

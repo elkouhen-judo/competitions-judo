@@ -590,6 +590,10 @@ function createTestCompetitionsService({
   const service = createCompetitionsService({
     combatsRepository: {
       listByCompetition: async (id) => combatsByCompetitionId[id] || [],
+      listByJudoka: async (judokaId) =>
+        Object.values(combatsByCompetitionId)
+          .flat()
+          .filter((combat) => String(combat.id_judoka) === String(judokaId)),
       listByCompetitionAndJudoka: async (id, judokaId) =>
         (combatsByCompetitionId[id] || []).filter(
           (combat) => String(combat.id_judoka) === String(judokaId)

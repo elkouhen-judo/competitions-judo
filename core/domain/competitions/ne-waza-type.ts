@@ -3,14 +3,30 @@ export type NeWazaType = string;
 export const NE_WAZA_TYPES: NeWazaType[] = [
   "Hon-gesa-gatame",
   "Kuzure-kesa-gatame",
+  "Ushiro-kesa-gatame",
+  "Makura-kesa-gatame",
+  "Kata-gatame",
   "Yoko-shiho-gatame",
   "Tate-shiho-gatame",
   "Kami-shiho-gatame",
-  "Juji-gatame",
-  "Ude-garami",
+  "Kuzure-kami-shiho-gatame",
+  "Ura-gatame",
   "Hadaka-jime",
   "Okuri-eri-jime",
-  "Kata-juji-jime"
+  "Kata-ha-jime",
+  "Kata-juji-jime",
+  "Gyaku-juji-jime",
+  "Nami-juji-jime",
+  "Sankaku-jime",
+  "Sode-guruma-jime",
+  "Tsukkomi-jime",
+  "Juji-gatame",
+  "Ude-garami",
+  "Ude-gatame",
+  "Waki-gatame",
+  "Hiza-gatame",
+  "Sankaku-gatame",
+  "Hara-gatame"
 ];
 
 const NE_WAZA_TYPE_ALIASES = new Map<string, NeWazaType>([

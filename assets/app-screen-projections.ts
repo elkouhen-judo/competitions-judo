@@ -248,16 +248,19 @@
     };
   }
 
-  // COMBAT-SCORE : « IWY - IWY », vide si le score n'est pas renseigné.
+  // COMBAT-SCORE : « IWY - IWY », suivi des shidos s'il y en a ; vide si le score n'est pas renseigné.
   function formatCombatOfficialScore(score: CombatReadModel["officialScore"]): string {
     if (!score) return "";
     const side = (value: { ippon: number; wazaAri: number; yuko: number }) =>
       [value.ippon, value.wazaAri, value.yuko].join(" ");
-    return `${side(score.judoka)} - ${side(score.opponent)}`;
+    const judokaShidos = Number(score.judoka.shido || 0);
+    const opponentShidos = Number(score.opponent.shido || 0);
+    const shidos = judokaShidos || opponentShidos ? ` · Shidos ${judokaShidos} - ${opponentShidos}` : "";
+    return `${side(score.judoka)} - ${side(score.opponent)}${shidos}`;
   }
 
   function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
-    const fallback = score.category === "Tachi-waza" ? "Debout" : "Au sol";
+    const fallback = score.category === "Tachi-waza" ? "Debout" : score.category === "Ne-waza" ? "Au sol" : "Technique non précisée";
     const detail = score.category === "Tachi-waza" ? score.technique || fallback : score.neWazaType || fallback;
     return [detail, score.value].filter(Boolean).join(" · ");
   }
@@ -281,8 +284,14 @@
     if (hasMissingIpponScore) {
       issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", shortLabel: "détail du point Ippon", priority: "high", field: "scores" });
     }
-    if (!(combat.scores || []).length && !hasMissingIpponScore) {
+    // Une victoire aux points doit montrer au moins un point du judoka ; une défaite ou une décision n'en exige pas.
+    const isVictoryOnPoints = combat.result === "Victoire" && ["Ippon", "Waza-ari", "Yuko"].includes(combat.victoryType || "");
+    if (isVictoryOnPoints && !(combat.scores || []).length && !hasMissingIpponScore) {
       issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
+    }
+    const allPoints = [...(combat.scores || []), ...(combat.concededScores || [])];
+    if (allPoints.some((score) => !(score.category === "Ne-waza" ? score.neWazaType : score.technique))) {
+      issues.push({ label: "Technique d'un point non précisée", shortLabel: "technique d'un point", priority: "medium", field: "scores" });
     }
     if (helpers.showJudoka && !combat.judokaHandedness) {
       issues.push({ label: "Droitier/gaucher du judoka non renseigné", shortLabel: "garde du judoka (profil)", priority: "medium" });

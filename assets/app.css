@@ -1401,12 +1401,6 @@ button:focus-visible,
   white-space: nowrap;
 }
 
-.combat-score-row-title {
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--muted);
-}
-
 .combat-score-row input,
     .combat-score-row select {
   margin: 0;
@@ -4434,33 +4428,121 @@ html {
   font-variant-numeric: tabular-nums;
 }
 
-/* COMBAT-PTS : « Marqué par » en tête de chaque point. */
+/* COMBAT-CHRONO : déroulé numéroté du combat, une ligne compacte par action. */
 
-.combat-score-camp {
-  display: grid;
+.combat-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.combat-timeline .combat-score-row {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 8px 8px 10px 12px;
   gap: 6px;
 }
 
-.combat-score-camp-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+/* Les longs libellés de familles ne doivent pas élargir la carte. */
+
+.combat-timeline .combat-technique-select,
+  .combat-timeline .combat-technique-custom {
+  width: 100%;
+  min-width: 0;
+}
+
+.combat-timeline .combat-score-row-header {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.combat-point-number {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--line);
   color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-.choice-button.choice-camp-judoka.choice-active,
-  .choice-button.choice-camp-judoka.choice-active:hover,
-  .choice-button.choice-camp-judoka.choice-active:focus {
-  border-color: var(--success);
-  background: var(--success);
-  color: #fff;
+.combat-point-badge {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
-.choice-button.choice-camp-opponent.choice-active,
-  .choice-button.choice-camp-opponent.choice-active:hover,
-  .choice-button.choice-camp-opponent.choice-active:focus {
-  border-color: var(--danger);
-  background: var(--danger);
-  color: #fff;
+.combat-point-badge.is-judoka {
+  color: var(--success);
+}
+
+.combat-point-badge.is-opponent {
+  color: var(--danger);
+}
+
+.combat-point-actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.combat-point-actions .icon-button {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+
+.combat-point-actions .icon-button:disabled {
+  opacity: 0.3;
+}
+
+.combat-timeline-empty,
+  .combat-decision-notice {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.combat-decision-notice {
+  margin-top: 6px;
+}
+
+/* Étapes sur plusieurs lignes : aucune option cachée hors de l'écran. */
+
+.choice-chips.choice-chips-wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.choice-chips-wrap .choice-chip {
+  min-width: 56px;
+  padding: 8px 12px;
+}
+
+/* « Hansoku-make » tient sur une ligne. */
+
+.combat-decision-choices .choice-button {
+  padding-left: 2px;
+  padding-right: 2px;
+  font-size: 0.86rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.score-stepper-value.is-unset {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.combat-official-score-value-label.is-penalty {
+  color: var(--warning, #b45309);
 }
 
 /* Score sur la carte du combat. */

@@ -655,13 +655,22 @@ test("combat score domain enforces the conditional sub-field per category", () =
     }
   );
 
-  assert.throws(
-    () => createCombatScore({ category: "Tachi-waza", value: "Ippon" }),
-    /Nom de l'action obligatoire pour un point debout/
-  );
-  assert.throws(
-    () => createCombatScore({ category: "Ne-waza", value: "Ippon" }),
-    /Action au sol obligatoire pour un point au sol/
+  // COMBAT-TECH-OPT : un point sans technique (voire sans catégorie) est conservé, à préciser plus tard.
+  assert.deepEqual(createCombatScore({ category: "Tachi-waza", value: "Ippon" }), {
+    category: "Tachi-waza",
+    technique: "",
+    neWazaType: "",
+    value: "Ippon"
+  });
+  assert.deepEqual(createCombatScore({ value: "Yuko" }), { category: "", technique: "", neWazaType: "", value: "Yuko" });
+  assert.throws(() => createCombatScore({ category: "Debout ?", value: "Ippon" }), /Catégorie de technique invalide/);
+  assert.throws(() => createCombatScore({ category: "Ne-waza" }), /Point marqué invalide/);
+  // COMBAT-CHRONO : le rang du point dans le combat est conservé.
+  assert.equal(createCombatScore({ value: "Yuko", order: 3 }).order, 3);
+  // Ancien libellé erroné ramené au nom de la technique.
+  assert.equal(
+    createCombatScore({ category: "Tachi-waza", technique: "Sasae-tsurikomi-goshi", value: "Yuko" }).technique,
+    "Sasae-tsurikomi-ashi"
   );
 
   assert.deepEqual(createCombatScores("not-an-array"), []);
@@ -796,7 +805,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { criterion: "judokaHandedness", label: "Droitier/gaucher du judoka non renseigné", count: 1, total: 6, rate: 17 },
       { criterion: "opponentStance", label: "Droitier/gaucher de l'adversaire non renseigné", count: 1, total: 6, rate: 17 },
       { criterion: "victoryType", label: "Fin du combat non renseignée", count: 0, total: 6, rate: 0 },
-      { criterion: "scores", label: "Points marqués non renseignés", count: 4, total: 6, rate: 67 },
+      { criterion: "scores", label: "Points marqués non renseignés", count: 0, total: 6, rate: 0 },
       { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 1, total: 6, rate: 17 },
       { criterion: "judokaGender", label: "Genre du judoka non renseigné", count: 1, total: 6, rate: 17 },
       { criterion: "inconsistentIppon", label: "Ippon à vérifier", count: 0, total: 6, rate: 0 }
@@ -1483,18 +1492,28 @@ test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et disti
     officialScore: { judoka: { ippon: 0, wazaAri: 1, yuko: 2 }, opponent: { ippon: 0, wazaAri: 0, yuko: 1 } }
   });
   assert.deepEqual(scored.officialScore, {
-    judoka: { ippon: 0, wazaAri: 1, yuko: 2 },
-    opponent: { ippon: 0, wazaAri: 0, yuko: 1 }
+    judoka: { ippon: 0, wazaAri: 1, yuko: 2, shido: 0 },
+    opponent: { ippon: 0, wazaAri: 0, yuko: 1, shido: 0 }
   });
   // Valeur manquante dans un camp : 0.
   assert.deepEqual(createCombat({ ...base, officialScore: { judoka: { yuko: 1 } } }).officialScore, {
-    judoka: { ippon: 0, wazaAri: 0, yuko: 1 },
-    opponent: { ippon: 0, wazaAri: 0, yuko: 0 }
+    judoka: { ippon: 0, wazaAri: 0, yuko: 1, shido: 0 },
+    opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 0 }
   });
+  // COMBAT-SHIDO : shidos de 0 à 3 ; un Ippon par camp au plus.
+  assert.equal(createCombat({ ...base, officialScore: { judoka: { shido: 3 }, opponent: {} } }).officialScore.judoka.shido, 3);
+  assert.throws(
+    () => createCombat({ ...base, officialScore: { judoka: { shido: 4 }, opponent: {} } }),
+    /Shido doit être un entier entre 0 et 3/
+  );
+  assert.throws(
+    () => createCombat({ ...base, officialScore: { judoka: { ippon: 2 }, opponent: {} } }),
+    /Ippon doit être un entier entre 0 et 1/
+  );
   assert.equal(createCombat({ ...base, officialScore: null }).officialScore, null);
   assert.equal(createCombat(base).officialScore, undefined);
   assert.throws(
-    () => createCombat({ ...base, officialScore: { judoka: { ippon: 10 }, opponent: {} } }),
+    () => createCombat({ ...base, officialScore: { judoka: { wazaAri: 10 }, opponent: {} } }),
     /entre 0 et 9/
   );
   assert.throws(

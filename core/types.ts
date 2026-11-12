@@ -50,12 +50,16 @@ export interface CombatScore {
   technique?: string;
   neWazaType?: string;
   value: string;
+  /** Rang du point dans le combat, tous camps confondus. */
+  order?: number;
 }
 
 export interface CombatSideScore {
   ippon: number;
   wazaAri: number;
   yuko: number;
+  /** Pénalités reçues (0 à 3). */
+  shido?: number;
 }
 
 export interface CombatOfficialScore {
@@ -155,9 +159,16 @@ export interface UserImportSummary {
   results: UserImportRowResult[];
 }
 
+/** COMBAT-SUGG : aides à la saisie d'un combat pour le judoka de la compétition. */
+export interface CombatSuggestions {
+  opponents: string[];
+  techniques: string[];
+}
+
 export interface CompetitionDetail {
   competition: Competition;
   combats: CombatReadModel[];
+  combatSuggestions?: CombatSuggestions;
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
