@@ -1,10 +1,12 @@
 const {
   getSupabaseConfig,
+  getSupabaseJwtSecret,
   getMcpJwtSecret,
   getMcpTokenTtlSeconds
 } = require("./config/env.js");
 const { createSupabaseClient } = require("./infra/supabase-client.js");
 const { createSupabaseRest } = require("./infra/supabase-rest.js");
+const { memoizeInRequest } = require("./infra/request-scope.js");
 const createSessionAuth = require("./auth/session.js");
 const { createMcpTokenAuth, sha256Base64Url } = require("./auth/mcp-token.js");
 const permissions = require("./auth/permissions.js");
@@ -87,7 +89,10 @@ const createMcpServerService =
   /** @type {typeof import("./services/mcp-server.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/mcp-server.service.js").default)
   );
-const { getCompetitionCategoryLabel } = require("./domain/competition-results.js");
+const {
+  countCombatResults,
+  getCompetitionCategoryLabel
+} = require("./domain/competition-results.js");
 const { getCurrentSeasonBounds, isDateWithinSeason } = require("./domain/season.js");
 const { createJudoka, createManagedChild } = require("./domain/access/judoka.js");
 const { createEmail } = require("./domain/access/email.js");
@@ -105,11 +110,11 @@ const {
 } = require("./domain/competitions/competition.js");
 const { updateCombat } = require("./domain/competitions/combat.js");
 const { buildJudokaProfileSnapshot } = require("./domain/season-statistics.js");
-const { toCanonicalJudoka } = require("./services/domain-adapters.js");
+const { toCanonicalCompetition, toCanonicalJudoka } = require("./services/domain-adapters.js");
 
 const supabaseClient = createSupabaseClient({ getSupabaseConfig });
 const supabaseRest = createSupabaseRest(supabaseClient);
-const sessionAuth = createSessionAuth({ getSupabaseConfig });
+const sessionAuth = createSessionAuth({ getSupabaseConfig, getJwtSecret: getSupabaseJwtSecret });
 const mcpTokenAuth = createMcpTokenAuth({
   getSecret: getMcpJwtSecret,
   getIssuer: () => "kiroku",
@@ -144,8 +149,7 @@ const clubsRepository = createClubsRepository(repositoryDeps);
 
 const userContextService = createUserContextService({
   judokasRepository,
-  parentLinksRepository,
-  clubsRepository,
+  memoizeInRequest,
   normalizeEmail: text.normalizeEmail,
   assertCanAccessJudokaProfile: permissions.assertCanAccessJudokaProfile,
   createManagedJudokaScope,
@@ -188,18 +192,16 @@ const clubCompetitionsService = createClubCompetitionsService({
 
 const coachDashboardService = createCoachDashboardService({
   combatsRepository,
-  combatScoresRepository,
   competitionsRepository,
-  judokasRepository,
   userContextService
 });
 
 const competitionsService = createCompetitionsService({
   combatsRepository,
-  combatScoresRepository,
   competitionsRepository,
   userContextService,
   normalizeLastName: text.normalizeLastName,
+  canManageCombatFor: permissions.canManageCombatFor,
   canManageCompetition: permissions.canManageCompetition,
   assertCanAccessCompetition: permissions.assertCanAccessCompetition,
   assertCanManageCompetition: permissions.assertCanManageCompetition,
@@ -215,6 +217,7 @@ const combatsService = createCombatsService({
   combatScoresRepository,
   competitionsRepository,
   userContextService,
+  normalizeLastName: text.normalizeLastName,
   assertCanManageCombatFor: permissions.assertCanManageCombatFor,
   createCombatUpdate: updateCombat,
   createPersistedCompetition,
@@ -254,82 +257,132 @@ const mcpAuthService = createMcpAuthService({
   signAuthorizationCode: mcpCodeAuth.signToken
 });
 
-async function getInitialData(email) {
-  let currentUser = await userContextService.getCurrentUser(email);
-  if (!currentUser) {
+// Périmètre des compétitions visibles : un coach voit celles des judokas de ses clubs et les
+// siennes, un parent celles de ses enfants et les siennes, les autres profils les leurs.
+function getCompetitionScope(identity) {
+  const domainUser = toCanonicalJudoka(identity.user);
+  const selfId = String(identity.user.id_judoka);
+  if (permissions.isCoach(domainUser)) {
+    return { clubIds: identity.coachClubIds, judokaIds: [selfId] };
+  }
+  if (permissions.isParent(domainUser)) {
+    return { judokaIds: [selfId, ...identity.childJudokaIds] };
+  }
+  return { judokaIds: [selfId] };
+}
+
+function toClubCompetitionSummary(row) {
+  return {
+    clubCompetitionId: row.id_club_competition,
+    name: row.nom,
+    competitionDate: row.date,
+    clubId: row.club_id || ""
+  };
+}
+
+// INIT-2 : le bilan V/D de chaque compétition vient des résultats lus avec elle.
+function splitCompetitionsAndRecords(rows) {
+  /** @type {Record<string, import("./domain/competition-results").CombatRecordCount>} */
+  const combatRecords = {};
+  const competitions = rows.map(({ combats, ...competition }) => {
+    const results = Array.isArray(combats) ? combats.map((combat) => combat.resultat) : [];
+    if (results.length) {
+      combatRecords[String(competition.id_competition)] = countCombatResults(results);
+    }
+    return toCanonicalCompetition(competition);
+  });
+  return { competitions, combatRecords };
+}
+
+async function requireIdentity(email) {
+  let identity = await userContextService.getIdentity(email);
+  if (!identity) {
     const invitation = await adminService.getAccessInvitation(email);
     if (invitation) {
       await registrationService.methods.registerProfile(email, {});
-      currentUser = await userContextService.getCurrentUser(email);
-      if (!currentUser) {
+      identity = await userContextService.getIdentity(email);
+      if (!identity) {
         throw new Error("Profil introuvable après activation de l'invitation.");
       }
     } else {
       throw new Error("Accès non autorisé. Une invitation est requise.");
     }
   }
+  return identity;
+}
 
-  const { user, judokas, managedJudokaScope, domainUser, coachClubIds = [] } =
-    await userContextService.getDomainUserContext(email);
+// INIT-1 : après le compte (1 requête), toutes les lectures partent ensemble.
+// PAGE-2 : seules la saison en cours et les compétitions à venir sont chargées, sauf `allSeasons`.
+async function loadInitialData(email, options = {}) {
+  const identity = await requireIdentity(email);
+  const domainUser = toCanonicalJudoka(identity.user);
   const admin = permissions.isAdmin(domainUser);
   const coach = permissions.isCoach(domainUser);
   const parent = permissions.isParent(domainUser);
+  const scope = getCompetitionScope(identity);
+  const loadedFrom = options.allSeasons ? "" : getCurrentSeasonBounds().start;
 
   // Un coach ne voit que les compétitions club et les clubs qu'il coache.
-  const clubCompetitionsRaw = coach ? await clubCompetitionsRepository.listByClubIds(coachClubIds) : [];
-  const clubCompetitions = clubCompetitionsRaw.map((cc) => ({
-    clubCompetitionId: cc.id_club_competition,
-    name: cc.nom,
-    competitionDate: cc.date,
-    clubId: cc.club_id || ""
-  }));
-  const coachClubIdSet = new Set(coachClubIds.map(String));
-  const clubs = coach
-    ? (await clubsRepository.listAll())
-        .filter((club) => coachClubIdSet.has(String(club.id_club)))
-        .map((club) => ({ clubId: club.id_club, name: club.nom }))
-    : [];
-
-  const competitions = await competitionsService.getCompetitionsForUser(user, managedJudokaScope);
+  const [{ user, judokas }, competitionRows, oldestCompetitionDate, clubCompetitionRows, clubRows] =
+    await Promise.all([
+      userContextService.getDomainUserContext(email),
+      competitionsRepository.listInScopeWithResults({ ...scope, dateFrom: loadedFrom }),
+      loadedFrom ? competitionsRepository.getOldestDate(scope) : "",
+      coach ? clubCompetitionsRepository.listByClubIds(identity.coachClubIds, loadedFrom) : [],
+      coach ? clubsRepository.listByIds(identity.coachClubIds) : []
+    ]);
 
   return {
     user: toCanonicalJudoka(user),
     isAdmin: admin,
     isCoach: coach,
     isParent: parent,
-    competitions,
-    combatRecords: await getCombatRecords(competitions),
-    clubCompetitions,
-    clubs,
-    judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : []
+    ...splitCompetitionsAndRecords(competitionRows),
+    clubCompetitions: clubCompetitionRows.map(toClubCompetitionSummary),
+    clubs: clubRows.map((club) => ({ clubId: club.id_club, name: club.nom })),
+    judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : [],
+    loadedFrom,
+    oldestCompetitionDate
   };
 }
 
-// Bilan des combats par compétition, affiché sur les cartes de l'accueil (« 3V 1D »).
-async function getCombatRecords(competitions) {
-  const ids = (competitions || []).map((competition) => competition.competitionId).filter(Boolean);
-  if (!ids.length || typeof combatsRepository.listByCompetitionIds !== "function") {
-    return {};
+async function getInitialData(email) {
+  return loadInitialData(email);
+}
+
+// PAGE-2 : une saison passée se charge à la demande.
+async function getSeasonCompetitions(email, seasonStartYear) {
+  const year = Number(seasonStartYear);
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) {
+    throw new Error("Saison invalide.");
   }
-  const rows = await combatsRepository.listByCompetitionIds(ids);
-  /** @type {Record<string, { total: number; wins: number; losses: number; draws: number }>} */
-  const records = {};
-  rows.forEach((combat) => {
-    const key = String(combat.id_competition);
-    const record = records[key] || { total: 0, wins: 0, losses: 0, draws: 0 };
-    const result = String(combat.resultat || "");
-    record.total += 1;
-    if (result === "Victoire") record.wins += 1;
-    else if (result === "Défaite") record.losses += 1;
-    else if (result) record.draws += 1;
-    records[key] = record;
-  });
-  return records;
+  const identity = await userContextService.getIdentity(email);
+  if (!identity) {
+    throw new Error(`Accès refusé pour : ${email}`);
+  }
+  const coach = permissions.isCoach(toCanonicalJudoka(identity.user));
+  const bounds = getCurrentSeasonBounds(new Date(year, 9, 1));
+  const [competitionRows, clubCompetitionRows] = await Promise.all([
+    competitionsRepository.listInScopeWithResults({
+      ...getCompetitionScope(identity),
+      dateFrom: bounds.start,
+      dateTo: bounds.end
+    }),
+    coach
+      ? clubCompetitionsRepository.listByClubIds(identity.coachClubIds, bounds.start, bounds.end)
+      : []
+  ]);
+  return {
+    seasonStartYear: year,
+    ...splitCompetitionsAndRecords(competitionRows),
+    clubCompetitions: clubCompetitionRows.map(toClubCompetitionSummary)
+  };
 }
 
 /** @type {import("./types").RpcMethods} */
 const methods = {
   getInitialData,
+  getSeasonCompetitions,
   ...profileService.methods,
   ...registrationService.methods,
   ...adminService.methods,
@@ -341,7 +394,8 @@ const methods = {
 };
 
 const mcpServerService = createMcpServerService({
-  methods,
+  // La recherche MCP porte sur tout l'historique, pas sur la seule saison en cours.
+  methods: { ...methods, getInitialData: (email) => loadInitialData(email, { allSeasons: true }) },
   getJudokas: async (email) => {
     const { judokas } = await userContextService.getCurrentUserContext(email);
     return judokas;

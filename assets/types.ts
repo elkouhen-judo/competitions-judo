@@ -4,6 +4,7 @@ import type {
   ClubCompetitionDetail,
   CombatReadModel,
   CombatScore,
+  CombatSuggestions,
   Competition,
   CompetitionDetail,
   InitialData,
@@ -11,6 +12,7 @@ import type {
   JudokaProfile,
   OperationResult,
   RpcMethods,
+  SeasonCompetitions,
   UserImportRowResult
 } from "../core/types";
 
@@ -285,7 +287,7 @@ export interface ScreenProjections {
   };
   projectManagedUsers(
     users: Judoka[],
-    pendingInvitations: AccessInvitation[],
+    totalCount: number,
     search: string,
     currentPage: number,
     pageSize: number,
@@ -420,10 +422,19 @@ export interface KirokuAppState {
   judokas: Judoka[];
   currentCombats: CompetitionDetail["combats"];
   /** COMBAT-SUGG : adversaires et techniques déjà saisis pour le judoka de la compétition ouverte. */
-  currentCombatSuggestions: NonNullable<CompetitionDetail["combatSuggestions"]> | null;
+  currentCombatSuggestions: CombatSuggestions | null;
+  /** PAGE-2 : début de la période chargée à l'ouverture ("" = tout l'historique). */
+  loadedFrom: string;
+  /** PAGE-2 : date de la plus ancienne compétition du périmètre ("" si aucune). */
+  oldestCompetitionDate: string;
+  /** PAGE-2 : saisons passées chargées à la demande (année de début de saison). */
+  loadedSeasonStartYears: number[];
+  isLoadingSeason: boolean;
   currentJudokaProfile: JudokaProfile | null;
   managedAdmins: AdminsManagement["admins"];
   managedUsers: AdminsManagement["users"];
+  /** PAGE-3 : nombre d'utilisateurs qui répondent à la recherche, toutes pages confondues. */
+  managedUsersTotal: number;
   managedAccessInvitations: AdminsManagement["accessInvitations"];
   canEditCurrentCompetition: boolean;
   isLoadingCompetition: boolean;
@@ -462,8 +473,24 @@ export type RpcClientArgs<M extends RpcClientMethod> = RpcMethods[M] extends (
   : never;
 export type RpcClientResult<M extends RpcClientMethod> = Awaited<ReturnType<RpcMethods[M]>>;
 
+/** ECRIT-2 : après une écriture, le navigateur met à jour son état et son cache sans recharger. */
+export interface LocalDataApi {
+  saveCompetition(competition: Competition): void;
+  removeCompetition(competitionId: string): void;
+  saveCombat(combat: CombatReadModel): void;
+  removeCombat(combatId: string): void;
+  saveClubCompetition(
+    clubCompetition: InitialData["clubCompetitions"][number],
+    competitions: Competition[]
+  ): void;
+  removeClubCompetition(clubCompetitionId: string): void;
+  /** PAGE-2 : ajoute une saison passée chargée à la demande. */
+  addSeason(season: SeasonCompetitions): void;
+}
+
 export interface KirokuApp {
   applyInitialData(data: InitialData): void;
+  local: LocalDataApi;
   auth: AuthApi;
   cancelPendingOperation(operationId: string): void;
   confirmAndRun<M extends RpcClientMethod>(config: {
@@ -477,8 +504,7 @@ export interface KirokuApp {
   loadCachedInitialData(): boolean;
   notifications: NotificationsApi;
   persistNavigationState(routeState?: Partial<NavigationSnapshot>): void;
-  reloadInitialData(openCompetitionId?: string): void;
-  reloadInitialDataAndShowAdmins(): void;
+  reloadInitialData(): void;
   reloadInitialDataThen(afterReload: () => void): void;
   resetApplicationState(): void;
   runServer<M extends RpcClientMethod>(
@@ -584,11 +610,13 @@ export type {
   ClubCompetitionDetail,
   CombatReadModel,
   CombatScore,
+  CombatSuggestions,
   Competition,
   CompetitionDetail,
   InitialData,
   Judoka,
   JudokaProfile,
   OperationResult,
+  SeasonCompetitions,
   UserImportRowResult
 };

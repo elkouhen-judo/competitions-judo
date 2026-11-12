@@ -26,6 +26,7 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
   const userContextService = {
     getDomainUserContext: async () => ({
       domainUser,
+      judokas: [],
       managedJudokaScope: createManagedJudokaScope([])
     })
   };
@@ -62,21 +63,16 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
 
   const competitionsService = createCompetitionsService({
     combatsRepository: {
-      listByCompetition: async (id) =>
-        [...combatRows.values()].filter((combat) => combat.id_competition === id),
-      listByCompetitionAndJudoka: async (id, judokaId) =>
-        [...combatRows.values()].filter(
-          (combat) => combat.id_competition === id && combat.id_judoka === judokaId
-        ),
-      listByCompetitionAndJudokaIds: async (id, judokaIds) =>
-        [...combatRows.values()].filter(
-          (combat) => combat.id_competition === id && judokaIds.includes(combat.id_judoka)
-        )
+      listByCompetitionWithScores: async (id) =>
+        [...combatRows.values()]
+          .filter((combat) => combat.id_competition === id)
+          .map((combat) => ({ ...combat, combat_scores: [] })),
+      listSuggestionsByJudoka: async () => []
     },
-    combatScoresRepository: { listByCombatIds: async () => [] },
     competitionsRepository,
     userContextService,
     normalizeLastName,
+    canManageCombatFor: permissions.canManageCombatFor,
     canManageCompetition: permissions.canManageCompetition,
     assertCanAccessCompetition: permissions.assertCanAccessCompetition,
     assertCanManageCompetition: permissions.assertCanManageCompetition,
@@ -91,7 +87,7 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
     combatsRepository: {
       getById: async (id) => combatRows.get(id) || null,
       insert: async (combat, id) => {
-        combatRows.set(id, {
+        const row = {
           id_combat: id,
           id_competition: combat.competitionId,
           id_judoka: combat.judokaId,
@@ -100,14 +96,20 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
           adversaire: combat.opponent,
           garde_adversaire: combat.opponentStance,
           notes: combat.notes
-        });
+        };
+        combatRows.set(id, row);
+        return row;
       }
     },
     combatScoresRepository: {
-      replaceForCombat: async (id, scores) => combatScores.set(id, scores)
+      replaceForCombat: async (id, scores) => {
+        combatScores.set(id, scores);
+        return [];
+      }
     },
     competitionsRepository,
     userContextService,
+    normalizeLastName,
     assertCanManageCombatFor: permissions.assertCanManageCombatFor,
     createCombatUpdate: updateCombat,
     createPersistedCompetition,
@@ -139,7 +141,16 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
       ...combat
     });
     assert.equal(result.success, true);
+    // ECRIT-2 : l'écriture renvoie le combat enregistré, sans relire la compétition.
+    assert.equal(result.competitionId, creation.competitionId);
+    assert.equal(result.combat.combatId, `COMBAT_ALI_${combatSequence}`);
   }
+
+  const detail = await competitionsService.methods.getCompetitionDetail(
+    "hugo@example.com",
+    creation.competitionId
+  );
+  assert.equal(detail.combats.length, 3);
 
   const storedCombats = [...combatRows.values()];
   assert.equal(storedCombats.length, 3);

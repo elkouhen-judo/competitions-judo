@@ -1,5 +1,6 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type UsersPage = import("../core/types").UsersPage;
 
   function createKirokuAdminsScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
@@ -38,7 +39,7 @@
     const usersProjection = window.Vue.computed(() =>
       window.KirokuScreenProjections.projectManagedUsers(
         state.managedUsers,
-        state.managedAccessInvitations,
+        state.managedUsersTotal,
         cleanText(state.usersSearch),
         state.usersCurrentPage,
         defaultListPageSize,
@@ -240,7 +241,8 @@
           } else {
             showError({ message: importSummary });
           }
-          app.reloadInitialDataAndShowAdmins();
+          // Un import peut créer des judokas dans le périmètre : les données initiales sont relues.
+          app.reloadInitialDataThen(refreshAdminsManagement);
         },
         showError
       );
@@ -256,7 +258,7 @@
         [],
         (data) => {
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
-          state.managedUsers = Array.isArray(data.users) ? data.users : [];
+          applyUsersPage(data, false);
           state.managedAccessInvitations = Array.isArray(data.accessInvitations)
             ? data.accessInvitations
             : [];
@@ -270,6 +272,47 @@
         },
         showError
       );
+    }
+
+    // ECRIT-2 : après une action d'administration, seul l'écran de gestion est relu.
+    function refreshAdminsManagement() {
+      showAdminsManagement(true);
+    }
+
+    // PAGE-3 : le serveur renvoie une page de 10 utilisateurs, le total et le curseur de la suite.
+    let usersNextCursor: UsersPage["nextCursor"] = null;
+    let usersSearchTimer: number | null = null;
+
+    function applyUsersPage(data: UsersPage, append: boolean) {
+      const users = Array.isArray(data.users) ? data.users : [];
+      state.managedUsers = append ? [...state.managedUsers, ...users] : users;
+      state.managedUsersTotal = Math.max(Number(data.totalUsers) || 0, state.managedUsers.length);
+      usersNextCursor = data.nextCursor || null;
+    }
+
+    function loadUsersPage(append: boolean, onLoaded?: () => void) {
+      const search = cleanText(state.usersSearch);
+      app.runServer(
+        "getUsersPage",
+        [{ search, after: append ? usersNextCursor : null }],
+        (data) => {
+          // Une réponse arrivée après une nouvelle saisie est ignorée.
+          if (search !== cleanText(state.usersSearch)) return;
+          applyUsersPage(data, append);
+          onLoaded?.();
+        },
+        showError
+      );
+    }
+
+    function searchUsers() {
+      if (usersSearchTimer) {
+        window.clearTimeout(usersSearchTimer);
+      }
+      usersSearchTimer = window.setTimeout(() => {
+        usersSearchTimer = null;
+        loadUsersPage(false);
+      }, 300);
     }
 
     function loadClubs(onLoaded?: () => void) {
@@ -288,14 +331,16 @@
     // Après une modification de club, on recharge la gestion (utilisateurs et clubs) pour rester cohérent.
     function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClub">(
       method: M,
-      args: import("./types").RpcClientArgs<M>
+      args: import("./types").RpcClientArgs<M>,
+      onSuccess?: () => void
     ) {
       app.runServer(
         method,
         args,
         (response) => {
+          onSuccess?.();
           showSuccess((response as { message?: string }).message || "Modification enregistrée.");
-          app.reloadInitialDataAndShowAdmins();
+          refreshAdminsManagement();
         },
         showError
       );
@@ -343,7 +388,7 @@
         args: [clubId],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
+          refreshAdminsManagement();
         }
       });
     }
@@ -356,23 +401,35 @@
     }
 
     function setUserClub(judokaId: string, clubId: string) {
-      runClubAction("setJudokaClub", [judokaId, clubId || null]);
+      // Une fois enregistré, le judoka change de club dans l'état local, pour l'espace coach.
+      runClubAction("setJudokaClub", [judokaId, clubId || null], () => {
+        state.judokas = state.judokas.map((judoka) =>
+          String(judoka.judokaId) === String(judokaId) ? { ...judoka, clubId: clubId || "" } : judoka
+        );
+      });
     }
 
     function updateUsersSearch(value: string) {
       state.usersSearch = value || "";
       state.usersCurrentPage = 1;
       state.accessInvitationsCurrentPage = 1;
+      searchUsers();
     }
 
     function resetUsersSearch() {
-      state.usersSearch = "";
-      state.usersCurrentPage = 1;
-      state.accessInvitationsCurrentPage = 1;
+      updateUsersSearch("");
     }
 
     function showNextUsersPage() {
-      state.usersCurrentPage += 1;
+      const nextPage = state.usersCurrentPage + 1;
+      const isLoaded = state.managedUsers.length > state.usersCurrentPage * defaultListPageSize;
+      if (isLoaded || state.managedUsers.length >= state.managedUsersTotal) {
+        state.usersCurrentPage = nextPage;
+        return;
+      }
+      loadUsersPage(true, () => {
+        state.usersCurrentPage = nextPage;
+      });
     }
 
     function showPreviousUsersPage() {
@@ -395,7 +452,7 @@
         args: [email],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
+          refreshAdminsManagement();
         }
       });
     }
@@ -408,7 +465,12 @@
         args: [idJudoka],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
+          // L'utilisateur supprimé et ses compétitions quittent l'état local.
+          state.judokas = state.judokas.filter((judoka) => String(judoka.judokaId) !== String(idJudoka));
+          state.competitions
+            .filter((competition) => String(competition.ownerJudokaId) === String(idJudoka))
+            .forEach((competition) => app.local.removeCompetition(competition.competitionId));
+          refreshAdminsManagement();
         }
       });
     }
@@ -433,7 +495,7 @@
         [email],
         (response) => {
           showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
+          refreshAdminsManagement();
         },
         showError
       );
@@ -447,7 +509,7 @@
         args: [idJudoka],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.reloadInitialDataAndShowAdmins();
+          refreshAdminsManagement();
         }
       });
     }

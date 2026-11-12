@@ -1,3 +1,5 @@
+const crypto = require("node:crypto");
+const fs = require("node:fs");
 const path = require("node:path");
 const esbuild = require("esbuild");
 
@@ -35,4 +37,42 @@ const transpileBuild = esbuild.build({
   logLevel: "info"
 });
 
-transpileBuild.catch(() => process.exit(1));
+function contentHash(content) {
+  return crypto.createHash("sha256").update(content).digest("hex").slice(0, 12);
+}
+
+// SHELL-2 : un seul JS minifié (Vue, déjà minifié, puis les écrans dans l'ordre de chargement),
+// un CSS minifié, et l'empreinte de chacun pour des URL mises en cache un an.
+async function bundleForDelivery() {
+  const dist = path.join(root, "assets", "dist");
+  const minify = async (file, loader) =>
+    (
+      await esbuild.transform(fs.readFileSync(file, "utf8"), {
+        loader,
+        minify: true,
+        target: "es2022",
+        charset: "utf8"
+      })
+    ).code;
+
+  const screens = await Promise.all(
+    entryPoints.map((entry) => minify(path.join(dist, `${path.basename(entry, ".ts")}.js`), "js"))
+  );
+  const client = [
+    fs.readFileSync(path.join(root, "assets", "vendor", "vue.global.prod.js"), "utf8"),
+    ...screens
+  ].join("\n");
+  const styles = await minify(path.join(root, "assets", "app.css"), "css");
+
+  fs.writeFileSync(path.join(dist, "client.min.js"), client);
+  fs.writeFileSync(path.join(dist, "styles.min.css"), styles);
+  fs.writeFileSync(
+    path.join(dist, "asset-manifest.json"),
+    JSON.stringify({ client: contentHash(client), styles: contentHash(styles) })
+  );
+}
+
+transpileBuild.then(bundleForDelivery).catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

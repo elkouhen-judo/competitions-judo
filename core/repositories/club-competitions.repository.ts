@@ -1,11 +1,11 @@
 import type { ClubCompetitionModel } from "../domain/competitions/club-competition";
+import { inFilter, uniqueIds } from "../shared/query";
 import type { ClubCompetitionRow, SupabaseRestDeps } from "./types";
 
 export interface ClubCompetitionsRepository {
   getById(idClubCompetition: string): Promise<ClubCompetitionRow | null>;
   insert(event: ClubCompetitionModel): Promise<ClubCompetitionRow | null>;
-  listAll(): Promise<ClubCompetitionRow[]>;
-  listByClubIds(clubIds: string[]): Promise<ClubCompetitionRow[]>;
+  listByClubIds(clubIds: string[], dateFrom?: string, dateTo?: string): Promise<ClubCompetitionRow[]>;
   countByClub(idClub: string): Promise<number>;
   remove(idClubCompetition: string): Promise<void>;
   update(
@@ -35,30 +35,39 @@ export default function createClubCompetitionsRepository(
     supabasePatch,
     supabaseSelect,
     supabaseSelectOne,
+    supabaseSelectPage,
     eqFilter
   } = deps;
 
-  async function listAll(): Promise<ClubCompetitionRow[]> {
-    return supabaseSelect<ClubCompetitionRow>("club_competitions", "select=*&order=date.desc");
-  }
-
-  async function listByClubIds(clubIds: string[]): Promise<ClubCompetitionRow[]> {
-    const ids = [...new Set((clubIds || []).map(String).filter(Boolean))];
+  async function listByClubIds(
+    clubIds: string[],
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<ClubCompetitionRow[]> {
+    const ids = uniqueIds(clubIds);
     if (!ids.length) {
       return [];
     }
+    const filters = ["select=*", inFilter("club_id", ids)];
+    if (dateFrom) {
+      filters.push(`date=gte.${encodeURIComponent(dateFrom)}`);
+    }
+    if (dateTo) {
+      filters.push(`date=lte.${encodeURIComponent(dateTo)}`);
+    }
     return supabaseSelect<ClubCompetitionRow>(
       "club_competitions",
-      `select=*&club_id=in.(${ids.map(encodeURIComponent).join(",")})&order=date.desc`
+      [...filters, "order=date.desc,id_club_competition.asc"].join("&")
     );
   }
 
   async function countByClub(idClub: string): Promise<number> {
-    const rows = await supabaseSelect<Pick<ClubCompetitionRow, "id_club_competition">>(
+    const { total } = await supabaseSelectPage<Pick<ClubCompetitionRow, "id_club_competition">>(
       "club_competitions",
-      `select=id_club_competition&${eqFilter("club_id", idClub)}`
+      `select=id_club_competition&${eqFilter("club_id", idClub)}`,
+      1
     );
-    return rows.length;
+    return total;
   }
 
   async function getById(idClubCompetition: string): Promise<ClubCompetitionRow | null> {
@@ -99,7 +108,6 @@ export default function createClubCompetitionsRepository(
   return {
     getById,
     insert,
-    listAll,
     listByClubIds,
     countByClub,
     remove,

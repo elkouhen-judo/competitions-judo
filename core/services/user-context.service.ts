@@ -1,14 +1,15 @@
 import { toCanonicalJudoka } from "./domain-adapters";
-import type { JudokaRow } from "../repositories/types";
+import type { JudokaIdentity, JudokaRow } from "../repositories/types";
 import type { JudokasRepository } from "../repositories/judokas.repository";
-import type { ParentLinksRepository } from "../repositories/parent-links.repository";
-import type { ClubsRepository } from "../repositories/clubs.repository";
 import type { DomainUserContext, ManagedJudokaScope, UserContext } from "../types";
 
 export interface UserContextServiceDeps {
-  judokasRepository: JudokasRepository;
-  parentLinksRepository: ParentLinksRepository;
-  clubsRepository: Pick<ClubsRepository, "listClubIdsByCoach">;
+  judokasRepository: Pick<
+    JudokasRepository,
+    "getIdentityByEmail" | "getById" | "listAll" | "listByIds" | "listByClubIds"
+  >;
+  /** Mémorise une lecture pour la durée d'un appel RPC (CTX-1). Par défaut : aucune mémoire. */
+  memoizeInRequest?: <T>(key: string, load: () => Promise<T>) => Promise<T>;
   normalizeEmail: (value: unknown) => string;
   assertCanAccessJudokaProfile: (
     user: ReturnType<typeof toCanonicalJudoka> | null | undefined,
@@ -27,11 +28,11 @@ export interface UserContextService {
     idJudoka?: string
   ): Promise<{ user: JudokaRow; target: JudokaRow }>;
   getCurrentUser(email: string): Promise<JudokaRow | null>;
+  /** Le compte et ses liens (clubs coachés, enfants), sans charger les judokas du périmètre. */
+  getIdentity(email: string): Promise<JudokaIdentity | null>;
   getCurrentUserContext(email: string): Promise<UserContext>;
   getDomainUserContext(email: string): Promise<DomainUserContext>;
   getJudokaById(idJudoka: string): Promise<JudokaRow | null>;
-  getJudokas(): Promise<JudokaRow[]>;
-  getParentManagedJudokas(idParent: string): Promise<JudokaRow[]>;
 }
 
 export default function createUserContextService(
@@ -39,8 +40,7 @@ export default function createUserContextService(
 ): UserContextService {
   const {
     judokasRepository,
-    parentLinksRepository,
-    clubsRepository,
+    memoizeInRequest = <T>(_key: string, load: () => Promise<T>) => load(),
     normalizeEmail,
     assertCanAccessJudokaProfile,
     createManagedJudokaScope,
@@ -49,40 +49,40 @@ export default function createUserContextService(
     isParent
   } = deps;
 
-  async function getCurrentUser(email: string): Promise<JudokaRow | null> {
+  async function getIdentity(email: string): Promise<JudokaIdentity | null> {
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail) {
       return null;
     }
 
-    return judokasRepository.getByEmail(normalizedEmail);
+    return memoizeInRequest(`identity:${normalizedEmail}`, () =>
+      judokasRepository.getIdentityByEmail(normalizedEmail)
+    );
   }
 
-  async function getJudokas(): Promise<JudokaRow[]> {
-    return judokasRepository.listAll();
+  async function getCurrentUser(email: string): Promise<JudokaRow | null> {
+    const identity = await getIdentity(email);
+    return identity ? identity.user : null;
   }
 
   async function getJudokaById(idJudoka: string): Promise<JudokaRow | null> {
     return judokasRepository.getById(idJudoka);
   }
 
-  async function getParentManagedJudokas(idParent: string): Promise<JudokaRow[]> {
-    const rows = await parentLinksRepository.listByParent(idParent);
-    if (!rows.length) {
-      return [];
-    }
-
-    const ids = rows.map((row) => row.id_judoka);
-    return judokasRepository.listByIds(ids);
+  // CTX-1 : le contexte coûte 2 requêtes au plus (compte et liens, puis judokas du périmètre)
+  // et n'est calculé qu'une fois par appel RPC.
+  async function getCurrentUserContext(email: string): Promise<UserContext> {
+    return memoizeInRequest(`context:${normalizeEmail(email)}`, () => loadCurrentUserContext(email));
   }
 
-  async function getCurrentUserContext(email: string): Promise<UserContext> {
-    const user = await getCurrentUser(email);
+  async function loadCurrentUserContext(email: string): Promise<UserContext> {
+    const identity = await getIdentity(email);
 
-    if (!user) {
+    if (!identity) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
 
+    const { user } = identity;
     let judokas: JudokaRow[] = [];
     let managedJudokaScope = createManagedJudokaScope([]);
     let coachClubIds: string[] = [];
@@ -90,15 +90,15 @@ export default function createUserContextService(
 
     if (isCoach(domainUser)) {
       // Un coach ne voit que les judokas des clubs qu'il coache (et son propre profil).
-      coachClubIds = await clubsRepository.listClubIdsByCoach(user.id_judoka);
+      coachClubIds = identity.coachClubIds;
       const clubJudokas = await judokasRepository.listByClubIds(coachClubIds);
       const includesSelf = clubJudokas.some((j) => String(j.id_judoka) === String(user.id_judoka));
       judokas = includesSelf ? clubJudokas : [user, ...clubJudokas];
       managedJudokaScope = createManagedJudokaScope(judokas.map((j) => String(j.id_judoka)));
     } else if (isAdmin(domainUser)) {
-      judokas = await getJudokas();
+      judokas = await judokasRepository.listAll();
     } else if (isParent(domainUser)) {
-      const children = await getParentManagedJudokas(user.id_judoka);
+      const children = await judokasRepository.listByIds(identity.childJudokaIds);
       const alreadyIncluded = children.some((j) => String(j.id_judoka) === String(user.id_judoka));
       judokas = alreadyIncluded ? children : [user, ...children];
       const managedJudokaIds = judokas.map((j) => String(j.id_judoka));
@@ -139,8 +139,7 @@ export default function createUserContextService(
     getCurrentUser,
     getCurrentUserContext,
     getDomainUserContext,
-    getJudokaById,
-    getJudokas,
-    getParentManagedJudokas
+    getIdentity,
+    getJudokaById
   };
 }

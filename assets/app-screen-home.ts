@@ -503,6 +503,45 @@
     const competitionsCanShowPreviousPage = competitionsPaginationRefs.canShowPreviousPage;
     const competitionsCanShowNextPage = competitionsPaginationRefs.canShowNextPage;
 
+    // PAGE-2 : l'ouverture charge la saison en cours ; une saison passée se charge à la demande.
+    function getSeasonStartYear(dateValue: string) {
+      const [year, month] = dateValue.split("-").map(Number);
+      return (month || 0) >= 9 ? year || 0 : (year || 0) - 1;
+    }
+    const olderSeasonStartYear = window.Vue.computed(() => {
+      if (!state.loadedFrom || !state.oldestCompetitionDate) {
+        return 0;
+      }
+      const loadedYears = [getSeasonStartYear(state.loadedFrom), ...state.loadedSeasonStartYears];
+      const previousYear = Math.min(...loadedYears) - 1;
+      return getSeasonStartYear(state.oldestCompetitionDate) <= previousYear ? previousYear : 0;
+    });
+    const olderSeasonLabel = window.Vue.computed(() => {
+      const year = olderSeasonStartYear.value;
+      return year ? `Voir la saison ${year}-${year + 1}` : "";
+    });
+    const isLoadingSeason = window.Vue.computed(() => state.isLoadingSeason);
+
+    function loadOlderSeason() {
+      const seasonStartYear = olderSeasonStartYear.value;
+      if (!seasonStartYear || state.isLoadingSeason) {
+        return;
+      }
+      state.isLoadingSeason = true;
+      app.runServer(
+        "getSeasonCompetitions",
+        [seasonStartYear],
+        (season) => {
+          state.isLoadingSeason = false;
+          app.local.addSeason(season);
+        },
+        (error) => {
+          state.isLoadingSeason = false;
+          showError(error);
+        }
+      );
+    }
+
     // Compétitions club du club sélectionné sur l'accueil (toutes celles du coach sinon).
     function getClubCompetitionsInSelectedClub() {
       return state.selectedClubId
@@ -674,6 +713,7 @@
         hideHomeFilterOptions,
         showCompetitionsPreviousPage,
         showCompetitionsNextPage,
+        loadOlderSeason,
         showClubCompetitionsPreviousPage,
         showClubCompetitionsNextPage,
         updateFilterJudokaText
@@ -713,6 +753,8 @@
         competitionsTotalCount,
         competitionsCanShowPreviousPage,
         competitionsCanShowNextPage,
+        olderSeasonLabel,
+        isLoadingSeason,
         clubCompetitionGroups,
         hasClubCompetitions,
         clubCompetitionsEmptyMessage,

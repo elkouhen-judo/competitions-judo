@@ -212,6 +212,9 @@ This specification does not define:
 - **UIX-014**: For `PARENT`, competition creation shall require an active family profile before the creation form is opened.
 - **UIX-015**: For `COACH`, the home screen shall list what is waiting: club competitions of the week, rankings to enter and coach reviews to write; each line opens the club competition. For `ADMIN`, access governance is reached from the account menu.
 - **UIX-016**: For `COACH`, the same four tabs shall be shown on every coach screen: « Accueil », « Compétitions », « Judokas » and « Stats ». « Mon espace », « Ma famille » and « Gestion des accès » are in the account menu opened from the header.
+- **UIX-016a**: The home lists shall load the current season and upcoming competitions; a « Voir la saison AAAA-AAAA » button shall load the previous season on demand, as long as an older competition exists.
+- **UIX-016b**: A past season already viewed shall stay readable offline.
+- **UIX-016c**: « Gestion des accès » shall list users by pages of 10 loaded from the server; the search by name or e-mail shall be applied by the server.
 - **UIX-017**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
 - **UIX-018**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
 - **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.

@@ -1,7 +1,9 @@
+import { inFilter, uniqueIds } from "../shared/query";
 import type { ClubRow, CoachClubRow, SupabaseRestDeps } from "./types";
 
 export interface ClubsRepository {
   listAll(): Promise<ClubRow[]>;
+  listByIds(clubIds: string[]): Promise<ClubRow[]>;
   getById(idClub: string): Promise<ClubRow | null>;
   insert(club: ClubRow): Promise<ClubRow | null>;
   rename(idClub: string, nom: string): Promise<ClubRow | null>;
@@ -15,7 +17,16 @@ export default function createClubsRepository(deps: SupabaseRestDeps): ClubsRepo
   const { supabaseDelete, supabaseInsert, supabasePatch, supabaseSelect, supabaseSelectOne, eqFilter } = deps;
 
   async function listAll(): Promise<ClubRow[]> {
-    return supabaseSelect<ClubRow>("clubs", "select=id_club,nom&order=nom.asc");
+    return supabaseSelect<ClubRow>("clubs", "select=id_club,nom&order=nom.asc,id_club.asc");
+  }
+
+  // INIT-1 : les clubs d'un coach sont filtrés par la requête.
+  async function listByIds(clubIds: string[]): Promise<ClubRow[]> {
+    const ids = uniqueIds(clubIds);
+    if (!ids.length) {
+      return [];
+    }
+    return supabaseSelect<ClubRow>("clubs", `select=id_club,nom&${inFilter("id_club", ids)}&order=nom.asc,id_club.asc`);
   }
 
   async function getById(idClub: string): Promise<ClubRow | null> {
@@ -35,13 +46,13 @@ export default function createClubsRepository(deps: SupabaseRestDeps): ClubsRepo
   }
 
   async function listCoachLinks(): Promise<CoachClubRow[]> {
-    return supabaseSelect<CoachClubRow>("coach_clubs", "select=id_coach,id_club");
+    return supabaseSelect<CoachClubRow>("coach_clubs", "select=id_coach,id_club&order=id_coach.asc,id_club.asc");
   }
 
   async function listClubIdsByCoach(idCoach: string): Promise<string[]> {
     const rows = await supabaseSelect<CoachClubRow>(
       "coach_clubs",
-      `select=id_club&${eqFilter("id_coach", idCoach)}`
+      `select=id_club&${eqFilter("id_coach", idCoach)}&order=id_club.asc`
     );
     return rows.map((row) => String(row.id_club));
   }
@@ -55,6 +66,7 @@ export default function createClubsRepository(deps: SupabaseRestDeps): ClubsRepo
 
   return {
     listAll,
+    listByIds,
     getById,
     insert,
     rename,

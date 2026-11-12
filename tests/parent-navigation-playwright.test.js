@@ -36,13 +36,13 @@ async function startServer() {
     { judokaId: "c2", accountEmail: "", firstName: "Nina", lastName: "Durand", profileType: "JUDOKA", accessRole: "NORMAL", ageCategory: "Minime" }
   ];
   const server = http.createServer(async (req, res) => {
-    if (req.url === "/api/client") {
+    if (req.url.split("?")[0] === "/api/client") {
       const response = await callHandler(clientHandler, req);
       res.writeHead(response.statusCode, response.headers);
       res.end(response.body);
       return;
     }
-    if (req.url === "/api/styles") {
+    if (req.url.split("?")[0] === "/api/styles") {
       res.writeHead(200, { "content-type": "text/css; charset=utf-8" });
       res.end(fs.readFileSync(path.join(root, "assets", "app.css"), "utf8"));
       return;

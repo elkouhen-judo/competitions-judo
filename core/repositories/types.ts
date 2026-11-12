@@ -10,7 +10,15 @@ export interface SupabaseRestDeps {
     table: string,
     query?: string
   ) => Promise<T | null>;
+  /** Lit une page et le nombre total de lignes qui répondent au filtre. */
+  supabaseSelectPage: <T = Record<string, unknown>>(
+    table: string,
+    query: string,
+    limit: number
+  ) => Promise<{ rows: T[]; total: number }>;
   supabaseInsert: <T = Record<string, unknown>>(table: string, payload: unknown) => Promise<T | null>;
+  /** Insère plusieurs lignes en un seul envoi. */
+  supabaseInsertMany: <T = Record<string, unknown>>(table: string, payloads: unknown[]) => Promise<T[]>;
   supabasePatch: <T = Record<string, unknown>>(
     table: string,
     query: string,
@@ -36,6 +44,13 @@ export interface JudokaRow {
   pending_parent_email?: string | null;
   club_id?: string | null;
   is_admin?: boolean;
+}
+
+/** Un compte avec ses liens : clubs coachés et enfants rattachés (CTX-1, une seule requête). */
+export interface JudokaIdentity {
+  user: JudokaRow;
+  coachClubIds: string[];
+  childJudokaIds: string[];
 }
 
 export interface ClubRow {
@@ -82,6 +97,12 @@ export interface CombatRow {
   score_judoka_shido?: number | null;
   score_adversaire_shido?: number | null;
 }
+
+/** Compétition lue avec le résultat de ses combats, pour le bilan V/D de l'accueil. */
+export type CompetitionWithResultsRow = CompetitionRow & { combats: Pick<CombatRow, "resultat">[] };
+
+/** Combat lu avec ses points (marqués et subis) en une requête. */
+export type CombatWithScoresRow = CombatRow & { combat_scores: CombatScoreRow[] };
 
 export interface CombatScoreRow {
   id_combat_score: string;

@@ -1,11 +1,7 @@
 import type { CombatScoreDraft } from "../domain/competitions/combat-score";
 import type { CombatScoreRow, SupabaseRestDeps } from "./types";
 
-const COMBAT_SCORE_SELECT_BATCH_SIZE = 100;
-
 export interface CombatScoresRepository {
-  listByCombatId(idCombat: string): Promise<CombatScoreRow[]>;
-  listByCombatIds(ids: string[]): Promise<CombatScoreRow[]>;
   replaceForCombat(
     idCombat: string,
     scores: CombatScoreDraft[],
@@ -17,6 +13,19 @@ export const CONCEDED_SCORE_CAMP = "ADVERSAIRE";
 
 export function isConcededScoreRow(row: Pick<CombatScoreRow, "camp">): boolean {
   return String(row.camp || "").toUpperCase() === CONCEDED_SCORE_CAMP;
+}
+
+/** Sépare les points lus avec un combat : marqués d'un côté, subis de l'autre. */
+export function splitCombatScores<T extends { combat_scores?: CombatScoreRow[] | "" }>(
+  combat: T
+): Omit<T, "combat_scores"> & { scores: CombatScoreRow[]; concededScores: CombatScoreRow[] } {
+  const { combat_scores: rows, ...rest } = combat;
+  const scoreRows = Array.isArray(rows) ? rows : [];
+  return {
+    ...rest,
+    scores: scoreRows.filter((row) => !isConcededScoreRow(row)),
+    concededScores: scoreRows.filter(isConcededScoreRow)
+  };
 }
 
 function toCombatScoreRecord(
@@ -40,34 +49,9 @@ function toCombatScoreRecord(
 export default function createCombatScoresRepository(
   deps: SupabaseRestDeps
 ): CombatScoresRepository {
-  const { supabaseDelete, supabaseInsert, supabaseSelect, eqFilter } = deps;
+  const { supabaseDelete, supabaseInsertMany, eqFilter } = deps;
 
-  async function listByCombatId(idCombat: string): Promise<CombatScoreRow[]> {
-    return supabaseSelect<CombatScoreRow>(
-      "combat_scores",
-      `select=*&${eqFilter("id_combat", idCombat)}&order=ordre.asc`
-    );
-  }
-
-  async function listByCombatIds(ids: string[]): Promise<CombatScoreRow[]> {
-    const uniqueIds = Array.from(new Set((ids || []).map(String).filter(Boolean)));
-    if (!uniqueIds.length) {
-      return [];
-    }
-
-    const rows: CombatScoreRow[] = [];
-    for (let index = 0; index < uniqueIds.length; index += COMBAT_SCORE_SELECT_BATCH_SIZE) {
-      const batchIds = uniqueIds.slice(index, index + COMBAT_SCORE_SELECT_BATCH_SIZE);
-      rows.push(
-        ...(await supabaseSelect<CombatScoreRow>(
-          "combat_scores",
-          `select=*&id_combat=in.(${batchIds.join(",")})&order=ordre.asc`
-        ))
-      );
-    }
-    return rows;
-  }
-
+  // ECRIT-1 : les points d'un combat partent en un seul envoi (suppression, puis insertion).
   async function replaceForCombat(
     idCombat: string,
     scores: CombatScoreDraft[],
@@ -75,30 +59,17 @@ export default function createCombatScoresRepository(
   ): Promise<CombatScoreRow[]> {
     await supabaseDelete("combat_scores", eqFilter("id_combat", idCombat));
 
-    const inserted: CombatScoreRow[] = [];
-    const insertAll = async (list: CombatScoreDraft[], conceded: boolean) => {
-      for (let index = 0; index < list.length; index += 1) {
-        const score = list[index];
-        if (!score) {
-          continue;
-        }
-        const row = await supabaseInsert<CombatScoreRow>(
-          "combat_scores",
-          toCombatScoreRecord(idCombat, score, index, conceded)
-        );
-        if (row) {
-          inserted.push(row);
-        }
-      }
-    };
-    await insertAll(scores, false);
-    await insertAll(concededScores, true);
-    return inserted;
+    const toRecords = (list: CombatScoreDraft[], conceded: boolean) =>
+      list.flatMap((score, index) =>
+        score ? [toCombatScoreRecord(idCombat, score, index, conceded)] : []
+      );
+    return supabaseInsertMany<CombatScoreRow>("combat_scores", [
+      ...toRecords(scores, false),
+      ...toRecords(concededScores, true)
+    ]);
   }
 
   return {
-    listByCombatId,
-    listByCombatIds,
     replaceForCombat
   };
 }

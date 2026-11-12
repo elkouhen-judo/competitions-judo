@@ -151,6 +151,11 @@
                 <button v-if="clubCompetitionsCanShowNextPage" class="button-secondary" type="button" @click="showClubCompetitionsNextPage()">Page suivante</button>
               </div>
             </div>
+            <div v-if="olderSeasonLabel" class="list-summary">
+              <div class="list-summary-actions">
+                <button class="button-secondary" type="button" :disabled="isLoadingSeason" @click="loadOlderSeason()">{{ isLoadingSeason ? "Chargement…" : olderSeasonLabel }}</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -190,6 +195,11 @@
               <div class="list-summary-actions">
                 <button v-if="competitionsCanShowPreviousPage" class="button-secondary" type="button" @click="showCompetitionsPreviousPage()">Page précédente</button>
                 <button v-if="competitionsCanShowNextPage" class="button-secondary" type="button" @click="showCompetitionsNextPage()">Page suivante</button>
+              </div>
+            </div>
+            <div v-if="olderSeasonLabel" class="list-summary">
+              <div class="list-summary-actions">
+                <button class="button-secondary" type="button" :disabled="isLoadingSeason" @click="loadOlderSeason()">{{ isLoadingSeason ? "Chargement…" : olderSeasonLabel }}</button>
               </div>
             </div>
           </div>

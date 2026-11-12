@@ -1,5 +1,17 @@
 import type { CompetitionModel } from "../domain/competitions/competition";
-import type { CompetitionRow, SupabaseRestDeps } from "./types";
+import { inFilter, selectByIdBatches, uniqueIds } from "../shared/query";
+import type { CompetitionRow, CompetitionWithResultsRow, SupabaseRestDeps } from "./types";
+
+/** Périmètre et période d'une lecture de compétitions. Un périmètre vide ne lit rien. */
+export interface CompetitionScopeFilter {
+  /** Compétitions de ces judokas. */
+  judokaIds?: string[];
+  /** Compétitions des judokas de ces clubs (jointure, sans liste d'identifiants). */
+  clubIds?: string[];
+  dateFrom?: string;
+  dateTo?: string;
+  ageCategory?: string;
+}
 
 interface CompetitionFinalization {
   competitionId: string | null;
@@ -8,7 +20,6 @@ interface CompetitionFinalization {
 }
 
 export interface CompetitionsRepository {
-  detachFromClubCompetition(idCompetition: string): Promise<CompetitionRow | null>;
   existsForJudoka(
     idJudoka: string,
     name?: string,
@@ -17,10 +28,19 @@ export interface CompetitionsRepository {
   ): Promise<CompetitionRow | null>;
   getById(idCompetition: string): Promise<CompetitionRow | null>;
   insert(competition: CompetitionModel, idCompetition: string): Promise<CompetitionRow | null>;
-  listAll(): Promise<CompetitionRow[]>;
+  detachAllFromClubCompetition(idClubCompetition: string): Promise<void>;
+  getOldestDate(scope: CompetitionScopeFilter): Promise<string>;
+  insertMany(
+    competitions: { competition: CompetitionModel; idCompetition: string }[]
+  ): Promise<CompetitionRow[]>;
   listByClubCompetition(idClubCompetition: string): Promise<CompetitionRow[]>;
   listByJudoka(idJudoka: string): Promise<CompetitionRow[]>;
-  listByJudokaIds(ids: string[]): Promise<CompetitionRow[]>;
+  listInScope(scope: CompetitionScopeFilter): Promise<CompetitionRow[]>;
+  listInScopeWithResults(scope: CompetitionScopeFilter): Promise<CompetitionWithResultsRow[]>;
+  updateClubCompetitionFields(
+    idClubCompetition: string,
+    fields: { name: string; competitionDate: string; ageCategory: string; level: string }
+  ): Promise<void>;
   remove(idCompetition: string): Promise<void>;
   removeByJudoka(idJudoka: string): Promise<void>;
   update(idCompetition: string, competition: CompetitionModel): Promise<CompetitionRow | null>;
@@ -38,11 +58,14 @@ export default function createCompetitionsRepository(
   const {
     supabaseDelete,
     supabaseInsert,
+    supabaseInsertMany,
     supabasePatch,
     supabaseSelect,
     supabaseSelectOne,
     eqFilter
   } = deps;
+
+  const COMPETITION_ORDER = "order=date.desc,id_competition.asc";
 
   function toCompetitionRecord(competition: CompetitionModel): Record<string, unknown> {
     const draft = competition && competition.draft;
@@ -71,31 +94,117 @@ export default function createCompetitionsRepository(
     };
   }
 
-  async function listAll(): Promise<CompetitionRow[]> {
-    return supabaseSelect<CompetitionRow>("competitions", "select=*&order=date.desc");
-  }
-
   async function listByJudoka(idJudoka: string): Promise<CompetitionRow[]> {
     return supabaseSelect<CompetitionRow>(
       "competitions",
-      `select=*&${eqFilter("id_judoka", idJudoka)}&order=date.desc`
+      `select=*&${eqFilter("id_judoka", idJudoka)}&${COMPETITION_ORDER}`
     );
   }
 
-  async function listByJudokaIds(ids: string[]): Promise<CompetitionRow[]> {
-    if (!ids || !ids.length) {
-      return [];
+  function periodFilters(scope: CompetitionScopeFilter): string[] {
+    const filters: string[] = [];
+    if (scope.dateFrom) {
+      filters.push(`date=gte.${encodeURIComponent(scope.dateFrom)}`);
     }
-    return supabaseSelect<CompetitionRow>(
-      "competitions",
-      `select=*&id_judoka=in.(${ids.join(",")})&order=date.desc`
+    if (scope.dateTo) {
+      filters.push(`date=lte.${encodeURIComponent(scope.dateTo)}`);
+    }
+    if (scope.ageCategory) {
+      filters.push(eqFilter("categorie_age", scope.ageCategory));
+    }
+    return filters;
+  }
+
+  type ScopedRow = CompetitionRow & { judokas?: unknown };
+
+  // PAGE-4 : le périmètre d'un coach se filtre par club (jointure sur judokas.club_id) ;
+  // les identifiants de judokas, peu nombreux (soi-même, ses enfants), partent par lots.
+  async function selectInScope<T extends ScopedRow>(
+    scope: CompetitionScopeFilter,
+    columns: string
+  ): Promise<T[]> {
+    const period = periodFilters(scope);
+    const clubIds = uniqueIds(scope.clubIds);
+    const reads: Promise<T[]>[] = [];
+    if (clubIds.length) {
+      reads.push(
+        supabaseSelect<T>(
+          "competitions",
+          [
+            `select=${columns},judokas!inner(club_id)`,
+            inFilter("judokas.club_id", clubIds),
+            ...period,
+            COMPETITION_ORDER
+          ].join("&")
+        )
+      );
+    }
+    reads.push(
+      selectByIdBatches(scope.judokaIds, (batchIds) =>
+        supabaseSelect<T>(
+          "competitions",
+          [`select=${columns}`, inFilter("id_judoka", batchIds), ...period, COMPETITION_ORDER].join("&")
+        )
+      )
     );
+
+    const byId = new Map<string, T>();
+    (await Promise.all(reads)).flat().forEach((row) => {
+      // La jointure sur judokas ne sert qu'au filtre : elle ne sort pas du dépôt.
+      const competition = { ...row };
+      delete competition.judokas;
+      byId.set(String(row.id_competition), competition);
+    });
+    return [...byId.values()].sort(
+      (a, b) =>
+        String(b.date).localeCompare(String(a.date)) ||
+        String(a.id_competition).localeCompare(String(b.id_competition))
+    );
+  }
+
+  async function listInScope(scope: CompetitionScopeFilter): Promise<CompetitionRow[]> {
+    return selectInScope<CompetitionRow>(scope, "*");
+  }
+
+  // INIT-2 : le bilan V/D ne lit que le résultat de chaque combat, avec la compétition.
+  async function listInScopeWithResults(
+    scope: CompetitionScopeFilter
+  ): Promise<CompetitionWithResultsRow[]> {
+    return selectInScope<CompetitionWithResultsRow>(scope, "*,combats(resultat)");
+  }
+
+  // PAGE-2 : date de la plus ancienne compétition du périmètre ("" s'il est vide).
+  async function getOldestDate(scope: CompetitionScopeFilter): Promise<string> {
+    const clubIds = uniqueIds(scope.clubIds);
+    const judokaIds = uniqueIds(scope.judokaIds);
+    const reads: Promise<Pick<CompetitionRow, "date"> | null>[] = [];
+    if (clubIds.length) {
+      reads.push(
+        supabaseSelectOne<Pick<CompetitionRow, "date">>(
+          "competitions",
+          `select=date,judokas!inner(club_id)&${inFilter("judokas.club_id", clubIds)}&order=date.asc`
+        )
+      );
+    }
+    if (judokaIds.length) {
+      reads.push(
+        supabaseSelectOne<Pick<CompetitionRow, "date">>(
+          "competitions",
+          `select=date&${inFilter("id_judoka", judokaIds)}&order=date.asc`
+        )
+      );
+    }
+    const dates = (await Promise.all(reads))
+      .map((row) => String((row && row.date) || ""))
+      .filter(Boolean)
+      .sort();
+    return dates[0] || "";
   }
 
   async function listByClubCompetition(idClubCompetition: string): Promise<CompetitionRow[]> {
     return supabaseSelect<CompetitionRow>(
       "competitions",
-      `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc`
+      `select=*&${eqFilter("club_competition_id", idClubCompetition)}&order=nom.asc,id_competition.asc`
     );
   }
 
@@ -138,6 +247,37 @@ export default function createCompetitionsRepository(
     );
   }
 
+  // ECRIT-3 : les participations d'une compétition club se créent en un seul envoi.
+  async function insertMany(
+    competitions: { competition: CompetitionModel; idCompetition: string }[]
+  ): Promise<CompetitionRow[]> {
+    return supabaseInsertMany<CompetitionRow>(
+      "competitions",
+      competitions.map(({ competition, idCompetition }) =>
+        toNewCompetitionRecord(competition, idCompetition)
+      )
+    );
+  }
+
+  // ECRIT-3 : les champs hérités de la compétition club se propagent en une requête.
+  async function updateClubCompetitionFields(
+    idClubCompetition: string,
+    fields: { name: string; competitionDate: string; ageCategory: string; level: string }
+  ): Promise<void> {
+    await supabasePatch("competitions", eqFilter("club_competition_id", idClubCompetition), {
+      nom: fields.name,
+      date: fields.competitionDate,
+      categorie_age: fields.ageCategory,
+      niveau: fields.level || ""
+    });
+  }
+
+  async function detachAllFromClubCompetition(idClubCompetition: string): Promise<void> {
+    await supabasePatch("competitions", eqFilter("club_competition_id", idClubCompetition), {
+      club_competition_id: null
+    });
+  }
+
   async function update(
     idCompetition: string,
     competition: CompetitionModel
@@ -176,14 +316,6 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function detachFromClubCompetition(idCompetition: string): Promise<CompetitionRow | null> {
-    return supabasePatch<CompetitionRow>(
-      "competitions",
-      eqFilter("id_competition", idCompetition),
-      { club_competition_id: null }
-    );
-  }
-
   async function remove(idCompetition: string): Promise<void> {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
@@ -193,17 +325,20 @@ export default function createCompetitionsRepository(
   }
 
   return {
-    detachFromClubCompetition,
+    detachAllFromClubCompetition,
     existsForJudoka,
     getById,
+    getOldestDate,
     insert,
-    listAll,
+    insertMany,
     listByClubCompetition,
     listByJudoka,
-    listByJudokaIds,
+    listInScope,
+    listInScopeWithResults,
     remove,
     removeByJudoka,
     update,
+    updateClubCompetitionFields,
     updateCoachObjective,
     updateCoachReview,
     updateResult

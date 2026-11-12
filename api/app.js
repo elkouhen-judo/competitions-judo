@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { getVersionedAssetUrls } = require("./_assets");
 
 const CANONICAL_PRODUCTION_APP_URL = "https://competitions-judo.vercel.app";
 
@@ -52,7 +53,11 @@ function renderIndexHtml() {
     html = html.replace(`<!-- view:${name} -->`, readViewPartial(name).trimEnd());
   }
 
-  return html;
+  // SHELL-2 : l'URL du JS et du CSS porte l'empreinte du contenu, pour un cache d'un an.
+  const assetUrls = getVersionedAssetUrls();
+  return html
+    .replace('href="/api/styles"', `href="${assetUrls.styles}"`)
+    .replace('src="/api/client"', `src="${assetUrls.client}"`);
 }
 
 function getRuntimeAppUrl(req) {

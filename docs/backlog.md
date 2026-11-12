@@ -1,297 +1,244 @@
-# Backlog ergonomie
+# Backlog optimisation du chargement
 
-Issu de la revue du 11/11/2026. L'application a été parcourue en local sur données fictives, en mobile (390 × 844) pour les profils judoka, parent et coach + admin, et en bureau (1280 × 860) pour le coach.
+Issu de la revue du 12/11/2026, faite par lecture du code. Les décomptes de requêtes sont exacts ; les temps ne sont pas mesurés (voir MESURE-1).
 
-- Priorité : P1 (gêne le parcours principal), P2 (gêne récurrente), P3 (confort).
+- Priorité : P1 (ralentit tous les écrans), P2 (ralentit un parcours), P3 (confort ou prévention).
 - Effort : S (≤ 1 jour), M (2-3 jours), L (≥ 1 semaine).
-- Chaque story donne le constat observé, la règle visée et le critère d'acceptation.
+- Chaque story donne le constat, la règle visée et le critère d'acceptation.
 
 ## Vue d'ensemble
 
-Le parcours principal est « ouvrir la compétition du jour → saisir un combat → saisir le classement ». Il fonctionne, mais il est alourdi par quatre défauts transverses :
+La lenteur vient du nombre d'allers-retours vers Supabase, faits l'un après l'autre à chaque appel RPC, et non du volume de données.
 
-1. **Trop de boutons pleine largeur.** Retour, Modifier et Supprimer occupent le haut de chaque fiche ; chaque carte de combat porte deux boutons.
-2. **Saisie par menus déroulants.** Le formulaire de combat demande 4 à 6 listes déroulantes, au bord du tatami.
-3. **Barre d'actions collante trop haute.** Deux boutons empilés masquent environ 130 px de contenu, dont des champs de formulaire.
-4. **Accueils explicatifs.** Les cartes de l'accueil décrivent les fonctions au lieu de montrer l'état du jour ; la liste utile passe sous la ligne de flottaison.
+| Action (profil coach) | Requêtes Supabase en série aujourd'hui | Cible |
+|---|---|---|
+| Ouverture de l'appli (`getInitialData`) | 9 + 1 par tranche de 100 compétitions | 3 étapes |
+| Ouverture d'une compétition (`getCompetitionDetail`) | 9 ou plus | 3 étapes |
+| Enregistrer un combat puis réaffichage | une vingtaine + 1 par point marqué | 6 étapes |
 
-## Avancement au 11/11/2026
+Une « étape » est un groupe de requêtes lancées en parallèle.
 
-Les 34 stories sont implémentées (tests : 279/279, parcours visuel judoka, parent et coach sans erreur). Écarts assumés par rapport au texte des stories :
+Il n'existe aucune pagination côté serveur. Les listes sont chargées en entier puis découpées par 10 dans le navigateur (`paginateList`). Les lots de 100 des dépôts servent à limiter la longueur de l'URL, pas à paginer.
+
+## Avancement au 12/11/2026
+
+Les 21 stories sont implémentées dans l'arbre de travail (tests : 352/352, hors ligne : 4/4). Rien n'est déployé ni commité.
+
+Écarts assumés par rapport au texte des stories :
 
 | Story | Écart |
 |---|---|
-| NAV-2 | Onglets coach : « Accueil », « Compétitions », « Judokas », « Stats ». « Mon espace » rejoint le menu du compte avec « Ma famille » et « Gestion des accès », pour garder l'accès aux judokas en un geste. |
-| NAV-3 | Squelette de l'accueil et affichage immédiat du cache. Le temps de réponse du serveur lui-même n'a pas été mesuré ni optimisé. |
-| FICHE-2 | Les places proposées sont 1er, 2e, 3e, 5e, 7e et Non classé ; une valeur historique (4e, 6e, 8e) reste affichée. |
-| STATS-1 | La tuile « Saisies à compléter » compte les combats du critère le plus fréquent (les critères se recoupent). |
-| UI-5 | Le débordement n'a pas été reproduit ; `overflow-x: clip` sur la page l'empêche sans casser les barres collantes. |
-| UI-7 | Le script de parcours reste hors dépôt (données fictives) ; les tests Playwright du dépôt couvrent la saisie de combat, le parcours parent et la finalisation hors ligne. |
+| MESURE-1 | L'en-tête `Server-Timing` et la ligne de journal existent. Les temps en millisecondes ne sont pas relevés : `docs/metrics.md` donne les décomptes de requêtes et d'étapes. |
+| INFRA-1 | `regions` vaut `dub1` : la base de production est en `eu-west-1`. La base dev est en `eu-central-1` ; le seuil de 20 ms n'y sera pas tenu. Latence non mesurée. |
+| AUTH-1 | Les deux projets signent en ES256 : le jeton est vérifié par les clés publiques JWKS, lues une fois par instance puis gardées 10 minutes ; un identifiant de clé inconnu les fait relire au plus une fois toutes les 30 s. Un jeton HS256 n'est accepté qu'avec un `SUPABASE_JWT_SECRET` d'au moins 32 caractères. |
+| CTX-1 | Sans migration : l'e-mail reste cherché avec `ilike`, l'index `lower(email)` n'est pas utilisé. |
+| INIT-2 | Pas de vue SQL : le résultat de chaque combat est lu avec sa compétition (`combats(resultat)`). |
+| DETAIL-1 | La compétition et ses combats sont lus en même temps que le contexte ; rien n'est renvoyé avant le contrôle d'accès. |
+| DETAIL-2 | Les suggestions sont gardées dans le cache local par judoka : hors connexion, elles ne sont disponibles que si le formulaire a déjà été ouvert en ligne pour ce judoka. |
+| ECRIT-2 | Les actions de « Gestion des accès » relisent l'écran de gestion, sans `getInitialData`. Les identifiants de compétition sont aléatoires, pour créer plusieurs participations en un envoi. |
+| PAGE-1 | Le plafond `max rows` n'a pas été relevé : chaque liste demande le total (`count=exact`) et lit les pages manquantes, quel que soit le plafond. |
+| PAGE-2 | Les compétitions club suivent la même règle de saison. Une saison passée se recharge à chaque ouverture de l'appli (bouton « Voir la saison ») ; hors connexion elle vient du cache. La recherche MCP garde tout l'historique. |
+| PAGE-3 | La recherche accepte plusieurs mots (nom, prénom, e-mail). L'onglet Clubs ne lit plus que les coachs et un décompte par club. |
+| ADMIN-1 | Avec la pagination, les admins ne peuvent plus être déduits de la liste des utilisateurs : ils gardent leur lecture, lancée en parallèle. |
+| SHELL-2 | Le JS et le CSS restent servis par `/api/client` et `/api/styles`, avec l'empreinte en paramètre `v`. |
 
-Reste à faire hors backlog : vérifier sur un vrai téléphone la barre collante du formulaire de combat et le menu « ⋯ » (fermeture au toucher extérieur).
+À vérifier avant mise en production :
+
+1. Les requêtes à jointure (`coach_clubs(id_club)`, `parent_judokas!parent_judokas_id_parent_fkey(id_judoka)`, `judokas!inner(club_id)`, `combats(resultat)`, `combat_scores(*)`) n'ont été exécutées que sur un faux Supabase. Les tester sur dev avec un compte coach, un parent et un judoka.
+2. La connexion sur dev, pour confirmer la vérification locale du jeton.
+3. Le relevé `Server-Timing` avant et après déploiement.
 
 ## Ordre de traitement proposé
 
 | Lot | Objectif | Stories |
 |---|---|---|
-| 1 | Saisir un combat vite et sans erreur | COMBAT-1 à COMBAT-5, BARRE-1 |
-| 2 | Alléger les fiches et la navigation | NAV-1 à NAV-4, FICHE-1 à FICHE-5 |
-| 3 | Accueils orientés action | ACCUEIL-1 à ACCUEIL-4, LISTE-1, LISTE-2 |
-| 4 | Coach et admin | CLUB-1 à CLUB-3, STATS-1, STATS-2, ADMIN-1, ADMIN-2 |
-| 5 | Finitions | UI-1 à UI-7 |
-
-## 1. Saisie d'un combat
-
-### COMBAT-1 — Boutons au lieu des menus déroulants (P1, M)
-
-- Constat : Étape, Résultat, « Comment le combat s'est terminé » et « Adversaire droitier ou gaucher » sont quatre listes déroulantes. Chaque choix coûte deux gestes.
-- Règle : Résultat s'affiche en trois boutons (Victoire, Défaite, Égalité).
-- Règle : la décision et la garde adverse s'affichent en boutons.
-- Règle : l'étape s'affiche en pastilles défilantes (Poule, 1/16, 1/8, 1/4, 1/2, Repêchage, Place de 3, Finale).
-- Acceptation : la partie « Saisie rapide » ne contient aucun menu déroulant.
-- Acceptation : chaque bouton mesure au moins 44 px de haut.
-- Fichiers : `assets/views/combat-form.html`, `assets/app-screen-combat-form.ts`.
-
-### COMBAT-2 — Champs obligatoires et erreurs sur le champ (P1, S)
+| 1 | Mesurer, puis retirer du temps à tous les appels | MESURE-1, INFRA-1, AUTH-1, CTX-1 |
+| 2 | Ouverture de l'appli et d'une compétition | INIT-1, INIT-2, DETAIL-1, DETAIL-2 |
+| 3 | Enregistrements | ECRIT-1, ECRIT-2, ECRIT-3 |
+| 4 | Pagination et volumes | PAGE-1 à PAGE-4 |
+| 5 | Coach et admin | COACH-1, COACH-2, ADMIN-1 |
+| 6 | Coquille de l'appli | SHELL-1 à SHELL-3 |
 
-- Constat : rien n'indique que Résultat est obligatoire. Un formulaire vide part au serveur et l'erreur s'affiche en bandeau flottant, loin du champ.
-- Règle : le formulaire vérifie Résultat avant l'envoi.
-- Règle : le message d'erreur s'affiche sous le champ concerné, qui reçoit le focus.
-- Règle : même traitement pour le nom de la compétition et pour le club, le nom et la catégorie d'une compétition club.
-- Acceptation : enregistrer un formulaire vide n'appelle pas le serveur.
-- Fichiers : `assets/app-screen-combat-form.ts`, `assets/app-screen-competition-form.ts`, `assets/app-screen-club-competition.ts`.
+## 1. Mesure et socle
 
-### COMBAT-3 — Enregistrer et saisir le suivant (P1, S)
+### MESURE-1 — Chronométrer chaque appel RPC (P1, S)
 
-- Constat : après un enregistrement, il faut revenir à la fiche puis rouvrir « Ajouter un combat ».
-- Règle : un second bouton « Enregistrer et saisir le suivant » rouvre un formulaire vide.
-- Règle : l'étape suivante est proposée (Poule reste Poule, 1/4 propose 1/2).
-- Acceptation : trois combats se saisissent sans repasser par la fiche.
-
-### COMBAT-4 — Carte de combat cliquable, sans boutons (P1, S)
+- Constat : aucun temps n'est mesuré. NAV-3 notait déjà « le temps de réponse du serveur n'a pas été mesuré ni optimisé ».
+- Règle : `/api/rpc` renvoie un en-tête `Server-Timing` avec la durée totale, la durée d'authentification, le nombre de requêtes Supabase et leur durée cumulée.
+- Règle : la même ligne est écrite dans les journaux Vercel, avec le nom de la méthode.
+- Acceptation : l'onglet Réseau du navigateur affiche le détail pour `getInitialData`.
+- Acceptation : un relevé avant/après est noté dans `docs/metrics.md` pour chaque lot.
+- Fichiers : `api/rpc.js`, `core/infra/supabase-client.js`.
+
+### INFRA-1 — Fonctions Vercel dans la région de la base (P1, S)
 
-- Constat : chaque carte porte « Modifier le combat » et « Supprimer le combat » en pleine largeur. Quatre combats font 2 900 px de haut sur mobile.
-- Règle : toucher la carte ouvre la modification.
-- Règle : la suppression se fait depuis le formulaire de modification.
-- Règle : la ligne « Judoka » et la mention « Aucun déroulé renseigné » disparaissent de la carte.
-- Acceptation : une carte de combat sans note tient en 120 px de haut au plus.
-- Fichiers : `assets/views/competition.html`, `assets/views/combat-form.html`.
+- Constat : `vercel.json` ne fixe aucune région ; les fonctions tournent par défaut à Washington (`iad1`). La région de la base Supabase n'a pas été vérifiée.
+- Règle : relever la région du projet Supabase (prod et dev) dans son tableau de bord.
+- Règle : fixer `regions` dans `vercel.json` sur la région Vercel la plus proche de la base.
+- Acceptation : la latence d'une requête Supabase vue par la fonction (MESURE-1) est inférieure à 20 ms.
+- Fichiers : `vercel.json`, `terraform/`.
+
+### AUTH-1 — Vérifier le jeton sans appel réseau (P1, S)
+
+- Constat : chaque RPC appelle `/auth/v1/user` avant tout traitement (`core/auth/session.js:29`).
+- Règle : la signature et l'expiration du JWT sont vérifiées dans la fonction (secret JWT ou clés publiques JWKS du projet).
+- Règle : l'email est lu dans le jeton vérifié.
+- Limite assumée : une session révoquée reste valide jusqu'à l'expiration du jeton (1 h).
+- Acceptation : un RPC ne fait plus aucun appel à `/auth/v1/`.
+- Acceptation : un jeton expiré, falsifié ou signé par un autre projet est refusé (tests).
+- Fichiers : `core/auth/session.js`, `core/config/env.js`, `tests/`.
+
+### CTX-1 — Contexte utilisateur en une étape, une fois par appel (P1, M)
+
+- Constat : chaque RPC refait 3 à 4 requêtes en série (judoka par email, `coach_clubs`, judokas des clubs). `getInitialData` lit le judoka par email deux fois (`core/index.js:283` puis `:297`).
+- Règle : le contexte est calculé une seule fois par appel RPC et réutilisé par tous les services.
+- Règle : le périmètre (clubs du coach, enfants du parent) se charge en une requête, par jointure PostgREST ou fonction SQL.
+- Règle : la recherche par email utilise l'index `lower(email)` (`eq` sur une valeur normalisée, et non `ilike`).
+- Acceptation : le contexte coûte 2 requêtes au plus, quel que soit le rôle.
+- Fichiers : `core/services/user-context.service.ts`, `core/repositories/judokas.repository.ts`, `core/index.js`.
 
-### COMBAT-5 — Alertes de saisie en langage courant (P2, S)
+## 2. Ouverture de l'appli et d'une compétition
 
-- Constat : les alertes affichent « MOYENNE Points marqués non renseignés ». Le niveau de priorité ne parle pas à un parent.
-- Règle : l'alerte s'affiche « À compléter : points marqués ».
-- Règle : toucher l'alerte ouvre le formulaire sur le champ concerné.
-- Acceptation : aucun libellé « Haute » ou « Moyenne » n'est visible sur la fiche.
-
-### BARRE-1 — Barre d'actions sur une seule ligne (P1, S)
+### INIT-1 — `getInitialData` en parallèle (P1, S)
 
-- Constat : la barre collante empile deux boutons (Enregistrer et Annuler, ou Finaliser et Ajouter un combat). Elle masque le champ Niveau du formulaire compétition et la liste des participants du formulaire club.
-- Règle : la barre collante porte une seule ligne : action principale large, action secondaire compacte.
-- Règle : le contenu garde une marge basse égale à la hauteur de la barre.
-- Acceptation : aucun champ n'est masqué par la barre en 390 × 844.
-- Fichiers : `assets/app.css`, vues de formulaire.
-
-## 2. Navigation et fiches
+- Constat : clubs, compétitions club, compétitions et bilans s'enchaînent en `await` alors qu'ils sont indépendants (`core/index.js:302-327`).
+- Constat : `clubsRepository.listAll()` charge tous les clubs puis filtre en JavaScript.
+- Règle : les lectures indépendantes partent ensemble (`Promise.all`).
+- Règle : les clubs du coach sont filtrés par la requête.
+- Acceptation : `getInitialData` tient en 3 étapes : contexte, listes, bilans.
+- Fichiers : `core/index.js`, `core/repositories/clubs.repository.ts`.
 
-### NAV-1 — Retour en flèche, actions dans un menu (P1, M)
+### INIT-2 — Bilan V/D sans charger les combats (P1, S)
+
+- Constat : `getCombatRecords` lit `select=*` sur tous les combats (notes comprises), par lots de 100 en série, pour compter victoires et défaites.
+- Règle : la requête ne lit que `id_competition` et `resultat`, ou une vue SQL agrégée par compétition.
+- Règle : les lots partent en parallèle.
+- Acceptation : le bilan de l'accueil pèse moins de 50 octets par combat.
+- Fichiers : `core/index.js`, `core/repositories/combats.repository.ts`, `supabase/migrations/`.
 
-- Constat : Retour, Modifier et Supprimer sont trois boutons pleine largeur en haut de la fiche compétition. Ils occupent 170 px et exposent la suppression au premier plan.
-- Règle : le retour devient une flèche à gauche du titre, sur tous les écrans.
-- Règle : Modifier et Supprimer passent dans un menu « ⋯ » à droite du titre.
-- Acceptation : le premier contenu de la fiche commence à moins de 160 px du haut en mobile.
-- Fichiers : toutes les vues de `assets/views/`.
+### DETAIL-1 — Combats et points en une requête (P1, M)
 
-### NAV-2 — Onglets coach identiques partout (P1, S)
+- Constat : `getCompetitionDetail` lit la compétition, puis les combats, puis les points, en série.
+- Règle : les combats et leurs points se lisent ensemble (`select=*,combat_scores(*)`, la clé étrangère existe).
+- Règle : la compétition et les combats partent en parallèle une fois l'accès vérifié.
+- Acceptation : la fiche tient en 3 étapes : contexte, compétition, combats avec points.
+- Fichiers : `core/services/competitions.service.ts`, `core/repositories/combats.repository.ts`.
 
-- Constat : l'accueil coach affiche « Accueil coach, Mon espace, Gestion des accès ». L'écran des statistiques affiche « Accueil coach, Mon espace, Statistiques ». Le troisième onglet est rogné à 390 px.
-- Règle : les mêmes onglets s'affichent sur tous les écrans coach : Accueil, Compétitions, Statistiques, Mon espace.
-- Règle : « Gestion des accès » passe dans le menu du compte.
-- Acceptation : aucun onglet n'est rogné à 390 px.
-- Fichiers : `assets/app-screen-home.ts`, `assets/views/home.html`, `assets/views/coach-dashboard.html`.
+### DETAIL-2 — Suggestions de saisie à la demande (P2, S)
 
-### NAV-3 — Chargement visible (P1, S)
+- Constat : `loadCombatSuggestions` relit tous les combats du judoka et tous leurs points à chaque ouverture de fiche, même sans saisie.
+- Règle : les suggestions se chargent à l'ouverture du formulaire de combat, par un RPC dédié.
+- Règle : le navigateur les garde en mémoire par judoka jusqu'au prochain enregistrement.
+- Acceptation : ouvrir une fiche ne lit aucun combat d'une autre compétition.
+- Fichiers : `core/services/competitions.service.ts`, `assets/app-screen-combat-form.ts`.
 
-- Constat : à l'ouverture sur l'environnement dev, la page reste vide environ cinq secondes, avec le seul en-tête.
-- Règle : un squelette de l'accueil s'affiche pendant le chargement.
-- Règle : les données en cache s'affichent tout de suite, puis se mettent à jour.
-- Acceptation : aucun écran vide de plus de 300 ms.
-- Fichiers : `assets/app-runtime.ts`.
+## 3. Enregistrements
 
-### NAV-4 — En-tête compact (P2, S)
+### ECRIT-1 — Points d'un combat en un envoi (P1, S)
 
-- Constat : le rôle « COACH · ADMIN · JUDOKA » s'affiche sur trois lignes et repousse le sous-titre. Le bouton de déconnexion est exposé, sans confirmation.
-- Règle : l'en-tête affiche le nom et un seul rôle, sur une ligne.
-- Règle : la déconnexion et « Gestion des accès » passent dans un menu ouvert par le nom.
-- Acceptation : l'en-tête mesure 64 px de haut au plus en mobile.
-- Fichiers : `assets/views/header.html`, `assets/app-runtime.ts`.
+- Constat : `replaceForCombat` supprime les points puis les insère un par un, en série (`core/repositories/combat-scores.repository.ts`).
+- Règle : les points s'insèrent en une requête (tableau JSON).
+- Acceptation : enregistrer un combat de 6 points coûte 3 écritures : combat, suppression, insertion.
+- Fichiers : `core/repositories/combat-scores.repository.ts`, `core/infra/supabase-rest.js`.
 
-### FICHE-1 — Compétition à venir sans actions de résultat (P1, S)
+### ECRIT-2 — Ne recharger que l'écran concerné (P1, M)
 
-- Constat : une compétition du 05/12 propose « Finaliser » et « Ajouter un combat », avec l'état vide « Aucun combat ».
-- Règle : avant la date, la fiche affiche le délai (« dans 24 jours »), les informations et l'objectif du coach.
-- Règle : les actions de combat et de classement apparaissent le jour J.
-- Acceptation : aucune action de saisie de résultat sur une compétition future.
-- Fichiers : `assets/views/competition.html`, `assets/app-screen-projections.ts`.
+- Constat : enregistrer une compétition relance `getInitialData` complet, puis `getCompetitionDetail`. Enregistrer un combat relance toute la fiche.
+- Règle : l'écriture renvoie l'élément enregistré ; le navigateur met à jour son état et son cache.
+- Règle : `getInitialData` n'est rappelé qu'à l'ouverture, au retour en ligne et après un import.
+- Acceptation : enregistrer un combat déclenche un seul appel RPC.
+- Fichiers : `core/services/combats.service.ts`, `core/services/competitions.service.ts`, `assets/app-screen-combat-form.ts`, `assets/app-screen-competition-form.ts`, `assets/app-runtime.ts`.
 
-### FICHE-2 — Classement saisi sur la fiche (P1, S)
+### ECRIT-3 — Compétition club : écritures groupées (P2, M)
 
-- Constat : « Finaliser » ouvre un écran à part qui ne contient qu'une liste déroulante. Le mot ne dit pas qu'il s'agit du classement.
-- Règle : le bouton s'appelle « Saisir le classement ».
-- Règle : le classement se choisit sur la fiche, en boutons (1er, 2e, 3e, 5e, 7e, Non classé).
-- Acceptation : l'écran `competitionFinalizationView` est supprimé.
-- Fichiers : `assets/views/competition.html`, `assets/views/competition-finalization.html`.
+- Constat : `saveClubCompetition` met à jour puis crée les participations une par une ; la suppression détache chaque participation une par une.
+- Règle : les créations partent en un envoi ; les mises à jour identiques partent en une requête filtrée sur `club_competition_id`.
+- Acceptation : enregistrer une compétition club de 30 judokas coûte 5 écritures au plus.
+- Fichiers : `core/services/club-competitions.service.ts`, `core/repositories/competitions.repository.ts`.
 
-### FICHE-3 — Synthèse sans redondance (P2, S)
+## 4. Pagination et volumes
 
-- Constat : la date figure dans le sous-titre et dans le bloc d'informations. Le bilan affiche « 3V · 1D · 0N ». La catégorie affiche « Cadet · -60kg ».
-- Règle : le bloc d'informations tient en une ligne de pastilles (catégorie, poids, niveau, classement).
-- Règle : les compteurs à zéro sont masqués (« 3V · 1D »).
-- Règle : le poids s'écrit « -60 kg ».
-- Acceptation : la synthèse d'une compétition terminée tient en 200 px de haut en mobile.
+### PAGE-1 — Plus aucune liste sans borne (P1, S)
 
-### FICHE-4 — Objectif et bilan du coach enregistrés automatiquement (P2, S)
+- Constat : aucune requête de liste ne porte de `limit`. L'API Supabase plafonne une réponse à 1 000 lignes par défaut et tronque sans erreur.
+- Constat : un lot de 100 compétitions peut dépasser 1 000 combats ; un coach peut dépasser 1 000 compétitions.
+- Règle : relever le plafond `max rows` du projet Supabase.
+- Règle : toute requête de liste porte un tri stable et une borne explicite.
+- Règle : une réponse qui atteint la borne lit la suite ou lève une erreur ; elle ne tronque jamais en silence.
+- Acceptation : un test charge 1 500 combats sur un lot et vérifie que les 1 500 sont comptés.
+- Fichiers : `core/infra/supabase-rest.js`, `core/repositories/*.ts`, `tests/`.
 
-- Constat : le coach a deux boutons, « Enregistrer l'objectif » et « Enregistrer le bilan », en plus de celui de la barre.
-- Règle : chaque champ s'enregistre à la sortie du champ, avec la mention « Enregistré ».
-- Acceptation : la section « Suivi coach » ne contient aucun bouton.
+### PAGE-2 — Chargement initial par saison (P2, M)
 
-### FICHE-5 — Fiche de progression lisible (P2, M)
+- Constat : `getInitialData` renvoie toutes les compétitions de toutes les saisons ; la réponse et le cache local grossissent chaque année.
+- Règle : l'ouverture charge la saison en cours et les compétitions à venir.
+- Règle : les saisons passées se chargent à la demande (« Voir la saison 2025-2026 »), puis restent en cache.
+- Règle : le découpage par 10 dans le navigateur reste inchangé à l'intérieur d'une saison.
+- Acceptation : la réponse de `getInitialData` ne grossit pas d'une saison à l'autre, à effectif constant.
+- Acceptation : hors connexion, la saison en cours et les saisons déjà consultées restent lisibles.
+- Fichiers : `core/index.js`, `core/services/competitions.service.ts`, `core/domain/season.js`, `assets/app-screen-home.ts`, `assets/app-runtime.ts`.
 
-- Constat : la page dépasse la largeur de l'écran en mobile (439 px pour 390). Les répartitions s'affichent en tuiles « 4/6 (67 %) ». « Précédente » occupe une ligne entière. « Modifier le profil » est en bas de page.
-- Règle : aucun défilement horizontal.
-- Règle : les modes de victoire et de défaite s'affichent en barres horizontales.
-- Règle : la saison se change par deux flèches autour de son libellé.
-- Règle : « Modifier le profil » passe dans le menu « ⋯ » du titre.
-- Acceptation : `document.documentElement.scrollWidth` égale la largeur de la fenêtre à 390 px.
-- Fichiers : `assets/views/judoka.html`, `assets/app-screen-judoka.ts`, `assets/app.css`.
+### PAGE-3 — Liste des utilisateurs paginée par le serveur (P3, M)
 
-## 3. Accueils et listes
+- Constat : `getAdminsManagement` charge tous les judokas et toutes les invitations ; la recherche et les pages se font dans le navigateur.
+- Règle : le serveur renvoie une page de 10 et le total ; la recherche par nom part au serveur.
+- Règle : la page suivante se lit par curseur (`nom`, `prenom`, `id_judoka`), et non par décalage.
+- Acceptation : ouvrir « Gestion des accès » lit 10 utilisateurs, quel que soit l'effectif.
+- Fichiers : `core/services/admin.service.ts`, `core/repositories/judokas.repository.ts`, `assets/app-screen-admins.ts`.
 
-### ACCUEIL-1 — Accueil judoka : la liste d'abord (P1, S)
+### PAGE-4 — Périmètre du coach sans liste d'identifiants dans l'URL (P3, S)
 
-- Constat : deux cartes explicatives (« Ajouter une compétition », « Ma progression ») occupent le premier écran. La liste des compétitions commence à 550 px.
-- Règle : l'accueil s'ouvre sur la compétition du jour ou la prochaine, puis la liste.
-- Règle : « Nouvelle compétition » et « Ma fiche » deviennent deux boutons sur une ligne.
-- Acceptation : la première compétition est visible sans défilement en 390 × 844.
-- Fichiers : `assets/views/home.html`, `assets/app-screen-home.ts`.
+- Constat : `listByJudokaIds` et `listByIds` placent tous les identifiants des judokas dans l'URL, sans lot. Un grand club dépasse la longueur admise.
+- Règle : les compétitions d'un coach se filtrent par club (jointure sur `judokas.club_id`), et non par liste d'identifiants.
+- Acceptation : un club de 500 judokas charge ses compétitions en une requête.
+- Fichiers : `core/repositories/competitions.repository.ts`, `core/repositories/judokas.repository.ts`.
 
-### ACCUEIL-2 — Accueil parent : choisir l'enfant en un geste (P1, M)
+## 5. Coach et admin
 
-- Constat : le parent passe par « Choisir un judoka », puis une liste déroulante. « Voir la fiche » est grisé tant qu'aucun enfant n'est choisi. Le choix est perdu au rechargement.
-- Règle : l'accueil affiche une pastille par enfant ; toucher une pastille affiche ses compétitions.
-- Règle : le dernier enfant choisi est mémorisé sur l'appareil.
-- Règle : les onglets « Accueil parent » et « Compétitions » disparaissent.
-- Acceptation : un parent de deux enfants ouvre la compétition du jour en deux gestes.
-- Acceptation : aucun bouton grisé sur l'accueil.
+### COACH-1 — Statistiques calculées sur le périmètre filtré (P2, M)
 
-### ACCUEIL-3 — Accueil coach : l'état du jour (P2, M)
+- Constat : `getCoachDashboard` lit toutes les compétitions deux fois et tous les judokas, puis filtre en JavaScript par club, date et catégorie.
+- Règle : club, dates et catégorie d'âge filtrent la requête.
+- Règle : les compétitions sont lues une seule fois ; seuls les judokas du périmètre sont lus.
+- Acceptation : un coach d'un club ne lit aucune ligne d'un autre club.
+- Fichiers : `core/services/coach-dashboard.service.ts`, `core/services/coach-dashboard-loader.ts`.
 
-- Constat : sous le bloc « Aujourd'hui », trois cartes décrivent les fonctions. Le filtre Club occupe une carte entière en haut de chaque écran.
-- Règle : l'accueil liste ce qui attend le coach : compétition du jour, classements à saisir, bilans à écrire.
-- Règle : le filtre Club devient une pastille dans la ligne d'onglets.
-- Acceptation : chaque ligne de l'accueil ouvre l'écran où l'action se fait.
+### COACH-2 — Recherche de combats sans requête par compétition (P2, S)
 
-### ACCUEIL-4 — Un seul bouton d'ajout sur l'état vide (P3, S)
+- Constat : `loadCoachChatDatasets` lance une requête par compétition, toutes en même temps.
+- Règle : les combats se lisent par lots, avec leurs points (même requête que DETAIL-1).
+- Acceptation : une recherche sur 200 compétitions coûte 3 requêtes de combats au plus.
+- Fichiers : `core/services/coach-dashboard.service.ts`.
 
-- Constat : « Mon espace » sans compétition affiche « Nouvelle compétition » et « Ajouter la première compétition ».
-- Règle : l'état vide porte le seul bouton d'ajout.
+### ADMIN-1 — Écran admin en parallèle (P3, S)
 
-### LISTE-1 — Cartes de compétition utiles (P2, S)
+- Constat : `getAdminsManagement` lit admins, utilisateurs et invitations en série ; les admins sont un sous-ensemble des utilisateurs.
+- Règle : les lectures partent ensemble ; les admins sont déduits de la liste des utilisateurs.
+- Acceptation : l'écran tient en 2 étapes.
+- Fichiers : `core/services/admin.service.ts`.
 
-- Constat : chaque carte affiche une ligne « Date » et un lien « Ouvrir les combats → ». Une compétition passée n'affiche ni classement ni bilan. Une compétition passée sans classement n'affiche aucun rappel.
-- Règle : la carte affiche le nom, la date en clair (« sam. 5 déc. »), le classement et le bilan (« 🥉 3e · 3V 1D »).
-- Règle : une compétition passée sans classement affiche « Classement à saisir ».
-- Règle : toute la carte est cliquable ; le lien texte disparaît.
-- Acceptation : cinq compétitions tiennent sur un écran de 844 px.
+## 6. Coquille de l'appli
 
-### LISTE-2 — Sections « À venir » et « Passées » (P2, S)
+### SHELL-1 — Coquille servie depuis le cache (P2, S)
 
-- Constat : la liste mélange les compétitions à venir et passées ; l'ordre est expliqué par une phrase.
-- Règle : deux intertitres, « À venir » et « Passées », remplacent la phrase.
+- Constat : le service worker interroge le réseau d'abord pour `/`, `/api/client` et `/api/styles`. Chaque lancement attend trois fonctions avant d'afficher les données en cache.
+- Règle : la coquille s'affiche depuis le cache, puis se met à jour en arrière-plan.
+- Règle : une nouvelle version s'applique au lancement suivant.
+- Acceptation : au second lancement, l'accueil en cache s'affiche sans attendre le réseau.
+- Fichiers : `api/service-worker.js`, `tests/offline-playwright.test.js`.
 
-## 4. Coach et admin
+### SHELL-2 — JS et CSS minifiés, avec en-têtes de cache (P2, S)
 
-### CLUB-1 — Classements saisis depuis le suivi club (P1, M)
+- Constat : `/api/client` relit et concatène 17 fichiers et Vue à chaque requête (environ 400 Ko non minifiés), sans `Cache-Control`.
+- Règle : le build produit un fichier JS minifié et un CSS minifié.
+- Règle : l'URL porte l'empreinte du contenu ; la réponse est mise en cache un an (`immutable`).
+- Acceptation : le JS pèse moins de 120 Ko compressé.
+- Acceptation : une visite répétée ne retélécharge ni le JS ni le CSS.
+- Fichiers : `scripts/build-assets.js`, `api/client.js`, `api/styles.js`, `api/app.js`, `Index.html`.
 
-- Constat : pour classer dix judokas, le coach ouvre dix fiches.
-- Règle : le suivi club propose le classement de chaque participant, en boutons sur sa ligne.
-- Acceptation : le coach classe tous les participants sans quitter l'écran.
-- Fichiers : `assets/views/club-competition-detail.html`, `assets/app-screen-club-competition.ts`.
+### SHELL-3 — Police sans blocage du rendu (P3, S)
 
-### CLUB-2 — Formulaire de compétition club (P2, S)
-
-- Constat : le club n'est pas présélectionné, même quand un club est filtré sur l'accueil. La liste des judokas est masquée par la barre d'actions. En modification, « Aucun résultat. » s'affiche avant toute recherche.
-- Règle : le club filtré sur l'accueil est présélectionné.
-- Règle : la liste des judokas s'affiche dès qu'une catégorie est choisie, au-dessus de la barre.
-- Règle : le message d'absence de résultat n'apparaît qu'après une recherche.
-
-### CLUB-3 — Compteurs de la liste club (P3, S)
-
-- Constat : « 3 participant(s) · 3 classement(s) · 3 podium(s) ».
-- Règle : les compteurs s'accordent (« 1 participant », « 3 participants »).
-- Règle : la recherche devient un champ simple, sans carte.
-
-### STATS-1 — Statistiques sans doublon (P2, M)
-
-- Constat : la page fait 3 100 px en mobile et douze sections. « Compétitions analysées » et « Combats analysés » figurent deux fois ; le taux de victoire trois fois. « Nat. 1×🥈 » est illisible.
-- Règle : chaque chiffre figure une seule fois.
-- Règle : la synthèse garde quatre chiffres : combats, taux de victoire, podiums, saisies à compléter.
-- Règle : les podiums s'affichent en toutes lettres (« National : 1 deuxième place »).
-- Acceptation : la page fait moins de 2 000 px en mobile.
-- Fichiers : `assets/views/coach-dashboard.html`, `assets/app-screen-coach-dashboard.ts`.
-
-### STATS-2 — Répartitions en barres (P3, M)
-
-- Constat : les modes de victoire, de défaite et les gardes s'affichent en tuiles de texte.
-- Règle : chaque répartition s'affiche en barres horizontales avec le nombre et le pourcentage.
-
-### ADMIN-1 — Gestion des accès en sections (P2, M)
-
-- Constat : import, clubs, utilisateurs, invitations et admins se suivent sur une page de 4 500 px en mobile.
-- Règle : la page s'organise en quatre onglets : Utilisateurs, Clubs, Invitations, Import.
-- Règle : la suppression d'un utilisateur passe dans le menu « ⋯ » de sa ligne.
-- Acceptation : chaque onglet tient en moins de deux écrans pour dix utilisateurs.
-- Fichiers : `assets/views/admins.html`, `assets/app-screen-admins.ts`.
-
-### ADMIN-2 — Import guidé (P3, S)
-
-- Constat : cinq paragraphes de consignes précèdent le bouton d'import.
-- Règle : les consignes se replient derrière « Format du fichier ».
-- Règle : le fichier d'exemple est un bouton, à côté du choix du fichier.
-
-## 5. Finitions
-
-### UI-1 — Icônes d'aide « i » (P2, S)
-
-- Constat : presque chaque titre et chaque tuile porte une icône « i » de 14 px, difficile à toucher.
-- Règle : l'aide reste sur les indicateurs calculés ; elle disparaît des titres évidents.
-- Règle : la zone tactile de l'icône mesure 44 px.
-
-### UI-2 — Dates en clair (P3, S)
-
-- Règle : les dates s'affichent « sam. 5 déc. 2026 » ; les compétitions proches ajoutent « dans 3 jours ».
-
-### UI-3 — Casse des noms de personnes (P3, S)
-
-- Constat : le même judoka s'affiche « Hugo DURAND » dans le titre et « Hugo Durand » dans la carte de combat.
-- Règle : un seul format, « Hugo Durand », dans toute l'application.
-
-### UI-4 — Libellés d'ajout cohérents (P3, S)
-
-- Constat : la même action s'appelle « Ajouter une compétition », « Nouvelle compétition » et « Ajouter la première compétition ».
-- Règle : « Nouvelle compétition » partout.
-
-### UI-5 — Défilement horizontal des statistiques (P2, S)
-
-- Constat : la capture de l'écran des statistiques mesure 456 px de large pour une fenêtre de 390 px.
-- Règle : vérifier puis supprimer tout débordement horizontal.
-
-### UI-6 — Réponse vide du serveur (P3, S)
-
-- Constat : une réponse vide à un enregistrement affiche « Cannot read properties of null (reading 'message') ».
-- Règle : le message devient « L'enregistrement a échoué. Réessayez. »
-
-### UI-7 — Captures de référence (P3, S)
-
-- Règle : le script de parcours (judoka, parent, coach, mobile et bureau) est ajouté à `tests/e2e/` et régénère les captures avant chaque lot.
+- Constat : la feuille Google Fonts bloque le premier affichage (`Index.html:16`) et dépend d'un tiers, y compris hors connexion.
+- Règle : la police est servie par l'appli, en `woff2`, avec `font-display: swap`.
+- Acceptation : le premier affichage ne fait aucune requête vers `fonts.googleapis.com`.
+- Fichiers : `Index.html`, `assets/app.tailwind.css`.

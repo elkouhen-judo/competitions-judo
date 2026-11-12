@@ -8,8 +8,9 @@ export function buildClubId(): string {
   return `CLUB${randomUUID().replace(/-/g, "")}`;
 }
 
+// Identifiant aléatoire : plusieurs participations sont créées dans la même milliseconde (ECRIT-3).
 export function buildCompetitionId(): string {
-  return `COMP${Date.now()}`;
+  return `COMP${randomUUID().replace(/-/g, "")}`;
 }
 
 export function buildCombatId(): string {

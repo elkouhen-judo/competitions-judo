@@ -1,10 +1,11 @@
-const fs = require("node:fs");
-const path = require("node:path");
+const { getAssetVersions, readStylesBundle, sendVersionedAsset } = require("./_assets");
 
-module.exports = function handler(_req, res) {
-  const cssPath = path.join(process.cwd(), "assets", "app.css");
-  const css = fs.readFileSync(cssPath, "utf8");
-
-  res.setHeader("Content-Type", "text/css; charset=utf-8");
-  res.status(200).send(css);
+module.exports = function handler(req, res) {
+  sendVersionedAsset(
+    req,
+    res,
+    "text/css; charset=utf-8",
+    getAssetVersions().styles,
+    readStylesBundle()
+  );
 };

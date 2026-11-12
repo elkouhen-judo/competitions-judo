@@ -2,6 +2,7 @@
   type KirokuApp = import("./types").KirokuApp;
   type ClubCompetitionDetail = import("../core/types").ClubCompetitionDetail;
   type ClubCompetitionDeps = import("./types").ClubCompetitionDeps;
+  type OperationResult = import("./types").OperationResult;
 
   interface ClubCompetitionJudokaOption {
     judokaId: string;
@@ -260,7 +261,7 @@
       app.runServer(
         "finalizeCompetition",
         [competitionId, result],
-        () => {
+        (response) => {
           Object.assign(participant, {
             rawResult: result,
             result: formatCompetitionRanking(result),
@@ -270,6 +271,9 @@
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
           );
+          if (response.competition) {
+            app.local.saveCompetition(response.competition);
+          }
         },
         showError
       );
@@ -414,10 +418,18 @@
         [form],
         (response) => {
           showSuccess(response.message);
-          app.reloadInitialData();
+          applySavedClubCompetition(response);
+          app.showHome && app.showHome();
         },
         showError
       );
+    }
+
+    // ECRIT-2 : la compétition club enregistrée met à jour l'accueil sans rechargement.
+    function applySavedClubCompetition(response: OperationResult) {
+      if (response.clubCompetition) {
+        app.local.saveClubCompetition(response.clubCompetition, response.competitions || []);
+      }
     }
 
     function openClubCompetition(id: string) {
@@ -526,6 +538,7 @@
         ],
         (response) => {
           showSuccess(response.message);
+          applySavedClubCompetition(response);
           openClubCompetition(form.clubCompetitionId);
         },
         showError
@@ -546,6 +559,7 @@
         args: [clubCompetitionId, competitionId],
         onSuccess: (response) => {
           showSuccess(response.message);
+          app.local.removeCompetition(competitionId);
           openClubCompetition(clubCompetitionId);
         }
       });
@@ -584,7 +598,8 @@
         args: [clubCompetitionId],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.reloadInitialData();
+          app.local.removeClubCompetition(clubCompetitionId);
+          app.showHome && app.showHome();
         }
       });
     }

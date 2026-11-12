@@ -1,17 +1,15 @@
 import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
-import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
-import type { CompetitionsRepository } from "../repositories/competitions.repository";
-import type { CombatScoreRow, CompetitionRow } from "../repositories/types";
-import type { JudokasRepository } from "../repositories/judokas.repository";
+import { isConcededScoreRow } from "../repositories/combat-scores.repository";
+import type { CompetitionScopeFilter } from "../repositories/competitions.repository";
+import type {
+  CombatRow,
+  CombatScoreRow,
+  CombatWithScoresRow,
+  CompetitionRow,
+  JudokaRow
+} from "../repositories/types";
 import type { CoachDashboardFilters } from "../types";
-
-export interface CoachDashboardLoaderDeps {
-  combatsRepository: CombatsRepository;
-  combatScoresRepository: CombatScoresRepository;
-  competitionsRepository: CompetitionsRepository;
-  judokasRepository: JudokasRepository;
-}
 
 export function validateCoachDashboardFilters(filters: CoachDashboardFilters): void {
   const dateFrom = String(filters.dateFrom || "").trim();
@@ -67,45 +65,53 @@ export function filterCompetitionsBySelection(
   );
 }
 
-function groupScoresByCombatId(scoreRows: CombatScoreRow[]): Map<string, CombatScoreRow[]> {
-  const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-  // Les statistiques portent sur les points marqués : les points subis sont écartés.
-  scoreRows.filter((score) => !isConcededScoreRow(score)).forEach((score) => {
-    const idCombat = String(score.id_combat);
-    scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
-  });
-  return scoresByCombatId;
+/** Les statistiques portent sur les points marqués : les points subis sont écartés. */
+export function groupScoredPointsByCombatId(
+  combatRows: CombatWithScoresRow[]
+): Map<string, CombatScoreRow[]> {
+  return new Map(
+    combatRows.map((combat) => [
+      String(combat.id_combat),
+      (Array.isArray(combat.combat_scores) ? combat.combat_scores : []).filter(
+        (score) => !isConcededScoreRow(score)
+      )
+    ])
+  );
 }
 
-/** Ne garde que les compétitions des judokas visibles par le coach (judokas de ses clubs). */
-export function filterCompetitionsByOwners(
-  competitionRows: CompetitionRow[],
-  allowedJudokaIds: string[] | undefined
-): CompetitionRow[] {
-  if (!allowedJudokaIds) {
-    return competitionRows;
-  }
-  const allowed = new Set(allowedJudokaIds.map(String));
-  return competitionRows.filter((competition) => allowed.has(String(competition.id_judoka)));
+export function withoutScores(row: CombatWithScoresRow): CombatRow {
+  const combat: Partial<CombatWithScoresRow> = { ...row };
+  delete combat.combat_scores;
+  return combat as CombatRow;
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * COACH-1 : club, dates et catégorie d'âge filtrent la requête. Une date mal formée n'est
+ * pas envoyée à la base ; `filterCompetitionsByScope` l'applique ensuite en mémoire.
+ */
+export function toCompetitionScopeFilter(
+  scope: CompetitionScopeFilter,
+  filters: Pick<CoachDashboardFilters, "dateFrom" | "dateTo" | "ageCategory">
+): CompetitionScopeFilter {
+  const dateFrom = String(filters.dateFrom || "").trim();
+  const dateTo = String(filters.dateTo || "").trim();
+  const ageCategory = String(filters.ageCategory || "").trim();
+  return {
+    ...scope,
+    ...(ISO_DATE.test(dateFrom) ? { dateFrom } : {}),
+    ...(ISO_DATE.test(dateTo) ? { dateTo } : {}),
+    ...(ageCategory ? { ageCategory } : {})
+  };
+}
+
+/** Combats des compétitions retenues, lus par lots avec leurs points, enrichis pour les statistiques. */
 export async function loadCoachDashboardCombats(
-  deps: CoachDashboardLoaderDeps,
-  filters: CoachDashboardFilters = {},
-  allowedJudokaIds?: string[]
+  combatsRepository: Pick<CombatsRepository, "listByCompetitionIdsWithScores">,
+  competitionRows: CompetitionRow[],
+  judokaRows: JudokaRow[]
 ) {
-  validateCoachDashboardFilters(filters);
-
-  const allCompetitionRows = filterCompetitionsByOwners(
-    await deps.competitionsRepository.listAll(),
-    allowedJudokaIds
-  );
-  const competitionRows = filterCompetitionsBySelection(
-    filterCompetitionsByScope(allCompetitionRows, filters),
-    filters
-  );
-
-  const judokaRows = await deps.judokasRepository.listAll();
   const judokasById = new Map(judokaRows.map((row) => [String(row.id_judoka), toCanonicalJudoka(row)]));
   const competitionLevelById = new Map(
     competitionRows.map((competition) => [
@@ -114,17 +120,14 @@ export async function loadCoachDashboardCombats(
     ])
   );
 
-  const combatRows = await deps.combatsRepository.listByCompetitionIds(
+  const combatRows = await combatsRepository.listByCompetitionIdsWithScores(
     competitionRows.map((competition) => competition.id_competition)
   );
-  const scoreRows = await deps.combatScoresRepository.listByCombatIds(
-    combatRows.map((combat) => combat.id_combat)
-  );
-  const scoresByCombatId = groupScoresByCombatId(scoreRows);
+  const scoresByCombatId = groupScoredPointsByCombatId(combatRows);
 
   return combatRows.map((combat) => ({
     ...toCanonicalCombat({
-      ...combat,
+      ...withoutScores(combat),
       scores: scoresByCombatId.get(String(combat.id_combat)) || []
     }),
     competitionLevel: competitionLevelById.get(String(combat.id_competition)) || "",

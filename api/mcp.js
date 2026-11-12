@@ -1,4 +1,5 @@
 const { mcpServerService, verifyMcpToken } = require("./_core");
+const { runInRequestScope } = require("../core/infra/request-scope.js");
 const { getRuntimeAppUrl } = require("./app.js").__internal;
 const { readRawBody } = require("./_read-body");
 
@@ -73,7 +74,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const result = await mcpServerService.handleRequest(claims, message);
+    const result = await runInRequestScope(() => mcpServerService.handleRequest(claims, message));
     sendJsonRpcResult(res, message.id, result);
   } catch (error) {
     const code = error.message === "Méthode MCP inconnue." ? JSON_RPC_METHOD_NOT_FOUND : JSON_RPC_APPLICATION_ERROR;

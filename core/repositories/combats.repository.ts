@@ -1,6 +1,12 @@
 import type { CombatModel } from "../domain/competitions/combat";
 import type { CombatOfficialScore } from "../domain/competitions/combat-official-score";
-import type { CombatRow, SupabaseRestDeps } from "./types";
+import { inFilter, selectByIdBatches } from "../shared/query";
+import type { CombatRow, CombatScoreRow, CombatWithScoresRow, SupabaseRestDeps } from "./types";
+
+/** Ce qu'il faut d'un combat pour proposer adversaires et techniques déjà saisis. */
+export type CombatSuggestionRow = Pick<CombatRow, "adversaire"> & {
+  combat_scores: Pick<CombatScoreRow, "categorie" | "technique" | "type_ne_waza" | "camp">[];
+};
 
 const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
   Victoire: "V",
@@ -8,17 +14,20 @@ const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
   Egalité: "E"
 };
 
-const COMBAT_SELECT_BATCH_SIZE = 100;
+// Tri stable : ordre de saisie, puis identifiant.
+const COMBAT_ORDER = "order=created_at.asc,id_combat.asc";
+// DETAIL-1 : les points d'un combat se lisent avec lui, dans l'ordre de saisie.
+const COMBAT_WITH_SCORES = `select=*,combat_scores(*)&combat_scores.order=ordre.asc&${COMBAT_ORDER}`;
 
 export interface CombatsRepository {
   existsForJudoka(idJudoka: string): Promise<CombatRow | null>;
   getById(idCombat: string): Promise<CombatRow | null>;
   insert(combat: CombatModel, idCombat: string): Promise<CombatRow | null>;
-  listByCompetition(idCompetition: string): Promise<CombatRow[]>;
-  listByCompetitionAndJudoka(idCompetition: string, idJudoka: string): Promise<CombatRow[]>;
-  listByCompetitionAndJudokaIds(idCompetition: string, ids: string[]): Promise<CombatRow[]>;
   listByCompetitionIds(ids: string[]): Promise<CombatRow[]>;
+  listByCompetitionIdsWithScores(ids: string[]): Promise<CombatWithScoresRow[]>;
+  listByCompetitionWithScores(idCompetition: string): Promise<CombatWithScoresRow[]>;
   listByJudoka(idJudoka: string): Promise<CombatRow[]>;
+  listSuggestionsByJudoka(idJudoka: string): Promise<CombatSuggestionRow[]>;
   remove(idCombat: string): Promise<void>;
   update(idCombat: string, combat: CombatModel): Promise<CombatRow | null>;
 }
@@ -97,57 +106,44 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
   } = deps;
 
   async function listByJudoka(idJudoka: string): Promise<CombatRow[]> {
-    return supabaseSelect<CombatRow>("combats", `select=*&${eqFilter("id_judoka", idJudoka)}`);
-  }
-
-  async function listByCompetition(idCompetition: string): Promise<CombatRow[]> {
     return supabaseSelect<CombatRow>(
       "combats",
-      `select=*&${eqFilter("id_competition", idCompetition)}`
+      `select=*&${eqFilter("id_judoka", idJudoka)}&${COMBAT_ORDER}`
     );
   }
 
-  async function listByCompetitionAndJudoka(
-    idCompetition: string,
-    idJudoka: string
-  ): Promise<CombatRow[]> {
-    return supabaseSelect<CombatRow>(
+  // DETAIL-2 : adversaires et techniques d'un judoka, sans le reste des combats.
+  async function listSuggestionsByJudoka(idJudoka: string): Promise<CombatSuggestionRow[]> {
+    return supabaseSelect<CombatSuggestionRow>(
       "combats",
-      `select=*&${eqFilter("id_competition", idCompetition)}&${eqFilter("id_judoka", idJudoka)}`
+      `select=adversaire,combat_scores(categorie,technique,type_ne_waza,camp)&${eqFilter("id_judoka", idJudoka)}&${COMBAT_ORDER}`
     );
   }
 
-  async function listByCompetitionAndJudokaIds(
-    idCompetition: string,
-    ids: string[]
-  ): Promise<CombatRow[]> {
-    if (!ids?.length) {
-      return [];
-    }
-
-    return supabaseSelect<CombatRow>(
+  async function listByCompetitionWithScores(idCompetition: string): Promise<CombatWithScoresRow[]> {
+    return supabaseSelect<CombatWithScoresRow>(
       "combats",
-      `select=*&${eqFilter("id_competition", idCompetition)}&id_judoka=in.(${ids.join(",")})`
+      `${COMBAT_WITH_SCORES}&${eqFilter("id_competition", idCompetition)}`
     );
   }
 
   async function listByCompetitionIds(ids: string[]): Promise<CombatRow[]> {
-    const uniqueIds = Array.from(new Set((ids || []).map(String).filter(Boolean)));
-    if (!uniqueIds.length) {
-      return [];
-    }
+    return selectByIdBatches(ids, (batchIds) =>
+      supabaseSelect<CombatRow>(
+        "combats",
+        `select=*&${inFilter("id_competition", batchIds)}&${COMBAT_ORDER}`
+      )
+    );
+  }
 
-    const rows: CombatRow[] = [];
-    for (let index = 0; index < uniqueIds.length; index += COMBAT_SELECT_BATCH_SIZE) {
-      const batchIds = uniqueIds.slice(index, index + COMBAT_SELECT_BATCH_SIZE);
-      rows.push(
-        ...(await supabaseSelect<CombatRow>(
-          "combats",
-          `select=*&id_competition=in.(${batchIds.join(",")})`
-        ))
-      );
-    }
-    return rows;
+  // COACH-2 : les combats de plusieurs compétitions se lisent par lots, avec leurs points.
+  async function listByCompetitionIdsWithScores(ids: string[]): Promise<CombatWithScoresRow[]> {
+    return selectByIdBatches(ids, (batchIds) =>
+      supabaseSelect<CombatWithScoresRow>(
+        "combats",
+        `${COMBAT_WITH_SCORES}&${inFilter("id_competition", batchIds)}`
+      )
+    );
   }
 
   async function getById(idCombat: string): Promise<CombatRow | null> {
@@ -198,11 +194,11 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     existsForJudoka,
     getById,
     insert,
-    listByCompetition,
-    listByCompetitionAndJudoka,
-    listByCompetitionAndJudokaIds,
     listByCompetitionIds,
+    listByCompetitionIdsWithScores,
+    listByCompetitionWithScores,
     listByJudoka,
+    listSuggestionsByJudoka,
     remove,
     update
   };

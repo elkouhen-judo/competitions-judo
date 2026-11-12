@@ -284,6 +284,9 @@
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
           );
+          if (response.competition) {
+            app.local.saveCompetition(response.competition);
+          }
         },
         showError
       );
@@ -348,7 +351,6 @@
         (data: CompetitionDetail) => {
           state.currentCompetition = data.competition;
           state.currentCombats = Array.isArray(data.combats) ? data.combats : [];
-          state.currentCombatSuggestions = data.combatSuggestions || null;
           state.canEditCurrentCompetition = Boolean(data.canEditCompetition);
           state.isLoadingCompetition = false;
           if (competitionDetailRef) {
@@ -378,7 +380,8 @@
         onSuccess: (response) => {
           showSuccess(response.message);
           state.currentCompetition = null;
-          app.reloadInitialData();
+          app.local.removeCompetition(competitionId);
+          app.showHome && app.showHome();
         }
       });
     }
@@ -573,12 +576,16 @@
         (response) => {
           showSuccess(response.message);
           const competitionId = response.competitionId || "";
-          if (isNewCompetition && competitionId) {
-            app.reloadInitialDataThen(() => {
-              openCompetition(competitionId, true, showCombatForm);
-            });
+          // ECRIT-2 : la compétition enregistrée met à jour l'état local, sans getInitialData.
+          if (response.competition) {
+            app.local.saveCompetition(response.competition);
+          }
+          if (!competitionId) {
+            app.showHome && app.showHome();
+          } else if (isNewCompetition) {
+            openCompetition(competitionId, true, showCombatForm);
           } else {
-            app.reloadInitialData(competitionId);
+            openCompetition(competitionId, true);
           }
         },
         showError

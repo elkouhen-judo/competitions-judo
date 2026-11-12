@@ -5,7 +5,8 @@ import type { ClubCompetitionsRepository } from "../repositories/club-competitio
 import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CompetitionsRepository } from "../repositories/competitions.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
-import type { JudokaRow } from "../repositories/types";
+import type { ClubCompetitionRow, CompetitionRow, JudokaRow } from "../repositories/types";
+import { countCombatResults } from "../domain/competition-results";
 import type { RpcMethods } from "../types";
 import type { UserContextService } from "./user-context.service";
 
@@ -115,16 +116,17 @@ export default function createClubCompetitionsService(
     const clubCompetitionId = String(input.clubCompetitionId || buildClubCompetitionId());
     // Le club d'une compétition est fixé à la création ; un coach d'un seul club n'a pas à le choisir.
     const requestedClubId = String(input.clubId || "") || (coachClubIds.length === 1 ? coachClubIds[0] : "");
-    const clubId = isEditing
-      ? (await getAccessibleEvent(clubCompetitionId, coachClubIds)).club_id || ""
-      : requestedClubId;
+    const [existingEvent, existing] = isEditing
+      ? await Promise.all([
+          getAccessibleEvent(clubCompetitionId, coachClubIds),
+          competitionsRepository.listByClubCompetition(clubCompetitionId)
+        ])
+      : [null, []];
+    const clubId = existingEvent ? existingEvent.club_id || "" : requestedClubId;
     if (!clubId) {
       throw new Error("Club de la compétition obligatoire.");
     }
     assertClubAccessible(clubId, coachClubIds);
-    const existing = isEditing
-      ? await competitionsRepository.listByClubCompetition(clubCompetitionId)
-      : [];
     const existingJudokaIds = new Set(existing.map((row) => String(row.id_judoka)));
 
     // Saisie a posteriori : l'ajout de judokas reste possible après la date de la compétition.
@@ -154,68 +156,71 @@ export default function createClubCompetitionsService(
       await clubCompetitionsRepository.insert(event);
     }
 
-    for (const participation of existing) {
-      const competition = createCompetition(
-        {
-          competitionId: participation.id_competition,
-          clubCompetitionId,
-          name: event.name,
-          competitionDate: event.competitionDate,
-          ageCategory: event.ageCategory,
-          weightCategory: participation.categorie_poids || "",
-          level: event.level,
-          result: participation.classement || ""
-        },
-        participation.id_judoka
-      );
-      await competitionsRepository.update(participation.id_competition, competition);
+    // ECRIT-3 : les champs hérités se propagent en une requête, les créations partent en un envoi.
+    const inheritedFields = {
+      name: event.name,
+      competitionDate: event.competitionDate,
+      ageCategory: event.ageCategory,
+      level: event.level
+    };
+    if (existing.length) {
+      await competitionsRepository.updateClubCompetitionFields(clubCompetitionId, inheritedFields);
     }
-
-    for (const judokaId of event.participantJudokaIds) {
-      if (existingJudokaIds.has(String(judokaId))) {
-        continue;
-      }
-      const competition = createCompetition(
-        {
-          name: event.name,
-          competitionDate: event.competitionDate,
-          ageCategory: event.ageCategory,
-          weightCategory: "",
-          level: event.level,
-          clubCompetitionId
-        },
-        judokaId
-      );
-      await competitionsRepository.insert(competition, buildCompetitionId());
-    }
+    const created = await competitionsRepository.insertMany(
+      event.participantJudokaIds
+        .filter((judokaId) => !existingJudokaIds.has(String(judokaId)))
+        .map((judokaId) => ({
+          competition: createCompetition(
+            { ...inheritedFields, weightCategory: "", clubCompetitionId },
+            judokaId
+          ),
+          idCompetition: buildCompetitionId()
+        }))
+    );
+    const updated: CompetitionRow[] = existing.map((participation) => ({
+      ...participation,
+      nom: event.name,
+      date: event.competitionDate,
+      categorie_age: event.ageCategory,
+      niveau: event.level || ""
+    }));
 
     return {
       success: true,
       clubCompetitionId,
-      message: input.clubCompetitionId ? "Compétition club modifiée." : "Compétition club créée."
+      message: input.clubCompetitionId ? "Compétition club modifiée." : "Compétition club créée.",
+      // ECRIT-2 : le navigateur met à jour son état sans recharger les données initiales.
+      clubCompetition: {
+        clubCompetitionId,
+        name: event.name,
+        competitionDate: event.competitionDate,
+        clubId
+      },
+      competitions: [...updated, ...created].map(toCanonicalCompetition)
     };
   }
 
   async function getClubCompetitionDetail(email: string, idClubCompetition: string) {
     const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
-    const event = await getAccessibleEvent(idClubCompetition, coachClubIds);
-    const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
-    const judokas = await judokasRepository.listByIds(participations.map((row) => row.id_judoka));
-    const combats = combatsRepository
-      ? await combatsRepository.listByCompetitionIds(participations.map((row) => row.id_competition))
-      : [];
-    const combatRecords: Record<string, { total: number; wins: number; losses: number; draws: number }> = {};
+    const [event, participations]: [ClubCompetitionRow, CompetitionRow[]] = await Promise.all([
+      getAccessibleEvent(idClubCompetition, coachClubIds),
+      competitionsRepository.listByClubCompetition(idClubCompetition)
+    ]);
+    const [judokas, combats] = await Promise.all([
+      judokasRepository.listByIds(participations.map((row) => row.id_judoka)),
+      combatsRepository
+        ? combatsRepository.listByCompetitionIds(participations.map((row) => row.id_competition))
+        : []
+    ]);
+    const resultsByCompetitionId = new Map<string, string[]>();
     combats.forEach((combat) => {
       const key = String(combat.id_competition);
-      const record = combatRecords[key] || { total: 0, wins: 0, losses: 0, draws: 0 };
-      const result = String(combat.resultat || "");
-      record.total += 1;
-      if (result === "Victoire") record.wins += 1;
-      else if (result === "Défaite") record.losses += 1;
-      else if (result) record.draws += 1;
-      combatRecords[key] = record;
+      resultsByCompetitionId.set(key, [...(resultsByCompetitionId.get(key) || []), combat.resultat]);
     });
+    const combatRecords = Object.fromEntries(
+      [...resultsByCompetitionId].map(([key, results]) => [key, countCombatResults(results)])
+    );
     return {
       clubCompetition: event,
       participations: participations.map(toCanonicalCompetition),
@@ -228,10 +233,8 @@ export default function createClubCompetitionsService(
     const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
     await getAccessibleEvent(idClubCompetition, coachClubIds);
-    const participations = await competitionsRepository.listByClubCompetition(idClubCompetition);
-    for (const participation of participations) {
-      await competitionsRepository.detachFromClubCompetition(participation.id_competition);
-    }
+    // ECRIT-3 : toutes les participations sont détachées en une requête.
+    await competitionsRepository.detachAllFromClubCompetition(idClubCompetition);
     await clubCompetitionsRepository.remove(idClubCompetition);
     return {
       success: true,

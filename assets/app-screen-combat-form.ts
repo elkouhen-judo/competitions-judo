@@ -2,6 +2,8 @@
   type KirokuApp = import("./types").KirokuApp;
   type CombatScoreFormRow = import("./types").CombatScoreFormRow;
   type CombatFormDeps = import("./types").CombatFormDeps;
+  type CombatSuggestions = import("./types").CombatSuggestions;
+  type OperationResult = import("./types").OperationResult;
   type CombatDataQualityIssue = import("./types").CombatDataQualityIssue;
 
   const {
@@ -130,7 +132,30 @@
       { key: "opponent", label: "Adversaire", labelFor: "à l'adversaire", className: "side-opponent" }
     ]);
 
-    // COMBAT-SUGG : adversaires déjà rencontrés et techniques déjà marquées, renvoyés avec la compétition.
+    // COMBAT-SUGG : adversaires déjà rencontrés et techniques déjà marquées.
+    // DETAIL-2 : chargés à l'ouverture du formulaire, gardés par judoka jusqu'au prochain enregistrement.
+    // Hors connexion, runServer répond avec les dernières suggestions mises en cache.
+    const combatSuggestionsByJudoka = new Map<string, CombatSuggestions>();
+    function loadCombatSuggestions(judokaId: string) {
+      const cached = combatSuggestionsByJudoka.get(judokaId);
+      state.currentCombatSuggestions = cached || null;
+      if (cached || !judokaId) {
+        return;
+      }
+      app.runServer(
+        "getCombatSuggestions",
+        [judokaId],
+        (suggestions) => {
+          combatSuggestionsByJudoka.set(judokaId, suggestions);
+          if (String(state.currentCompetition?.ownerJudokaId || "") === judokaId) {
+            state.currentCombatSuggestions = suggestions;
+          }
+        },
+        // Les suggestions sont une aide : leur absence ne bloque pas la saisie.
+        () => undefined
+      );
+    }
+
     const combatOpponentSuggestions = window.Vue.computed(() => state.currentCombatSuggestions?.opponents || []);
     const combatFavoriteTechniques = window.Vue.computed(() =>
       (state.currentCombatSuggestions?.techniques || []).map((technique) => {
@@ -296,6 +321,7 @@
       }
       ensureCombatFormViewModel();
       resetCombatForm();
+      loadCombatSuggestions(String(getCurrentCompetition().ownerJudokaId || ""));
       const combatId = id && typeof id === "object" && "type" in id ? "" : id;
       const competitionName = ui.formatCompetitionName(getCurrentCompetition().name);
       let isEditingExistingCombat = false;
@@ -649,7 +675,7 @@
         (response) => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(competitionId, true, afterReload);
+          showSavedCombat(response, competitionId, afterReload);
         },
         showError
       );
@@ -666,10 +692,23 @@
         (response) => {
           showSuccess(response.message);
           resetCombatForm();
-          openCompetition(competitionId, true);
+          showSavedCombat(response, competitionId);
         },
         showError
       );
+    }
+
+    // ECRIT-2 : le combat renvoyé par le serveur met à jour la fiche, sans la recharger.
+    // Hors connexion, l'écriture est en file d'attente : la fiche est relue depuis le cache.
+    function showSavedCombat(response: OperationResult, competitionId: string, afterShown?: () => void) {
+      if (!response.combat) {
+        openCompetition(competitionId, true, afterShown);
+        return;
+      }
+      combatSuggestionsByJudoka.delete(String(response.combat.judokaId));
+      app.local.saveCombat(response.combat);
+      showView("competitionView", { routeState: { competitionId } });
+      afterShown?.();
     }
 
     function getCombatFormValue() {
@@ -709,7 +748,9 @@
         args: [id],
         onSuccess: (response) => {
           showSuccess(response.message);
-          openCompetition(competitionId, true);
+          combatSuggestionsByJudoka.delete(String(getCurrentCompetition().ownerJudokaId));
+          app.local.removeCombat(id);
+          showView("competitionView", { routeState: { competitionId } });
         }
       });
     }

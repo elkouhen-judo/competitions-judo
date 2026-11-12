@@ -130,12 +130,39 @@ export interface OperationResult {
   competitionId?: string;
   judokaId?: string;
   clubCompetitionId?: string;
+  /** ECRIT-2 : compétition enregistrée, pour mettre à jour l'état du navigateur sans rechargement. */
+  competition?: Competition;
+  /** ECRIT-2 : combat enregistré, tel que la fiche de compétition l'affiche. */
+  combat?: CombatReadModel;
+  /** ECRIT-2 : compétition club enregistrée et ses participations. */
+  clubCompetition?: InitialData["clubCompetitions"][number];
+  competitions?: Competition[];
 }
 
-export interface AdminsManagement {
+/** PAGE-3 : dernière ligne d'une page d'utilisateurs, pour lire la page suivante. */
+export interface UsersPageCursor {
+  lastName: string;
+  firstName: string;
+  judokaId: string;
+}
+
+/** PAGE-3 : une page d'utilisateurs, paginée et filtrée par le serveur. */
+export interface UsersPage {
+  users: Judoka[];
+  /** Nombre d'utilisateurs qui répondent à la recherche, toutes pages confondues. */
+  totalUsers: number;
+  /** Curseur de la page suivante ; null sur la dernière page. */
+  nextCursor: UsersPageCursor | null;
+}
+
+export interface UsersPageRequest {
+  search?: string;
+  after?: UsersPageCursor | null;
+}
+
+export interface AdminsManagement extends UsersPage {
   user: Judoka;
   admins: Judoka[];
-  users: Judoka[];
   accessInvitations: AccessInvitation[];
 }
 
@@ -168,7 +195,6 @@ export interface CombatSuggestions {
 export interface CompetitionDetail {
   competition: Competition;
   combats: CombatReadModel[];
-  combatSuggestions?: CombatSuggestions;
   isAdmin: boolean;
   isCoach: boolean;
   isParent: boolean;
@@ -381,6 +407,18 @@ export interface InitialData {
   /** Clubs coachés par l'utilisateur (vide si l'utilisateur n'est pas coach). */
   clubs?: Club[];
   judokas: Judoka[];
+  /** PAGE-2 : début de la période chargée (saison en cours) ; "" si tout l'historique est chargé. */
+  loadedFrom?: string;
+  /** PAGE-2 : date de la plus ancienne compétition du périmètre, pour proposer les saisons passées. */
+  oldestCompetitionDate?: string;
+}
+
+/** PAGE-2 : compétitions d'une saison passée, chargées à la demande. */
+export interface SeasonCompetitions {
+  seasonStartYear: number;
+  competitions: Competition[];
+  combatRecords: Record<string, { total: number; wins: number; losses: number; draws: number }>;
+  clubCompetitions: InitialData["clubCompetitions"];
 }
 
 export type McpScope =
@@ -432,6 +470,10 @@ export interface McpRegisteredClientClaims {
 export interface RpcMethods {
   /** Charge le contexte de l'utilisateur courant, ses compétitions et celles du club. */
   getInitialData: (email: string) => Promise<InitialData>;
+  /** PAGE-2 : compétitions d'une saison passée (année de début de saison). */
+  getSeasonCompetitions: (email: string, seasonStartYear: number) => Promise<SeasonCompetitions>;
+  /** DETAIL-2 : adversaires et techniques déjà saisis pour un judoka. */
+  getCombatSuggestions: (email: string, judokaId: string) => Promise<CombatSuggestions>;
   /** Calcule le profil saisonnier d'un judoka (soi-même par défaut, ou un profil accessible). */
   getJudokaProfile: (email: string, idJudoka?: string, seasonStartYear?: number) => Promise<JudokaProfile>;
   /** Finalise l'inscription d'un compte après une invitation. */
@@ -441,7 +483,9 @@ export interface RpcMethods {
   /** Annule une invitation d'accès en attente. */
   deleteAccessInvitation: (email: string, invitedEmail: string) => Promise<OperationResult>;
   /** Liste les administrateurs, les utilisateurs et les invitations d'accès en attente. */
-  getAdminsManagement: (email: string) => Promise<AdminsManagement>;
+  getAdminsManagement: (email: string, request?: UsersPageRequest) => Promise<AdminsManagement>;
+  /** PAGE-3 : page suivante ou recherche dans la liste des utilisateurs. */
+  getUsersPage: (email: string, request?: UsersPageRequest) => Promise<UsersPage>;
   /** Promeut un judoka au rôle administrateur. */
   grantAdminRole: (email: string, targetEmail: string) => Promise<OperationResult>;
   /** Retire le rôle administrateur d'un judoka. */

@@ -65,14 +65,15 @@ async function startServer() {
     coachReview: ""
   };
   let combats = [];
+  const rpcMethods = [];
   const server = http.createServer(async (req, res) => {
-    if (req.url === "/api/client") {
+    if (req.url.split("?")[0] === "/api/client") {
       const result = await callHandler(clientHandler, req);
       res.writeHead(result.statusCode, result.headers);
       res.end(result.body);
       return;
     }
-    if (req.url === "/api/styles") {
+    if (req.url.split("?")[0] === "/api/styles") {
       res.writeHead(200, { "content-type": "text/css; charset=utf-8" });
       res.end(fs.readFileSync(path.join(root, "assets", "app.css"), "utf8"));
       return;
@@ -82,6 +83,7 @@ async function startServer() {
       req.on("data", (chunk) => (body += chunk));
       req.on("end", () => {
         const request = JSON.parse(body || "{}");
+        rpcMethods.push(request.method);
         let result = null;
         if (request.method === "getInitialData") {
           result = { user, isAdmin: false, isCoach: false, isParent: false, competitions: [competition], clubCompetitions: [], judokas: [user] };
@@ -89,11 +91,13 @@ async function startServer() {
           result = {
             competition,
             combats,
-            combatSuggestions: { opponents: ["Camille Durand", "Inès Robert"], techniques: ["Uchi-mata"] },
             canEditCompetition: true,
             canFinalizeCompetition: true,
             canDeleteCompetition: true
           };
+        } else if (request.method === "getCombatSuggestions") {
+          // DETAIL-2 : les suggestions se chargent à l'ouverture du formulaire de combat.
+          result = { opponents: ["Camille Durand", "Inès Robert"], techniques: ["Uchi-mata"] };
         } else if (request.method === "ajouterCombat") {
           const input = request.args[0];
           const combat = {
@@ -105,7 +109,8 @@ async function startServer() {
             dataQualityIssues: []
           };
           combats = [combat];
-          result = { success: true, message: "Combat enregistré." };
+          // ECRIT-2 : l'écriture renvoie le combat enregistré.
+          result = { success: true, message: "Combat enregistré.", competitionId: input.competitionId, combat };
         }
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ result }));
@@ -122,12 +127,12 @@ async function startServer() {
     res.end("Not found");
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  return { server, url: `http://127.0.0.1:${server.address().port}`, competition };
+  return { server, url: `http://127.0.0.1:${server.address().port}`, competition, rpcMethods };
 }
 
 for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
   test(`parcours visuel de création d'un combat sur ${name}`, async (t) => {
-    const { server, url, competition } = await startServer();
+    const { server, url, competition, rpcMethods } = await startServer();
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport });
     await context.addInitScript((session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)), {
@@ -240,6 +245,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     assert.equal(actionOverlap, false);
     await shot("04-form-filled");
 
+    const callsBeforeSave = rpcMethods.length;
     await page.locator("#saveCombatButton").click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
@@ -252,6 +258,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     ]);
     await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
+    // ECRIT-2 : enregistrer un combat déclenche un seul appel RPC, la fiche n'est pas rechargée.
+    assert.deepEqual(rpcMethods.slice(callsBeforeSave), ["ajouterCombat"]);
+    assert.equal(rpcMethods.filter((method) => method === "getCombatSuggestions").length, 1);
     await shot("05-saved");
 
     // Ouverture en modification d'un combat complet : le haut du formulaire (tour) reste visible.

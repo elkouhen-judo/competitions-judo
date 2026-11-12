@@ -15,9 +15,9 @@ export interface ClubsServiceDeps {
   clubCompetitionsRepository: Pick<ClubCompetitionsRepository, "countByClub">;
   judokasRepository: Pick<
     JudokasRepository,
-    "getById" | "listAll" | "countByClub" | "setClub"
+    "getById" | "listCoaches" | "countByClub" | "setClub"
   >;
-  userContextService: Pick<UserContextService, "getDomainUserContext">;
+  userContextService: Pick<UserContextService, "getIdentity">;
   isAdmin: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
   buildClubId: () => string;
 }
@@ -45,8 +45,12 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
   } = deps;
 
   async function requireAdmin(email: string): Promise<void> {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
-    if (!isAdmin(domainUser)) {
+    // Le contrôle d'accès ne lit que le compte, pas les judokas du périmètre.
+    const identity = await userContextService.getIdentity(email);
+    if (!identity) {
+      throw new Error(`Accès refusé pour : ${email}`);
+    }
+    if (!isAdmin(toCanonicalJudoka(identity.user))) {
       throw new Error("Gestion des clubs réservée aux admins.");
     }
   }
@@ -62,22 +66,24 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
 
   async function getClubsManagement(email: string): Promise<ClubsManagement> {
     await requireAdmin(email);
-    const [clubs, links, judokas] = await Promise.all([
+    // PAGE-3 : seuls les coachs sont lus ; l'effectif de chaque club est compté par la base.
+    const [clubs, links, coachRows] = await Promise.all([
       clubsRepository.listAll(),
       clubsRepository.listCoachLinks(),
-      judokasRepository.listAll()
+      judokasRepository.listCoaches()
     ]);
-    const coaches = judokas
-      .map(toCanonicalJudoka)
-      .filter((judoka) => judoka.accessRole === "COACH");
+    const judokaCounts = await Promise.all(
+      clubs.map((club) => judokasRepository.countByClub(club.id_club))
+    );
+    const coaches = coachRows.map(toCanonicalJudoka);
     return {
-      clubs: clubs.map((club) => ({
+      clubs: clubs.map((club, index) => ({
         clubId: club.id_club,
         name: club.nom,
         coachIds: links
           .filter((link) => String(link.id_club) === String(club.id_club))
           .map((link) => String(link.id_coach)),
-        judokaCount: judokas.filter((judoka) => String(judoka.club_id || "") === String(club.id_club)).length
+        judokaCount: judokaCounts[index] || 0
       })),
       coaches: coaches.map((coach) => ({
         judokaId: coach.judokaId,

@@ -70,7 +70,14 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-009**: `terraform/` shall manage, as code, the Vercel project name/`node_version` and the Supabase Auth `site_url`/`uri_allow_list` for both environments (prod and dev), kept in sync with VCL-008/CFG-011. `terraform/modules/kiroku_project` shall hold environment-agnostic resource definitions (no hardcoded environment values); `terraform/environments/prod` and `terraform/environments/dev` shall each be an independent root module with its own state, calling that shared module with environment-specific values, so each environment can be planned/applied on its own without touching the other's state. Project creation, build/install commands (owned by `vercel.json`, VCL-010/VCL-011), and sensitive environment variables stay outside Terraform's scope — see `terraform/README.md` for rationale and the required one-time `terraform import`.
 - **VCL-010**: `npm run build:styles` (Tailwind CSS compilation from `assets/app.tailwind.css` to `assets/app.css`) and `npm run build:assets` (`scripts/build-assets.js`, esbuild transpilation) shall run via `postinstall` so the compiled CSS and `assets/dist/*` files consumed by `/api/styles` and `/api/client` exist before Vercel bundles the serverless functions.
 - **VCL-011**: `npm run build:core` (`scripts/build-core.js`, esbuild transpilation) shall run via `postinstall` (after `build:assets`) so the compiled `core-dist/*` files required by `.ts`-backed `core/` modules (via thin `core/**/*.js` shims) exist before Vercel bundles the serverless functions.
-- **VCL-012**: The browser shall register a root-scoped service worker that caches the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`) and shall keep `/api/rpc` network-only.
+- **VCL-012**: The browser shall register a root-scoped service worker that serves the app shell (`/`, `/api/styles`, `/api/client`, `/manifest.webmanifest`, `/assets/fonts/*`) from its cache and shall keep `/api/rpc` network-only.
+- **VCL-012a**: The service worker shall refresh the cached `/` in the background on each launch; a new version applies at the next launch.
+- **VCL-012b**: The service worker cache name shall carry the JS and CSS content hashes; a deployment installs a new cache and deletes the previous one.
+- **VCL-021**: `npm run build:assets` shall produce `assets/dist/client.min.js`, `assets/dist/styles.min.css` and `assets/dist/asset-manifest.json` (content hashes).
+- **VCL-022**: `/api/app` shall reference `/api/client?v=<hash>` and `/api/styles?v=<hash>`; a request carrying the current hash is answered with `Cache-Control: public, max-age=31536000, immutable`, any other with `no-cache`.
+- **VCL-023**: The font shall be served by the app from `/assets/fonts/` (`woff2`, `font-display: swap`); the page shall not request any third-party stylesheet.
+- **VCL-024**: `vercel.json` shall pin functions to `dub1`, the Vercel region next to the production Supabase project (`eu-west-1`). The dev Supabase project is in `eu-central-1`.
+- **VCL-025**: `/api/rpc` shall return a `Server-Timing` header (`total`, `auth`, `supabase` with request and stage counts) and log the same values with the method name.
 - **VCL-013**: Browser reads without a local snapshot and mutations outside the offline queue shall fail explicitly when offline; supported offline mutations shall be queued locally, and slow mobile requests shall abort with a user-facing error.
 - **VCL-020**: The client router shall encode shareable navigation context in the URL hash and restore it after reload.
 - **VCL-014**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
@@ -118,6 +125,17 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-032**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
 - **DAT-033**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
 
+### 3.3b Data access performance
+
+- **PERF-001**: The user context shall cost at most 2 Supabase requests (account with its coached clubs and children, then the judokas in scope) and shall be computed once per RPC call.
+- **PERF-002**: Independent reads of one RPC shall be sent in parallel.
+- **PERF-003**: Every list read shall carry a stable `order`, an explicit `limit` and `Prefer: count=exact`; when the announced total is not reached, the remaining pages are read, and an incomplete list raises an error.
+- **PERF-004**: A coach scope shall be filtered by club (`judokas.club_id` join), never by a list of judoka ids in the URL; id lists are sent in batches of 100, in parallel.
+- **PERF-005**: `getInitialData` shall load the current season and upcoming competitions, with each competition's combat results embedded (`combats(resultat)`); `getSeasonCompetitions` loads one past season on demand.
+- **PERF-006**: Combats shall be read with their points in one request (`combat_scores(*)`); combat points are written in one insert.
+- **PERF-007**: A write RPC shall return the saved element (`competition`, `combat`, `clubCompetition`, `competitions`); the browser updates its state and cache. `getInitialData` is only called at opening, when back online and after a CSV import.
+- **PERF-008**: `getAdminsManagement` and `getUsersPage` shall return users by pages of 10, read by cursor (`nom`, `prenom`, `id_judoka`), with the search applied by the server.
+
 ### 3.4 Authentication and authorization
 
 - **AUTH-001**: Authentication shall use Google through Supabase Auth.
@@ -127,8 +145,10 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-005**: Password-based login shall remain unsupported.
 - **AUTH-006**: Magic-link login shall remain unsupported.
 - **AUTH-007**: Business API calls shall send `Authorization: Bearer <access_token>` to `/api/rpc`.
-- **AUTH-008**: The backend shall validate the access token through Supabase `/auth/v1/user`.
-- **AUTH-009**: The backend shall resolve the verified email from Supabase before applying business permissions.
+- **AUTH-008**: The backend shall verify the access token inside the function: signature (project JWKS for `ES256`/`RS256`, or `SUPABASE_JWT_SECRET` of at least 32 characters for `HS256`), expiry, and issuer `<SUPABASE_URL>/auth/v1`. No call to `/auth/v1/user` is made.
+- **AUTH-008a**: The project JWKS shall be cached in memory for 10 minutes and re-read when a token carries an unknown key id, at most once every 30 seconds per function instance.
+- **AUTH-008b**: Accepted limit: a revoked session stays valid until its access token expires (1 h).
+- **AUTH-009**: The backend shall read the email from the verified token before applying business permissions.
 - **AUTH-010**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
 - **AUTH-010a**: A coach's sports scope shall be resolved server-side as the judokas whose `club_id` belongs to the coach's `coach_clubs` (plus their own profile), carried by the same managed-judoka scope as parents; every service (competitions, combats, club competitions, dashboard, combat search, MCP) shall filter on it.
 - **AUTH-011**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
@@ -162,6 +182,7 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-001**: `SUPABASE_URL` is required.
 - **CFG-002**: `SUPABASE_ANON_KEY` is required.
 - **CFG-003**: `SUPABASE_SERVICE_ROLE_KEY` is required.
+- **CFG-003a**: `SUPABASE_JWT_SECRET` is optional; it is only used for projects that still sign access tokens with `HS256`.
 - **CFG-004**: Google Auth provider must be enabled in Supabase Auth.
 - **CFG-005**: Google OAuth callback `https://<project-ref>.supabase.co/auth/v1/callback` must be allowed in Google configuration.
 - **CFG-006**: The public Vercel URL must be allowed in Supabase redirect URLs.

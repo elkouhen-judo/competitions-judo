@@ -48,3 +48,23 @@ export interface CompetitionCategoryLike {
 export function getCompetitionCategoryLabel(competition: CompetitionCategoryLike): string {
   return [competition.ageCategory, competition.weightCategory].filter(Boolean).join(" - ");
 }
+
+export interface CombatRecordCount {
+  total: number;
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+/** Bilan des combats d'une compétition (« 3V 1D ») à partir de leurs résultats. */
+export function countCombatResults(results: unknown[]): CombatRecordCount {
+  const record: CombatRecordCount = { total: 0, wins: 0, losses: 0, draws: 0 };
+  results.forEach((value) => {
+    const result = String(value || "");
+    record.total += 1;
+    if (result === "Victoire") record.wins += 1;
+    else if (result === "Défaite") record.losses += 1;
+    else if (result) record.draws += 1;
+  });
+  return record;
+}

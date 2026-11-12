@@ -194,10 +194,11 @@ test("vercel runtime calls the rpc endpoint directly", () => {
   assert.match(appShell, /res\.redirect\(308,\s*redirectUrl\);/);
   assert.match(appShell, /appUrl:/);
   assert.match(appShell, /html\.replace\("<\/head>",/);
-  assert.match(html, /href="\/api\/styles"/);
+  // SHELL-2 : l'URL du CSS et du JS porte l'empreinte du contenu.
+  assert.match(html, /href="\/api\/styles\?v=[0-9a-f]{12}"/);
   assert.match(html, /viewport-fit=cover/);
   assert.match(html, /rel="manifest" href="\/manifest\.webmanifest"/);
-  assert.match(html, /src="\/api\/client" defer/);
+  assert.match(html, /src="\/api\/client\?v=[0-9a-f]{12}" defer/);
   assert.doesNotMatch(html, /vue@3\/dist\/vue\.global\.prod\.js/);
   assert.match(client, /vue v3\./);
   assert.match(client, /var Vue=function/);
@@ -370,7 +371,10 @@ test("judoka home keeps competition creation available", () => {
   assert.match(uiBundle, /function resolveCompetitionOwnerSelection\(\)/);
   assert.match(uiBundle, /function getCompetitionOwnerRequiredMessage\(\)/);
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
-  assert.match(uiBundle, /errors\.owner = competition\.ownerJudokaId \? "" : getCompetitionOwnerRequiredMessage\(\);/);
+  assert.match(
+    uiBundle,
+    /errors\.owner = competition\.ownerJudokaId \? "" : getCompetitionOwnerRequiredMessage\(\);/
+  );
   assert.match(uiBundle, /function getHomeActiveJudokaId\(\)/);
   assert.doesNotMatch(uiBundle, /canDelete: state\.isParent && !state\.isCoach && !state\.isAdmin/);
   assert.match(uiBundle, /showHomeActions = window\.Vue\.computed\(/);
@@ -401,7 +405,7 @@ test("competition persistence keeps categories and omits removed place and actua
     /const competitionDraft = createCompetition\(domainCompetitionInput,\s*ownerJudokaId\);/
   );
   assert.match(competitionsService, /const competitionId = domainCompetitionInput\.competitionId;/);
-  assert.match(competitionsService, /return records\.map\(toCanonicalCompetition\);/);
+  assert.match(coreIndex, /return toCanonicalCompetition\(competition\);/);
   assert.match(
     competitionsService,
     /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/
@@ -471,11 +475,13 @@ test("admin can manage admins from a dedicated screen", () => {
   );
   assert.match(uiBundle, /function saveAdminRole\(\)/);
   assert.match(uiBundle, /function revokeAdminRole\(idJudoka,\s*name\)/);
-  assert.match(adminService, /async function getAdminsManagement\(email: string\)/);
+  // PAGE-3 : la liste des utilisateurs est paginée par le serveur.
   assert.match(
     adminService,
-    /users: \(await judokasRepository\.listAll\(\)\)\.map\(toCanonicalJudoka\)/
+    /async function getAdminsManagement\(email: string, request: UsersPageRequest = \{\}\)/
   );
+  assert.match(adminService, /judokasRepository\.listPage\(\{/);
+  assert.doesNotMatch(adminService, /users: \(await judokasRepository\.listAll\(\)\)/);
   assert.doesNotMatch(adminService, /async function saveAccessInvitation\(/);
   assert.doesNotMatch(adminService, /createAccessInvitation/);
   assert.match(
@@ -509,10 +515,7 @@ test("admin can delete a user and their competitions from a dedicated section", 
   assert.match(adminService, /Retirez d'abord les droits admin avant de supprimer ce compte/);
   assert.match(adminService, /competitionsRepository\.removeByJudoka\(idJudoka\)/);
   assert.match(adminService, /judokasRepository\.remove\(idJudoka\)/);
-  assert.match(
-    adminService,
-    /users: \(await judokasRepository\.listAll\(\)\)\.map\(toCanonicalJudoka\)/
-  );
+  assert.match(adminService, /const users = rows\.map\(toCanonicalJudoka\);/);
 });
 
 test("CSV import is the only way to create a user, no manual single-invite form remains", () => {
@@ -548,10 +551,8 @@ test("pending invitations stay visible in a dedicated paginated admin section", 
     adminService,
     /async function deleteAccessInvitation\(email: string,\s*invitedEmail: string\)/
   );
-  assert.match(
-    adminService,
-    /accessInvitations: \(await invitationsRepository\.listAll\(\)\)\.map\(toInvitationReadModel\)/
-  );
+  assert.match(adminService, /invitationsRepository\.listAll\(\)/);
+  assert.match(adminService, /accessInvitations: invitations\.map\(toInvitationReadModel\)/);
 });
 
 test("judoka profile exposes season statistics through a dedicated screen", () => {
@@ -594,7 +595,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   );
   assert.match(userContextService, /return \{ user, judokas, managedJudokaScope, coachClubIds \};/);
   // Un coach ne voit que les judokas des clubs qu'il coache.
-  assert.match(userContextService, /coachClubIds = await clubsRepository\.listClubIdsByCoach\(user\.id_judoka\);/);
+  // CTX-1 : les clubs coachés viennent de la lecture du compte, sans requête supplémentaire.
+  assert.match(userContextService, /coachClubIds = identity\.coachClubIds;/);
   assert.match(
     userContextService,
     /assertCanAccessJudokaProfile\(toCanonicalJudoka\(user\),\s*targetId,\s*userContext\.managedJudokaScope\);/
@@ -692,15 +694,20 @@ test("judoka and invitation lookup use a case-insensitive normalized email match
   );
 });
 
-test("combat mutations reload competition details after save", () => {
+test("combat mutations update the open competition locally after save", () => {
+  // ECRIT-2 : le combat renvoyé par le serveur met à jour la fiche, sans getCompetitionDetail.
   assert.match(
     uiBundle,
-    /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(competitionId,\s*true\);/
+    /"ajouterCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*showSavedCombat\(response, competitionId, afterReload\);/
   );
   assert.match(
     uiBundle,
-    /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*openCompetition\(competitionId,\s*true\);/
+    /"updateCombat"[\s\S]*showSuccess\(response\.message\);[\s\S]*resetCombatForm\(\);[\s\S]*showSavedCombat\(response, competitionId\);/
   );
+  assert.match(uiBundle, /app\.local\.saveCombat\(response\.combat\);/);
+  // getInitialData n'est rappelé qu'à l'ouverture, au retour en ligne et après un import.
+  // (deux définitions, l'appel interne, le retour en ligne et l'import CSV.)
+  assert.equal([...uiBundle.matchAll(/reloadInitialData(Then)?\(/g)].length, 5);
   assert.doesNotMatch(
     uiBundle,
     /judoka_nom: state\.currentUser \? getJudokaDisplayName\(state\.currentUser\) : ""/
@@ -719,7 +726,10 @@ test("vercel runtime lets the connected user log out", () => {
     uiBundle,
     /<summary id="userInfo" class="user-pill" aria-label="Menu du compte">\s*<strong>\{\{ userName \}\}<\/strong>\s*<span class="user-pill-role">\{\{ roleLabel \}\}<\/span>/
   );
-  assert.match(uiBundle, /id="logoutButton" type="button" role="menuitem" @click="logoutUser\(\)">Se déconnecter/);
+  assert.match(
+    uiBundle,
+    /id="logoutButton" type="button" role="menuitem" @click="logoutUser\(\)">Se déconnecter/
+  );
   assert.match(uiBundle, /@click="openAccessManagement\(\)">Gestion des accès/);
   assert.match(uiBundle, /showHeader: false/);
   assert.match(uiBundle, /function setHeaderVisible\(visible\)/);
@@ -780,6 +790,7 @@ test("vercel api keeps supabase api key usage server side", () => {
       "./config/env.js",
       "./infra/supabase-client.js",
       "./infra/supabase-rest.js",
+      "./infra/request-scope.js",
       "./auth/session.js",
       "./auth/mcp-token.js",
       "./auth/permissions.js",
@@ -814,14 +825,21 @@ test("vercel api keeps supabase api key usage server side", () => {
     adminService,
     /async function getAccessInvitation\(email: string\): Promise<AccessInvitationRow \| null>/
   );
+  // INIT-1 : après le compte, les lectures de l'ouverture partent ensemble.
+  assert.match(coreIndex, /const identity = await requireIdentity\(email\);/);
   assert.match(
     coreIndex,
-    /const \{ user, judokas, managedJudokaScope, domainUser, coachClubIds = \[\] \} =\s*await userContextService\.getDomainUserContext\(email\);/
+    /await Promise\.all\(\[\s*userContextService\.getDomainUserContext\(email\),\s*competitionsRepository\.listInScopeWithResults\(/
   );
   // Un coach peut aussi être admin : l'en-tête affiche les deux rôles.
   // NAV-4 : un seul rôle affiché dans l'en-tête.
-  assert.match(client, /const roleLabel = state\.isCoach\s*\? "Coach"\s*: state\.currentUser\?\.profileType === "PARENT"/);
-  assert.match(sessionAuth, /\/auth\/v1\/user/);
+  assert.match(
+    client,
+    /const roleLabel = state\.isCoach\s*\? "Coach"\s*: state\.currentUser\?\.profileType === "PARENT"/
+  );
+  // AUTH-1 : la session est vérifiée dans la fonction, sans appel à /auth/v1/user.
+  assert.doesNotMatch(sessionAuth, /fetch\([^)]*\/auth\/v1\/user/);
+  assert.match(sessionAuth, /\/auth\/v1\/\.well-known\/jwks\.json/);
   assert.match(
     competitionsService,
     /const enriched = toCombatReadModelsWithJudokas\(filtered,\s*judokas,/
@@ -844,35 +862,145 @@ test("vercel api keeps supabase api key usage server side", () => {
   assert.match(rpc, /const body = await bodyPromise/);
   assert.match(rpc, /methods\[body\.method\]/);
   assert.match(rpc, /Corps JSON invalide\./);
-  assert.match(sessionAuth, /Réponse Supabase invalide pendant la vérification de session\./);
+  assert.match(sessionAuth, /const INVALID_SESSION_MESSAGE = "Session Supabase invalide\.";/);
   assert.match(supabaseClient, /Réponse Supabase invalide sur/);
   assert.match(supabaseClient, /Réponse Supabase RPC invalide pour/);
 });
 
-test("service worker fetches the app shell network-first so deploys are visible without manual cache clearing", () => {
+test("service worker serves the app shell from the cache and refreshes it in the background", () => {
+  // SHELL-1 : la coquille s'affiche depuis le cache ; la version relue s'applique au lancement suivant.
   assert.match(
     serviceWorkerSource,
-    /fetch\(request\)\s*\.then\(\(response\) => \{[\s\S]*?cache\.put\(request, response\.clone\(\)\)/
+    /const cachedShell = caches\.open\(CACHE_NAME\)\.then\(\(cache\) => cache\.match\(SHELL_URL\)\);/
   );
   assert.match(
     serviceWorkerSource,
-    /\.catch\(\(\) => caches\.open\(CACHE_NAME\)\.then\(\(cache\) => cache\.match\(request\)\)\)/
+    /event\.waitUntil\(refreshedShell\.catch\(\(\) => undefined\)\);/
   );
-  assert.doesNotMatch(serviceWorkerSource, /cache\.match\(request\)\.then\(\(cached\) => \{/);
+  // Sans coquille en cache, une réponse redirigée est rejouée par le navigateur (navigation).
+  assert.match(
+    serviceWorkerSource,
+    /\(cached\) => cached \|\| refreshedShell\.then\(\(response\) => \(response\.redirected \? fetch\(request\) : response\)\)/
+  );
+  assert.match(serviceWorkerSource, /cache\.put\(SHELL_URL, copy\)/);
+  // Une redirection (hôte non canonique) n'est jamais mise en cache comme coquille.
+  assert.match(serviceWorkerSource, /if \(!response\.ok \|\| response\.redirected\)/);
+  // Le JS et le CSS portent une empreinte : ils sont lus dans le cache d'abord.
+  assert.match(serviceWorkerSource, /event\.respondWith\(cacheFirst\(request\)\);/);
+  // Une ancienne empreinte reçoit le fichier courant : il n'est pas rangé sous l'ancienne adresse.
+  assert.match(
+    serviceWorkerSource,
+    /const isExpectedVersion = !version \|\| response\.headers\.get\("X-Asset-Version"\) === version;/
+  );
+  assert.match(serviceWorkerSource, /if \(response\.ok && isExpectedVersion\)/);
+  assert.match(
+    serviceWorkerSource,
+    /const PRECACHE_URLS = \["\/","\/api\/styles\?v=[0-9a-f]{12}","\/api\/client\?v=[0-9a-f]{12}","\/manifest\.webmanifest"\];/
+  );
+  // Un déploiement change l'empreinte, donc le nom du cache : l'ancien cache est supprimé.
+  assert.match(
+    serviceWorkerSource,
+    /const CACHE_NAME = "kiroku-app-shell-v9-[0-9a-f]{12}-[0-9a-f]{12}";/
+  );
+  assert.match(
+    serviceWorkerSource,
+    /keys\.filter\(\(key\) => key !== CACHE_NAME\)\.map\(\(key\) => caches\.delete\(key\)\)/
+  );
+});
+
+test("the client bundle is minified, fingerprinted and cached for a year", async () => {
+  const zlib = require("node:zlib");
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(root, "assets", "dist", "asset-manifest.json"), "utf8")
+  );
+  const call = (handler, url) =>
+    new Promise((resolve) => {
+      const headers = {};
+      handler(
+        { url, headers: {} },
+        {
+          setHeader: (name, value) => {
+            headers[name.toLowerCase()] = value;
+          },
+          status() {
+            return this;
+          },
+          send: (body) => resolve({ headers, body: String(body) })
+        }
+      );
+    });
+
+  // SHELL-2 : URL avec empreinte → cache d'un an ; sans empreinte ou périmée → revalidation.
+  const js = await call(
+    require(path.join(root, "api", "client.js")),
+    `/api/client?v=${manifest.client}`
+  );
+  assert.equal(js.headers["cache-control"], "public, max-age=31536000, immutable");
+  assert.ok(zlib.gzipSync(js.body).length < 120 * 1024, "le JS pèse moins de 120 Ko compressé");
+  const css = await call(
+    require(path.join(root, "api", "styles.js")),
+    `/api/styles?v=${manifest.styles}`
+  );
+  assert.equal(css.headers["cache-control"], "public, max-age=31536000, immutable");
+  assert.equal(css.headers["content-type"], "text/css; charset=utf-8");
+  const stale = await call(
+    require(path.join(root, "api", "client.js")),
+    "/api/client?v=000000000000"
+  );
+  assert.equal(stale.headers["cache-control"], "no-cache");
+  assert.equal(stale.headers["x-asset-version"], manifest.client);
+  assert.equal(js.headers["x-asset-version"], manifest.client);
+  const bare = await call(require(path.join(root, "api", "client.js")), "/api/client");
+  assert.equal(bare.headers["cache-control"], "no-cache");
+});
+
+test("the font is served by the app without render-blocking third-party stylesheet", () => {
+  // SHELL-3 : aucune requête vers Google Fonts, police woff2 locale avec font-display: swap.
+  assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+  assert.match(
+    html,
+    /rel="preload" href="\/assets\/fonts\/plus-jakarta-sans-latin-wght-normal\.woff2" as="font"/
+  );
+  const css = fs.readFileSync(path.join(root, "assets", "app.css"), "utf8");
+  assert.match(
+    css,
+    /@font-face\s*\{[^}]*font-family:\s*'Plus Jakarta Sans'[^}]*font-display:\s*swap/
+  );
+  assert.doesNotMatch(css, /fonts\.googleapis\.com/);
+  for (const file of [
+    "plus-jakarta-sans-latin-wght-normal.woff2",
+    "plus-jakarta-sans-latin-ext-wght-normal.woff2"
+  ]) {
+    assert.ok(fs.existsSync(path.join(root, "assets", "fonts", file)), file);
+    assert.match(css, new RegExp(`/assets/fonts/${file.replace(/\./g, "\\.")}`));
+  }
+  assert.deepEqual(vercel.headers, [
+    {
+      source: "/assets/fonts/(.*)",
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }]
+    }
+  ]);
+});
+
+test("vercel functions run next to the Supabase database", () => {
+  // INFRA-1 : la base de production est en eu-west-1 (Irlande) ; dub1 est la région Vercel voisine.
+  assert.deepEqual(vercel.regions, ["dub1"]);
 });
 
 test("service worker never intercepts the downloadable CSV template, even as a navigation fallback", () => {
   assert.match(serviceWorkerSource, /const BYPASS_URLS = \["\/sample-users-import\.csv"\];/);
   assert.match(
     serviceWorkerSource,
-    /request\.method !== "GET" \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
+    /request\.method !== "GET" \|\|\s*url\.origin !== self\.location\.origin \|\|\s*url\.pathname === "\/api\/rpc" \|\|\s*BYPASS_URLS\.includes\(url\.pathname\)/
   );
 });
 
 test("vercel serves a public RGPD page linked from the login screen and the account menu", () => {
   const privacyHandler = require(path.join(root, "api", "privacy.js"));
   const rewrites = vercel.rewrites.map((rule) => `${rule.source}->${rule.destination}`);
-  assert.ok(rewrites.indexOf("/confidentialite->/api/privacy") < rewrites.indexOf("/(.*)->/api/app"));
+  assert.ok(
+    rewrites.indexOf("/confidentialite->/api/privacy") < rewrites.indexOf("/(.*)->/api/app")
+  );
   assert.ok(rewrites.includes("/rgpd->/api/privacy"));
   assert.match(html, /href="\/confidentialite"[^>]*>Données personnelles \(RGPD\)/);
   assert.match(html, /id="privacyLink" href="\/confidentialite"/);
@@ -898,8 +1026,16 @@ test("the app ships its Ayumi icons for the browser tab and the home screen", ()
   assert.match(html, /<link rel="apple-touch-icon" href="\/assets\/icons\/apple-touch-icon\.png">/);
   assert.match(html, /<meta name="apple-mobile-web-app-title" content="Ayumi">/);
   const icons = manifestHandler.manifest.icons;
-  assert.deepEqual(icons.map((icon) => `${icon.sizes}:${icon.purpose}`), ["192x192:any", "512x512:any", "512x512:maskable"]);
-  for (const file of ["favicon.ico", ...icons.map((icon) => icon.src.slice(1)), "assets/icons/apple-touch-icon.png", "assets/icons/icon-32.png"]) {
+  assert.deepEqual(
+    icons.map((icon) => `${icon.sizes}:${icon.purpose}`),
+    ["192x192:any", "512x512:any", "512x512:maskable"]
+  );
+  for (const file of [
+    "favicon.ico",
+    ...icons.map((icon) => icon.src.slice(1)),
+    "assets/icons/apple-touch-icon.png",
+    "assets/icons/icon-32.png"
+  ]) {
     assert.ok(fs.statSync(path.join(root, file)).size > 0, `${file} manquant`);
   }
 });

@@ -11,7 +11,7 @@ export default function createParentLinksRepository(deps: SupabaseRestDeps): Par
   async function listByParent(idParent: string): Promise<Pick<ParentLinkRow, "id_judoka">[]> {
     return supabaseSelect<Pick<ParentLinkRow, "id_judoka">>(
       "parent_judokas",
-      `select=id_judoka&${eqFilter("id_parent", idParent)}`
+      `select=id_judoka&${eqFilter("id_parent", idParent)}&order=id_judoka.asc`
     );
   }
 

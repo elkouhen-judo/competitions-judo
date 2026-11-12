@@ -152,3 +152,21 @@ Cette section recense, avec les filtres choisis, les combats dont la saisie est 
 *Note :* ce dernier critère détecte la divergence possible entre la ligne `Ippon` de la section 4.1 (basée sur `victoryType`) et les métriques `tachiWazaIpponVictoryRate`/`neWazaIpponVictoryRate` de la section 3.3 (basées sur `scores`) — il signale les combats à compléter plutôt que de forcer une règle de cohérence stricte entre les deux métriques.
 
 ---
+
+---
+
+## 6. Relevé de chargement (backlog optimisation du 12/11/2026)
+
+Décomptes mesurés par `tests/loading-performance.test.js` sur un faux Supabase (profil coach). Une « étape » est un groupe de requêtes lancées en parallèle.
+
+| Action | Avant (lecture du code) | Après (mesuré en test) |
+| :--- | :--- | :--- |
+| Contexte utilisateur | 3 à 4 requêtes en série, refaites par service | 2 requêtes, une fois par appel |
+| Ouverture de l'appli (`getInitialData`) | 9 requêtes en série + 1 par tranche de 100 compétitions | 3 étapes au plus |
+| Ouverture d'une compétition (`getCompetitionDetail`) | 9 requêtes en série ou plus | 4 requêtes, 3 étapes au plus |
+| Enregistrer un combat de 6 points | une vingtaine de requêtes + 1 par point, puis rechargement de la fiche | 1 appel RPC, 6 étapes au plus, 3 écritures |
+| Compétition club de 30 judokas | 1 écriture par participation | 2 écritures |
+| Gestion des accès (`getAdminsManagement`) | 4 lectures en série, tous les judokas | 4 requêtes, 2 étapes, 10 utilisateurs |
+| JS de la coquille | environ 400 Ko non minifiés, sans cache | 97 Ko compressés, cache d'un an |
+
+Temps de réponse : non relevés. L'en-tête `Server-Timing` de `/api/rpc` (onglet Réseau) et les journaux Vercel donnent la durée totale, la durée d'authentification, le nombre de requêtes Supabase et leur durée cumulée. Le relevé en millisecondes reste à faire sur l'environnement dev, avant puis après déploiement.

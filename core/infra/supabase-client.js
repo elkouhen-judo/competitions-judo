@@ -1,3 +1,5 @@
+const { trackSupabaseRequest } = require("./request-scope.js");
+
 function isJwtLikeToken(value) {
   return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(value || ""));
 }
@@ -52,38 +54,45 @@ function createSupabaseClient({ getSupabaseConfig }) {
       prefer: options.prefer
     });
 
-    const response = await fetch(requestUrl, {
-      method: method.toUpperCase(),
-      headers,
-      body: Object.prototype.hasOwnProperty.call(options, "payload")
-        ? JSON.stringify(options.payload)
-        : undefined
+    return trackSupabaseRequest(method, async () => {
+      const response = await fetch(requestUrl, {
+        method: method.toUpperCase(),
+        headers,
+        body: Object.prototype.hasOwnProperty.call(options, "payload")
+          ? JSON.stringify(options.payload)
+          : undefined
+      });
+      const body = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`Erreur Supabase ${response.status} sur ${table} : ${body}`);
+      }
+      if (options.onResponse) {
+        options.onResponse(response);
+      }
+
+      return parseJsonBody(body, `Réponse Supabase invalide sur ${table}.`);
     });
-    const body = await response.text();
-
-    if (!response.ok) {
-      throw new Error(`Erreur Supabase ${response.status} sur ${table} : ${body}`);
-    }
-
-    return parseJsonBody(body, `Réponse Supabase invalide sur ${table}.`);
   }
 
   async function supabaseRpc(functionName, payload) {
     const config = getSupabaseConfig();
-    const response = await fetch(`${config.url}/rest/v1/rpc/${functionName}`, {
-      method: "POST",
-      headers: createSupabaseHeaders(config.serviceRoleKey, {
-        authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : ""
-      }),
-      body: JSON.stringify(payload || {})
+    return trackSupabaseRequest("post", async () => {
+      const response = await fetch(`${config.url}/rest/v1/rpc/${functionName}`, {
+        method: "POST",
+        headers: createSupabaseHeaders(config.serviceRoleKey, {
+          authorizationToken: isJwtLikeToken(config.serviceRoleKey) ? config.serviceRoleKey : ""
+        }),
+        body: JSON.stringify(payload || {})
+      });
+      const body = await response.text();
+
+      if (!response.ok) {
+        throw new Error(body || `Erreur Supabase RPC ${functionName}.`);
+      }
+
+      return parseJsonBody(body, `Réponse Supabase RPC invalide pour ${functionName}.`);
     });
-    const body = await response.text();
-
-    if (!response.ok) {
-      throw new Error(body || `Erreur Supabase RPC ${functionName}.`);
-    }
-
-    return parseJsonBody(body, `Réponse Supabase RPC invalide pour ${functionName}.`);
   }
 
   return {

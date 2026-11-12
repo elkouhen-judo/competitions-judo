@@ -1,7 +1,20 @@
 import type { JudokaModel } from "../domain/access/judoka";
 import type { AccessRole } from "../domain/access/role";
 import type { PersonName } from "../domain/access/person-name";
-import type { JudokaRow, SupabaseRestDeps } from "./types";
+import { ID_BATCH_SIZE, inFilter, selectByIdBatches, uniqueIds } from "../shared/query";
+import type { JudokaIdentity, JudokaRow, SupabaseRestDeps } from "./types";
+
+/** Curseur de la liste paginée des utilisateurs : dernière ligne de la page précédente. */
+export interface JudokaPageCursor {
+  nom: string;
+  prenom: string;
+  id_judoka: string;
+}
+
+type JudokaIdentityRow = JudokaRow & {
+  coach_clubs?: { id_club: string }[] | "";
+  parent_judokas?: { id_judoka: string }[] | "";
+};
 
 export interface JudokaChangesInput {
   accountEmail?: string;
@@ -24,6 +37,12 @@ export interface JudokaChangesInput {
 
 export interface JudokasRepository {
   getByEmail(email: string): Promise<JudokaRow | null>;
+  getIdentityByEmail(email: string): Promise<JudokaIdentity | null>;
+  listPage(options: {
+    search?: string;
+    after?: JudokaPageCursor | null;
+    limit: number;
+  }): Promise<{ rows: JudokaRow[]; total: number }>;
   getById(idJudoka: string): Promise<JudokaRow | null>;
   getByName(prenom: string, nom: string): Promise<JudokaRow | null>;
   insert(
@@ -38,6 +57,7 @@ export interface JudokasRepository {
     }
   ): Promise<JudokaRow | null>;
   listAdmins(): Promise<JudokaRow[]>;
+  listCoaches(): Promise<JudokaRow[]>;
   listAll(): Promise<JudokaRow[]>;
   listByIds(ids: string[]): Promise<JudokaRow[]>;
   listByClubIds(clubIds: string[]): Promise<JudokaRow[]>;
@@ -64,6 +84,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     supabasePatch,
     supabaseSelect,
     supabaseSelectOne,
+    supabaseSelectPage,
     eqFilter
   } = deps;
 
@@ -131,24 +152,101 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   }
 
   async function listAll(): Promise<JudokaRow[]> {
-    return supabaseSelect<JudokaRow>("judokas", "select=*&order=nom.asc,prenom.asc");
+    return supabaseSelect<JudokaRow>("judokas", `select=*&${JUDOKA_ORDER}`);
   }
 
   async function listAdmins(): Promise<JudokaRow[]> {
     return supabaseSelect<JudokaRow>(
       "judokas",
-      "select=*&or=(role.eq.ADMIN,is_admin.is.true)&order=nom.asc,prenom.asc"
+      `select=*&or=(role.eq.ADMIN,is_admin.is.true)&${JUDOKA_ORDER}`
     );
   }
 
-  async function listByIds(ids: string[]): Promise<JudokaRow[]> {
-    if (!ids || !ids.length) {
-      return [];
-    }
-    return supabaseSelect<JudokaRow>(
-      "judokas",
-      `select=*&id_judoka=in.(${ids.join(",")})&order=nom.asc,prenom.asc`
+  const JUDOKA_ORDER = "order=nom.asc,prenom.asc,id_judoka.asc";
+
+  function sortByName(rows: JudokaRow[]): JudokaRow[] {
+    return [...rows].sort(
+      (a, b) =>
+        String(a.nom).localeCompare(String(b.nom), "fr") ||
+        String(a.prenom).localeCompare(String(b.prenom), "fr") ||
+        String(a.id_judoka).localeCompare(String(b.id_judoka))
     );
+  }
+
+  async function listCoaches(): Promise<JudokaRow[]> {
+    return supabaseSelect<JudokaRow>("judokas", `select=*&role=eq.COACH&${JUDOKA_ORDER}`);
+  }
+
+  async function listByIds(ids: string[]): Promise<JudokaRow[]> {
+    const rows = await selectByIdBatches(ids, (batchIds) =>
+      supabaseSelect<JudokaRow>("judokas", `select=*&${inFilter("id_judoka", batchIds)}&${JUDOKA_ORDER}`)
+    );
+    // Plusieurs lots : chaque lot est trié par la base, l'ensemble est retrié.
+    return uniqueIds(ids).length > ID_BATCH_SIZE ? sortByName(rows) : rows;
+  }
+
+  // PostgREST : une valeur entre guillemets accepte virgules et parenthèses dans un filtre logique.
+  function quoteLogicValue(value: string): string {
+    const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return encodeURIComponent(`"${escaped}"`);
+  }
+
+  // PAGE-3 : une page d'utilisateurs triée par nom, lue après un curseur (et non par décalage).
+  async function listPage(options: {
+    search?: string;
+    after?: JudokaPageCursor | null;
+    limit: number;
+  }): Promise<{ rows: JudokaRow[]; total: number }> {
+    const filters: string[] = [];
+    // Chaque mot de la recherche doit se trouver dans le nom, le prénom ou l'e-mail.
+    const words = String(options.search || "").replace(/[%_*]/g, " ").split(/\s+/).filter(Boolean);
+    if (words.length) {
+      const wordFilters = words.map((word) => {
+        const pattern = quoteLogicValue(`*${word}*`);
+        return `or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern})`;
+      });
+      filters.push(`and=(${wordFilters.join(",")})`);
+    }
+    const after = options.after;
+    if (!after) {
+      return supabaseSelectPage<JudokaRow>(
+        "judokas",
+        ["select=*", ...filters, JUDOKA_ORDER].join("&"),
+        options.limit
+      );
+    }
+
+    const nom = quoteLogicValue(after.nom);
+    const prenom = quoteLogicValue(after.prenom);
+    const id = quoteLogicValue(after.id_judoka);
+    const afterCursor = `or=(nom.gt.${nom},and(nom.eq.${nom},prenom.gt.${prenom}),and(nom.eq.${nom},prenom.eq.${prenom},id_judoka.gt.${id}))`;
+    // Le total porte sur la recherche entière, pas sur la suite du curseur.
+    const [page, whole] = await Promise.all([
+      supabaseSelectPage<JudokaRow>(
+        "judokas",
+        ["select=*", ...filters, afterCursor, JUDOKA_ORDER].join("&"),
+        options.limit
+      ),
+      supabaseSelectPage<JudokaRow>("judokas", ["select=id_judoka", ...filters].join("&"), 1)
+    ]);
+    return { rows: page.rows, total: whole.total };
+  }
+
+  // CTX-1 : le compte, les clubs qu'il coache et ses enfants rattachés, en une requête.
+  async function getIdentityByEmail(email: string): Promise<JudokaIdentity | null> {
+    const row = await supabaseSelectOne<JudokaIdentityRow>(
+      "judokas",
+      `select=*,coach_clubs(id_club),parent_judokas!parent_judokas_id_parent_fkey(id_judoka)&email=ilike.${findEmailQueryValue(email)}`
+    );
+    if (!row) {
+      return null;
+    }
+    const { coach_clubs: coachClubs, parent_judokas: parentLinks, ...user } = row;
+    return {
+      user,
+      coachClubIds: uniqueIds((coachClubs || []).map((link) => link.id_club)),
+      childJudokaIds: uniqueIds((parentLinks || []).map((link) => link.id_judoka))
+    };
   }
 
   async function getByEmail(email: string): Promise<JudokaRow | null> {
@@ -197,22 +295,20 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   }
 
   async function listByClubIds(clubIds: string[]): Promise<JudokaRow[]> {
-    const ids = [...new Set((clubIds || []).map(String).filter(Boolean))];
+    const ids = uniqueIds(clubIds);
     if (!ids.length) {
       return [];
     }
-    return supabaseSelect<JudokaRow>(
-      "judokas",
-      `select=*&club_id=in.(${ids.map(encodeURIComponent).join(",")})&order=nom.asc,prenom.asc`
-    );
+    return supabaseSelect<JudokaRow>("judokas", `select=*&${inFilter("club_id", ids)}&${JUDOKA_ORDER}`);
   }
 
   async function countByClub(idClub: string): Promise<number> {
-    const rows = await supabaseSelect<Pick<JudokaRow, "id_judoka">>(
+    const { total } = await supabaseSelectPage<Pick<JudokaRow, "id_judoka">>(
       "judokas",
-      `select=id_judoka&${eqFilter("club_id", idClub)}`
+      `select=id_judoka&${eqFilter("club_id", idClub)}`,
+      1
     );
-    return rows.length;
+    return total;
   }
 
   async function setClub(idJudoka: string, idClub: string | null): Promise<void> {
@@ -259,11 +355,14 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
 
   return {
     getByEmail,
+    getIdentityByEmail,
     getById,
     getByName,
     insert,
     listAdmins,
     listAll,
+    listCoaches,
+    listPage,
     listByIds,
     listByClubIds,
     countByClub,

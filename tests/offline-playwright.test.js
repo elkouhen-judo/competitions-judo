@@ -70,6 +70,7 @@ function callHandler(handler, req) {
 
 async function startTestServer() {
   const rpcCalls = [];
+  const shell = { delayMs: 0, requests: 0 };
   const server = http.createServer(async (req, res) => {
     if (req.url === "/service-worker.js") {
       const result = await callHandler(serviceWorkerHandler, req);
@@ -78,16 +79,22 @@ async function startTestServer() {
       return;
     }
 
-    if (req.url === "/api/client") {
+    if (req.url.split("?")[0] === "/api/client") {
       const result = await callHandler(clientHandler, req);
       res.writeHead(result.statusCode, result.headers);
       res.end(result.body);
       return;
     }
 
-    if (req.url === "/api/styles") {
+    if (req.url.split("?")[0] === "/api/styles") {
       res.writeHead(200, { "content-type": "text/css; charset=utf-8" });
       res.end(fs.readFileSync(path.join(root, "assets", "app.css"), "utf8"));
+      return;
+    }
+
+    if (req.url.startsWith("/assets/fonts/")) {
+      res.writeHead(200, { "content-type": "font/woff2" });
+      res.end(fs.readFileSync(path.join(root, req.url)));
       return;
     }
 
@@ -116,6 +123,8 @@ async function startTestServer() {
           };
         } else if (request.method === "getCompetitionDetail") {
           result = detail;
+        } else if (request.method === "getCombatSuggestions") {
+          result = { opponents: ["Adversaire déjà rencontré"], techniques: [] };
         } else if (request.method === "finalizeCompetition") {
           competition.result = request.args[1];
           result = {
@@ -131,6 +140,13 @@ async function startTestServer() {
     }
 
     if (req.url === "/" || req.url.startsWith("/?")) {
+      shell.requests += 1;
+      if (shell.delayMs) {
+        await new Promise((resolve) => setTimeout(resolve, shell.delayMs));
+      }
+      if (res.destroyed || !server.listening) {
+        return;
+      }
       let html = renderIndexHtml();
       html = html.replace(
         "</head>",
@@ -146,7 +162,7 @@ async function startTestServer() {
   });
 
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  return { server, rpcCalls, url: `http://127.0.0.1:${server.address().port}` };
+  return { server, rpcCalls, shell, url: `http://127.0.0.1:${server.address().port}` };
 }
 
 async function createPage(browser, url) {
@@ -196,6 +212,48 @@ test("l'application recharge les données locales hors connexion", async (t) => 
   await expect(page.getByText(competition.name, { exact: true })).toHaveCount(1);
 });
 
+test("les suggestions de saisie déjà chargées restent disponibles après un redémarrage hors connexion", async (t) => {
+  const { server, url } = await startTestServer();
+  const browser = await chromium.launch({ headless: true });
+  t.after(async () => {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const created = await createPage(browser, url);
+  const { context } = created;
+  let page = created.page;
+  t.after(() => context.close());
+  const suggestionSelector =
+    '#combat_adversaire_suggestions option[value="Adversaire déjà rencontré"]';
+
+  async function openCombatForm() {
+    await page.getByRole("button", { name: competition.name }).click();
+    await page.locator("#competitionView").waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "Ajouter un combat" }).click();
+    await page.locator("#combatFormView").waitFor({ state: "visible" });
+  }
+
+  await page.goto(url);
+  await waitForApp(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await openCombatForm();
+  await expect(page.locator(suggestionSelector)).toHaveCount(1);
+
+  // DETAIL-2 : l'application est relancée hors connexion dans un nouvel onglet
+  // (même stockage local, même service worker) ; les suggestions viennent du cache.
+  page = await context.newPage();
+  await context.setOffline(true);
+  await page.goto(url);
+  await waitForApp(page);
+  // Un onglet ouvert après la coupure garde navigator.onLine à true sous Playwright :
+  // on rejoue la coupure pour que l'application reçoive l'événement « offline ».
+  await context.setOffline(false);
+  await context.setOffline(true);
+  await expect(page.locator(".offline-status")).toHaveText(/Hors connexion/);
+  await openCombatForm();
+  await expect(page.locator(suggestionSelector)).toHaveCount(1);
+});
+
 test("une finalisation offline est conservée puis synchronisée au retour du réseau", async (t) => {
   const { server, rpcCalls, url } = await startTestServer();
   const browser = await chromium.launch({ headless: true });
@@ -226,4 +284,30 @@ test("une finalisation offline est conservée puis synchronisée au retour du r�
   await expect(page.locator("#competitionClassement")).toHaveText(/1er/, { timeout: 5000 });
   await expect(page.locator(".offline-status")).toHaveCount(0, { timeout: 5000 });
   assert.equal(rpcCalls.filter((call) => call.method === "finalizeCompetition").length, 1);
+});
+
+test("au second lancement, l'accueil s'affiche depuis le cache sans attendre le réseau", async (t) => {
+  const { server, shell, url } = await startTestServer();
+  const browser = await chromium.launch({ headless: true });
+  t.after(async () => {
+    await browser.close();
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const { context, page } = await createPage(browser, url);
+  t.after(() => context.close());
+
+  await page.goto(url);
+  await waitForApp(page);
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+  // SHELL-1 : le réseau met 4 s à rendre la coquille ; le cache l'affiche tout de suite.
+  shell.delayMs = 4000;
+  const requestsBefore = shell.requests;
+  const startedAt = Date.now();
+  await page.reload();
+  await waitForApp(page);
+  assert.ok(Date.now() - startedAt < 3000, "la coquille ne doit pas attendre le réseau");
+  // La coquille est tout de même relue en arrière-plan, pour le lancement suivant.
+  await expect.poll(() => shell.requests).toBeGreaterThan(requestsBefore);
 });

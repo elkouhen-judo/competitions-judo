@@ -1,12 +1,14 @@
 import type {
   AppScreens,
   AuthApi,
+  CombatReadModel,
   Competition,
   CompetitionDetail,
   InitialData,
   KirokuApp,
   KirokuAppState,
   KirokuUi,
+  LocalDataApi,
   NavigationSnapshot,
   NotificationsApi,
   PendingOfflineOperation,
@@ -16,6 +18,7 @@ import type {
   RpcClientResult,
   RunServerOptions,
   RuntimeConfig,
+  SeasonCompetitions,
   ViewId
 } from "./types";
 
@@ -35,9 +38,14 @@ function createInitialState(): KirokuAppState {
     judokas: [],
     currentCombats: [],
     currentCombatSuggestions: null,
+    loadedFrom: "",
+    oldestCompetitionDate: "",
+    loadedSeasonStartYears: [],
+    isLoadingSeason: false,
     currentJudokaProfile: null,
     managedAdmins: [],
     managedUsers: [],
+    managedUsersTotal: 0,
     managedAccessInvitations: [],
     canEditCurrentCompetition: false,
     isLoadingCompetition: false,
@@ -67,6 +75,8 @@ function createInitialState(): KirokuAppState {
   const lastInitialDataCacheKey = "kiroku_initial_data:last";
   const competitionDetailCachePrefix = "kiroku_competition_detail:";
   const judokaProfileCachePrefix = "kiroku_judoka_profile:";
+  const seasonCachePrefix = "kiroku_season:";
+  const combatSuggestionsCachePrefix = "kiroku_combat_suggestions:";
   const pendingOperationsStoragePrefix = "kiroku_pending_ops:";
 
   interface HeaderViewModel {
@@ -496,6 +506,10 @@ function createInitialState(): KirokuAppState {
 
           if (String(method) === "getCompetitionDetail") {
             saveCompetitionDetailCache(getCurrentUserEmailKey(), payload.result as unknown as CompetitionDetail);
+          } else if (String(method) === "getSeasonCompetitions") {
+            saveSeasonCache(getCurrentUserEmailKey(), payload.result as unknown as SeasonCompetitions);
+          } else if (String(method) === "getCombatSuggestions") {
+            saveCombatSuggestionsCache(getCurrentUserEmailKey(), String(args[0] || ""), payload.result);
           } else if (String(method) === "getJudokaProfile") {
             saveJudokaProfileCache(
               getCurrentUserEmailKey(),
@@ -611,7 +625,7 @@ function createInitialState(): KirokuAppState {
       return userKey ? `${initialDataCachePrefix}${userKey}` : "";
     }
 
-    function saveInitialDataCache(data: InitialData) {
+    function saveInitialDataCache(data: InitialData, cachedAt = new Date().toISOString()) {
       const userKey = getInitialDataCacheUserKey(data);
       const storageKey = getInitialDataCacheStorageKey(userKey);
       if (!storageKey) {
@@ -619,7 +633,7 @@ function createInitialState(): KirokuAppState {
       }
 
       try {
-        localStorage.setItem(storageKey, JSON.stringify({ cachedAt: new Date().toISOString(), data }));
+        localStorage.setItem(storageKey, JSON.stringify({ cachedAt, data }));
         localStorage.setItem(lastInitialDataCacheKey, storageKey);
       } catch (_error) {
         // Cache storage is opportunistic; connected usage must keep working without it.
@@ -700,6 +714,31 @@ function createInitialState(): KirokuAppState {
       }
     }
 
+    // PAGE-2 : une saison passée déjà consultée reste lisible hors connexion.
+    function getSeasonCacheKey(email: string, seasonStartYear: number) {
+      return email ? `${seasonCachePrefix}${email}:${seasonStartYear}` : "";
+    }
+
+    function saveSeasonCache(email: string, season: SeasonCompetitions) {
+      const key = getSeasonCacheKey(email, season.seasonStartYear);
+      if (!key) return;
+      try {
+        localStorage.setItem(key, JSON.stringify(season));
+      } catch (_error) {
+        // Cache storage is opportunistic; connected usage must keep working without it.
+      }
+    }
+
+    function readSeasonCache(email: string, seasonStartYear: number): SeasonCompetitions | null {
+      const key = getSeasonCacheKey(email, seasonStartYear);
+      if (!key) return null;
+      try {
+        return JSON.parse(localStorage.getItem(key) || "null") as SeasonCompetitions | null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
     function getJudokaProfileCacheKey(email: string, judokaId: string, seasonStartYear?: number) {
       const season = seasonStartYear === undefined ? "current" : String(seasonStartYear);
       return email && judokaId ? `${judokaProfileCachePrefix}${email}:${judokaId}:${season}` : "";
@@ -722,6 +761,31 @@ function createInitialState(): KirokuAppState {
 
     function readJudokaProfileCache(email: string, judokaId: string, seasonStartYear?: number) {
       const key = getJudokaProfileCacheKey(email, judokaId, seasonStartYear);
+      if (!key) return null;
+      try {
+        return JSON.parse(localStorage.getItem(key) || "null");
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    // DETAIL-2 : les suggestions de saisie déjà chargées restent disponibles hors connexion.
+    function getCombatSuggestionsCacheKey(email: string, judokaId: string) {
+      return email && judokaId ? `${combatSuggestionsCachePrefix}${email}:${judokaId}` : "";
+    }
+
+    function saveCombatSuggestionsCache(email: string, judokaId: string, data: unknown) {
+      const key = getCombatSuggestionsCacheKey(email, judokaId);
+      if (!key) return;
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (_error) {
+        // Cache storage is opportunistic; connected usage must keep working without it.
+      }
+    }
+
+    function readCombatSuggestionsCache(email: string, judokaId: string) {
+      const key = getCombatSuggestionsCacheKey(email, judokaId);
       if (!key) return null;
       try {
         return JSON.parse(localStorage.getItem(key) || "null");
@@ -874,6 +938,18 @@ function createInitialState(): KirokuAppState {
           success?.(cached as unknown as RpcClientResult<M>);
           return;
         }
+      } else if (methodName === "getSeasonCompetitions") {
+        const cached = readSeasonCache(getCurrentUserEmailKey(), Number(methodArgs[0]));
+        if (cached) {
+          success?.(cached as unknown as RpcClientResult<M>);
+          return;
+        }
+      } else if (methodName === "getCombatSuggestions") {
+        const cached = readCombatSuggestionsCache(getCurrentUserEmailKey(), String(methodArgs[0] || ""));
+        if (cached) {
+          success?.(cached as RpcClientResult<M>);
+          return;
+        }
       } else if (methodName === "getJudokaProfile") {
         const cached = readJudokaProfileCache(
           getCurrentUserEmailKey(),
@@ -982,6 +1058,9 @@ function createInitialState(): KirokuAppState {
       state.cachedDataLoadedAt = cacheInfo.cachedAt || "";
       state.competitions = Array.isArray(data.competitions) ? data.competitions : [];
       state.combatRecords = data.combatRecords && typeof data.combatRecords === "object" ? data.combatRecords : {};
+      state.loadedFrom = String(data.loadedFrom || "");
+      state.oldestCompetitionDate = String(data.oldestCompetitionDate || "");
+      state.loadedSeasonStartYears = [];
       state.clubCompetitions = Array.isArray(data.clubCompetitions) ? data.clubCompetitions : [];
       state.clubs = Array.isArray(data.clubs) ? data.clubs : [];
       if (state.selectedClubId && !state.clubs.some((club) => club.clubId === state.selectedClubId)) {
@@ -1057,16 +1136,7 @@ function createInitialState(): KirokuAppState {
       syncOfflineStatusHeader();
     }
 
-    function reloadInitialData(openCompetitionId?: string) {
-      reloadInitialDataThen(() => {
-        if (openCompetitionId) {
-          screens.competition.openCompetition(openCompetitionId, true);
-        } else {
-          screens.home.showHome();
-        }
-      });
-    }
-
+    // Appelé à l'ouverture, au retour en ligne et après un import : jamais après une écriture.
     function reloadInitialDataThen(afterReload: () => void) {
       runServer(
         "getInitialData",
@@ -1079,18 +1149,201 @@ function createInitialState(): KirokuAppState {
       );
     }
 
-    function reloadInitialDataAndShowAdmins() {
-      reloadInitialDataThen(() => screens.admins.showAdminsManagement(true));
+    function reloadInitialData() {
+      reloadInitialDataThen(() => screens.home.showHome());
     }
+
+    function getSeasonStartYear(dateValue: unknown): number {
+      const [year, month] = String(dateValue || "").split("-").map(Number);
+      return (month || 0) >= 9 ? year || 0 : (year || 0) - 1;
+    }
+
+    function pickCombatRecords(competitions: Competition[]) {
+      const records: KirokuAppState["combatRecords"] = {};
+      competitions.forEach((competition) => {
+        const record = state.combatRecords[String(competition.competitionId)];
+        if (record) {
+          records[String(competition.competitionId)] = record;
+        }
+      });
+      return records;
+    }
+
+    // ECRIT-2 : le cache local suit l'état après chaque écriture confirmée par le serveur.
+    function persistLocalData() {
+      if (!state.currentUser) {
+        return;
+      }
+      const isLoadedAtOpening = (dateValue: unknown) => !state.loadedFrom || String(dateValue || "") >= state.loadedFrom;
+      const competitions = state.competitions.filter((c) => isLoadedAtOpening(c.competitionDate));
+      saveInitialDataCache(
+        {
+          user: state.currentUser,
+          isAdmin: state.isAdmin,
+          isCoach: state.isCoach,
+          isParent: state.isParent,
+          competitions,
+          combatRecords: pickCombatRecords(competitions),
+          clubCompetitions: state.clubCompetitions.filter((cc) => isLoadedAtOpening(cc.competitionDate)),
+          clubs: state.clubs,
+          judokas: state.judokas,
+          loadedFrom: state.loadedFrom,
+          oldestCompetitionDate: state.oldestCompetitionDate
+        },
+        state.isUsingCachedData && state.cachedDataLoadedAt ? state.cachedDataLoadedAt : undefined
+      );
+      state.loadedSeasonStartYears.forEach((seasonStartYear) => {
+        const inSeason = (dateValue: unknown) =>
+          !isLoadedAtOpening(dateValue) && getSeasonStartYear(dateValue) === seasonStartYear;
+        const seasonCompetitions = state.competitions.filter((c) => inSeason(c.competitionDate));
+        saveSeasonCache(getCurrentUserEmailKey(), {
+          seasonStartYear,
+          competitions: seasonCompetitions,
+          combatRecords: pickCombatRecords(seasonCompetitions),
+          clubCompetitions: state.clubCompetitions.filter((cc) => inSeason(cc.competitionDate))
+        });
+      });
+    }
+
+    function upsertBy<T>(list: T[], item: T, getId: (value: T) => string): T[] {
+      const id = getId(item);
+      return list.some((value) => getId(value) === id)
+        ? list.map((value) => (getId(value) === id ? item : value))
+        : [...list, item];
+    }
+
+    const getCompetitionId = (competition: Competition) => String(competition.competitionId);
+
+    function rememberOldestCompetitionDate(competitions: Competition[]) {
+      competitions.forEach((competition) => {
+        const date = String(competition.competitionDate || "");
+        if (date && (!state.oldestCompetitionDate || date < state.oldestCompetitionDate)) {
+          state.oldestCompetitionDate = date;
+        }
+      });
+    }
+
+    function saveCompetitionLocally(competition: Competition) {
+      state.competitions = upsertBy(state.competitions, competition, getCompetitionId);
+      if (state.currentCompetition && getCompetitionId(state.currentCompetition) === getCompetitionId(competition)) {
+        state.currentCompetition = competition;
+      }
+      rememberOldestCompetitionDate([competition]);
+      persistLocalData();
+    }
+
+    function removeCompetitionLocally(competitionId: string) {
+      state.competitions = state.competitions.filter((c) => getCompetitionId(c) !== String(competitionId));
+      const records = { ...state.combatRecords };
+      delete records[String(competitionId)];
+      state.combatRecords = records;
+      try {
+        localStorage.removeItem(getCompetitionDetailCacheKey(getCurrentUserEmailKey(), String(competitionId)));
+      } catch (_error) {
+        // Cache storage is opportunistic; connected usage must keep working without it.
+      }
+      persistLocalData();
+    }
+
+    // Le bilan V/D de la carte d'accueil et le cache de la fiche suivent les combats affichés.
+    function syncCurrentCombats(combats: KirokuAppState["currentCombats"]) {
+      state.currentCombats = combats;
+      const competitionId = state.currentCompetition ? getCompetitionId(state.currentCompetition) : "";
+      if (!competitionId) {
+        return;
+      }
+      const record = { total: 0, wins: 0, losses: 0, draws: 0 };
+      combats.forEach((combat) => {
+        record.total += 1;
+        if (combat.result === "Victoire") record.wins += 1;
+        else if (combat.result === "Défaite") record.losses += 1;
+        else if (combat.result) record.draws += 1;
+      });
+      state.combatRecords = { ...state.combatRecords, [competitionId]: record };
+      const cachedDetail = readCompetitionDetailCache(getCurrentUserEmailKey(), competitionId);
+      if (cachedDetail) {
+        saveCompetitionDetailCache(getCurrentUserEmailKey(), { ...cachedDetail, combats });
+      }
+      persistLocalData();
+    }
+
+    function saveCombatLocally(combat: CombatReadModel) {
+      if (!state.currentCompetition || getCompetitionId(state.currentCompetition) !== String(combat.competitionId)) {
+        return;
+      }
+      syncCurrentCombats(upsertBy(state.currentCombats, combat, (value) => String(value.combatId)));
+    }
+
+    function removeCombatLocally(combatId: string) {
+      syncCurrentCombats(state.currentCombats.filter((combat) => String(combat.combatId) !== String(combatId)));
+    }
+
+    function saveClubCompetitionLocally(
+      clubCompetition: InitialData["clubCompetitions"][number],
+      competitions: Competition[]
+    ) {
+      const clubCompetitionId = String(clubCompetition.clubCompetitionId);
+      state.clubCompetitions = upsertBy(state.clubCompetitions, clubCompetition, (value) =>
+        String(value.clubCompetitionId)
+      );
+      const savedIds = new Set(competitions.map(getCompetitionId));
+      state.competitions = [
+        ...state.competitions.filter(
+          (c) => String(c.clubCompetitionId || "") !== clubCompetitionId && !savedIds.has(getCompetitionId(c))
+        ),
+        ...competitions
+      ];
+      rememberOldestCompetitionDate(competitions);
+      persistLocalData();
+    }
+
+    // La suppression d'une compétition club garde les compétitions des judokas, détachées.
+    function removeClubCompetitionLocally(clubCompetitionId: string) {
+      const id = String(clubCompetitionId);
+      state.clubCompetitions = state.clubCompetitions.filter((cc) => String(cc.clubCompetitionId) !== id);
+      state.competitions = state.competitions.map((c) =>
+        String(c.clubCompetitionId || "") === id ? { ...c, clubCompetitionId: null } : c
+      );
+      persistLocalData();
+    }
+
+    function addSeasonLocally(season: SeasonCompetitions) {
+      const competitions = Array.isArray(season.competitions) ? season.competitions : [];
+      const clubCompetitions = Array.isArray(season.clubCompetitions) ? season.clubCompetitions : [];
+      const seasonCompetitionIds = new Set(competitions.map(getCompetitionId));
+      const seasonClubCompetitionIds = new Set(clubCompetitions.map((cc) => String(cc.clubCompetitionId)));
+      state.competitions = [
+        ...state.competitions.filter((c) => !seasonCompetitionIds.has(getCompetitionId(c))),
+        ...competitions
+      ];
+      state.clubCompetitions = [
+        ...state.clubCompetitions.filter((cc) => !seasonClubCompetitionIds.has(String(cc.clubCompetitionId))),
+        ...clubCompetitions
+      ];
+      state.combatRecords = { ...state.combatRecords, ...(season.combatRecords || {}) };
+      if (!state.loadedSeasonStartYears.includes(season.seasonStartYear)) {
+        state.loadedSeasonStartYears = [...state.loadedSeasonStartYears, season.seasonStartYear];
+      }
+    }
+
+    const local: LocalDataApi = {
+      saveCompetition: saveCompetitionLocally,
+      removeCompetition: removeCompetitionLocally,
+      saveCombat: saveCombatLocally,
+      removeCombat: removeCombatLocally,
+      saveClubCompetition: saveClubCompetitionLocally,
+      removeClubCompetition: removeClubCompetitionLocally,
+      addSeason: addSeasonLocally
+    };
 
     return {
       runServer,
       runServerWithOptions,
       applyInitialData,
       loadCachedInitialData,
+      local,
       reloadInitialData,
       reloadInitialDataThen,
-      reloadInitialDataAndShowAdmins,
       cancelPendingOperation,
       syncPendingOperations,
       setHeaderVisible,
@@ -1164,9 +1417,9 @@ function createInitialState(): KirokuAppState {
       runServerWithOptions,
       applyInitialData,
       loadCachedInitialData,
+      local,
       reloadInitialData,
       reloadInitialDataThen,
-      reloadInitialDataAndShowAdmins,
       cancelPendingOperation,
       syncPendingOperations,
       setHeaderVisible,
@@ -1180,10 +1433,10 @@ function createInitialState(): KirokuAppState {
       confirmAndRun,
       defaultListPageSize,
       loadCachedInitialData,
+      local,
       notifications,
       persistNavigationState,
       reloadInitialData,
-      reloadInitialDataAndShowAdmins,
       reloadInitialDataThen,
       resetApplicationState,
       runtimeConfig,
@@ -1227,6 +1480,8 @@ function createInitialState(): KirokuAppState {
         initialDataCachePrefix,
         competitionDetailCachePrefix,
         judokaProfileCachePrefix,
+        seasonCachePrefix,
+        combatSuggestionsCachePrefix,
         pendingOperationsStoragePrefix,
         "kiroku_supabase_session"
       ];

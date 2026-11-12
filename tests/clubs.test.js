@@ -22,14 +22,13 @@ function coachContext(extras = {}) {
 }
 
 function adminContext({ coach = false } = {}) {
-  return async () => ({
-    domainUser: toCanonicalJudoka({
-      id_judoka: "ADMIN1",
-      profile_type: "JUDOKA",
-      role: coach ? "COACH" : "NORMAL",
-      is_admin: true
-    })
-  });
+  const user = {
+    id_judoka: "ADMIN1",
+    profile_type: "JUDOKA",
+    role: coach ? "COACH" : "NORMAL",
+    is_admin: true
+  };
+  return async () => ({ user, domainUser: toCanonicalJudoka(user) });
 }
 
 function createClubCompetitionsServiceFor({ events = {}, judokas = {}, calls = [], context = coachContext() } = {}) {
@@ -42,10 +41,14 @@ function createClubCompetitionsServiceFor({ events = {}, judokas = {}, calls = [
     },
     competitionsRepository: {
       listByClubCompetition: async () => [],
-      insert: async (competition) => calls.push(["insertCompetition", competition]),
+      insertMany: async (rows) => {
+        rows.forEach(({ competition }) => calls.push(["insertCompetition", competition]));
+        return [];
+      },
+      updateClubCompetitionFields: async () => {},
       getById: async () => null,
       remove: async () => {},
-      detachFromClubCompetition: async () => {}
+      detachAllFromClubCompetition: async () => {}
     },
     judokasRepository: {
       listByIds: async (ids) => ids.map((id) => judokas[id]).filter(Boolean)
@@ -192,23 +195,39 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
     { id_judoka: "J_NANTES", club_id: "NANTES" },
     { id_judoka: "J_RENNES", club_id: "RENNES" }
   ];
+  const scopes = [];
+  const context = coachContext({ judokas });
   const service = createCoachDashboardService({
     combatsRepository: {
-      listByCompetition: async (id) => combatsByCompetitionId[id] || [],
-      listByCompetitionIds: async (ids) => ids.flatMap((id) => combatsByCompetitionId[id] || [])
+      listByCompetitionIdsWithScores: async (ids) =>
+        ids.flatMap((id) => (combatsByCompetitionId[id] || []).map((row) => ({ ...row, combat_scores: [] })))
     },
-    combatScoresRepository: { listByCombatIds: async () => [] },
-    competitionsRepository: { listAll: async () => competitionRows },
-    judokasRepository: { listAll: async () => [...judokas, { id_judoka: "J_ANGERS", club_id: "ANGERS" }] },
-    userContextService: { getDomainUserContext: coachContext({ judokas }) }
+    // Le dépôt renvoie ici plus que le périmètre demandé : le service ne doit garder que les
+    // compétitions des judokas des clubs du coach.
+    competitionsRepository: {
+      listInScope: async (scope) => {
+        scopes.push(scope);
+        return competitionRows;
+      }
+    },
+    userContextService: {
+      getDomainUserContext: context,
+      getIdentity: async () => {
+        const { user, coachClubIds } = await context();
+        return { user, coachClubIds, childJudokaIds: [] };
+      }
+    }
   });
 
   const all = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(all.stats.totalCombats, 2);
   assert.deepEqual(all.availableCompetitions.map((c) => c.competitionId).sort(), ["C_NANTES", "C_RENNES"]);
+  // COACH-1 : le périmètre part dans la requête (clubs du coach et lui-même).
+  assert.deepEqual(scopes[0], { clubIds: ["NANTES", "RENNES"], judokaIds: ["COACH1"] });
 
   const rennes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "RENNES" });
   assert.equal(rennes.stats.totalCombats, 1);
+  assert.deepEqual(scopes[1], { clubIds: ["RENNES"] });
 
   await assert.rejects(
     () => service.methods.getCoachDashboard("coach@example.com", { clubId: "ANGERS" }),
@@ -233,11 +252,17 @@ function createClubsServiceFor({ context = adminContext(), clubs = [], links = [
     clubCompetitionsRepository: { countByClub: async (id) => competitionsByClub[id] || 0 },
     judokasRepository: {
       getById: async (id) => judokas.find((judoka) => judoka.id_judoka === id) || null,
-      listAll: async () => judokas,
+      listCoaches: async () => judokas.filter((judoka) => judoka.role === "COACH"),
       countByClub: async (id) => judokas.filter((judoka) => judoka.club_id === id).length,
       setClub: async (id, clubId) => calls.push(["setClub", id, clubId])
     },
-    userContextService: { getDomainUserContext: context },
+    // Le contrôle d'accès des clubs ne lit que le compte (getIdentity), pas le périmètre.
+    userContextService: {
+      getIdentity: async (email) => {
+        const { user } = await context(email);
+        return { user, coachClubIds: [], childJudokaIds: [] };
+      }
+    },
     isAdmin: permissions.isAdmin,
     buildClubId: () => "CLUB_NEW"
   });
@@ -306,4 +331,24 @@ test("permission policy keeps admin rights separate from the coach role", () => 
   assert.equal(permissions.canManageCombatFor(coachAdmin, "J1", scope), true);
   assert.equal(permissions.canManageCombatFor(coachAdmin, "J2", scope), false);
   assert.equal(permissions.canManageCombatFor({ accessRole: "ADMIN" }, "J1", scope), false);
+});
+
+test("club management reads only coaches and per-club counts, never the whole judoka list", async () => {
+  const service = createClubsServiceFor({
+    clubs: [{ id_club: "NANTES", nom: "Nantes" }, { id_club: "RENNES", nom: "Rennes" }],
+    links: [{ id_coach: "COACH1", id_club: "NANTES" }],
+    judokas: [
+      { id_judoka: "COACH1", role: "COACH", profile_type: "JUDOKA", prenom: "Alex", nom: "Coach", email: "alex@example.com" },
+      { id_judoka: "J1", role: "NORMAL", profile_type: "JUDOKA", club_id: "NANTES" },
+      { id_judoka: "J2", role: "NORMAL", profile_type: "JUDOKA", club_id: "NANTES" }
+    ]
+  });
+
+  const management = await service.methods.getClubsManagement("admin@example.com");
+
+  assert.deepEqual(management.clubs, [
+    { clubId: "NANTES", name: "Nantes", coachIds: ["COACH1"], judokaCount: 2 },
+    { clubId: "RENNES", name: "Rennes", coachIds: [], judokaCount: 0 }
+  ]);
+  assert.deepEqual(management.coaches.map((coach) => coach.judokaId), ["COACH1"]);
 });

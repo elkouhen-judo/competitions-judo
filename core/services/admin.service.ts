@@ -13,7 +13,7 @@ import type { CompetitionsRepository } from "../repositories/competitions.reposi
 import type { InvitationsRepository } from "../repositories/invitations.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
 import type { ParentLinksRepository } from "../repositories/parent-links.repository";
-import type { RpcMethods, UserImportRowResult } from "../types";
+import type { RpcMethods, UserImportRowResult, UsersPage, UsersPageRequest } from "../types";
 import type { UserContextService } from "./user-context.service";
 import type { createEmail } from "../domain/access/email";
 import type { createJudoka, createManagedChild } from "../domain/access/judoka";
@@ -26,11 +26,15 @@ import type {
 import type { AccessRole } from "../domain/access/role";
 import { parseCsv } from "../shared/csv";
 
+/** PAGE-3 : taille d'une page de la liste des utilisateurs. */
+const USERS_PAGE_SIZE = 10;
+
 type AdminMethods = Pick<
   RpcMethods,
   | "deleteAccessInvitation"
   | "deleteUser"
   | "getAdminsManagement"
+  | "getUsersPage"
   | "grantAdminRole"
   | "importUsersCsv"
   | "revokeAdminRole"
@@ -675,13 +679,45 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     getAccessInvitation
   });
 
-  async function getAdminsManagement(email: string) {
+  // PAGE-3 : le serveur renvoie une page d'utilisateurs et le total ; la recherche part au serveur.
+  async function loadUsersPage(request: UsersPageRequest = {}): Promise<UsersPage> {
+    const after = request && request.after;
+    const { rows, total } = await judokasRepository.listPage({
+      search: cleanText(request && request.search),
+      after: after
+        ? { nom: String(after.lastName || ""), prenom: String(after.firstName || ""), id_judoka: String(after.judokaId || "") }
+        : null,
+      limit: USERS_PAGE_SIZE
+    });
+    const users = rows.map(toCanonicalJudoka);
+    const last = users[users.length - 1];
+    return {
+      users,
+      totalUsers: total,
+      nextCursor: last
+        ? { lastName: last.lastName, firstName: last.firstName, judokaId: last.judokaId }
+        : null
+    };
+  }
+
+  async function getUsersPage(email: string, request: UsersPageRequest = {}): Promise<UsersPage> {
+    await requireAdminUser(email);
+    return loadUsersPage(request);
+  }
+
+  // ADMIN-1 : après le contrôle d'accès, les trois lectures partent ensemble.
+  async function getAdminsManagement(email: string, request: UsersPageRequest = {}) {
     const user = await requireAdminUser(email);
+    const [admins, usersPage, invitations] = await Promise.all([
+      getAdmins(),
+      loadUsersPage(request),
+      invitationsRepository.listAll()
+    ]);
     return {
       user: toCanonicalJudoka(user),
-      admins: (await getAdmins()).map(toCanonicalJudoka),
-      users: (await judokasRepository.listAll()).map(toCanonicalJudoka),
-      accessInvitations: (await invitationsRepository.listAll()).map(toInvitationReadModel)
+      admins: admins.map(toCanonicalJudoka),
+      ...usersPage,
+      accessInvitations: invitations.map(toInvitationReadModel)
     };
   }
 
@@ -832,6 +868,7 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       deleteAccessInvitation,
       deleteUser,
       getAdminsManagement,
+      getUsersPage,
       grantAdminRole,
       importUsersCsv,
       revokeAdminRole,

@@ -1,17 +1,18 @@
 import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics";
-import { createCoachAssistantSearch, type CoachChatDatasets } from "./coach-assistant-search";
+import { createCoachAssistantSearch } from "./coach-assistant-search";
 import {
   filterCompetitionsByScope,
   filterCompetitionsBySelection,
+  groupScoredPointsByCombatId,
   loadCoachDashboardCombats,
-  filterCompetitionsByOwners
+  toCompetitionScopeFilter,
+  validateCoachDashboardFilters,
+  withoutScores
 } from "./coach-dashboard-loader";
-import { toCanonicalCompetition } from "./domain-adapters";
+import { toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
-import type { CombatScoreRow, CompetitionRow } from "../repositories/types";
-import { isConcededScoreRow, type CombatScoresRepository } from "../repositories/combat-scores.repository";
-import type { CompetitionsRepository } from "../repositories/competitions.repository";
-import type { JudokasRepository } from "../repositories/judokas.repository";
+import type { CompetitionRow, JudokaRow } from "../repositories/types";
+import type { CompetitionScopeFilter, CompetitionsRepository } from "../repositories/competitions.repository";
 import type {
   CoachAssistantMatch,
   CoachChatFilters,
@@ -48,12 +49,10 @@ function buildCoachDashboardCompetitionOptions(competitionRows: CompetitionRow[]
 }
 
 export interface CoachDashboardServiceDeps {
-  combatsRepository: CombatsRepository;
-  combatScoresRepository: CombatScoresRepository;
-  competitionsRepository: CompetitionsRepository;
+  combatsRepository: Pick<CombatsRepository, "listByCompetitionIdsWithScores">;
+  competitionsRepository: Pick<CompetitionsRepository, "listInScope">;
   getCurrentDate?: () => string;
-  judokasRepository: JudokasRepository;
-  userContextService: UserContextService;
+  userContextService: Pick<UserContextService, "getDomainUserContext" | "getIdentity">;
 }
 
 export interface CoachDashboardService {
@@ -65,85 +64,92 @@ export default function createCoachDashboardService(
 ): CoachDashboardService {
   const {
     combatsRepository,
-    combatScoresRepository,
     competitionsRepository,
     getCurrentDate = () => new Date().toISOString().slice(0, 10),
-    judokasRepository,
     userContextService
   } = deps;
   const coachAssistantSearch = createCoachAssistantSearch({ getCurrentDate });
 
-  // Retourne les judokas visibles par le coach : ceux de ses clubs, ou d'un seul club si clubId est fourni.
-  async function requireCoach(email: string, message: string, clubId?: string): Promise<string[]> {
-    const { domainUser, judokas, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
-    if (domainUser.accessRole !== "COACH") {
+  // COACH-1 : le périmètre du coach filtre la requête. Sans club choisi : les judokas de ses
+  // clubs et lui-même ; avec un club : les judokas de ce club seulement.
+  async function loadCoachData(
+    email: string,
+    message: string,
+    clubId: string | undefined,
+    filters: Pick<CoachDashboardFilters, "dateFrom" | "dateTo" | "ageCategory">
+  ): Promise<{ competitionRows: CompetitionRow[]; judokaRows: JudokaRow[] }> {
+    const identity = await userContextService.getIdentity(email);
+    if (!identity) {
+      throw new Error(`Accès refusé pour : ${email}`);
+    }
+    if (toCanonicalJudoka(identity.user).accessRole !== "COACH") {
       throw new Error(message);
     }
     const selectedClubId = String(clubId || "").trim();
-    if (!selectedClubId) {
-      return judokas.map((judoka) => String(judoka.id_judoka));
-    }
-    if (!coachClubIds.includes(selectedClubId)) {
+    if (selectedClubId && !identity.coachClubIds.includes(selectedClubId)) {
       throw new Error("Club introuvable.");
     }
-    return judokas
-      .filter((judoka) => String(judoka.club_id || "") === selectedClubId)
-      .map((judoka) => String(judoka.id_judoka));
-  }
+    const scope: CompetitionScopeFilter = selectedClubId
+      ? { clubIds: [selectedClubId] }
+      : { clubIds: identity.coachClubIds, judokaIds: [String(identity.user.id_judoka)] };
 
-  async function loadCoachChatDatasets(allowedJudokaIds: string[]): Promise<CoachChatDatasets> {
-    const allowed = new Set(allowedJudokaIds);
-    const [competitionRows, judokaRows] = await Promise.all([
-      competitionsRepository.listAll().then((rows) => filterCompetitionsByOwners(rows, allowedJudokaIds)),
-      judokasRepository.listAll().then((rows) => rows.filter((row) => allowed.has(String(row.id_judoka))))
+    // Les compétitions sont lues une seule fois, en même temps que les judokas du périmètre.
+    const [{ judokas }, competitionRows] = await Promise.all([
+      userContextService.getDomainUserContext(email),
+      competitionsRepository.listInScope(toCompetitionScopeFilter(scope, filters))
     ]);
-    const combatRowsByCompetition = await Promise.all(
-      competitionRows.map((competition) => combatsRepository.listByCompetition(competition.id_competition))
-    );
-    const combatRows = combatRowsByCompetition.flat();
-    const scoreRows = await combatScoresRepository.listByCombatIds(
-      combatRows.map((combat) => combat.id_combat)
-    );
-    const scoresByCombatId = new Map<string, CombatScoreRow[]>();
-    scoreRows.filter((score) => !isConcededScoreRow(score)).forEach((score) => {
-      const idCombat = String(score.id_combat);
-      scoresByCombatId.set(idCombat, [...(scoresByCombatId.get(idCombat) || []), score]);
-    });
-    return { judokaRows, competitionRows, combatRows, scoresByCombatId };
+    const judokaRows = selectedClubId
+      ? judokas.filter((judoka) => String(judoka.club_id || "") === selectedClubId)
+      : judokas;
+    // Un coach d'un club ne lit aucune ligne d'un autre club : le périmètre est revérifié.
+    const allowed = new Set(judokaRows.map((judoka) => String(judoka.id_judoka)));
+    return {
+      competitionRows: competitionRows.filter((row) => allowed.has(String(row.id_judoka))),
+      judokaRows
+    };
   }
 
   async function getCoachDashboard(
     email: string,
     filters: CoachDashboardFilters = {}
   ): Promise<CoachDashboard> {
-    const allowedJudokaIds = await requireCoach(email, "Tableau de bord réservé aux coachs.", filters.clubId);
-    const [combats, allCompetitionRows] = await Promise.all([
-      loadCoachDashboardCombats(
-        { combatsRepository, combatScoresRepository, competitionsRepository, judokasRepository },
-        filters,
-        allowedJudokaIds
-      ),
-      competitionsRepository.listAll().then((rows) => filterCompetitionsByOwners(rows, allowedJudokaIds))
-    ]);
-    const competitionsInScope = filterCompetitionsBySelection(
-      filterCompetitionsByScope(allCompetitionRows, filters),
+    validateCoachDashboardFilters(filters);
+    const { competitionRows, judokaRows } = await loadCoachData(
+      email,
+      "Tableau de bord réservé aux coachs.",
+      filters.clubId,
       filters
-    ).map(toCanonicalCompetition);
+    );
+    const scopedRows = filterCompetitionsByScope(competitionRows, filters);
+    const selectedRows = filterCompetitionsBySelection(scopedRows, filters);
+    const combats = await loadCoachDashboardCombats(combatsRepository, selectedRows, judokaRows);
     return {
-      stats: computeCoachDashboardStats(combats, competitionsInScope),
-      availableCompetitions: buildCoachDashboardCompetitionOptions(
-        filterCompetitionsByScope(allCompetitionRows, filters)
-      )
+      stats: computeCoachDashboardStats(combats, selectedRows.map(toCanonicalCompetition)),
+      availableCompetitions: buildCoachDashboardCompetitionOptions(scopedRows)
     };
   }
 
+  // COACH-2 : les combats se lisent par lots avec leurs points, et non par compétition.
   async function searchCombats(
     email: string,
     filters: CoachChatFilters = {},
     limit?: number
   ): Promise<{ matches: CoachAssistantMatch[] }> {
-    const allowedJudokaIds = await requireCoach(email, "Recherche de combats réservée aux coachs.");
-    return coachAssistantSearch.searchCombats(filters, limit, await loadCoachChatDatasets(allowedJudokaIds));
+    const { competitionRows, judokaRows } = await loadCoachData(
+      email,
+      "Recherche de combats réservée aux coachs.",
+      undefined,
+      {}
+    );
+    const combatsWithScores = await combatsRepository.listByCompetitionIdsWithScores(
+      competitionRows.map((competition) => competition.id_competition)
+    );
+    return coachAssistantSearch.searchCombats(filters, limit, {
+      judokaRows,
+      competitionRows,
+      combatRows: combatsWithScores.map(withoutScores),
+      scoresByCombatId: groupScoredPointsByCombatId(combatsWithScores)
+    });
   }
 
   return {

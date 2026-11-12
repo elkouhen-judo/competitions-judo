@@ -132,7 +132,7 @@
 
   function projectManagedUsers(
     users: Judoka[] | null | undefined,
-    pendingInvitations: AccessInvitation[] | null | undefined,
+    totalCount: number,
     search: string,
     currentPage: number,
     pageSize: number,
@@ -155,30 +155,23 @@
       canHaveClub: user.profileType !== "PARENT"
     }));
 
-    void pendingInvitations;
-    const allCards = registeredCards;
-    const normalizedSearch = (search || "").toLowerCase();
-    const filteredUsers = !normalizedSearch
-      ? allCards
-      : allCards.filter((card) =>
-          `${card.fullName} ${card.accountEmail}`.toLowerCase().includes(normalizedSearch)
-        );
-
-    const totalPages = Math.max(Math.ceil(filteredUsers.length / pageSize), 1);
+    // PAGE-3 : la recherche et le total viennent du serveur ; `users` contient les pages déjà lues.
+    const total = Math.max(Number(totalCount) || 0, registeredCards.length);
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
     const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
     const startIndex = (safeCurrentPage - 1) * pageSize;
-    const projectedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
+    const projectedUsers = registeredCards.slice(startIndex, startIndex + pageSize);
 
     return {
       users: projectedUsers,
-      usersSummary: `${filteredUsers.length} utilisateur(s)${search ? " trouvé(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      usersSummary: `${total} utilisateur(s)${search ? " trouvé(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
       usersEmptyMessage: search
         ? `Aucun utilisateur trouvé pour "${search}".`
         : "Aucun utilisateur trouvé.",
       canResetUsersSearch: Boolean(search),
       canShowPreviousUsersPage: safeCurrentPage > 1,
       canShowNextUsersPage: safeCurrentPage < totalPages,
-      hasUsers: Boolean(filteredUsers.length)
+      hasUsers: Boolean(total)
     };
   }
 
