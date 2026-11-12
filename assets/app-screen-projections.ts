@@ -248,6 +248,14 @@
     };
   }
 
+  // COMBAT-SCORE : « IWY - IWY », vide si le score n'est pas renseigné.
+  function formatCombatOfficialScore(score: CombatReadModel["officialScore"]): string {
+    if (!score) return "";
+    const side = (value: { ippon: number; wazaAri: number; yuko: number }) =>
+      [value.ippon, value.wazaAri, value.yuko].join(" ");
+    return `${side(score.judoka)} - ${side(score.opponent)}`;
+  }
+
   function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
     const fallback = score.category === "Tachi-waza" ? "Debout" : "Au sol";
     const detail = score.category === "Tachi-waza" ? score.technique || fallback : score.neWazaType || fallback;
@@ -308,6 +316,7 @@
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (c.concededScores || []).map(formatCombatScoreLabel),
+      officialScoreLabel: formatCombatOfficialScore(c.officialScore),
       dataQualityIssues: getCombatDataQualityIssues(c, helpers),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
@@ -341,6 +350,7 @@
       victoryType?: string;
       scores?: CombatReadModel["scores"];
       concededScores?: CombatReadModel["scores"];
+      officialScore?: CombatReadModel["officialScore"];
       notes?: string;
     },
     helpers: {
@@ -364,6 +374,7 @@
       victoryType: payload.victoryType || "",
       scores: payload.scores || [],
       concededScores: payload.concededScores || [],
+      officialScore: payload.officialScore || null,
       notes: payload.notes || "",
       judokaDisplayName: judoka ? helpers.getJudokaDisplayName(judoka) : "",
       judokaHandedness: judoka ? judoka.handedness : ""
@@ -382,6 +393,7 @@
       victoryType: combatLike.victoryType || "",
       scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (combatLike.concededScores || []).map(formatCombatScoreLabel),
+      officialScoreLabel: formatCombatOfficialScore(combatLike.officialScore),
       dataQualityIssues: getCombatDataQualityIssues(combatLike, helpers),
       judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),

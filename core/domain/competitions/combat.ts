@@ -3,6 +3,7 @@ import { createCombatDecisionType, type CombatDecisionType } from "./combat-deci
 import { createOpponentStance, type OpponentStance } from "./opponent-stance";
 import { createCombatStage, type CombatStage } from "./combat-stage";
 import { createCombatScores, type CombatScoreDraft } from "./combat-score";
+import { createCombatOfficialScore, type CombatOfficialScore } from "./combat-official-score";
 import { createCombatId, createCompetitionId, createJudokaId } from "../shared/identity";
 
 export interface CombatInput {
@@ -16,6 +17,7 @@ export interface CombatInput {
   victoryType?: unknown;
   scores?: unknown;
   concededScores?: unknown;
+  officialScore?: unknown;
   notes?: unknown;
 }
 
@@ -28,6 +30,8 @@ export interface CombatDraft {
   scores: CombatScoreDraft[];
   /** Points marqués par l'adversaire (techniques subies). */
   concededScores: CombatScoreDraft[];
+  /** Score officiel IWY - IWY ; null = non renseigné ; undefined = inchangé. */
+  officialScore: CombatOfficialScore | null | undefined;
   notes: string;
 }
 
@@ -43,6 +47,7 @@ export interface CombatModel {
   victoryType: CombatDecisionType;
   scores: CombatScoreDraft[];
   concededScores: CombatScoreDraft[];
+  officialScore: CombatOfficialScore | null | undefined;
   notes: string;
 }
 
@@ -64,6 +69,7 @@ export function createCombatDraft(combat: CombatInput = {}): CombatDraft {
     victoryType,
     scores: createCombatScores(combat.scores),
     concededScores: createCombatScores(combat.concededScores),
+    officialScore: createCombatOfficialScore(combat.officialScore),
     notes: String(combat.notes || "")
   };
 }
@@ -86,6 +92,7 @@ export function createCombat(combat: CombatInput): CombatModel {
     victoryType: draft.victoryType,
     scores: draft.scores,
     concededScores: draft.concededScores,
+    officialScore: draft.officialScore,
     notes: draft.notes
   };
 }

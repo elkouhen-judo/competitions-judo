@@ -1468,3 +1468,41 @@ test("a combat keeps the opponent's points (conceded scores) apart from the judo
   assert.deepEqual(combat.draft.concededScores, [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Ippon" }]);
   assert.deepEqual(createCombat({ competitionId: "COMP1", judokaId: "JUDO1", result: "Victoire", victoryType: "Décision" }).concededScores, []);
 });
+
+test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et distingue vide et inchangé", () => {
+  const base = {
+    competitionId: "COMP1",
+    judokaId: "JUDO1",
+    opponent: "Lee",
+    result: "Victoire",
+    victoryType: "Décision"
+  };
+
+  const scored = createCombat({
+    ...base,
+    officialScore: { judoka: { ippon: 0, wazaAri: 1, yuko: 2 }, opponent: { ippon: 0, wazaAri: 0, yuko: 1 } }
+  });
+  assert.deepEqual(scored.officialScore, {
+    judoka: { ippon: 0, wazaAri: 1, yuko: 2 },
+    opponent: { ippon: 0, wazaAri: 0, yuko: 1 }
+  });
+  // Valeur manquante dans un camp : 0.
+  assert.deepEqual(createCombat({ ...base, officialScore: { judoka: { yuko: 1 } } }).officialScore, {
+    judoka: { ippon: 0, wazaAri: 0, yuko: 1 },
+    opponent: { ippon: 0, wazaAri: 0, yuko: 0 }
+  });
+  assert.equal(createCombat({ ...base, officialScore: null }).officialScore, null);
+  assert.equal(createCombat(base).officialScore, undefined);
+  assert.throws(
+    () => createCombat({ ...base, officialScore: { judoka: { ippon: 10 }, opponent: {} } }),
+    /entre 0 et 9/
+  );
+  assert.throws(
+    () => createCombat({ ...base, officialScore: { judoka: { yuko: -1 }, opponent: {} } }),
+    /entre 0 et 9/
+  );
+  assert.throws(
+    () => createCombat({ ...base, officialScore: { judoka: { wazaAri: 1.5 }, opponent: {} } }),
+    /entre 0 et 9/
+  );
+});

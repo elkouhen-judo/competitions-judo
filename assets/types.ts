@@ -178,6 +178,8 @@ export interface CompetitionCombatCard {
   victoryType?: string;
   scoreLabels: string[];
   concededScoreLabels: string[];
+  /** Score officiel « IWY - IWY » ; vide si non renseigné. */
+  officialScoreLabel?: string;
   dataQualityIssues: CombatDataQualityIssue[];
   resultClass: string;
   judokaDisplayName: string;
@@ -513,6 +515,8 @@ export interface CombatScoreFormRow {
   technique: string;
   neWazaType: string;
   value: string;
+  /** COMBAT-PTS : qui a marqué le point (JUDOKA ou ADVERSAIRE). */
+  camp?: string;
   /** Saisie libre en cours (« Autre technique… »), même si le champ est encore vide. */
   customTechnique?: boolean;
 }

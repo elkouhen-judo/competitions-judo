@@ -487,8 +487,13 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
   // COMBAT-3 : enregistrer et saisir le suivant, avec l'étape suivante proposée.
   assert.match(bundle, /id="saveAndNextCombatButton"[\s\S]*?Enregistrer \+ suivant/);
   assert.match(client, /const next = \{ "1\/32": "1\/16", "1\/16": "1\/8", "1\/8": "1\/4", "1\/4": "1\/2", "1\/2": "Finale" \};/);
-  // COMBAT-1 : la fin du combat crée la ligne de point correspondante.
-  assert.match(client, /form\.scores\.push\(\{ \.\.\.createEmptyCombatScoreRow\(\), value: form\.victoryType \}\);/);
+  // COMBAT-1 : la fin du combat crée la ligne de point correspondante, dans le bon camp.
+  assert.match(client, /form\.points\.push\(\{ \.\.\.createEmptyCombatScoreRow\(\), camp, value: form\.victoryType \}\);/);
+  // COMBAT-SCORE : score officiel IWY - IWY dans la saisie rapide.
+  assert.match(bundle, /id="combat_score"[\s\S]*?@click="changeCombatOfficialScore\(side\.key, valueKey\.key, 1\)"/);
+  // COMBAT-PTS : une seule liste de points, chacun avec « Marqué par ».
+  assert.match(bundle, /v-for="\(score, index\) in combatForm\.points"[\s\S]*?Marqué par/);
+  assert.doesNotMatch(bundle, /combat_points_subis/);
 });
 
 test("combat form and cards show what is left to fill in plain words", () => {
@@ -502,7 +507,7 @@ test("combat form and cards show what is left to fill in plain words", () => {
   assert.match(client, /scores: "combat_points"/);
   assert.match(
     client,
-    /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!form\.scores\.some\(\(score\) => score\.value === "Ippon"\)/
+    /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!judokaPoints\.some\(\(score\) => score\.value === "Ippon"\)/
   );
   assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
   assert.match(client, /getCombatDecisionOptions\(form\.result\)\.length && !form\.victoryType/);
@@ -518,5 +523,5 @@ test("combat form lets the user pick a listed technique or type another one", ()
   assert.match(view, /v-if="isCustomScoreTechnique\(score\)"/);
   assert.doesNotMatch(view, /<datalist/);
   assert.match(screen, /function isCustomScoreTechnique\(score\)/);
-  assert.match(screen, /function selectScoreTechnique\(index, value, list = "scores"\)/);
+  assert.match(screen, /function selectScoreTechnique\(index, value\)/);
 });

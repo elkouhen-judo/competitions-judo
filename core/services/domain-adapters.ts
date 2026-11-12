@@ -3,6 +3,7 @@ import { normalizeBeltColor } from "../domain/access/belt-color";
 import type {
   AccessInvitation,
   Combat,
+  CombatOfficialScore,
   CombatReadModel,
   CombatScore,
   Competition,
@@ -95,6 +96,30 @@ export function toCanonicalCombatScore(score: SourceRecord = {}): CombatScore {
   };
 }
 
+function toCanonicalOfficialScore(combat: SourceRecord): CombatOfficialScore | null {
+  const official = pick<CombatOfficialScore | null>(combat, "officialScore", "officialScore");
+  if (official !== undefined) {
+    return official && typeof official === "object" ? official : null;
+  }
+  const record = combat as Record<string, unknown>;
+  const columns = [
+    "score_judoka_ippon",
+    "score_judoka_wazaari",
+    "score_judoka_yuko",
+    "score_adversaire_ippon",
+    "score_adversaire_wazaari",
+    "score_adversaire_yuko"
+  ];
+  if (columns.every((column) => record[column] === null || record[column] === undefined)) {
+    return null;
+  }
+  const [ji, jw, jy, ai, aw, ay] = columns.map((column) => Number(record[column] || 0));
+  return {
+    judoka: { ippon: ji, wazaAri: jw, yuko: jy },
+    opponent: { ippon: ai, wazaAri: aw, yuko: ay }
+  };
+}
+
 export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
   const rawScores = pick<SourceRecord[]>(combat, "scores", "scores");
   const rawConcededScores = pick<SourceRecord[]>(combat, "concededScores", "concededScores");
@@ -110,6 +135,7 @@ export function toCanonicalCombat(combat: SourceRecord = {}): Combat {
     victoryType: String(pick(combat, "victoryType", "type_victoire") || ""),
     scores: Array.isArray(rawScores) ? rawScores.map(toCanonicalCombatScore) : [],
     concededScores: Array.isArray(rawConcededScores) ? rawConcededScores.map(toCanonicalCombatScore) : [],
+    officialScore: toCanonicalOfficialScore(combat),
     notes: String(pick(combat, "notes", "deroule") || "")
   };
 }

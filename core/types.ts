@@ -52,6 +52,17 @@ export interface CombatScore {
   value: string;
 }
 
+export interface CombatSideScore {
+  ippon: number;
+  wazaAri: number;
+  yuko: number;
+}
+
+export interface CombatOfficialScore {
+  judoka: CombatSideScore;
+  opponent: CombatSideScore;
+}
+
 export interface Combat {
   combatId: string;
   judokaId: string;
@@ -64,6 +75,8 @@ export interface Combat {
   scores: CombatScore[];
   /** Points marqués par l'adversaire (techniques subies). */
   concededScores?: CombatScore[];
+  /** Score officiel IWY - IWY ; null = non renseigné. */
+  officialScore?: CombatOfficialScore | null;
   notes?: string;
 }
 

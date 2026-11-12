@@ -4325,14 +4325,166 @@ html,
   color: var(--danger);
 }
 
-#combat_points_subis {
-  margin-top: 4px;
-}
-
 /* Le champ qui reçoit le focus ne passe jamais sous la barre d'actions collée en bas. */
 
 html {
   scroll-padding-bottom: 112px;
+}
+
+/* COMBAT-SCORE : score officiel IWY - IWY, une ligne par valeur, une colonne par camp. */
+
+.combat-official-score-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.combat-official-score-summary {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.combat-official-score-summary.is-empty {
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.combat-official-score-clear {
+  width: auto;
+  min-height: 32px;
+  margin: 0 0 0 auto;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+
+.combat-official-score-grid {
+  display: grid;
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px 10px;
+  max-width: 520px;
+}
+
+.combat-official-score-side {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.combat-official-score-side.side-judoka {
+  color: var(--success);
+}
+
+.combat-official-score-side.side-opponent {
+  color: var(--danger);
+}
+
+.combat-official-score-value-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.score-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(24px, 1fr) 44px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.score-stepper-button {
+  width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.score-stepper-button:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.score-stepper-button:disabled {
+  color: var(--line);
+  background: transparent;
+}
+
+.score-stepper-value {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* COMBAT-PTS : « Marqué par » en tête de chaque point. */
+
+.combat-score-camp {
+  display: grid;
+  gap: 6px;
+}
+
+.combat-score-camp-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.choice-button.choice-camp-judoka.choice-active,
+  .choice-button.choice-camp-judoka.choice-active:hover,
+  .choice-button.choice-camp-judoka.choice-active:focus {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+
+.choice-button.choice-camp-opponent.choice-active,
+  .choice-button.choice-camp-opponent.choice-active:hover,
+  .choice-button.choice-camp-opponent.choice-active:focus {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Score sur la carte du combat. */
+
+.combat-official-score-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.combat-official-score-line-label {
+  min-width: 4.5em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.combat-official-score-line-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 /* ── Composants ───────────────────────────────────────────────────────────

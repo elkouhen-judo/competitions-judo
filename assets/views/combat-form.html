@@ -79,6 +79,37 @@
             </ul>
           </div>
 
+          <!-- COMBAT-SCORE : score officiel IWY - IWY, indépendant des points détaillés. -->
+          <div id="combat_score" class="choice-field combat-official-score" tabindex="-1">
+            <div class="combat-official-score-header">
+              <span class="choice-label" id="combat_score_label">Score</span>
+              <span class="combat-official-score-summary" :class="{ 'is-empty': !combatForm.officialScore }" aria-live="polite">{{ combatOfficialScoreSummary }}</span>
+              <button v-if="combatForm.officialScore" class="combat-official-score-clear" type="button" @click="clearCombatOfficialScore()">Effacer</button>
+            </div>
+            <div class="combat-official-score-grid" role="group" aria-labelledby="combat_score_label">
+              <span aria-hidden="true"></span>
+              <span v-for="side in combatScoreSides" :key="side.key" :class="['combat-official-score-side', side.className]">{{ side.label }}</span>
+              <template v-for="valueKey in combatScoreValueKeys" :key="valueKey.key">
+                <span class="combat-official-score-value-label">{{ valueKey.label }}</span>
+                <div v-for="side in combatScoreSides" :key="side.key + valueKey.key" class="score-stepper">
+                  <button
+                    type="button"
+                    class="score-stepper-button"
+                    :aria-label="'Retirer un ' + valueKey.label + ' ' + side.labelFor"
+                    :disabled="!combatForm.officialScore || combatForm.officialScore[side.key][valueKey.key] <= 0"
+                    @click="changeCombatOfficialScore(side.key, valueKey.key, -1)">−</button>
+                  <output class="score-stepper-value" :aria-label="valueKey.label + ' ' + side.labelFor">{{ combatForm.officialScore ? combatForm.officialScore[side.key][valueKey.key] : "–" }}</output>
+                  <button
+                    type="button"
+                    class="score-stepper-button"
+                    :aria-label="'Ajouter un ' + valueKey.label + ' ' + side.labelFor"
+                    :disabled="Boolean(combatForm.officialScore) && combatForm.officialScore[side.key][valueKey.key] >= combatScoreMax"
+                    @click="changeCombatOfficialScore(side.key, valueKey.key, 1)">+</button>
+                </div>
+              </template>
+            </div>
+          </div>
+
           <div class="choice-field">
             <label for="combat_adversaire">Adversaire</label>
             <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse" autocomplete="off">
@@ -114,16 +145,33 @@
 
           <div id="combat_points" class="combat-score-block" tabindex="-1">
             <div class="combat-score-header">
-              <span class="choice-label">Points marqués par le judoka</span>
-              <p class="field-hint">Uniquement ses points, même en cas de défaite.</p>
+              <span class="choice-label">Points du combat</span>
+              <p class="field-hint">Pour chaque point, indiquez qui l'a marqué.</p>
             </div>
             <div class="combat-score-rows">
-              <div v-for="(score, index) in combatForm.scores" :key="index" class="combat-score-row">
+              <div v-for="(score, index) in combatForm.points" :key="index" class="combat-score-row">
                 <div class="combat-score-row-header">
                   <span class="combat-score-row-title">Point {{ index + 1 }}</span>
                   <button class="icon-button" type="button" :aria-label="'Retirer le point ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   </button>
+                </div>
+                <!-- COMBAT-PTS : chaque point indique qui l'a marqué (judoka ou adversaire). -->
+                <div class="combat-score-camp">
+                  <span class="combat-score-camp-label" :id="'combat_point_camp_label_' + index">Marqué par</span>
+                  <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-labelledby="'combat_point_camp_label_' + index">
+                    <button
+                      v-for="camp in combatScoreCamps"
+                      :key="camp.value"
+                      type="button"
+                      role="radio"
+                      :aria-checked="score.camp === camp.value ? 'true' : 'false'"
+                      :aria-label="camp.label + ', point ' + (index + 1)"
+                      :class="['choice-button', camp.className, { 'choice-active': score.camp === camp.value }]"
+                      @click="score.camp = camp.value">
+                      {{ camp.label }}
+                    </button>
+                  </div>
                 </div>
                 <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur du point ' + (index + 1)">
                   <button
@@ -177,70 +225,6 @@
             <ul v-if="combatFormScoreIssues.length" class="field-todo-list" aria-label="À compléter sur les points marqués">
               <li v-for="issue in combatFormScoreIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
             </ul>
-          </div>
-
-          <div id="combat_points_subis" class="combat-score-block" tabindex="-1">
-            <div class="combat-score-header">
-              <span class="choice-label">Points marqués par l'adversaire</span>
-              <p class="field-hint">Uniquement ses points, même en cas de victoire.</p>
-            </div>
-            <div class="combat-score-rows">
-              <div v-for="(score, index) in combatForm.concededScores" :key="index" class="combat-score-row">
-                <div class="combat-score-row-header">
-                  <span class="combat-score-row-title">Point {{ index + 1 }}</span>
-                  <button class="icon-button" type="button" :aria-label="'Retirer le point adverse ' + (index + 1)" title="Retirer" @click="removeCombatScoreRow(index, 'concededScores')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  </button>
-                </div>
-                <div class="choice-segmented choice-segmented-3" role="radiogroup" :aria-label="'Valeur du point adverse ' + (index + 1)">
-                  <button
-                    v-for="value in combatScoreValues"
-                    :key="value"
-                    type="button"
-                    role="radio"
-                    :aria-checked="score.value === value ? 'true' : 'false'"
-                    :class="['choice-button', { 'choice-active': score.value === value }]"
-                    @click="score.value = value">
-                    {{ value }}
-                  </button>
-                </div>
-                <div class="choice-segmented choice-segmented-2" role="radiogroup" :aria-label="'Debout ou au sol, point adverse ' + (index + 1)">
-                  <button
-                    v-for="category in combatScoreCategories"
-                    :key="category.value"
-                    type="button"
-                    role="radio"
-                    :aria-checked="score.category === category.value ? 'true' : 'false'"
-                    :class="['choice-button', { 'choice-active': score.category === category.value }]"
-                    @click="selectCombatScoreCategory(index, category.value, 'concededScores')">
-                    {{ category.label }}
-                  </button>
-                </div>
-                <!-- COMBAT-TECH : liste des techniques connues, « Autre technique… » ouvre une saisie libre. -->
-                <template v-if="score.category === 'Tachi-waza' || score.category === 'Ne-waza'">
-                  <select
-                    class="combat-technique-select"
-                    :value="getScoreTechniqueSelectValue(score)"
-                    :aria-label="(score.category === 'Ne-waza' ? 'Technique au sol' : 'Technique debout') + ', point adverse ' + (index + 1)"
-                    @change="selectScoreTechnique(index, $event.target.value, 'concededScores')">
-                    <option value="">Choisir la technique</option>
-                    <option v-for="technique in getScoreTechniqueOptions(score)" :key="technique" :value="technique">{{ technique }}</option>
-                    <option :value="otherTechniqueValue">Autre technique…</option>
-                  </select>
-                  <input
-                    v-if="isCustomScoreTechnique(score)"
-                    :id="'combat_custom_technique_concededScores_' + index"
-                    class="combat-technique-custom"
-                    type="text"
-                    :value="getScoreTechnique(score)"
-                    @input="setScoreTechnique(index, $event.target.value, 'concededScores')"
-                    :aria-label="'Nom de la technique, point ' + (index + 1)"
-                    placeholder="Nom de la technique (ex. Sode-tsurikomi-goshi)"
-                    autocomplete="off">
-                </template>
-              </div>
-            </div>
-            <button class="button-secondary" type="button" @click="addCombatScoreRow('concededScores')">+ Ajouter un point</button>
           </div>
 
           <div class="choice-field">

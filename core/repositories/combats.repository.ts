@@ -1,4 +1,5 @@
 import type { CombatModel } from "../domain/competitions/combat";
+import type { CombatOfficialScore } from "../domain/competitions/combat-official-score";
 import type { CombatRow, SupabaseRestDeps } from "./types";
 
 const LEGACY_RESULTS_BY_CANONICAL_RESULT: Record<string, string> = {
@@ -41,6 +42,22 @@ function shouldRetryWithLegacyResult(error: unknown, record: Record<string, unkn
   );
 }
 
+// COMBAT-SCORE : score IWY - IWY à plat sur 6 colonnes ; null partout = non renseigné.
+// Score absent (undefined) : colonnes non envoyées, la valeur en base est conservée.
+function toOfficialScoreColumns(score: CombatOfficialScore | null | undefined): Record<string, number | null> {
+  if (score === undefined) {
+    return {};
+  }
+  return {
+    score_judoka_ippon: score ? score.judoka.ippon : null,
+    score_judoka_wazaari: score ? score.judoka.wazaAri : null,
+    score_judoka_yuko: score ? score.judoka.yuko : null,
+    score_adversaire_ippon: score ? score.opponent.ippon : null,
+    score_adversaire_wazaari: score ? score.opponent.wazaAri : null,
+    score_adversaire_yuko: score ? score.opponent.yuko : null
+  };
+}
+
 function toCombatRecord(combat: CombatModel): Record<string, unknown> {
   const { draft } = combat;
   if (!draft) {
@@ -55,6 +72,7 @@ function toCombatRecord(combat: CombatModel): Record<string, unknown> {
     etape: draft.stage || "",
     resultat: draft.result,
     type_victoire: draft.victoryType,
+    ...toOfficialScoreColumns(draft.officialScore),
     deroule: draft.notes
   };
 }

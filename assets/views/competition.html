@@ -141,6 +141,10 @@
                     <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
                   </div>
                 </div>
+                <p v-if="combat.officialScoreLabel" class="combat-official-score-line" :aria-label="'Score ' + combat.officialScoreLabel + ' (Ippon, Waza-ari, Yuko du judoka puis de l’adversaire)'">
+                  <span class="combat-official-score-line-label">Score</span>
+                  <span class="combat-official-score-line-value">{{ combat.officialScoreLabel }}</span>
+                </p>
                 <p v-if="combat.scoreLabels.length" class="combat-scores-line combat-scored-line" aria-label="Points marqués par le judoka">
                   <span class="combat-scored-label">Marqué</span>
                   <span v-for="scoreLabel in combat.scoreLabels" :key="scoreLabel" class="result-badge badge-scored">{{ scoreLabel }}</span>

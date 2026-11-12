@@ -73,6 +73,12 @@ export interface CombatRow {
   resultat: string;
   type_victoire: string;
   deroule: string;
+  score_judoka_ippon?: number | null;
+  score_judoka_wazaari?: number | null;
+  score_judoka_yuko?: number | null;
+  score_adversaire_ippon?: number | null;
+  score_adversaire_wazaari?: number | null;
+  score_adversaire_yuko?: number | null;
 }
 
 export interface CombatScoreRow {

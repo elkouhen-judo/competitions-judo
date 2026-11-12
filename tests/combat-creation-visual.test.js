@@ -165,7 +165,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.locator("#combat_garde_adversaire").getByRole("radio", { name: "Gaucher" }).click();
     // Choisir « Ippon » a créé la ligne de point : il ne reste que la technique à préciser.
     await expect(page.locator(".combat-score-row")).toHaveCount(1);
-    await expect(page.locator(".combat-score-row [aria-checked='true']").first()).toHaveText("Ippon");
+    await expect(page.locator(".combat-score-row").getByRole("radiogroup", { name: "Valeur du point 1" }).locator("[aria-checked='true']")).toHaveText("Ippon");
     await page.locator(".combat-score-row").getByRole("radio", { name: "Debout" }).click();
     // Technique absente de la liste : « Autre technique… » ouvre un champ libre, choisir une technique connue le referme.
     const techniqueSelect = page.locator(".combat-score-row select.combat-technique-select");
@@ -177,14 +177,39 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await shot("04a-custom-technique");
     await techniqueSelect.selectOption("O-soto-gari");
     await expect(customTechnique).toHaveCount(0);
-    // Technique subie : les points de l'adversaire se saisissent à part, comme les points marqués.
-    await page.locator("#combat_points_subis").getByRole("button", { name: "+ Ajouter un point" }).click();
-    const concededRow = page.locator("#combat_points_subis .combat-score-row");
-    await expect(concededRow).toHaveCount(1);
+    // COMBAT-PTS : une seule liste ; le point créé par la victoire est au judoka, le suivant est attribué à l'adversaire.
+    await expect(page.locator(".combat-score-row").first().getByRole("radio", { name: "Judoka, point 1" })).toHaveAttribute("aria-checked", "true");
+    assert.equal(await page.locator("#combat_points_subis").count(), 0);
+    await expect(page.locator("#combat_points").getByRole("button", { name: "+ Ajouter un point" })).toHaveCount(1);
+    await page.locator("#combat_points").getByRole("button", { name: "+ Ajouter un point" }).click();
+    const concededRow = page.locator("#combat_points .combat-score-row").nth(1);
+    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(2);
+    await concededRow.getByRole("radio", { name: "Adversaire, point 2" }).click();
     await concededRow.getByRole("radio", { name: "Waza-ari" }).click();
     await concededRow.getByRole("radio", { name: "Debout" }).click();
     await concededRow.locator("select.combat-technique-select").selectOption("Uchi-mata");
-    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(1);
+
+    // COMBAT-SCORE : score officiel IWY - IWY, non renseigné tant qu'aucun compteur n'est touché.
+    const scoreSummary = page.locator("#combat_score .combat-official-score-summary");
+    await expect(scoreSummary).toHaveText("Non renseigné");
+    await expect(page.getByRole("button", { name: "Retirer un Ippon au judoka" })).toBeDisabled();
+    await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
+    await expect(scoreSummary).toHaveText("1 0 0 - 0 0 0");
+    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
+    await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
+    await page.getByRole("button", { name: "Ajouter un Waza-ari à l'adversaire" }).click();
+    await page.getByRole("button", { name: "Ajouter un Yuko à l'adversaire" }).click();
+    await page.getByRole("button", { name: "Retirer un Yuko à l'adversaire" }).click();
+    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0");
+    // « Effacer » remet le score à non renseigné.
+    await page.locator("#combat_score").getByRole("button", { name: "Effacer" }).click();
+    await expect(scoreSummary).toHaveText("Non renseigné");
+    for (const name of ["Ajouter un Ippon au judoka", "Ajouter un Yuko au judoka", "Ajouter un Yuko au judoka", "Ajouter un Waza-ari à l'adversaire"]) {
+      await page.getByRole("button", { name }).click();
+    }
+    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0");
+    const scoreOverflow = await page.locator("#combat_score").evaluate((element) => element.scrollWidth > element.clientWidth);
+    assert.equal(scoreOverflow, false);
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
     const borderedLabels = await page.locator(
       ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
@@ -209,6 +234,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.getByText("O-soto-gari · Ippon", { exact: true })).toBeVisible();
     await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText("Uchi-mata · Waza-ari");
     await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText("O-soto-gari · Ippon");
+    await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText("1 0 2 - 0 1 0");
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     await shot("05-saved");
 
@@ -219,6 +245,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatFormView")).toBeVisible();
     await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Repêchage");
     await expect(page.locator("#combat_etape")).toBeInViewport();
+    // Rouvert : score et points retrouvent leur camp.
+    await expect(page.locator("#combat_score .combat-official-score-summary")).toHaveText("1 0 2 - 0 1 0");
+    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(2);
+    await expect(page.getByRole("radio", { name: "Adversaire, point 2" })).toHaveAttribute("aria-checked", "true");
     await shot("06-edit");
 
     // Rechargement pendant la modification : on revient sur la compétition, pas sur un formulaire vide.

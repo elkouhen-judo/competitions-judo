@@ -9,6 +9,7 @@ const createInvitationsRepository = require("../core/repositories/invitations.re
 const createJudokasRepository = require("../core/repositories/judokas.repository");
 const createParentLinksRepository = require("../core/repositories/parent-links.repository");
 const { toCanonicalCombat, toCombatReadModelsWithJudokas } = require("../core/services/domain-adapters");
+const { createCombat } = require("../core/domain/competitions/combat");
 
 function createRepositoryDeps(calls, options = {}) {
   const { selectOneResult = null, selectResult = [] } = options;
@@ -635,4 +636,65 @@ test("combat read models expose judoka handedness for metric quality indicators"
 
   assert.equal(combat.judokaDisplayName, "Hugo Durand");
   assert.equal(combat.judokaHandedness, "Gaucher");
+});
+
+test("COMBAT-SCORE : le score officiel est écrit sur 6 colonnes, effacé avec null, conservé s'il est absent", async () => {
+  const calls = [];
+  const combatsRepository = createCombatsRepository(createRepositoryDeps(calls));
+  const base = {
+    competitionId: "COMP1",
+    judokaId: "JUDO1",
+    combatId: "CB1",
+    opponent: "Lee",
+    result: "Victoire",
+    victoryType: "Décision"
+  };
+
+  await combatsRepository.update("CB1", createCombat({
+    ...base,
+    officialScore: { judoka: { ippon: 1, wazaAri: 0, yuko: 2 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0 } }
+  }));
+  await combatsRepository.update("CB1", createCombat({ ...base, officialScore: null }));
+  await combatsRepository.update("CB1", createCombat(base));
+
+  const [scored, cleared, untouched] = calls.map((call) => call[3]);
+  assert.deepEqual(
+    [
+      scored.score_judoka_ippon,
+      scored.score_judoka_wazaari,
+      scored.score_judoka_yuko,
+      scored.score_adversaire_ippon,
+      scored.score_adversaire_wazaari,
+      scored.score_adversaire_yuko
+    ],
+    [1, 0, 2, 0, 1, 0]
+  );
+  assert.equal(cleared.score_judoka_ippon, null);
+  assert.equal(cleared.score_adversaire_yuko, null);
+  assert.equal("score_judoka_ippon" in untouched, false);
+});
+
+test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colonnes sont vides", () => {
+  const row = {
+    id_combat: "CB1",
+    id_judoka: "JUDO1",
+    id_competition: "COMP1",
+    adversaire: "Lee",
+    resultat: "Victoire",
+    type_victoire: "Décision",
+    deroule: ""
+  };
+  assert.equal(toCanonicalCombat(row).officialScore, null);
+  assert.deepEqual(
+    toCanonicalCombat({
+      ...row,
+      score_judoka_ippon: 1,
+      score_judoka_wazaari: 0,
+      score_judoka_yuko: 2,
+      score_adversaire_ippon: 0,
+      score_adversaire_wazaari: 1,
+      score_adversaire_yuko: 0
+    }).officialScore,
+    { judoka: { ippon: 1, wazaAri: 0, yuko: 2 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0 } }
+  );
 });

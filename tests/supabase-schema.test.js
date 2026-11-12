@@ -197,3 +197,17 @@ test("supabase schema lets imported profiles sign up through the auth hook", () 
     /create policy "Supabase auth admin read invitations for signup hook"[\s\S]*for select[\s\S]*to supabase_auth_admin[\s\S]*using\s*\(\s*true\s*\)/i
   );
 });
+
+test("supabase schema stores the official IWY - IWY score on combats", () => {
+  for (const column of [
+    "score_judoka_ippon",
+    "score_judoka_wazaari",
+    "score_judoka_yuko",
+    "score_adversaire_ippon",
+    "score_adversaire_wazaari",
+    "score_adversaire_yuko"
+  ]) {
+    assert.match(schema, new RegExp(`add column if not exists ${column} smallint`, "i"));
+  }
+  assert.match(schema, /combats_score_check[\s\S]*between 0 and 9/i);
+});

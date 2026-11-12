@@ -71,4 +71,8 @@ Cet ordre respecte les clés étrangères.
 
 `public.combats` stocke aussi `etape` : le tour du combat dans la compétition (`Poule`, `1/32`, `1/16`, `1/8`, `1/4`, `1/2`, `Repêchage`, `Place de 3`, `Finale`, ou vide), contraint par `combats_etape_check`.
 
+`public.combats` stocke le score officiel IWY - IWY sur six colonnes `smallint` : `score_judoka_ippon`, `score_judoka_wazaari`, `score_judoka_yuko`, `score_adversaire_ippon`, `score_adversaire_wazaari`, `score_adversaire_yuko`. Elles sont toutes nulles (score non renseigné) ou toutes entre 0 et 9, contrainte `combats_score_check`.
+
+`public.combat_scores.camp` indique qui a marqué le point : `JUDOKA` ou `ADVERSAIRE` (`combat_scores_camp_check`).
+
 `public.clubs` stocke les clubs (`id_club`, `nom` unique sans tenir compte de la casse). `public.judokas.is_admin` porte le droit admin indépendamment de `role`, pour qu'un coach puisse aussi être admin.

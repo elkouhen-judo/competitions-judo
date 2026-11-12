@@ -13,8 +13,29 @@
 
   const OTHER_TECHNIQUE_VALUE = "__autre__";
 
-  // « scores » : points marqués par le judoka ; « concededScores » : techniques subies.
-  type ScoreListKey = "scores" | "concededScores";
+  // COMBAT-PTS : une seule liste de points ; chaque point indique qui l'a marqué.
+  const CAMP_JUDOKA = "JUDOKA";
+  const CAMP_OPPONENT = "ADVERSAIRE";
+
+  // COMBAT-SCORE : score officiel IWY - IWY, indépendant de la liste des points.
+  type ScoreSideKey = "judoka" | "opponent";
+  type ScoreValueKey = "ippon" | "wazaAri" | "yuko";
+  type CombatOfficialScoreForm = Record<ScoreSideKey, Record<ScoreValueKey, number>>;
+  const COMBAT_SCORE_MAX = 9;
+  const SCORE_VALUE_KEYS: ScoreValueKey[] = ["ippon", "wazaAri", "yuko"];
+
+  function createZeroOfficialScore(): CombatOfficialScoreForm {
+    return {
+      judoka: { ippon: 0, wazaAri: 0, yuko: 0 },
+      opponent: { ippon: 0, wazaAri: 0, yuko: 0 }
+    };
+  }
+
+  function formatOfficialScore(score: CombatOfficialScoreForm | null): string {
+    if (!score) return "Non renseigné";
+    const side = (key: ScoreSideKey) => SCORE_VALUE_KEYS.map((valueKey) => score[key][valueKey]).join(" ");
+    return `${side("judoka")} - ${side("opponent")}`;
+  }
 
   function createKirokuCombatFormScreen(app: KirokuApp, deps: CombatFormDeps) {
     const { state, ui, notifications } = app;
@@ -39,6 +60,20 @@
       { value: "Tachi-waza", label: "Debout" },
       { value: "Ne-waza", label: "Au sol" }
     ]);
+    const combatScoreCamps = window.Vue.computed(() => [
+      { value: CAMP_JUDOKA, label: "Judoka", className: "choice-camp-judoka" },
+      { value: CAMP_OPPONENT, label: "Adversaire", className: "choice-camp-opponent" }
+    ]);
+    const combatScoreSides = window.Vue.computed(() => [
+      { key: "judoka", label: "Judoka", labelFor: "au judoka", className: "side-judoka" },
+      { key: "opponent", label: "Adversaire", labelFor: "à l'adversaire", className: "side-opponent" }
+    ]);
+    const combatScoreValueKeys = window.Vue.computed(() => [
+      { key: "ippon", label: "Ippon" },
+      { key: "wazaAri", label: "Waza-ari" },
+      { key: "yuko", label: "Yuko" }
+    ]);
+    const combatScoreMax = window.Vue.computed(() => COMBAT_SCORE_MAX);
     const DECISION_SCORE_VALUES = ["Ippon", "Waza-ari", "Yuko"];
 
     const defaultCombatForm = {
@@ -48,8 +83,8 @@
       opponentStance: "",
       result: "",
       victoryType: "",
-      scores: [] as CombatScoreFormRow[],
-      concededScores: [] as CombatScoreFormRow[],
+      officialScore: null as CombatOfficialScoreForm | null,
+      points: [] as CombatScoreFormRow[],
       notes: ""
     };
     const defaultCombatFormViewState = {
@@ -61,7 +96,7 @@
 
     const combatFormViewModel = window.Vue.reactive({
       ...defaultCombatFormViewState,
-      combatForm: { ...defaultCombatForm, scores: [] as CombatScoreFormRow[], concededScores: [] as CombatScoreFormRow[] },
+      combatForm: { ...defaultCombatForm, points: [] as CombatScoreFormRow[] },
       combatFormErrors: { result: "" }
     });
     let combatFormMounted = false;
@@ -72,19 +107,23 @@
     const neWazaTechniques = window.Vue.computed(() => NE_WAZA_TECHNIQUES);
     const tachiWazaTechniques = window.Vue.computed(() => TACHI_WAZA_TECHNIQUES);
     const otherTechniqueValue = window.Vue.computed(() => OTHER_TECHNIQUE_VALUE);
+    const combatOfficialScoreSummary = window.Vue.computed(() =>
+      formatOfficialScore(combatFormViewModel.combatForm.officialScore)
+    );
     const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
       const form = combatFormViewModel.combatForm;
       if (!form.result) {
         return [];
       }
       const issues: CombatDataQualityIssue[] = [];
+      const judokaPoints = form.points.filter((score) => score.camp !== CAMP_OPPONENT);
       if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
         issues.push({ label: "Fin du combat non renseignée", shortLabel: "fin du combat", priority: "high", field: "victoryType" });
       }
       const hasMissingIpponScore =
         form.result === "Victoire" &&
         form.victoryType === "Ippon" &&
-        !form.scores.some((score) => score.value === "Ippon");
+        !judokaPoints.some((score) => score.value === "Ippon");
       if (hasMissingIpponScore) {
         issues.push({
           label: "Ippon indiqué, mais aucun point Ippon détaillé",
@@ -93,7 +132,7 @@
           field: "scores"
         });
       }
-      if (!form.scores.length && !hasMissingIpponScore) {
+      if (!judokaPoints.length && !hasMissingIpponScore) {
         issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
       }
       if (!form.opponentStance) {
@@ -127,6 +166,8 @@
         {
           addCombatScoreRow,
           cancelCombatForm,
+          changeCombatOfficialScore,
+          clearCombatOfficialScore,
           deleteCombatFromForm,
           getScoreTechnique,
           getScoreTechniqueOptions,
@@ -147,8 +188,13 @@
         },
         {
           combatDecisionOptions,
+          combatOfficialScoreSummary,
           combatResultOptions,
+          combatScoreCamps,
           combatScoreCategories,
+          combatScoreMax,
+          combatScoreSides,
+          combatScoreValueKeys,
           combatScoreValues,
           combatStageOptions,
           combatStanceOptions,
@@ -197,18 +243,16 @@
           opponentStance: combat.opponentStance || "",
           result: combat.result || "",
           victoryType: combat.victoryType || "",
-          scores: (combat.scores || []).map((score) => ({
-            category: score.category || "",
-            technique: score.technique || "",
-            neWazaType: score.neWazaType || "",
-            value: score.value || ""
-          })),
-          concededScores: (combat.concededScores || []).map((score) => ({
-            category: score.category || "",
-            technique: score.technique || "",
-            neWazaType: score.neWazaType || "",
-            value: score.value || ""
-          })),
+          officialScore: combat.officialScore
+            ? {
+                judoka: { ...combat.officialScore.judoka },
+                opponent: { ...combat.officialScore.opponent }
+              }
+            : null,
+          points: [
+            ...(combat.scores || []).map((score) => toPointFormRow(score, CAMP_JUDOKA)),
+            ...(combat.concededScores || []).map((score) => toPointFormRow(score, CAMP_OPPONENT))
+          ],
           notes: combat.notes || ""
         });
         syncCombatDecisionVisibility(false);
@@ -227,6 +271,19 @@
         // sinon le haut du formulaire (tour, résultat) sort de l'écran à l'ouverture.
         $(target).focus({ preventScroll: target === "saveCombatButton" });
       });
+    }
+
+    function toPointFormRow(
+      score: { category?: string; technique?: string; neWazaType?: string; value?: string },
+      camp: string
+    ): CombatScoreFormRow {
+      return {
+        camp,
+        category: score.category || "",
+        technique: score.technique || "",
+        neWazaType: score.neWazaType || "",
+        value: score.value || ""
+      };
     }
 
     function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
@@ -317,24 +374,33 @@
     }
 
     // COMBAT-1 : la fin du combat crée la ligne de point correspondante pour ne pas saisir deux fois.
+    // Victoire : point du judoka ; défaite : point de l'adversaire.
     function selectCombatDecision(decision: string) {
       const form = combatFormViewModel.combatForm;
       form.victoryType = form.victoryType === decision && form.result !== "Egalité" ? "" : decision;
+      const camp = form.result === "Victoire" ? CAMP_JUDOKA : form.result === "Défaite" ? CAMP_OPPONENT : "";
       if (
-        form.result === "Victoire" &&
+        camp &&
         DECISION_SCORE_VALUES.includes(form.victoryType) &&
-        !form.scores.some((score) => score.value === form.victoryType)
+        !form.points.some((score) => score.camp === camp && score.value === form.victoryType)
       ) {
-        form.scores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
+        form.points.push({ ...createEmptyCombatScoreRow(), camp, value: form.victoryType });
       }
-      // Défaite sur un point : la technique subie correspondante est préparée.
-      if (
-        form.result === "Défaite" &&
-        DECISION_SCORE_VALUES.includes(form.victoryType) &&
-        !form.concededScores.some((score) => score.value === form.victoryType)
-      ) {
-        form.concededScores.push({ ...createEmptyCombatScoreRow(), value: form.victoryType });
+    }
+
+    // COMBAT-SCORE : toucher un compteur renseigne le score (tout part de 0).
+    function changeCombatOfficialScore(side: ScoreSideKey, valueKey: ScoreValueKey, delta: number) {
+      const form = combatFormViewModel.combatForm;
+      if (!form.officialScore) {
+        if (delta < 0) return;
+        form.officialScore = createZeroOfficialScore();
       }
+      const next = form.officialScore[side][valueKey] + delta;
+      form.officialScore[side][valueKey] = Math.min(COMBAT_SCORE_MAX, Math.max(0, next));
+    }
+
+    function clearCombatOfficialScore() {
+      combatFormViewModel.combatForm.officialScore = null;
     }
 
     function selectCombatStance(stance: string) {
@@ -342,18 +408,16 @@
       form.opponentStance = form.opponentStance === stance ? "" : stance;
     }
 
-    function getScoreList(list: ScoreListKey = "scores"): CombatScoreFormRow[] {
-      return list === "concededScores"
-        ? combatFormViewModel.combatForm.concededScores
-        : combatFormViewModel.combatForm.scores;
+    function getPoint(index: number): CombatScoreFormRow | undefined {
+      return combatFormViewModel.combatForm.points[index];
     }
 
-    function selectCombatScoreCategory(index: number, category: string, list: ScoreListKey = "scores") {
-      const score = getScoreList(list)[index];
+    function selectCombatScoreCategory(index: number, category: string) {
+      const score = getPoint(index);
       if (!score) return;
       if (score.category !== category) score.customTechnique = false;
       score.category = category;
-      onCombatScoreCategoryChange(index, list);
+      onCombatScoreCategoryChange(index);
     }
 
     // COMBAT-TECH : la technique se choisit dans la liste, ou se saisit librement via « Autre technique… ».
@@ -374,21 +438,21 @@
       return isCustomScoreTechnique(score) ? OTHER_TECHNIQUE_VALUE : getScoreTechnique(score);
     }
 
-    function setScoreTechnique(index: number, value: string, list: ScoreListKey = "scores") {
-      const score = getScoreList(list)[index];
+    function setScoreTechnique(index: number, value: string) {
+      const score = getPoint(index);
       if (!score) return;
       const technique = String(value || "").trim();
       if (score.category === "Ne-waza") score.neWazaType = technique;
       else score.technique = technique;
     }
 
-    function selectScoreTechnique(index: number, value: string, list: ScoreListKey = "scores") {
-      const score = getScoreList(list)[index];
+    function selectScoreTechnique(index: number, value: string) {
+      const score = getPoint(index);
       if (!score) return;
       if (value === OTHER_TECHNIQUE_VALUE) {
         score.customTechnique = true;
-        setScoreTechnique(index, "", list);
-        const inputId = list === "concededScores" ? `combat_custom_technique_concededScores_${index}` : `combat_custom_technique_${index}`;
+        setScoreTechnique(index, "");
+        const inputId = `combat_custom_technique_${index}`;
         window.Vue.nextTick(() => {
           const input = document.getElementById(inputId);
           if (input) input.focus();
@@ -396,7 +460,7 @@
         return;
       }
       score.customTechnique = false;
-      setScoreTechnique(index, value, list);
+      setScoreTechnique(index, value);
     }
 
     function deleteCombatFromForm() {
@@ -446,6 +510,8 @@
       ensureCombatFormViewModel();
       const competition = getCurrentCompetition();
       const result = combatFormViewModel.combatForm.result;
+      const officialScore = combatFormViewModel.combatForm.officialScore;
+      const completePoints = combatFormViewModel.combatForm.points.filter(isCombatScoreRowComplete);
       return {
         competitionId: competition.competitionId,
         judokaId: competition.ownerJudokaId,
@@ -455,11 +521,18 @@
         result,
         victoryType:
           result === "Egalité" ? "Hiki wake" : combatFormViewModel.combatForm.victoryType,
-        scores: combatFormViewModel.combatForm.scores.filter(isCombatScoreRowComplete),
-        concededScores: combatFormViewModel.combatForm.concededScores.filter(isCombatScoreRowComplete),
+        officialScore: officialScore
+          ? { judoka: { ...officialScore.judoka }, opponent: { ...officialScore.opponent } }
+          : null,
+        scores: completePoints.filter((score) => score.camp !== CAMP_OPPONENT).map(toScorePayload),
+        concededScores: completePoints.filter((score) => score.camp === CAMP_OPPONENT).map(toScorePayload),
         notes: combatFormViewModel.combatForm.notes,
         combatId: undefined as string | undefined
       };
+    }
+
+    function toScorePayload(score: CombatScoreFormRow) {
+      return { category: score.category, technique: score.technique, neWazaType: score.neWazaType, value: score.value };
     }
 
     function deleteCombat(id: string) {
@@ -498,19 +571,21 @@
       }
     }
 
-    function addCombatScoreRow(list: ScoreListKey = "scores") {
+    // Un nouveau point est au judoka, sauf après une défaite.
+    function addCombatScoreRow() {
       ensureCombatFormViewModel();
-      getScoreList(list).push(createEmptyCombatScoreRow());
+      const camp = combatFormViewModel.combatForm.result === "Défaite" ? CAMP_OPPONENT : CAMP_JUDOKA;
+      combatFormViewModel.combatForm.points.push({ ...createEmptyCombatScoreRow(), camp });
     }
 
-    function removeCombatScoreRow(index: number, list: ScoreListKey = "scores") {
+    function removeCombatScoreRow(index: number) {
       ensureCombatFormViewModel();
-      getScoreList(list).splice(index, 1);
+      combatFormViewModel.combatForm.points.splice(index, 1);
     }
 
-    function onCombatScoreCategoryChange(index: number, list: ScoreListKey = "scores") {
+    function onCombatScoreCategoryChange(index: number) {
       ensureCombatFormViewModel();
-      const score = getScoreList(list)[index];
+      const score = getPoint(index);
       if (!score) return;
       if (score.category !== "Tachi-waza") score.technique = "";
       if (score.category !== "Ne-waza") score.neWazaType = "";
@@ -519,8 +594,8 @@
     function resetCombatForm() {
       ensureCombatFormViewModel();
       Object.assign(combatFormViewModel.combatForm, defaultCombatForm, {
-        scores: [] as CombatScoreFormRow[],
-        concededScores: [] as CombatScoreFormRow[]
+        officialScore: null,
+        points: [] as CombatScoreFormRow[]
       });
       combatFormViewModel.combatFormErrors.result = "";
       Object.assign(combatFormViewModel, {

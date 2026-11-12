@@ -222,6 +222,30 @@ alter table public.combat_scores
 alter table public.combat_scores
   add constraint combat_scores_camp_check check (camp in ('JUDOKA', 'ADVERSAIRE'));
 
+-- Score officiel IWY - IWY, saisi à part des points détaillés. Vide (null) = non renseigné.
+alter table public.combats
+  add column if not exists score_judoka_ippon smallint,
+  add column if not exists score_judoka_wazaari smallint,
+  add column if not exists score_judoka_yuko smallint,
+  add column if not exists score_adversaire_ippon smallint,
+  add column if not exists score_adversaire_wazaari smallint,
+  add column if not exists score_adversaire_yuko smallint;
+
+alter table public.combats
+  drop constraint if exists combats_score_check;
+
+alter table public.combats
+  add constraint combats_score_check check (
+    (
+      score_judoka_ippon is null and score_judoka_wazaari is null and score_judoka_yuko is null
+      and score_adversaire_ippon is null and score_adversaire_wazaari is null and score_adversaire_yuko is null
+    )
+    or (
+      score_judoka_ippon between 0 and 9 and score_judoka_wazaari between 0 and 9 and score_judoka_yuko between 0 and 9
+      and score_adversaire_ippon between 0 and 9 and score_adversaire_wazaari between 0 and 9 and score_adversaire_yuko between 0 and 9
+    )
+  );
+
 create unique index if not exists judokas_email_idx
   on public.judokas (lower(email))
   where email is not null;
