@@ -3999,6 +3999,107 @@
     font-size: 0.84rem;
   }
 
+  /* TDB-5 : les techniques subies se lisent comme des points adverses. */
+  .bar-track-conceded .bar-fill {
+    background: var(--danger);
+  }
+
+  /* TDB-1 : accès aux statistiques depuis la compétition, et retour vers elle. */
+  .club-competition-stats-button,
+  .dashboard-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    margin: 0 0 14px;
+  }
+
+  /* TDB-2 : échec de chargement, avec une action pour réessayer. */
+  .dashboard-load-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  /* TDB-3 : une ligne par judoka, qui ouvre sa fiche. */
+  .dashboard-judoka-list {
+    display: grid;
+    gap: 6px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dashboard-judoka-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: var(--text);
+    text-align: left;
+    box-shadow: none;
+  }
+
+  .dashboard-judoka-row:hover:not(:disabled),
+  .quality-issue-combat:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .dashboard-judoka-name {
+    font-weight: 700;
+  }
+
+  .dashboard-judoka-figures {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* CREA-8 : sous la liste des judokas, sans la marge négative des aides de formulaire. */
+  #clubCompetitionUncategorized {
+    margin: 10px 0 0;
+  }
+
+  /* TDB-4 : les combats concernés par un manque de saisie. */
+  .quality-issue-toggle {
+    width: auto;
+    margin-top: 8px;
+  }
+
+  .quality-issue-combats {
+    display: grid;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .quality-issue-combat {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--soft);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    justify-content: flex-start;
+    box-shadow: none;
+  }
+
   #coachDashboardView .section h3 {
     margin: 0;
   }

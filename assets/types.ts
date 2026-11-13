@@ -115,6 +115,7 @@ export interface KirokuUi {
   getClassementBadgeClass(value: unknown): string;
   getCompactJudokaLabel(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate(): string;
+  onChoiceKeydown(event: KeyboardEvent): void;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
   mountViewModel<T extends object>(
@@ -382,8 +383,17 @@ export interface AdminsScreen {
   showAdminsManagement(keepMessage?: boolean): void;
 }
 
+/** TDB-1 : une compétition club dont on ouvre les statistiques depuis sa fiche. */
+export interface CoachDashboardCompetitionPreset {
+  clubCompetitionId: string;
+  name: string;
+  competitionDate: string;
+  /** Les compétitions individuelles des participants. */
+  competitionIds: string[];
+}
+
 export interface CoachDashboardScreen {
-  showCoachDashboard(): void;
+  showCoachDashboard(options?: { competition?: CoachDashboardCompetitionPreset }): void;
 }
 
 export interface LoginScreen {

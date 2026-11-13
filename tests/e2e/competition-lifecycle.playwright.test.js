@@ -41,7 +41,7 @@ test("crée et valide durablement la participation du judoka de test du 29 août
     await page.locator("#club_competition_name").fill(competitionName);
     await page.locator("#club_competition_date").fill("2026-08-29");
     await page.locator("#club_competition_categorie_age").selectOption("Minime");
-    await page.locator("#club_competition_niveau").selectOption("Régional");
+    await page.locator("#club_competition_niveau").getByRole("radio", { name: "Régional" }).click();
     await page.locator("#clubFormJudokaSearch").fill(judokaFirstName);
     await page
       .locator("#clubCompetitionParticipants label")

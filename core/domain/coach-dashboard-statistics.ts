@@ -1,5 +1,5 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
-import { computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
+import { computeTopConcededTechniques, computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
 import { computeDecisionBreakdown, computeRate } from "./competitions/combat-decision-breakdown";
 import { OPPONENT_STANCES } from "./competitions/opponent-stance";
 import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
@@ -9,6 +9,7 @@ import type {
   Competition,
   CoachDashboardGenderBreakdownEntry,
   CoachDashboardHandednessBreakdownEntry,
+  CoachDashboardJudokaEntry,
   CoachDashboardLateralMatchupBreakdownEntry,
   CoachDashboardLevelPodiumBreakdownEntry,
   CoachDashboardQualityIssueEntry,
@@ -135,14 +136,66 @@ const DATA_QUALITY_CRITERIA: Array<{
   }
 ];
 
+const QUALITY_ISSUE_COMBAT_LIMIT = 50;
+
+type DashboardCompetition = Pick<Competition, "result" | "level"> &
+  Partial<Pick<Competition, "competitionId" | "clubCompetitionId" | "name" | "ownerJudokaId">>;
+
+// TDB-4 : chaque critère donne aussi les premiers combats concernés, pour les compléter.
 function computeDataQualityIssues(
-  combats: CoachDashboardCombat[]
+  combats: CoachDashboardCombat[],
+  competitions: DashboardCompetition[]
 ): CoachDashboardQualityIssueEntry[] {
   const total = combats.length;
+  const competitionNameById = new Map(
+    competitions.map((competition) => [String(competition.competitionId || ""), String(competition.name || "")])
+  );
   return DATA_QUALITY_CRITERIA.map(({ criterion, label, isMissing }) => {
-    const count = combats.filter(isMissing).length;
-    return { criterion, label, count, total, rate: computeRate(count, total) };
+    const missing = combats.filter(isMissing);
+    return {
+      criterion,
+      label,
+      count: missing.length,
+      total,
+      rate: computeRate(missing.length, total),
+      combats: missing.slice(0, QUALITY_ISSUE_COMBAT_LIMIT).map((combat) => ({
+        combatId: String(combat.combatId || ""),
+        competitionId: String(combat.competitionId || ""),
+        competitionName: competitionNameById.get(String(combat.competitionId || "")) || "",
+        judokaId: String(combat.judokaId || ""),
+        opponent: String(combat.opponent || "")
+      }))
+    };
   });
+}
+
+// TDB-3 : combats, victoires, défaites et podiums de chaque judoka du périmètre.
+function computeJudokaBreakdown(
+  combats: CoachDashboardCombat[],
+  competitions: DashboardCompetition[]
+): CoachDashboardJudokaEntry[] {
+  const entries = new Map<string, CoachDashboardJudokaEntry>();
+  const entryFor = (judokaId: string) => {
+    let entry = entries.get(judokaId);
+    if (!entry) {
+      entry = { judokaId, combats: 0, victories: 0, defeats: 0, podiums: 0 };
+      entries.set(judokaId, entry);
+    }
+    return entry;
+  };
+  combats.forEach((combat) => {
+    const entry = entryFor(String(combat.judokaId));
+    entry.combats += 1;
+    if (isVictoryCombatResult(combat.result)) entry.victories += 1;
+    if (isLossCombatResult(combat.result)) entry.defeats += 1;
+  });
+  competitions.forEach((competition) => {
+    const judokaId = String(competition.ownerJudokaId || "");
+    if (!judokaId) return;
+    const entry = entryFor(judokaId);
+    if (PODIUM_PLACES.some(({ place }) => competition.result === place)) entry.podiums += 1;
+  });
+  return Array.from(entries.values()).sort((a, b) => b.combats - a.combats || b.podiums - a.podiums);
 }
 
 const PODIUM_PLACES: Array<{ place: "1er" | "2e" | "3e"; label: string }> = [
@@ -174,9 +227,7 @@ function computePodiumBreakdownByLevel(
   });
 }
 
-function computeAnalyzedCompetitionCount(
-  competitions: Array<Pick<Competition, "result" | "level"> & Partial<Pick<Competition, "competitionId" | "clubCompetitionId">>>
-): number {
+function computeAnalyzedCompetitionCount(competitions: DashboardCompetition[]): number {
   const competitionKeys = new Set<string>();
   competitions.forEach((competition, index) => {
     const clubCompetitionId = String(competition.clubCompetitionId || "").trim();
@@ -188,7 +239,7 @@ function computeAnalyzedCompetitionCount(
 
 export function computeCoachDashboardStats(
   combats: CoachDashboardCombat[],
-  competitions: Array<Pick<Competition, "result" | "level"> & Partial<Pick<Competition, "competitionId" | "clubCompetitionId">>> = []
+  competitions: DashboardCompetition[] = []
 ): CoachDashboardStats {
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
@@ -213,8 +264,10 @@ export function computeCoachDashboardStats(
     byLateralMatchup: computeLateralMatchupBreakdown(combats),
     judokasByGender: computeJudokaCountByGender(combats),
     judokasByHandedness: computeJudokaCountByHandedness(combats),
-    dataQualityIssues: computeDataQualityIssues(combats),
+    dataQualityIssues: computeDataQualityIssues(combats, competitions),
     podiumsByLevel: computePodiumBreakdownByLevel(competitions),
-    topWinTechniques: computeTopWinTechniques(combats)
+    topWinTechniques: computeTopWinTechniques(combats),
+    topConcededTechniques: computeTopConcededTechniques(combats),
+    byJudoka: computeJudokaBreakdown(combats, competitions)
   };
 }

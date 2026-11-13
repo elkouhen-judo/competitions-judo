@@ -9,9 +9,11 @@
         </div>
       </div>
       <div class="panel-body">
+        <!-- CREA-2 : sans club, le formulaire n'est pas proposé. -->
         <div v-if="hasNoCoachClub" class="status-banner status-banner-warning">
           Vous n'êtes rattaché à aucun club. Demandez à un admin de vous ajouter à votre club pour créer une compétition club.
         </div>
+        <template v-else>
         <div class="form-grid">
           <div v-if="showClubCompetitionClubSelect">
             <label for="club_competition_club">Club <span class="required-mark" aria-hidden="true">*</span></label>
@@ -27,8 +29,9 @@
             <p v-if="clubCompetitionFormErrors.name" class="field-error" role="alert">{{ clubCompetitionFormErrors.name }}</p>
           </div>
           <div>
-            <label for="club_competition_date">Date</label>
-            <input id="club_competition_date" type="date" v-model="clubCompetitionForm.competitionDate">
+            <label for="club_competition_date">Date <span class="required-mark" aria-hidden="true">*</span></label>
+            <input id="club_competition_date" type="date" v-model="clubCompetitionForm.competitionDate" aria-required="true" :aria-invalid="clubCompetitionFormErrors.competitionDate ? 'true' : 'false'" @input="clubCompetitionFormErrors.competitionDate = ''">
+            <p v-if="clubCompetitionFormErrors.competitionDate" class="field-error" role="alert">{{ clubCompetitionFormErrors.competitionDate }}</p>
           </div>
           <div>
             <label for="club_competition_categorie_age">Catégorie d'âge <span class="required-mark" aria-hidden="true">*</span></label>
@@ -45,36 +48,65 @@
             </select>
             <p v-if="clubCompetitionFormErrors.ageCategory" class="field-error" role="alert">{{ clubCompetitionFormErrors.ageCategory }}</p>
           </div>
-          <div>
-            <label for="club_competition_niveau">Niveau</label>
-            <select id="club_competition_niveau" v-model="clubCompetitionForm.level">
-              <option value="">Sélectionnez un niveau</option>
-              <option value="Départemental">Départemental</option>
-              <option value="Régional">Régional</option>
-              <option value="National">National</option>
-              <option value="International">International</option>
-            </select>
+          <!-- CREA-9 : le niveau en boutons, parcourables au clavier. -->
+          <div class="choice-field full-row">
+            <span class="choice-label" id="club_competition_niveau_label">Niveau <span class="required-mark" aria-hidden="true">*</span></span>
+            <div
+              id="club_competition_niveau"
+              class="choice-segmented choice-segmented-2"
+              role="radiogroup"
+              aria-labelledby="club_competition_niveau_label"
+              aria-required="true"
+              :aria-invalid="clubCompetitionFormErrors.level ? 'true' : 'false'"
+              tabindex="-1"
+              @keydown="onChoiceKeydown">
+              <button
+                v-for="option in clubCompetitionLevelOptions"
+                :key="option"
+                type="button"
+                role="radio"
+                :aria-checked="clubCompetitionForm.level === option ? 'true' : 'false'"
+                :class="['choice-button', { 'choice-active': clubCompetitionForm.level === option }]"
+                @click="selectClubCompetitionLevel(option)">
+                {{ option }}
+              </button>
+            </div>
+            <p v-if="clubCompetitionFormErrors.level" class="field-error" role="alert">{{ clubCompetitionFormErrors.level }}</p>
           </div>
         </div>
 
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Judokas inscrits
+              <h3>Judokas inscrits <span class="required-mark" aria-hidden="true">*</span>
                 <span v-if="clubCompetitionForm.participantJudokaIds.length" class="result-badge">{{ clubCompetitionForm.participantJudokaIds.length }}</span>
               </h3>
             </div>
+            <!-- CREA-4 : toute la liste affichée (club, catégorie, recherche) en un toucher. -->
+            <button v-if="clubCompetitionFormParticipantsFiltered.length" id="clubCompetitionSelectAll" class="button-secondary compact-button" type="button" @click="toggleAllClubCompetitionParticipants()">
+              {{ clubCompetitionFormAllSelected ? "Tout désélectionner" : "Tout sélectionner" }}
+            </button>
+          </div>
+          <!-- CREA-7 : un changement de catégorie ou de club qui retire des judokas est annoncé. -->
+          <p v-if="clubCompetitionFormNotice" id="clubCompetitionFormNotice" class="field-todo" role="status">{{ clubCompetitionFormNotice }}</p>
+          <!-- CREA-5 : la sélection reste visible, toutes pages confondues. -->
+          <div v-if="clubCompetitionFormSelectedParticipants.length" id="clubCompetitionSelectedParticipants" class="competition-chip-list" aria-label="Judokas inscrits">
+            <span v-for="participant in clubCompetitionFormSelectedParticipants" :key="participant.judokaId" class="competition-chip">
+              {{ participant.name }}
+              <button type="button" class="competition-chip-remove" :aria-label="'Retirer ' + participant.name" @click="removeClubCompetitionParticipant(participant.judokaId)">×</button>
+            </span>
           </div>
           <div v-if="hasClubCompetitionFormAgeCategory && clubCompetitionForm.clubId" class="list-search">
             <input type="search" id="clubFormJudokaSearch" aria-label="Rechercher un judoka" placeholder="Rechercher un judoka…" autocomplete="off" v-model="judokaSearchText" @input="updateClubCompetitionJudokaSearch()">
           </div>
-          <div id="clubCompetitionParticipants">
+          <div id="clubCompetitionParticipants" tabindex="-1">
             <div v-if="!hasClubCompetitionFormAgeCategory" class="empty-state">Sélectionnez une catégorie pour afficher les judokas.</div>
             <div v-else-if="!clubCompetitionForm.clubId" class="empty-state">Sélectionnez un club pour afficher ses judokas.</div>
-            <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">Aucun judoka de ce club dans cette catégorie.</div>
+            <div v-else-if="!clubCompetitionFormCategoryParticipants.length" class="empty-state">Aucun judoka de ce club dans cette catégorie.</div>
+            <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">Aucun judoka ne correspond à cette recherche.</div>
             <div v-else class="list">
               <label v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" class="checkbox-row">
-                <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds">
+                <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds" @change="clubCompetitionFormErrors.participants = ''">
                 <span>{{ participant.name }}</span>
               </label>
             </div>
@@ -86,11 +118,14 @@
               </div>
             </div>
           </div>
+          <p v-if="clubCompetitionFormErrors.participants" class="field-error" role="alert">{{ clubCompetitionFormErrors.participants }}</p>
+          <!-- CREA-8 : les judokas du club sans catégorie d'âge sont signalés. -->
+          <p v-if="clubCompetitionFormUncategorizedText" id="clubCompetitionUncategorized" class="field-hint">{{ clubCompetitionFormUncategorizedText }}</p>
         </div>
 
         <div class="form-actions mobile-action-bar action-bar-inline">
-          <button class="button-secondary" type="button" @click="cancelClubCompetitionForm()">Annuler</button>
           <button id="saveClubCompetitionButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="saveClubCompetition()">Enregistrer</button>
         </div>
+        </template>
       </div>
     </section>

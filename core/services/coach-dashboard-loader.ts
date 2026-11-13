@@ -128,7 +128,9 @@ export async function loadCoachDashboardCombats(
   return combatRows.map((combat) => ({
     ...toCanonicalCombat({
       ...withoutScores(combat),
-      scores: scoresByCombatId.get(String(combat.id_combat)) || []
+      scores: scoresByCombatId.get(String(combat.id_combat)) || [],
+      // TDB-5 : les points subis alimentent « Techniques subies », jamais les autres statistiques.
+      concededScores: (Array.isArray(combat.combat_scores) ? combat.combat_scores : []).filter(isConcededScoreRow)
     }),
     competitionLevel: competitionLevelById.get(String(combat.id_competition)) || "",
     judokaGender: judokasById.get(String(combat.id_judoka))?.gender || "",

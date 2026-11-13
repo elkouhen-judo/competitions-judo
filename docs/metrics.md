@@ -27,6 +27,8 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 | **Date début / fin**   | `dateFrom` / `dateTo` | **Étape 1 : Compétitions** | Filtre la table Compétitions sur le champ `date`. Si les deux dates sont renseignées, `dateFrom <= dateTo` est obligatoire. |
 | **Compétitions**       | `competitionIds`      | **Étape 1 : Compétitions** | Sélecteur multi-compétitions avec recherche texte (nom ou date) côté client. Filtre la table Compétitions sur les identifiants sélectionnés ; vide = toutes les compétitions. |
 
+*Période par défaut :* à la première ouverture, `dateFrom`/`dateTo` couvrent la saison en cours (du 1er septembre au 31 août). Ouvertes depuis une compétition club, les statistiques portent sur cette seule compétition (`competitionIds` = ses participations), sur la saison de sa date.
+
 *Note :* les filtres par genre (`gender`) et par garde (`handedness`) ont été retirés du tableau de bord ; `gender` ne subsiste que dans les filtres de la recherche MCP (`CoachChatFilters`, périmètre distinct). Les statistiques "Judokas par genre"/"Judokas par garde" (section 3.2) restent inchangées — ce ne sont que les filtres qui ont été supprimés.
 
 ### Logique d'exclusion et cas limites :
@@ -131,6 +133,14 @@ Ces deux sections analysent la manière dont les combats se terminent. Elles aff
 
 ---
 
+### 4.3. Techniques subies (`topConcededTechniques`)
+
+Les 3 techniques les plus fréquentes parmi les points marqués par les adversaires (`concededScores`), tous résultats confondus, de la plus fréquente à la moins fréquente (ordre alphabétique à égalité). Un point sans technique n'est pas compté. Les points subis n'entrent dans aucune autre métrique.
+
+### 4.4. Par judoka (`byJudoka`)
+
+Une ligne par judoka du périmètre : `combats` (combats filtrés), `victories`, `defeats`, et `podiums` (compétitions filtrées classées `1er`, `2e` ou `3e`). Un judoka avec une compétition mais sans combat apparaît avec `combats = 0`. La somme des `combats` vaut `totalCombats`.
+
 ## 5. Section "Fiabilité des données" (`dataQualityIssues`)
 
 Cette section est affichée en dernier sur le tableau de bord : elle indique les informations manquantes ou à vérifier, à consulter après avoir pris connaissance des résultats eux-mêmes (sections 3 et 4).
@@ -148,6 +158,8 @@ Cette section recense, avec les filtres choisis, les combats dont la saisie est 
 | `competitionLevel`     | Niveau de compétition non renseigné   | Le niveau de la compétition associée est absent.                                                                     |
 | `judokaGender`         | Genre du judoka non renseigné         | Le genre du judoka suivi est absent.                                                                                 |
 | `inconsistentIppon`    | Ippon à vérifier                      | Résultat = `"Victoire"` **et** `victoryType = "Ippon"` **et** aucun score marqué n'a `value = "Ippon"` (ni Tachi-waza ni Ne-waza). |
+
+*Combats concernés :* chaque critère renvoie aussi `combats`, les 50 premiers combats concernés (`combatId`, `competitionId`, `competitionName`, `judokaId`, `opponent`), pour les ouvrir depuis l'écran.
 
 *Note :* ce dernier critère détecte la divergence possible entre la ligne `Ippon` de la section 4.1 (basée sur `victoryType`) et les métriques `tachiWazaIpponVictoryRate`/`neWazaIpponVictoryRate` de la section 3.3 (basées sur `scores`) — il signale les combats à compléter plutôt que de forcer une règle de cohérence stricte entre les deux métriques.
 

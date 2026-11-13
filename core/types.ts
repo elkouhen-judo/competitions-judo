@@ -267,12 +267,32 @@ export interface CoachDashboardHandednessBreakdownEntry {
   judokaCount: number;
 }
 
+/** TDB-4 : un combat concerné par un critère de saisie à compléter. */
+export interface CoachDashboardQualityIssueCombat {
+  combatId: string;
+  competitionId: string;
+  competitionName: string;
+  judokaId: string;
+  opponent: string;
+}
+
 export interface CoachDashboardQualityIssueEntry {
   criterion: string;
   label: string;
   count: number;
   total: number;
   rate: number;
+  /** Les premiers combats concernés (au plus 50), pour les compléter. */
+  combats: CoachDashboardQualityIssueCombat[];
+}
+
+/** TDB-3 : résultats d'un judoka sur le périmètre filtré. */
+export interface CoachDashboardJudokaEntry {
+  judokaId: string;
+  combats: number;
+  victories: number;
+  defeats: number;
+  podiums: number;
 }
 
 export interface CoachDashboardPodiumBreakdownEntry {
@@ -303,6 +323,9 @@ export interface CoachDashboardStats {
   dataQualityIssues: CoachDashboardQualityIssueEntry[];
   podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
   topWinTechniques: TechniqueBreakdownEntry[];
+  /** TDB-5 : techniques des points marqués par les adversaires. */
+  topConcededTechniques: TechniqueBreakdownEntry[];
+  byJudoka: CoachDashboardJudokaEntry[];
 }
 
 export interface CoachDashboardCompetitionOption {

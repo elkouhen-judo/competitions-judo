@@ -287,6 +287,26 @@
     };
   }
 
+  // Les flèches du clavier parcourent un groupe de choix et sélectionnent l'option atteinte.
+  function onChoiceKeydown(event: KeyboardEvent) {
+    const steps: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    const isEdgeKey = event.key === "Home" || event.key === "End";
+    if (!(event.key in steps) && !isEdgeKey) return;
+    const group = event.currentTarget as HTMLElement;
+    const radios = Array.from(group.querySelectorAll<HTMLButtonElement>("[role='radio']:not(:disabled)"));
+    if (!radios.length) return;
+    event.preventDefault();
+    const current = radios.indexOf(document.activeElement as HTMLButtonElement);
+    let targetIndex = event.key === "Home" ? 0 : radios.length - 1;
+    if (!isEdgeKey) {
+      const start = current === -1 ? (steps[event.key] > 0 ? -1 : 0) : current;
+      targetIndex = (start + steps[event.key] + radios.length) % radios.length;
+    }
+    const target = radios[targetIndex];
+    target.focus();
+    target.click();
+  }
+
   window.KirokuUI = {
     $,
     cleanText,
@@ -310,6 +330,7 @@
     mountViewModel,
     normalizeDisplayName,
     normalizeLastName,
+    onChoiceKeydown,
     pluralize,
     showView() {},
     toInputDate,

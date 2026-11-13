@@ -412,7 +412,9 @@ test("coach can open club competition creation and participant management UI", (
     bundle,
     /id="club_competition_categorie_age" v-model="clubCompetitionForm\.ageCategory"/
   );
-  assert.match(bundle, /id="club_competition_niveau" v-model="clubCompetitionForm\.level"/);
+  // CREA-9 : le niveau se choisit en boutons.
+  assert.match(bundle, /id="club_competition_niveau"\s+class="choice-segmented choice-segmented-2"\s+role="radiogroup"/);
+  assert.match(bundle, /@click="selectClubCompetitionLevel\(option\)"/);
   assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
   assert.match(bundle, /Saisie après coup possible : ajoutez les judokas oubliés/);
   assert.match(bundle, /@click="setClubParticipantRanking\(p\.competitionId, option\.value\)"/);
