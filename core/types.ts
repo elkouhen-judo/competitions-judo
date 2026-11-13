@@ -258,7 +258,7 @@ export interface CoachDashboardMatchupEntry {
   victories: number;
 }
 
-/** STAT-5, STAT-16 : bilan d'un tour ou d'un niveau ; `key` vide = non renseigné. */
+/** STAT-16 : bilan d'un niveau ; `key` vide = non renseigné. */
 export interface CoachDashboardResultLine {
   key: string;
   label: string;
@@ -310,15 +310,6 @@ export interface CoachDashboardHandednessBreakdownEntry {
   judokaCount: number;
 }
 
-/** TDB-4 : un combat concerné par un critère de saisie à compléter. */
-export interface CoachDashboardQualityIssueCombat {
-  combatId: string;
-  competitionId: string;
-  competitionName: string;
-  judokaId: string;
-  opponent: string;
-}
-
 export interface CoachDashboardQualityIssueEntry {
   criterion: string;
   label: string;
@@ -327,22 +318,6 @@ export interface CoachDashboardQualityIssueEntry {
   rate: number;
   /** STAT-14 : le niveau manquant se compte par compétition, les autres critères par combat. */
   unit: "combat" | "competition";
-  /** Les premiers combats concernés (au plus 50), pour les compléter. */
-  combats: CoachDashboardQualityIssueCombat[];
-  /** Les premières compétitions concernées (au plus 50), pour un critère par compétition. */
-  competitions: Array<{ competitionId: string; competitionName: string }>;
-}
-
-/** TDB-3 : résultats d'un judoka sur le périmètre filtré. */
-export interface CoachDashboardJudokaEntry {
-  judokaId: string;
-  combats: number;
-  victories: number;
-  defeats: number;
-  podiums: number;
-  /** STAT-10 : bilan contre les droitiers et contre les gauchers. */
-  vsRightHanded: { combats: number; victories: number };
-  vsLeftHanded: { combats: number; victories: number };
 }
 
 export interface CoachDashboardPodiumBreakdownEntry {
@@ -377,8 +352,6 @@ export interface CoachDashboardStats {
   topWinTechniques: TechniqueBreakdownEntry[];
   /** STAT-4 : techniques des points adverses dans les combats perdus. */
   topDefeatTechniques: TechniqueBreakdownEntry[];
-  byJudoka: CoachDashboardJudokaEntry[];
-  byStage: CoachDashboardResultLine[];
   byLevel: CoachDashboardResultLine[];
   byMonth: CoachDashboardMonthEntry[];
   scoreHolding: CoachDashboardScoreHolding;
@@ -394,7 +367,10 @@ export interface CoachDashboardCompetitionOption {
 }
 
 export interface CoachDashboard {
-  stats: CoachDashboardStats;
+  /** STAT-20 : null quand le périmètre compte trop peu de judokas pour des statistiques de groupe. */
+  stats: CoachDashboardStats | null;
+  /** STAT-20 : sous le seuil, seuls le nombre de combats et de compétitions sont donnés. */
+  withheld: { analyzedCompetitions: number; totalCombats: number } | null;
   availableCompetitions: CoachDashboardCompetitionOption[];
 }
 

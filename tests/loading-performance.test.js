@@ -258,6 +258,37 @@ function handleRest(method, table, params, payload) {
   return respond(405, { message: "Méthode non gérée." });
 }
 
+// STAT-17 : même lecture que la fonction SQL coach_dashboard_data (supabase/migrations).
+function handleRpc(name, payload = {}) {
+  if (name !== "coach_dashboard_data") {
+    return respond(404, { message: `Fonction inconnue : ${name}` });
+  }
+  const clubIds = payload.p_club_ids || [];
+  const judokaIds = payload.p_judoka_ids || [];
+  const competitionIds = payload.p_competition_ids || [];
+  const competitions = db.competitions
+    .filter((row) => {
+      const owner = db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka);
+      return (
+        (clubIds.includes(owner && owner.club_id) || judokaIds.includes(row.id_judoka)) &&
+        (!payload.p_date_from || row.date >= payload.p_date_from) &&
+        (!payload.p_date_to || row.date <= payload.p_date_to) &&
+        (!payload.p_age_category || row.categorie_age === payload.p_age_category)
+      );
+    })
+    .sort((a, b) => b.date.localeCompare(a.date) || a.id_competition.localeCompare(b.id_competition));
+  const scopedIds = new Set(competitions.map((row) => row.id_competition));
+  const combats = db.combats
+    .filter(
+      (row) =>
+        scopedIds.has(row.id_competition) &&
+        (!competitionIds.length || competitionIds.includes(row.id_competition))
+    )
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || a.id_combat.localeCompare(b.id_combat))
+    .map((row) => ({ ...row, combat_scores: EMBEDS.combats.combat_scores(row) }));
+  return respond(200, { competitions, combats });
+}
+
 async function fakeFetch(input, init = {}) {
   const url = new URL(String(input));
   const method = String(init.method || "GET").toUpperCase();
@@ -283,6 +314,9 @@ async function fakeFetch(input, init = {}) {
   }
   if (!table) {
     return respond(404, { message: "Chemin inconnu." });
+  }
+  if (table.startsWith("rpc/")) {
+    return handleRpc(table.slice("rpc/".length), payload);
   }
   return handleRest(method, table, params, payload);
 }
@@ -1195,7 +1229,9 @@ test("PAGE-1 : toute lecture de liste porte un tri et une borne explicites", asy
 // COACH-1, COACH-2
 // ---------------------------------------------------------------------------------------------
 
-test("COACH-1 : le tableau de bord lit les compétitions une fois, filtrées par club, dates et catégorie", async () => {
+const rpcCalls = (list, name) => list.filter((request) => request.table === `rpc/${name}`);
+
+test("COACH-1 / STAT-17 : le tableau de bord lit ses données en un appel, filtré par club, dates et catégorie", async () => {
   const {
     result,
     scope,
@@ -1209,11 +1245,19 @@ test("COACH-1 : le tableau de bord lit les compétitions une fois, filtrées par
     })
   );
 
-  const competitionReads = reads(list, "competitions");
-  assert.equal(competitionReads.length, 1);
-  assert.match(competitionReads[0].query, /judokas\.club_id=in\.\(NANTES\)/);
-  assert.ok(competitionReads[0].query.includes(`date=gte.${season.start}&date=lte.${season.end}`));
-  assert.match(competitionReads[0].query, /categorie_age=eq\.Cadet/);
+  // STAT-17 : 2 requêtes de contexte, 1 pour les données ; aucune lecture de table pour les combats.
+  assert.equal(scope.requests, 3, list.map((request) => `${request.method} ${request.table} ${request.query}`).join("\n"));
+  const [dataCall] = rpcCalls(list, "coach_dashboard_data");
+  assert.equal(rpcCalls(list, "coach_dashboard_data").length, 1);
+  assert.deepEqual(dataCall.payload, {
+    p_club_ids: ["NANTES"],
+    p_judoka_ids: [],
+    p_date_from: season.start,
+    p_date_to: season.end,
+    p_age_category: "Cadet",
+    p_competition_ids: []
+  });
+  assert.deepEqual(reads(list, "competitions"), []);
   // Seuls les judokas du périmètre sont lus (ceux des clubs du coach), jamais toute la table.
   const judokaReads = reads(list, "judokas").filter(
     (request) => !request.query.includes("email=ilike.")
@@ -1221,10 +1265,10 @@ test("COACH-1 : le tableau de bord lit les compétitions une fois, filtrées par
   assert.equal(judokaReads.length, 1);
   assert.match(judokaReads[0].query, /club_id=in\.\(NANTES,RENNES\)/);
   // Un coach ne lit aucune ligne d'un autre club.
-  list.forEach((request) => assert.doesNotMatch(request.query, /ANGERS|C_A01/));
-  assert.equal(reads(list, "combats").length, 1);
+  list.forEach((request) => assert.doesNotMatch(`${request.query}${JSON.stringify(request.payload || "")}`, /ANGERS|C_A01/));
+  assert.deepEqual(reads(list, "combats"), []);
   assert.deepEqual(reads(list, "combat_scores"), []);
-  assert.ok(scope.stages <= 3, `${scope.stages} étapes`);
+  assert.ok(scope.stages <= 2, `${scope.stages} étapes`);
 
   assert.equal(result.stats.totalCombats, 4);
   assert.deepEqual(result.availableCompetitions.map((item) => item.competitionId).sort(), [
@@ -1240,6 +1284,37 @@ test("COACH-1 : le tableau de bord lit les compétitions une fois, filtrées par
     () => measure(() => methods.getCoachDashboard("solo@example.com", {})),
     /réservé aux coachs/
   );
+});
+
+test("STAT-17 : 250 participations coûtent toujours 3 requêtes, et les combats choisis seulement", async () => {
+  resetDatabase();
+  db.competitions = Array.from({ length: 250 }, (_, index) =>
+    competition(`S${String(index).padStart(3, "0")}`, index % 2 ? "N01" : "N02", inSeason("10-10"))
+  );
+  db.combats = db.competitions.map((row, index) =>
+    combat(`Q${String(index).padStart(3, "0")}`, row.id_judoka, row.id_competition, index % 3 ? "Victoire" : "Défaite")
+  );
+
+  const all = await measureWithoutReset(() => methods.getCoachDashboard("coach@example.com", {}));
+  assert.equal(all.scope.requests, 3);
+  assert.equal(all.result.stats.totalCombats, 250);
+  assert.equal(all.result.availableCompetitions.length, 250);
+
+  // Les combats ne sont lus que pour les compétitions choisies ; la liste proposée reste complète.
+  const chosen = await measureWithoutReset(() =>
+    methods.getCoachDashboard("coach@example.com", { competitionIds: ["S000", "S001"] })
+  );
+  assert.equal(chosen.scope.requests, 3);
+  assert.deepEqual(rpcCalls(chosen.requests, "coach_dashboard_data")[0].payload.p_competition_ids, ["S000", "S001"]);
+  assert.equal(chosen.result.stats.totalCombats, 2);
+  assert.equal(chosen.result.availableCompetitions.length, 250);
+
+  // STAT-20 : une compétition d'un seul judoka ne donne que son volume.
+  const solo = await measureWithoutReset(() =>
+    methods.getCoachDashboard("coach@example.com", { competitionIds: ["S000"] })
+  );
+  assert.equal(solo.result.stats, null);
+  assert.deepEqual(solo.result.withheld, { analyzedCompetitions: 1, totalCombats: 1 });
 });
 
 test("COACH-2 : une recherche sur 200 compétitions coûte 3 requêtes de combats au plus", async () => {

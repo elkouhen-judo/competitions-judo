@@ -110,6 +110,12 @@
             <span>{{ coachDashboardLoadError }}</span>
             <button class="button-secondary compact-button" type="button" @click="retryCoachDashboard()">Réessayer</button>
           </div>
+          <!-- STAT-20 : sous 2 judokas, les statistiques décriraient un judoka : seul le volume est donné. -->
+          <div v-else-if="coachDashboardWithheld" id="coachDashboardWithheld" class="empty-state dashboard-withheld">
+            <p>Trop peu de judokas pour des statistiques de groupe.</p>
+            <p class="field-hint">{{ coachDashboardWithheld.totalCombats }} combat{{ coachDashboardWithheld.totalCombats > 1 ? 's' : '' }} sur {{ coachDashboardWithheld.analyzedCompetitions }} compétition{{ coachDashboardWithheld.analyzedCompetitions > 1 ? 's' : '' }}. Le bilan d'un judoka se lit sur sa fiche.</p>
+            <button class="button-secondary compact-button" type="button" @click="showCoachJudoka()">Voir les judokas</button>
+          </div>
           <div v-else-if="!coachDashboardStats || !coachDashboardStats.totalCombats" class="empty-state">Aucun combat trouvé pour ces filtres.</div>
         </div>
 
@@ -156,38 +162,6 @@
           </h3>
           <ul id="coachDashboardPodiums" class="podium-lines">
             <li v-for="line in coachDashboardPodiumLines" :key="line.level"><strong>{{ line.level }}</strong> : {{ line.text }}</li>
-          </ul>
-        </div>
-
-        <!-- TDB-3 : qui porte les victoires et les défaites. -->
-        <div class="section" v-if="coachDashboardJudokaRows.length">
-          <h3>Par judoka
-            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byJudoka"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byJudoka }}</span></span>
-          </h3>
-          <ul id="coachDashboardJudokas" class="dashboard-judoka-list">
-            <li v-for="entry in coachDashboardVisibleJudokaRows" :key="entry.judokaId">
-              <button type="button" class="dashboard-judoka-row" @click="openCoachDashboardJudoka(entry.judokaId)">
-                <span class="dashboard-judoka-name">{{ entry.name }}</span>
-                <span class="dashboard-judoka-figures">{{ entry.summary }}</span>
-                <span v-if="entry.versus" class="dashboard-judoka-versus">{{ entry.versus }}</span>
-              </button>
-            </li>
-          </ul>
-          <button v-if="coachDashboardJudokaRows.length > coachDashboardVisibleJudokaRows.length" class="button-secondary compact-button" type="button" @click="showAllJudokas = true">
-            Voir les {{ coachDashboardJudokaRows.length }} judokas
-          </button>
-        </div>
-
-        <!-- STAT-5 : à quel tour on gagne et on perd. -->
-        <div class="section" v-if="coachDashboardStageLines.length">
-          <h3>Par tour
-            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byStage"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byStage }}</span></span>
-          </h3>
-          <ul id="coachDashboardByStage" class="bar-list">
-            <li v-for="line in coachDashboardStageLines" :key="line.key || line.label">
-              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
-              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
-            </li>
           </ul>
         </div>
 
@@ -330,43 +304,6 @@
           </ul>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
-          <h3>Saisies à compléter
-            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.quality"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.quality }}</span></span>
-          </h3>
-          <div v-if="!coachDashboardDataQualityIssues.length" class="empty-state">Toutes les saisies sont complètes.</div>
-          <ul v-else id="coachDashboardQualityIssues" class="bar-list">
-            <li v-for="entry in coachDashboardDataQualityIssues" :key="entry.criterion">
-              <div class="bar-row-head">
-                <span>{{ entry.label }}
-                  <span class="info-tip" tabindex="0" :aria-label="getDataQualityIssueDescription(entry.criterion)">
-                    <span aria-hidden="true">i</span>
-                    <span class="info-tip-bubble" aria-hidden="true">{{ getDataQualityIssueDescription(entry.criterion) }}</span>
-                  </span>
-                </span>
-                <span class="bar-row-value">{{ entry.count }}/{{ entry.total }}</span>
-              </div>
-              <div class="bar-track bar-track-todo" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
-              <!-- TDB-4 : les combats concernés, pour les compléter ; STAT-14 : les compétitions pour le niveau. -->
-              <button class="button-secondary compact-button quality-issue-toggle" type="button" :aria-expanded="expandedQualityCriterion === entry.criterion ? 'true' : 'false'" @click="toggleQualityIssue(entry.criterion)">
-                {{ expandedQualityCriterion === entry.criterion ? (entry.unit === 'competition' ? "Masquer les compétitions" : "Masquer les combats") : (entry.unit === 'competition' ? "Voir les compétitions" : "Voir les combats") }}
-              </button>
-              <ul v-if="expandedQualityCriterion === entry.criterion && entry.unit === 'competition'" class="quality-issue-combats">
-                <li v-for="competition in entry.competitions" :key="competition.competitionId">
-                  <button type="button" class="quality-issue-combat" @click="openQualityIssueCompetition(competition)">{{ formatCompetitionName(competition.competitionName) || "Compétition" }}</button>
-                </li>
-              </ul>
-              <ul v-else-if="expandedQualityCriterion === entry.criterion" class="quality-issue-combats">
-                <li v-for="combat in entry.combats" :key="combat.combatId">
-                  <button type="button" class="quality-issue-combat" @click="openQualityIssueCombat(combat)">{{ getQualityIssueCombatLabel(combat) }}</button>
-                </li>
-              </ul>
-              <p v-if="expandedQualityCriterion === entry.criterion && entry.unit !== 'competition' && entry.count > entry.combats.length" class="field-hint">
-                Les {{ entry.combats.length }} premiers combats sur {{ entry.count }}.
-              </p>
-            </li>
-          </ul>
-        </div>
         </div>
       </div>
     </section>

@@ -1,10 +1,14 @@
-import { computeCoachDashboardStats } from "../domain/coach-dashboard-statistics";
+import {
+  computeCoachDashboardStats,
+  computeWithheldScope,
+  isGroupScope
+} from "../domain/coach-dashboard-statistics";
 import { createCoachAssistantSearch } from "./coach-assistant-search";
 import {
   filterCompetitionsByScope,
   filterCompetitionsBySelection,
   groupScoredPointsByCombatId,
-  loadCoachDashboardCombats,
+  toCoachDashboardCombats,
   toCompetitionScopeFilter,
   validateCoachDashboardFilters,
   withoutScores
@@ -49,7 +53,7 @@ function buildCoachDashboardCompetitionOptions(competitionRows: CompetitionRow[]
 }
 
 export interface CoachDashboardServiceDeps {
-  combatsRepository: Pick<CombatsRepository, "listByCompetitionIdsWithScores">;
+  combatsRepository: Pick<CombatsRepository, "listByCompetitionIdsWithScores" | "listCoachDashboardData">;
   competitionsRepository: Pick<CompetitionsRepository, "listInScope">;
   getCurrentDate?: () => string;
   userContextService: Pick<UserContextService, "getDomainUserContext" | "getIdentity">;
@@ -72,12 +76,11 @@ export default function createCoachDashboardService(
 
   // COACH-1 : le périmètre du coach filtre la requête. Sans club choisi : les judokas de ses
   // clubs et lui-même ; avec un club : les judokas de ce club seulement.
-  async function loadCoachData(
+  async function resolveCoachScope(
     email: string,
     message: string,
-    clubId: string | undefined,
-    filters: Pick<CoachDashboardFilters, "dateFrom" | "dateTo" | "ageCategory">
-  ): Promise<{ competitionRows: CompetitionRow[]; judokaRows: JudokaRow[] }> {
+    clubId: string | undefined
+  ): Promise<{ scope: CompetitionScopeFilter; selectedClubId: string }> {
     const identity = await userContextService.getIdentity(email);
     if (!identity) {
       throw new Error(`Accès refusé pour : ${email}`);
@@ -92,16 +95,18 @@ export default function createCoachDashboardService(
     const scope: CompetitionScopeFilter = selectedClubId
       ? { clubIds: [selectedClubId] }
       : { clubIds: identity.coachClubIds, judokaIds: [String(identity.user.id_judoka)] };
+    return { scope, selectedClubId };
+  }
 
-    // Les compétitions sont lues une seule fois, en même temps que les judokas du périmètre.
-    const [{ judokas }, competitionRows] = await Promise.all([
-      userContextService.getDomainUserContext(email),
-      competitionsRepository.listInScope(toCompetitionScopeFilter(scope, filters))
-    ]);
+  // Un coach d'un club ne lit aucune ligne d'un autre club : le périmètre est revérifié.
+  function restrictToScope(
+    judokas: JudokaRow[],
+    competitionRows: CompetitionRow[],
+    selectedClubId: string
+  ): { competitionRows: CompetitionRow[]; judokaRows: JudokaRow[] } {
     const judokaRows = selectedClubId
       ? judokas.filter((judoka) => String(judoka.club_id || "") === selectedClubId)
       : judokas;
-    // Un coach d'un club ne lit aucune ligne d'un autre club : le périmètre est revérifié.
     const allowed = new Set(judokaRows.map((judoka) => String(judoka.id_judoka)));
     return {
       competitionRows: competitionRows.filter((row) => allowed.has(String(row.id_judoka))),
@@ -114,17 +119,32 @@ export default function createCoachDashboardService(
     filters: CoachDashboardFilters = {}
   ): Promise<CoachDashboard> {
     validateCoachDashboardFilters(filters);
-    const { competitionRows, judokaRows } = await loadCoachData(
+    const { scope, selectedClubId } = await resolveCoachScope(
       email,
       "Tableau de bord réservé aux coachs.",
-      filters.clubId,
-      filters
+      filters.clubId
     );
+    // STAT-17 : compétitions, combats et points en un appel, en même temps que les judokas.
+    const competitionIds = Array.isArray(filters.competitionIds) ? filters.competitionIds.map(String) : [];
+    const [{ judokas }, data] = await Promise.all([
+      userContextService.getDomainUserContext(email),
+      combatsRepository.listCoachDashboardData(toCompetitionScopeFilter(scope, filters), competitionIds)
+    ]);
+    const { competitionRows, judokaRows } = restrictToScope(judokas, data.competitions, selectedClubId);
     const scopedRows = filterCompetitionsByScope(competitionRows, filters);
     const selectedRows = filterCompetitionsBySelection(scopedRows, filters);
-    const combats = await loadCoachDashboardCombats(combatsRepository, selectedRows, judokaRows);
+    const selectedIds = new Set(selectedRows.map((row) => String(row.id_competition)));
+    const combats = toCoachDashboardCombats(
+      data.combats.filter((combat) => selectedIds.has(String(combat.id_competition))),
+      selectedRows,
+      judokaRows
+    );
+    const competitions = selectedRows.map(toCanonicalCompetition);
+    // STAT-20 : sous 2 judokas, aucune statistique : elle décrirait un judoka identifiable.
+    const isGroup = isGroupScope(combats, competitions);
     return {
-      stats: computeCoachDashboardStats(combats, selectedRows.map(toCanonicalCompetition)),
+      stats: isGroup ? computeCoachDashboardStats(combats, competitions) : null,
+      withheld: isGroup ? null : computeWithheldScope(combats, competitions),
       availableCompetitions: buildCoachDashboardCompetitionOptions(scopedRows)
     };
   }
@@ -135,12 +155,17 @@ export default function createCoachDashboardService(
     filters: CoachChatFilters = {},
     limit?: number
   ): Promise<{ matches: CoachAssistantMatch[] }> {
-    const { competitionRows, judokaRows } = await loadCoachData(
+    const { scope, selectedClubId } = await resolveCoachScope(
       email,
       "Recherche de combats réservée aux coachs.",
-      undefined,
-      {}
+      undefined
     );
+    // Les compétitions sont lues une seule fois, en même temps que les judokas du périmètre.
+    const [{ judokas }, scopedCompetitions] = await Promise.all([
+      userContextService.getDomainUserContext(email),
+      competitionsRepository.listInScope(scope)
+    ]);
+    const { competitionRows, judokaRows } = restrictToScope(judokas, scopedCompetitions, selectedClubId);
     const combatsWithScores = await combatsRepository.listByCompetitionIdsWithScores(
       competitionRows.map((competition) => competition.id_competition)
     );

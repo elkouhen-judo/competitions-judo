@@ -217,3 +217,20 @@ test("supabase schema stores the official IWY - IWY score on combats", () => {
   }
   assert.match(schema, /combats_score_check[\s\S]*between 0 and 9/i);
 });
+
+test("STAT-17 : la lecture du tableau de bord coach est une fonction réservée au rôle service, sans calcul", () => {
+  const match = /create or replace function public\.coach_dashboard_data\(([\s\S]*?)\)\s*returns jsonb([\s\S]*?)\$\$;/i.exec(schema);
+  assert.ok(match, "fonction coach_dashboard_data absente");
+  const [, params, body] = match;
+  ["p_club_ids text[]", "p_judoka_ids text[]", "p_date_from date", "p_date_to date", "p_age_category text", "p_competition_ids text[]"].forEach(
+    (param) => assert.ok(params.includes(param), param)
+  );
+  // Lecture seule, sans statistique calculée en SQL.
+  assert.match(body, /\bstable\b/i);
+  assert.doesNotMatch(body, /\b(count|sum|avg)\s*\(|\b(insert|update|delete)\b/i);
+  assert.match(body, /join public\.judokas j on j\.id_judoka = c\.id_judoka/i);
+  assert.match(body, /'combat_scores'/);
+  const signature = "public\\.coach_dashboard_data\\(text\\[\\], text\\[\\], date, date, text, text\\[\\]\\)";
+  assert.match(schema, new RegExp(`grant execute on function ${signature} to service_role`, "i"));
+  assert.match(schema, new RegExp(`revoke execute on function ${signature} from authenticated, anon, public`, "i"));
+});

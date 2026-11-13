@@ -9,7 +9,7 @@ const { chromium, expect } = require("@playwright/test");
 const root = path.join(__dirname, "..");
 const clientHandler = require(path.join(root, "api", "client.js"));
 const { renderIndexHtml } = require(path.join(root, "api", "app.js"));
-const { computeCoachDashboardStats } = require(
+const { computeCoachDashboardStats, computeWithheldScope, isGroupScope } = require(
   path.join(root, "core-dist", "domain", "coach-dashboard-statistics.js")
 );
 
@@ -76,7 +76,8 @@ function currentSeasonLabel() {
   return `Saison ${startYear}-${startYear + 1}`;
 }
 
-async function startServer({ clubs = [CLUB] } = {}) {
+// soloFighter : seul Hugo a combattu (STAT-20) ; savedCompetition : la compétition existe déjà.
+async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetition = null } = {}) {
   const coach = {
     judokaId: "coach-1",
     accountEmail: "coach@example.com",
@@ -95,7 +96,7 @@ async function startServer({ clubs = [CLUB] } = {}) {
   const hugo = judokas[0];
   const nina = judokas[1];
   const rpc = [];
-  const control = { failDashboard: false, savedCompetition: null };
+  const control = { failDashboard: false, savedCompetition };
 
   // Combats fictifs des deux participants : une victoire par Ippon, deux défaites sur Uchi-mata.
   const participations = [
@@ -151,6 +152,10 @@ async function startServer({ clubs = [CLUB] } = {}) {
     }
   ];
 
+  if (soloFighter) {
+    combats.splice(0, combats.length, ...combats.filter((combat) => combat.judokaId === hugo.judokaId));
+  }
+
   function dashboardFor(filters) {
     const name = control.savedCompetition ? control.savedCompetition.name : "Coupe de Nantes";
     const date = control.savedCompetition ? control.savedCompetition.competitionDate : "2026-11-28";
@@ -173,11 +178,12 @@ async function startServer({ clubs = [CLUB] } = {}) {
       ? inScope.filter((competition) => filters.competitionIds.includes(competition.competitionId))
       : inScope;
     const selectedIds = new Set(selected.map((competition) => competition.competitionId));
+    const selectedCombats = combats.filter((combat) => selectedIds.has(combat.competitionId));
+    // STAT-20 : même règle que le serveur.
+    const isGroup = isGroupScope(selectedCombats, selected);
     return {
-      stats: computeCoachDashboardStats(
-        combats.filter((combat) => selectedIds.has(combat.competitionId)),
-        selected
-      ),
+      stats: isGroup ? computeCoachDashboardStats(selectedCombats, selected) : null,
+      withheld: isGroup ? null : computeWithheldScope(selectedCombats, selected),
       // Le serveur désigne la compétition club par sa dernière participation.
       availableCompetitions: inScope.length
         ? [
@@ -251,7 +257,9 @@ async function startServer({ clubs = [CLUB] } = {}) {
             judokas,
             combatRecords: {
               "participation-hugo": { total: 2, wins: 1, losses: 1, draws: 0 },
-              "participation-nina": { total: 1, wins: 0, losses: 1, draws: 0 }
+              "participation-nina": soloFighter
+                ? { total: 0, wins: 0, losses: 0, draws: 0 }
+                : { total: 1, wins: 0, losses: 1, draws: 0 }
             }
           };
         } else if (request.method === "getCoachDashboard") {
@@ -430,25 +438,27 @@ for (const [name, viewport] of [
     await expect(
       page.locator("#coachDashboardView .dashboard-kpis .mini-stat-label").nth(1)
     ).toContainText("trop peu de combats");
-    // TDB-3, STAT-10 : résultats par judoka, puis bilan contre droitiers et gauchers.
-    await expect(page.locator("#coachDashboardJudokas .dashboard-judoka-row")).toHaveText([
-      /Hugo Dubois\s*2 combats · 1 V · 1 D · 1 podium\s*contre droitiers 1\/1/,
-      /Nina Durand\s*1 combat · 0 V · 1 D\s*contre gauchers 0\/1/
-    ]);
+    // STAT-18 : aucune ligne par judoka, aucun nom de judoka dans les statistiques.
+    await expect(page.locator("#coachDashboardView h3").filter({ hasText: "Par judoka" })).toHaveCount(0);
+    const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
+    ["Hugo", "Nina", "Dubois", "Durand"].forEach((name) => assert.equal(statsText.includes(name), false, name));
+    // STAT-20 : 2 judokas, la garde de l'effectif n'est pas ventilée.
+    await expect(page.locator("#coachDashboardView .dashboard-effectif").first()).toHaveText(/^Effectif : 2 judokas\s*i/);
     // STAT-4 : techniques des adversaires dans les défaites.
     await expect(page.locator("#coachDashboardDefeatTechniques .bar-row-head")).toHaveText([
       /Uchi-mata\s*2/
     ]);
-    // STAT-15 : le bilan, puis le tour où l'on perd le plus, sans jugement.
+    // STAT-15 : le bilan, puis la fin de défaite la plus fréquente, sans jugement (plus de tour).
     await expect(page.locator("#coachDashboardView .dashboard-summary-insight")).toHaveText(
-      "1 victoire, 2 défaites sur 3 combats. Le plus de défaites : 1/4 (2)."
+      "1 victoire, 2 défaites sur 3 combats. Défaites le plus souvent par Waza-ari (2)."
     );
-    // STAT-5 : par tour, dans l'ordre du tableau ; STAT-1 : pas de barre sous 5 combats.
-    await expect(page.locator("#coachDashboardByStage .bar-row-head")).toHaveText([
-      /Poule\s*1\/1 gagné · trop peu de combats/,
-      /1\/4\s*0\/2 gagnés · trop peu de combats/
-    ]);
-    await expect(page.locator("#coachDashboardByStage .bar-track")).toHaveCount(0);
+    // Ni statistique par tour, ni section « Saisies à compléter » ; la tuile de synthèse reste.
+    const headings = page.locator("#coachDashboardView h3");
+    await expect(headings.filter({ hasText: "Par tour" })).toHaveCount(0);
+    await expect(headings.filter({ hasText: "Saisies à compléter" })).toHaveCount(0);
+    await expect(page.locator("#coachDashboardView .dashboard-kpis .mini-stat").nth(3)).toContainText(
+      "Saisies à compléter"
+    );
     // STAT-16 : par niveau ; STAT-10 : garde du judoka contre garde de l'adversaire.
     await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
       /Régional\s*1\/3 gagnés · trop peu de combats/
@@ -470,14 +480,6 @@ for (const [name, viewport] of [
       "1 podium sur 1 participation classée"
     );
 
-    // TDB-4 : un manque de saisie ouvre la liste des combats concernés.
-    const opponentIssue = page
-      .locator("#coachDashboardQualityIssues > li")
-      .filter({ hasText: "de l'adversaire" });
-    await opponentIssue.getByRole("button", { name: "Voir les combats" }).click();
-    await expect(opponentIssue.locator(".quality-issue-combat")).toHaveText([
-      "Hugo Dubois · Coupe de Nantes · contre Sacha Bernard"
-    ]);
 
     // TDB-9 : chaque tuile et chaque section de statistiques porte une info-bulle.
     const untipped = await page.evaluate(() =>
@@ -581,6 +583,42 @@ for (const [name, viewport] of [
     );
     await expect(page.getByText("Aucun combat trouvé pour ces filtres.")).toHaveCount(0);
     await context.setOffline(false);
+  });
+}
+
+for (const [name, viewport] of [
+  ["desktop", { width: 1440, height: 900 }],
+  ["mobile", { width: 375, height: 812 }]
+]) {
+  test(`STAT-20 : un seul judoka ayant combattu, aucune statistique sur ${name}`, async (t) => {
+    const savedCompetition = {
+      clubCompetitionId: "cc-1",
+      name: "Coupe de Nantes",
+      competitionDate: "2026-11-28",
+      clubId: CLUB.clubId
+    };
+    const { page, rpc } = await openApp(t, viewport, { soloFighter: true, savedCompetition });
+
+    // La fiche de la compétition ne propose pas ses statistiques.
+    await page.getByRole("button", { name: "Compétitions", exact: true }).click();
+    await page.locator("#clubCompetitionsList .competition-open-button").filter({ hasText: "Coupe de Nantes" }).click();
+    await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
+    await expect(page.locator("#clubDetailParticipantsList article")).toHaveCount(2);
+    await expect(page.locator("#clubCompetitionStatsButton")).toHaveCount(0);
+    await page.screenshot({ path: `output/playwright/stat20-${name}-01-detail.png`, fullPage: true, animations: "disabled" });
+
+    // L'onglet « Stats » ne donne que le volume, puis renvoie vers les judokas.
+    await page.locator("#clubCompetitionDetailView").getByRole("button", { name: "Retour", exact: true }).click();
+    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    const withheld = page.locator("#coachDashboardWithheld");
+    await expect(withheld).toContainText("Trop peu de judokas pour des statistiques de groupe.");
+    await expect(withheld).toContainText("2 combats sur 1 compétition.");
+    await expect(page.locator("#coachDashboardView .dashboard-kpis")).toHaveCount(0);
+    await expect(page.getByText("Aucun combat trouvé pour ces filtres.")).toHaveCount(0);
+    assert.ok(methods(rpc).includes("getCoachDashboard"));
+    await page.screenshot({ path: `output/playwright/stat20-${name}-02-withheld.png`, fullPage: true, animations: "disabled" });
+    await withheld.getByRole("button", { name: "Voir les judokas" }).click();
+    await expect(page.locator("#homeView")).toBeVisible();
   });
 }
 

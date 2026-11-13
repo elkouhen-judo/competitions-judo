@@ -134,6 +134,7 @@ This specification does not redefine product behavior already described in `docs
 - **PERF-005**: `getInitialData` shall load the current season and upcoming competitions, with each competition's combat results embedded (`combats(resultat)`); `getSeasonCompetitions` loads one past season on demand.
 - **PERF-006**: Combats shall be read with their points in one request (`combat_scores(*)`); combat points are written in one insert.
 - **PERF-007**: A write RPC shall return the saved element (`competition`, `combat`, `clubCompetition`, `competitions`); the browser updates its state and cache. `getInitialData` is only called at opening, when back online and after a CSV import.
+- **PERF-009**: `getCoachDashboard` shall cost at most 3 Supabase requests, whatever the number of participations: 2 for the user context, 1 call to the SQL function `coach_dashboard_data`, sent in parallel with the judokas read. The function returns the competitions of the scope (clubs or judokas allowed, dates, age category), the combats of the selected competitions and their points, and computes nothing; the statistics stay in TypeScript. The coach access check stays in the Vercel function, before the call. A read-only RPC (`supabaseRpc(..., { readOnly: true })`) does not clear the request's memoized reads.
 - **PERF-008**: `getAdminsManagement` and `getUsersPage` shall return users by pages of 10, read by cursor (`nom`, `prenom`, `id_judoka`), with the search applied by the server.
 
 ### 3.4 Authentication and authorization

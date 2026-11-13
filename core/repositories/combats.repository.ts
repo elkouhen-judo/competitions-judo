@@ -1,7 +1,14 @@
 import type { CombatModel } from "../domain/competitions/combat";
 import type { CombatOfficialScore } from "../domain/competitions/combat-official-score";
-import { inFilter, selectByIdBatches } from "../shared/query";
-import type { CombatRow, CombatScoreRow, CombatWithScoresRow, SupabaseRestDeps } from "./types";
+import { inFilter, selectByIdBatches, uniqueIds } from "../shared/query";
+import type { CompetitionScopeFilter } from "./competitions.repository";
+import type { CombatRow, CombatScoreRow, CombatWithScoresRow, CompetitionRow, SupabaseRestDeps } from "./types";
+
+/** STAT-17 : compétitions du périmètre, combats des compétitions choisies et leurs points. */
+export interface CoachDashboardDataRows {
+  competitions: CompetitionRow[];
+  combats: CombatWithScoresRow[];
+}
 
 /** Ce qu'il faut d'un combat pour proposer adversaires et techniques déjà saisis. */
 export type CombatSuggestionRow = Pick<CombatRow, "adversaire" | "garde_adversaire"> & {
@@ -26,6 +33,10 @@ export interface CombatsRepository {
   listByCompetitionIds(ids: string[]): Promise<CombatRow[]>;
   listByCompetitionIdsWithScores(ids: string[]): Promise<CombatWithScoresRow[]>;
   listByCompetitionWithScores(idCompetition: string): Promise<CombatWithScoresRow[]>;
+  listCoachDashboardData(
+    scope: CompetitionScopeFilter,
+    competitionIds: string[]
+  ): Promise<CoachDashboardDataRows>;
   listByJudoka(idJudoka: string): Promise<CombatRow[]>;
   listSuggestionsByJudoka(idJudoka: string): Promise<CombatSuggestionRow[]>;
   remove(idCombat: string): Promise<void>;
@@ -102,8 +113,32 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     supabasePatch,
     supabaseSelect,
     supabaseSelectOne,
+    supabaseRpc,
     eqFilter
   } = deps;
+
+  // STAT-17 : une seule lecture, quel que soit le nombre de participations ; la fonction SQL
+  // ne calcule rien. Le contrôle d'accès du coach est fait avant l'appel, dans le service.
+  async function listCoachDashboardData(
+    scope: CompetitionScopeFilter,
+    competitionIds: string[]
+  ): Promise<CoachDashboardDataRows> {
+    if (!supabaseRpc) {
+      throw new Error("supabaseRpc requis pour lire le tableau de bord.");
+    }
+    const data = await supabaseRpc<Partial<CoachDashboardDataRows> | null>("coach_dashboard_data", {
+      p_club_ids: uniqueIds(scope.clubIds),
+      p_judoka_ids: uniqueIds(scope.judokaIds),
+      p_date_from: scope.dateFrom || null,
+      p_date_to: scope.dateTo || null,
+      p_age_category: scope.ageCategory || null,
+      p_competition_ids: uniqueIds(competitionIds)
+    }, { readOnly: true });
+    return {
+      competitions: Array.isArray(data?.competitions) ? data.competitions : [],
+      combats: Array.isArray(data?.combats) ? data.combats : []
+    };
+  }
 
   async function listByJudoka(idJudoka: string): Promise<CombatRow[]> {
     return supabaseSelect<CombatRow>(
@@ -197,6 +232,7 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     listByCompetitionIds,
     listByCompetitionIdsWithScores,
     listByCompetitionWithScores,
+    listCoachDashboardData,
     listByJudoka,
     listSuggestionsByJudoka,
     remove,

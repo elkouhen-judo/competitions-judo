@@ -26,6 +26,12 @@ export interface SupabaseRestDeps {
   ) => Promise<T | null>;
   supabaseDelete: (table: string, query: string) => Promise<void>;
   eqFilter: (column: string, value: unknown) => string;
+  /** Appelle une fonction SQL (rôle service) ; absent des dépôts qui n'en ont pas besoin. */
+  supabaseRpc?: <T = unknown>(
+    functionName: string,
+    payload?: Record<string, unknown>,
+    options?: { readOnly?: boolean }
+  ) => Promise<T>;
 }
 
 export interface JudokaRow {

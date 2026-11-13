@@ -135,6 +135,7 @@ const mcpClientAuth = createMcpTokenAuth({
 });
 const repositoryDeps = {
   ...supabaseRest,
+  supabaseRpc: supabaseClient.supabaseRpc,
   eqFilter
 };
 

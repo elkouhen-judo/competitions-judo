@@ -4023,89 +4023,24 @@
     gap: 10px;
   }
 
-  /* TDB-3 : une ligne par judoka, qui ouvre sa fiche. */
-  .dashboard-judoka-list {
-    display: grid;
-    gap: 6px;
-    margin: 0 0 10px;
-    padding: 0;
-    list-style: none;
-  }
-
-  .dashboard-judoka-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 4px 12px;
-    width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
-    color: var(--text);
-    text-align: left;
-    box-shadow: none;
-  }
-
-  .dashboard-judoka-row:hover:not(:disabled),
-  .quality-issue-combat:hover:not(:disabled) {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--text);
-  }
-
-  .dashboard-judoka-name {
-    font-weight: 700;
-  }
-
-  .dashboard-judoka-figures {
-    color: var(--muted);
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* STAT-10 : bilan contre droitiers et gauchers, sur sa propre ligne. */
-  .dashboard-judoka-versus {
-    flex-basis: 100%;
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-variant-numeric: tabular-nums;
-  }
-
   /* CREA-8 : sous la liste des judokas, sans la marge négative des aides de formulaire. */
   #clubCompetitionUncategorized {
     margin: 10px 0 0;
   }
 
-  /* TDB-4 : les combats concernés par un manque de saisie. */
-  .quality-issue-toggle {
-    width: auto;
-    margin-top: 8px;
-  }
-
-  .quality-issue-combats {
+  /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */
+  .dashboard-withheld {
     display: grid;
-    gap: 4px;
-    margin: 8px 0 0;
-    padding: 0;
-    list-style: none;
+    justify-items: center;
+    gap: 8px;
   }
 
-  .quality-issue-combat {
-    width: 100%;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--soft);
-    color: var(--text);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: left;
-    justify-content: flex-start;
-    box-shadow: none;
+  .dashboard-withheld p {
+    margin: 0;
+  }
+
+  .dashboard-withheld .field-hint {
+    margin: 0;
   }
 
   #coachDashboardView .section h3 {

@@ -75,9 +75,10 @@ function createSupabaseClient({ getSupabaseConfig }) {
     });
   }
 
-  async function supabaseRpc(functionName, payload) {
+  // Une fonction en lecture seule (readOnly) ne vide pas les lectures mémorisées de l'appel.
+  async function supabaseRpc(functionName, payload, options = {}) {
     const config = getSupabaseConfig();
-    return trackSupabaseRequest("post", async () => {
+    return trackSupabaseRequest(options.readOnly ? "get" : "post", async () => {
       const response = await fetch(`${config.url}/rest/v1/rpc/${functionName}`, {
         method: "POST",
         headers: createSupabaseHeaders(config.serviceRoleKey, {

@@ -1,5 +1,4 @@
 import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
-import type { CombatsRepository } from "../repositories/combats.repository";
 import { isConcededScoreRow } from "../repositories/combat-scores.repository";
 import type { CompetitionScopeFilter } from "../repositories/competitions.repository";
 import type {
@@ -106,9 +105,9 @@ export function toCompetitionScopeFilter(
   };
 }
 
-/** Combats des compétitions retenues, lus par lots avec leurs points, enrichis pour les statistiques. */
-export async function loadCoachDashboardCombats(
-  combatsRepository: Pick<CombatsRepository, "listByCompetitionIdsWithScores">,
+/** Combats des compétitions retenues, avec leurs points, enrichis pour les statistiques. */
+export function toCoachDashboardCombats(
+  combatRows: CombatWithScoresRow[],
   competitionRows: CompetitionRow[],
   judokaRows: JudokaRow[]
 ) {
@@ -120,9 +119,6 @@ export async function loadCoachDashboardCombats(
     ])
   );
 
-  const combatRows = await combatsRepository.listByCompetitionIdsWithScores(
-    competitionRows.map((competition) => competition.id_competition)
-  );
   const scoresByCombatId = groupScoredPointsByCombatId(combatRows);
 
   return combatRows.map((combat) => ({

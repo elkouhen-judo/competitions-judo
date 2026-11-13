@@ -373,7 +373,8 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   assert.match(client, /decisionType: "Non renseignée"/);
   // STAT-4 à STAT-12, STAT-16 : nouvelles sections.
   assert.match(bundle, /v-for="entry in coachDashboardDefeatTechniqueBars"/);
-  assert.match(bundle, /v-for="line in coachDashboardStageLines"/);
+  // Le tour reste saisi, mais aucune statistique par tour.
+  assert.doesNotMatch(bundle, /coachDashboardStageLines|coachDashboardByStage/);
   assert.match(bundle, /v-for="line in coachDashboardLevelLines"/);
   assert.match(bundle, /v-for="line in coachDashboardMonthLines"/);
   assert.match(bundle, /v-for="line in coachDashboardScoreHoldingLines"/);
@@ -382,11 +383,9 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   assert.match(bundle, /coachDashboardDiscipline\.shidoText/);
   // STAT-13 : plus de genre dans l'effectif ; STAT-14 : niveau compté par compétition.
   assert.doesNotMatch(client, /judokasByGender|judokaGender/);
-  assert.match(bundle, /"Voir les compétitions"/);
-  assert.match(bundle, /v-for="entry in coachDashboardDataQualityIssues" :key="entry\.criterion"[\s\S]*:aria-label="getDataQualityIssueDescription\(entry\.criterion\)"/);
-  assert.match(client, /function getDataQualityIssueDescription\(criterion\)/);
+  // « Saisies à compléter » : la tuile de synthèse seule, sans section ni liste.
+  assert.doesNotMatch(bundle, /coachDashboardQualityIssues|"Voir les compétitions"|getDataQualityIssueDescription/);
   assert.match(client, /\(entry\) => entry\.count > 0/);
-  assert.match(client, /inconsistentIppon:/);
   assert.match(bundle, /\.bar-track\s*\{/);
   assert.match(bundle, /\.info-tip\s*\{/);
   assert.match(client, /function setupTooltipPositioning\(\)/);

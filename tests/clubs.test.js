@@ -198,17 +198,21 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
   const scopes = [];
   const context = coachContext({ judokas });
   const service = createCoachDashboardService({
+    // STAT-17 : le dépôt renvoie ici plus que le périmètre demandé : le service ne doit garder que
+    // les compétitions et les combats des judokas des clubs du coach.
     combatsRepository: {
       listByCompetitionIdsWithScores: async (ids) =>
-        ids.flatMap((id) => (combatsByCompetitionId[id] || []).map((row) => ({ ...row, combat_scores: [] })))
-    },
-    // Le dépôt renvoie ici plus que le périmètre demandé : le service ne doit garder que les
-    // compétitions des judokas des clubs du coach.
-    competitionsRepository: {
-      listInScope: async (scope) => {
+        ids.flatMap((id) => (combatsByCompetitionId[id] || []).map((row) => ({ ...row, combat_scores: [] }))),
+      listCoachDashboardData: async (scope) => {
         scopes.push(scope);
-        return competitionRows;
+        return {
+          competitions: competitionRows,
+          combats: Object.values(combatsByCompetitionId).flat().map((row) => ({ ...row, combat_scores: [] }))
+        };
       }
+    },
+    competitionsRepository: {
+      listInScope: async () => competitionRows
     },
     userContextService: {
       getDomainUserContext: context,
@@ -225,8 +229,10 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
   // COACH-1 : le périmètre part dans la requête (clubs du coach et lui-même).
   assert.deepEqual(scopes[0], { clubIds: ["NANTES", "RENNES"], judokaIds: ["COACH1"] });
 
+  // STAT-20 : le club de Rennes n'a qu'un judoka : seul le volume est donné.
   const rennes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "RENNES" });
-  assert.equal(rennes.stats.totalCombats, 1);
+  assert.equal(rennes.stats, null);
+  assert.deepEqual(rennes.withheld, { analyzedCompetitions: 1, totalCombats: 1 });
   assert.deepEqual(scopes[1], { clubIds: ["RENNES"] });
 
   await assert.rejects(

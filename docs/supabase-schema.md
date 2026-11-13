@@ -37,6 +37,11 @@ Les identifiants existants sont conservés en `text` pour simplifier l'import de
 - `id_competition`
 - `id_combat`
 
+Il crée aussi les fonctions appelables par le rôle service (`service_role`) uniquement :
+
+- `public.register_profile` : inscription d'un profil invité.
+- `public.coach_dashboard_data(p_club_ids, p_judoka_ids, p_date_from, p_date_to, p_age_category, p_competition_ids)` : lecture du tableau de bord coach en un appel (STAT-17). Renvoie `{ competitions, combats }` : les compétitions dont le judoka est dans `p_club_ids` ou est listé dans `p_judoka_ids`, filtrées par dates et catégorie d'âge, puis les combats des compétitions choisies (toutes si `p_competition_ids` est vide) avec leurs `combat_scores` triés par `ordre`. Aucun calcul.
+
 ## Relations
 
 - `competitions.club_competition_id` référence optionnellement `club_competitions.id_club_competition`.

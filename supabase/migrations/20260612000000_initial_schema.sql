@@ -682,3 +682,72 @@ revoke all on table public.coach_clubs from anon, authenticated;
 
 grant select, insert, update, delete on table public.clubs to service_role;
 grant select, insert, update, delete on table public.coach_clubs to service_role;
+
+-- STAT-17 : données du tableau de bord coach en un appel : les compétitions du périmètre
+-- (clubs ou judokas autorisés, dates, catégorie d'âge), les combats des compétitions choisies
+-- (toutes si aucune) et leurs points. Rien n'est calculé ici : les statistiques restent en
+-- TypeScript. Le contrôle d'accès du coach est fait dans la fonction Vercel, avant l'appel.
+create or replace function public.coach_dashboard_data(
+  p_club_ids text[] default '{}',
+  p_judoka_ids text[] default '{}',
+  p_date_from date default null,
+  p_date_to date default null,
+  p_age_category text default null,
+  p_competition_ids text[] default '{}'
+)
+returns jsonb
+language sql
+stable
+set search_path = public
+as $$
+  with scoped as (
+    select c.*
+    from public.competitions c
+    left join public.judokas j on j.id_judoka = c.id_judoka
+    where (
+        j.club_id = any(coalesce(p_club_ids, '{}'::text[]))
+        or c.id_judoka = any(coalesce(p_judoka_ids, '{}'::text[]))
+      )
+      and (p_date_from is null or c.date >= p_date_from)
+      and (p_date_to is null or c.date <= p_date_to)
+      and (coalesce(p_age_category, '') = '' or c.categorie_age = p_age_category)
+  ),
+  selected_combats as (
+    select cb.*
+    from public.combats cb
+    join scoped s on s.id_competition = cb.id_competition
+    where coalesce(cardinality(p_competition_ids), 0) = 0
+      or cb.id_competition = any(p_competition_ids)
+  )
+  select jsonb_build_object(
+    'competitions',
+    coalesce(
+      (select jsonb_agg(to_jsonb(s) order by s.date desc, s.id_competition) from scoped s),
+      '[]'::jsonb
+    ),
+    'combats',
+    coalesce(
+      (
+        select jsonb_agg(
+          to_jsonb(cb) || jsonb_build_object(
+            'combat_scores',
+            coalesce(
+              (
+                select jsonb_agg(to_jsonb(cs) order by cs.ordre, cs.id_combat_score)
+                from public.combat_scores cs
+                where cs.id_combat = cb.id_combat
+              ),
+              '[]'::jsonb
+            )
+          )
+          order by cb.created_at, cb.id_combat
+        )
+        from selected_combats cb
+      ),
+      '[]'::jsonb
+    )
+  );
+$$;
+
+grant execute on function public.coach_dashboard_data(text[], text[], date, date, text, text[]) to service_role;
+revoke execute on function public.coach_dashboard_data(text[], text[], date, date, text, text[]) from authenticated, anon, public;

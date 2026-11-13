@@ -403,6 +403,42 @@ test("combats repository reads combats with their scores, in batches for several
   ]);
 });
 
+test("STAT-17 : combats repository reads the coach dashboard data in one read-only RPC", async () => {
+  const calls = [];
+  const combatsRepository = createCombatsRepository({
+    ...createRepositoryDeps([]),
+    supabaseRpc: async (name, payload, options) => {
+      calls.push([name, payload, options]);
+      return { competitions: [{ id_competition: "C1" }], combats: [{ id_combat: "CB1", combat_scores: [] }] };
+    }
+  });
+
+  const data = await combatsRepository.listCoachDashboardData(
+    { clubIds: ["NANTES", "NANTES", ""], judokaIds: ["COACH1"], dateFrom: "2026-09-01", ageCategory: "Cadet" },
+    ["C1", "C1"]
+  );
+
+  assert.deepEqual(calls, [
+    [
+      "coach_dashboard_data",
+      {
+        p_club_ids: ["NANTES"],
+        p_judoka_ids: ["COACH1"],
+        p_date_from: "2026-09-01",
+        p_date_to: null,
+        p_age_category: "Cadet",
+        p_competition_ids: ["C1"]
+      },
+      { readOnly: true }
+    ]
+  ]);
+  assert.deepEqual(data, { competitions: [{ id_competition: "C1" }], combats: [{ id_combat: "CB1", combat_scores: [] }] });
+
+  // Une réponse vide ne casse pas la lecture.
+  const empty = createCombatsRepository({ ...createRepositoryDeps([]), supabaseRpc: async () => null });
+  assert.deepEqual(await empty.listCoachDashboardData({}, []), { competitions: [], combats: [] });
+});
+
 test("repositories map club competitions and participation links", async () => {
   const calls = [];
   const clubRepository = createClubCompetitionsRepository(createRepositoryDeps(calls));

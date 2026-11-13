@@ -1041,8 +1041,32 @@ function createTestCoachDashboardService({
     const judokas = context.judokas && context.judokas.length ? context.judokas : [...judokaRows, ...ownerRows];
     return { ...context, judokas };
   };
+  const inScope = (scope) =>
+    competitionRows.filter(
+      (row) =>
+        (!scope.dateFrom || String(row.date || "") >= scope.dateFrom) &&
+        (!scope.dateTo || String(row.date || "") <= scope.dateTo) &&
+        (!scope.ageCategory || String(row.categorie_age || "") === scope.ageCategory)
+    );
+  const withScores = (ids) =>
+    ids.flatMap((id) =>
+      (combatsByCompetitionId[id] || []).map((combat) => ({
+        ...combat,
+        combat_scores: combatScoresByCombatId[combat.id_combat] || []
+      }))
+    );
   const service = createCoachDashboardService({
     combatsRepository: {
+      // STAT-17 : compétitions du périmètre, combats des compétitions choisies et points, en un appel.
+      listCoachDashboardData: async (scope, competitionIds) => {
+        calls.scopes.push(scope);
+        const competitions = inScope(scope);
+        const ids = competitions
+          .map((row) => row.id_competition)
+          .filter((id) => !competitionIds.length || competitionIds.includes(id));
+        calls.combatBatches.push(ids);
+        return { competitions, combats: withScores(ids) };
+      },
       // COACH-2 : les combats se lisent par lots, avec leurs points.
       listByCompetitionIdsWithScores: async (ids) => {
         calls.combatBatches.push(ids);
@@ -1175,10 +1199,24 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   // STAT-13 : l'effectif ne se lit plus par genre.
   assert.equal(allResult.stats.engagedJudokas, 2);
   assert.equal("judokasByGender" in allResult.stats, false);
-  assert.deepEqual(allResult.stats.judokasByHandedness, [
-    { handedness: "Droitier", judokaCount: 1 },
-    { handedness: "Gaucher", judokaCount: 1 }
-  ]);
+  // STAT-20 : sous 5 judokas, la garde de chacun se devinerait : elle n'est pas ventilée.
+  assert.deepEqual(allResult.stats.judokasByHandedness, []);
+  assert.equal(allResult.withheld, null);
+  // STAT-21 : ni judoka, ni adversaire dans la réponse ; « name » n'y désigne qu'une compétition.
+  const nominativeKeys = (value, path = "") =>
+    Array.isArray(value)
+      ? value.flatMap((item, index) => nominativeKeys(item, `${path}[${index}]`))
+      : value && typeof value === "object"
+        ? Object.entries(value).flatMap(([key, child]) => [
+            ...(["judokaId", "ownerJudokaId", "opponent", "firstName", "lastName", "email"].includes(key) ||
+            (key === "name" && !path.startsWith(".availableCompetitions"))
+              ? [`${path}.${key}`]
+              : []),
+            ...nominativeKeys(child, `${path}.${key}`)
+          ])
+        : [];
+  assert.deepEqual(nominativeKeys(allResult), []);
+  assert.equal(JSON.stringify(allResult).includes("JUDO"), false);
   assert.deepEqual(
     allResult.stats.victoriesByDecisionType.find((entry) => entry.decisionType === "Ippon"),
     { decisionType: "Ippon", count: 2, total: 2, rate: 100 }
@@ -1246,21 +1284,20 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     }
   ]);
 
+  // STAT-20 : une compétition où un seul judoka a combattu ne donne que son volume.
   const competitionFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     competitionIds: ["COMP2"]
   });
-  assert.equal(competitionFiltered.stats.totalCombats, 1);
-  assert.equal(competitionFiltered.stats.analyzedCompetitions, 1);
-  assert.equal(competitionFiltered.stats.victories, 1);
+  assert.equal(competitionFiltered.stats, null);
+  assert.deepEqual(competitionFiltered.withheld, { analyzedCompetitions: 1, totalCombats: 1 });
   assert.equal(competitionFiltered.availableCompetitions.length, 2);
 
   const exactDateFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     dateFrom: "2026-03-15",
     dateTo: "2026-03-15"
   });
-  assert.equal(exactDateFiltered.stats.totalCombats, 1);
-  assert.equal(exactDateFiltered.stats.analyzedCompetitions, 1);
-  assert.equal(exactDateFiltered.stats.victories, 1);
+  assert.equal(exactDateFiltered.stats, null);
+  assert.deepEqual(exactDateFiltered.withheld, { analyzedCompetitions: 1, totalCombats: 1 });
   assert.deepEqual(exactDateFiltered.availableCompetitions, [
     {
       competitionId: "COMP2",

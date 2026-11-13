@@ -1,7 +1,7 @@
 ---
 title: Coach Dashboard Metrics
-version: 1.9
-date_updated: 2026-06-20
+version: 2.0
+date_updated: 2026-11-13
 owner: competitions-judo
 tags:
   - dashboard
@@ -31,6 +31,12 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 
 *Note :* les filtres par genre (`gender`) et par garde (`handedness`) ont été retirés du tableau de bord ; `gender` ne subsiste que dans les filtres de la recherche MCP (`CoachChatFilters`, périmètre distinct). Les statistiques "Judokas par genre"/"Judokas par garde" (section 3.2) restent inchangées — ce ne sont que les filtres qui ont été supprimés.
 
+### Confidentialité et seuil de groupe (DASH-026, DASH-027)
+* Les statistiques du coach ne contiennent ni identité, ni identifiant de judoka, ni nom d'adversaire, ni ligne par judoka. Le bilan d'un judoka se lit sur sa fiche.
+* **Seuil de 2 judokas :** sont comptés les judokas qui ont un combat dans le périmètre ; sans aucun combat, les judokas propriétaires des compétitions retenues. Sous 2, la réponse vaut `stats = null` et `withheld = { analyzedCompetitions, totalCombats }`.
+* **Seuil de 5 judokas pour la garde :** sous 5 judokas engagés, `judokasByHandedness` est vide.
+* *Limite connue :* avec peu de judokas, comparer deux sélections de compétitions permet encore de déduire le bilan d'un judoka ; les sections ventilées par garde (« Selon les gardes ») restent affichées dès 2 judokas.
+
 ### Logique d'exclusion et cas limites :
 1. **Étape 1 :** Les filtres `ageCategory`, `dateFrom`/`dateTo` et `competitionIds` restreignent d'abord la liste des **compétitions** éligibles, puis l'ensemble des combats correspondants est extrait sans filtre supplémentaire au niveau combat.
 2. **Filtres vides ou non sélectionnés :** Si un filtre n'est pas renseigné dans l'IHM, il est ignoré (aucune restriction n'est appliquée sur ce critère).
@@ -51,7 +57,7 @@ Sauf mention contraire explicite ci-dessous, tous les taux respectent les règle
 
 ## 3. Synthèse et sections de résultats
 
-L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Par judoka, Par tour, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline, puis Saisies à compléter (section 5). Une section sans donnée est masquée.
+L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline, puis Saisies à compléter (section 5). Une section sans donnée est masquée.
 
 ### 3.1. Synthèse
 
@@ -60,9 +66,9 @@ L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Par judoka, Par tour, 
 | `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées (une compétition club comptée une fois). |
 | `victoryRate`, `victories` | **Victoires** | `victories / totalCombats`, seuil de 5 (section 2). |
 | `podiumsByLevel` | **Podiums sur N classés** | Somme des podiums de tous les niveaux, rapportée à la somme des participations classées (`rankedParticipations`). |
-| `dataQualityIssues` | **Saisies à compléter** | Plus grand `count` parmi les critères comptés par combat (`unit = "combat"`). |
-| — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : le tour avec le plus de défaites (tour renseigné), sinon la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
-| `engagedJudokas`, `judokasByHandedness` | **Effectif** | Judokas **distincts** avec au moins un combat retenu, puis ventilés par garde (`Droitier` / `Gaucher`). Le genre n'est pas affiché. |
+| `dataQualityIssues` | **Saisies à compléter** | Plus grand `count` parmi les critères comptés par combat (`unit = "combat"`, section 5). Aucune liste n'est affichée. |
+| — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
+| `engagedJudokas`, `judokasByHandedness` | **Effectif** | Judokas **distincts** avec au moins un combat retenu, puis, à partir de 5 judokas, ventilés par garde (`Droitier` / `Gaucher`). Le genre n'est pas affiché. |
 
 *Note :* un judoka avec 5 combats compte pour `5` dans `totalCombats` et pour `1` dans l'effectif.
 
@@ -73,16 +79,13 @@ Par niveau (`Départemental`, `Régional`, `National`, `International`) :
 * Affichage : `🥉 1 troisième place · 1 podium sur 4 participations classées`.
 * Calcul par compétition, pas par combat. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
 
-### 3.3. Par judoka (`byJudoka`)
-Une ligne par judoka du périmètre : `combats`, `victories`, `defeats`, `podiums`, puis `vsRightHanded` et `vsLeftHanded` : combats gagnés ou perdus contre un adversaire droitier (ou gaucher), et victoires parmi eux. Affichage : `contre gauchers 1/5 (20 %)`, pourcentage à partir de 5 combats. La somme des `combats` vaut `totalCombats`.
-
-### 3.4. Par tour (`byStage`) et Par niveau (`byLevel`)
-* Une ligne par étape présente, dans l'ordre du tableau (Poule, 1/32, 1/16, 1/8, 1/4, 1/2, Finale, Repêchage, Place de 3), puis « Tour non renseigné ».
+### 3.4. Par niveau (`byLevel`)
+*Le tour du combat reste saisi, mais aucune statistique par tour n'est calculée.*
 * Une ligne par niveau présent (Départemental, Régional, National, International), puis « Niveau non renseigné ».
 * Chaque ligne : `combats`, `victories`, `defeats` ; taux `victories / combats`, seuil de 5. La somme des combats vaut `totalCombats`.
 
 ### 3.5. Évolution (`byMonth`)
-Une ligne par mois (`AAAA-MM`, mois de la date de compétition) qui compte des combats : `combats`, `victories`, `defeats`, `podiums` (participations du mois classées sur le podium). Taux `victories / combats`, seuil de 5. La section ne s'affiche qu'à partir de 2 mois.
+Une ligne par mois (`AAAA-MM`, mois de la date de compétition) qui compte des combats ou un podium : `combats`, `victories`, `defeats`, `podiums` (participations du mois classées sur le podium). Un mois de podium sans combat affiche « aucun combat saisi ». Taux `victories / combats`, seuil de 5. La section ne s'affiche qu'à partir de 2 mois. La somme des podiums égale la tuile « Podiums » quand toutes les compétitions ont une date.
 
 ### 3.6. Ippon : debout ou au sol (`ipponVictories`)
 * Dénominateur `total` : victoires avec au moins un point `Ippon` du judoka.
@@ -128,9 +131,9 @@ Les 5 techniques les plus marquées par les adversaires (`concededScores`) dans 
 
 ---
 
-## 5. Section "Saisies à compléter" (`dataQualityIssues`)
+## 5. Critères de la tuile "Saisies à compléter" (`dataQualityIssues`)
 
-Affichée en dernier, si `totalCombats > 0`. Le service renvoie toujours les 6 critères ; seuls ceux avec `count > 0` s'affichent. Si aucun, le message « Toutes les saisies sont complètes. » s'affiche.
+Il n'y a plus de section dédiée : seule la tuile de synthèse (section 3.1) les utilise. Le service renvoie toujours les 6 critères, chacun avec `count`, `total`, `rate` et `unit`, sans liste de combats ni de compétitions.
 
 | Critère (`criterion`) | Unité | Libellé IHM | Condition de comptage |
 | :-- | :-- | :-- | :-- |
@@ -140,8 +143,6 @@ Affichée en dernier, si `totalCombats > 0`. Le service renvoie toujours les 6 c
 | `scores` | combat | Points marqués non renseignés | Aucun point marqué détaillé. |
 | `competitionLevel` | compétition | Niveau de compétition non renseigné | Compétitions du périmètre sans niveau, sur le nombre de compétitions du périmètre (une compétition club comptée une fois). |
 | `inconsistentIppon` | combat | Ippon à vérifier | Victoire par `Ippon` sans aucun point `Ippon` détaillé. |
-
-*Éléments concernés :* les critères par combat renvoient `combats` (50 premiers : `combatId`, `competitionId`, `competitionName`, `judokaId`, `opponent`) et l'écran propose « Voir les combats » ; le critère par compétition renvoie `competitions` (`competitionId`, `competitionName`) et propose « Voir les compétitions ».
 
 *Note :* le genre du judoka n'est plus un critère de saisie du tableau de bord (STAT-13) ; la recherche MCP garde son filtre par genre.
 
@@ -162,3 +163,17 @@ Décomptes mesurés par `tests/loading-performance.test.js` sur un faux Supabase
 | JS de la coquille | environ 400 Ko non minifiés, sans cache | 97 Ko compressés, cache d'un an |
 
 Temps de réponse : non relevés. L'en-tête `Server-Timing` de `/api/rpc` (onglet Réseau) et les journaux Vercel donnent la durée totale, la durée d'authentification, le nombre de requêtes Supabase et leur durée cumulée. Le relevé en millisecondes reste à faire sur l'environnement dev, avant puis après déploiement.
+
+## 7. Lecture du tableau de bord en un appel (STAT-17, 13/11/2026)
+
+Relevé sur la base dev (`eu-central-1`), depuis un poste local, avec le vrai câblage de `core/` : 2 coachs, 5 compétitions, 16 combats. Chaque coach : 7 appels `getCoachDashboard` sur toute la période, alternés entre les deux lectures ; médianes.
+
+| Lecture | Requêtes Supabase | Étapes | Durée totale | Durée Supabase cumulée |
+| :--- | :--- | :--- | :--- | :--- |
+| Avant : compétitions, puis combats par lots de 100 | 5 | 3 | 165 ms | 270 ms |
+| Après : fonction `coach_dashboard_data` | 3 | 2 | 110 ms | 162 ms |
+
+* La durée Supabase cumulée additionne des requêtes parallèles : elle dépasse la durée totale.
+* Avant, le nombre de requêtes croît d'une par tranche de 100 participations ; après, il reste à 3.
+* Les deux lectures renvoient une réponse identique sur 14 scénarios (toute la période, la saison, chaque compétition de chaque coach).
+* Le relevé `Server-Timing` sur Vercel (région `dub1`) reste à faire après le déploiement de l'application.

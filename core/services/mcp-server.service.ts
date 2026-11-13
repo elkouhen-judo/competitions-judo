@@ -311,8 +311,9 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
     {
       name: "coach.dashboard",
       description:
-        "Statistiques agrégées des combats (taux de victoire, répartition par décision, par garde adverse, " +
-        "par niveau de compétition, par genre, etc.) pour le tableau de bord coach, optionnellement filtrées.",
+        "Statistiques agrégées des combats (taux de victoire, fins de combat, techniques, gardes, " +
+        "niveaux, mois, tenue du score, discipline, décompte des saisies à compléter) pour le tableau de bord coach, " +
+        "optionnellement filtrées. Aucune donnée propre à un judoka ; sous 2 judokas, stats vaut null.",
       scope: "coach-dashboard:read",
       inputSchema: { type: "object", properties: { filters: COACH_DASHBOARD_FILTERS_SCHEMA } },
       async handler(email, args) {

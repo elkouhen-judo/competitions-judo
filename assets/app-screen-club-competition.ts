@@ -300,12 +300,15 @@
       );
     }
 
-    // TDB-1 : les statistiques d'une compétition s'ouvrent depuis sa fiche, dès qu'un combat est saisi.
+    // TDB-1 : les statistiques d'une compétition s'ouvrent depuis sa fiche, une fois des combats saisis.
+    // STAT-20 : il faut au moins 2 judokas ayant combattu (MIN_GROUP_JUDOKAS côté serveur).
+    const MIN_GROUP_JUDOKAS = 2;
     let clubCompetitionStatsTarget: CoachDashboardCompetitionPreset | null = null;
     const canShowClubCompetitionStats = window.Vue.computed(
       () =>
         !clubCompetitionDetailViewModel.clubCompetitionDetailEditing &&
-        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants.some((p) => p.hasCombats)
+        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants.filter((p) => p.hasCombats).length >=
+          MIN_GROUP_JUDOKAS
     );
 
     function showClubCompetitionStats() {

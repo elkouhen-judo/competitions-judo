@@ -2,7 +2,6 @@
   type KirokuApp = import("./types").KirokuApp;
   type CoachDashboardStats = import("../core/types").CoachDashboardStats;
   type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
-  type CoachDashboardQualityIssueCombat = import("../core/types").CoachDashboardQualityIssueCombat;
   type CoachDashboardCompetitionPreset = import("./types").CoachDashboardCompetitionPreset;
 
   const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
@@ -10,8 +9,6 @@
   const PODIUM_LEVEL_PRIORITY = ["International", "National", "Régional", "Départemental"];
   const PODIUM_PLACE_PRIORITY = ["1er", "2e", "3e"];
   const PODIUM_PLACE_EMOJIS: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
-
-  const COACH_DASHBOARD_JUDOKA_PREVIEW_LIMIT = 10;
 
   // STAT-1 : en dessous de 5 combats (ou points) au dénominateur, pas de pourcentage ni de barre.
   const MIN_RATE_SAMPLE = 5;
@@ -25,11 +22,9 @@
       "Premières, deuxièmes et troisièmes places, sur les participations dont le classement final est saisi.",
     incomplete:
       "Combats concernés par le manque de saisie le plus fréquent. Un combat peut avoir plusieurs manques.",
-    effectif: "Judokas différents ayant au moins un combat retenu, puis leur garde.",
+    effectif: "Judokas différents ayant au moins un combat retenu, puis leur garde à partir de 5 judokas.",
     podiumsByLevel:
       "Places obtenues par niveau de compétition, sur les participations classées à ce niveau.",
-    byJudoka:
-      "Combats, victoires, défaites et podiums de chaque judoka, puis son bilan contre les droitiers et les gauchers.",
     victoriesByType: "Comment les combats gagnés se sont terminés, en part de toutes les victoires.",
     winTechniques: "Les 5 techniques les plus marquées par les judokas dans les combats gagnés.",
     defeatsByType: "Comment les combats perdus se sont terminés, en part de toutes les défaites.",
@@ -37,7 +32,6 @@
     ippon: "Victoires avec au moins un Ippon du judoka : part des Ippon marqués debout et au sol.",
     lateral:
       "Taux de victoire selon la garde du judoka et celle de l'adversaire. Seuls les combats gagnés ou perdus dont les deux gardes sont connues comptent.",
-    byStage: "Combats, victoires et défaites à chaque tour du tableau.",
     byLevel: "Combats, victoires et défaites selon le niveau de la compétition.",
     scoreHolding:
       "Qui marque le premier et qui gagne ensuite, lu sur le déroulé. Seuls les combats dont tous les points sont rangés comptent.",
@@ -45,23 +39,7 @@
       "Part des points marqués et concédés au sol. Seuls les points dont la technique est connue comptent.",
     discipline:
       "Shidos reçus par combat, sur les combats dont le score est renseigné, et défaites par Hansoku-make.",
-    byMonth: "Combats, victoires et podiums de chaque mois qui compte des combats.",
-    quality: "Informations utiles aux statistiques qui manquent. Touchez un manque pour voir où compléter."
-  };
-
-  const DATA_QUALITY_ISSUE_DESCRIPTIONS: Record<string, string> = {
-    judokaHandedness:
-      "La garde du judoka suivi (droitier/gaucher) n'est pas renseignée sur ce combat — elle alimente les statistiques par garde.",
-    opponentStance:
-      "La garde de l'adversaire (droitier/gaucher) n'est pas renseignée sur ce combat — elle alimente les statistiques par garde.",
-    victoryType:
-      "La manière dont le combat s'est terminé (Ippon, Waza-ari...) n'est pas renseignée sur ce combat.",
-    scores:
-      "Aucun point marqué n'a été détaillé sur ce combat — cela aide à distinguer les Ippon debout et au sol.",
-    competitionLevel:
-      "Le niveau de la compétition n'est pas renseigné — il alimente les podiums et les résultats par niveau. Compté une fois par compétition.",
-    inconsistentIppon:
-      "Le combat est gagné par Ippon, mais aucun point Ippon n'a été détaillé : la saisie mérite une vérification."
+    byMonth: "Combats, victoires et podiums de chaque mois qui compte des combats ou un podium."
   };
 
   const MONTH_FORMATTER = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
@@ -92,7 +70,7 @@
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
     const { state, screens, ui } = app;
-    const { cleanText, formatDate, getCurrentLocalDate, getJudokaDisplayName, pluralize, showView } = ui;
+    const { cleanText, formatDate, getCurrentLocalDate, pluralize, showView } = ui;
 
     const defaultCoachDashboardForm = {
       clubId: "",
@@ -109,6 +87,8 @@
       competitionSearchText: "",
       filtersExpanded: false,
       coachDashboardStats: null as CoachDashboardStats | null,
+      // STAT-20 : périmètre trop petit pour des statistiques de groupe.
+      coachDashboardWithheld: null as { analyzedCompetitions: number; totalCombats: number } | null,
       isLoadingCoachDashboardStats: false,
       // TDB-2 : un échec de chargement n'est jamais présenté comme « aucun combat ».
       coachDashboardLoadError: "",
@@ -117,8 +97,6 @@
       // TDB-1 : statistiques ouvertes depuis une compétition club, et retour vers sa fiche.
       returnClubCompetitionId: "",
       returnClubCompetitionName: "",
-      expandedQualityCriterion: "",
-      showAllJudokas: false,
       metricDescriptions: METRIC_DESCRIPTIONS
     });
     let coachDashboardMounted = false;
@@ -192,12 +170,11 @@
         .filter((line) => line.combats > 0)
         .map((line) => ({ ...line, ...formatWinRate(line.victories, line.combats) }));
     }
-    const coachDashboardStageLines = window.Vue.computed(() => toResultLines(currentStats()?.byStage || []));
     const coachDashboardLevelLines = window.Vue.computed(() => toResultLines(currentStats()?.byLevel || []));
 
-    // STAT-12 : un mois par ligne, affiché à partir de 2 mois.
+    // STAT-12 : un mois par ligne, affiché à partir de 2 mois ; STAT-22 : un mois de podium sans combat compte.
     const coachDashboardMonthLines = window.Vue.computed(() => {
-      const months = (currentStats()?.byMonth || []).filter((entry) => entry.combats > 0);
+      const months = (currentStats()?.byMonth || []).filter((entry) => entry.combats > 0 || entry.podiums > 0);
       if (months.length < 2) return [];
       return months.map((entry) => {
         const [year, month] = entry.month.split("-").map(Number);
@@ -205,7 +182,9 @@
         return {
           ...entry,
           label: label.charAt(0).toUpperCase() + label.slice(1),
-          ...formatWinRate(entry.victories, entry.combats),
+          ...(entry.combats
+            ? formatWinRate(entry.victories, entry.combats)
+            : { text: "aucun combat saisi", rate: 0, showBar: false }),
           podiumText: entry.podiums ? pluralize(entry.podiums, "podium") : ""
         };
       });
@@ -322,49 +301,6 @@
         .reduce((max, issue) => Math.max(max, issue.count), 0)
     );
 
-    function getJudokaName(judokaId: string): string {
-      const judoka =
-        state.judokas.find((candidate) => String(candidate.judokaId) === String(judokaId)) ||
-        (state.currentUser && String(state.currentUser.judokaId) === String(judokaId) ? state.currentUser : null);
-      return (judoka && getJudokaDisplayName(judoka)) || "Judoka";
-    }
-
-    function formatVersus(label: string, record: { combats: number; victories: number } | undefined): string {
-      if (!record || !record.combats) return "";
-      const rate = record.combats >= MIN_RATE_SAMPLE ? ` (${toRate(record.victories, record.combats)} %)` : "";
-      return `${label} ${record.victories}/${record.combats}${rate}`;
-    }
-
-    // TDB-3 : résultats par judoka, du plus actif au moins actif.
-    const coachDashboardJudokaRows = window.Vue.computed(() =>
-      (currentStats()?.byJudoka || [])
-        .map((entry) => ({
-          ...entry,
-          name: getJudokaName(entry.judokaId),
-          summary: [
-            pluralize(entry.combats, "combat"),
-            `${entry.victories} V`,
-            `${entry.defeats} D`,
-            entry.podiums ? pluralize(entry.podiums, "podium") : ""
-          ]
-            .filter(Boolean)
-            .join(" · "),
-          // STAT-10 : bilan contre les droitiers et contre les gauchers.
-          versus: [
-            formatVersus("contre droitiers", entry.vsRightHanded),
-            formatVersus("contre gauchers", entry.vsLeftHanded)
-          ]
-            .filter(Boolean)
-            .join(" · ")
-        }))
-        .sort((a, b) => b.combats - a.combats || a.name.localeCompare(b.name, "fr"))
-    );
-    const coachDashboardVisibleJudokaRows = window.Vue.computed(() =>
-      coachDashboardViewModel.showAllJudokas
-        ? coachDashboardJudokaRows.value
-        : coachDashboardJudokaRows.value.slice(0, COACH_DASHBOARD_JUDOKA_PREVIEW_LIMIT)
-    );
-
     // STAT-15 : le bilan, puis le fait le plus marquant, sans jugement.
     const coachDashboardSummaryInsight = window.Vue.computed(() => {
       const stats = currentStats();
@@ -379,16 +315,11 @@
         .filter(Boolean)
         .join(", ");
       const sentences = [`${record} sur ${pluralize(stats.totalCombats, "combat")}.`];
-      const worstStage = (stats.byStage || [])
-        .filter((line) => line.key && line.defeats > 0)
-        .sort((a, b) => b.defeats - a.defeats)[0];
       const mainDefeat = [...(stats.defeatsByDecisionType || [])]
         .filter((entry) => entry.count > 0)
         .sort((a, b) => b.count - a.count)[0];
       const topTechnique = (stats.topWinTechniques || [])[0];
-      if (worstStage) {
-        sentences.push(`Le plus de défaites : ${worstStage.label} (${worstStage.defeats}).`);
-      } else if (mainDefeat) {
+      if (mainDefeat) {
         sentences.push(`Défaites le plus souvent par ${mainDefeat.decisionType} (${mainDefeat.count}).`);
       } else if (topTechnique) {
         sentences.push(`Technique la plus marquée : ${topTechnique.technique} (${topTechnique.count}).`);
@@ -465,11 +396,6 @@
         "coachDashboardView",
         coachDashboardViewModel,
         {
-          getDataQualityIssueDescription,
-          getQualityIssueCombatLabel,
-          openCoachDashboardJudoka,
-          openQualityIssueCombat,
-          openQualityIssueCompetition,
           resetCoachDashboardFilters,
           retryCoachDashboard,
           returnToClubCompetition,
@@ -477,7 +403,6 @@
           showCoachHome,
           showCoachCompetitions,
           toggleCoachDashboardFilters,
-          toggleQualityIssue,
           addCoachDashboardCompetition,
           removeCoachDashboardCompetition,
           showCoachJudoka,
@@ -492,7 +417,6 @@
           coachDashboardDefeatsByType,
           coachDashboardIpponLines,
           coachDashboardByLateralMatchup,
-          coachDashboardStageLines,
           coachDashboardLevelLines,
           coachDashboardMonthLines,
           coachDashboardScoreHoldingLines,
@@ -508,8 +432,6 @@
           coachDashboardTopWinTechniqueBars,
           coachDashboardDefeatTechniqueBars,
           coachDashboardIncompleteCount,
-          coachDashboardJudokaRows,
-          coachDashboardVisibleJudokaRows,
           coachDashboardSummaryInsight,
           coachDashboardSelectedCompetitions,
           coachDashboardCompetitionSuggestions,
@@ -558,6 +480,7 @@
             return;
           }
           coachDashboardViewModel.coachDashboardStats = response.stats;
+          coachDashboardViewModel.coachDashboardWithheld = response.withheld || null;
           coachDashboardViewModel.availableCompetitions = response.availableCompetitions;
           coachDashboardViewModel.coachDashboardLoadError = "";
           // Une compétition sélectionnée reste choisie, même si le serveur la désigne
@@ -687,6 +610,7 @@
         coachDashboardViewModel.returnClubCompetitionId = preset.clubCompetitionId;
         coachDashboardViewModel.returnClubCompetitionName = preset.name;
         coachDashboardViewModel.coachDashboardStats = null;
+        coachDashboardViewModel.coachDashboardWithheld = null;
       } else if (coachDashboardViewModel.returnClubCompetitionId) {
         // Retour à l'onglet « Stats » : les filtres du coach reviennent.
         Object.assign(
@@ -697,6 +621,7 @@
         coachDashboardViewModel.returnClubCompetitionId = "";
         coachDashboardViewModel.returnClubCompetitionName = "";
         coachDashboardViewModel.coachDashboardStats = null;
+        coachDashboardViewModel.coachDashboardWithheld = null;
       } else if (!coachDashboardFiltersInitialized) {
         // TDB-6 : première ouverture sur la saison en cours et le club choisi à l'accueil.
         Object.assign(form, getDefaultCoachDashboardFilters(), { clubId: state.selectedClubId || "" });
@@ -706,8 +631,6 @@
       coachDashboardViewModel.filtersExpanded = false;
       coachDashboardViewModel.coachDashboardLoadError = "";
       coachDashboardViewModel.coachDashboardDateError = "";
-      coachDashboardViewModel.expandedQualityCriterion = "";
-      coachDashboardViewModel.showAllJudokas = false;
       showView("coachDashboardView");
       fetchCoachDashboardStats();
     }
@@ -716,37 +639,6 @@
       const clubCompetitionId = coachDashboardViewModel.returnClubCompetitionId;
       if (clubCompetitionId) {
         screens.competition.openClubCompetition(clubCompetitionId);
-      }
-    }
-
-    function openCoachDashboardJudoka(judokaId: string) {
-      screens.judoka.showJudokaProfile(judokaId);
-    }
-
-    // TDB-4 : un manque de saisie s'ouvre sur la liste des combats concernés.
-    function toggleQualityIssue(criterion: string) {
-      coachDashboardViewModel.expandedQualityCriterion =
-        coachDashboardViewModel.expandedQualityCriterion === criterion ? "" : criterion;
-    }
-
-    function getQualityIssueCombatLabel(combat: CoachDashboardQualityIssueCombat): string {
-      return [
-        getJudokaName(combat.judokaId),
-        ui.formatCompetitionName(combat.competitionName) || "Compétition",
-        combat.opponent ? `contre ${combat.opponent}` : "adversaire non renseigné"
-      ].join(" · ");
-    }
-
-    function openQualityIssueCombat(combat: CoachDashboardQualityIssueCombat) {
-      if (combat.competitionId) {
-        screens.competition.openCompetition(combat.competitionId);
-      }
-    }
-
-    // STAT-14 : le niveau manquant ouvre la compétition concernée.
-    function openQualityIssueCompetition(competition: { competitionId: string }) {
-      if (competition.competitionId) {
-        screens.competition.openCompetition(competition.competitionId);
       }
     }
 
@@ -767,10 +659,6 @@
 
     function showCoachJudoka() {
       showCoachHomeMode("coachJudoka");
-    }
-
-    function getDataQualityIssueDescription(criterion: string): string {
-      return DATA_QUALITY_ISSUE_DESCRIPTIONS[criterion] || "";
     }
 
     return {
