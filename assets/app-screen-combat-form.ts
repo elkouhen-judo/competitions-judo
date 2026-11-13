@@ -107,8 +107,60 @@
     const combatFormViewModel = window.Vue.reactive({
       ...defaultCombatFormViewState,
       combatForm: { ...defaultCombatForm, shidos: { judoka: 0, opponent: 0 }, points: [] as CombatScoreFormRow[] },
-      combatFormErrors: { result: "" }
+      combatFormErrors: { result: "" },
+      // SAISIE-1 : saisie rapide par défaut ; le détail (garde, score, déroulé, notes) se déplie à la demande.
+      combatDetailOpen: false,
+      combatStagePickerOpen: false
     });
+
+    // SAISIE-1 : l'appareil retient si le détail était déplié ou replié.
+    const COMBAT_DETAIL_STORAGE_KEY = "ayumi_combat_detail_open";
+    // SAISIE-2 : champs du détail ; les viser l'ouvre.
+    const COMBAT_DETAIL_TARGETS = ["combat_garde_adversaire", "combat_score", "combat_points", "combat_deroule"];
+
+    function readCombatDetailPreference(): boolean {
+      try {
+        return localStorage.getItem(COMBAT_DETAIL_STORAGE_KEY) === "1";
+      } catch {
+        return false;
+      }
+    }
+
+    function writeCombatDetailPreference(open: boolean) {
+      try {
+        localStorage.setItem(COMBAT_DETAIL_STORAGE_KEY, open ? "1" : "0");
+      } catch {
+        // Stockage indisponible (navigation privée) : le choix vaut pour la session.
+      }
+    }
+
+    function toggleCombatDetail() {
+      combatFormViewModel.combatDetailOpen = !combatFormViewModel.combatDetailOpen;
+      writeCombatDetailPreference(combatFormViewModel.combatDetailOpen);
+    }
+
+    function openCombatStagePicker() {
+      combatFormViewModel.combatStagePickerOpen = true;
+      window.Vue.nextTick(() => $("combat_etape").focus());
+    }
+
+    type CombatWithDetail = {
+      officialScore?: unknown;
+      scores?: unknown[];
+      concededScores?: unknown[];
+      opponentStance?: string;
+      notes?: string;
+    };
+    // SAISIE-2 : un combat déjà détaillé s'ouvre déplié.
+    function hasCombatDetail(combat: CombatWithDetail): boolean {
+      return Boolean(
+        combat.officialScore ||
+          (combat.scores || []).length ||
+          (combat.concededScores || []).length ||
+          combat.opponentStance ||
+          combat.notes
+      );
+    }
     let combatFormMounted = false;
     let combatFormSnapshot = "";
 
@@ -327,6 +379,7 @@
           isCustomScoreTechnique,
           moveCombatPoint,
           onChoiceKeydown,
+          openCombatStagePicker,
           removeCombatScoreRow,
           saveCombat,
           saveCombatAndNext,
@@ -336,7 +389,8 @@
           selectCombatStance,
           selectScoreTechnique,
           setScoreTechnique,
-          syncCombatDecisionVisibility
+          syncCombatDecisionVisibility,
+          toggleCombatDetail
         },
         {
           canClearCombatScore,
@@ -406,6 +460,7 @@
           points: toChronologicalPoints(combat.scores || [], combat.concededScores || [], combat.officialScore || null),
           notes: combat.notes || ""
         });
+        combatFormViewModel.combatDetailOpen = hasCombatDetail(combat) || readCombatDetailPreference();
         syncCombatDecisionVisibility(false);
       } else {
         Object.assign(combatFormViewModel, {
@@ -417,7 +472,11 @@
         combatFormViewModel.combatForm.stage = lastCombat
           ? getNextCombatStage(lastCombat.stage || "", lastCombat.result || "")
           : "";
+        combatFormViewModel.combatDetailOpen = readCombatDetailPreference();
         syncCombatDecisionVisibility(true);
+      }
+      if (focusField && COMBAT_DETAIL_TARGETS.includes(focusField)) {
+        combatFormViewModel.combatDetailOpen = true;
       }
 
       takeCombatFormSnapshot();
@@ -471,8 +530,8 @@
 
     function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
       const form = combatFormViewModel.combatForm;
+      // SAISIE-1 : le tour est proposé sur une pastille ; un nouveau combat commence par l'adversaire.
       if (!isEditingExistingCombat) {
-        if (!form.stage) return "combat_etape";
         return "combat_adversaire";
       }
       if (!form.result) {
@@ -485,9 +544,9 @@
         return "combat_adversaire";
       }
       if (!form.stage) {
-        return "combat_etape";
+        return "combat_etape_toggle";
       }
-      if (!form.opponentStance) {
+      if (!form.opponentStance && combatFormViewModel.combatDetailOpen) {
         return "combat_garde_adversaire";
       }
       return "saveCombatButton";
@@ -548,7 +607,7 @@
         showCombatForm();
         combatFormViewModel.combatForm.stage = nextStage;
         takeCombatFormSnapshot();
-        window.Vue.nextTick(() => $(nextStage ? "combat_adversaire" : "combat_etape").focus());
+        window.Vue.nextTick(() => $("combat_adversaire").focus());
       });
     }
 
@@ -564,9 +623,13 @@
       return next[stage] || "";
     }
 
-    function selectCombatStage(stage: string) {
+    // SAISIE-1 : un toucher sur un tour referme la liste ; les flèches du clavier la parcourent sans la fermer.
+    function selectCombatStage(stage: string, event?: MouseEvent) {
       const form = combatFormViewModel.combatForm;
       form.stage = form.stage === stage ? "" : stage;
+      if (!event || event.detail > 0) {
+        combatFormViewModel.combatStagePickerOpen = false;
+      }
     }
 
     function selectCombatResult(result: string) {
@@ -845,6 +908,7 @@
         points: [] as CombatScoreFormRow[]
       });
       combatFormViewModel.combatFormErrors.result = "";
+      combatFormViewModel.combatStagePickerOpen = false;
       combatFormSnapshot = "";
       Object.assign(combatFormViewModel, {
         combatFormTitle: "Ajouter un combat",

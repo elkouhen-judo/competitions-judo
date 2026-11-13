@@ -498,7 +498,7 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
   assert.match(bundle, /id="combatDecisionBlock" class="choice-field" :class="\{ hidden: !showCombatDecisionBlock \}"/);
   assert.match(bundle, /id="combat_resultat"[\s\S]*?role="radiogroup"[\s\S]*?aria-required="true"/);
   assert.match(bundle, /@click="selectCombatResult\(option\.value\)"/);
-  assert.match(bundle, /@click="selectCombatStage\(option\)"/);
+  assert.match(bundle, /@click="selectCombatStage\(option, \$event\)"/);
   assert.match(bundle, /@click="selectCombatDecision\(option\)"/);
   assert.match(bundle, /@click="selectCombatStance\(option\)"/);
   assert.match(bundle, /\.choice-button,\s*\.choice-chip\s*\{\s*min-height:\s*44px;/);
@@ -518,8 +518,12 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
   assert.match(client, /form\.points\.push\(createPointRow\(camp, form\.victoryType, \{ autoFromDecision: true \}\)\);/);
   // COMBAT-SCORE : score officiel IWY - IWY dans la saisie rapide.
   assert.match(bundle, /id="combat_score"[\s\S]*?@click="changeCombatOfficialScore\(side\.key, valueKey\.key, 1\)"/);
-  // COMBAT-CHRONO : la saisie suit le combat (avant, pendant, fin) et le déroulé se réordonne.
-  assert.match(bundle, /<h3>Avant le combat<\/h3>[\s\S]*<h3>Le combat<\/h3>[\s\S]*<h3>Fin du combat<\/h3>/);
+  // SAISIE-1 : l'essentiel d'abord (tour, adversaire, résultat), le détail replié dessous.
+  assert.match(bundle, /<h3>Le combat<\/h3>[\s\S]*id="combat_adversaire"[\s\S]*id="combat_resultat"[\s\S]*id="combatDetailToggle"[\s\S]*<div id="combatDetail" v-show="combatDetailOpen">[\s\S]*id="combat_garde_adversaire"[\s\S]*id="combat_score"[\s\S]*id="combat_deroule"/);
+  assert.match(client, /const COMBAT_DETAIL_STORAGE_KEY = "ayumi_combat_detail_open";/);
+  assert.doesNotMatch(bundle, /<h3>Avant le combat<\/h3>|<h3>Fin du combat<\/h3>/);
+  // SAISIE-3 : la manière de gagner est facultative.
+  assert.match(bundle, /<span class="choice-optional">facultatif<\/span>/);
   assert.match(bundle, /v-for="\(score, index\) in combatForm\.points"[\s\S]*?moveCombatPoint\(index, -1\)/);
   assert.match(bundle, /@keydown="onChoiceKeydown"/);
   // COMBAT-QUIT : quitter un formulaire modifié demande confirmation.

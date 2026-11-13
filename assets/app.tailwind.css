@@ -3125,6 +3125,7 @@
 
   /* Saisie d'un combat : chaque étape est une carte */
   #combatFormView .panel-body > .form-section,
+  #combatDetail > .form-section,
   .combat-quick-section {
     margin: 12px 0 0;
     padding: 16px;
@@ -4026,6 +4027,53 @@
   /* CREA-8 : sous la liste des judokas, sans la marge négative des aides de formulaire. */
   #clubCompetitionUncategorized {
     margin: 10px 0 0;
+  }
+
+  /* SAISIE-1 : le tour proposé tient sur une pastille, « Changer » ouvre la liste. */
+  .combat-stage-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  .button-link {
+    width: auto;
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .button-link:hover:not(:disabled) {
+    background: none;
+    color: var(--accent);
+  }
+
+  /* SAISIE-3 : ce qui n'est pas obligatoire le dit. */
+  .choice-optional {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .combat-decision-hint {
+    margin: 0 0 8px;
+  }
+
+  /* SAISIE-1 : le détail se déplie sous l'essentiel. */
+  .combat-detail-toggle {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .combat-detail-hint {
+    margin: 8px 0 0;
   }
 
   /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */

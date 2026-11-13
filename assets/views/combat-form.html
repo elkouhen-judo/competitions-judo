@@ -11,18 +11,25 @@
       <div class="panel-body">
         <input type="hidden" id="combat_id" v-model="combatForm.combatId">
 
-        <!-- COMBAT-CHRONO : la saisie suit le combat : avant, pendant, puis la fin. -->
+        <!-- SAISIE-1 : l'essentiel d'abord (tour, adversaire, résultat) ; le détail se complète ensuite. -->
         <div class="form-section combat-quick-section">
           <div class="form-section-heading">
             <div>
-              <h3>Avant le combat</h3>
-              <p class="subtitle">Le tour, l'adversaire et sa garde.</p>
+              <h3>Le combat</h3>
+              <p class="subtitle">Le résultat suffit pour enregistrer.</p>
             </div>
           </div>
 
+          <!-- SAISIE-1 : le tour proposé tient sur une pastille ; « Changer » ouvre la liste. -->
           <div class="choice-field">
-            <span class="choice-label" id="combat_etape_label">Étape</span>
-            <div id="combat_etape" class="choice-chips choice-chips-wrap" role="radiogroup" aria-labelledby="combat_etape_label" tabindex="-1" @keydown="onChoiceKeydown">
+            <span class="choice-label" id="combat_etape_label">Tour</span>
+            <div v-if="!combatStagePickerOpen" class="combat-stage-summary">
+              <span v-if="combatForm.stage" class="choice-chip choice-active combat-stage-current">{{ combatForm.stage }}</span>
+              <button id="combat_etape_toggle" class="button-link" type="button" :aria-expanded="combatStagePickerOpen ? 'true' : 'false'" @click="openCombatStagePicker()">
+                {{ combatForm.stage ? "Changer" : "Préciser le tour" }}
+              </button>
+            </div>
+            <div v-else id="combat_etape" class="choice-chips choice-chips-wrap" role="radiogroup" aria-labelledby="combat_etape_label" tabindex="-1" @keydown="onChoiceKeydown">
               <button
                 v-for="option in combatStageOptions"
                 :key="option"
@@ -30,7 +37,7 @@
                 role="radio"
                 :aria-checked="combatForm.stage === option ? 'true' : 'false'"
                 :class="['choice-chip', { 'choice-active': combatForm.stage === option }]"
-                @click="selectCombatStage(option)">
+                @click="selectCombatStage(option, $event)">
                 {{ option }}
               </button>
             </div>
@@ -43,6 +50,75 @@
               <option v-for="opponent in combatOpponentSuggestions" :key="opponent" :value="opponent"></option>
             </datalist>
           </div>
+
+          <div class="choice-field">
+            <span class="choice-label" id="combat_resultat_label">Résultat <span class="required-mark" aria-hidden="true">*</span></span>
+            <div
+              id="combat_resultat"
+              class="choice-segmented choice-segmented-3"
+              role="radiogroup"
+              aria-labelledby="combat_resultat_label"
+              aria-required="true"
+              :aria-invalid="combatFormErrors.result ? 'true' : 'false'"
+              :aria-describedby="combatFormErrors.result ? 'combat_resultat_error' : null"
+              tabindex="-1"
+              @keydown="onChoiceKeydown">
+              <button
+                v-for="option in combatResultOptions"
+                :key="option.value"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.result === option.value ? 'true' : 'false'"
+                :class="['choice-button', option.className, { 'choice-active': combatForm.result === option.value }]"
+                @click="selectCombatResult(option.value)">
+                {{ option.label }}
+              </button>
+            </div>
+            <p v-if="combatFormErrors.result" id="combat_resultat_error" class="field-error" role="alert">{{ combatFormErrors.result }}</p>
+            <!-- SAISIE-1 : un score sans Ippon ni 3 shidos propose l'issue, sans la choisir. -->
+            <button v-if="combatOutcomeProposal" id="combat_outcome_proposal" class="combat-outcome-proposal" type="button" @click="applyCombatOutcomeProposal()">
+              D'après le score : {{ combatOutcomeProposal.label }}
+            </button>
+            <!-- SAISIE-2 : un résultat qui contredit le score est signalé, sans bloquer l'enregistrement. -->
+            <p v-if="combatOutcomeWarning" id="combat_outcome_warning" class="field-todo combat-outcome-warning" role="status">{{ combatOutcomeWarning }}</p>
+          </div>
+
+          <div id="combatDecisionBlock" class="choice-field" :class="{ hidden: !showCombatDecisionBlock }">
+            <span class="choice-label" id="combat_type_victoire_label">{{ combatDecisionLabel }} <span class="choice-optional">facultatif</span></span>
+            <!-- SAISIE-3 : en mots de tribune, ce que veut dire chaque fin de combat. -->
+            <p class="field-hint combat-decision-hint">Si vous le savez : Ippon (point décisif), avantage (Waza-ari, Yuko), décision des arbitres, disqualification (Hansoku-make) ou forfait.</p>
+            <div id="combat_type_victoire" class="choice-segmented choice-segmented-3 combat-decision-choices" role="radiogroup" aria-labelledby="combat_type_victoire_label" tabindex="-1" @keydown="onChoiceKeydown">
+              <button
+                v-for="option in combatDecisionOptions"
+                :key="option"
+                type="button"
+                role="radio"
+                :aria-checked="combatForm.victoryType === option ? 'true' : 'false'"
+                :class="['choice-button', { 'choice-active': combatForm.victoryType === option }]"
+                @click="selectCombatDecision(option)">
+                {{ option }}
+              </button>
+            </div>
+            <ul v-if="combatFormVictoryTypeIssues.length" class="field-todo-list" aria-label="À compléter sur la fin du combat">
+              <li v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
+            </ul>
+          </div>
+
+          <!-- SAISIE-3 : le détail sert l'analyse du coach et peut attendre. -->
+          <button id="combatDetailToggle" class="button-secondary combat-detail-toggle" type="button" aria-controls="combatDetail" :aria-expanded="combatDetailOpen ? 'true' : 'false'" @click="toggleCombatDetail()">
+            {{ combatDetailOpen ? "Replier le détail" : "Détailler ce combat" }}
+          </button>
+          <p v-if="!combatDetailOpen" class="field-hint combat-detail-hint">Garde, score, points et notes, pour l'analyse du coach. Vous pourrez les compléter plus tard.</p>
+        </div>
+
+        <div id="combatDetail" v-show="combatDetailOpen">
+          <div class="form-section">
+            <div class="form-section-heading">
+              <div>
+                <h3>Détail du combat</h3>
+                <p class="subtitle">Touchez + à chaque action, dans l'ordre où elle arrive.</p>
+              </div>
+            </div>
 
           <div class="choice-field">
             <span class="choice-label" id="combat_garde_adversaire_label">Garde de l'adversaire</span>
@@ -62,16 +138,6 @@
               <li v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
             </ul>
           </div>
-        </div>
-
-        <div class="form-section">
-          <div class="form-section-heading">
-            <div>
-              <h3>Le combat</h3>
-              <p class="subtitle">Touchez + à chaque action, dans l'ordre où elle arrive.</p>
-            </div>
-          </div>
-
           <!-- COMBAT-SCORE : tableau de marque ; chaque + d'un Ippon, Waza-ari ou Yuko ajoute l'action au déroulé. -->
           <div id="combat_score" class="choice-field combat-official-score" tabindex="-1">
             <div class="combat-official-score-header">
@@ -162,70 +228,10 @@
               <li v-for="issue in combatFormScoreIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
             </ul>
           </div>
-        </div>
-
-        <div class="form-section">
-          <div class="form-section-heading">
-            <div>
-              <h3>Fin du combat</h3>
-              <p class="subtitle">Le résultat, puis ce qui l'a décidé.</p>
-            </div>
-          </div>
-
-          <div class="choice-field">
-            <span class="choice-label" id="combat_resultat_label">Résultat <span class="required-mark" aria-hidden="true">*</span></span>
-            <div
-              id="combat_resultat"
-              class="choice-segmented choice-segmented-3"
-              role="radiogroup"
-              aria-labelledby="combat_resultat_label"
-              aria-required="true"
-              :aria-invalid="combatFormErrors.result ? 'true' : 'false'"
-              :aria-describedby="combatFormErrors.result ? 'combat_resultat_error' : null"
-              tabindex="-1"
-              @keydown="onChoiceKeydown">
-              <button
-                v-for="option in combatResultOptions"
-                :key="option.value"
-                type="button"
-                role="radio"
-                :aria-checked="combatForm.result === option.value ? 'true' : 'false'"
-                :class="['choice-button', option.className, { 'choice-active': combatForm.result === option.value }]"
-                @click="selectCombatResult(option.value)">
-                {{ option.label }}
-              </button>
-            </div>
-            <p v-if="combatFormErrors.result" id="combat_resultat_error" class="field-error" role="alert">{{ combatFormErrors.result }}</p>
-            <!-- SAISIE-1 : un score sans Ippon ni 3 shidos propose l'issue, sans la choisir. -->
-            <button v-if="combatOutcomeProposal" id="combat_outcome_proposal" class="combat-outcome-proposal" type="button" @click="applyCombatOutcomeProposal()">
-              D'après le score : {{ combatOutcomeProposal.label }}
-            </button>
-            <!-- SAISIE-2 : un résultat qui contredit le score est signalé, sans bloquer l'enregistrement. -->
-            <p v-if="combatOutcomeWarning" id="combat_outcome_warning" class="field-todo combat-outcome-warning" role="status">{{ combatOutcomeWarning }}</p>
-          </div>
-
-          <div id="combatDecisionBlock" class="choice-field" :class="{ hidden: !showCombatDecisionBlock }">
-            <span class="choice-label" id="combat_type_victoire_label">{{ combatDecisionLabel }}</span>
-            <div id="combat_type_victoire" class="choice-segmented choice-segmented-3 combat-decision-choices" role="radiogroup" aria-labelledby="combat_type_victoire_label" tabindex="-1" @keydown="onChoiceKeydown">
-              <button
-                v-for="option in combatDecisionOptions"
-                :key="option"
-                type="button"
-                role="radio"
-                :aria-checked="combatForm.victoryType === option ? 'true' : 'false'"
-                :class="['choice-button', { 'choice-active': combatForm.victoryType === option }]"
-                @click="selectCombatDecision(option)">
-                {{ option }}
-              </button>
-            </div>
-            <ul v-if="combatFormVictoryTypeIssues.length" class="field-todo-list" aria-label="À compléter sur la fin du combat">
-              <li v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
-            </ul>
-          </div>
-
           <div class="choice-field">
             <label for="combat_deroule">Notes</label>
             <textarea id="combat_deroule" rows="3" placeholder="Ex : ressenti, tactique, consigne du coach..." v-model.trim="combatForm.notes"></textarea>
+          </div>
           </div>
         </div>
 

@@ -133,6 +133,8 @@ async function startServer() {
   return { server, url: `http://127.0.0.1:${server.address().port}`, competition, rpcMethods };
 }
 
+const resultRadioOf = (page, label) => page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
+
 for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
   test(`parcours visuel de création d'un combat sur ${name}`, async (t) => {
     const { server, url, competition, rpcMethods } = await startServer();
@@ -171,11 +173,24 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     }
     await shot("03-form-empty");
 
-    // COMBAT-CHRONO : avant le combat, sans menu déroulant ; toutes les étapes sont visibles.
+    // SAISIE-1 : saisie rapide par défaut ; le résultat et l'enregistrement se voient sans défiler.
+    await expect(page.locator("#combatDetail")).toBeHidden();
+    await expect(page.locator("#combatDetailToggle")).toHaveText("Détailler ce combat");
+    await expect(page.locator("#combat_resultat")).toBeInViewport();
+    await expect(page.locator("#saveCombatButton")).toBeInViewport();
+    await expect(page.locator("#combat_adversaire")).toBeFocused();
+
+    // COMBAT-CHRONO : le tour, sans menu déroulant ; toutes les étapes sont visibles une fois la liste ouverte.
     assert.equal(await page.locator("#combatFormView .combat-quick-section select").count(), 0);
+    await page.locator("#combat_etape_toggle").click();
     const stageOverflow = await page.locator("#combat_etape").evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(stageOverflow, false);
     await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
+    // SAISIE-1 : un toucher sur un tour referme la liste sur une pastille.
+    await expect(page.locator("#combat_etape")).toHaveCount(0);
+    await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Repêchage");
+    await page.locator("#combatDetailToggle").click();
+    await expect(page.locator("#combatDetail")).toBeVisible();
     await expect(page.locator("#combat_adversaire_suggestions option")).toHaveCount(2);
     // SAISIE-3 : un adversaire déjà rencontré remplit sa garde ; un inconnu la laisse vide.
     const stanceRadio = (label) => page.locator("#combat_garde_adversaire").getByRole("radio", { name: label });
@@ -234,7 +249,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     assert.equal(scoreOverflow, false);
 
     // Fin du combat : l'issue déduite ne double pas le point déjà dans le déroulé.
-    await expect(page.locator("#combat_type_victoire_label")).toHaveText("Victoire par");
+    await expect(page.locator("#combat_type_victoire_label")).toHaveText("Victoire par facultatif");
     await expect(timelineRows).toHaveCount(4);
     // SAISIE-2 : un résultat contraire au score est signalé, puis l'issue est rétablie à la main.
     const outcomeWarning = page.locator("#combat_outcome_warning");
@@ -290,7 +305,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     // SAISIE-4 : après une victoire en repêchage, le combat suivant propose « Place de 3 ».
     await page.getByRole("button", { name: "Ajouter un combat" }).click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Place de 3");
+    await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Place de 3");
+    // SAISIE-1 : l'appareil a retenu le détail déplié.
+    await expect(page.locator("#combatDetail")).toBeVisible();
     await expect(page.locator("#combat_adversaire")).toBeFocused();
 
     // SAISIE-1 : 3 shidos de l'adversaire décident l'issue ; en retirer un l'efface.
@@ -327,8 +344,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     // La carte du combat s'ouvre en modification d'un simple toucher.
     await page.locator("#competitionView .combat-card").first().click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Repêchage");
-    await expect(page.locator("#combat_etape")).toBeInViewport();
+    await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Repêchage");
+    await expect(page.locator("#combatFormView .combat-stage-current")).toBeInViewport();
+    await expect(page.locator("#combatDetail")).toBeVisible();
     // Rouvert : score, shidos et déroulé dans l'ordre du combat ; l'issue enregistrée n'est pas recalculée.
     await expect(page.getByRole("status", { name: "Shido à l'adversaire" })).toHaveText("1");
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
@@ -357,5 +375,63 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.locator("#combatFormView")).toBeHidden();
     await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
+  });
+}
+
+// SAISIE-1 / SAISIE-2 : un combat s'enregistre en trois touchers, puis se complète depuis sa carte.
+for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 375, height: 812 }]]) {
+  test(`saisie rapide d'un combat en trois touchers sur ${name}`, async (t) => {
+    const { server, url, competition, rpcMethods } = await startServer();
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ viewport });
+    await context.addInitScript((session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)), {
+      access_token: tokenFor("combat-flow@example.com"),
+      refresh_token: "",
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    });
+    const page = await context.newPage();
+    t.after(async () => {
+      await context.close();
+      await browser.close();
+      await new Promise((resolve) => server.close(resolve));
+    });
+    const shot = (step) => page.screenshot({ path: `output/playwright/saisie-rapide-${name}-${step}.png`, fullPage: true, animations: "disabled" });
+
+    await page.goto(url);
+    await page.locator("#homeView").waitFor({ state: "visible" });
+    await page.getByRole("button", { name: competition.name }).click();
+    await page.getByRole("button", { name: "Ajouter un combat" }).click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
+    await expect(page.locator("#combatDetail")).toBeHidden();
+    // Sans défiler : le résultat, la manière et l'enregistrement.
+    await expect(page.locator("#combat_resultat")).toBeInViewport();
+    await expect(page.locator("#saveCombatButton")).toBeInViewport();
+    await shot("01-vide");
+
+    // Trois touchers : résultat, manière, Enregistrer.
+    await resultRadioOf(page, "Défaite").click();
+    // SAISIE-3 : la manière est facultative et expliquée en mots simples.
+    await expect(page.locator("#combat_type_victoire_label")).toHaveText("Défaite par facultatif");
+    await expect(page.locator("#combatDecisionBlock .combat-decision-hint")).toBeVisible();
+    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true }).click();
+    await expect(page.locator("#combat_type_victoire")).toBeInViewport();
+    await shot("02-rempli");
+    const callsBefore = rpcMethods.length;
+    await page.locator("#saveCombatButton").click();
+    await expect(page.locator("#competitionView")).toBeVisible();
+    assert.deepEqual(rpcMethods.slice(callsBefore), ["ajouterCombat"]);
+    const card = page.locator("#competitionView .combat-card").first();
+    await expect(card.locator(".result-badge").first()).toHaveText("Défaite");
+    await shot("03-enregistre");
+
+    // SAISIE-2 : « À compléter » sur la carte ouvre le combat, détail déplié, sur le champ concerné.
+    await card.getByRole("button", { name: "À compléter : garde de l'adversaire" }).click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
+    await expect(page.locator("#combatDetail")).toBeVisible();
+    await expect(page.locator("#combat_garde_adversaire")).toBeFocused();
+    // Les valeurs saisies en rapide sont retrouvées.
+    await expect(resultRadioOf(page, "Défaite")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true })).toHaveAttribute("aria-checked", "true");
+    await shot("04-completer");
   });
 }

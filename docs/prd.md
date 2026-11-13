@@ -34,7 +34,8 @@ Core product principles:
 - **Zero mandatory coach input**: the product must remain useful even if the coach only ever reads it.
 - **Asynchronous entry by family**: a parent (or the judoka) creates the competition and logs combats from their child's or their own space.
 - **Minimal entry friction**: the combat entry form must be simple enough for a non-judoka parent to fill out unaided.
-- **Online-first for the MVP**: the application requires network connectivity; offline support is explicitly deferred.
+- **Quick entry first, detail later**: a combat is saved with its result in a few touches; the stance, score, points and notes can be completed later by the family, the judoka or the coach.
+- **Usable in the gymnasium**: once opened online, the application stays readable offline, and combats and rankings entered offline are synchronized when the network comes back.
 
 The product is built around two primary views:
 
@@ -74,9 +75,10 @@ What Ayumi is not:
 - Club administrative management (memberships/licenses, dues, attendance tracking).
 - Social networking features or video analysis tooling.
 - A messaging/communication system between users.
-- Offline support — the MVP requires network connectivity; offline handling is deferred entirely.
 - Competition location and actual weigh-in fields.
-- Detailed referee scoring counters (Shido counters, scoreboard timelines, penalty counts). The MVP may still capture lightweight structured decision types and scoring techniques when useful for coach statistics.
+- Scoreboard clock, golden score and penalty reasons as structured fields (they may be written in the combat notes). The official score, shidos and point timeline are recorded, folded under the combat detail.
+- Coach objectives per competition.
+- Reminders or messages sent to families.
 - Storing judoka birth years (a deliberate privacy decision).
 - Password-based and magic-link authentication.
 
