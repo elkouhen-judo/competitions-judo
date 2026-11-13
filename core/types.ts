@@ -249,17 +249,60 @@ export interface CoachDashboardFilters {
   ageCategory?: string;
 }
 
-export interface CoachDashboardLateralMatchupBreakdownEntry {
-  matchup: "same" | "opposite";
+/** STAT-10 : garde du judoka contre garde de l'adversaire (combats gagnés ou perdus). */
+export interface CoachDashboardMatchupEntry {
+  judokaHandedness: string;
+  opponentStance: string;
   label: string;
   combats: number;
   victories: number;
-  victoryRate: number;
 }
 
-export interface CoachDashboardGenderBreakdownEntry {
-  gender: string;
-  judokaCount: number;
+/** STAT-5, STAT-16 : bilan d'un tour ou d'un niveau ; `key` vide = non renseigné. */
+export interface CoachDashboardResultLine {
+  key: string;
+  label: string;
+  combats: number;
+  victories: number;
+  defeats: number;
+}
+
+/** STAT-12 : bilan d'un mois (AAAA-MM). */
+export interface CoachDashboardMonthEntry {
+  month: string;
+  combats: number;
+  victories: number;
+  defeats: number;
+  podiums: number;
+}
+
+/** STAT-2 : victoires avec un point Ippon du judoka, debout ou au sol. */
+export interface CoachDashboardIpponSplit {
+  total: number;
+  standing: number;
+  ground: number;
+}
+
+/** STAT-6 : tenue du score, lue sur le déroulé des combats dont tous les points ont un rang. */
+export interface CoachDashboardScoreHolding {
+  counted: number;
+  scoredFirst: number;
+  wonAfterScoringFirst: number;
+  lostAfterLeading: number;
+  wonAfterTrailing: number;
+}
+
+/** STAT-7 : points au sol parmi les points dont la catégorie est connue. */
+export interface CoachDashboardGroundShare {
+  scored: { ground: number; counted: number };
+  conceded: { ground: number; counted: number };
+}
+
+/** STAT-8 : shidos reçus sur les combats au score renseigné, défaites par Hansoku-make. */
+export interface CoachDashboardDiscipline {
+  scoredCombats: number;
+  shidosReceived: number;
+  hansokuMakeDefeats: number;
 }
 
 export interface CoachDashboardHandednessBreakdownEntry {
@@ -282,8 +325,12 @@ export interface CoachDashboardQualityIssueEntry {
   count: number;
   total: number;
   rate: number;
+  /** STAT-14 : le niveau manquant se compte par compétition, les autres critères par combat. */
+  unit: "combat" | "competition";
   /** Les premiers combats concernés (au plus 50), pour les compléter. */
   combats: CoachDashboardQualityIssueCombat[];
+  /** Les premières compétitions concernées (au plus 50), pour un critère par compétition. */
+  competitions: Array<{ competitionId: string; competitionName: string }>;
 }
 
 /** TDB-3 : résultats d'un judoka sur le périmètre filtré. */
@@ -293,6 +340,9 @@ export interface CoachDashboardJudokaEntry {
   victories: number;
   defeats: number;
   podiums: number;
+  /** STAT-10 : bilan contre les droitiers et contre les gauchers. */
+  vsRightHanded: { combats: number; victories: number };
+  vsLeftHanded: { combats: number; victories: number };
 }
 
 export interface CoachDashboardPodiumBreakdownEntry {
@@ -304,28 +354,36 @@ export interface CoachDashboardPodiumBreakdownEntry {
 export interface CoachDashboardLevelPodiumBreakdownEntry {
   level: string;
   podiums: CoachDashboardPodiumBreakdownEntry[];
+  /** STAT-11 : participations classées (classement final saisi) à ce niveau. */
+  rankedParticipations: number;
 }
 
 export interface CoachDashboardStats {
   analyzedCompetitions: number;
   totalCombats: number;
   victories: number;
+  defeats: number;
+  draws: number;
   victoryRate: number;
-  tachiWazaIpponVictories: number;
-  tachiWazaIpponVictoryRate: number;
-  neWazaIpponVictories: number;
-  neWazaIpponVictoryRate: number;
+  ipponVictories: CoachDashboardIpponSplit;
   victoriesByDecisionType: DecisionBreakdownEntry[];
   defeatsByDecisionType: DecisionBreakdownEntry[];
-  byLateralMatchup: CoachDashboardLateralMatchupBreakdownEntry[];
-  judokasByGender: CoachDashboardGenderBreakdownEntry[];
+  byLateralMatchup: CoachDashboardMatchupEntry[];
+  /** STAT-13 : judokas différents avec au moins un combat, puis leur garde. */
+  engagedJudokas: number;
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
   dataQualityIssues: CoachDashboardQualityIssueEntry[];
   podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
   topWinTechniques: TechniqueBreakdownEntry[];
-  /** TDB-5 : techniques des points marqués par les adversaires. */
-  topConcededTechniques: TechniqueBreakdownEntry[];
+  /** STAT-4 : techniques des points adverses dans les combats perdus. */
+  topDefeatTechniques: TechniqueBreakdownEntry[];
   byJudoka: CoachDashboardJudokaEntry[];
+  byStage: CoachDashboardResultLine[];
+  byLevel: CoachDashboardResultLine[];
+  byMonth: CoachDashboardMonthEntry[];
+  scoreHolding: CoachDashboardScoreHolding;
+  groundShare: CoachDashboardGroundShare;
+  discipline: CoachDashboardDiscipline;
 }
 
 export interface CoachDashboardCompetitionOption {

@@ -1162,22 +1162,19 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     }
   ]);
   assert.equal(allResult.availableCompetitions.length, 2);
+  // STAT-10 : garde du judoka contre garde de l'adversaire.
   assert.deepEqual(
-    allResult.stats.byLateralMatchup.map(({ matchup, combats, victories, victoryRate }) => ({
-      matchup,
-      combats,
-      victories,
-      victoryRate
-    })),
+    allResult.stats.byLateralMatchup.map(({ label, combats, victories }) => [label, combats, victories]),
     [
-      { matchup: "opposite", combats: 0, victories: 0, victoryRate: 0 },
-      { matchup: "same", combats: 3, victories: 2, victoryRate: 67 }
+      ["Droitier contre droitier", 2, 2],
+      ["Droitier contre gaucher", 0, 0],
+      ["Gaucher contre droitier", 0, 0],
+      ["Gaucher contre gaucher", 1, 0]
     ]
   );
-  assert.deepEqual(allResult.stats.judokasByGender, [
-    { gender: "Homme", judokaCount: 1 },
-    { gender: "Femme", judokaCount: 1 }
-  ]);
+  // STAT-13 : l'effectif ne se lit plus par genre.
+  assert.equal(allResult.stats.engagedJudokas, 2);
+  assert.equal("judokasByGender" in allResult.stats, false);
   assert.deepEqual(allResult.stats.judokasByHandedness, [
     { handedness: "Droitier", judokaCount: 1 },
     { handedness: "Gaucher", judokaCount: 1 }
@@ -1193,7 +1190,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "1er", label: "🥇", count: 1 },
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
-      ]
+      ],
+      rankedParticipations: 1
     },
     {
       level: "Régional",
@@ -1201,7 +1199,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "1er", label: "🥇", count: 0 },
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
-      ]
+      ],
+      rankedParticipations: 0
     },
     {
       level: "National",
@@ -1209,7 +1208,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "1er", label: "🥇", count: 0 },
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 1 }
-      ]
+      ],
+      rankedParticipations: 1
     },
     {
       level: "International",
@@ -1217,7 +1217,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "1er", label: "🥇", count: 0 },
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
-      ]
+      ],
+      rankedParticipations: 0
     }
   ]);
 
@@ -1226,14 +1227,15 @@ test("getCoachDashboard computes stats filtered by competition and age category"
   });
   assert.equal(ageFiltered.stats.totalCombats, 2);
   assert.equal(ageFiltered.stats.analyzedCompetitions, 1);
-  assert.equal(ageFiltered.stats.tachiWazaIpponVictories, 1);
+  assert.deepEqual(ageFiltered.stats.ipponVictories, { total: 1, standing: 1, ground: 0 });
   assert.deepEqual(ageFiltered.stats.podiumsByLevel[0], {
     level: "Départemental",
     podiums: [
       { place: "1er", label: "🥇", count: 1 },
       { place: "2e", label: "🥈", count: 0 },
       { place: "3e", label: "🥉", count: 0 }
-    ]
+    ],
+    rankedParticipations: 1
   });
   assert.deepEqual(ageFiltered.availableCompetitions, [
     {

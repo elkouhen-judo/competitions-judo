@@ -4206,6 +4206,15 @@ button.field-todo:disabled {
   font-variant-numeric: tabular-nums;
 }
 
+/* STAT-10 : bilan contre droitiers et gauchers, sur sa propre ligne. */
+
+.dashboard-judoka-versus {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* CREA-8 : sous la liste des judokas, sans la marge négative des aides de formulaire. */
 
 #clubCompetitionUncategorized {

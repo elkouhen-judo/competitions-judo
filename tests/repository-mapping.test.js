@@ -1011,6 +1011,14 @@ test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colon
     deroule: ""
   };
   assert.equal(toCanonicalCombat(row).officialScore, null);
+  // Une ligne relue par l'API REST porte "" à la place de null : le score reste « non renseigné ».
+  const emptyColumns = Object.fromEntries(
+    ["ippon", "wazaari", "yuko", "shido"].flatMap((value) => [
+      [`score_judoka_${value}`, ""],
+      [`score_adversaire_${value}`, ""]
+    ])
+  );
+  assert.equal(toCanonicalCombat({ ...row, ...emptyColumns }).officialScore, null);
   assert.deepEqual(
     toCanonicalCombat({
       ...row,

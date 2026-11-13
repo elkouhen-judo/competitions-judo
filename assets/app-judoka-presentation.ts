@@ -3,6 +3,26 @@
   type JudokaProfilePresentationHelpers = import("./types").JudokaProfilePresentationHelpers;
   type JudokaProfileViewModel = import("./types").JudokaProfileViewModel;
 
+  type DecisionTypeEntry = { decisionType: string; count: number; total?: number; rate?: number };
+  type DecisionTypeLine = { decisionType: string; count: number; rate: number };
+
+  // Fins de combat utiles : lignes non nulles, de la plus fréquente à la moins
+  // fréquente, plus « Non renseignée » pour que la somme égale le total.
+  function buildDecisionTypeLines(entries: DecisionTypeEntry[] | null | undefined, total: number): DecisionTypeLine[] {
+    const safeTotal = Math.max(0, Number(total) || 0);
+    const toRate = (count: number) => (safeTotal ? Math.round((count / safeTotal) * 100) : 0);
+    const lines = (entries || [])
+      .map((entry) => ({ decisionType: entry.decisionType, count: Number(entry.count) || 0 }))
+      .filter((entry) => entry.count > 0)
+      .sort((left, right) => right.count - left.count)
+      .map((entry) => ({ ...entry, rate: toRate(entry.count) }));
+    const missing = safeTotal - lines.reduce((sum, entry) => sum + entry.count, 0);
+    if (missing > 0) {
+      lines.push({ decisionType: "Non renseignée", count: missing, rate: toRate(missing) });
+    }
+    return lines;
+  }
+
   function createJudokaProfileViewModel(
     profile: JudokaProfile | null,
     helpers: JudokaProfilePresentationHelpers
@@ -78,9 +98,9 @@
       heroYearInCategory: yearInCategory,
       heroHandedness: handedness,
       heroSeason: `Saison ${season.label}`,
-      // Les modes à zéro n'apportent rien et allongent la fiche.
-      victoriesByDecisionType: (victoriesByDecisionType || []).filter((entry) => Number(entry.count) > 0),
-      defeatsByDecisionType: (defeatsByDecisionType || []).filter((entry) => Number(entry.count) > 0),
+      // Fins de combat sans ligne à zéro, triées, « Non renseignée » en complément.
+      victoriesByDecisionType: buildDecisionTypeLines(victoriesByDecisionType, seasonWins),
+      defeatsByDecisionType: buildDecisionTypeLines(defeatsByDecisionType, seasonLosses),
       topWinTechniques: topWinTechniques || [],
       hasTopWinTechniques: Boolean((topWinTechniques || []).length),
       competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
@@ -97,4 +117,5 @@
   }
 
   window.createJudokaProfileViewModel = createJudokaProfileViewModel;
+  window.buildDecisionTypeLines = buildDecisionTypeLines;
 })();

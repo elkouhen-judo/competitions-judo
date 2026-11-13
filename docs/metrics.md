@@ -41,129 +41,109 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 ---
 
 ## 2. Règles générales de calcul des taux
-Sauf mention contraire explicite dans les tableaux ci-dessous, tous les taux et pourcentages respectent les règles mathématiques strictes suivantes :
-* **Formule de base :** `taux = round((numérateur / dénominateur) * 100)`.
-* **Arrondi :** Arrondi à l'entier le plus proche (`round()`).
-* **Division par zéro :** Si le dénominateur est `0`, le taux vaut `0`.
+Sauf mention contraire explicite ci-dessous, tous les taux respectent les règles suivantes :
+* **Formule de base :** `taux = round((numérateur / dénominateur) * 100)`, arrondi à l'entier le plus proche.
+* **Division par zéro :** si le dénominateur est `0`, le taux vaut `0`.
+* **Décompte d'abord :** chaque taux affiche d'abord son décompte (`3/8 gagnés (38 %)`).
+* **Seuil de 5 (STAT-1) :** en dessous de 5 combats (ou 5 points) au dénominateur, ni pourcentage ni barre ne s'affichent. Une ligne de taux de victoire affiche alors « trop peu de combats » (`0/1 gagné · trop peu de combats`). La tuile « Victoires » affiche `victoires/combats` sous 5 combats.
 
 ---
 
-## 3. Spécifications détaillées par section
+## 3. Synthèse et sections de résultats
 
-L'ordre des sous-sections ci-dessous suit l'ordre d'affichage du tableau de bord : podiums, volume de combats, effectif engagé, par garde, profil de performance, fins de combat, puis fiabilité des données.
+L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Par judoka, Par tour, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline, puis Saisies à compléter (section 5). Une section sans donnée est masquée.
 
-### 3.1. Section "Volume de combats"
-Cette section comptabilise l'activité globale avec les filtres choisis.
+### 3.1. Synthèse
 
-| Métrique technique    | Libellé IHM                    | Type de décompte      | Règle de calcul et unicité                                                                                                          |
-| :-------------------- | :----------------------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
-| `totalCombats`        | **Combats analysés**           | Compte de lignes      | Nombre total de combats restants après application de l'ensemble des filtres (Étape 1 + Étape 2).                                   |
+| Métrique technique | Libellé IHM | Règle de calcul |
+| :-- | :-- | :-- |
+| `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées (une compétition club comptée une fois). |
+| `victoryRate`, `victories` | **Victoires** | `victories / totalCombats`, seuil de 5 (section 2). |
+| `podiumsByLevel` | **Podiums sur N classés** | Somme des podiums de tous les niveaux, rapportée à la somme des participations classées (`rankedParticipations`). |
+| `dataQualityIssues` | **Saisies à compléter** | Plus grand `count` parmi les critères comptés par combat (`unit = "combat"`). |
+| — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : le tour avec le plus de défaites (tour renseigné), sinon la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
+| `engagedJudokas`, `judokasByHandedness` | **Effectif** | Judokas **distincts** avec au moins un combat retenu, puis ventilés par garde (`Droitier` / `Gaucher`). Le genre n'est pas affiché. |
 
-### 3.2. Section "Effectif engagé"
-Cette section dénombre les judokas distincts avec les filtres choisis, indépendamment du volume de combats.
+*Note :* un judoka avec 5 combats compte pour `5` dans `totalCombats` et pour `1` dans l'effectif.
 
-| Métrique technique    | Libellé IHM                    | Type de décompte      | Règle de calcul et unicité                                                                                                          |
-| :-------------------- | :----------------------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
-| `judokasByGender`     | **Judokas par genre — Homme / Femme** | Dénombrement distinct | Nombre de judokas **uniques/distincts** ayant réalisé au moins un combat avec les filtres choisis, ventilé par genre.       |
-| `judokasByHandedness` | **Judokas droitiers / gauchers** | Dénombrement distinct | Nombre de judokas **uniques/distincts** ayant réalisé au moins un combat avec les filtres choisis, ventilé par garde.      |
+### 3.2. Podiums (`podiumsByLevel`)
+Par niveau (`Départemental`, `Régional`, `National`, `International`) :
+* `podiums` : nombre de participations du périmètre classées exactement `"1er"`, `"2e"` ou `"3e"`.
+* `rankedParticipations` : participations du niveau dont le classement final est saisi (tout classement non vide).
+* Affichage : `🥉 1 troisième place · 1 podium sur 4 participations classées`.
+* Calcul par compétition, pas par combat. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
 
-*Note d'ambiguïté résolue :* Si un même judoka effectue 5 combats avec les filtres choisis, il compte pour `5` dans `totalCombats` (section "Volume de combats"), mais pour `1` dans la ventilation de `judokasByGender` et de `judokasByHandedness` (section "Effectif engagé").
+### 3.3. Par judoka (`byJudoka`)
+Une ligne par judoka du périmètre : `combats`, `victories`, `defeats`, `podiums`, puis `vsRightHanded` et `vsLeftHanded` : combats gagnés ou perdus contre un adversaire droitier (ou gaucher), et victoires parmi eux. Affichage : `contre gauchers 1/5 (20 %)`, pourcentage à partir de 5 combats. La somme des `combats` vaut `totalCombats`.
 
-### 3.3. Section "Profil de performance"
-Pour cette section, le dénominateur commun et systématique est le nombre total de combats filtrés (`totalCombats`).
+### 3.4. Par tour (`byStage`) et Par niveau (`byLevel`)
+* Une ligne par étape présente, dans l'ordre du tableau (Poule, 1/32, 1/16, 1/8, 1/4, 1/2, Finale, Repêchage, Place de 3), puis « Tour non renseigné ».
+* Une ligne par niveau présent (Départemental, Régional, National, International), puis « Niveau non renseigné ».
+* Chaque ligne : `combats`, `victories`, `defeats` ; taux `victories / combats`, seuil de 5. La somme des combats vaut `totalCombats`.
 
-| Métrique technique     | Libellé IHM               | Dénominateur   | Numérateur (Critères d'inclusion)                                                                                                                      |
-| :--------------------- | :------------------------ | :------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `victoryRate`               | **Victoires totales**           | `totalCombats` | Nombre de combats où le résultat pour le judoka suivi est strictement égal à `"Victoire"`.                                                             |
-| `tachiWazaIpponVictoryRate` | **Victoires Ippon debout**      | `totalCombats` | Nombre de combats qui cumulent **à la fois** :<br>1. Résultat = `"Victoire"`<br>2. Au moins un score marqué avec `category = "Tachi-waza"` **et** `value = "Ippon"`. |
-| `neWazaIpponVictoryRate`    | **Victoires Ippon au sol**      | `totalCombats` | Nombre de combats qui cumulent **à la fois** :<br>1. Résultat = `"Victoire"`<br>2. Au moins un score marqué avec `category = "Ne-waza"` **et** `value = "Ippon"`.    |
+### 3.5. Évolution (`byMonth`)
+Une ligne par mois (`AAAA-MM`, mois de la date de compétition) qui compte des combats : `combats`, `victories`, `defeats`, `podiums` (participations du mois classées sur le podium). Taux `victories / combats`, seuil de 5. La section ne s'affiche qu'à partir de 2 mois.
 
-*Note de discriminant :* Le score (`CombatScore.value`) est l'unique critère retenu pour ces deux métriques — le type de décision finale du combat (`victoryType`, ex. nom de la prise) n'intervient pas dans ce calcul. Ces deux métriques ne sont donc pas mutuellement exclusives ni exhaustives par rapport à la ligne `Ippon` de la section 4.1 : un écart entre les deux est un signal de qualité de saisie, voir section 5.
+### 3.6. Ippon : debout ou au sol (`ipponVictories`)
+* Dénominateur `total` : victoires avec au moins un point `Ippon` du judoka.
+* `standing` : parmi elles, celles avec un Ippon `Tachi-waza` ; `ground` : avec un Ippon `Ne-waza`.
+* Affichage : `Debout 3/4`, `Au sol 1/4`, pourcentage à partir de 5. Masquée sans victoire avec point Ippon.
 
-### 3.4. Section "Podiums" (`podiumsByLevel`)
-Cette section dénombre les compétitions du périmètre filtré (Étape 1, indépendamment des combats) terminées sur le podium, puis les regroupe par niveau de compétition.
+### 3.7. Debout ou au sol (`groundShare`)
+* `scored.ground / scored.counted` : points marqués au sol, parmi les points marqués dont la catégorie est connue (`Tachi-waza` ou `Ne-waza`).
+* `conceded.ground / conceded.counted` : idem pour les points concédés.
+* Un point sans technique n'est pas compté.
 
-| Métrique technique | Libellé IHM   | Type de décompte | Règle de calcul                                                                                          |
-| :------------------ | :------------ | :---------------- | :--------------------------------------------------------------------------------------------------------- |
-| `podiumsByLevel[niveau].podiums` (`1er`) | **🥇** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"1er"`. |
-| `podiumsByLevel[niveau].podiums` (`2e`)  | **🥈** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"2e"`.  |
-| `podiumsByLevel[niveau].podiums` (`3e`)  | **🥉** | Compte de lignes  | Nombre de compétitions du périmètre filtré, au niveau concerné, dont le classement final est exactement `"3e"`.  |
+### 3.8. Selon les gardes (`byLateralMatchup`)
+Quatre lignes : droitier contre droitier, droitier contre gaucher, gaucher contre droitier, gaucher contre gaucher (garde du judoka, puis de l'adversaire). Un combat est exclu si son résultat n'est ni `"Victoire"` ni `"Défaite"`, ou si l'une des deux gardes n'est pas `"Droitier"`/`"Gaucher"`. Taux `victories / combats`, seuil de 5. Seules les lignes avec au moins un combat s'affichent.
 
-*Particularités :*
-- **Compteurs bruts uniquement :** contrairement aux autres sections, aucun pourcentage n'est affiché (pas de dénominateur pertinent à exposer).
-- **Compétitions finalisées uniquement :** une compétition dont le classement (`Competition.result`) est vide (non finalisée) est exclue du calcul, y compris pour les places autres que 1/2/3 (`"4e"`…`"8e"`, `"Non classé"` ne comptent pas non plus, seules les valeurs exactes `"1er"`/`"2e"`/`"3e"` sont retenues).
-- **Niveau de calcul :** par compétition, pas par combat — une compétition sans combat enregistré mais déjà classée compte normalement.
-- **Niveaux gérés :** `Départemental`, `Régional`, `National`, `International`. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
+### 3.9. Tenue du score (`scoreHolding`)
+Lue sur le déroulé, point après point, sur les seuls combats dont tous les points (des deux camps) portent un rang unique (`counted`, affiché).
+* « Mener » compare les points cumulés : un Ippon l'emporte sur les Waza-ari, un Waza-ari sur les Yuko.
+* `scoredFirst` : combats où le premier point est au judoka ; `wonAfterScoringFirst` : victoires parmi eux.
+* `lostAfterLeading` : défaites alors que le judoka a mené à un moment.
+* `wonAfterTrailing` : victoires alors que le judoka a été mené à un moment.
 
-### 3.5. Section "Par garde" (`byLateralMatchup`)
-Libellé IHM de la carte : **Garde du judoka vs garde de l'adversaire**.
-Cet indicateur évalue l'impact de la garde des deux combattants sur le taux de réussite du judoka.
-
-#### Critères d'exclusion stricts :
-Un combat est **totalement exclu** de cette section si l'une des conditions suivantes est vraie :
-1. Le résultat du combat n'est ni `"Victoire"` ni `"Défaite"` (par exemple une égalité `Hiki wake`).
-2. La garde du judoka suivi n'est pas une valeur reconnue (`"Droitier"` ou `"Gaucher"`).
-3. La garde de l'adversaire n'est pas une valeur reconnue (`"Droitier"` ou `"Gaucher"`).
-
-#### Catégories de confrontation :
-* **Garde opposée (`opposite`) :** le judoka et l'adversaire n'ont pas la même garde (Droitier vs Gaucher, ou Gaucher vs Droitier).
-* **Même Garde (`same`) :** le judoka et l'adversaire ont la même garde (Droitier vs Droitier, ou Gaucher vs Gaucher).
-
-#### Formules de calcul :
-* **Taux de victoire garde opposée :** `round((victories opposite / combats opposite) * 100)`.
-* **Taux de victoire même garde :** `round((victories same / combats same) * 100)`.
+### 3.10. Discipline (`discipline`)
+* `shidosReceived / scoredCombats` : shidos reçus par combat, sur les combats dont le score officiel est renseigné (`scoredCombats`, affiché). Affichage : `0,5 shido par combat (6 combats)`.
+* `hansokuMakeDefeats` : défaites dont la fin est `Hansoku-make`.
+* Masquée si aucun combat n'a de score renseigné.
 
 ---
 
-## 4. Sections "Fins de combat"
+## 4. Fins de combat et techniques
 
-Ces deux sections analysent la manière dont les combats se terminent. Elles affichent le format textuel suivant à l'écran : `compte / total (taux%)`.
+### 4.1. Fin des combats gagnés (`victoriesByDecisionType`) et perdus (`defeatsByDecisionType`)
+* Dénominateur : victoires (ou défaites) du périmètre.
+* Seules les fins avec au moins un combat s'affichent, de la plus fréquente à la moins fréquente, puis une ligne « Non renseignée » (total moins la somme des lignes) : la somme des lignes égale le total.
+* Affichage : `compte/total (taux %)`, pourcentage et barre à partir de 5.
+* La même règle s'applique à la fiche saison du judoka (sans seuil).
+* L'égalité (`Hiki wake`) n'entre dans aucune des deux sections.
 
-### 4.1. Mode de victoire (`victoriesByDecisionType`)
-* **Dénominateur spécifique :** Nombre total de combats se soldant par une **Victoire** du judoka dans le périmètre filtré.
-* **Fins de combat cartographiées :** `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`.
-* **Formule du taux :** `round( (Victoires par [Fin de combat] / Nombre total de Victoires) * 100 )`
+### 4.2. Techniques qui gagnent (`topWinTechniques`)
+Les 5 techniques les plus marquées par les judokas dans les combats gagnés (3 sur la fiche saison du judoka), ordre alphabétique à égalité. Barres relatives à la plus fréquente.
 
-### 4.2. Mode de défaite (`defeatsByDecisionType`)
-* **Dénominateur spécifique :** Nombre total de combats se soldant par une **Défaite** du judoka dans le périmètre filtré.
-* **Fins de combat cartographiées :** `Ippon`, `Waza-ari`, `Yuko`, `Décision`, `Hansoku-make`, `Forfait`.
-* **Formule du taux :** `round( (Défaites par [Fin de combat] / Nombre total de Défaites) * 100 )`
-
-*Note de cohérence :* L'égalité (`Hiki wake`) possédant son propre type de décision isolé, elle n'intervient jamais dans ces deux sections car le statut du combat n'est ni une Victoire ni une Défaite.
-
----
-
-### 4.3. Techniques subies (`topConcededTechniques`)
-
-Les 3 techniques les plus fréquentes parmi les points marqués par les adversaires (`concededScores`), tous résultats confondus, de la plus fréquente à la moins fréquente (ordre alphabétique à égalité). Un point sans technique n'est pas compté. Les points subis n'entrent dans aucune autre métrique.
-
-### 4.4. Par judoka (`byJudoka`)
-
-Une ligne par judoka du périmètre : `combats` (combats filtrés), `victories`, `defeats`, et `podiums` (compétitions filtrées classées `1er`, `2e` ou `3e`). Un judoka avec une compétition mais sans combat apparaît avec `combats = 0`. La somme des `combats` vaut `totalCombats`.
-
-## 5. Section "Fiabilité des données" (`dataQualityIssues`)
-
-Cette section est affichée en dernier sur le tableau de bord : elle indique les informations manquantes ou à vérifier, à consulter après avoir pris connaissance des résultats eux-mêmes (sections 3 et 4).
-
-Cette section recense, avec les filtres choisis, les combats dont la saisie est incomplète ou à vérifier. Elle n'est affichée que si `totalCombats > 0`. Le dénominateur de chaque critère est `totalCombats` ; l'affichage IHM utilise le format `compte/total (taux%)`.
-
-*Affichage IHM :* le service renvoie toujours les 7 critères (même à `count = 0`) ; seuls les critères avec `count > 0` (au moins un combat concerné) sont affichés à l'écran. Si tous les critères sont à `0`, un message "Aucune donnée à fiabiliser avec ces filtres." remplace la grille.
-
-| Critère (`criterion`) | Libellé IHM                          | Condition de comptage (le combat est compté si...)                                                                  |
-| :--------------------- | :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------- |
-| `judokaHandedness`     | Droitier/gaucher du judoka non renseigné | La garde du judoka suivi est absente.                                                                        |
-| `opponentStance`       | Droitier/gaucher de l'adversaire non renseigné | La garde de l'adversaire est absente.                                                              |
-| `victoryType`          | Fin du combat non renseignée          | La manière dont le combat s'est terminé (`victoryType`) est absente.                                                |
-| `scores`               | Points marqués non renseignés         | Le combat n'a aucun point marqué détaillé (tableau `scores` vide).                                                  |
-| `competitionLevel`     | Niveau de compétition non renseigné   | Le niveau de la compétition associée est absent.                                                                     |
-| `judokaGender`         | Genre du judoka non renseigné         | Le genre du judoka suivi est absent.                                                                                 |
-| `inconsistentIppon`    | Ippon à vérifier                      | Résultat = `"Victoire"` **et** `victoryType = "Ippon"` **et** aucun score marqué n'a `value = "Ippon"` (ni Tachi-waza ni Ne-waza). |
-
-*Combats concernés :* chaque critère renvoie aussi `combats`, les 50 premiers combats concernés (`combatId`, `competitionId`, `competitionName`, `judokaId`, `opponent`), pour les ouvrir depuis l'écran.
-
-*Note :* ce dernier critère détecte la divergence possible entre la ligne `Ippon` de la section 4.1 (basée sur `victoryType`) et les métriques `tachiWazaIpponVictoryRate`/`neWazaIpponVictoryRate` de la section 3.3 (basées sur `scores`) — il signale les combats à compléter plutôt que de forcer une règle de cohérence stricte entre les deux métriques.
+### 4.3. Techniques qui nous battent (`topDefeatTechniques`)
+Les 5 techniques les plus marquées par les adversaires (`concededScores`) dans les **combats perdus** uniquement. Un point concédé dans un combat gagné n'est pas compté ; un point sans technique non plus.
 
 ---
+
+## 5. Section "Saisies à compléter" (`dataQualityIssues`)
+
+Affichée en dernier, si `totalCombats > 0`. Le service renvoie toujours les 6 critères ; seuls ceux avec `count > 0` s'affichent. Si aucun, le message « Toutes les saisies sont complètes. » s'affiche.
+
+| Critère (`criterion`) | Unité | Libellé IHM | Condition de comptage |
+| :-- | :-- | :-- | :-- |
+| `judokaHandedness` | combat | Droitier/gaucher du judoka non renseigné | La garde du judoka suivi est absente. |
+| `opponentStance` | combat | Droitier/gaucher de l'adversaire non renseigné | La garde de l'adversaire est absente. |
+| `victoryType` | combat | Fin du combat non renseignée | `victoryType` est absent. |
+| `scores` | combat | Points marqués non renseignés | Aucun point marqué détaillé. |
+| `competitionLevel` | compétition | Niveau de compétition non renseigné | Compétitions du périmètre sans niveau, sur le nombre de compétitions du périmètre (une compétition club comptée une fois). |
+| `inconsistentIppon` | combat | Ippon à vérifier | Victoire par `Ippon` sans aucun point `Ippon` détaillé. |
+
+*Éléments concernés :* les critères par combat renvoient `combats` (50 premiers : `combatId`, `competitionId`, `competitionName`, `judokaId`, `opponent`) et l'écran propose « Voir les combats » ; le critère par compétition renvoie `competitions` (`competitionId`, `competitionName`) et propose « Voir les compétitions ».
+
+*Note :* le genre du judoka n'est plus un critère de saisie du tableau de bord (STAT-13) ; la recherche MCP garde son filtre par genre.
 
 ---
 

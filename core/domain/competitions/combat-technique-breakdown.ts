@@ -1,4 +1,4 @@
-import { isVictoryCombatResult } from "./combat-result";
+import { isLossCombatResult, isVictoryCombatResult } from "./combat-result";
 import type { Combat, CombatScore, TechniqueBreakdownEntry } from "../../types";
 
 const DEFAULT_TOP_TECHNIQUES_LIMIT = 3;
@@ -39,13 +39,13 @@ export function computeTopWinTechniques(
   );
 }
 
-/** TDB-5 : techniques des points marqués par les adversaires, tous résultats confondus. */
-export function computeTopConcededTechniques(
-  combats: Array<Pick<Combat, "concededScores">>,
+/** STAT-4 : techniques des points marqués par les adversaires dans les combats perdus. */
+export function computeTopDefeatTechniques(
+  combats: Array<Pick<Combat, "result" | "concededScores">>,
   limit: number = DEFAULT_TOP_TECHNIQUES_LIMIT
 ): TechniqueBreakdownEntry[] {
   return rankTechniques(
-    combats.flatMap((combat) => combat.concededScores || []),
+    combats.filter((combat) => isLossCombatResult(combat.result)).flatMap((combat) => combat.concededScores || []),
     limit
   );
 }

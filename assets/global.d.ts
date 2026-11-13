@@ -42,6 +42,10 @@ declare global {
       profile: JudokaProfile | null,
       helpers: JudokaProfilePresentationHelpers
     ) => JudokaProfileViewModel | null;
+    buildDecisionTypeLines: (
+      entries: Array<{ decisionType: string; count: number }> | null | undefined,
+      total: number
+    ) => Array<{ decisionType: string; count: number; rate: number }>;
     createKirokuHomeScreen: (app: KirokuApp) => HomeScreen;
     createKirokuJudokaScreen: (app: KirokuApp) => JudokaScreen;
     createKirokuCompetitionDetailScreen: (

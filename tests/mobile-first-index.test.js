@@ -354,15 +354,35 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   // STATS-1 : quatre chiffres de synthèse, chacun affiché une seule fois.
   assert.match(bundle, /class="dashboard-kpis"/);
   assert.equal((bundle.match(/coachDashboardStats\.analyzedCompetitions/g) || []).length, 1);
-  assert.equal((bundle.match(/\{\{ coachDashboardStats\.victoryRate \}\}%/g) || []).length, 1);
+  assert.equal((bundle.match(/\{\{ coachDashboardVictoryTile\.value \}\}/g) || []).length, 1);
+  // STAT-1 : sous 5 combats, ni pourcentage ni barre.
+  assert.match(client, /const MIN_RATE_SAMPLE = 5;/);
+  assert.match(client, /" · trop peu de combats"/);
+  assert.match(bundle, /v-if="line\.showBar"/);
+  // STAT-15 : la synthèse ne porte aucun jugement.
+  assert.doesNotMatch(client, /Point fort|Point d'attention/);
   assert.doesNotMatch(bundle, /<h3>Volume de combats<\/h3>|<h3>Synthèse coach<\/h3>|coachDashboardTopPodiumLevel/);
   assert.match(bundle, /v-for="line in coachDashboardPodiumLines"/);
   assert.match(client, /"deuxième place", "deuxièmes places"/);
   // STATS-2 : répartitions en barres.
-  assert.match(bundle, /v-for="entry in coachDashboardVictoriesByType"[\s\S]*class="bar-fill" :style="\{ width: entry\.rate \+ '%' \}"/);
+  assert.match(bundle, /v-for="entry in coachDashboardVictoriesByType"[\s\S]*v-if="entry\.showBar"[\s\S]*class="bar-fill" :style="\{ width: entry\.rate \+ '%' \}"/);
   assert.match(bundle, /v-for="entry in coachDashboardDefeatsByType"/);
   assert.match(bundle, /v-for="entry in coachDashboardTopWinTechniqueBars"/);
-  assert.match(bundle, /v-for="entry in coachDashboardByLateralMatchup"/);
+  assert.match(bundle, /v-for="line in coachDashboardByLateralMatchup"/);
+  // STAT-3 : fins de combat utiles et triées, « Non renseignée » en complément.
+  assert.match(client, /decisionType: "Non renseignée"/);
+  // STAT-4 à STAT-12, STAT-16 : nouvelles sections.
+  assert.match(bundle, /v-for="entry in coachDashboardDefeatTechniqueBars"/);
+  assert.match(bundle, /v-for="line in coachDashboardStageLines"/);
+  assert.match(bundle, /v-for="line in coachDashboardLevelLines"/);
+  assert.match(bundle, /v-for="line in coachDashboardMonthLines"/);
+  assert.match(bundle, /v-for="line in coachDashboardScoreHoldingLines"/);
+  assert.match(bundle, /v-for="line in coachDashboardGroundLines"/);
+  assert.match(bundle, /v-for="line in coachDashboardIpponLines"/);
+  assert.match(bundle, /coachDashboardDiscipline\.shidoText/);
+  // STAT-13 : plus de genre dans l'effectif ; STAT-14 : niveau compté par compétition.
+  assert.doesNotMatch(client, /judokasByGender|judokaGender/);
+  assert.match(bundle, /"Voir les compétitions"/);
   assert.match(bundle, /v-for="entry in coachDashboardDataQualityIssues" :key="entry\.criterion"[\s\S]*:aria-label="getDataQualityIssueDescription\(entry\.criterion\)"/);
   assert.match(client, /function getDataQualityIssueDescription\(criterion\)/);
   assert.match(client, /\(entry\) => entry\.count > 0/);

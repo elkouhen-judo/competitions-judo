@@ -598,8 +598,8 @@ export interface JudokaProfileViewModel {
   heroYearInCategory: string;
   heroHandedness: string;
   heroSeason: string;
-  victoriesByDecisionType: Array<{ decisionType: string; count: number; total: number; rate: number }>;
-  defeatsByDecisionType: Array<{ decisionType: string; count: number; total: number; rate: number }>;
+  victoriesByDecisionType: Array<{ decisionType: string; count: number; rate: number }>;
+  defeatsByDecisionType: Array<{ decisionType: string; count: number; rate: number }>;
   topWinTechniques: Array<{ technique: string; count: number }>;
   hasTopWinTechniques: boolean;
   competitionResults: Array<{

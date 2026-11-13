@@ -121,27 +121,30 @@
                 <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.combats"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.combats }}</span></span>
               </span>
             </div>
+            <!-- STAT-1 : sous 5 combats, la tuile donne le décompte, pas un pourcentage. -->
             <div class="mini-stat">
-              <span class="mini-stat-value">{{ coachDashboardStats.victoryRate }}%</span>
-              <span class="mini-stat-label">Victoires ({{ coachDashboardStats.victories }})
+              <span id="coachDashboardVictoryValue" class="mini-stat-value">{{ coachDashboardVictoryTile.value }}</span>
+              <span class="mini-stat-label">{{ coachDashboardVictoryTile.label }}
                 <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.victories"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.victories }}</span></span>
               </span>
             </div>
+            <!-- STAT-11 : podiums rapportés aux participations classées. -->
             <div class="mini-stat">
               <span class="mini-stat-value">{{ coachDashboardPodiumTotal }}</span>
-              <span class="mini-stat-label">Podiums
+              <span class="mini-stat-label">Podiums sur {{ coachDashboardRankedTotal }} classés
                 <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.podiums"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.podiums }}</span></span>
               </span>
             </div>
-            <div class="mini-stat" :class="{ 'mini-stat-todo': coachDashboardDataQualityIssues.length }">
+            <div class="mini-stat" :class="{ 'mini-stat-todo': coachDashboardIncompleteCount }">
               <span class="mini-stat-value">{{ coachDashboardIncompleteCount }}</span>
               <span class="mini-stat-label">Saisies à compléter
                 <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.incomplete"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.incomplete }}</span></span>
               </span>
             </div>
           </div>
+          <!-- STAT-15 : bilan, puis le fait le plus marquant, sans jugement. -->
           <p class="dashboard-summary-insight">{{ coachDashboardSummaryInsight }}</p>
-          <!-- TDB-7 : l'effectif fait partie de la synthèse. -->
+          <!-- STAT-13 : judokas engagés, puis leur garde. -->
           <p class="dashboard-effectif">Effectif : {{ coachDashboardEffectifText }}
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.effectif"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.effectif }}</span></span>
           </p>
@@ -151,7 +154,7 @@
           <h3>Podiums
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.podiumsByLevel"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.podiumsByLevel }}</span></span>
           </h3>
-          <ul class="podium-lines">
+          <ul id="coachDashboardPodiums" class="podium-lines">
             <li v-for="line in coachDashboardPodiumLines" :key="line.level"><strong>{{ line.level }}</strong> : {{ line.text }}</li>
           </ul>
         </div>
@@ -166,6 +169,7 @@
               <button type="button" class="dashboard-judoka-row" @click="openCoachDashboardJudoka(entry.judokaId)">
                 <span class="dashboard-judoka-name">{{ entry.name }}</span>
                 <span class="dashboard-judoka-figures">{{ entry.summary }}</span>
+                <span v-if="entry.versus" class="dashboard-judoka-versus">{{ entry.versus }}</span>
               </button>
             </li>
           </ul>
@@ -174,23 +178,63 @@
           </button>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
-          <h3>Fin des combats gagnés
-            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.victoriesByType"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.victoriesByType }}</span></span>
+        <!-- STAT-5 : à quel tour on gagne et on perd. -->
+        <div class="section" v-if="coachDashboardStageLines.length">
+          <h3>Par tour
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byStage"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byStage }}</span></span>
           </h3>
-          <ul class="bar-list">
-            <li v-for="entry in coachDashboardVictoriesByType" :key="entry.decisionType">
-              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.count }} ({{ entry.rate }}%)</span></div>
-              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
+          <ul id="coachDashboardByStage" class="bar-list">
+            <li v-for="line in coachDashboardStageLines" :key="line.key || line.label">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
             </li>
           </ul>
         </div>
 
-        <div class="section" v-if="coachDashboardTopWinTechniques.length">
+        <!-- STAT-16 : selon le niveau de la compétition. -->
+        <div class="section" v-if="coachDashboardLevelLines.length">
+          <h3>Par niveau
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byLevel"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byLevel }}</span></span>
+          </h3>
+          <ul id="coachDashboardByLevel" class="bar-list">
+            <li v-for="line in coachDashboardLevelLines" :key="line.key || line.label">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- STAT-12 : un mois par ligne, à partir de 2 mois. -->
+        <div class="section" v-if="coachDashboardMonthLines.length">
+          <h3>Évolution
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byMonth"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byMonth }}</span></span>
+          </h3>
+          <ul id="coachDashboardByMonth" class="bar-list">
+            <li v-for="line in coachDashboardMonthLines" :key="line.month">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}<template v-if="line.podiumText"> · {{ line.podiumText }}</template></span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- STAT-3 : seules les fins utiles, de la plus fréquente à la moins fréquente. -->
+        <div class="section" v-if="coachDashboardVictoriesByType.length">
+          <h3>Fin des combats gagnés
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.victoriesByType"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.victoriesByType }}</span></span>
+          </h3>
+          <ul id="coachDashboardVictoriesByType" class="bar-list">
+            <li v-for="entry in coachDashboardVictoriesByType" :key="entry.decisionType">
+              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.text }}</span></div>
+              <div v-if="entry.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="section" v-if="coachDashboardTopWinTechniqueBars.length">
           <h3>Techniques qui gagnent
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.winTechniques"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.winTechniques }}</span></span>
           </h3>
-          <ul class="bar-list">
+          <ul id="coachDashboardWinTechniques" class="bar-list">
             <li v-for="entry in coachDashboardTopWinTechniqueBars" :key="entry.technique">
               <div class="bar-row-head"><span>{{ entry.technique }}</span><span class="bar-row-value">{{ entry.count }}</span></div>
               <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
@@ -198,58 +242,91 @@
           </ul>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
+        <div class="section" v-if="coachDashboardDefeatsByType.length">
           <h3>Fin des combats perdus
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.defeatsByType"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.defeatsByType }}</span></span>
           </h3>
-          <ul class="bar-list">
+          <ul id="coachDashboardDefeatsByType" class="bar-list">
             <li v-for="entry in coachDashboardDefeatsByType" :key="entry.decisionType">
-              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.count }} ({{ entry.rate }}%)</span></div>
-              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
+              <div class="bar-row-head"><span>{{ entry.decisionType }}</span><span class="bar-row-value">{{ entry.text }}</span></div>
+              <div v-if="entry.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
             </li>
           </ul>
         </div>
 
-        <!-- TDB-5 : ce que les adversaires marquent. -->
-        <div class="section" v-if="coachDashboardConcededTechniqueBars.length">
-          <h3>Techniques subies
-            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.concededTechniques"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.concededTechniques }}</span></span>
+        <!-- STAT-4 : ce que les adversaires marquent dans nos défaites. -->
+        <div class="section" v-if="coachDashboardDefeatTechniqueBars.length">
+          <h3>Techniques qui nous battent
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.defeatTechniques"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.defeatTechniques }}</span></span>
           </h3>
-          <ul id="coachDashboardConcededTechniques" class="bar-list">
-            <li v-for="entry in coachDashboardConcededTechniqueBars" :key="entry.technique">
+          <ul id="coachDashboardDefeatTechniques" class="bar-list">
+            <li v-for="entry in coachDashboardDefeatTechniqueBars" :key="entry.technique">
               <div class="bar-row-head"><span>{{ entry.technique }}</span><span class="bar-row-value">{{ entry.count }}</span></div>
               <div class="bar-track bar-track-conceded" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
             </li>
           </ul>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
-          <h3>Ippon
+        <!-- STAT-2 : parmi les victoires avec un Ippon du judoka. -->
+        <div class="section" v-if="coachDashboardIpponLines.length">
+          <h3>Ippon : debout ou au sol
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.ippon"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.ippon }}</span></span>
           </h3>
-          <ul class="bar-list">
-            <li>
-              <div class="bar-row-head"><span>Debout</span><span class="bar-row-value">{{ coachDashboardStats.tachiWazaIpponVictories }} ({{ coachDashboardStats.tachiWazaIpponVictoryRate }}%)</span></div>
-              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: coachDashboardStats.tachiWazaIpponVictoryRate + '%' }"></span></div>
-            </li>
-            <li>
-              <div class="bar-row-head"><span>Au sol</span><span class="bar-row-value">{{ coachDashboardStats.neWazaIpponVictories }} ({{ coachDashboardStats.neWazaIpponVictoryRate }}%)</span></div>
-              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: coachDashboardStats.neWazaIpponVictoryRate + '%' }"></span></div>
+          <ul id="coachDashboardIppon" class="bar-list">
+            <li v-for="line in coachDashboardIpponLines" :key="line.key || line.label">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
             </li>
           </ul>
-          <!-- TDB-7 : le pourcentage est calculé sur tous les combats, pas sur les seuls combats gagnés. -->
-          <p class="dashboard-effectif">Combats gagnés avec au moins un Ippon debout ou au sol, en part de tous les combats.</p>
         </div>
 
-        <div class="section" v-if="coachDashboardStats && coachDashboardStats.totalCombats">
-          <h3>Selon la garde de l'adversaire
+        <!-- STAT-7 : part des points au sol. -->
+        <div class="section" v-if="coachDashboardGroundLines.length">
+          <h3>Debout ou au sol
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.groundShare"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.groundShare }}</span></span>
+          </h3>
+          <ul id="coachDashboardGround" class="bar-list">
+            <li v-for="line in coachDashboardGroundLines" :key="line.key || line.label">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- STAT-10 : garde du judoka contre garde de l'adversaire. -->
+        <div class="section" v-if="coachDashboardByLateralMatchup.length">
+          <h3>Selon les gardes
             <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.lateral"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.lateral }}</span></span>
           </h3>
-          <ul class="bar-list">
-            <li v-for="entry in coachDashboardByLateralMatchup" :key="entry.matchup">
-              <div class="bar-row-head"><span>{{ entry.label }}</span><span class="bar-row-value">{{ entry.victories }}/{{ entry.combats }} gagnés ({{ entry.victoryRate }}%)</span></div>
-              <div class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.victoryRate + '%' }"></span></div>
+          <ul id="coachDashboardMatchups" class="bar-list">
+            <li v-for="line in coachDashboardByLateralMatchup" :key="line.key || line.label">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
             </li>
+          </ul>
+        </div>
+
+        <!-- STAT-6 : qui marque le premier, et qui gagne ensuite. -->
+        <div class="section" v-if="coachDashboardScoreHoldingLines.length">
+          <h3>Tenue du score
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.scoreHolding"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.scoreHolding }}</span></span>
+          </h3>
+          <ul id="coachDashboardScoreHolding" class="bar-list">
+            <li v-for="line in coachDashboardScoreHoldingLines" :key="line.key">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.value }}</span></div>
+            </li>
+          </ul>
+          <p class="dashboard-effectif">Sur {{ coachDashboardStats.scoreHolding.counted }} combat(s) au déroulé complet.</p>
+        </div>
+
+        <!-- STAT-8 : shidos et Hansoku-make. -->
+        <div class="section" v-if="coachDashboardDiscipline">
+          <h3>Discipline
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.discipline"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.discipline }}</span></span>
+          </h3>
+          <ul id="coachDashboardDiscipline" class="bar-list">
+            <li><div class="bar-row-head"><span>Shidos reçus</span><span class="bar-row-value">{{ coachDashboardDiscipline.shidoText }}</span></div></li>
+            <li><div class="bar-row-head"><span>Défaites par Hansoku-make</span><span class="bar-row-value">{{ coachDashboardDiscipline.hansokuMakeText }}</span></div></li>
           </ul>
         </div>
 
@@ -270,16 +347,21 @@
                 <span class="bar-row-value">{{ entry.count }}/{{ entry.total }}</span>
               </div>
               <div class="bar-track bar-track-todo" aria-hidden="true"><span class="bar-fill" :style="{ width: entry.rate + '%' }"></span></div>
-              <!-- TDB-4 : les combats concernés, pour les compléter. -->
+              <!-- TDB-4 : les combats concernés, pour les compléter ; STAT-14 : les compétitions pour le niveau. -->
               <button class="button-secondary compact-button quality-issue-toggle" type="button" :aria-expanded="expandedQualityCriterion === entry.criterion ? 'true' : 'false'" @click="toggleQualityIssue(entry.criterion)">
-                {{ expandedQualityCriterion === entry.criterion ? "Masquer les combats" : "Voir les combats" }}
+                {{ expandedQualityCriterion === entry.criterion ? (entry.unit === 'competition' ? "Masquer les compétitions" : "Masquer les combats") : (entry.unit === 'competition' ? "Voir les compétitions" : "Voir les combats") }}
               </button>
-              <ul v-if="expandedQualityCriterion === entry.criterion" class="quality-issue-combats">
+              <ul v-if="expandedQualityCriterion === entry.criterion && entry.unit === 'competition'" class="quality-issue-combats">
+                <li v-for="competition in entry.competitions" :key="competition.competitionId">
+                  <button type="button" class="quality-issue-combat" @click="openQualityIssueCompetition(competition)">{{ formatCompetitionName(competition.competitionName) || "Compétition" }}</button>
+                </li>
+              </ul>
+              <ul v-else-if="expandedQualityCriterion === entry.criterion" class="quality-issue-combats">
                 <li v-for="combat in entry.combats" :key="combat.combatId">
                   <button type="button" class="quality-issue-combat" @click="openQualityIssueCombat(combat)">{{ getQualityIssueCombatLabel(combat) }}</button>
                 </li>
               </ul>
-              <p v-if="expandedQualityCriterion === entry.criterion && entry.count > entry.combats.length" class="field-hint">
+              <p v-if="expandedQualityCriterion === entry.criterion && entry.unit !== 'competition' && entry.count > entry.combats.length" class="field-hint">
                 Les {{ entry.combats.length }} premiers combats sur {{ entry.count }}.
               </p>
             </li>

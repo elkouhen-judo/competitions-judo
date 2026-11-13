@@ -112,6 +112,7 @@ async function startServer({ clubs = [CLUB] } = {}) {
       opponentStance: "Droitier",
       result: "Victoire",
       victoryType: "Ippon",
+      stage: "Poule",
       scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }],
       concededScores: [],
       judokaGender: "Homme",
@@ -126,6 +127,7 @@ async function startServer({ clubs = [CLUB] } = {}) {
       opponentStance: "",
       result: "Défaite",
       victoryType: "Waza-ari",
+      stage: "1/4",
       scores: [],
       concededScores: conceded,
       judokaGender: "Homme",
@@ -140,6 +142,7 @@ async function startServer({ clubs = [CLUB] } = {}) {
       opponentStance: "Gaucher",
       result: "Défaite",
       victoryType: "Waza-ari",
+      stage: "1/4",
       scores: [],
       concededScores: conceded,
       judokaGender: "Homme",
@@ -422,23 +425,50 @@ for (const [name, viewport] of [
     await expect(filterSummary).toContainText("Saison 2026-2027");
     await expect(filterSummary).toContainText("Coupe de Nantes");
 
-    // TDB-3 : résultats par judoka ; TDB-5 : techniques subies.
+    // STAT-1 : sous 5 combats, la tuile « Victoires » donne le décompte, sans pourcentage.
+    await expect(page.locator("#coachDashboardVictoryValue")).toHaveText("1/3");
+    await expect(
+      page.locator("#coachDashboardView .dashboard-kpis .mini-stat-label").nth(1)
+    ).toContainText("trop peu de combats");
+    // TDB-3, STAT-10 : résultats par judoka, puis bilan contre droitiers et gauchers.
     await expect(page.locator("#coachDashboardJudokas .dashboard-judoka-row")).toHaveText([
-      /Hugo Dubois\s*2 combats · 1 V · 1 D · 1 podium/,
-      /Nina Durand\s*1 combat · 0 V · 1 D/
+      /Hugo Dubois\s*2 combats · 1 V · 1 D · 1 podium\s*contre droitiers 1\/1/,
+      /Nina Durand\s*1 combat · 0 V · 1 D\s*contre gauchers 0\/1/
     ]);
-    await expect(page.locator("#coachDashboardConcededTechniques .bar-row-head")).toHaveText([
+    // STAT-4 : techniques des adversaires dans les défaites.
+    await expect(page.locator("#coachDashboardDefeatTechniques .bar-row-head")).toHaveText([
       /Uchi-mata\s*2/
     ]);
-    // TDB-7 : la synthèse parle de performance ; la légende Ippon porte sur tous les combats.
+    // STAT-15 : le bilan, puis le tour où l'on perd le plus, sans jugement.
     await expect(page.locator("#coachDashboardView .dashboard-summary-insight")).toHaveText(
-      "Point d'attention : 33 % de victoires sur 3 combats ; défaites surtout par Waza-ari."
+      "1 victoire, 2 défaites sur 3 combats. Le plus de défaites : 1/4 (2)."
     );
-    await expect(
-      page
-        .locator("#coachDashboardView")
-        .getByText("en part de tous les combats.", { exact: false })
-    ).toBeVisible();
+    // STAT-5 : par tour, dans l'ordre du tableau ; STAT-1 : pas de barre sous 5 combats.
+    await expect(page.locator("#coachDashboardByStage .bar-row-head")).toHaveText([
+      /Poule\s*1\/1 gagné · trop peu de combats/,
+      /1\/4\s*0\/2 gagnés · trop peu de combats/
+    ]);
+    await expect(page.locator("#coachDashboardByStage .bar-track")).toHaveCount(0);
+    // STAT-16 : par niveau ; STAT-10 : garde du judoka contre garde de l'adversaire.
+    await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
+      /Régional\s*1\/3 gagnés · trop peu de combats/
+    ]);
+    await expect(page.locator("#coachDashboardMatchups .bar-row-head")).toHaveText([
+      /Droitier contre droitier\s*1\/1 gagné · trop peu de combats/,
+      /Droitier contre gaucher\s*0\/1 gagné · trop peu de combats/
+    ]);
+    // STAT-3 : une seule ligne par fin de combat présente ; STAT-2 : Ippon debout parmi les victoires.
+    await expect(page.locator("#coachDashboardDefeatsByType .bar-row-head")).toHaveText([
+      /Waza-ari\s*2\/2/
+    ]);
+    await expect(page.locator("#coachDashboardIppon .bar-row-head")).toHaveText([
+      /Debout\s*1\/1/,
+      /Au sol\s*0\/1/
+    ]);
+    // STAT-11 : podiums rapportés aux participations classées.
+    await expect(page.locator("#coachDashboardPodiums")).toContainText(
+      "1 podium sur 1 participation classée"
+    );
 
     // TDB-4 : un manque de saisie ouvre la liste des combats concernés.
     const opponentIssue = page

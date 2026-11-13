@@ -117,7 +117,8 @@ function toCanonicalOfficialScore(combat: SourceRecord): CombatOfficialScore | n
     "score_judoka_shido",
     "score_adversaire_shido"
   ];
-  if (columns.every((column) => record[column] === null || record[column] === undefined)) {
+  // Une ligne lue par l'API REST porte "" à la place de null : un score absent reste absent.
+  if (columns.every((column) => record[column] === null || record[column] === undefined || record[column] === "")) {
     return null;
   }
   const [ji, jw, jy, ai, aw, ay, js, os] = columns.map((column) => Number(record[column] || 0));
