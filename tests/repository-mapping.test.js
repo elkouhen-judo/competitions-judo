@@ -626,7 +626,6 @@ test("competitions repository maps update, finalization and coach annotation pat
     ownerJudokaId: "JUDO1",
     result: "2e"
   });
-  await competitionsRepository.updateCoachObjective("COMP1", "Travailler le ne-waza");
   await competitionsRepository.updateCoachReview("COMP1", "Bon combat");
   await competitionsRepository.detachAllFromClubCompetition("CLUB1");
   await competitionsRepository.remove("COMP2");
@@ -649,12 +648,6 @@ test("competitions repository maps update, finalization and coach annotation pat
       }
     ],
     ["patch", "competitions", "id_competition=eq.COMP1", { classement: "2e" }],
-    [
-      "patch",
-      "competitions",
-      "id_competition=eq.COMP1",
-      { coach_objective: "Travailler le ne-waza" }
-    ],
     ["patch", "competitions", "id_competition=eq.COMP1", { coach_review: "Bon combat" }],
     ["patch", "competitions", "club_competition_id=eq.CLUB1", { club_competition_id: null }],
     ["delete", "competitions", "id_competition=eq.COMP2"],

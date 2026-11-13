@@ -386,7 +386,6 @@ function buildAssistantSearchText(
       competition?.categorie_poids,
       competition?.niveau,
       competition?.classement,
-      competition?.coach_objective,
       competition?.coach_review,
       ...scoreValues
     ].join(" ")

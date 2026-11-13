@@ -234,3 +234,9 @@ test("STAT-17 : la lecture du tableau de bord coach est une fonction réservée 
   assert.match(schema, new RegExp(`grant execute on function ${signature} to service_role`, "i"));
   assert.match(schema, new RegExp(`revoke execute on function ${signature} from authenticated, anon, public`, "i"));
 });
+
+test("supabase schema no longer stores a coach objective", () => {
+  assert.doesNotMatch(schema, /add column if not exists coach_objective/i);
+  assert.match(schema, /alter table public\.competitions\s+drop column if exists coach_objective;/i);
+  assert.match(schema, /add column if not exists coach_review text not null default ''/i);
+});

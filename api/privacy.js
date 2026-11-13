@@ -63,7 +63,7 @@ function renderPrivacyHtml() {
       <li><strong>Identité et compte</strong> : prénom, nom, adresse e-mail du compte Google utilisé pour se connecter, rôle (judoka, parent, coach, administrateur), club.</li>
       <li><strong>Profil sportif</strong> : catégorie d'âge, catégorie de poids, couleur de ceinture, genre, année dans la catégorie, latéralité.</li>
       <li><strong>Liens familiaux</strong> : lien entre un parent et ses enfants judokas.</li>
-      <li><strong>Activité sportive</strong> : compétitions, combats (adversaire, résultat, points marqués), classements, objectifs et bilans rédigés par le coach.</li>
+      <li><strong>Activité sportive</strong> : compétitions, combats (adversaire, résultat, points marqués), classements, bilans rédigés par le coach.</li>
     </ul>
     <p>Aucune donnée bancaire, aucune donnée de santé et aucune photo ne sont collectées. Le mot de passe Google n'est jamais transmis à Ayumi.</p>
 
@@ -74,7 +74,7 @@ function renderPrivacyHtml() {
         <tbody>
           <tr><td>Créer et sécuriser l'accès à l'application</td><td>Intérêt légitime du club à réserver l'accès à ses membres</td></tr>
           <tr><td>Suivre les compétitions, combats et résultats</td><td>Intérêt légitime du club à accompagner la progression sportive de ses judokas</td></tr>
-          <tr><td>Rédiger les objectifs et bilans du coach</td><td>Intérêt légitime (suivi sportif)</td></tr>
+          <tr><td>Rédiger les bilans du coach</td><td>Intérêt légitime (suivi sportif)</td></tr>
         </tbody>
       </table>
     </div>

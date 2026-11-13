@@ -35,7 +35,6 @@ const competition = {
   weightCategory: "-73 kg",
   level: "Départemental",
   result: null,
-  coachObjective: "",
   coachReview: ""
 };
 

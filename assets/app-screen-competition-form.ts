@@ -13,7 +13,7 @@
   }
 
   // Competition detail concern: viewing a competition + its combats, the coach
-  // objective/review fields, and finalization status. Returns `openCompetition` so the
+  // review field, and finalization status. Returns `openCompetition` so the
   // form controller (and the finalization glue in the main factory) can navigate back
   // into the detail view after a save.
   function createCompetitionDetailController(
@@ -30,9 +30,7 @@
     const { showCombatForm, deleteCombat, editCurrentCompetition } = deps;
 
     const defaultCompetitionDetailViewState = {
-      coachObjectiveText: "",
       coachReviewText: "",
-      coachObjectiveStatus: "",
       coachReviewStatus: ""
     };
 
@@ -169,7 +167,7 @@
     const showCoachAssessment = window.Vue.computed(() =>
       Boolean(
         state.currentCompetition &&
-        (state.isCoach || state.isParent || state.currentCompetition.coachObjective || state.currentCompetition.coachReview)
+        (state.isCoach || state.isParent || state.currentCompetition.coachReview)
       )
     );
     const canEditCoachAssessment = window.Vue.computed(() => state.isCoach);
@@ -191,7 +189,6 @@
           openCombatIssue,
           saveCompetitionRanking,
           showCombatForm,
-          saveCoachObjective,
           saveCoachReview
         },
         {
@@ -223,30 +220,7 @@
       );
     }
 
-    // FICHE-4 : objectif et bilan s'enregistrent à la sortie du champ, sans bouton ni notification.
-    function saveCoachObjective() {
-      if (!competitionDetailRef || !state.currentCompetition) return;
-      const ref = competitionDetailRef;
-      const competitionId = state.currentCompetition.competitionId;
-      const objective = ref.coachObjectiveText;
-      if (objective === (state.currentCompetition.coachObjective || "")) return;
-      ref.coachObjectiveStatus = "Enregistrement…";
-      app.runServer(
-        "saveCoachObjective",
-        [competitionId, objective],
-        () => {
-          ref.coachObjectiveStatus = "Enregistré";
-          if (state.currentCompetition) {
-            state.currentCompetition = { ...state.currentCompetition, coachObjective: objective };
-          }
-        },
-        (error) => {
-          ref.coachObjectiveStatus = "Non enregistré";
-          showError(error);
-        }
-      );
-    }
-
+    // FICHE-4 : le bilan s'enregistre à la sortie du champ, sans bouton ni notification.
     function saveCoachReview() {
       if (!competitionDetailRef || !state.currentCompetition) return;
       const ref = competitionDetailRef;
@@ -354,9 +328,7 @@
           state.canEditCurrentCompetition = Boolean(data.canEditCompetition);
           state.isLoadingCompetition = false;
           if (competitionDetailRef) {
-            competitionDetailRef.coachObjectiveText = data.competition.coachObjective || "";
             competitionDetailRef.coachReviewText = data.competition.coachReview || "";
-            competitionDetailRef.coachObjectiveStatus = "";
             competitionDetailRef.coachReviewStatus = "";
           }
           onLoaded?.();

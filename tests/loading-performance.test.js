@@ -375,7 +375,8 @@ function competition(id, owner, date, extras = {}) {
     categorie_poids: "",
     niveau: "Régional",
     classement: "",
-    coach_objective: "",
+    // Colonne encore en base, plus gérée par l'application.
+    coach_objective: "ANCIEN-OBJECTIF",
     coach_review: "",
     ...extras
   };
@@ -576,10 +577,10 @@ test("CTX-1 : le contexte n'est calculé qu'une fois par appel, et une écriture
   await methods.getCombatSuggestions("coach@example.com", "");
   assert.equal(requests.length, 4);
 
-  // Une écriture (ici l'objectif du coach) vide la mémoire : le contexte est relu ensuite.
+  // Une écriture (ici le bilan du coach) vide la mémoire : le contexte est relu ensuite.
   const afterWrite = await measure(async () => {
     await methods.getCombatSuggestions("coach@example.com", "");
-    await methods.saveCoachObjective("coach@example.com", "C_N01", "Travailler le ne-waza");
+    await methods.saveCoachReview("coach@example.com", "C_N01", "Travailler le ne-waza");
     await methods.getCombatSuggestions("coach@example.com", "");
   });
   const identityReads = afterWrite.requests.filter((request) =>
@@ -735,6 +736,23 @@ test("PAGE-4 : le périmètre d'un coach se filtre par club, sans liste d'identi
     assert.doesNotMatch(request.query, /N01|N30|R01|SOLO1/);
     assert.ok(request.query.length < 300, `URL de ${request.query.length} caractères`);
   });
+});
+
+test("aucune lecture ne renvoie l'ancien objectif du coach resté en base", async () => {
+  const calls = {
+    getInitialData: () => methods.getInitialData("coach@example.com"),
+    getSeasonCompetitions: () => methods.getSeasonCompetitions("coach@example.com", seasonStartYear),
+    getCompetitionDetail: () => methods.getCompetitionDetail("coach@example.com", "C_N01"),
+    getClubCompetitionDetail: () => methods.getClubCompetitionDetail("coach@example.com", "EVENT1"),
+    getJudokaProfile: () => methods.getJudokaProfile("coach@example.com", "N01"),
+    getCoachDashboard: () => methods.getCoachDashboard("coach@example.com", {}),
+    searchCombats: () => methods.searchCombats("coach@example.com", {}),
+    parentInitialData: () => methods.getInitialData("parent@example.com")
+  };
+  for (const [name, call] of Object.entries(calls)) {
+    const { result } = await measure(call);
+    assert.equal(/objecti/i.test(JSON.stringify(result)), false, name);
+  }
 });
 
 test("le périmètre de getInitialData suit le rôle : parent, judoka, admin", async () => {

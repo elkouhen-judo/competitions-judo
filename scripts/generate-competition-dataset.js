@@ -447,6 +447,8 @@ function generateDataset(judokas) {
       }
 
       const ranking = getRanking(wins, losses, draws, random);
+      // Tirage conservé (ancien objectif du coach, supprimé) : le jeu de données généré ne change pas.
+      random();
       competitions.push({
         id_competition: competitionId,
         id_judoka_email: judoka.email,
@@ -457,15 +459,6 @@ function generateDataset(judokas) {
         categorie_poids: weightCategory,
         niveau: level,
         classement: RANKINGS.includes(ranking) ? ranking : "Non classé",
-        coach_objective: pick(
-          [
-            "Installer sa garde forte avant la première attaque.",
-            "Enchaîner attaque debout puis contrôle au sol.",
-            "Rester mobile et provoquer les déplacements adverses.",
-            "Garder l'intensité jusqu'au matte."
-          ],
-          random
-        ),
         coach_review: pick(
           [
             "Progression visible sur l'engagement et l'attitude.",
@@ -517,7 +510,6 @@ function renderSql(dataset) {
     "categorie_poids",
     "niveau",
     "classement",
-    "coach_objective",
     "coach_review"
   ];
   const combatColumns = [
@@ -688,7 +680,6 @@ insert into public.competitions (
   categorie_poids,
   niveau,
   classement,
-  coach_objective,
   coach_review
 )
 select
@@ -701,7 +692,6 @@ select
   seed_rows.categorie_poids,
   seed_rows.niveau,
   seed_rows.classement,
-  seed_rows.coach_objective,
   seed_rows.coach_review
 from seed_rows
 join public.judokas on lower(judokas.email) = lower(seed_rows.id_judoka_email)
@@ -714,7 +704,6 @@ on conflict (id_competition) do update set
   categorie_poids = excluded.categorie_poids,
   niveau = excluded.niveau,
   classement = excluded.classement,
-  coach_objective = excluded.coach_objective,
   coach_review = excluded.coach_review,
   updated_at = now();
 

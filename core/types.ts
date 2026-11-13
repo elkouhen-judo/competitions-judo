@@ -41,7 +41,6 @@ export interface Competition {
   weightCategory: string;
   level: string;
   result: string | null;
-  coachObjective: string;
   coachReview: string;
 }
 
@@ -588,8 +587,6 @@ export interface RpcMethods {
   getCompetitionDetail: (email: string, idCompetition: string) => Promise<CompetitionDetail>;
   /** Crée ou met à jour une compétition personnelle. */
   saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
-  /** Enregistre l'objectif pré-compétition défini par le coach. */
-  saveCoachObjective: (email: string, idCompetition: string, objective: string) => Promise<OperationResult>;
   /** Enregistre le bilan post-compétition rédigé par le coach. */
   saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
   /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre, l'année dans la catégorie et la garde d'un judoka. */

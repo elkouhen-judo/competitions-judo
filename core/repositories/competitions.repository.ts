@@ -44,7 +44,6 @@ export interface CompetitionsRepository {
   remove(idCompetition: string): Promise<void>;
   removeByJudoka(idJudoka: string): Promise<void>;
   update(idCompetition: string, competition: CompetitionModel): Promise<CompetitionRow | null>;
-  updateCoachObjective(idCompetition: string, objective: string): Promise<CompetitionRow | null>;
   updateCoachReview(idCompetition: string, review: string): Promise<CompetitionRow | null>;
   updateResult(
     idCompetition: string,
@@ -300,14 +299,6 @@ export default function createCompetitionsRepository(
     );
   }
 
-  async function updateCoachObjective(idCompetition: string, objective: string): Promise<CompetitionRow | null> {
-    return supabasePatch<CompetitionRow>(
-      "competitions",
-      eqFilter("id_competition", idCompetition),
-      { coach_objective: objective }
-    );
-  }
-
   async function updateCoachReview(idCompetition: string, review: string): Promise<CompetitionRow | null> {
     return supabasePatch<CompetitionRow>(
       "competitions",
@@ -339,7 +330,6 @@ export default function createCompetitionsRepository(
     removeByJudoka,
     update,
     updateClubCompetitionFields,
-    updateCoachObjective,
     updateCoachReview,
     updateResult
   };

@@ -61,7 +61,6 @@ async function startServer() {
     weightCategory: "-63 kg",
     level: "Régional",
     result: null,
-    coachObjective: "",
     coachReview: ""
   };
   let combats = [];

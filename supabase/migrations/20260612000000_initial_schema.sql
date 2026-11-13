@@ -152,8 +152,11 @@ alter table public.competitions
   add column if not exists niveau text not null default '';
 
 alter table public.competitions
-  add column if not exists coach_objective text not null default '',
   add column if not exists coach_review text not null default '';
+
+-- L'application ne gère plus d'objectif du coach : la colonne est retirée.
+alter table public.competitions
+  drop column if exists coach_objective;
 
 alter table public.competitions
   add column if not exists ai_analysis text not null default '';

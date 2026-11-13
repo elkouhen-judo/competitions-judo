@@ -79,7 +79,6 @@ export interface CompetitionRow {
   categorie_poids: string;
   niveau: string;
   classement: string;
-  coach_objective: string;
   coach_review: string;
   ai_analysis: string;
 }

@@ -24,7 +24,6 @@ type CompetitionMethods = Pick<
   | "getCombatSuggestions"
   | "getCompetitionDetail"
   | "saveCompetition"
-  | "saveCoachObjective"
   | "saveCoachReview"
 >;
 
@@ -315,19 +314,6 @@ export default function createCompetitionsService(
     };
   }
 
-  async function saveCoachObjective(email: string, idCompetition: string, objective: string) {
-    const { domainUser } = await userContextService.getDomainUserContext(email);
-    if (domainUser.accessRole !== "COACH") {
-      throw new Error("Seul un coach peut définir un objectif.");
-    }
-    const competition = await competitionsRepository.getById(idCompetition);
-    if (!competition) {
-      throw new Error("Compétition introuvable.");
-    }
-    await competitionsRepository.updateCoachObjective(idCompetition, objective || "");
-    return { success: true, competitionId: idCompetition, message: "Objectif enregistré." };
-  }
-
   async function saveCoachReview(email: string, idCompetition: string, review: string) {
     const { domainUser } = await userContextService.getDomainUserContext(email);
     if (domainUser.accessRole !== "COACH") {
@@ -370,7 +356,6 @@ export default function createCompetitionsService(
       getCombatSuggestions,
       getCompetitionDetail,
       saveCompetition,
-      saveCoachObjective,
       saveCoachReview
     }
   };

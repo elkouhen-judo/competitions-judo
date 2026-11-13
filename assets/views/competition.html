@@ -68,22 +68,13 @@
           <p class="empty-action-body">Les combats et le classement se saisiront à partir du jour de la compétition.</p>
         </div>
 
-        <div v-if="showCoachAssessment" class="section coach-assessment-section">
+        <div v-if="showCoachAssessment && !competitionTiming.isUpcoming" class="section coach-assessment-section">
           <div class="section-heading">
             <div>
               <h3>Suivi coach</h3>
             </div>
           </div>
           <div class="coach-assessment-block">
-            <div class="coach-assessment-label-row">
-              <label class="coach-assessment-label" for="coachObjectiveText">Objectif</label>
-              <span v-if="coachObjectiveStatus" class="autosave-status" role="status">{{ coachObjectiveStatus }}</span>
-            </div>
-            <p v-if="!canEditCoachAssessment && !coachObjectiveText" class="coach-assessment-empty">Aucun objectif défini.</p>
-            <textarea v-if="canEditCoachAssessment" id="coachObjectiveText" class="coach-assessment-textarea" v-model="coachObjectiveText" placeholder="Objectif défini avant la compétition…" rows="2" @input="coachObjectiveStatus = ''" @blur="saveCoachObjective()"></textarea>
-            <p v-else-if="coachObjectiveText" class="coach-assessment-text">{{ coachObjectiveText }}</p>
-          </div>
-          <div v-if="!competitionTiming.isUpcoming" class="coach-assessment-block">
             <div class="coach-assessment-label-row">
               <label class="coach-assessment-label" for="coachReviewText">Bilan</label>
               <span v-if="coachReviewStatus" class="autosave-status" role="status">{{ coachReviewStatus }}</span>

@@ -634,7 +634,6 @@ function createTestCompetitionsService({
     inserted: [],
     updated: [],
     updatedResult: [],
-    coachObjective: [],
     coachReview: [],
     removed: [],
     combatReads: [],
@@ -691,10 +690,6 @@ function createTestCompetitionsService({
       updateResult: async (idCompetition, finalization) => {
         calls.updatedResult.push({ idCompetition, finalization });
         return { ...competitionsByCompetitionId[idCompetition], classement: finalization.result };
-      },
-      updateCoachObjective: async (idCompetition, objective) => {
-        calls.coachObjective.push({ idCompetition, objective });
-        return null;
       },
       updateCoachReview: async (idCompetition, review) => {
         calls.coachReview.push({ idCompetition, review });
@@ -951,7 +946,7 @@ test("finalizeCompetition rejects an admin requester", async () => {
   );
 });
 
-test("saveCoachObjective lets a coach record an objective", async () => {
+test("saveCoachReview lets a coach record a review", async () => {
   const { service, calls } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       COMP1: { id_competition: "COMP1", id_judoka: "JUDO1", nom: "Tournoi", date: "2026-06-14" }
@@ -959,16 +954,18 @@ test("saveCoachObjective lets a coach record an objective", async () => {
     getDomainUserContext: domainContextFor("COACH1", "COACH")
   });
 
-  const result = await service.methods.saveCoachObjective(
+  const result = await service.methods.saveCoachReview(
     "coach@example.com",
     "COMP1",
-    "Travailler le ne-waza"
+    "Bonne attitude, à retravailler au sol"
   );
 
   assert.equal(result.success, true);
-  assert.deepEqual(calls.coachObjective, [
-    { idCompetition: "COMP1", objective: "Travailler le ne-waza" }
+  assert.deepEqual(calls.coachReview, [
+    { idCompetition: "COMP1", review: "Bonne attitude, à retravailler au sol" }
   ]);
+  // Aucune gestion d'objectif.
+  assert.equal("saveCoachObjective" in service.methods, false);
 });
 
 test("saveCoachReview rejects a normal judoka", async () => {
@@ -1657,7 +1654,7 @@ test("getCompetitionDetail exposes inherited club competition fields", async () 
   assert.equal(detail.hasInheritedClubCompetitionFields, true);
 });
 
-test("getCompetitionDetail exposes coach objective to a parent in managed scope", async () => {
+test("getCompetitionDetail exposes the coach review to a parent in managed scope, and no objective", async () => {
   const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       COMP1: {
@@ -1665,7 +1662,8 @@ test("getCompetitionDetail exposes coach objective to a parent in managed scope"
         id_judoka: "CHILD1",
         nom: "Tournoi",
         date: "2026-06-14",
-        coach_objective: "Travailler le ne-waza"
+        coach_objective: "Ancien objectif encore en base",
+        coach_review: "Bonne attitude"
       }
     },
     getDomainUserContext: domainContextFor("PARENT1", "NORMAL", {
@@ -1682,7 +1680,9 @@ test("getCompetitionDetail exposes coach objective to a parent in managed scope"
 
   assert.equal(detail.isParent, true);
   assert.equal(detail.canEditCompetition, true);
-  assert.equal(detail.competition.coachObjective, "Travailler le ne-waza");
+  assert.equal(detail.competition.coachReview, "Bonne attitude");
+  // Un ancien objectif resté en base ne sort plus de l'API.
+  assert.equal(JSON.stringify(detail).includes("objecti"), false);
 });
 
 function createTestCombatsService({

@@ -316,18 +316,24 @@ test("combat cards open on tap and destructive actions are labelled", () => {
   assert.match(bundle, /aria-label="Actions sur la compétition"/);
 });
 
-test("coach objective and review save automatically when leaving the field", () => {
-  assert.match(bundle, /v-if="showCoachAssessment" class="section coach-assessment-section"/);
+test("coach review saves automatically when leaving the field, and no objective is managed", () => {
+  // Le bilan ne s'écrit qu'une fois la compétition commencée : pas de bloc avant sa date.
+  assert.match(
+    bundle,
+    /v-if="showCoachAssessment && !competitionTiming\.isUpcoming" class="section coach-assessment-section"/
+  );
   assert.match(
     client,
-    /state\.isCoach \|\| state\.isParent \|\| state\.currentCompetition\.coachObjective/
+    /state\.isCoach \|\| state\.isParent \|\| state\.currentCompetition\.coachReview/
   );
-  assert.match(bundle, /id="coachObjectiveText"[^>]*@blur="saveCoachObjective\(\)"/);
   assert.match(bundle, /id="coachReviewText"[^>]*@blur="saveCoachReview\(\)"/);
-  assert.match(bundle, /\{\{ coachObjectiveText \}\}/);
+  assert.match(bundle, /\{\{ coachReviewText \}\}/);
   assert.doesNotMatch(bundle, /coach-assessment-save/);
-  assert.match(client, /ref\.coachObjectiveStatus = "Enregistré";/);
-  assert.match(client, /if \(objective === \(state\.currentCompetition\.coachObjective \|\| ""\)\) return;/);
+  assert.match(client, /ref\.coachReviewStatus = "Enregistré";/);
+  assert.match(client, /if \(review === \(state\.currentCompetition\.coachReview \|\| ""\)\) return;/);
+  // Aucune gestion d'objectif dans l'application.
+  assert.doesNotMatch(bundle, /coachObjective|saveCoachObjective|Aucun objectif/);
+  assert.doesNotMatch(client, /coachObjective|saveCoachObjective/);
 });
 
 test("coach dashboard exposes its core filters and readable metrics without a chat", () => {
