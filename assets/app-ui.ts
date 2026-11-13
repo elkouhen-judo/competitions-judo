@@ -148,6 +148,29 @@
     return `${year}-${month}-${day}`;
   }
 
+  // INSCR-2 : saison sportive (septembre → août) et inscription d'un judoka.
+  function getSeasonStartYear(dateValue: unknown): number | null {
+    const match = /^(\d{4})-(\d{2})/.exec(String(dateValue || ""));
+    if (!match) return null;
+    const year = Number(match[1]);
+    return Number(match[2]) >= 9 ? year : year - 1;
+  }
+
+  function formatSeasonLabel(startYear: number) {
+    return `${startYear}-${startYear + 1}`;
+  }
+
+  // Une compétition est ouverte au judoka si sa saison ne dépasse pas sa dernière
+  // inscription. Sans saison d'inscription connue (profil non chargé), on ne bloque pas.
+  function isRegisteredForDate(judoka: Partial<Judoka> | null | undefined, dateValue: unknown) {
+    const competitionSeason = getSeasonStartYear(dateValue);
+    if (competitionSeason === null || !judoka || (judoka.profileType && judoka.profileType !== "JUDOKA")) return true;
+    if (judoka.registrationSeason === undefined) return true;
+    const season = Number(judoka.registrationSeason);
+    if (judoka.registrationSeason === null || !Number.isInteger(season)) return false;
+    return competitionSeason <= season;
+  }
+
   function formatResultat(value: unknown) {
     if (value === "V" || value === "Victoire") return "Victoire";
     if (value === "D" || value === "Défaite") return "Défaite";
@@ -323,6 +346,9 @@
     getClassementBadgeClass,
     getCompactJudokaLabel,
     getCurrentLocalDate,
+    getSeasonStartYear,
+    formatSeasonLabel,
+    isRegisteredForDate,
     getJudokaDisplayName,
     getJudokaInitials,
     createMountedViewModel,

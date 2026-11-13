@@ -50,6 +50,8 @@ export interface JudokaRow {
   pending_parent_email?: string | null;
   club_id?: string | null;
   is_admin?: boolean;
+  /** INSCR-1 : année de début de la saison de la dernière inscription (null = jamais inscrit). */
+  saison_inscription?: number | null;
 }
 
 /** Un compte avec ses liens : clubs coachés et enfants rattachés (CTX-1, une seule requête). */

@@ -1,3 +1,4 @@
+import { formatSeasonLabel, getSeasonStartYear, isRegisteredForCompetitionDate } from "../domain/season";
 import { toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
 import type { createClubCompetition, ClubCompetitionInput } from "../domain/competitions/club-competition";
 import type { createCompetition } from "../domain/competitions/competition";
@@ -103,6 +104,17 @@ export default function createClubCompetitionsService(
     }
   }
 
+  // INSCR-2 : seuls les judokas inscrits pour la saison de la compétition peuvent y être ajoutés.
+  function assertParticipantsRegistered(rows: JudokaRow[], competitionDate: string): void {
+    const unregistered = rows.filter((row) => !isRegisteredForCompetitionDate(row.saison_inscription, competitionDate));
+    if (unregistered.length) {
+      const season = getSeasonStartYear(competitionDate) as number;
+      throw new Error(
+        `Tous les judokas sélectionnés doivent être inscrits pour la saison ${formatSeasonLabel(season)}.`
+      );
+    }
+  }
+
   function isCompetitionFinished(row: { date?: unknown }): boolean {
     const date = String(row.date || "").trim();
     return Boolean(date) && date <= getCurrentDate();
@@ -147,6 +159,7 @@ export default function createClubCompetitionsService(
       const participantRows = await assertParticipantIdsExist(allParticipantJudokaIds);
       const newParticipantRows = participantRows.filter((row) => !existingJudokaIds.has(String(row.id_judoka)));
       assertParticipantsInClub(newParticipantRows, clubId);
+      assertParticipantsRegistered(newParticipantRows, event.competitionDate);
       assertParticipantsMatchAgeCategory(participantRows, event.ageCategory);
     }
 

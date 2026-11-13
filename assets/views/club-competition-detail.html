@@ -131,6 +131,7 @@
           <div v-if="clubCompetitionAvailableJudokas.length > 5" class="list-search">
             <input type="search" id="clubDetailJudokaSearch" aria-label="Rechercher un judoka" placeholder="Rechercher un judoka…" autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
           </div>
+          <p v-if="clubCompetitionUnregisteredCount" id="clubDetailUnregistered" class="field-hint">{{ clubCompetitionUnregisteredCount > 1 ? `${clubCompetitionUnregisteredCount} judokas du club ne sont pas réinscrits pour la saison de cette compétition.` : "1 judoka du club n'est pas réinscrit pour la saison de cette compétition." }}</p>
           <div id="clubDetailAvailableJudokas">
             <div v-if="!clubCompetitionAvailableJudokas.length" class="empty-state">Aucun judoka disponible dans cette catégorie.</div>
             <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>

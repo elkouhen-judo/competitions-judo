@@ -4,13 +4,24 @@
 
   function createKirokuAdminsScreen(app: KirokuApp) {
     const { defaultListPageSize, state, ui, notifications } = app;
-    const { cleanText, getJudokaDisplayName, showView } = ui;
+    const { cleanText, getCurrentLocalDate, getJudokaDisplayName, showView } = ui;
+
+    // INSCR-1 : l'import inscrit les judokas pour une saison (1er septembre – 31 août), celle en cours par défaut.
+    function getSeasonStartYear(dateValue: string): number {
+      const [year, month] = String(dateValue || "").split("-").map(Number);
+      return (month || 0) >= 9 ? year : year - 1;
+    }
+    const currentSeasonStartYear = getSeasonStartYear(getCurrentLocalDate());
+    const importSeasonOptions = [currentSeasonStartYear - 1, currentSeasonStartYear, currentSeasonStartYear + 1].map(
+      (startYear) => ({ value: startYear, label: `${startYear}-${startYear + 1}` })
+    );
     const { clearMessage, showError, showSuccess } = notifications;
     const accessInvitationsPageSize = 5;
     const defaultAdminsViewState = {
       adminEmail: "",
       importUsersFileName: "",
       importUsersCsvContent: "",
+      importSeasonStartYear: 0,
       // ADMIN-1 : la gestion des accès s'organise en quatre onglets.
       adminTab: "users",
       newClubName: "",
@@ -150,6 +161,7 @@
           setUserClub
         },
         {
+          importSeasonOptions: window.Vue.computed(() => importSeasonOptions),
           adminTabs: window.Vue.computed(() => [
             { key: "users", label: "Utilisateurs" },
             { key: "clubs", label: "Clubs" },
@@ -224,11 +236,14 @@
         return;
       }
 
+      const seasonStartYear = viewModel.importSeasonStartYear || currentSeasonStartYear;
       app.runServer(
         "importUsersCsv",
-        [viewModel.importUsersCsvContent],
+        [viewModel.importUsersCsvContent, seasonStartYear],
         (response) => {
-          const importSummary = `Import CSV terminé : ${response.imported} ligne(s) OK, ${response.failed} ligne(s) KO.`;
+          // INSCR-1 : le résumé dit qui est inscrit pour la saison et combien ne sont pas réinscrits.
+          const seasonLabel = `${response.seasonStartYear}-${response.seasonStartYear + 1}`;
+          const importSummary = `Import CSV terminé : ${response.imported} ligne(s) OK, ${response.failed} ligne(s) KO. ${response.registered} judoka(s) inscrit(s) pour ${seasonLabel}, ${response.notReregistered} non réinscrit(s).`;
           viewModel.importUsersFileName = "";
           viewModel.importUsersCsvContent = "";
           const fileInput = document.getElementById("importUsersFile") as HTMLInputElement | null;

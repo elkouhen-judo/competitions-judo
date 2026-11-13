@@ -72,6 +72,9 @@
         : `${judoka.yearInCategory}e année`
       : "";
     const handedness = judoka.handedness || "";
+    // INSCR-2 : judoka non réinscrit pour la saison en cours.
+    const today = helpers.getCurrentLocalDate ? helpers.getCurrentLocalDate() : "";
+    const unregistered = Boolean(today && helpers.isRegisteredForDate && !helpers.isRegisteredForDate(judoka, today));
 
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
@@ -97,6 +100,7 @@
       heroGender: gender,
       heroYearInCategory: yearInCategory,
       heroHandedness: handedness,
+      heroUnregistered: unregistered ? "Non réinscrit" : "",
       heroSeason: `Saison ${season.label}`,
       // Fins de combat sans ligne à zéro, triées, « Non renseignée » en complément.
       victoriesByDecisionType: buildDecisionTypeLines(victoriesByDecisionType, seasonWins),

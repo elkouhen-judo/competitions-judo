@@ -24,6 +24,8 @@ export interface Judoka {
   clubId?: string;
   /** Droit admin indépendant du rôle (un coach peut aussi être admin). */
   adminAccess?: boolean;
+  /** INSCR-1 : année de début de la saison de la dernière inscription (null = jamais inscrit). */
+  registrationSeason?: number | null;
 }
 
 export interface Club {
@@ -183,6 +185,10 @@ export interface UserImportSummary {
   imported: number;
   failed: number;
   results: UserImportRowResult[];
+  /** INSCR-1 : saison de l'import, judokas inscrits par cet import, judokas des clubs importés non réinscrits. */
+  seasonStartYear: number;
+  registered: number;
+  notReregistered: number;
 }
 
 /** COMBAT-SUGG : aides à la saisie d'un combat pour le judoka de la compétition. */
@@ -559,7 +565,7 @@ export interface RpcMethods {
   /** Rattache un judoka à un club (ou l'en retire avec null). Admin uniquement. */
   setJudokaClub: (email: string, idJudoka: string, idClub: string | null) => Promise<OperationResult>;
   /** Importe des profils JUDOKA/PARENT en masse depuis un fichier CSV. */
-  importUsersCsv: (email: string, csvContent: string) => Promise<UserImportSummary>;
+  importUsersCsv: (email: string, csvContent: string, seasonStartYear?: number) => Promise<UserImportSummary>;
   /** Supprime une compétition de club. */
   deleteClubCompetition: (email: string, idClubCompetition: string) => Promise<OperationResult>;
   /** Détache une participation personnelle d'une compétition de club. */

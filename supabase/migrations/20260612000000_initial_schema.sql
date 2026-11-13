@@ -141,6 +141,18 @@ alter table public.judokas
 alter table public.judokas
   add column if not exists pending_parent_email text;
 
+-- INSCR-1 : saison de la dernière inscription du judoka (année de début : 2026 pour 2026-2027),
+-- posée par l'import CSV de réinscription. Les judokas présents à la mise en service (13/11/2026)
+-- sont inscrits pour la saison 2026-2027.
+alter table public.judokas
+  add column if not exists saison_inscription integer;
+
+update public.judokas
+set saison_inscription = 2026
+where saison_inscription is null
+  and profile_type = 'JUDOKA'
+  and created_at < '2026-11-14';
+
 alter table public.club_competitions
   add column if not exists niveau text not null default '';
 
@@ -496,8 +508,16 @@ begin
 
   v_user_id := 'JUDO' || replace(gen_random_uuid()::text, '-', '');
 
-  insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type)
-  values (v_user_id, v_email, v_prenom, v_nom, 'NORMAL', v_profile_type)
+  -- INSCR-1 : un judoka qui s'inscrit sur invitation est inscrit pour la saison en cours.
+  insert into public.judokas (id_judoka, email, prenom, nom, role, profile_type, saison_inscription)
+  values (
+    v_user_id, v_email, v_prenom, v_nom, 'NORMAL', v_profile_type,
+    case
+      when v_profile_type = 'JUDOKA' then
+        (extract(year from current_date) - case when extract(month from current_date) >= 9 then 0 else 1 end)::integer
+      else null
+    end
+  )
   returning * into v_user;
 
   delete from public.access_invitations

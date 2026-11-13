@@ -1,5 +1,6 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
+  type Judoka = import("../core/types").Judoka;
   type ClubCompetitionDetail = import("../core/types").ClubCompetitionDetail;
   type ClubCompetitionDeps = import("./types").ClubCompetitionDeps;
   type OperationResult = import("./types").OperationResult;
@@ -10,6 +11,7 @@
     name: string;
     ageCategory: string;
     clubId: string;
+    registrationSeason?: number | null;
   }
 
   interface ClubCompetitionParticipantCard {
@@ -45,8 +47,11 @@
       formatCompetitionName,
       formatCompetitionRanking,
       getClassementBadgeClass,
+      formatSeasonLabel,
       getCurrentLocalDate,
       getJudokaDisplayName,
+      getSeasonStartYear,
+      isRegisteredForDate,
       showView
     } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
@@ -91,6 +96,7 @@
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
+      clubCompetitionUnregisteredCount: 0,
       judokaAvailableSearchText: "",
       clubCompetitionNewJudokaIds: [] as string[]
     };
@@ -108,11 +114,27 @@
       clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
+      clubCompetitionUnregisteredCount: 0,
       clubCompetitionNewJudokaIds: [] as string[]
     });
     let clubCompetitionDetailMounted = false;
 
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
+
+    function toJudokaOption(j: Judoka): ClubCompetitionJudokaOption {
+      return {
+        judokaId: String(j.judokaId || ""),
+        name: getJudokaDisplayName(j) || "Judoka",
+        ageCategory: String(j.ageCategory || ""),
+        clubId: String(j.clubId || ""),
+        registrationSeason: j.registrationSeason
+      };
+    }
+
+    function isOptionRegistered(option: ClubCompetitionJudokaOption, dateValue?: string) {
+      const date = dateValue ?? clubCompetitionFormViewModel.clubCompetitionForm.competitionDate;
+      return isRegisteredForDate({ profileType: "JUDOKA", registrationSeason: option.registrationSeason }, date);
+    }
 
     // Seuls les judokas du club et de la catégorie de la compétition peuvent y être inscrits.
     const clubCompetitionFormCategoryParticipants = window.Vue.computed(() => {
@@ -122,8 +144,23 @@
         return [];
       }
       return clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
-        (p) => p.clubId === clubId && p.ageCategory === ageCategory
+        (p) => p.clubId === clubId && p.ageCategory === ageCategory && isOptionRegistered(p)
       );
+    });
+    // INSCR-2 : les judokas de la catégorie non réinscrits pour la saison de la compétition.
+    const clubCompetitionFormUnregisteredText = window.Vue.computed(() => {
+      const form = clubCompetitionFormViewModel.clubCompetitionForm;
+      const ageCategory = cleanText(form.ageCategory);
+      const season = getSeasonStartYear(form.competitionDate);
+      if (!ageCategory || !form.clubId || season === null) return "";
+      const count = clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
+        (p) => p.clubId === form.clubId && p.ageCategory === ageCategory && !isOptionRegistered(p)
+      ).length;
+      if (!count) return "";
+      const label = formatSeasonLabel(season);
+      return count > 1
+        ? `${count} judokas de la catégorie ne sont pas réinscrits pour la saison ${label}.`
+        : `1 judoka de la catégorie n'est pas réinscrit pour la saison ${label}.`;
     });
     // CREA-6 : la recherche ne liste que les noms qui correspondent ; la sélection reste dans les pastilles.
     const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
@@ -227,6 +264,7 @@
           selectClubCompetitionLevel,
           toggleAllClubCompetitionParticipants,
           updateClubCompetitionAgeCategory,
+          updateClubCompetitionDate,
           updateClubCompetitionJudokaSearch,
           updateClubCompetitionClub,
           showClubCompetitionFormParticipantsPreviousPage,
@@ -239,6 +277,7 @@
           clubCompetitionFormParticipantsFiltered,
           clubCompetitionFormSelectedParticipants,
           clubCompetitionFormUncategorizedText,
+          clubCompetitionFormUnregisteredText,
           clubCompetitionLevelOptions,
           clubCompetitionFormParticipantsPage: clubCompetitionFormParticipantsPaginationRefs.page,
           clubCompetitionFormParticipantsTotalPages: clubCompetitionFormParticipantsPaginationRefs.totalPages,
@@ -369,6 +408,29 @@
       state.clubCompetitionFormParticipantsCurrentPage = 1;
     }
 
+    // INSCR-2 : changer la date peut changer de saison ; les non-réinscrits sont retirés.
+    function updateClubCompetitionDate() {
+      clubCompetitionFormViewModel.clubCompetitionFormErrors.competitionDate = "";
+      const form = clubCompetitionFormViewModel.clubCompetitionForm;
+      const participantsById = new Map(
+        clubCompetitionFormViewModel.clubCompetitionParticipants.map((p) => [String(p.judokaId), p])
+      );
+      const kept = form.participantJudokaIds.filter((id) => {
+        const participant = participantsById.get(String(id));
+        return !participant || isOptionRegistered(participant);
+      });
+      const removed = form.participantJudokaIds.length - kept.length;
+      if (!removed) return;
+      form.participantJudokaIds = kept;
+      const season = getSeasonStartYear(form.competitionDate);
+      const label = season === null ? "" : ` pour la saison ${formatSeasonLabel(season)}`;
+      clubCompetitionFormViewModel.clubCompetitionFormNotice =
+        removed > 1
+          ? `${removed} judokas retirés : ils ne sont pas réinscrits${label}.`
+          : `1 judoka retiré : il n'est pas réinscrit${label}.`;
+      state.clubCompetitionFormParticipantsCurrentPage = 1;
+    }
+
     function updateClubCompetitionAgeCategory() {
       clubCompetitionFormViewModel.clubCompetitionFormErrors.ageCategory = "";
       const ageCategory = cleanText(clubCompetitionFormViewModel.clubCompetitionForm.ageCategory);
@@ -456,12 +518,7 @@
     function showClubCompetitionForm() {
       clearMessage();
       ensureClubCompetitionFormViewModel();
-      const allParticipants = state.judokas.map((j) => ({
-        judokaId: String(j.judokaId || ""),
-        name: getJudokaDisplayName(j) || "Judoka",
-        ageCategory: String(j.ageCategory || ""),
-        clubId: String(j.clubId || "")
-      }));
+      const allParticipants = state.judokas.map(toJudokaOption);
       // Club par défaut : celui filtré sur l'accueil, ou l'unique club du coach.
       const defaultClubId =
         state.selectedClubId || (state.clubs.length === 1 ? state.clubs[0].clubId : "");
@@ -634,15 +691,15 @@
           state.clubCompetitionParticipantsCurrentPage = 1;
           // Seuls les judokas du club de la compétition peuvent y être ajoutés.
           const eventClubId = String(cc.club_id || "");
-          const available = state.judokas
+          let available = state.judokas
             .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
             .filter((j) => String(j.clubId || "") === eventClubId)
-            .map((j) => ({
-              judokaId: String(j.judokaId || ""),
-              name: getJudokaDisplayName(j) || "Judoka",
-              ageCategory: String(j.ageCategory || ""),
-              clubId: String(j.clubId || "")
-            }));
+            .map(toJudokaOption);
+          // INSCR-2 : les judokas non réinscrits pour la saison de la compétition ne sont pas proposés.
+          clubCompetitionDetailViewModel.clubCompetitionUnregisteredCount = available.filter(
+            (j) => !isOptionRegistered(j, String(cc.date || ""))
+          ).length;
+          available = available.filter((j) => isOptionRegistered(j, String(cc.date || "")));
           clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = available;
           clubCompetitionDetailViewModel.judokaAvailableSearchText = "";
           clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];

@@ -51,7 +51,8 @@ function createClubCompetitionsServiceFor({ events = {}, judokas = {}, calls = [
       detachAllFromClubCompetition: async () => {}
     },
     judokasRepository: {
-      listByIds: async (ids) => ids.map((id) => judokas[id]).filter(Boolean)
+      // INSCR-2 : les judokas des jeux de données sont inscrits pour la saison en cours.
+      listByIds: async (ids) => ids.map((id) => judokas[id] && { saison_inscription: 2026, ...judokas[id] }).filter(Boolean)
     },
     userContextService: { getDomainUserContext: context },
     canManageClubCompetition: permissions.canManageClubCompetition,

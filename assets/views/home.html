@@ -160,6 +160,7 @@
         </div>
 
         <div v-if="showCompetitionsSection && isHomeReady" id="homeCompetitionsSection" class="section">
+          <p v-if="homeRegistrationNotice" id="homeRegistrationNotice" class="registration-notice" role="status">{{ homeRegistrationNotice }} Les compétitions déjà saisies restent consultables ; demandez la réinscription au club pour en ajouter.</p>
           <div id="competitionsList">
             <div v-if="!hasCompetitions" class="empty-action">
               <p class="empty-action-title">Aucune compétition</p>

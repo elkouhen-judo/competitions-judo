@@ -63,6 +63,7 @@ export interface JudokasRepository {
   listByClubIds(clubIds: string[]): Promise<JudokaRow[]>;
   countByClub(idClub: string): Promise<number>;
   setClub(idJudoka: string, idClub: string | null): Promise<void>;
+  setRegistrationSeason(idJudoka: string, seasonStartYear: number): Promise<void>;
   setAdminFlag(idJudoka: string, isAdmin: boolean): Promise<void>;
   remove(idJudoka: string): Promise<void>;
   saveJudokaInfo(
@@ -311,6 +312,11 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     return total;
   }
 
+  // INSCR-1 : la réinscription pose la saison de la dernière inscription.
+  async function setRegistrationSeason(idJudoka: string, seasonStartYear: number): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { saison_inscription: seasonStartYear });
+  }
+
   async function setClub(idJudoka: string, idClub: string | null): Promise<void> {
     await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { club_id: idClub || null });
   }
@@ -367,6 +373,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     listByClubIds,
     countByClub,
     setClub,
+    setRegistrationSeason,
     setAdminFlag,
     remove,
     saveJudokaInfo,

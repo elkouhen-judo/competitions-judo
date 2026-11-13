@@ -115,6 +115,9 @@ export interface KirokuUi {
   getClassementBadgeClass(value: unknown): string;
   getCompactJudokaLabel(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate(): string;
+  getSeasonStartYear(dateValue: unknown): number | null;
+  formatSeasonLabel(startYear: number): string;
+  isRegisteredForDate(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
   onChoiceKeydown(event: KeyboardEvent): void;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
@@ -546,6 +549,8 @@ export interface JudokaProfilePresentationHelpers {
   getClassementBadgeClass(value: unknown): string;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
+  getCurrentLocalDate?(): string;
+  isRegisteredForDate?(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
 }
 
 export interface CombatScoreFormRow {
@@ -597,6 +602,7 @@ export interface JudokaProfileViewModel {
   heroGender: string;
   heroYearInCategory: string;
   heroHandedness: string;
+  heroUnregistered: string;
   heroSeason: string;
   victoriesByDecisionType: Array<{ decisionType: string; count: number; rate: number }>;
   defeatsByDecisionType: Array<{ decisionType: string; count: number; rate: number }>;

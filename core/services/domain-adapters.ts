@@ -51,6 +51,11 @@ function normalizeCanonicalCombatResult(value: unknown): Combat["result"] {
   return "Défaite";
 }
 
+function toRegistrationSeason(value: unknown): number | null {
+  const season = Number(value);
+  return value !== null && value !== undefined && value !== "" && Number.isInteger(season) ? season : null;
+}
+
 export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
   return {
     judokaId: String(pick(user, "judokaId", "id_judoka") || ""),
@@ -66,7 +71,8 @@ export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
     yearInCategory: String(pick(user, "yearInCategory", "annee_categorie") || ""),
     handedness: String(pick(user, "handedness", "lateralite") || ""),
     clubId: String(pick(user, "clubId", "club_id") || ""),
-    adminAccess: pick(user, "adminAccess", "is_admin") === true
+    adminAccess: pick(user, "adminAccess", "is_admin") === true,
+    registrationSeason: toRegistrationSeason(pick(user, "registrationSeason", "saison_inscription"))
   };
 }
 

@@ -1107,3 +1107,10 @@ test("SCORE-VIDE : un score entièrement nul n'est ni relu ni enregistré comme 
   assert.equal(calls[0][3].score_judoka_ippon, null);
   assert.equal(calls[0][3].score_adversaire_shido, null);
 });
+
+test("INSCR-1 : judokas repository writes the registration season", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(createRepositoryDeps(calls));
+  await judokasRepository.setRegistrationSeason("J1", 2027);
+  assert.deepEqual(calls, [["patch", "judokas", "id_judoka=eq.J1", { saison_inscription: 2027 }]]);
+});

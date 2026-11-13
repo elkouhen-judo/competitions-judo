@@ -4221,6 +4221,25 @@ button.field-todo:disabled {
 
 /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */
 
+/* INSCR-2 : judoka non réinscrit pour la saison. */
+
+.registration-notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--warning);
+  border-radius: 10px;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.result-badge.badge-unregistered {
+  border-color: var(--warning);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
 .dashboard-withheld {
   display: grid;
   justify-items: center;

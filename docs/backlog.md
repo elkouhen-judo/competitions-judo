@@ -107,7 +107,7 @@ Décisions prises (13/11/2026) :
 - L'adversaire figure dans l'écran rapide, en facultatif.
 - Aucun rappel ni relance des familles n'est ajouté.
 
-### SAISIE-1 — Écran rapide : le résultat d'abord (P1, M)
+### SAISIE-1 — Écran rapide : le résultat d'abord (P1, M) — fait
 
 - Constat : sur mobile, le formulaire fait environ trois écrans de haut. « Résultat », seul champ obligatoire, est tout en bas.
 - Constat : la règle CBT-011 impose toutes les sections, toujours affichées, dans l'ordre du combat.
@@ -122,7 +122,7 @@ Décisions prises (13/11/2026) :
 - Acceptation : un combat enregistré en rapide puis rouvert contient les mêmes valeurs.
 - Fichiers : `assets/views/combat-form.html`, `assets/app-screen-combat-form.ts`, `assets/app.tailwind.css`, `docs/spec.md` (CBT-011, CBT-013, UIX-034), `tests/combat-creation-visual.test.js`, `tests/mobile-first-index.test.js`.
 
-### SAISIE-2 — Compléter plus tard (P1, S) — après SAISIE-1
+### SAISIE-2 — Compléter plus tard (P1, S) — fait
 
 - Constat : la carte d'un combat affiche déjà ses manques (« À compléter »). Elle n'y conduit pas.
 - Règle : toucher « À compléter » sur la carte ouvre le combat avec le détail déplié, sur le premier manque.
@@ -130,7 +130,7 @@ Décisions prises (13/11/2026) :
 - Acceptation : un combat saisi en rapide se complète en deux touchers depuis la fiche de la compétition.
 - Fichiers : `assets/views/competition.html`, `assets/app-screen-competition-form.ts`, `assets/app-screen-combat-form.ts`, `docs/spec.md` (UIX-030, UIX-034), `tests/combat-creation-visual.test.js`.
 
-### SAISIE-3 — Des mots pour les parents (P2, S) — après SAISIE-1
+### SAISIE-3 — Des mots pour les parents (P2, S) — fait
 
 - Constat : le vocabulaire (Waza-ari, Yuko, Hansoku-make, garde) suppose un pratiquant. Rien ne dit ce qui est facultatif.
 - Règle : « Victoire par » et « Défaite par » portent la mention « facultatif » et une phrase d'aide.
@@ -139,7 +139,7 @@ Décisions prises (13/11/2026) :
 - Acceptation : l'écran rapide ne demande aucun terme de judo pour enregistrer une victoire ou une défaite.
 - Fichiers : `assets/views/combat-form.html`, `docs/spec.md` (CBT-005, UIX-032), `tests/mobile-first-index.test.js`.
 
-### SAISIE-4 — Documents alignés sur le produit (P3, S)
+### SAISIE-4 — Documents alignés sur le produit (P3, S) — fait
 
 - Constat : `docs/prd.md` exclut encore les compteurs de score, les shidos et le hors connexion, tous présents.
 - Constat : `docs/spec.md` (COMP-012) autorise les classements 4e, 6e et 8e ; l'écran propose 1er, 2e, 3e, 5e, 7e et « Non classé ».
@@ -164,7 +164,7 @@ Décisions prises (13/11/2026) :
 - Mise en service : tous les judokas présents au déploiement sont considérés inscrits pour la saison en cours.
 - Catégorie de poids : elle n'entre pas dans l'import. Elle est saisie compétition par compétition.
 
-### INSCR-1 — Saison d'inscription posée par l'import (P1, M)
+### INSCR-1 — Saison d'inscription posée par l'import (P1, M) — fait
 
 - Règle : chaque ligne `JUDOKA` importée ou réimportée enregistre la saison d'inscription du judoka, choisie sur l'écran d'import (saison en cours par défaut).
 - Règle : la saison est stockée sur le judoka (`judokas.saison_inscription`, année de début de saison). Seule la dernière saison est gardée.
@@ -176,7 +176,7 @@ Décisions prises (13/11/2026) :
 - Acceptation : un judoka absent du réimport garde sa saison d'inscription précédente et toutes ses données.
 - Fichiers : `supabase/migrations/20260612000000_initial_schema.sql`, `core/services/admin.service.ts`, `core/repositories/judokas.repository.ts`, `core/services/domain-adapters.ts`, `core/types.ts`, `assets/views/admins.html`, `docs/spec.md` (AUTH-019), `docs/supabase-schema.md`, `tests/application-services.test.js`, `tests/repository-mapping.test.js`, `tests/supabase-schema.test.js`.
 
-### INSCR-2 — Pas de compétition pour un judoka non réinscrit (P1, M) — après INSCR-1
+### INSCR-2 — Pas de compétition pour un judoka non réinscrit (P1, M) — fait
 
 - Règle : un judoka ne peut être inscrit à une compétition que s'il est inscrit pour la saison de la date de cette compétition.
 - Règle : la règle vaut pour les deux chemins : participant d'une compétition club (coach) et compétition individuelle (famille ou judoka).

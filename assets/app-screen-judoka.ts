@@ -49,6 +49,7 @@
       heroGender: "",
       heroYearInCategory: "",
       heroHandedness: "",
+      heroUnregistered: "",
       heroSeason: "",
       seasonLabel: "",
       seasonCompetitionCount: "0",
@@ -78,7 +79,9 @@
           formatCompetitionRanking,
           getClassementBadgeClass,
           getJudokaDisplayName,
-          getJudokaInitials
+          getJudokaInitials,
+          getCurrentLocalDate: ui.getCurrentLocalDate,
+          isRegisteredForDate: ui.isRegisteredForDate
         }) ?? defaultJudokaProfile
       );
     });
@@ -102,6 +105,7 @@
     const heroGender = window.Vue.computed(() => judokaProfile.value.heroGender);
     const heroYearInCategory = window.Vue.computed(() => judokaProfile.value.heroYearInCategory);
     const heroHandedness = window.Vue.computed(() => judokaProfile.value.heroHandedness);
+    const heroUnregistered = window.Vue.computed(() => judokaProfile.value.heroUnregistered);
     const heroSeason = window.Vue.computed(() => judokaProfile.value.heroSeason);
     const seasonLabel = window.Vue.computed(() => judokaProfile.value.seasonLabel);
     const seasonCompetitionCount = window.Vue.computed(
@@ -286,6 +290,7 @@
           heroGender,
           heroYearInCategory,
           heroHandedness,
+          heroUnregistered,
           heroSeason,
           seasonLabel,
           seasonCompetitionCount,

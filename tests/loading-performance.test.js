@@ -360,6 +360,8 @@ function judoka(id, extras = {}) {
     categorie_age: "Cadet",
     club_id: null,
     is_admin: false,
+    // INSCR-2 : inscrit pour la saison en cours.
+    saison_inscription: seasonStartYear,
     ...extras
   };
 }

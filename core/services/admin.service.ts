@@ -25,6 +25,7 @@ import type {
 } from "../domain/category-reference";
 import type { AccessRole } from "../domain/access/role";
 import { parseCsv } from "../shared/csv";
+import { getSeasonStartYear } from "../domain/season";
 
 /** PAGE-3 : taille d'une page de la liste des utilisateurs. */
 const USERS_PAGE_SIZE = 10;
@@ -89,6 +90,7 @@ interface UserImportControllerDeps {
   normalizeEmail: (value: unknown) => string;
   requireAdminUser: (email: string) => Promise<JudokaRow>;
   getAccessInvitation: (email: string) => Promise<AccessInvitationRow | null>;
+  getCurrentDate: () => string;
 }
 
 // CSV import concern: resolving each row against existing judokas/invitations/parent
@@ -547,11 +549,39 @@ function createUserImportController(deps: UserImportControllerDeps) {
     return String(club.id_club);
   }
 
-  async function assignImportedJudokaToClub(row: Record<string, string>, clubId: string): Promise<void> {
+  async function findImportedJudoka(row: Record<string, string>): Promise<JudokaRow | null> {
     const rawEmail = cleanText(row.email);
-    const judoka = rawEmail
-      ? await judokasRepository.getByEmail(normalizeEmail(rawEmail))
-      : await judokasRepository.getByName(cleanText(row.prenom), cleanText(row.nom));
+    return rawEmail
+      ? judokasRepository.getByEmail(normalizeEmail(rawEmail))
+      : judokasRepository.getByName(cleanText(row.prenom), cleanText(row.nom));
+  }
+
+  // INSCR-1 : une ligne JUDOKA importée inscrit le judoka pour la saison de l'import.
+  async function registerImportedJudoka(row: Record<string, string>, seasonStartYear: number): Promise<string> {
+    const judoka = await findImportedJudoka(row);
+    if (!judoka || String(judoka.profile_type || "") !== "JUDOKA") {
+      return "";
+    }
+    if (Number(judoka.saison_inscription) !== seasonStartYear) {
+      await judokasRepository.setRegistrationSeason(judoka.id_judoka, seasonStartYear);
+    }
+    return String(judoka.id_judoka);
+  }
+
+  // INSCR-1 : saison de l'import ; la saison en cours par défaut.
+  function resolveImportSeason(seasonStartYear: unknown): number {
+    if (seasonStartYear === undefined || seasonStartYear === null || seasonStartYear === "") {
+      return getSeasonStartYear(deps.getCurrentDate()) as number;
+    }
+    const season = Number(seasonStartYear);
+    if (!Number.isInteger(season) || season < 2000 || season > 2100) {
+      throw new Error("Saison d'inscription invalide.");
+    }
+    return season;
+  }
+
+  async function assignImportedJudokaToClub(row: Record<string, string>, clubId: string): Promise<void> {
+    const judoka = await findImportedJudoka(row);
     if (!judoka) {
       return;
     }
@@ -567,14 +597,17 @@ function createUserImportController(deps: UserImportControllerDeps) {
     }
   }
 
-  async function importUsersCsv(email: string, csvContent: string) {
+  async function importUsersCsv(email: string, csvContent: string, seasonStartYear?: number) {
     await requireAdminUser(email);
+    const season = resolveImportSeason(seasonStartYear);
     const rows = parseCsv(String(csvContent || ""));
     if (!rows.length) {
       throw new Error("Fichier CSV vide.");
     }
 
     const results: UserImportRowResult[] = [];
+    const registeredIds = new Set<string>();
+    const importedClubIds = new Set<string>();
     const importContext = createUserImportContext();
     const clubs = clubsRepository ? await clubsRepository.listAll() : [];
     for (let index = 0; index < rows.length; index += 1) {
@@ -586,6 +619,11 @@ function createUserImportController(deps: UserImportControllerDeps) {
         const outcome = await importUserRow(importContext, row);
         if (clubId) {
           await assignImportedJudokaToClub(row, clubId);
+          importedClubIds.add(clubId);
+        }
+        const registeredId = await registerImportedJudoka(row, season);
+        if (registeredId) {
+          registeredIds.add(registeredId);
         }
         results.push({
           row: rowNumber,
@@ -605,11 +643,23 @@ function createUserImportController(deps: UserImportControllerDeps) {
       }
     }
 
+    // INSCR-1 : judokas des clubs de l'import qui ne sont pas inscrits pour cette saison.
+    const clubJudokas = importedClubIds.size ? await judokasRepository.listByClubIds([...importedClubIds]) : [];
+    const notReregistered = clubJudokas.filter(
+      (judoka) =>
+        String(judoka.profile_type || "") === "JUDOKA" &&
+        !registeredIds.has(String(judoka.id_judoka)) &&
+        Number(judoka.saison_inscription) !== season
+    ).length;
+
     return {
       success: results.every((result) => result.success),
       imported: results.filter((result) => result.success).length,
       failed: results.filter((result) => !result.success).length,
-      results
+      results,
+      seasonStartYear: season,
+      registered: registeredIds.size,
+      notReregistered
     };
   }
 
@@ -676,7 +726,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     createYearInCategory,
     normalizeEmail,
     requireAdminUser,
-    getAccessInvitation
+    getAccessInvitation,
+    getCurrentDate
   });
 
   // PAGE-3 : le serveur renvoie une page d'utilisateurs et le total ; la recherche part au serveur.

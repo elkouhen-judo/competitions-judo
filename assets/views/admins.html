@@ -256,8 +256,15 @@
               <li>Les colonnes sportives sont facultatives : <strong>ageCategory</strong>, <strong>couleur_ceinture</strong>, <strong>genre</strong>, <strong>anneeCategorie</strong> et <strong>lateralite</strong>.</li>
               <li>La colonne <strong>club</strong> est facultative : nom d'un club existant. Un coach importé avec un club coache ce club.</li>
               <li>Un réimport met à jour les profils déjà connus au lieu de les compter comme des erreurs.</li>
+              <li>Chaque judoka du fichier est inscrit pour la saison choisie. Un judoka absent du fichier garde ses données mais ne peut plus être inscrit à une compétition de cette saison.</li>
             </ul>
           </details>
+          <!-- INSCR-1 : la réinscription se fait pour une saison, celle en cours par défaut. -->
+          <label for="importSeason">Saison d'inscription</label>
+          <select id="importSeason" v-model.number="importSeasonStartYear">
+            <option :value="0">Saison en cours ({{ importSeasonOptions[1].label }})</option>
+            <option v-for="option in importSeasonOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
           <label for="importUsersFile">Fichier CSV</label>
           <div class="import-file-row">
             <input type="file" id="importUsersFile" accept=".csv,text/csv" @change="handleImportUsersFileChange($event)">

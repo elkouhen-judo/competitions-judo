@@ -110,8 +110,21 @@
 
     const canFilterByJudoka = window.Vue.computed(() => getCurrentMode() === "coachJudoka" && state.judokas.length > 0);
 
+    // INSCR-2 : un judoka non réinscrit pour la saison en cours ne peut plus être engagé.
+    const homeRegistrationNotice = window.Vue.computed(() => {
+      const mode = getCurrentMode();
+      if (!["judoka", "family"].includes(mode)) return "";
+      const judoka = mode === "judoka" ? state.currentUser : getHomeActiveJudoka();
+      const today = ui.getCurrentLocalDate();
+      if (!judoka || ui.isRegisteredForDate(judoka, today)) return "";
+      const season = ui.getSeasonStartYear(today);
+      return season === null ? "" : `Non réinscrit pour la saison ${ui.formatSeasonLabel(season)}.`;
+    });
     const canCreateCompetition = window.Vue.computed(
-      () => !(state.isAdmin && !state.isCoach && !state.isParent) && ["judoka", "family"].includes(getCurrentMode())
+      () =>
+        !(state.isAdmin && !state.isCoach && !state.isParent) &&
+        ["judoka", "family"].includes(getCurrentMode()) &&
+        !homeRegistrationNotice.value
     );
     // ACCUEIL-4 : sans compétition, l'état vide porte le seul bouton d'ajout.
     const showAddCompetitionAction = window.Vue.computed(() => canCreateCompetition.value && hasCompetitions());
@@ -214,6 +227,7 @@
       showCoachSubTabs,
       canFilterByJudoka,
       canCreateCompetition,
+      homeRegistrationNotice,
       showAddCompetitionAction,
       canCreateClubCompetition,
       canOpenJudokaProfile,
@@ -377,6 +391,7 @@
       showCoachSubTabs,
       canFilterByJudoka,
       canCreateCompetition,
+      homeRegistrationNotice,
       showAddCompetitionAction,
       canCreateClubCompetition,
       canOpenJudokaProfile,
@@ -726,6 +741,7 @@
         currentHomeMode,
         canFilterByJudoka,
         canCreateCompetition,
+        homeRegistrationNotice,
         showAddCompetitionAction,
         canCreateClubCompetition,
         canOpenJudokaProfile,
@@ -798,7 +814,15 @@
       return {
         judokaId: String(judoka.judokaId || ""),
         name: getJudokaDisplayName(judoka) || "Judoka",
-        meta: [judoka.ageCategory, judoka.weightCategory].map((value) => cleanText(value)).filter(Boolean).join(" · "),
+        // INSCR-2 : le coach voit qui n'est pas réinscrit pour la saison en cours.
+        meta: [
+          judoka.ageCategory,
+          judoka.weightCategory,
+          ui.isRegisteredForDate(judoka, ui.getCurrentLocalDate()) ? "" : "Non réinscrit"
+        ]
+          .map((value) => cleanText(value))
+          .filter(Boolean)
+          .join(" · "),
         ageCategory: cleanText(judoka.ageCategory),
         searchText: `${getJudokaDisplayName(judoka)} ${judoka.ageCategory || ""}`.toLowerCase()
       };

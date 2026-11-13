@@ -22,6 +22,7 @@
           <div class="hero-copy">
             <span class="hero-kicker">Profil sportif</span>
             <div class="hero-badges">
+              <span v-if="heroUnregistered" id="judokaHeroUnregistered" class="result-badge badge-unregistered">{{ heroUnregistered }}</span>
               <span id="judokaHeroRecord" class="result-badge">{{ heroCategory }}</span>
               <span v-if="heroYearInCategory" id="judokaHeroYearInCategory" class="result-badge">{{ heroYearInCategory }}</span>
               <span v-if="heroWeightCategory" id="judokaHeroWeightCategory" class="result-badge">{{ heroWeightCategory }}</span>

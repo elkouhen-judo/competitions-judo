@@ -56,7 +56,7 @@ Il crée aussi les fonctions appelables par le rôle service (`service_role`) un
 La cascade permet de supprimer automatiquement les combats d'une compétition supprimée, et les prises marquées d'un combat supprimé.
 La suppression ou le détachement d'une compétition club conserve les compétitions individuelles via `club_competition_id = null`.
 
-`public.judokas` stocke aussi `genre` (`Homme`, `Femme`, ou vide), `annee_categorie` (l'année dans la catégorie d'âge — `1`/`2` pour Poussinet à Minime, `1`/`2`/`3` pour Cadet/Junior, ou vide) et `lateralite` (`Droitier`, `Gaucher`, ou vide), utilisés pour filtrer et ventiler le tableau de bord coach.
+`public.judokas` stocke aussi `genre` (`Homme`, `Femme`, ou vide), `annee_categorie` (l'année dans la catégorie d'âge — `1`/`2` pour Poussinet à Minime, `1`/`2`/`3` pour Cadet/Junior, ou vide) et `lateralite` (`Droitier`, `Gaucher`, ou vide), utilisés pour filtrer et ventiler le tableau de bord coach. `saison_inscription` (entier, année de début de saison, ex. `2026` pour 2026-2027) est la dernière saison pour laquelle le judoka est inscrit : posée par l'import CSV de l'admin (INSCR-1) ou par l'inscription en ligne, vide pour un parent. Un judoka ne peut être engagé que dans une compétition dont la saison ne dépasse pas cette valeur (INSCR-2).
 
 ## Exécution
 

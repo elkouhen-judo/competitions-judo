@@ -240,3 +240,11 @@ test("supabase schema no longer stores a coach objective", () => {
   assert.match(schema, /alter table public\.competitions\s+drop column if exists coach_objective;/i);
   assert.match(schema, /add column if not exists coach_review text not null default ''/i);
 });
+
+test("INSCR-1 : le judoka garde la saison de sa dernière inscription", () => {
+  assert.match(schema, /alter table public\.judokas\s+add column if not exists saison_inscription integer;/i);
+  // Mise en service : les judokas déjà présents sont inscrits pour 2026-2027, une seule fois.
+  assert.match(schema, /update public\.judokas\s+set saison_inscription = 2026\s+where saison_inscription is null\s+and profile_type = 'JUDOKA'\s+and created_at < '2026-11-14';/i);
+  // Inscription sur invitation : la saison en cours.
+  assert.match(schema, /insert into public\.judokas \(id_judoka, email, prenom, nom, role, profile_type, saison_inscription\)/i);
+});

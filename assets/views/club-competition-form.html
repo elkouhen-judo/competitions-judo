@@ -30,7 +30,7 @@
           </div>
           <div>
             <label for="club_competition_date">Date <span class="required-mark" aria-hidden="true">*</span></label>
-            <input id="club_competition_date" type="date" v-model="clubCompetitionForm.competitionDate" aria-required="true" :aria-invalid="clubCompetitionFormErrors.competitionDate ? 'true' : 'false'" @input="clubCompetitionFormErrors.competitionDate = ''">
+            <input id="club_competition_date" type="date" v-model="clubCompetitionForm.competitionDate" aria-required="true" :aria-invalid="clubCompetitionFormErrors.competitionDate ? 'true' : 'false'" @input="updateClubCompetitionDate()">
             <p v-if="clubCompetitionFormErrors.competitionDate" class="field-error" role="alert">{{ clubCompetitionFormErrors.competitionDate }}</p>
           </div>
           <div>
@@ -121,6 +121,7 @@
           <p v-if="clubCompetitionFormErrors.participants" class="field-error" role="alert">{{ clubCompetitionFormErrors.participants }}</p>
           <!-- CREA-8 : les judokas du club sans catégorie d'âge sont signalés. -->
           <p v-if="clubCompetitionFormUncategorizedText" id="clubCompetitionUncategorized" class="field-hint">{{ clubCompetitionFormUncategorizedText }}</p>
+          <p v-if="clubCompetitionFormUnregisteredText" id="clubCompetitionUnregistered" class="field-hint">{{ clubCompetitionFormUnregisteredText }}</p>
         </div>
 
         <div class="form-actions mobile-action-bar action-bar-inline">

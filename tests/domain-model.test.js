@@ -1795,3 +1795,19 @@ test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et disti
     /entre 0 et 9/
   );
 });
+
+test("INSCR-2 : saison d'une date et inscription pour une compétition", () => {
+  const { getSeasonStartYear, isRegisteredForCompetitionDate, formatSeasonLabel } = require("../core/domain/season");
+  assert.equal(getSeasonStartYear("2026-08-31"), 2025);
+  assert.equal(getSeasonStartYear("2026-09-01"), 2026);
+  assert.equal(getSeasonStartYear(""), null);
+  assert.equal(formatSeasonLabel(2026), "2026-2027");
+  // Inscrit en 2026 : compétitions jusqu'à la saison 2026-2027.
+  assert.equal(isRegisteredForCompetitionDate(2026, "2027-05-01"), true);
+  assert.equal(isRegisteredForCompetitionDate(2026, "2025-10-01"), true);
+  assert.equal(isRegisteredForCompetitionDate(2026, "2027-09-01"), false);
+  assert.equal(isRegisteredForCompetitionDate(null, "2026-10-01"), false);
+  assert.equal(isRegisteredForCompetitionDate(undefined, "2026-10-01"), false);
+  // Date illisible : laissée aux autres contrôles.
+  assert.equal(isRegisteredForCompetitionDate(null, ""), true);
+});

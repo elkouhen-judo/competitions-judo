@@ -1,3 +1,5 @@
+import type { JudokaRow } from "../repositories/types";
+import { formatSeasonLabel, getSeasonStartYear, isRegisteredForCompetitionDate } from "../domain/season";
 import {
   toCombatReadModelsWithJudokas,
   toCanonicalCompetition,
@@ -176,8 +178,30 @@ export default function createCompetitionsService(
     };
   }
 
+  // INSCR-2 : un judoka non réinscrit ne peut pas être inscrit à une compétition de la nouvelle saison.
+  async function assertOwnerRegistered(
+    context: { user?: JudokaRow; judokas?: JudokaRow[] },
+    ownerJudokaId: string,
+    competitionDate: unknown
+  ) {
+    const fromContext =
+      (context.judokas || []).find((judoka) => String(judoka.id_judoka) === String(ownerJudokaId)) ||
+      (context.user && String(context.user.id_judoka) === String(ownerJudokaId) ? context.user : null);
+    const owner =
+      fromContext ||
+      (typeof userContextService.getJudokaById === "function"
+        ? await userContextService.getJudokaById(String(ownerJudokaId))
+        : null);
+    if (!owner || isRegisteredForCompetitionDate(owner.saison_inscription, competitionDate)) {
+      return;
+    }
+    const season = getSeasonStartYear(competitionDate) as number;
+    throw new Error(`Judoka non réinscrit pour la saison ${formatSeasonLabel(season)}.`);
+  }
+
   async function saveCompetition(email: string, competition: Record<string, unknown>) {
-    const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
+    const userContext = await userContextService.getDomainUserContext(email);
+    const { managedJudokaScope, domainUser } = userContext;
     const domainCompetitionInput = toCanonicalCompetition(competition);
     const ownerJudokaId = resolveCompetitionOwnerId(
       domainUser,
@@ -227,6 +251,11 @@ export default function createCompetitionsService(
         },
         ownerJudokaId
       );
+      // INSCR-2 : seul un changement de saison est contrôlé ; une compétition déjà enregistrée reste modifiable.
+      const newDate = competitionDraft.draft.competitionDate;
+      if (getSeasonStartYear(newDate) !== getSeasonStartYear(existingDomainCompetition.competitionDate)) {
+        await assertOwnerRegistered(userContext, ownerJudokaId, newDate);
+      }
       await assertNoStandaloneDuplicateCompetition(competitionDraft, competitionId);
       const updated = await competitionsRepository.update(competitionId, competitionDraft);
       return {
@@ -239,6 +268,7 @@ export default function createCompetitionsService(
 
     const idCompetition = buildCompetitionId();
     const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
+    await assertOwnerRegistered(userContext, ownerJudokaId, competitionDraft.draft.competitionDate);
     await assertNoStandaloneDuplicateCompetition(competitionDraft);
     const inserted = await competitionsRepository.insert(competitionDraft, idCompetition);
 
