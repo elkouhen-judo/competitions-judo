@@ -97,7 +97,7 @@ export default function createCompetitionsService(
   async function getCombatSuggestions(email: string, judokaId: string): Promise<CombatSuggestions> {
     const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
     if (!judokaId || !canManageCombatFor(domainUser, judokaId, managedJudokaScope)) {
-      return { opponents: [], techniques: [] };
+      return { opponents: [], opponentStances: {}, techniques: [] };
     }
     const combats = await combatsRepository.listSuggestionsByJudoka(judokaId);
     const rankByFrequency = (values: string[], limit: number) => {
@@ -108,8 +108,16 @@ export default function createCompetitionsService(
         .slice(0, limit)
         .map(([value]) => value);
     };
+    // Les combats sont lus du plus ancien au plus récent : la dernière garde renseignée l'emporte.
+    const opponentStances: Record<string, string> = {};
+    combats.forEach((combat) => {
+      const opponent = String(combat.adversaire || "").trim();
+      const stance = String(combat.garde_adversaire || "").trim();
+      if (opponent && stance) opponentStances[opponent] = stance;
+    });
     return {
       opponents: rankByFrequency(combats.map((combat) => String(combat.adversaire || "")), 50),
+      opponentStances,
       techniques: rankByFrequency(
         combats
           .flatMap((combat) => (Array.isArray(combat.combat_scores) ? combat.combat_scores : []))

@@ -798,7 +798,7 @@ test("DETAIL-2 : les suggestions se chargent par un RPC dédié, en une lecture"
   assert.equal(combatReads.length, 1);
   assert.match(
     combatReads[0].query,
-    /^select=adversaire,combat_scores\(categorie,technique,type_ne_waza,camp\)&id_judoka=eq\.N01/
+    /^select=adversaire,garde_adversaire,combat_scores\(categorie,technique,type_ne_waza,camp\)&id_judoka=eq\.N01/
   );
   assert.deepEqual(reads(list, "combat_scores"), []);
   assert.equal(result.opponents.length, 4);
@@ -807,7 +807,7 @@ test("DETAIL-2 : les suggestions se chargent par un RPC dédié, en une lecture"
 
   // Hors périmètre : rien n'est lu.
   const refused = await measure(() => methods.getCombatSuggestions("coach@example.com", "A01"));
-  assert.deepEqual(refused.result, { opponents: [], techniques: [] });
+  assert.deepEqual(refused.result, { opponents: [], opponentStances: {}, techniques: [] });
   assert.deepEqual(reads(refused.requests, "combats"), []);
 });
 

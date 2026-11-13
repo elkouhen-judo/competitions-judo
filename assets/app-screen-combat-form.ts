@@ -89,6 +89,8 @@
       opponentStance: "",
       result: "",
       victoryType: "",
+      /** SAISIE-1 : résultat et fin du combat remplis par le score, pas par l'utilisateur. */
+      outcomeAuto: false,
       /** Score renseigné même sans point (ex. décision à 0 - 0). */
       scoreFilled: false,
       shidos: { judoka: 0, opponent: 0 } as Record<ScoreSideKey, number>,
@@ -191,19 +193,66 @@
       return { judoka: side("judoka"), opponent: side("opponent") };
     }
 
-    const combatOfficialScoreSummary = window.Vue.computed(() => {
-      const score = getOfficialScore();
-      if (!score) return "Non renseigné";
-      const side = (key: ScoreSideKey) => POINT_VALUE_KEYS.map((valueKey) => score[key][valueKey]).join(" ");
-      const shidos = score.judoka.shido || score.opponent.shido ? ` · Shidos ${score.judoka.shido} - ${score.opponent.shido}` : "";
-      return `${side("judoka")} - ${side("opponent")}${shidos}`;
+    // SAISIE-1 : ce que le score dit de l'issue du combat. Un Ippon ou 3 shidos d'un seul camp
+    // la décident (certain) ; sinon un score supérieur la propose seulement (forfait, décision...).
+    type OutcomeDeduction = { result: string; victoryType: string; certain: boolean };
+    function deduceCombatOutcome(): OutcomeDeduction | null {
+      const shidos = combatFormViewModel.combatForm.shidos;
+      const judokaIppon = getCombatScoreCount("judoka", "ippon") > 0;
+      const opponentIppon = getCombatScoreCount("opponent", "ippon") > 0;
+      if (judokaIppon || opponentIppon) {
+        if (judokaIppon === opponentIppon) return null;
+        return { result: judokaIppon ? "Victoire" : "Défaite", victoryType: "Ippon", certain: true };
+      }
+      const judokaHansoku = shidos.judoka >= SCORE_ROW_MAX.shido;
+      const opponentHansoku = shidos.opponent >= SCORE_ROW_MAX.shido;
+      if (judokaHansoku || opponentHansoku) {
+        if (judokaHansoku === opponentHansoku) return null;
+        return { result: opponentHansoku ? "Victoire" : "Défaite", victoryType: "Hansoku-make", certain: true };
+      }
+      for (const key of ["wazaAri", "yuko"] as PointValueKey[]) {
+        const lead = getCombatScoreCount("judoka", key) - getCombatScoreCount("opponent", key);
+        if (lead) return { result: lead > 0 ? "Victoire" : "Défaite", victoryType: POINT_VALUE_BY_KEY[key], certain: false };
+      }
+      return null;
+    }
+
+    // Une issue certaine remplit un résultat vide ou déjà déduit ; un choix fait à la main n'est jamais
+    // écrasé. Si le score ne la décide plus, la valeur déduite est retirée.
+    function applyOutcomeDeduction() {
+      const form = combatFormViewModel.combatForm;
+      if (form.result && !form.outcomeAuto) return;
+      const deduction = deduceCombatOutcome();
+      if (deduction?.certain) {
+        Object.assign(form, { result: deduction.result, victoryType: deduction.victoryType, outcomeAuto: true });
+        combatFormViewModel.combatFormErrors.result = "";
+      } else if (form.outcomeAuto) {
+        Object.assign(form, { result: "", victoryType: "", outcomeAuto: false });
+      }
+    }
+
+    const combatOutcomeProposal = window.Vue.computed(() => {
+      if (combatFormViewModel.combatForm.result) return null;
+      const deduction = deduceCombatOutcome();
+      if (!deduction || deduction.certain) return null;
+      return { ...deduction, label: `${deduction.result} par ${deduction.victoryType}` };
     });
 
-    const combatDecisionPointNotice = window.Vue.computed(() => {
-      const point = combatFormViewModel.combatForm.points.find(
-        (candidate) => candidate.autoFromDecision && !getScoreTechnique(candidate)
-      );
-      return point ? `${point.value} ajouté au déroulé du combat : précisez la technique.` : "";
+    function applyCombatOutcomeProposal() {
+      const proposal = combatOutcomeProposal.value;
+      if (!proposal) return;
+      selectCombatResult(proposal.result);
+      selectCombatDecision(proposal.victoryType);
+    }
+
+    // SAISIE-2 : un résultat choisi à la main qui contredit le score est signalé, sans bloquer.
+    const combatOutcomeWarning = window.Vue.computed(() => {
+      const form = combatFormViewModel.combatForm;
+      if (!form.result || form.outcomeAuto) return "";
+      const deduction = deduceCombatOutcome();
+      if (!deduction?.certain || deduction.result === form.result) return "";
+      const expected = deduction.result === "Victoire" ? "une victoire" : "une défaite";
+      return `Le score indique ${expected}. Vérifiez le résultat.`;
     });
 
     const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
@@ -265,6 +314,8 @@
         "combatFormView",
         combatFormViewModel,
         {
+          applyCombatOutcomeProposal,
+          applyKnownOpponentStance,
           cancelCombatForm,
           changeCombatOfficialScore,
           clearCombatOfficialScore,
@@ -291,10 +342,10 @@
           canClearCombatScore,
           combatDecisionLabel,
           combatDecisionOptions,
-          combatDecisionPointNotice,
           combatFavoriteTechniques,
-          combatOfficialScoreSummary,
           combatOpponentSuggestions,
+          combatOutcomeProposal,
+          combatOutcomeWarning,
           combatResultOptions,
           combatScoreIsFilled,
           combatScoreSides,
@@ -361,6 +412,11 @@
           combatFormTitle: "Ajouter un combat",
           combatFormSubtitle: competitionName || ""
         });
+        // SAISIE-4 : l'étape suivante se déduit du dernier combat enregistré de la compétition.
+        const lastCombat = state.currentCombats[state.currentCombats.length - 1];
+        combatFormViewModel.combatForm.stage = lastCombat
+          ? getNextCombatStage(lastCombat.stage || "", lastCombat.result || "")
+          : "";
         syncCombatDecisionVisibility(true);
       }
 
@@ -534,7 +590,11 @@
     }
 
     function selectCombatResult(result: string) {
-      combatFormViewModel.combatForm.result = result;
+      const form = combatFormViewModel.combatForm;
+      // Remplacer un résultat déduit du score efface aussi la fin du combat déduite avec lui.
+      if (form.outcomeAuto && form.result !== result) form.victoryType = "";
+      form.outcomeAuto = false;
+      form.result = result;
       combatFormViewModel.combatFormErrors.result = "";
       syncCombatDecisionVisibility(true);
       applyDecisionPoint();
@@ -544,6 +604,7 @@
     // Victoire : point du judoka ; défaite : point de l'adversaire.
     function selectCombatDecision(decision: string) {
       const form = combatFormViewModel.combatForm;
+      form.outcomeAuto = false;
       form.victoryType = form.victoryType === decision && form.result !== "Egalité" ? "" : decision;
       applyDecisionPoint();
     }
@@ -567,25 +628,38 @@
       form.scoreFilled = true;
       if (key === "shido") {
         form.shidos[side] = Math.min(SCORE_ROW_MAX.shido, Math.max(0, form.shidos[side] + delta));
-        return;
-      }
-      const camp = getCampForSide(side);
-      const value = POINT_VALUE_BY_KEY[key];
-      if (delta > 0) {
+      } else if (delta > 0) {
+        const camp = getCampForSide(side);
+        const value = POINT_VALUE_BY_KEY[key];
         if (countPoints(camp, value) < SCORE_ROW_MAX[key]) form.points.push(createPointRow(camp, value));
-        return;
+      } else {
+        const camp = getCampForSide(side);
+        const value = POINT_VALUE_BY_KEY[key];
+        const matching = form.points
+          .map((point, index) => ({ point, index }))
+          .filter(({ point }) => point.camp === camp && point.value === value);
+        const target = [...matching].reverse().find(({ point }) => !getScoreTechnique(point)) || matching[matching.length - 1];
+        if (target) form.points.splice(target.index, 1);
       }
-      const matching = form.points
-        .map((point, index) => ({ point, index }))
-        .filter(({ point }) => point.camp === camp && point.value === value);
-      const target = [...matching].reverse().find(({ point }) => !getScoreTechnique(point)) || matching[matching.length - 1];
-      if (target) form.points.splice(target.index, 1);
+      applyOutcomeDeduction();
     }
 
     function clearCombatOfficialScore() {
       const form = combatFormViewModel.combatForm;
       form.scoreFilled = false;
       form.shidos = { judoka: 0, opponent: 0 };
+      applyOutcomeDeduction();
+    }
+
+    // SAISIE-3 : un adversaire déjà rencontré remplit sa garde, si elle n'est pas encore choisie.
+    function applyKnownOpponentStance(value: string) {
+      const form = combatFormViewModel.combatForm;
+      const name = String(value || "").trim().toLocaleLowerCase("fr");
+      if (form.opponentStance || !name) return;
+      const stances = state.currentCombatSuggestions?.opponentStances || {};
+      const known = Object.keys(stances).find((opponent) => opponent.toLocaleLowerCase("fr") === name);
+      const stance = known ? stances[known] : "";
+      if (stance && combatStanceOptions.value.includes(stance)) form.opponentStance = stance;
     }
 
     function selectCombatStance(stance: string) {
@@ -781,6 +855,7 @@
     function removeCombatScoreRow(index: number) {
       ensureCombatFormViewModel();
       combatFormViewModel.combatForm.points.splice(index, 1);
+      applyOutcomeDeduction();
     }
 
     function resetCombatForm() {

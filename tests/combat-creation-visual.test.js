@@ -97,7 +97,11 @@ async function startServer() {
           };
         } else if (request.method === "getCombatSuggestions") {
           // DETAIL-2 : les suggestions se chargent à l'ouverture du formulaire de combat.
-          result = { opponents: ["Camille Durand", "Inès Robert"], techniques: ["Uchi-mata"] };
+          result = {
+            opponents: ["Camille Durand", "Inès Robert"],
+            opponentStances: { "Camille Durand": "Gaucher" },
+            techniques: ["Uchi-mata"]
+          };
         } else if (request.method === "ajouterCombat") {
           const input = request.args[0];
           const combat = {
@@ -174,8 +178,13 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     assert.equal(stageOverflow, false);
     await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
     await expect(page.locator("#combat_adversaire_suggestions option")).toHaveCount(2);
+    // SAISIE-3 : un adversaire déjà rencontré remplit sa garde ; un inconnu la laisse vide.
+    const stanceRadio = (label) => page.locator("#combat_garde_adversaire").getByRole("radio", { name: label });
+    await page.fill("#combat_adversaire", "Inconnu");
+    await expect(page.locator("#combat_garde_adversaire [aria-checked='true']")).toHaveCount(0);
+    await page.fill("#combat_adversaire", "camille durand");
+    await expect(stanceRadio("Gaucher")).toHaveAttribute("aria-checked", "true");
     await page.fill("#combat_adversaire", "Camille Durand");
-    await page.locator("#combat_garde_adversaire").getByRole("radio", { name: "Gaucher" }).click();
 
     // Pendant le combat : chaque + ajoute l'action à la fin du déroulé ; le score en est le décompte.
     const scoreSummary = page.locator("#combat_score .combat-official-score-summary");
@@ -183,7 +192,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(scoreSummary).toHaveText("Non renseigné");
     await expect(page.getByRole("button", { name: "Retirer un Ippon au judoka" })).toBeDisabled();
     await page.getByRole("button", { name: "Ajouter un Waza-ari à l'adversaire" }).click();
-    await expect(scoreSummary).toHaveText("0 0 0 - 0 1 0");
+    // SAISIE-5 : une fois renseigné, le score n'est lu que dans le tableau.
+    await expect(scoreSummary).toHaveCount(0);
+    await expect(page.getByRole("status", { name: "Waza-ari à l'adversaire" })).toHaveText("1");
     await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
     await page.getByRole("button", { name: "Ajouter un Yuko au judoka" }).click();
     await page.getByRole("button", { name: "Ajouter un Yuko à l'adversaire" }).click();
@@ -191,7 +202,11 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.getByRole("button", { name: "Ajouter un Shido à l'adversaire" }).click();
     await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
     await expect(page.getByRole("button", { name: "Ajouter un Ippon au judoka" })).toBeDisabled();
-    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
+    // SAISIE-1 : l'Ippon du judoka décide l'issue, sans autre toucher.
+    const resultRadio = (label) => page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
+    const decisionRadio = (label) => page.locator("#combat_type_victoire").getByRole("radio", { name: label, exact: true });
+    await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
+    await expect(decisionRadio("Ippon")).toHaveAttribute("aria-checked", "true");
     await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
       "Adversaire · Waza-ari",
       "Léa · Yuko",
@@ -219,11 +234,21 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     const scoreOverflow = await page.locator("#combat_score").evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(scoreOverflow, false);
 
-    // Fin du combat : « Victoire par Ippon » ne double pas le point déjà dans le déroulé.
-    await page.locator("#combat_resultat").getByRole("radio", { name: "Victoire" }).click();
+    // Fin du combat : l'issue déduite ne double pas le point déjà dans le déroulé.
     await expect(page.locator("#combat_type_victoire_label")).toHaveText("Victoire par");
-    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Ippon" }).click();
     await expect(timelineRows).toHaveCount(4);
+    // SAISIE-2 : un résultat contraire au score est signalé, puis l'issue est rétablie à la main.
+    const outcomeWarning = page.locator("#combat_outcome_warning");
+    await expect(outcomeWarning).toHaveCount(0);
+    await resultRadio("Défaite").click();
+    await expect(outcomeWarning).toHaveText("Le score indique une victoire. Vérifiez le résultat.");
+    await expect(page.locator("#combat_type_victoire [aria-checked='true']")).toHaveCount(0);
+    await expect(timelineRows).toHaveCount(4);
+    await resultRadio("Victoire").click();
+    await decisionRadio("Ippon").click();
+    await expect(outcomeWarning).toHaveCount(0);
+    // SAISIE-6 : une technique manquante n'est signalée qu'une fois.
+    await expect(page.locator("#combatFormView .combat-decision-notice")).toHaveCount(0);
     // Les Yuko sans technique sont gardés et signalés, pas perdus.
     await expect(page.locator("#combat_points .field-todo")).toHaveText("À compléter : technique d'un point");
     const hansokuHeight = await page.locator("#combat_type_victoire").getByRole("radio", { name: "Hansoku-make" }).evaluate((element) => element.getBoundingClientRect().height);
@@ -263,6 +288,41 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     assert.equal(rpcMethods.filter((method) => method === "getCombatSuggestions").length, 1);
     await shot("05-saved");
 
+    // SAISIE-4 : après une victoire en repêchage, le combat suivant propose « Place de 3 ».
+    await page.getByRole("button", { name: "Ajouter un combat" }).click();
+    await expect(page.locator("#combatFormView")).toBeVisible();
+    await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Place de 3");
+    await expect(page.locator("#combat_adversaire")).toBeFocused();
+
+    // SAISIE-1 : 3 shidos de l'adversaire décident l'issue ; en retirer un l'efface.
+    for (let index = 0; index < 3; index += 1) {
+      await page.getByRole("button", { name: "Ajouter un Shido à l'adversaire" }).click();
+    }
+    await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
+    await expect(decisionRadio("Hansoku-make")).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("button", { name: "Retirer un Shido à l'adversaire" }).click();
+    await expect(page.locator("#combat_resultat [aria-checked='true']")).toHaveCount(0);
+
+    // Un score supérieur sans Ippon propose l'issue sans la choisir.
+    const proposal = page.locator("#combat_outcome_proposal");
+    await page.getByRole("button", { name: "Ajouter un Waza-ari au judoka" }).click();
+    await expect(proposal).toHaveText("D'après le score : Victoire par Waza-ari");
+    await expect(page.locator("#combat_resultat [aria-checked='true']")).toHaveCount(0);
+    await shot("05a-proposal");
+    await proposal.click();
+    await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
+    await expect(decisionRadio("Waza-ari")).toHaveAttribute("aria-checked", "true");
+    await expect(proposal).toHaveCount(0);
+    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(1);
+
+    // Un choix fait à la main n'est pas écrasé par un Ippon ajouté ensuite : il est signalé.
+    await page.getByRole("button", { name: "Ajouter un Ippon à l'adversaire" }).click();
+    await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#combat_outcome_warning")).toHaveText("Le score indique une défaite. Vérifiez le résultat.");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await expect(page.locator("#competitionView")).toBeVisible();
+
     // Ouverture en modification d'un combat complet : le haut du formulaire (tour) reste visible.
     await page.evaluate("window.scrollTo({ top: document.body.scrollHeight })");
     // La carte du combat s'ouvre en modification d'un simple toucher.
@@ -270,8 +330,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatFormView")).toBeVisible();
     await expect(page.locator("#combat_etape [aria-checked='true']")).toHaveText("Repêchage");
     await expect(page.locator("#combat_etape")).toBeInViewport();
-    // Rouvert : score, shidos et déroulé dans l'ordre du combat.
-    await expect(scoreSummary).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
+    // Rouvert : score, shidos et déroulé dans l'ordre du combat ; l'issue enregistrée n'est pas recalculée.
+    await expect(page.getByRole("status", { name: "Shido à l'adversaire" })).toHaveText("1");
+    await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
+    await expect(decisionRadio("Ippon")).toHaveAttribute("aria-checked", "true");
     await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
       "Adversaire · Waza-ari",
       "Léa · Yuko",

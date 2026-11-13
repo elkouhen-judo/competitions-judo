@@ -189,6 +189,8 @@ export interface UserImportSummary {
 /** COMBAT-SUGG : aides à la saisie d'un combat pour le judoka de la compétition. */
 export interface CombatSuggestions {
   opponents: string[];
+  /** SAISIE-3 : garde de chaque adversaire au combat le plus récent où elle est renseignée. */
+  opponentStances: Record<string, string>;
   techniques: string[];
 }
 

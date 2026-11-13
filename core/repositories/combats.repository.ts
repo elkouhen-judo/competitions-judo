@@ -4,7 +4,7 @@ import { inFilter, selectByIdBatches } from "../shared/query";
 import type { CombatRow, CombatScoreRow, CombatWithScoresRow, SupabaseRestDeps } from "./types";
 
 /** Ce qu'il faut d'un combat pour proposer adversaires et techniques déjà saisis. */
-export type CombatSuggestionRow = Pick<CombatRow, "adversaire"> & {
+export type CombatSuggestionRow = Pick<CombatRow, "adversaire" | "garde_adversaire"> & {
   combat_scores: Pick<CombatScoreRow, "categorie" | "technique" | "type_ne_waza" | "camp">[];
 };
 
@@ -112,11 +112,11 @@ export default function createCombatsRepository(deps: SupabaseRestDeps): Combats
     );
   }
 
-  // DETAIL-2 : adversaires et techniques d'un judoka, sans le reste des combats.
+  // DETAIL-2 : adversaires (et leur garde) et techniques d'un judoka, sans le reste des combats.
   async function listSuggestionsByJudoka(idJudoka: string): Promise<CombatSuggestionRow[]> {
     return supabaseSelect<CombatSuggestionRow>(
       "combats",
-      `select=adversaire,combat_scores(categorie,technique,type_ne_waza,camp)&${eqFilter("id_judoka", idJudoka)}&${COMBAT_ORDER}`
+      `select=adversaire,garde_adversaire,combat_scores(categorie,technique,type_ne_waza,camp)&${eqFilter("id_judoka", idJudoka)}&${COMBAT_ORDER}`
     );
   }
 

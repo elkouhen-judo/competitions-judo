@@ -659,6 +659,7 @@ function createTestCompetitionsService({
           .filter((combat) => String(combat.id_judoka) === String(judokaId))
           .map((combat) => ({
             adversaire: combat.adversaire,
+            garde_adversaire: combat.garde_adversaire,
             combat_scores: combatScoresByCombatId[combat.id_combat] || []
           }));
       }
@@ -1493,16 +1494,23 @@ test("getCompetitionDetail splits scored and conceded points read with the comba
 });
 
 test("getCombatSuggestions ranks opponents and scored techniques of a judoka the requester manages", async () => {
-  const combat = (id, opponent) => ({
+  const combat = (id, opponent, stance = "") => ({
     id_combat: id,
     id_judoka: "JUDO1",
     id_competition: "COMP1",
     adversaire: opponent,
+    garde_adversaire: stance,
     resultat: "Victoire"
   });
   const { service, calls } = createTestCompetitionsService({
     combatsByCompetitionId: {
-      COMP1: [combat("CB1", "Léo Dupont"), combat("CB2", " Léo Dupont "), combat("CB3", "Noa Martin"), combat("CB4", "")]
+      COMP1: [
+        combat("CB1", "Léo Dupont", "Droitier"),
+        combat("CB2", " Léo Dupont ", "Gaucher"),
+        combat("CB3", "Noa Martin"),
+        combat("CB4", "", "Droitier"),
+        combat("CB5", "Léo Dupont")
+      ]
     },
     combatScoresByCombatId: {
       CB1: [
@@ -1518,6 +1526,8 @@ test("getCombatSuggestions ranks opponents and scored techniques of a judoka the
   const suggestions = await service.methods.getCombatSuggestions("judoka@example.com", "JUDO1");
 
   assert.deepEqual(suggestions.opponents, ["Léo Dupont", "Noa Martin"]);
+  // SAISIE-3 : la garde du combat le plus récent où elle est renseignée ; aucune garde inventée.
+  assert.deepEqual(suggestions.opponentStances, { "Léo Dupont": "Gaucher" });
   // Les techniques subies (camp ADVERSAIRE) ne sont pas proposées.
   assert.deepEqual(suggestions.techniques, ["Uchi-mata", "Immobilisation"]);
   assert.deepEqual(calls.suggestionReads, ["JUDO1"]);
@@ -1533,10 +1543,12 @@ test("getCombatSuggestions reads nothing for a judoka the requester cannot manag
 
   assert.deepEqual(await service.methods.getCombatSuggestions("judoka@example.com", "JUDO2"), {
     opponents: [],
+    opponentStances: {},
     techniques: []
   });
   assert.deepEqual(await service.methods.getCombatSuggestions("judoka@example.com", ""), {
     opponents: [],
+    opponentStances: {},
     techniques: []
   });
   assert.deepEqual(calls.suggestionReads, []);

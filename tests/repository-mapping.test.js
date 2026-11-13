@@ -385,7 +385,7 @@ test("combats repository reads combats with their scores, in batches for several
   // COACH-2 : 205 compétitions = 3 lots, et non 205 requêtes.
   await combatsRepository.listByCompetitionIdsWithScores([...competitionIds, "COMP1", ""]);
   await combatsRepository.listByCompetitionIds(["COMP1", "COMP2"]);
-  // DETAIL-2 : les suggestions ne lisent que l'adversaire et les techniques.
+  // DETAIL-2 : les suggestions ne lisent que l'adversaire, sa garde et les techniques.
   await combatsRepository.listSuggestionsByJudoka("JUDO1");
   await combatsRepository.listByCompetitionIdsWithScores([]);
 
@@ -398,7 +398,7 @@ test("combats repository reads combats with their scores, in batches for several
     [
       "select",
       "combats",
-      "select=adversaire,combat_scores(categorie,technique,type_ne_waza,camp)&id_judoka=eq.JUDO1&order=created_at.asc,id_combat.asc"
+      "select=adversaire,garde_adversaire,combat_scores(categorie,technique,type_ne_waza,camp)&id_judoka=eq.JUDO1&order=created_at.asc,id_combat.asc"
     ]
   ]);
 });

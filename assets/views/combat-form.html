@@ -38,7 +38,7 @@
 
           <div class="choice-field">
             <label for="combat_adversaire">Adversaire</label>
-            <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse" autocomplete="off" list="combat_adversaire_suggestions">
+            <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse" autocomplete="off" list="combat_adversaire_suggestions" @input="applyKnownOpponentStance($event.target.value)">
             <datalist id="combat_adversaire_suggestions">
               <option v-for="opponent in combatOpponentSuggestions" :key="opponent" :value="opponent"></option>
             </datalist>
@@ -76,7 +76,8 @@
           <div id="combat_score" class="choice-field combat-official-score" tabindex="-1">
             <div class="combat-official-score-header">
               <span class="choice-label" id="combat_score_label">Score</span>
-              <span class="combat-official-score-summary" :class="{ 'is-empty': !combatScoreIsFilled }" aria-live="polite">{{ combatOfficialScoreSummary }}</span>
+              <!-- SAISIE-5 : le tableau dit le score ; seul l'état « Non renseigné » est écrit en clair. -->
+              <span v-if="!combatScoreIsFilled" class="combat-official-score-summary">Non renseigné</span>
               <button v-if="canClearCombatScore" class="combat-official-score-clear" type="button" @click="clearCombatOfficialScore()">Effacer</button>
             </div>
             <div class="combat-official-score-grid" role="group" aria-labelledby="combat_score_label">
@@ -195,6 +196,12 @@
               </button>
             </div>
             <p v-if="combatFormErrors.result" id="combat_resultat_error" class="field-error" role="alert">{{ combatFormErrors.result }}</p>
+            <!-- SAISIE-1 : un score sans Ippon ni 3 shidos propose l'issue, sans la choisir. -->
+            <button v-if="combatOutcomeProposal" id="combat_outcome_proposal" class="combat-outcome-proposal" type="button" @click="applyCombatOutcomeProposal()">
+              D'après le score : {{ combatOutcomeProposal.label }}
+            </button>
+            <!-- SAISIE-2 : un résultat qui contredit le score est signalé, sans bloquer l'enregistrement. -->
+            <p v-if="combatOutcomeWarning" id="combat_outcome_warning" class="field-todo combat-outcome-warning" role="status">{{ combatOutcomeWarning }}</p>
           </div>
 
           <div id="combatDecisionBlock" class="choice-field" :class="{ hidden: !showCombatDecisionBlock }">
@@ -211,7 +218,6 @@
                 {{ option }}
               </button>
             </div>
-            <p v-if="combatDecisionPointNotice" class="combat-decision-notice" aria-live="polite">{{ combatDecisionPointNotice }}</p>
             <ul v-if="combatFormVictoryTypeIssues.length" class="field-todo-list" aria-label="À compléter sur la fin du combat">
               <li v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
             </ul>
@@ -219,7 +225,7 @@
 
           <div class="choice-field">
             <label for="combat_deroule">Notes</label>
-            <textarea id="combat_deroule" rows="3" placeholder="Ex : bon départ, difficulté contre un gaucher, projection tentée..." v-model.trim="combatForm.notes"></textarea>
+            <textarea id="combat_deroule" rows="3" placeholder="Ex : ressenti, tactique, consigne du coach..." v-model.trim="combatForm.notes"></textarea>
           </div>
         </div>
 
