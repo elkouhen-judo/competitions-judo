@@ -35,8 +35,15 @@ function createSideScore(side: unknown): CombatSideScore {
   };
 }
 
+/** SCORE-VIDE : 0 0 0 - 0 0 0 sans shido ne dit rien du combat ; il vaut « non renseigné ». */
+export function isEmptyCombatOfficialScore(score: CombatOfficialScore): boolean {
+  return [score.judoka, score.opponent].every(
+    (side) => !side.ippon && !side.wazaAri && !side.yuko && !side.shido
+  );
+}
+
 /**
- * null : score non renseigné (ou effacé).
+ * null : score non renseigné (ou effacé), y compris un score entièrement nul.
  * undefined : score absent de la saisie, à laisser inchangé (ex. outil MCP qui ne le connaît pas).
  */
 export function createCombatOfficialScore(score: unknown): CombatOfficialScore | null | undefined {
@@ -47,8 +54,9 @@ export function createCombatOfficialScore(score: unknown): CombatOfficialScore |
     return null;
   }
   const source = score as Record<string, unknown>;
-  return {
+  const official = {
     judoka: createSideScore(source.judoka),
     opponent: createSideScore(source.opponent)
   };
+  return isEmptyCombatOfficialScore(official) ? null : official;
 }

@@ -1,4 +1,5 @@
 import { normalizeCombatResult } from "../domain/competitions/combat-result";
+import { isEmptyCombatOfficialScore } from "../domain/competitions/combat-official-score";
 import { normalizeBeltColor } from "../domain/access/belt-color";
 import type {
   AccessInvitation,
@@ -122,10 +123,12 @@ function toCanonicalOfficialScore(combat: SourceRecord): CombatOfficialScore | n
     return null;
   }
   const [ji, jw, jy, ai, aw, ay, js, os] = columns.map((column) => Number(record[column] || 0));
-  return {
+  const score = {
     judoka: { ippon: ji, wazaAri: jw, yuko: jy, shido: js },
     opponent: { ippon: ai, wazaAri: aw, yuko: ay, shido: os }
   };
+  // SCORE-VIDE : un score entièrement nul enregistré par erreur reste « non renseigné ».
+  return isEmptyCombatOfficialScore(score) ? null : score;
 }
 
 export function toCanonicalCombat(combat: SourceRecord = {}): Combat {

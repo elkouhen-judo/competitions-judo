@@ -248,6 +248,12 @@
       [value.ippon, value.wazaAri, value.yuko].join(" ");
     const judokaShidos = Number(score.judoka.shido || 0);
     const opponentShidos = Number(score.opponent.shido || 0);
+    // SCORE-VIDE : un score entièrement nul vaut « non renseigné » (combat en attente compris).
+    const total = [score.judoka, score.opponent].reduce(
+      (sum, value) => sum + Number(value.ippon || 0) + Number(value.wazaAri || 0) + Number(value.yuko || 0),
+      judokaShidos + opponentShidos
+    );
+    if (!total) return "";
     const shidos = judokaShidos || opponentShidos ? ` · Shidos ${judokaShidos} - ${opponentShidos}` : "";
     return `${side(score.judoka)} - ${side(score.opponent)}${shidos}`;
   }

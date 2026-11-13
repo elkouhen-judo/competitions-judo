@@ -1047,3 +1047,34 @@ test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colon
     { judoka: { ippon: 0, wazaAri: 1, yuko: 0, shido: 1 }, opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 2 } }
   );
 });
+
+test("SCORE-VIDE : un score entièrement nul n'est ni relu ni enregistré comme renseigné", async () => {
+  const zeroColumns = Object.fromEntries(
+    ["ippon", "wazaari", "yuko", "shido"].flatMap((value) => [
+      [`score_judoka_${value}`, 0],
+      [`score_adversaire_${value}`, 0]
+    ])
+  );
+  const row = { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "Victoire" };
+  assert.equal(toCanonicalCombat({ ...row, ...zeroColumns }).officialScore, null);
+  // Un seul shido suffit à rendre le score utile.
+  assert.notEqual(toCanonicalCombat({ ...row, ...zeroColumns, score_adversaire_shido: 1 }).officialScore, null);
+
+  const calls = [];
+  const combatsRepository = createCombatsRepository(createRepositoryDeps(calls));
+  const zero = { ippon: 0, wazaAri: 0, yuko: 0, shido: 0 };
+  await combatsRepository.update(
+    "CB1",
+    createCombat({
+      competitionId: "COMP1",
+      judokaId: "JUDO1",
+      combatId: "CB1",
+      opponent: "Lee",
+      result: "Victoire",
+      victoryType: "Décision",
+      officialScore: { judoka: zero, opponent: zero }
+    })
+  );
+  assert.equal(calls[0][3].score_judoka_ippon, null);
+  assert.equal(calls[0][3].score_adversaire_shido, null);
+});

@@ -260,6 +260,22 @@ alter table public.combats
     and (score_adversaire_shido is null or score_adversaire_shido between 0 and 3)
   );
 
+-- SCORE-VIDE : un score entièrement nul (0 0 0 - 0 0 0, sans shido) ne dit rien ; il venait d'un
+-- combat sans score relu à tort comme renseigné puis réenregistré. Il redevient « non renseigné ».
+update public.combats
+set
+  score_judoka_ippon = null,
+  score_judoka_wazaari = null,
+  score_judoka_yuko = null,
+  score_adversaire_ippon = null,
+  score_adversaire_wazaari = null,
+  score_adversaire_yuko = null,
+  score_judoka_shido = null,
+  score_adversaire_shido = null
+where score_judoka_ippon = 0 and score_judoka_wazaari = 0 and score_judoka_yuko = 0
+  and score_adversaire_ippon = 0 and score_adversaire_wazaari = 0 and score_adversaire_yuko = 0
+  and coalesce(score_judoka_shido, 0) = 0 and coalesce(score_adversaire_shido, 0) = 0;
+
 -- COMBAT-TECH-OPT : un point peut être enregistré avant de connaître la technique (catégorie vide).
 alter table public.combat_scores
   drop constraint if exists combat_scores_categorie_check;
