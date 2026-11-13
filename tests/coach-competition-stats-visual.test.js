@@ -77,7 +77,8 @@ function currentSeasonLabel() {
 }
 
 // soloFighter : seul Hugo a combattu (STAT-20) ; savedCompetition : la compétition existe déjà.
-async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetition = null } = {}) {
+// previousSeason : la même fenêtre un an plus tôt a ses propres combats (STAT-23).
+async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetition = null, previousSeason = false } = {}) {
   const coach = {
     judokaId: "coach-1",
     accountEmail: "coach@example.com",
@@ -181,9 +182,34 @@ async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetiti
     const selectedCombats = combats.filter((combat) => selectedIds.has(combat.competitionId));
     // STAT-20 : même règle que le serveur.
     const isGroup = isGroupScope(selectedCombats, selected);
+    // STAT-23 : comparaison avec la même fenêtre un an plus tôt, sans compétition choisie.
+    const shift = (value) => `${Number(value.slice(0, 4)) - 1}${value.slice(4)}`;
+    const comparable =
+      previousSeason && isGroup && filters.dateFrom && filters.dateTo && !(filters.competitionIds || []).length;
+    const previousCompetitions = [
+      { competitionId: "old-hugo", ownerJudokaId: hugo.judokaId, level: "Régional", result: "", competitionDate: "2026-03-10" },
+      { competitionId: "old-nina", ownerJudokaId: nina.judokaId, level: "Régional", result: "5e", competitionDate: "2026-03-10" }
+    ];
+    const previousCombats = previousCompetitions.map((competition, index) => ({
+      combatId: `old-${index}`,
+      judokaId: competition.ownerJudokaId,
+      competitionId: competition.competitionId,
+      result: "Défaite",
+      victoryType: "Ippon",
+      scores: [],
+      concededScores: [],
+      competitionLevel: "Régional"
+    }));
     return {
       stats: isGroup ? computeCoachDashboardStats(selectedCombats, selected) : null,
       withheld: isGroup ? null : computeWithheldScope(selectedCombats, selected),
+      previous: comparable
+        ? {
+            dateFrom: shift(filters.dateFrom),
+            dateTo: shift(filters.dateTo),
+            stats: computeCoachDashboardStats(previousCombats, previousCompetitions)
+          }
+        : null,
       // Le serveur désigne la compétition club par sa dernière participation.
       availableCompetitions: inScope.length
         ? [
@@ -439,11 +465,17 @@ for (const [name, viewport] of [
       page.locator("#coachDashboardView .dashboard-kpis .mini-stat-label").nth(1)
     ).toContainText("trop peu de combats");
     // STAT-18 : aucune ligne par judoka, aucun nom de judoka dans les statistiques.
-    await expect(page.locator("#coachDashboardView h3").filter({ hasText: "Par judoka" })).toHaveCount(0);
+    await expect(page.locator("#coachDashboardView h3").filter({ hasText: /^\s*Par judoka/ })).toHaveCount(0);
     const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
     ["Hugo", "Nina", "Dubois", "Durand"].forEach((name) => assert.equal(statsText.includes(name), false, name));
-    // STAT-20 : 2 judokas, la garde de l'effectif n'est pas ventilée.
-    await expect(page.locator("#coachDashboardView .dashboard-effectif").first()).toHaveText(/^Effectif : 2 judokas\s*i/);
+    // STAT-28 : l'activité remplace l'effectif ; STAT-20 : 2 judokas, la garde n'est pas ventilée.
+    await expect(page.locator("#coachDashboardActivity .bar-row-head").first()).toHaveText(/^Judokas engagés\s*2$/);
+    await expect(page.locator("#coachDashboardActivity .bar-row-head").nth(3)).toHaveText(
+      /^Combats par judoka engagé\s*1,5$/
+    );
+    // STAT-23 : une compétition choisie n'affiche aucun écart.
+    await expect(page.locator("#coachDashboardPreviousLabel")).toHaveCount(0);
+    await expect(page.locator("#coachDashboardView .mini-stat-delta")).toHaveCount(0);
     // STAT-4 : techniques des adversaires dans les défaites.
     await expect(page.locator("#coachDashboardDefeatTechniques .bar-row-head")).toHaveText([
       /Uchi-mata\s*2/
@@ -472,6 +504,7 @@ for (const [name, viewport] of [
       /Waza-ari\s*2\/2/
     ]);
     await expect(page.locator("#coachDashboardIppon .bar-row-head")).toHaveText([
+      /Victoires avec Ippon\s*1\/1/,
       /Debout\s*1\/1/,
       /Au sol\s*0\/1/
     ]);
@@ -619,6 +652,54 @@ for (const [name, viewport] of [
     await page.screenshot({ path: `output/playwright/stat20-${name}-02-withheld.png`, fullPage: true, animations: "disabled" });
     await withheld.getByRole("button", { name: "Voir les judokas" }).click();
     await expect(page.locator("#homeView")).toBeVisible();
+  });
+}
+
+for (const [name, viewport] of [
+  ["desktop", { width: 1440, height: 900 }],
+  ["mobile", { width: 375, height: 812 }]
+]) {
+  test(`STAT-23 / STAT-28 : la saison se compare à la précédente, sans jugement, sur ${name}`, async (t) => {
+    const savedCompetition = {
+      clubCompetitionId: "cc-1",
+      name: "Coupe de Nantes",
+      competitionDate: "2026-11-28",
+      clubId: CLUB.clubId
+    };
+    const { page } = await openApp(t, viewport, { savedCompetition, previousSeason: true });
+    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    await expect(page.locator("#coachDashboardView .dashboard-kpis")).toBeVisible();
+
+    // Écarts des tuiles : sous 5 combats, la tuile « Victoires » compare des décomptes.
+    await expect(page.locator("#coachDashboardView .mini-stat-delta")).toHaveText([
+      "+1 combat",
+      "+1 victoire",
+      "+1 podium"
+    ]);
+    await expect(page.locator("#coachDashboardPreviousLabel")).toContainText(
+      /Écarts avec la période du 1 sept\. 2025 au 31 août 2026\./
+    );
+    // Aucune couleur de jugement sur un écart.
+    const deltaColors = await page
+      .locator("#coachDashboardView .mini-stat-delta")
+      .evaluateAll((elements) => [...new Set(elements.map((element) => getComputedStyle(element).color))]);
+    assert.equal(deltaColors.length, 1);
+
+    // STAT-28 : l'activité et la période précédente, sans aucun nom.
+    await expect(page.locator("#coachDashboardActivity .bar-row-head")).toHaveText([
+      /^Judokas engagés\s*2 · avant 2$/,
+      /^Participations\s*2 · avant 2$/,
+      /^Compétitions\s*1 · avant 2$/,
+      /^Combats par judoka engagé\s*1,5 · avant 1,0$/,
+      /^Participations par niveau\s*Régional 2 \(avant 2\)$/
+    ]);
+    // STAT-25 / STAT-26 : podiums du niveau, 7 premiers et rapport de la période précédente.
+    await expect(page.locator("#coachDashboardPodiums")).toContainText(
+      "1 podium sur 1 participation classée · 1 dans les 7 premiers · avant 0 sur 1"
+    );
+    const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
+    ["Hugo", "Nina", "Dubois", "Durand"].forEach((judokaName) => assert.equal(statsText.includes(judokaName), false, judokaName));
+    await page.screenshot({ path: `output/playwright/stat23-${name}-season.png`, fullPage: true, animations: "disabled" });
   });
 }
 

@@ -382,7 +382,13 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   // Le tour reste saisi, mais aucune statistique par tour.
   assert.doesNotMatch(bundle, /coachDashboardStageLines|coachDashboardByStage/);
   assert.match(bundle, /v-for="line in coachDashboardLevelLines"/);
-  assert.match(bundle, /v-for="line in coachDashboardMonthLines"/);
+  // STAT-24 : « Évolution » par trimestre de saison ou par saison ; STAT-28 : section « Activité ».
+  assert.match(bundle, /v-for="line in coachDashboardPeriodLines"/);
+  assert.doesNotMatch(bundle, /coachDashboardMonthLines|byMonth/);
+  assert.match(bundle, /v-for="line in coachDashboardActivityLines"/);
+  // STAT-23 : écarts des tuiles, et rappel de la période comparée.
+  assert.match(bundle, /coachDashboardTileDeltas\.victories/);
+  assert.match(bundle, /id="coachDashboardPreviousLabel"/);
   assert.match(bundle, /v-for="line in coachDashboardScoreHoldingLines"/);
   assert.match(bundle, /v-for="line in coachDashboardGroundLines"/);
   assert.match(bundle, /v-for="line in coachDashboardIpponLines"/);

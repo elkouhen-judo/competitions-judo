@@ -1098,6 +1098,82 @@ function createTestCoachDashboardService({
   return { service, calls };
 }
 
+test("STAT-23 : getCoachDashboard compare avec la même fenêtre un an plus tôt, en une lecture", async () => {
+  const fight = (id, judoka, competition, resultat) => ({ id_combat: id, id_judoka: judoka, id_competition: competition, resultat });
+  const competitionRows = [
+    { id_competition: "OLD1", id_judoka: "J1", date: "2025-10-05", niveau: "Régional", classement: "3e" },
+    { id_competition: "OLD2", id_judoka: "J2", date: "2025-10-05", niveau: "Régional", classement: "" },
+    // Entre les deux fenêtres : ni dans l'une, ni dans l'autre.
+    { id_competition: "GAP", id_judoka: "J1", date: "2026-02-01", niveau: "Régional", classement: "1er" },
+    { id_competition: "NEW1", id_judoka: "J1", date: "2026-10-04", niveau: "Régional", classement: "1er" },
+    { id_competition: "NEW2", id_judoka: "J2", date: "2026-10-04", niveau: "Régional", classement: "2e" }
+  ];
+  const { service, calls } = createTestCoachDashboardService({
+    competitionRows,
+    combatsByCompetitionId: {
+      OLD1: [fight("O1", "J1", "OLD1", "Victoire")],
+      OLD2: [fight("O2", "J2", "OLD2", "Défaite")],
+      GAP: [fight("G1", "J1", "GAP", "Victoire")],
+      NEW1: [fight("N1", "J1", "NEW1", "Victoire"), fight("N2", "J1", "NEW1", "Victoire")],
+      NEW2: [fight("N3", "J2", "NEW2", "Victoire")]
+    },
+    getCurrentDate: () => "2026-11-13",
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+
+  const result = await service.methods.getCoachDashboard("coach@example.com", {
+    dateFrom: "2026-09-01",
+    dateTo: "2026-11-13"
+  });
+  // Une seule lecture, qui commence un an plus tôt.
+  assert.equal(calls.scopes.length, 1);
+  assert.equal(calls.scopes[0].dateFrom, "2025-09-01");
+  assert.equal(result.stats.totalCombats, 3);
+  assert.deepEqual(
+    result.availableCompetitions.map((option) => option.competitionId),
+    ["NEW1", "NEW2"]
+  );
+  assert.equal(result.previous.dateFrom, "2025-09-01");
+  assert.equal(result.previous.dateTo, "2025-11-13");
+  assert.equal(result.previous.stats.totalCombats, 2);
+  assert.equal(result.previous.stats.victories, 1);
+
+  // Compétitions choisies, période sans fin ou de plus d'un an : aucune comparaison.
+  const chosen = await service.methods.getCoachDashboard("coach@example.com", {
+    dateFrom: "2026-09-01",
+    dateTo: "2026-11-13",
+    competitionIds: ["NEW1", "NEW2"]
+  });
+  assert.equal(chosen.previous, null);
+  assert.equal((await service.methods.getCoachDashboard("coach@example.com", { dateFrom: "2026-09-01" })).previous, null);
+  assert.equal(
+    (await service.methods.getCoachDashboard("coach@example.com", { dateFrom: "2025-01-01", dateTo: "2026-11-13" })).previous,
+    null
+  );
+});
+
+test("STAT-23 : sous 2 judokas sur la période précédente, aucune comparaison", async () => {
+  const { service } = createTestCoachDashboardService({
+    competitionRows: [
+      { id_competition: "OLD1", id_judoka: "J1", date: "2025-10-05", niveau: "Régional", classement: "" },
+      { id_competition: "NEW1", id_judoka: "J1", date: "2026-10-04", niveau: "Régional", classement: "" },
+      { id_competition: "NEW2", id_judoka: "J2", date: "2026-10-04", niveau: "Régional", classement: "" }
+    ],
+    combatsByCompetitionId: {
+      OLD1: [{ id_combat: "O1", id_judoka: "J1", id_competition: "OLD1", resultat: "Victoire" }],
+      NEW1: [{ id_combat: "N1", id_judoka: "J1", id_competition: "NEW1", resultat: "Victoire" }],
+      NEW2: [{ id_combat: "N2", id_judoka: "J2", id_competition: "NEW2", resultat: "Défaite" }]
+    },
+    getDomainUserContext: domainContextFor("COACH1", "COACH")
+  });
+  const result = await service.methods.getCoachDashboard("coach@example.com", {
+    dateFrom: "2026-09-01",
+    dateTo: "2027-08-31"
+  });
+  assert.equal(result.stats.totalCombats, 2);
+  assert.equal(result.previous, null);
+});
+
 test("getCoachDashboard computes stats filtered by competition and age category", async () => {
   const { service } = createTestCoachDashboardService({
     competitionRows: [
@@ -1227,7 +1303,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
       ],
-      rankedParticipations: 1
+      rankedParticipations: 1,
+      topSeven: 1,
+      participations: 2
     },
     {
       level: "Régional",
@@ -1236,7 +1314,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
       ],
-      rankedParticipations: 0
+      rankedParticipations: 0,
+      topSeven: 0,
+      participations: 0
     },
     {
       level: "National",
@@ -1245,7 +1325,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 1 }
       ],
-      rankedParticipations: 1
+      rankedParticipations: 1,
+      topSeven: 1,
+      participations: 1
     },
     {
       level: "International",
@@ -1254,7 +1336,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
         { place: "2e", label: "🥈", count: 0 },
         { place: "3e", label: "🥉", count: 0 }
       ],
-      rankedParticipations: 0
+      rankedParticipations: 0,
+      topSeven: 0,
+      participations: 0
     }
   ]);
 
@@ -1271,7 +1355,9 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       { place: "2e", label: "🥈", count: 0 },
       { place: "3e", label: "🥉", count: 0 }
     ],
-    rankedParticipations: 1
+    rankedParticipations: 1,
+    topSeven: 1,
+    participations: 2
   });
   assert.deepEqual(ageFiltered.availableCompetitions, [
     {

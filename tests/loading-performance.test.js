@@ -1272,7 +1272,8 @@ test("COACH-1 / STAT-17 : le tableau de bord lit ses données en un appel, filtr
   assert.deepEqual(dataCall.payload, {
     p_club_ids: ["NANTES"],
     p_judoka_ids: [],
-    p_date_from: season.start,
+    // STAT-23 : la lecture commence un an plus tôt, pour la période comparée.
+    p_date_from: `${Number(season.start.slice(0, 4)) - 1}${season.start.slice(4)}`,
     p_date_to: season.end,
     p_age_category: "Cadet",
     p_competition_ids: []

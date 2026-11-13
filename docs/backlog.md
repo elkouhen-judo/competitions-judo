@@ -1,6 +1,6 @@
 # Backlog
 
-Les stories STAT-17 à STAT-22 de la revue du 13/11/2026 sont implémentées (DASH-026, DASH-027, DASH-013 de `docs/spec.md`, PERF-009 de `docs/spec-tech.md`). Définitions dans `docs/metrics.md`.
+Les stories STAT-17 à STAT-29, SAISIE-1 à SAISIE-4 et INSCR-1 et INSCR-2 sont implémentées. Statistiques : DASH-006 à DASH-029 de `docs/spec.md`, PERF-009 de `docs/spec-tech.md`, définitions dans `docs/metrics.md`. Réinscription : AUTH-019a et AUTH-019b.
 
 ## Statistiques
 
@@ -21,7 +21,7 @@ Contraintes communes à toutes les stories :
 
 ### Comparer dans le temps
 
-#### STAT-23 — Écart avec la période précédente (P1, L)
+#### STAT-23 — Écart avec la période précédente (P1, L) — fait
 
 - Constat : chaque chiffre décrit la période filtrée. Comparer deux saisons oblige à changer les dates et à retenir les chiffres.
 - Règle : la période précédente est la fenêtre `dateFrom`–`dateTo` décalée d'un an. Le club et la catégorie d'âge filtrés s'y appliquent.
@@ -35,7 +35,7 @@ Contraintes communes à toutes les stories :
 - Acceptation : `getCoachDashboard` fait toujours 3 requêtes Supabase.
 - Fichiers : `core/services/coach-dashboard.service.ts`, `core/services/coach-dashboard-loader.ts`, `core/types.ts`, `assets/app-screen-coach-dashboard.ts`, `assets/views/coach-dashboard.html`, `docs/spec.md`, `docs/metrics.md`, `tests/application-services.test.js`, `tests/loading-performance.test.js`, `tests/coach-competition-stats-visual.test.js`.
 
-#### STAT-24 — « Évolution » par trimestre et par saison (P1, M)
+#### STAT-24 — « Évolution » par trimestre et par saison (P1, M) — fait
 
 - Constat : un mois compte rarement 5 combats. La section n'affiche alors presque jamais de taux.
 - Constat : la section ne s'affiche qu'à partir de 2 mois et ne suit que les combats, les victoires et les podiums.
@@ -50,7 +50,7 @@ Contraintes communes à toutes les stories :
 
 ### Lire juste
 
-#### STAT-25 — Résultats à niveau égal (P1, M) — après STAT-23
+#### STAT-25 — Résultats à niveau égal (P1, M) — fait
 
 - Constat : un club qui monte du départemental au régional voit son taux de victoire baisser alors qu'il progresse.
 - Constat : « Par niveau » donne le bilan de chaque niveau, sans lecture dans le temps.
@@ -60,7 +60,7 @@ Contraintes communes à toutes les stories :
 - Acceptation : une montée en niveau se lit par la hausse des participations régionales ou nationales, sans regarder le taux global.
 - Fichiers : `core/domain/coach-dashboard-statistics.ts`, `core/types.ts`, `assets/app-screen-coach-dashboard.ts`, `assets/views/coach-dashboard.html`, `docs/spec.md` (DASH-010, DASH-012), `docs/metrics.md`, `tests/domain-model.test.js`.
 
-#### STAT-26 — Places de 5e et 7e (P2, S)
+#### STAT-26 — Places de 5e et 7e (P2, S) — fait
 
 - Constat : les classements `5e` et `7e` sont saisis. Les statistiques ne comptent que les podiums.
 - Règle : « Podiums » ajoute, par niveau, le nombre de participations classées dans les 7 premiers (`1er`, `2e`, `3e`, `5e`, `7e`).
@@ -68,7 +68,7 @@ Contraintes communes à toutes les stories :
 - Acceptation : une participation classée `5e` compte dans « 7 premiers » et pas dans les podiums.
 - Fichiers : `core/domain/coach-dashboard-statistics.ts`, `core/types.ts`, `assets/app-screen-coach-dashboard.ts`, `docs/spec.md` (DASH-009, DASH-012), `docs/metrics.md`, `tests/domain-model.test.js`.
 
-#### STAT-27 — Participations sans combat saisi (P2, S)
+#### STAT-27 — Participations sans combat saisi (P2, S) — fait
 
 - Constat : une participation classée sans aucun combat saisi compte dans les podiums et pas dans les taux de victoire. Rien ne le signale.
 - Règle : la synthèse affiche le nombre de participations du périmètre et, parmi elles, celles sans combat saisi (`18 participations, dont 4 sans combat saisi`).
@@ -79,7 +79,7 @@ Contraintes communes à toutes les stories :
 
 ### Suivre le travail
 
-#### STAT-28 — Activité du club (P2, M) — après STAT-23
+#### STAT-28 — Activité du club (P2, M) — fait
 
 - Constat : l'effectif n'est qu'un chiffre instantané. Le nombre de participations et de combats par judoka n'est pas suivi.
 - Règle : une section « Activité » donne les judokas engagés, les participations, les compétitions et les combats par judoka engagé (moyenne à une décimale).
@@ -88,7 +88,7 @@ Contraintes communes à toutes les stories :
 - Acceptation : la section se place après « Podiums » et se lit sans aucun nom de judoka.
 - Fichiers : `core/domain/coach-dashboard-statistics.ts`, `core/types.ts`, `assets/app-screen-coach-dashboard.ts`, `assets/views/coach-dashboard.html`, `docs/spec.md` (DASH-006, DASH-007), `docs/metrics.md`, `tests/domain-model.test.js`, `tests/coach-competition-stats-visual.test.js`.
 
-#### STAT-29 — Technique dans le temps (P2, M) — après STAT-23
+#### STAT-29 — Technique dans le temps (P2, M) — fait
 
 - Constat : les indicateurs techniques existent, sans lecture dans le temps. On ne voit pas si le travail à l'entraînement se retrouve en compétition.
 - Règle : ces lignes affichent la valeur de la période précédente : part des victoires par Ippon, part des points marqués au sol, part des points concédés au sol, victoires après avoir marqué le premier, shidos par combat.

@@ -822,7 +822,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 1
+        rankedParticipations: 1,
+        topSeven: 1,
+        participations: 1
       },
       {
         level: "Régional",
@@ -831,7 +833,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 1 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 1
+        rankedParticipations: 1,
+        topSeven: 1,
+        participations: 1
       },
       {
         level: "National",
@@ -840,7 +844,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 1
+        rankedParticipations: 1,
+        topSeven: 1,
+        participations: 1
       },
       {
         level: "International",
@@ -849,7 +855,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 1
+        rankedParticipations: 1,
+        topSeven: 1,
+        participations: 2
       }
     ],
     topWinTechniques: [
@@ -865,7 +873,11 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { key: "International", label: "International", combats: 1, victories: 1, defeats: 0 },
       { key: "", label: "Niveau non renseigné", combats: 1, victories: 0, defeats: 1 }
     ],
-    byMonth: [],
+    byPeriod: [],
+    // STAT-27 : sans date, une participation compte ; ces combats ne disent pas leur compétition.
+    participations: 5,
+    participationsWithoutCombat: 5,
+    distinctWinTechniques: 2,
     // STAT-6 : aucun point n'a de rang, aucun combat n'est compté.
     scoreHolding: { counted: 0, scoredFirst: 0, wonAfterScoringFirst: 0, lostAfterLeading: 0, wonAfterTrailing: 0 },
     groundShare: { scored: { ground: 1, counted: 2 }, conceded: { ground: 0, counted: 0 } },
@@ -921,7 +933,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 0
+        rankedParticipations: 0,
+        topSeven: 0,
+        participations: 0
       },
       {
         level: "Régional",
@@ -930,7 +944,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 0
+        rankedParticipations: 0,
+        topSeven: 0,
+        participations: 0
       },
       {
         level: "National",
@@ -939,7 +955,9 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 0
+        rankedParticipations: 0,
+        topSeven: 0,
+        participations: 0
       },
       {
         level: "International",
@@ -948,13 +966,18 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
           { place: "2e", label: "🥈", count: 0 },
           { place: "3e", label: "🥉", count: 0 }
         ],
-        rankedParticipations: 0
+        rankedParticipations: 0,
+        topSeven: 0,
+        participations: 0
       }
     ],
     topWinTechniques: [],
     topDefeatTechniques: [],
     byLevel: [],
-    byMonth: [],
+    byPeriod: [],
+    participations: 0,
+    participationsWithoutCombat: 0,
+    distinctWinTechniques: 0,
     scoreHolding: { counted: 0, scoredFirst: 0, wonAfterScoringFirst: 0, lostAfterLeading: 0, wonAfterTrailing: 0 },
     groundShare: { scored: { ground: 0, counted: 0 }, conceded: { ground: 0, counted: 0 } },
     discipline: { scoredCombats: 0, shidosReceived: 0, hansokuMakeDefeats: 0 }
@@ -1103,7 +1126,7 @@ test("saisies à compléter : décomptes seuls, le niveau compté une fois par c
   issues.forEach((entry) => assert.equal("competitions" in entry || "combats" in entry, false));
 });
 
-test("STAT-22 : « Évolution » compte le podium d'un mois sans combat saisi", () => {
+test("STAT-22 / STAT-24 : « Évolution » par trimestre compte le podium d'un trimestre sans combat saisi", () => {
   const combats = [
     { combatId: "CB1", judokaId: "J1", competitionId: "P1", result: "Victoire" },
     { combatId: "CB2", judokaId: "J2", competitionId: "P2", result: "Défaite" }
@@ -1115,18 +1138,68 @@ test("STAT-22 : « Évolution » compte le podium d'un mois sans combat saisi", 
     { competitionId: "P4", ownerJudokaId: "J1", level: "Régional", result: "2e", competitionDate: "" }
   ];
 
-  const stats = computeCoachDashboardStats(combats, competitions);
+  const stats = computeCoachDashboardStats(combats, competitions, { today: "2027-01-10" });
 
-  assert.deepEqual(stats.byMonth, [
-    { month: "2026-10", combats: 2, victories: 1, defeats: 1, podiums: 1 },
-    { month: "2026-12", combats: 0, victories: 0, defeats: 0, podiums: 1 }
+  assert.deepEqual(stats.byPeriod, [
+    { key: "2026-T1", label: "Sept.-nov. 2026", participations: 2, combats: 2, victories: 1, defeats: 1, podiums: 1 },
+    { key: "2026-T2", label: "Déc. 2026-févr. 2027", participations: 1, combats: 0, victories: 0, defeats: 0, podiums: 1 }
   ]);
-  // Seul le podium sans date reste hors des mois.
+  // Seul le podium sans date reste hors des trimestres.
   const podiumTile = stats.podiumsByLevel.reduce(
     (sum, level) => sum + level.podiums.reduce((total, podium) => total + podium.count, 0),
     0
   );
-  assert.equal(stats.byMonth.reduce((sum, entry) => sum + entry.podiums, 0), podiumTile - 1);
+  assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.podiums, 0), podiumTile - 1);
+  // La somme des combats des lignes égale la tuile « Combats » quand toutes les compétitions sont datées.
+  assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.combats, 0), stats.totalCombats);
+});
+
+test("STAT-24 : sur plusieurs saisons, une ligne par saison", () => {
+  const combats = [
+    { combatId: "CB1", judokaId: "J1", competitionId: "P1", result: "Victoire" },
+    { combatId: "CB2", judokaId: "J2", competitionId: "P2", result: "Défaite" },
+    { combatId: "CB3", judokaId: "J2", competitionId: "P3", result: "Victoire" }
+  ];
+  const competitions = [
+    { competitionId: "P1", ownerJudokaId: "J1", level: "Régional", result: "", competitionDate: "2025-10-04" },
+    { competitionId: "P2", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-03-04" },
+    { competitionId: "P3", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-10-06" }
+  ];
+  const stats = computeCoachDashboardStats(combats, competitions);
+  assert.deepEqual(
+    stats.byPeriod.map((entry) => [entry.key, entry.label, entry.combats]),
+    [
+      ["2025", "Saison 2025-2026", 2],
+      ["2026", "Saison 2026-2027", 1]
+    ]
+  );
+});
+
+test("STAT-26 / STAT-27 / STAT-29 : 7 premiers, participations sans combat, techniques différentes", () => {
+  const point = (technique) => ({ category: "Tachi-waza", technique, value: "Waza-ari" });
+  const combats = [
+    { combatId: "CB1", judokaId: "J1", competitionId: "P1", result: "Victoire", scores: [point("Uchi-mata"), point("Seoi-nage")] },
+    { combatId: "CB2", judokaId: "J2", competitionId: "P2", result: "Victoire", scores: [point("Uchi-mata")] },
+    { combatId: "CB3", judokaId: "J2", competitionId: "P2", result: "Défaite", scores: [point("O-goshi")] }
+  ];
+  const competitions = [
+    { competitionId: "P1", ownerJudokaId: "J1", level: "Régional", result: "5e", competitionDate: "2026-10-04" },
+    { competitionId: "P2", ownerJudokaId: "J2", level: "Régional", result: "2e", competitionDate: "2026-10-04" },
+    // Passée, classée, sans combat saisi.
+    { competitionId: "P3", ownerJudokaId: "J1", level: "Régional", result: "7e", competitionDate: "2026-10-18" },
+    // À venir : ni participation, ni participation sans combat.
+    { competitionId: "P4", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-12-06" }
+  ];
+  const stats = computeCoachDashboardStats(combats, competitions, { today: "2026-11-13" });
+  const regional = stats.podiumsByLevel.find((entry) => entry.level === "Régional");
+  // Une 5e place compte dans les 7 premiers, pas dans les podiums.
+  assert.equal(regional.topSeven, 3);
+  assert.equal(regional.podiums.reduce((sum, podium) => sum + podium.count, 0), 1);
+  assert.equal(regional.participations, 3);
+  assert.equal(stats.participations, 3);
+  assert.equal(stats.participationsWithoutCombat, 1);
+  // Les points des combats perdus ne comptent pas.
+  assert.equal(stats.distinctWinTechniques, 2);
 });
 
 test("STAT-20 : statistiques de groupe dès 2 judokas, garde de l'effectif dès 5", () => {
@@ -1195,10 +1268,9 @@ test("coach dashboard statistics read rounds, months, score holding, ground shar
   assert.deepEqual(stats.groundShare, { scored: { ground: 1, counted: 3 }, conceded: { ground: 1, counted: 2 } });
   // STAT-8 : 6 shidos sur 3 combats au score renseigné ; une défaite par Hansoku-make.
   assert.deepEqual(stats.discipline, { scoredCombats: 3, shidosReceived: 6, hansokuMakeDefeats: 1 });
-  // STAT-12 : un mois par mois de compétition avec des combats.
-  assert.deepEqual(stats.byMonth, [
-    { month: "2026-10", combats: 2, victories: 1, defeats: 1, podiums: 1 },
-    { month: "2026-11", combats: 2, victories: 1, defeats: 1, podiums: 0 }
+  // STAT-24 : octobre et novembre tombent dans le même trimestre de saison.
+  assert.deepEqual(stats.byPeriod, [
+    { key: "2026-T1", label: "Sept.-nov. 2026", participations: 3, combats: 4, victories: 2, defeats: 2, podiums: 1 }
   ]);
   // STAT-14 : la compétition club sans niveau compte une fois, sur 2 compétitions.
   const levelIssue = stats.dataQualityIssues.find((entry) => entry.criterion === "competitionLevel");

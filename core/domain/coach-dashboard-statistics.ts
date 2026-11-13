@@ -1,9 +1,14 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
-import { computeTopDefeatTechniques, computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
+import {
+  computeTopDefeatTechniques,
+  computeTopWinTechniques,
+  countDistinctWinTechniques
+} from "./competitions/combat-technique-breakdown";
 import { computeDecisionBreakdown, computeRate } from "./competitions/combat-decision-breakdown";
 import { OPPONENT_STANCES } from "./competitions/opponent-stance";
 import { HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
 import { formatCompetitionRankingDisplay } from "./competition-results";
+import { formatSeasonLabel, getSeasonStartYear } from "./season";
 import type {
   Combat,
   CombatScore,
@@ -14,7 +19,7 @@ import type {
   CoachDashboardIpponSplit,
   CoachDashboardLevelPodiumBreakdownEntry,
   CoachDashboardMatchupEntry,
-  CoachDashboardMonthEntry,
+  CoachDashboardPeriodEntry,
   CoachDashboardQualityIssueEntry,
   CoachDashboardResultLine,
   CoachDashboardScoreHolding,
@@ -46,6 +51,24 @@ const PODIUM_PLACES: Array<{ place: "1er" | "2e" | "3e"; label: string }> = [
 
 function isPodium(result: unknown): boolean {
   return PODIUM_PLACES.some(({ place }) => result === place);
+}
+
+// STAT-26 : les 7 premiers, tels que proposés à la saisie du classement (COMP-012).
+const TOP_SEVEN_PLACES = ["1er", "2e", "3e", "5e", "7e"];
+
+function isTopSeven(result: unknown): boolean {
+  return TOP_SEVEN_PLACES.includes(String(result || ""));
+}
+
+export interface CoachDashboardStatsOptions {
+  /** Date du jour (AAAA-MM-JJ) : une participation datée après n'est pas encore une participation. */
+  today?: string;
+}
+
+// STAT-27 : une participation compte une fois sa date passée ; sans date, elle compte.
+function isPastParticipation(competition: DashboardCompetition, today: string): boolean {
+  const date = String(competition.competitionDate || "");
+  return !today || !date || date <= today;
 }
 
 function isFinalizedCompetitionResult(result: unknown): boolean {
@@ -156,34 +179,72 @@ function computeResultLines(
   return unknown.length ? [...lines, toResultLine("", missingLabel, unknown)] : lines;
 }
 
-// STAT-12 : un mois par mois de compétition qui compte des combats ;
-// STAT-22 : ou un podium, même sans combat saisi.
-function computeMonthBreakdown(
+// STAT-24 : trimestres de saison (septembre–novembre, décembre–février, mars–mai, juin–août).
+const QUARTER_LABELS = ["Sept.-nov.", "Déc.-févr.", "Mars-mai", "Juin-août"];
+
+function getQuarter(date: string, seasonStartYear: number): { key: string; label: string } {
+  const month = Number(date.slice(5, 7));
+  const index = Math.floor((((month - 9) % 12) + 12) % 12 / 3);
+  const year = index === 0 ? seasonStartYear : seasonStartYear + 1;
+  const label =
+    index === 1
+      ? `Déc. ${seasonStartYear}-févr. ${seasonStartYear + 1}`
+      : `${QUARTER_LABELS[index]} ${year}`;
+  return { key: `${seasonStartYear}-T${index + 1}`, label };
+}
+
+// STAT-24 : une ligne par trimestre quand tout tient dans une saison, sinon une ligne par saison.
+// STAT-22 : une ligne sans combat mais avec un podium reste listée.
+function computePeriodBreakdown(
   combats: CoachDashboardCombat[],
-  competitions: DashboardCompetition[]
-): CoachDashboardMonthEntry[] {
-  const monthOf = (value: unknown) => String(value || "").slice(0, 7);
-  const monthByCompetitionId = new Map(
-    competitions.map((competition) => [String(competition.competitionId || ""), monthOf(competition.competitionDate)])
+  competitions: DashboardCompetition[],
+  today: string
+): CoachDashboardPeriodEntry[] {
+  const dated = competitions.filter((competition) =>
+    /^\d{4}-\d{2}-\d{2}/.test(String(competition.competitionDate || ""))
   );
-  const months = new Map<string, CoachDashboardMonthEntry>();
+  const seasons = new Set(dated.map((competition) => getSeasonStartYear(competition.competitionDate)));
+  const bySeason = seasons.size > 1;
+  const periodOf = (date: string) => {
+    const season = getSeasonStartYear(date) as number;
+    return bySeason
+      ? { key: String(season), label: `Saison ${formatSeasonLabel(season)}` }
+      : getQuarter(date, season);
+  };
+  const periods = new Map<string, CoachDashboardPeriodEntry>();
+  const entryFor = (date: string) => {
+    const { key, label } = periodOf(date);
+    const entry = periods.get(key) || {
+      key,
+      label,
+      participations: 0,
+      combats: 0,
+      victories: 0,
+      defeats: 0,
+      podiums: 0
+    };
+    periods.set(key, entry);
+    return entry;
+  };
+  const dateByCompetitionId = new Map(
+    dated.map((competition) => [String(competition.competitionId || ""), String(competition.competitionDate)])
+  );
+  dated.forEach((competition) => {
+    const date = String(competition.competitionDate);
+    if (isPastParticipation(competition, today)) entryFor(date).participations += 1;
+    if (isPodium(competition.result)) entryFor(date).podiums += 1;
+  });
   combats.forEach((combat) => {
-    const month = monthByCompetitionId.get(String(combat.competitionId)) || "";
-    if (!/^\d{4}-\d{2}$/.test(month)) return;
-    const entry = months.get(month) || { month, combats: 0, victories: 0, defeats: 0, podiums: 0 };
+    const date = dateByCompetitionId.get(String(combat.competitionId));
+    if (!date) return;
+    const entry = entryFor(date);
     entry.combats += 1;
     if (isVictoryCombatResult(combat.result)) entry.victories += 1;
     if (isLossCombatResult(combat.result)) entry.defeats += 1;
-    months.set(month, entry);
   });
-  competitions.forEach((competition) => {
-    const month = monthOf(competition.competitionDate);
-    if (!isPodium(competition.result) || !/^\d{4}-\d{2}$/.test(month)) return;
-    const entry = months.get(month) || { month, combats: 0, victories: 0, defeats: 0, podiums: 0 };
-    entry.podiums += 1;
-    months.set(month, entry);
-  });
-  return Array.from(months.values()).sort((a, b) => a.month.localeCompare(b.month));
+  return Array.from(periods.values())
+    .filter((entry) => entry.combats > 0 || entry.podiums > 0)
+    .sort((a, b) => a.key.localeCompare(b.key));
 }
 
 const POINT_VALUE_INDEX: Record<string, number> = { Ippon: 0, "Waza-ari": 1, Yuko: 2 };
@@ -333,8 +394,12 @@ function computeDataQualityIssues(
   return [...combatIssues.slice(0, 4), levelIssue, ...combatIssues.slice(4)];
 }
 
-// STAT-11 : podiums et participations classées, par niveau.
-function computePodiumBreakdownByLevel(competitions: DashboardCompetition[]): CoachDashboardLevelPodiumBreakdownEntry[] {
+// STAT-11 : podiums et participations classées, par niveau ; STAT-26 : 7 premiers ;
+// STAT-25 : participations passées à chaque niveau.
+function computePodiumBreakdownByLevel(
+  competitions: DashboardCompetition[],
+  today: string
+): CoachDashboardLevelPodiumBreakdownEntry[] {
   const finalizedCompetitions = competitions.filter((competition) =>
     isFinalizedCompetitionResult(competition.result)
   );
@@ -347,7 +412,11 @@ function computePodiumBreakdownByLevel(competitions: DashboardCompetition[]): Co
         label,
         count: levelCompetitions.filter((competition) => competition.result === place).length
       })),
-      rankedParticipations: levelCompetitions.length
+      rankedParticipations: levelCompetitions.length,
+      topSeven: levelCompetitions.filter((competition) => isTopSeven(competition.result)).length,
+      participations: competitions.filter(
+        (competition) => competition.level === level && isPastParticipation(competition, today)
+      ).length
     };
   });
 }
@@ -380,10 +449,28 @@ export function computeWithheldScope(
   return { analyzedCompetitions: computeAnalyzedCompetitionCount(competitions), totalCombats: combats.length };
 }
 
+// STAT-27 : participations passées, et celles qui n'ont aucun combat saisi.
+function computeParticipations(
+  combats: CoachDashboardCombat[],
+  competitions: DashboardCompetition[],
+  today: string
+): { participations: number; participationsWithoutCombat: number } {
+  const past = competitions.filter((competition) => isPastParticipation(competition, today));
+  const withCombat = new Set(combats.map((combat) => String(combat.competitionId)));
+  return {
+    participations: past.length,
+    participationsWithoutCombat: past.filter(
+      (competition) => !withCombat.has(String(competition.competitionId || ""))
+    ).length
+  };
+}
+
 export function computeCoachDashboardStats(
   combats: CoachDashboardCombat[],
-  competitions: DashboardCompetition[] = []
+  competitions: DashboardCompetition[] = [],
+  options: CoachDashboardStatsOptions = {}
 ): CoachDashboardStats {
+  const today = String(options.today || "");
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
   const defeats = combats.filter((combat) => isLossCombatResult(combat.result)).length;
@@ -403,8 +490,9 @@ export function computeCoachDashboardStats(
     engagedJudokas,
     judokasByHandedness: computeJudokaCountByHandedness(combats, engagedJudokas),
     dataQualityIssues: computeDataQualityIssues(combats, competitions),
-    podiumsByLevel: computePodiumBreakdownByLevel(competitions),
+    podiumsByLevel: computePodiumBreakdownByLevel(competitions, today),
     topWinTechniques: computeTopWinTechniques(combats, DASHBOARD_TOP_TECHNIQUES_LIMIT),
+    distinctWinTechniques: countDistinctWinTechniques(combats),
     topDefeatTechniques: computeTopDefeatTechniques(combats, DASHBOARD_TOP_TECHNIQUES_LIMIT),
     byLevel: computeResultLines(
       combats,
@@ -412,7 +500,8 @@ export function computeCoachDashboardStats(
       (combat) => String(combat.competitionLevel || ""),
       "Niveau non renseigné"
     ),
-    byMonth: computeMonthBreakdown(combats, competitions),
+    byPeriod: computePeriodBreakdown(combats, competitions, today),
+    ...computeParticipations(combats, competitions, today),
     scoreHolding: computeScoreHolding(combats),
     groundShare: computeGroundShare(combats),
     discipline: computeDiscipline(combats)

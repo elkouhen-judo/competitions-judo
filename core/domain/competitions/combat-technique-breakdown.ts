@@ -49,3 +49,16 @@ export function computeTopDefeatTechniques(
     limit
   );
 }
+
+/** STAT-29 : nombre de techniques différentes marquées dans les combats gagnés. */
+export function countDistinctWinTechniques(combats: Array<Pick<Combat, "result" | "scores">>): number {
+  const techniques = new Set<string>();
+  combats
+    .filter((combat) => isVictoryCombatResult(combat.result))
+    .flatMap((combat) => combat.scores || [])
+    .forEach((score) => {
+      const technique = getCombatScoreTechniqueLabel(score);
+      if (technique) techniques.add(technique);
+    });
+  return techniques.size;
+}

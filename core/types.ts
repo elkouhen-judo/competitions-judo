@@ -272,9 +272,14 @@ export interface CoachDashboardResultLine {
   defeats: number;
 }
 
-/** STAT-12 : bilan d'un mois (AAAA-MM). */
-export interface CoachDashboardMonthEntry {
-  month: string;
+/**
+ * STAT-24 : bilan d'un trimestre de saison (clé « 2026-T1 », septembre à novembre 2026) ou,
+ * quand la période couvre plusieurs saisons, d'une saison (clé « 2026 »).
+ */
+export interface CoachDashboardPeriodEntry {
+  key: string;
+  label: string;
+  participations: number;
   combats: number;
   victories: number;
   defeats: number;
@@ -336,6 +341,10 @@ export interface CoachDashboardLevelPodiumBreakdownEntry {
   podiums: CoachDashboardPodiumBreakdownEntry[];
   /** STAT-11 : participations classées (classement final saisi) à ce niveau. */
   rankedParticipations: number;
+  /** STAT-26 : participations classées dans les 7 premiers (1er, 2e, 3e, 5e, 7e). */
+  topSeven: number;
+  /** STAT-25 : participations passées à ce niveau, classées ou non. */
+  participations: number;
 }
 
 export interface CoachDashboardStats {
@@ -358,7 +367,12 @@ export interface CoachDashboardStats {
   /** STAT-4 : techniques des points adverses dans les combats perdus. */
   topDefeatTechniques: TechniqueBreakdownEntry[];
   byLevel: CoachDashboardResultLine[];
-  byMonth: CoachDashboardMonthEntry[];
+  byPeriod: CoachDashboardPeriodEntry[];
+  /** STAT-27 : participations passées du périmètre, dont celles sans combat saisi. */
+  participations: number;
+  participationsWithoutCombat: number;
+  /** STAT-29 : techniques différentes marquées dans les combats gagnés. */
+  distinctWinTechniques: number;
   scoreHolding: CoachDashboardScoreHolding;
   groundShare: CoachDashboardGroundShare;
   discipline: CoachDashboardDiscipline;
@@ -376,6 +390,11 @@ export interface CoachDashboard {
   stats: CoachDashboardStats | null;
   /** STAT-20 : sous le seuil, seuls le nombre de combats et de compétitions sont donnés. */
   withheld: { analyzedCompetitions: number; totalCombats: number } | null;
+  /**
+   * STAT-23 : mêmes statistiques sur la même fenêtre de dates un an plus tôt ; null sans
+   * dates, avec des compétitions choisies, sans donnée ou sous le seuil de 2 judokas.
+   */
+  previous?: { dateFrom: string; dateTo: string; stats: CoachDashboardStats } | null;
   availableCompetitions: CoachDashboardCompetitionOption[];
 }
 

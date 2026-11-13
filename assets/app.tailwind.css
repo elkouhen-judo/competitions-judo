@@ -4077,6 +4077,22 @@
   }
 
   /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */
+  /* STAT-23 : écart avec la période précédente, sans couleur de jugement. */
+  .mini-stat-delta {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* STAT-24 : détail d'une ligne d'évolution. */
+  .bar-row-detail {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
   /* INSCR-2 : judoka non réinscrit pour la saison. */
   .registration-notice {
     margin: 0 0 12px;

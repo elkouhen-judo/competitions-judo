@@ -133,3 +133,27 @@ export function toCoachDashboardCombats(
     judokaHandedness: judokasById.get(String(combat.id_judoka))?.handedness || ""
   }));
 }
+
+/** STAT-23 : même date un an plus tôt ; le 29 février devient le 28. */
+export function shiftDateOneYearBack(date: string): string {
+  const [year, month, day] = date.split("-");
+  const previousYear = String(Number(year) - 1).padStart(4, "0");
+  const previousDay = month === "02" && day === "29" ? "28" : day;
+  return `${previousYear}-${month}-${previousDay}`;
+}
+
+/**
+ * STAT-23 : la période comparée est la fenêtre de dates décalée d'un an. Aucune comparaison
+ * sans date de début et de fin, avec des compétitions choisies, ou si les deux fenêtres se
+ * recouvrent (période de plus d'un an).
+ */
+export function getPreviousPeriod(
+  filters: Pick<CoachDashboardFilters, "dateFrom" | "dateTo" | "competitionIds">
+): { dateFrom: string; dateTo: string } | null {
+  const dateFrom = String(filters.dateFrom || "").trim();
+  const dateTo = String(filters.dateTo || "").trim();
+  if (!ISO_DATE.test(dateFrom) || !ISO_DATE.test(dateTo)) return null;
+  if (Array.isArray(filters.competitionIds) && filters.competitionIds.length) return null;
+  const previous = { dateFrom: shiftDateOneYearBack(dateFrom), dateTo: shiftDateOneYearBack(dateTo) };
+  return previous.dateTo < dateFrom ? previous : null;
+}

@@ -7,6 +7,7 @@ import { createCoachAssistantSearch } from "./coach-assistant-search";
 import {
   filterCompetitionsByScope,
   filterCompetitionsBySelection,
+  getPreviousPeriod,
   groupScoredPointsByCombatId,
   toCoachDashboardCombats,
   toCompetitionScopeFilter,
@@ -125,26 +126,41 @@ export default function createCoachDashboardService(
       filters.clubId
     );
     // STAT-17 : compétitions, combats et points en un appel, en même temps que les judokas.
+    // STAT-23 : la lecture commence un an plus tôt pour la période comparée ; le partage est fait ici.
     const competitionIds = Array.isArray(filters.competitionIds) ? filters.competitionIds.map(String) : [];
+    const previousPeriod = getPreviousPeriod(filters);
+    const readFilters = previousPeriod ? { ...filters, dateFrom: previousPeriod.dateFrom } : filters;
     const [{ judokas }, data] = await Promise.all([
       userContextService.getDomainUserContext(email),
-      combatsRepository.listCoachDashboardData(toCompetitionScopeFilter(scope, filters), competitionIds)
+      combatsRepository.listCoachDashboardData(toCompetitionScopeFilter(scope, readFilters), competitionIds)
     ]);
     const { competitionRows, judokaRows } = restrictToScope(judokas, data.competitions, selectedClubId);
     const scopedRows = filterCompetitionsByScope(competitionRows, filters);
     const selectedRows = filterCompetitionsBySelection(scopedRows, filters);
-    const selectedIds = new Set(selectedRows.map((row) => String(row.id_competition)));
-    const combats = toCoachDashboardCombats(
-      data.combats.filter((combat) => selectedIds.has(String(combat.id_competition))),
-      selectedRows,
-      judokaRows
-    );
-    const competitions = selectedRows.map(toCanonicalCompetition);
-    // STAT-20 : sous 2 judokas, aucune statistique : elle décrirait un judoka identifiable.
-    const isGroup = isGroupScope(combats, competitions);
+    const today = getCurrentDate();
+    const computePeriod = (rows: CompetitionRow[]) => {
+      const ids = new Set(rows.map((row) => String(row.id_competition)));
+      const combats = toCoachDashboardCombats(
+        data.combats.filter((combat) => ids.has(String(combat.id_competition))),
+        rows,
+        judokaRows
+      );
+      const competitions = rows.map(toCanonicalCompetition);
+      // STAT-20 : sous 2 judokas, aucune statistique : elle décrirait un judoka identifiable.
+      const isGroup = isGroupScope(combats, competitions);
+      return {
+        stats: isGroup ? computeCoachDashboardStats(combats, competitions, { today }) : null,
+        withheld: isGroup ? null : computeWithheldScope(combats, competitions)
+      };
+    };
+    const current = computePeriod(selectedRows);
+    const previousRows = previousPeriod
+      ? filterCompetitionsByScope(competitionRows, { ...filters, ...previousPeriod })
+      : [];
+    const previousStats = current.stats && previousRows.length ? computePeriod(previousRows).stats : null;
     return {
-      stats: isGroup ? computeCoachDashboardStats(combats, competitions) : null,
-      withheld: isGroup ? null : computeWithheldScope(combats, competitions),
+      ...current,
+      previous: previousPeriod && previousStats ? { ...previousPeriod, stats: previousStats } : null,
       availableCompetitions: buildCoachDashboardCompetitionOptions(scopedRows)
     };
   }
