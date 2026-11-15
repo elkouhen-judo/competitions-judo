@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Ayumi, le carnet de compétition des judokas du club : les parcours de l'application en images.">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Ayumi en images</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@700&display=swap">
+<style>
+  /* Mise en page : une bande par parcours, des téléphones alignés sur un rail que l'on fait défiler ; la saisie des combats ouvre la page en grand. */
+  :root {
+    --bg: #f3f5fa;
+    --panel: #ffffff;
+    --ink: #0e1a2b;
+    --muted: #556479;
+    --line: #dbe2ee;
+    --blue: #1f4fd8;
+    --blue-soft: #e8eefc;
+    --win: #2f6b3a;
+    --loss: #a3302b;
+    --shido: #8a6300;
+    --phone: #0e1a2b;
+    --on-blue: #ffffff;
+    --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220; --panel: #131c2e; --ink: #e9eef7; --muted: #9aa8bd; --line: #26324a;
+      --blue: #7b98ff; --blue-soft: #1b2850; --win: #7cc48a; --loss: #f08a84; --shido: #e0b44c; --phone: #2a3650; --on-blue: #0b1220;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1220; --panel: #131c2e; --ink: #e9eef7; --muted: #9aa8bd; --line: #26324a;
+    --blue: #7b98ff; --blue-soft: #1b2850; --win: #7cc48a; --loss: #f08a84; --shido: #e0b44c; --phone: #2a3650; --on-blue: #0b1220;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2, h3 { text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+  p { margin: 0; }
+  a { color: var(--blue); }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+
+  /* En-tête */
+  .hero { padding-block: 48px 40px; }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 48px; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+  .brand-mark { width: 44px; height: 44px; border-radius: 12px; background: #1f4fd8; display: grid; place-items: center; position: relative; }
+  .brand-mark span { font-family: var(--font-jp); color: #fff; font-size: 24px; line-height: 1; margin-top: -4px; }
+  .brand-mark::after { content: ""; position: absolute; left: 9px; right: 9px; bottom: 8px; height: 3px; border-radius: 2px; background: #fff; }
+  .brand small { display: block; color: var(--muted); font-weight: 500; font-size: 13px; }
+  .hero h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.04; font-weight: 800; margin-top: 28px; }
+  .hero h1 em { font-style: normal; color: var(--blue); }
+  .lede { color: var(--muted); font-size: 18px; max-width: 34em; margin-top: 18px; }
+  .roles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; padding: 0; list-style: none; }
+  .roles li { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 14px; }
+  .hero-phones { display: flex; justify-content: center; align-items: flex-end; gap: 18px; }
+  .hero-phones .phone:first-child { width: 190px; transform: translateY(-24px) rotate(-4deg); }
+  .hero-phones .phone:last-child { width: 230px; }
+
+  /* Score officiel : la notation du judo, en vrai contenu */
+  .score-strip { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; align-items: baseline; font-size: 14px; color: var(--muted); }
+  .score-strip b { font-variant-numeric: tabular-nums; letter-spacing: 0.18em; color: var(--ink); font-size: 20px; font-weight: 800; }
+
+  /* Navigation entre parcours */
+  .journeys { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  .journeys nav { display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; scrollbar-width: none; }
+  .journeys a { flex: 0 0 auto; text-decoration: none; color: var(--ink); font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid transparent; }
+  .journeys a:hover { border-color: var(--line); background: var(--panel); }
+  .journeys a.featured { background: var(--blue); color: var(--on-blue); }
+
+  /* Sections */
+  section.journey { padding-block: 56px 24px; scroll-margin-top: 64px; }
+  .section-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: end; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; font-weight: 700; color: var(--blue); }
+  .section-head h2 { font-size: clamp(26px, 3.4vw, 38px); font-weight: 800; margin-top: 6px; }
+  .section-head p { color: var(--muted); max-width: 40em; margin-top: 10px; }
+  .rail-controls { display: flex; gap: 8px; }
+  .rail-controls button { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 18px; cursor: pointer; }
+  .rail-controls button:hover { border-color: var(--blue); color: var(--blue); }
+
+  .rail { display: grid; grid-auto-flow: column; grid-auto-columns: 232px; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; padding-block: 28px 18px; margin-top: 8px; scrollbar-width: thin; }
+  .featured-section .rail { grid-auto-columns: 262px; }
+  .step { scroll-snap-align: start; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .step button.phone-btn { all: unset; cursor: zoom-in; display: block; border-radius: 34px; }
+  .step button.phone-btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+  .phone { width: 100%; aspect-ratio: 390 / 844; max-width: 100%; border-radius: 34px; padding: 7px; background: var(--phone); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 18px 40px -18px rgba(14,26,43,.45); transition: transform .2s ease; }
+  .phone img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 28px; background: #f3f5fa; }
+  .step button.phone-btn:hover .phone { transform: translateY(-4px); }
+  .step-meta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: baseline; }
+  .step-num { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--blue); font-size: 14px; }
+  .step-meta h3 { font-size: 16px; font-weight: 700; }
+  .step-meta p { grid-column: 2; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+  .featured-section { background: var(--panel); border-block: 1px solid var(--line); }
+  .featured-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+  .glossary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-block: 8px 32px; }
+  .glossary div { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--bg); }
+  .glossary dt { font-weight: 800; }
+  .glossary dd { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .glossary .t-ippon { color: var(--win); }
+  .glossary .t-waza { color: var(--blue); }
+  .glossary .t-yuko { color: var(--ink); }
+  .glossary .t-shido { color: var(--shido); }
+
+  footer { padding-block: 48px 64px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); margin-top: 40px; }
+  footer .privacy { display: flex; gap: 12px; align-items: flex-start; max-width: 46em; }
+  .blur-sample { flex: 0 0 auto; display: inline-block; width: 64px; height: 20px; border-radius: 5px; background: linear-gradient(90deg, var(--line), var(--muted), var(--line)); filter: blur(3px); opacity: .7; margin-top: 2px; }
+
+  /* Agrandissement */
+  .viewer { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; overflow: hidden; z-index: 20; background: rgba(8, 13, 24, .86); grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: calc(env(safe-area-inset-top, 0px) + 16px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 16px) max(16px, env(safe-area-inset-left, 0px)); }
+  .viewer[open] { display: grid; }
+  .viewer::backdrop { background: transparent; }
+  html.viewer-open { overflow: hidden; }
+  .viewer figcaption small { display: block; color: #b7c3d6; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+  .viewer button[aria-disabled="true"] { opacity: .35; cursor: default; }
+  .viewer figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0; max-height: 100%; }
+  .viewer .phone { width: auto; height: min(78vh, 760px); max-width: 100%; }
+  .viewer figcaption { color: #e9eef7; text-align: center; max-width: 30em; }
+  .viewer figcaption b { display: block; font-size: 17px; }
+  .viewer figcaption span { color: #b7c3d6; font-size: 14px; }
+  .viewer button { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: #fff; font-size: 20px; cursor: pointer; }
+  .viewer .close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: max(14px, env(safe-area-inset-right, 0px)); }
+
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .hero-phones .phone:first-child { width: 150px; }
+    .hero-phones .phone:last-child { width: 180px; }
+    .glossary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .section-head { grid-template-columns: minmax(0, 1fr); }
+    .rail-controls { display: none; }
+  }
+  @media (max-width: 560px) {
+    .hero { padding-block: 28px 28px; }
+    .rail, .featured-section .rail { grid-auto-columns: 74%; gap: 18px; }
+    .viewer { grid-template-columns: minmax(0, 1fr); }
+    .viewer .prev, .viewer .next { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); }
+    .viewer .prev { left: max(18px, env(safe-area-inset-left, 0px)); }
+    .viewer .next { right: max(18px, env(safe-area-inset-right, 0px)); }
+    .viewer .phone { height: min(66vh, 640px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .phone { transition: none; }
+    .rail { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>歩</span></div>
+        <div>Ayumi <small>Suivi de compétitions de judo</small></div>
+      </div>
+      <h1>Le carnet de compétition <em>des judokas du club</em>.</h1>
+      <p class="lede">Ayumi est le carnet de compétition du club : le judoka ou son parent saisit ses combats depuis le téléphone, le coach suit toute l'équipe et sa saison.</p>
+      <ul class="roles" aria-label="Pour qui">
+        <li>Judokas</li><li>Parents</li><li>Coachs</li>
+      </ul>
+      <div class="score-strip" aria-label="Exemple de score officiel">
+        <span>Score officiel</span><b>0 1 1 - 0 1 0</b><span>Ippon · Waza-ari · Yuko, puis les shidos</span>
+      </div>
+    </div>
+    <div class="hero-phones" aria-hidden="true">
+      <div class="phone"><img src="shots/combat-04-choix-du-tour.png" alt=""></div>
+      <div class="phone"><img src="shots/combat-05-saisie-rapide-remplie.png" alt=""></div>
+    </div>
+  </div>
+</header>
+
+<div class="journeys">
+  <div class="wrap"><nav id="journeyNav" aria-label="Parcours"></nav></div>
+</div>
+
+<main id="sections"></main>
+
+<footer>
+  <div class="wrap">
+    <p class="privacy"><span class="blur-sample" aria-hidden="true"></span><span>Les captures viennent de l'application, sur un téléphone de 390 pixels de large, avec des données d'exemple. Les noms de personnes sont floutés.</span></p>
+  </div>
+</footer>
+
+<dialog class="viewer" id="viewer" aria-label="Écran agrandi">
+  <button class="prev" type="button" aria-label="Écran précédent">←</button>
+  <figure>
+    <div class="phone"><img id="viewerImg" alt=""></div>
+    <figcaption aria-live="polite"><small id="viewerPos"></small><b id="viewerTitle"></b><span id="viewerCaption"></span></figcaption>
+  </figure>
+  <button class="next" type="button" aria-label="Écran suivant">→</button>
+  <button class="close" type="button" aria-label="Fermer">✕</button>
+</dialog>
+
+<script>
+const JOURNEYS = [{"id":"saisie-des-combats","nav":"Saisie des combats","featured":true,"kicker":"Le jour de la compétition","title":"Saisir les combats d'une compétition","intro":"Entre deux combats, le judoka ou son parent note le résultat en quelques secondes. Après la compétition, on reprend chaque combat pour détailler le score, les techniques et la garde de l'adversaire.","glossary":[{"term":"Ippon","cls":"t-ippon","text":"Point décisif : le combat s'arrête."},{"term":"Waza-ari","cls":"t-waza","text":"Avantage ; deux font un ippon."},{"term":"Yuko","cls":"t-yuko","text":"Petit avantage, compté à part."},{"term":"Shido","cls":"t-shido","text":"Pénalité ; trois donnent la victoire à l'adversaire."}],"steps":[{"file":"combat-01-accueil.png","title":"Ses compétitions","caption":"Le judoka retrouve ses compétitions de la saison et ouvre celle du jour."},{"file":"combat-02-competition-vide.png","title":"Le jour J","caption":"La fiche de la compétition est prête : un bouton suffit pour saisir le premier combat."},{"file":"combat-03-saisie-rapide-vide.png","title":"Saisie rapide","caption":"Le formulaire s'ouvre en saisie rapide : le résultat suffit, le bouton Enregistrer reste sous le pouce."},{"file":"combat-04-choix-du-tour.png","title":"Le tour","caption":"Poule, 1/8, repêchage ou finale : le tour se choisit d'un toucher, sans menu déroulant."},{"file":"combat-05-saisie-rapide-remplie.png","title":"Trois touchers","caption":"Victoire, Ippon, Enregistrer : un combat est noté entre deux passages sur le tatami."},{"file":"combat-06-combat-enregistre.png","title":"Combat enregistré","caption":"La carte du combat apparaît aussitôt, avec ce qu'il reste à compléter plus tard."},{"file":"combat-07-score-pendant-le-combat.png","title":"Le score, point par point","caption":"Pendant le combat, chaque + ajoute un waza-ari, un yuko ou un shido au bon camp."},{"file":"combat-08-issue-proposee.png","title":"L'issue proposée","caption":"L'application lit le score et propose le résultat ; une contradiction est signalée."},{"file":"combat-09-deroule-et-techniques.png","title":"Le déroulé","caption":"Les actions se rangent dans l'ordre du combat, chacune avec sa technique et la garde de l'adversaire."},{"file":"combat-10-competition-trois-combats.png","title":"La journée complète","caption":"Les combats s'empilent sur la fiche, avec le score officiel et les points marqués ou subis."},{"file":"combat-11-cartes-des-combats.png","title":"Relire ses combats","caption":"Chaque carte se rouvre d'un toucher pour corriger ou compléter le combat."}]},{"id":"judoka","nav":"Judoka","kicker":"Parcours judoka","title":"Suivre sa saison","intro":"Le judoka retrouve les compétitions où le coach l'a inscrit, indique son classement et relit sa saison.","steps":[{"file":"judoka-01-accueil.png","title":"Mes compétitions","caption":"Le judoka retrouve ses compétitions à venir et passées, avec son classement et son bilan de victoires et défaites."},{"file":"judoka-02-competition-terminee.png","title":"Une compétition terminée","caption":"Il ouvre un tournoi pour revoir son classement, son taux de victoires et le détail de chaque combat."},{"file":"judoka-03-classement-a-saisir.png","title":"Classement à saisir","caption":"Après la compétition, il touche la place obtenue pour clôturer la journée."},{"file":"judoka-04-classement-enregistre.png","title":"Classement enregistré","caption":"La médaille s'affiche aussitôt sur la compétition et dans la liste."},{"file":"judoka-05-fiche-saison.png","title":"Ma fiche","caption":"Sa fiche réunit son profil sportif et le bilan de la saison : compétitions, combats, taux de victoires et façon de gagner."},{"file":"judoka-05b-resultats.png","title":"Résultats de la saison","caption":"Il compare la fin de ses combats gagnés et perdus, puis parcourt ses résultats compétition par compétition."},{"file":"judoka-06-profil.png","title":"Profil judoka","caption":"Il tient à jour sa catégorie, sa garde, son poids et sa ceinture, qui servent aux analyses."}]},{"id":"parent","nav":"Parent","kicker":"Parcours parent","title":"Suivre ses enfants","intro":"Un parent passe d'un enfant à l'autre et saisit les combats à leur place.","steps":[{"file":"parent-01-accueil-enfants.png","title":"Mes enfants","caption":"Le parent choisit l'enfant suivi d'un toucher et voit ses compétitions à venir et passées."},{"file":"parent-02-autre-enfant.png","title":"Passer d'un enfant à l'autre","caption":"Une autre pastille affiche aussitôt les compétitions de son frère ou de sa sœur ; le dernier choix est retenu."},{"file":"parent-03-competition-enfant.png","title":"La compétition d'un enfant","caption":"Il ouvre un tournoi pour voir le classement, le bilan et le suivi du coach."},{"file":"parent-04-combats-enfant.png","title":"Ses combats","caption":"Chaque combat montre le tour, le résultat, le score et les techniques marquées ou subies."},{"file":"parent-05-fiche-enfant.png","title":"La fiche de l'enfant","caption":"La fiche de l'enfant résume son profil sportif et sa saison en un coup d'œil."}]},{"id":"coach","nav":"Coach","kicker":"Parcours coach","title":"Piloter l'équipe du club","intro":"Le coach inscrit ses judokas à une compétition, suit leurs combats et lit les statistiques de la compétition et de la saison.","steps":[{"file":"coach-01-accueil.png","title":"Ce qui attend le coach","caption":"À l'ouverture, le coach voit les compétitions de la semaine, les classements à saisir et les bilans à écrire."},{"file":"coach-02-competitions-du-club.png","title":"Compétitions du club","caption":"Le coach retrouve les compétitions du club, cherche par nom ou par date, et en crée une nouvelle."},{"file":"coach-03-creation-competition.png","title":"Nouvelle compétition","caption":"Le coach saisit une seule fois le nom, la date, la catégorie d'âge et le niveau, pour tous les judokas."},{"file":"coach-04-choix-des-judokas.png","title":"Inscrire les judokas","caption":"Le coach coche les judokas de la catégorie, ou les sélectionne tous d'un toucher."},{"file":"coach-05-fiche-competition-club.png","title":"Classer les participants","caption":"Sur la fiche, le coach voit le bilan de chaque judoka et touche une place pour le classer."},{"file":"coach-07-combats-d-un-judoka.png","title":"Les combats d'un judoka","caption":"En touchant un nom, le coach ouvre les combats du judoka, écrit son bilan et ajoute un combat si besoin."},{"file":"coach-08-stats-competition.png","title":"Statistiques de la compétition","caption":"En un toucher, le coach obtient le bilan du groupe : combats, victoires, podiums, sans aucun nom de judoka."},{"file":"coach-09-stats-techniques.png","title":"Techniques et fins de combat","caption":"Le coach voit les techniques qui gagnent, celles qui battent ses judokas, et la part d'Ippon debout ou au sol."},{"file":"coach-10-stats-saison.png","title":"Statistiques de la saison","caption":"L'onglet Stats ouvre la saison en cours et compare chaque chiffre à la saison précédente."},{"file":"coach-11-filtres-saison.png","title":"Filtrer les statistiques","caption":"Le coach restreint l'analyse à une catégorie d'âge, une période ou certaines compétitions."},{"file":"coach-12-activite-et-comparaison.png","title":"Activité et niveaux","caption":"Le coach suit l'engagement du club et les résultats par niveau, avec les chiffres d'avant en regard."},{"file":"coach-13-assistant-claude.png","title":"Connecter l'assistant Claude","caption":"Le coach autorise lui-même un assistant Claude à lire ses données, après avoir vérifié le domaine de retour."}]},{"id":"hors-connexion","nav":"Hors connexion","kicker":"Sans réseau","title":"Saisir même sans réseau","intro":"Au fond d'un gymnase sans réseau, les combats sont gardés sur le téléphone et partent dès que la connexion revient.","steps":[{"file":"offline-01-accueil-hors-connexion.png","title":"Sans réseau","caption":"Dans un gymnase sans réseau, l'application s'ouvre quand même et le badge « Hors connexion » le signale."},{"file":"offline-02-combat-en-attente.png","title":"Combat gardé sur le téléphone","caption":"Le combat saisi hors connexion s'affiche aussitôt, marqué « En attente d'envoi », et le badge compte les envois en attente."},{"file":"offline-03-envois-en-attente.png","title":"Liste des envois","caption":"Un toucher sur le badge ouvre la liste des modifications non envoyées, que l'on peut encore annuler."},{"file":"offline-04-envoi-en-cours.png","title":"Retour du réseau","caption":"Dès que le réseau revient, l'application envoie seule les combats en attente, sans rien demander."},{"file":"offline-05-envoye.png","title":"Tout est envoyé","caption":"Le badge disparaît, le combat est enregistré et le bilan de la compétition est à jour."},{"file":"offline-06-envoi-refuse.png","title":"Envoi refusé","caption":"Si le serveur refuse un envoi, le motif s'affiche et l'utilisateur choisit de réessayer ou d'annuler."}]},{"id":"connexion","nav":"Connexion","kicker":"Pour commencer","title":"Se connecter","intro":"On se connecte avec son compte Google. Seuls les comptes invités par le club ouvrent l'application.","steps":[{"file":"acces-01-connexion.png","title":"Connexion avec Google","caption":"L'utilisateur se connecte avec le compte Google associé à sa fiche judoka ou à celle de son enfant, sans mot de passe à retenir."},{"file":"acces-02-invitation-requise.png","title":"Accès sur invitation","caption":"Une adresse Google qui n'a pas été invitée par le club voit un message clair et peut se reconnecter avec un autre compte."},{"file":"acces-03-donnees-personnelles.png","title":"Données personnelles","caption":"Depuis l'écran de connexion, chacun peut lire, sans compte, quelles données sont gardées et quels sont ses droits RGPD."},{"file":"acces-04-connecte.png","title":"Arrivée dans l'application","caption":"Une fois connecté, le judoka retrouve ses compétitions à venir et l'accès à sa fiche."}]}];
+
+document.documentElement.lang = "fr";
+const nav = document.getElementById("journeyNav");
+const main = document.getElementById("sections");
+const flat = [];
+
+JOURNEYS.forEach((journey) => {
+  const link = document.createElement("a");
+  link.href = `#${journey.id}`;
+  link.textContent = journey.nav;
+  if (journey.featured) link.className = "featured";
+  nav.appendChild(link);
+
+  const section = document.createElement("section");
+  section.id = journey.id;
+  section.className = `journey${journey.featured ? " featured-section" : ""}`;
+  const wrap = document.createElement("div");
+  wrap.className = "wrap";
+  wrap.innerHTML = `
+    <div class="section-head">
+      <div>
+        <div class="kicker">${journey.kicker}${journey.featured ? '<span class="featured-badge">Le cœur de l\'application</span>' : ""}</div>
+        <h2>${journey.title}</h2>
+        <p>${journey.intro}</p>
+      </div>
+      <div class="rail-controls">
+        <button type="button" data-dir="-1" aria-label="Écrans précédents">←</button>
+        <button type="button" data-dir="1" aria-label="Écrans suivants">→</button>
+      </div>
+    </div>`;
+  if (journey.glossary) {
+    const dl = document.createElement("dl");
+    dl.className = "glossary";
+    dl.innerHTML = journey.glossary.map((g) => `<div><dt class="${g.cls}">${g.term}</dt><dd>${g.text}</dd></div>`).join("");
+    wrap.appendChild(dl);
+  }
+  const rail = document.createElement("div");
+  rail.className = "rail";
+  rail.tabIndex = 0;
+  rail.setAttribute("aria-label", `Écrans : ${journey.nav}`);
+  journey.steps.forEach((step, index) => {
+    const position = flat.length;
+    flat.push({ ...step, journey: journey.nav, index: index + 1, total: journey.steps.length });
+    const item = document.createElement("article");
+    item.className = "step";
+    item.innerHTML = `
+      <button class="phone-btn" type="button" aria-label="Agrandir : ${step.title}">
+        <div class="phone"><img loading="lazy" src="shots/${step.file}" alt="${step.title}. ${step.caption}"></div>
+      </button>
+      <div class="step-meta">
+        <span class="step-num">${String(index + 1).padStart(2, "0")}</span>
+        <h3>${step.title}</h3>
+        <p>${step.caption}</p>
+      </div>`;
+    item.querySelector("button").addEventListener("click", () => openViewer(position));
+    rail.appendChild(item);
+  });
+  wrap.appendChild(rail);
+  wrap.querySelectorAll(".rail-controls button").forEach((button) => {
+    button.addEventListener("click", () => rail.scrollBy({ left: Number(button.dataset.dir) * rail.clientWidth * 0.8, behavior: "smooth" }));
+  });
+  section.appendChild(wrap);
+  main.appendChild(section);
+});
+
+const viewer = document.getElementById("viewer");
+const viewerImg = document.getElementById("viewerImg");
+let current = 0;
+function show(position) {
+  current = Math.min(Math.max(position, 0), flat.length - 1);
+  const step = flat[current];
+  document.getElementById("viewerPos").textContent = `${step.journey} · ${step.index}/${step.total}`;
+  viewer.querySelector(".prev").setAttribute("aria-disabled", String(current === 0));
+  viewer.querySelector(".next").setAttribute("aria-disabled", String(current === flat.length - 1));
+  viewerImg.src = `shots/${step.file}`;
+  viewerImg.alt = step.title;
+  document.getElementById("viewerTitle").textContent = step.title;
+  document.getElementById("viewerCaption").textContent = step.caption;
+}
+function openViewer(position) {
+  show(position);
+  viewer.showModal();
+  document.documentElement.classList.add("viewer-open");
+  viewer.querySelector(".close").focus();
+}
+function closeViewer() {
+  viewer.close();
+}
+viewer.addEventListener("close", () => document.documentElement.classList.remove("viewer-open"));
+viewer.querySelector(".prev").addEventListener("click", () => show(current - 1));
+viewer.querySelector(".next").addEventListener("click", () => show(current + 1));
+viewer.querySelector(".close").addEventListener("click", closeViewer);
+viewer.addEventListener("click", (event) => { if (event.target === viewer) closeViewer(); });
+document.addEventListener("keydown", (event) => {
+  if (!viewer.open) return;
+  if (event.key === "ArrowLeft") show(current - 1);
+  if (event.key === "ArrowRight") show(current + 1);
+});
+let touchX = null;
+viewer.addEventListener("touchstart", (event) => { touchX = event.touches[0].clientX; }, { passive: true });
+viewer.addEventListener("touchend", (event) => {
+  if (touchX === null) return;
+  const delta = event.changedTouches[0].clientX - touchX;
+  if (Math.abs(delta) > 50) show(current + (delta < 0 ? 1 : -1));
+  touchX = null;
+});
+</script>
+</body>
+</html>
