@@ -1,3 +1,11 @@
+# Ayumi — consignes de l'agent
+
+Règles du projet (fiche de demande, validation avant commit et déploiement, preuves visuelles) :
+
+@AGENTS.md
+
+Automatisations Claude Code du projet : `.claude/settings.json` (permissions et hooks), `.claude/hooks/`, `.claude/skills/deploy/` (`/deploy`), `.mcp.json` (Supabase en lecture seule sur dev).
+
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
