@@ -24,6 +24,20 @@
           <div class="list-search">
             <input type="search" id="usersFilter" aria-label="Rechercher un utilisateur" autocomplete="off" placeholder="Rechercher : nom ou e-mail" :value="usersSearch" @input="updateUsersSearch($event.target.value)">
           </div>
+          <!-- ADMIN-2 : retrouver les judokas sans club (invisibles des coachs) et ceux non réinscrits. -->
+          <div id="usersKindFilter" class="choice-chips" role="radiogroup" aria-label="Afficher">
+            <button
+              v-for="option in [{ value: '', label: 'Tous' }, { value: 'noClub', label: 'Sans club' }, { value: 'notRegistered', label: 'Non réinscrits' }]"
+              :key="option.value"
+              type="button"
+              role="radio"
+              :aria-checked="usersFilter === option.value ? 'true' : 'false'"
+              :class="['choice-chip', { 'choice-active': usersFilter === option.value }]"
+              :disabled="isSubmitting"
+              @click="selectUsersFilter(option.value)">
+              {{ option.label }}
+            </button>
+          </div>
           <div id="usersSummary">
             <div v-if="usersSummary" class="list-summary">
               <p class="list-summary-text">{{ usersSummary }}</p>
@@ -57,12 +71,15 @@
                   </select>
                 </div>
                 <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
-                <details v-else-if="!managedUser.isAdmin" class="page-menu card-menu">
+                <details v-else-if="!managedUser.isAdmin || managedUser.isCoach || managedUser.canBeCoach" class="page-menu card-menu">
                   <summary class="icon-button" :aria-label="'Actions pour ' + managedUser.fullName" title="Actions">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
                   </summary>
                   <div class="page-menu-list" role="menu">
-                    <button type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">Supprimer le compte</button>
+                    <!-- ADMIN-1 : le rôle coach se donne et se retire ici, sans import CSV. -->
+                    <button v-if="managedUser.canBeCoach" type="button" role="menuitem" :disabled="isSubmitting" @click="grantCoachRole(managedUser.judokaId, managedUser.fullName)">Nommer coach</button>
+                    <button v-if="managedUser.isCoach" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="revokeCoachRole(managedUser.judokaId, managedUser.fullName)">Retirer le rôle coach</button>
+                    <button v-if="!managedUser.isAdmin" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">Supprimer le compte</button>
                   </div>
                 </details>
               </article>

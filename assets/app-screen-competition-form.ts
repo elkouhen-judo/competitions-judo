@@ -107,6 +107,10 @@
       () => !state.isLoadingCompetition && Boolean(state.currentCompetition) && canEditCompetition.value
     );
     const canFinalizeCompetition = window.Vue.computed(() => competitionDetailProjection.value?.canFinalizeCompetition ?? false);
+    // PART-1 : une participation liée à une compétition club se retire depuis celle-ci (COMP-027).
+    const canDeleteCompetition = window.Vue.computed(
+      () => canEditCompetition.value && !state.currentCompetition?.clubCompetitionId
+    );
     // FICHE-1 : avant la date, la fiche prépare la compétition ; les saisies de résultat arrivent le jour J.
     const competitionTiming = window.Vue.computed(() => {
       const days = ui.getDaysFromToday(state.currentCompetition?.competitionDate);
@@ -196,6 +200,7 @@
           canEditCompetition,
           canManageCombat,
           canFinalizeCompetition,
+          canDeleteCompetition,
           competitionResultClass,
           competitionResultLabel,
           competitionTiming,

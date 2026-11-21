@@ -161,6 +161,9 @@ export interface ManagedUserCard {
   /** Club du judoka ("" si aucun) ; les profils PARENT n'appartiennent à aucun club. */
   clubId: string;
   canHaveClub: boolean;
+  /** ADMIN-1 : rôle coach actuel, et possibilité de le donner. */
+  isCoach: boolean;
+  canBeCoach: boolean;
 }
 
 export interface CompetitionCombatCard {

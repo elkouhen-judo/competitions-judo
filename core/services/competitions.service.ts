@@ -360,6 +360,10 @@ export default function createCompetitionsService(
       managedJudokaScope,
       "Suppression de cette compétition non autorisée."
     );
+    // PART-1 : une participation liée se retire depuis sa compétition club, qui protège les résultats (COMP-027).
+    if (competition.club_competition_id) {
+      throw new Error("Retirez ce judoka depuis la compétition club.");
+    }
 
     await competitionsRepository.remove(idCompetition);
     return { success: true, message: "Compétition supprimée." };

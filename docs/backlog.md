@@ -1,62 +1,78 @@
 # Backlog
 
-## Parcours du coach (revue du 21/11/2026)
+## Revue des parcours par profil (21/11/2026)
 
-Objectif : le coach suit sans effort l'après-compétition (classements, bilans) et la saisie du jour J. L'application ne réclame plus de saisie combat par combat.
+Méthode : relecture des écrans, des services et des règles (`docs/spec.md`), profil par profil. Le parcours coach a été revu et livré le même jour (COACH-1 à COACH-7, SIMPL-1, RETOUR-1) ; il ne reste qu'un point, partagé avec la famille (PART-1).
 
-### Décisions
+### Décisions prises pour cette revue
 
-- Un coach non admin n'ajoute pas lui-même un judoka à son club et ne le réinscrit pas : cela reste le rôle de l'admin (import CSV, CLUB-006, AUTH-019a).
-- Un participant sans combat saisi n'attend pas de bilan (COACH-3), sans donnée « pas de bilan » en plus.
-- Les rappels « À compléter » sont retirés partout (SIMPL-1). « Profils à compléter » (proposé à la revue) est abandonné avec eux.
+- Le coach non admin n'ajoute toujours pas de judoka à son club (rôle de l'admin).
+- Les invitations individuelles restent faites par l'import CSV (CHD-001) ; pas de formulaire d'invitation.
 
-### Après la compétition
+---
 
-#### COACH-1 — Le compteur de bilans suit la saisie (P1, XS) — fait
+## Admin
 
-- Constat : enregistrer un bilan ne mettait à jour que la compétition ouverte ; l'accueil et l'agenda gardaient « N bilans à écrire » jusqu'au rechargement.
-- Règle : le bilan enregistré met aussi à jour la liste des compétitions de l'appli.
-- Acceptation : après un bilan, le groupe « Bilans à écrire » de l'agenda baisse sans rechargement.
+Faits vérifiés : l'admin gère utilisateurs, admins, clubs, coachs de chaque club, invitations et import CSV. Le rôle coach ne se donne et ne se retire que par l'import CSV (`role` = `COACH` ou `NORMAL`). Rien ne permet de trouver les judokas sans club (invisibles des coachs, CLUB-001) ni ceux non réinscrits (AUTH-019a), hors le résumé d'un import.
 
-#### COACH-2 — Le bilan à écrire sur la ligne du participant (P1, S) — fait
+#### ADMIN-1 — Donner ou retirer le rôle coach depuis « Utilisateurs » (P1, M)
 
-- Constat : l'agenda menait à la fiche de la compétition club, qui ne disait pas quel participant attendait son bilan.
-- Règle : après la date, la ligne d'un participant affiche « Bilan à écrire » quand il a combattu sans bilan (COMP-034).
-- Règle : au retour de la compétition d'un participant, les lignes montrent combats, classement et bilan à jour, sans rechargement (y compris hors ligne pour les combats et le classement).
-- Acceptation : écrire le bilan de Hugo puis revenir efface sa pastille.
+- Constat : nommer un nouveau coach ou retirer un coach parti impose de refaire un CSV.
+- Règle : la carte d'un utilisateur `JUDOKA` avec e-mail propose « Nommer coach » ou « Retirer le rôle coach » dans son menu d'actions.
+- Règle : un `PARENT` ne peut pas être coach (comme à l'import) ; un admin coach garde ses droits admin (ROL-004a).
+- Règle : retirer le rôle coach retire aussi ses clubs coachés ; le judoka garde son propre club et ses données.
+- Règle : le coach nommé apparaît dans « Clubs coachés » pour recevoir ses clubs.
+- Règle : retirer le rôle demande confirmation (UIX-038) ; un admin ne retire pas son propre rôle coach.
+- Acceptation : nommer coach un judoka, lui cocher un club ; le retirer, il n'apparaît plus dans « Clubs coachés ».
 
-#### COACH-3 — Pas de bilan attendu sans combat (P2, XS) — fait
+#### ADMIN-2 — Trouver les judokas sans club et les non réinscrits (P2, S)
 
-- Constat : un participant absent ou forfait restait « bilan à écrire » pour toujours.
-- Règle : un bilan n'est attendu que pour une participation passée avec au moins un combat saisi (COMP-035).
-- Acceptation : un participant « Aucun combat saisi » ne compte pas dans les bilans à écrire.
+- Constat : un judoka sans club n'est vu par aucun coach ; l'admin ne peut pas le retrouver autrement qu'en parcourant tous les comptes.
+- Règle : « Utilisateurs » propose un filtre « Tous », « Sans club », « Non réinscrits » (saison en cours), appliqué par le serveur avec la recherche et la pagination (UIX-016c).
+- Règle : ces deux filtres ne listent que des profils `JUDOKA`.
+- Acceptation : « Sans club » liste un judoka sans club et pas un parent ; « Non réinscrits » liste un judoka inscrit pour une saison passée.
 
-#### COACH-6 — L'agenda annonce ce qu'il ne montre pas (P3, XS) — fait
+#### ADMIN-3 — Pas de bouton de modification de profil qui échoue (P3, XS)
 
-- Constat : chaque groupe de l'agenda s'arrêtait à 5 lignes sans le dire.
-- Règle : au-delà de 5, « + N autres dans « Compétitions » » ouvre l'onglet « Compétitions » (UIX-015).
+- Constat : la fiche judoka affiche « Modifier le profil » à un admin, que le serveur refuse hors de son périmètre (ROL-004).
+- Règle : l'action n'est proposée qu'au judoka lui-même, à son parent et à son coach.
 
-### Le jour de la compétition
+---
 
-#### COACH-4 — Passer au judoka suivant (P2, M) — fait
+## Coach
 
-- Constat : saisir les combats de plusieurs judokas imposait deux retours en arrière entre chaque judoka.
-- Règle : la compétition d'un participant ouverte depuis la compétition club propose « Suivant : <judoka> », dans l'ordre de la liste, le dernier menant au premier (COMP-036).
+#### PART-1 — Une participation à une compétition club ne se supprime pas depuis sa fiche (P1, S)
 
-### Cohérence des écrans
+- Constat : « Supprimer la compétition » sur la fiche d'une participation liée à une compétition club la supprime avec ses combats, pour le coach comme pour la famille. Cela contourne COMP-027 (une participation avec résultats ne se retire pas d'une compétition passée) et fait disparaître un participant de la compétition club sans que le coach le voie.
+- Règle : une participation liée à une compétition club ne se supprime que par « Retirer » sur la compétition club (COMP-027) ; le serveur refuse sa suppression directe, pour tous les profils (écrans, API, MCP).
+- Règle : la fiche de cette participation ne propose plus « Supprimer la compétition » ; une compétition détachée (COMP-018) reste supprimable.
+- Acceptation : la suppression directe d'une participation liée est refusée avec « Retirez ce judoka depuis la compétition club. » ; une compétition détachée se supprime toujours.
 
-#### COACH-7 — Modifier une compétition club comme on la crée (P3, S) — fait
+---
 
-- Règle : en modification, le niveau se choisit en quatre boutons et « Tout sélectionner » coche les judokas à ajouter (COMP-037).
-- Règle : quitter une modification non enregistrée (« Annuler » ou flèche retour) demande confirmation.
-- Règle : le texte d'aide avant la date dit « ouvrir sa participation » ; le bandeau « saisie après coup » reste réservé à la modification (COMP-026).
+## Parent
 
-#### SIMPL-1 — Plus de rappels « À compléter » (P2, S) — fait
+Faits vérifiés : la famille choisit l'enfant, lit ses compétitions, saisit combats et classement, lit le bilan du coach. Elle ne crée plus de compétition (COMP-006).
 
-- Retiré : « À compléter : … » et ses priorités sur les cartes de combat, sous les champs du formulaire de combat, « Niveau à compléter » et la tuile « Points détaillés » sur la fiche compétition, la tuile « Saisies à compléter » des statistiques et le champ `dataQualityIssues` (écran, API, MCP).
-- Gardé : « Aucun combat saisi » sur la ligne d'un participant, en texte neutre.
-- Règles : CBT-015, DASH-007, DASH-017.
+#### FAM-1 — Dire pourquoi un enfant n'a aucune compétition (P2, XS)
 
-#### DOC-1 — Spécification remise à jour (P3, XS) — fait
+- Constat : pour un enfant sans club, le message « Les compétitions apparaissent ici quand le coach du club y inscrit le judoka » promet ce qui n'arrivera pas : aucun coach ne le voit (CLUB-001).
+- Règle : sans club, le message devient « <Prénom> n'est rattaché à aucun club : aucun coach ne peut l'inscrire. Demandez au club de le rattacher. »
+- Acceptation : un enfant sans club affiche ce message ; un enfant avec club garde le message actuel.
 
-- Exemples et règles de création par la famille retirés (UIX-008, UIX-012, UIX-014), AC-021 aligné sur COMP-027, identifiants UIX en double renumérotés (UIX-039 à UIX-041).
+PART-1 s'applique aussi à la famille.
+
+---
+
+## Judoka
+
+Faits vérifiés : le judoka lit ses compétitions, saisit ses combats et son classement, lit son bilan.
+
+- FAM-1 s'applique à « Mon espace » (« Vous n'êtes rattaché à aucun club… »).
+- PART-1 s'applique au judoka.
+
+---
+
+## Plan d'exécution
+
+Ordre : PART-1, FAM-1, ADMIN-3, ADMIN-2, ADMIN-1. Chaque sujet : test qui échoue, code, test qui passe, `npm test`, spec mise à jour. Captures mobile et desktop pour chaque écran touché. Relecture indépendante de l'ensemble à la fin.

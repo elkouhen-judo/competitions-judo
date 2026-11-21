@@ -159,6 +159,8 @@ export interface UsersPage {
 export interface UsersPageRequest {
   search?: string;
   after?: UsersPageCursor | null;
+  /** ADMIN-2 : "noClub" (judokas sans club) ou "notRegistered" (non réinscrits pour la saison en cours). */
+  filter?: string;
 }
 
 export interface AdminsManagement extends UsersPage {
@@ -575,6 +577,10 @@ export interface RpcMethods {
   getUsersPage: (email: string, request?: UsersPageRequest) => Promise<UsersPage>;
   /** Promeut un judoka au rôle administrateur. */
   grantAdminRole: (email: string, targetEmail: string) => Promise<OperationResult>;
+  /** ADMIN-1 : nomme coach un judoka avec e-mail (jamais un PARENT). */
+  grantCoachRole: (email: string, idJudoka: string) => Promise<OperationResult>;
+  /** ADMIN-1 : retire le rôle coach et les clubs coachés. */
+  revokeCoachRole: (email: string, idJudoka: string) => Promise<OperationResult>;
   /** Retire le rôle administrateur d'un judoka. */
   revokeAdminRole: (email: string, idJudoka: string) => Promise<OperationResult>;
   /** Liste les clubs (avec leurs coachs et leur nombre de judokas) et les coachs. Admin uniquement. */

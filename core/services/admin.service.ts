@@ -37,6 +37,8 @@ type AdminMethods = Pick<
   | "getAdminsManagement"
   | "getUsersPage"
   | "grantAdminRole"
+  | "grantCoachRole"
+  | "revokeCoachRole"
   | "importUsersCsv"
   | "revokeAdminRole"
   | "saveJudokaInfo"
@@ -733,8 +735,15 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
   // PAGE-3 : le serveur renvoie une page d'utilisateurs et le total ; la recherche part au serveur.
   async function loadUsersPage(request: UsersPageRequest = {}): Promise<UsersPage> {
     const after = request && request.after;
+    const rawFilter = cleanText(request && request.filter);
+    if (rawFilter && rawFilter !== "noClub" && rawFilter !== "notRegistered") {
+      throw new Error("Filtre d'utilisateurs inconnu.");
+    }
+    const filter = rawFilter as "" | "noClub" | "notRegistered";
     const { rows, total } = await judokasRepository.listPage({
       search: cleanText(request && request.search),
+      filter,
+      ...(filter === "notRegistered" ? { seasonStartYear: getSeasonStartYear(getCurrentDate()) as number } : {}),
       after: after
         ? { nom: String(after.lastName || ""), prenom: String(after.firstName || ""), id_judoka: String(after.judokaId || "") }
         : null,
@@ -797,6 +806,44 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       judokaId: target.id_judoka,
       message: "Droits admin accordés."
     };
+  }
+
+  // ADMIN-1 : le rôle coach se donne et se retire depuis « Utilisateurs », comme à l'import (AUTH-014).
+  async function grantCoachRole(email: string, idJudoka: string) {
+    await requireAdminUser(email);
+    if (!idJudoka) throw new Error("Judoka obligatoire.");
+    const target = await userContextService.getJudokaById(idJudoka);
+    if (!target) throw new Error("Judoka introuvable.");
+    if (String(target.profile_type || "").toUpperCase() === "PARENT") {
+      throw new Error("Un profil PARENT ne peut pas être coach.");
+    }
+    if (!cleanText(target.email)) {
+      throw new Error("Un coach doit avoir un e-mail de connexion.");
+    }
+    const currentRole = String(target.role || "").toUpperCase();
+    if (currentRole === "COACH") throw new Error("Ce judoka est déjà coach.");
+    // ROL-004a : un ancien admin « role = ADMIN » garde ses droits admin par l'indicateur séparé,
+    // posé avant le changement de rôle pour ne jamais perdre l'admin si la seconde écriture échoue.
+    if (currentRole === "ADMIN" && !target.is_admin) {
+      await judokasRepository.setAdminFlag(idJudoka, true);
+    }
+    await judokasRepository.update(idJudoka, { accessRole: "COACH" });
+    return { success: true, message: "Rôle coach accordé. Cochez ses clubs dans « Clubs »." };
+  }
+
+  async function revokeCoachRole(email: string, idJudoka: string) {
+    await requireAdminUser(email);
+    if (!idJudoka) throw new Error("Judoka obligatoire.");
+    const target = await userContextService.getJudokaById(idJudoka);
+    if (!target || String(target.role || "").toUpperCase() !== "COACH") {
+      throw new Error("Ce judoka n'est pas coach.");
+    }
+    if (!clubsRepository) throw new Error("Gestion des clubs indisponible.");
+    // Le rôle part d'abord (c'est lui qui donne l'accès) ; puis les clubs coachés, devenus sans effet.
+    // Le club du judoka et ses données restent.
+    await judokasRepository.update(idJudoka, { accessRole: "NORMAL" });
+    await clubsRepository.replaceCoachClubs(idJudoka, []);
+    return { success: true, message: "Rôle coach retiré." };
   }
 
   async function revokeAdminRole(email: string, idJudoka: string) {
@@ -921,6 +968,8 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
       getAdminsManagement,
       getUsersPage,
       grantAdminRole,
+      grantCoachRole,
+      revokeCoachRole,
       importUsersCsv,
       revokeAdminRole,
       saveJudokaInfo

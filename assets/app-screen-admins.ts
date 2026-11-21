@@ -34,6 +34,12 @@
       coaches: [] as Array<{ judokaId: string; firstName: string; lastName: string; accountEmail: string }>
     });
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
+    // ADMIN-2 : filtre de la liste des utilisateurs, appliqué par le serveur ("" = tous).
+    const usersFilterState = window.Vue.reactive({ value: "" as "" | "noClub" | "notRegistered" });
+    const USERS_FILTER_EMPTY_MESSAGES: Record<string, string> = {
+      noClub: "Aucun judoka sans club.",
+      notRegistered: "Tous les judokas sont réinscrits pour la saison en cours."
+    };
 
     const adminsProjection = window.Vue.computed(() =>
       window.KirokuScreenProjections.projectManagedAdmins(state.managedAdmins, state.currentUser, {
@@ -74,8 +80,15 @@
     const managedUsersPage = window.Vue.computed(() => usersProjection.value.users);
     const usersSearch = window.Vue.computed(() => state.usersSearch);
     const usersSummary = window.Vue.computed(() => usersProjection.value.usersSummary);
-    const usersEmptyMessage = window.Vue.computed(() => usersProjection.value.usersEmptyMessage);
-    const canResetUsersSearch = window.Vue.computed(() => usersProjection.value.canResetUsersSearch);
+    const usersFilter = window.Vue.computed(() => usersFilterState.value);
+    const usersEmptyMessage = window.Vue.computed(() =>
+      usersFilterState.value && !cleanText(state.usersSearch)
+        ? USERS_FILTER_EMPTY_MESSAGES[usersFilterState.value]
+        : usersProjection.value.usersEmptyMessage
+    );
+    const canResetUsersSearch = window.Vue.computed(
+      () => usersProjection.value.canResetUsersSearch || Boolean(usersFilterState.value)
+    );
     const canShowPreviousUsersPage = window.Vue.computed(
       () => usersProjection.value.canShowPreviousUsersPage
     );
@@ -142,6 +155,9 @@
           importUsersCsv,
           resetAdminForm,
           resetUsersSearch,
+          selectUsersFilter,
+          grantCoachRole,
+          revokeCoachRole,
           revokeAdminRole,
           saveAdminRole,
           showAdminsPreviousPage,
@@ -178,6 +194,7 @@
           adminsCanShowNextPage: adminsPaginationRefs.canShowNextPage,
           managedUsersPage,
           usersSearch,
+          usersFilter,
           usersSummary,
           usersEmptyMessage,
           canResetUsersSearch,
@@ -268,18 +285,26 @@
         clearMessage();
       }
 
+      // ADMIN-2 : après une action (club d'un judoka, rôle…), la recherche et le filtre en cours sont gardés.
+      if (!keepMessage) {
+        state.usersSearch = "";
+        usersFilterState.value = "";
+      }
+      const request = { search: cleanText(state.usersSearch), filter: usersFilterState.value };
       app.runServer(
         "getAdminsManagement",
-        [],
+        [request],
         (data) => {
           state.managedAdmins = Array.isArray(data.admins) ? data.admins : [];
-          applyUsersPage(data, false);
+          // Une recherche ou un filtre changé pendant le rechargement garde sa propre réponse.
+          const isCurrentUsersRequest =
+            request.search === cleanText(state.usersSearch) && request.filter === usersFilterState.value;
+          if (isCurrentUsersRequest) applyUsersPage(data, false);
           state.managedAccessInvitations = Array.isArray(data.accessInvitations)
             ? data.accessInvitations
             : [];
           state.adminsCurrentPage = 1;
-          state.usersSearch = "";
-          state.usersCurrentPage = 1;
+          if (isCurrentUsersRequest) state.usersCurrentPage = 1;
           state.accessInvitationsCurrentPage = 1;
           ensureAdminsViewModel();
           resetAdminForm();
@@ -307,12 +332,13 @@
 
     function loadUsersPage(append: boolean, onLoaded?: () => void) {
       const search = cleanText(state.usersSearch);
+      const filter = usersFilterState.value;
       app.runServer(
         "getUsersPage",
-        [{ search, after: append ? usersNextCursor : null }],
+        [{ search, filter, after: append ? usersNextCursor : null }],
         (data) => {
-          // Une réponse arrivée après une nouvelle saisie est ignorée.
-          if (search !== cleanText(state.usersSearch)) return;
+          // Une réponse arrivée après une nouvelle saisie (ou un autre filtre) est ignorée.
+          if (search !== cleanText(state.usersSearch) || filter !== usersFilterState.value) return;
           applyUsersPage(data, append);
           onLoaded?.();
         },
@@ -432,7 +458,40 @@
     }
 
     function resetUsersSearch() {
+      usersFilterState.value = "";
       updateUsersSearch("");
+    }
+
+    // ADMIN-1 : nommer un coach se fait d'un toucher ; le retirer demande confirmation (UIX-038).
+    function grantCoachRole(judokaId: string, fullName: string) {
+      app.runServer(
+        "grantCoachRole",
+        [judokaId],
+        (response) => {
+          showSuccess(response.message || `${fullName} est coach.`);
+          refreshAdminsManagement();
+        },
+        showError
+      );
+    }
+
+    function revokeCoachRole(judokaId: string, fullName: string) {
+      app.confirmAndRun({
+        message: `Retirer le rôle coach de ${fullName} ? Ses clubs coachés lui seront retirés ; son profil et ses compétitions restent.`,
+        confirmLabel: "Retirer le rôle coach",
+        method: "revokeCoachRole",
+        args: [judokaId],
+        onSuccess: (response) => {
+          showSuccess(response.message);
+          refreshAdminsManagement();
+        }
+      });
+    }
+
+    function selectUsersFilter(value: string) {
+      usersFilterState.value = value === "noClub" || value === "notRegistered" ? value : "";
+      state.usersCurrentPage = 1;
+      loadUsersPage(false);
     }
 
     function showNextUsersPage() {

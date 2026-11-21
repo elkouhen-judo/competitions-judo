@@ -93,7 +93,7 @@ This specification does not define:
 - **COMP-002**: A competition shall expose an age category chosen from the fixed list: `Poussinet`, `Poussin`, `Benjamin`, `Minime`, `Cadet`, `Junior`, `Senior`, `Vétéran`, and a weight category.
 - **COMP-003**: A competition shall expose a level field chosen from: `Départemental`, `Régional`, `National`, `International`. The field is optional (empty by default).
 - **COMP-004**: A competition shall not use an actual weigh-in field.
-- **COMP-005**: A `JUDOKA` or `PARENT` can update and delete only competitions linked to their scope.
+- **COMP-005**: A `JUDOKA` or `PARENT` can update and delete only competitions linked to their scope (deletion limited by COMP-038).
 - **COMP-006** (MULTI-4): Only a `COACH` creates a competition, as a club competition of one of their clubs (COMP-019); each participant gets an individual competition (COMP-023). A `JUDOKA` or `PARENT` cannot create a competition: the home screen offers no « Nouvelle compétition » and the server refuses a save without an existing competition (screens, API and MCP alike).
 - **COMP-007**: When opening the club competition creation form, the date field shall be initialized to the current day by default.
 - **COMP-008**: Competition creation shall not ask for the final ranking.
@@ -126,6 +126,7 @@ This specification does not define:
 - **COMP-035** (COACH-3): A coach review is expected only for a past participation with at least one recorded combat. The coach agenda, the competition cards and the participant lines count only those; the coach may still write a review for any participation.
 - **COMP-036** (COACH-4): A participant's competition opened from the club competition detail offers « Suivant : <judoka> », which opens the next participant in the order of the detail list, the last leading back to the first. It is offered only with at least 2 participants.
 - **COMP-037** (COACH-7): Editing a club competition uses the same controls as creating one: the level with four buttons, « Tout sélectionner » / « Tout désélectionner » on the judokas to add. Leaving the edit (« Annuler » or back arrow) with unsaved changes asks for confirmation.
+- **COMP-038** (PART-1): A participation linked to a club competition is removed only with « Retirer » on the club competition (COMP-027). Its own detail offers no « Supprimer la compétition », and the server refuses its direct deletion for every profile (screens, API and MCP alike) with « Retirez ce judoka depuis la compétition club. ». A detached competition (COMP-018) can still be deleted.
 
 ### 3.4 Combat rules
 
@@ -211,6 +212,7 @@ This specification does not define:
 - **AUTH-021**: After a CSV import, the admin UI shall show only a toast summary with the number of successful rows and failed rows; it shall not render a row-by-row import result list.
 - **AUTH-022**: The underlying `JUDOKA` or `PARENT` profile type shall not be changed automatically after registration.
 - **AUTH-023**: Admin and Coach elevations shall be managed separately from the invitation flow.
+- **AUTH-024** (ADMIN-1): From « Utilisateurs », an admin names a `JUDOKA` with an account e-mail coach (« Nommer coach ») or removes the coach role (« Retirer le rôle coach », after confirmation). A `PARENT` cannot be coach. A former `ADMIN` named coach keeps admin rights through the separate admin flag (ROL-004a). Removing the coach role also removes the coached clubs; the judoka keeps their own club and data. The current admin's own card offers neither action.
 
 ### 3.8 UI and UX rules
 
@@ -227,11 +229,13 @@ This specification does not define:
 - **UIX-011**: User notifications should be displayed through toast notifications so the current screen remains readable while the message stays explicit.
 - **UIX-012**: For `PARENT`, the home screen shall open on the family space: one pill per child, then that child's competitions grouped as « À venir » and « Passées », and the child's profile action.
 - **UIX-013**: For `PARENT`, a child shall always be selected: the last child chosen on the device, otherwise the first child. The parent profile itself is never offered as a child.
+- **UIX-013a** (FAM-1): When a child (or, in « Mon espace », the judoka) has no competition and belongs to no club, the empty state says so: « <Prénom> n'est rattaché à aucun club : aucun coach ne peut l'inscrire. Demandez au club de le rattacher. » (« Vous n'êtes rattaché à aucun club… » for the judoka).
 - **UIX-015**: For `COACH`, the home screen shall list what is waiting: club competitions of the week, rankings to enter and coach reviews to write (COMP-035); each line opens the club competition. Each group shows at most 5 lines, then « + N autres dans « Compétitions » », which opens the « Compétitions » tab (COACH-6). For `ADMIN`, access governance is reached from the account menu.
 - **UIX-016**: For `COACH`, the same four tabs shall be shown on every coach screen: « Accueil », « Compétitions », « Judokas » and « Stats ». « Mon espace », « Ma famille » and « Gestion des accès » are in the account menu opened from the header.
 - **UIX-016a**: The home lists shall load the current season and upcoming competitions; a « Voir la saison AAAA-AAAA » button shall load the previous season on demand, as long as an older competition exists.
 - **UIX-016b**: A past season already viewed shall stay readable offline.
 - **UIX-016c**: « Gestion des accès » shall list users by pages of 10 loaded from the server; the search by name or e-mail shall be applied by the server.
+- **UIX-016d** (ADMIN-2): « Utilisateurs » offers « Tous », « Sans club » and « Non réinscrits » (registration season before the current one). Both filters list `JUDOKA` profiles only, are applied by the server with the search and pagination, and are kept after an action on a user.
 - **UIX-017**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
 - **UIX-018**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
 - **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.

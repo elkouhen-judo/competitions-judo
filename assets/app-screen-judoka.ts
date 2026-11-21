@@ -167,8 +167,9 @@
           state.judokas.some((j) => String(j.judokaId) === String(judokaLocalState.viewedJudokaId))
       )
     );
+    // ADMIN-3 : les droits admin seuls ne modifient pas un profil sportif (ROL-004), le serveur le refuserait.
     const canEditJudokaInfo = window.Vue.computed(
-      () => state.isCoach || state.isAdmin || isOwnProfile.value || isManagedProfile.value
+      () => state.isCoach || isOwnProfile.value || isManagedProfile.value
     );
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
 

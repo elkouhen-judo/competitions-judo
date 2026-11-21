@@ -452,10 +452,17 @@
       const sortedComps = sortUpcomingFirst(filteredComps, today);
 
       if (!sortedComps.length) {
+        // FAM-1 : sans club, aucun coach ne voit le judoka ni ne peut l'inscrire (CLUB-001).
+        const owner = mode === "judoka" ? state.currentUser : getHomeActiveJudoka();
+        const hasNoClub = (mode === "family" || mode === "judoka") && owner && !String(owner.clubId || "");
         const emptyMsg =
           mode === "coachJudoka"
             ? "Aucune compétition enregistrée pour ce judoka."
-            : "Les compétitions apparaissent ici quand le coach du club y inscrit le judoka.";
+            : hasNoClub && mode === "judoka"
+              ? "Vous n'êtes rattaché à aucun club : aucun coach ne peut vous inscrire. Demandez au club de vous rattacher."
+              : hasNoClub && owner
+                ? `${ui.normalizeDisplayName(cleanText(owner.firstName)) || "Ce judoka"} n'est rattaché à aucun club : aucun coach ne peut l'inscrire. Demandez au club de le rattacher.`
+                : "Les compétitions apparaissent ici quand le coach du club y inscrit le judoka.";
         return { hasCompetitions: false, competitionsEmptyMessage: emptyMsg, page: emptyPage };
       }
 

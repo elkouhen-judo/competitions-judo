@@ -11,6 +11,9 @@ export interface JudokaPageCursor {
   id_judoka: string;
 }
 
+/** ADMIN-2 : filtres de la liste des utilisateurs, appliqués par le serveur. */
+export type JudokaPageFilter = "" | "noClub" | "notRegistered";
+
 type JudokaIdentityRow = JudokaRow & {
   coach_clubs?: { id_club: string }[] | "";
   parent_judokas?: { id_judoka: string }[] | "";
@@ -41,6 +44,9 @@ export interface JudokasRepository {
   listPage(options: {
     search?: string;
     after?: JudokaPageCursor | null;
+    /** ADMIN-2 : judokas sans club, ou non réinscrits pour `seasonStartYear`. */
+    filter?: JudokaPageFilter;
+    seasonStartYear?: number;
     limit: number;
   }): Promise<{ rows: JudokaRow[]; total: number }>;
   getById(idJudoka: string): Promise<JudokaRow | null>;
@@ -196,17 +202,32 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   async function listPage(options: {
     search?: string;
     after?: JudokaPageCursor | null;
+    filter?: JudokaPageFilter;
+    seasonStartYear?: number;
     limit: number;
   }): Promise<{ rows: JudokaRow[]; total: number }> {
     const filters: string[] = [];
+    // Un seul filtre logique « and » par requête : la recherche et les filtres ADMIN-2 s'y ajoutent.
+    const logicFilters: string[] = [];
+    if (options.filter === "noClub" || options.filter === "notRegistered") {
+      filters.push("profile_type=eq.JUDOKA");
+    }
+    if (options.filter === "noClub") {
+      filters.push("club_id=is.null");
+    }
+    if (options.filter === "notRegistered") {
+      const season = Number(options.seasonStartYear);
+      if (!Number.isInteger(season)) throw new Error("Saison obligatoire pour le filtre « Non réinscrits ».");
+      logicFilters.push(`or(saison_inscription.is.null,saison_inscription.lt.${season})`);
+    }
     // Chaque mot de la recherche doit se trouver dans le nom, le prénom ou l'e-mail.
     const words = String(options.search || "").replace(/[%_*]/g, " ").split(/\s+/).filter(Boolean);
-    if (words.length) {
-      const wordFilters = words.map((word) => {
-        const pattern = quoteLogicValue(`*${word}*`);
-        return `or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern})`;
-      });
-      filters.push(`and=(${wordFilters.join(",")})`);
+    words.forEach((word) => {
+      const pattern = quoteLogicValue(`*${word}*`);
+      logicFilters.push(`or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern})`);
+    });
+    if (logicFilters.length) {
+      filters.push(`and=(${logicFilters.join(",")})`);
     }
     const after = options.after;
     if (!after) {

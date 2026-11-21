@@ -261,10 +261,8 @@ test("judoka profile reads as a season summary with bars and tappable results", 
   assert.match(bundle, /id="judoka_couleur_ceinture"/);
   assert.match(bundle, /<label for="judoka_lateralite">Garde<\/label>/);
   assert.match(judokaScreenClient, /const isManagedProfile = /);
-  assert.match(
-    judokaScreenClient,
-    /\(\) => state\.isCoach \|\| state\.isAdmin \|\| isOwnProfile\.value \|\| isManagedProfile\.value/
-  );
+  // ADMIN-3 : les droits admin seuls ne proposent pas de modifier un profil sportif.
+  assert.match(judokaScreenClient, /\(\) => state\.isCoach \|\| isOwnProfile\.value \|\| isManagedProfile\.value/);
   assert.match(judokaScreenClient, /formatCompetitionRanking/);
   assert.match(bundle, /class="result-badge classement-badge"[\s\S]*\{\{ result\.result \}\}/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);

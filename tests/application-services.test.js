@@ -1533,6 +1533,33 @@ test("deleteCompetition removes the competition when authorized", async () => {
   assert.deepEqual(calls.removed, ["COMP1"]);
 });
 
+// PART-1 : une participation liée à une compétition club se retire depuis la compétition club (COMP-027).
+for (const [label, judokaId, role] of [["judoka", "JUDO1", "NORMAL"], ["coach", "COACH1", "COACH"]]) {
+  test(`deleteCompetition refuses a club competition participation for a ${label}`, async () => {
+    const { service, calls } = createTestCompetitionsService({
+      competitionsByCompetitionId: {
+        COMP1: {
+          id_competition: "COMP1",
+          id_judoka: "JUDO1",
+          club_competition_id: "CC1",
+          nom: "Interclubs",
+          date: "2026-06-14",
+          categorie_age: "Cadet"
+        }
+      },
+      getDomainUserContext: domainContextFor(judokaId, role, {
+        managedJudokaScope: createManagedJudokaScope(["JUDO1"])
+      })
+    });
+
+    await assert.rejects(
+      () => service.methods.deleteCompetition(`${label}@example.com`, "COMP1"),
+      /Retirez ce judoka depuis la compétition club\./
+    );
+    assert.deepEqual(calls.removed || [], []);
+  });
+}
+
 test("deleteCompetition rejects when the competition does not exist", async () => {
   const { service } = createTestCompetitionsService({
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
@@ -2451,8 +2478,8 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         return Object.values(judokasByEmail);
       },
       // PAGE-3 : une page triée par nom, lue après un curseur, et le total de la recherche.
-      listPage: async ({ search, after, limit }) => {
-        calls.pages.push({ search, after, limit });
+      listPage: async ({ search, after, limit, filter, seasonStartYear }) => {
+        calls.pages.push({ search, after, limit, ...(filter ? { filter } : {}), ...(seasonStartYear ? { seasonStartYear } : {}) });
         const key = (row) => [String(row.nom || ""), String(row.prenom || ""), String(row.id_judoka || "")];
         const compare = (a, b) => {
           const [ka, kb] = [key(a), key(b)];
@@ -2471,6 +2498,7 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         calls.updated.push({ idJudoka, changes });
         return null;
       },
+      setAdminFlag: async (idJudoka, isAdmin) => (calls.adminFlags = [...(calls.adminFlags || []), [idJudoka, isAdmin]]),
       setClub: async (idJudoka, idClub) => calls.clubAssignments.push([idJudoka, idClub]),
       setRegistrationSeason: async (idJudoka, season) => calls.registrations.push([idJudoka, season]),
       listByClubIds: async (clubIds) =>
@@ -2495,7 +2523,9 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         calls.lookups.currentUser.push(email);
         if (email === "admin@example.com") return adminUser;
         return judokasByEmail[String(email || "").toLowerCase()] || null;
-      }
+      },
+      getJudokaById: async (idJudoka) =>
+        Object.values(judokasByEmail).find((row) => String(row.id_judoka) === String(idJudoka)) || null
     },
     buildJudokaId: buildTestJudokaIdGenerator(),
     cleanText,
@@ -2515,6 +2545,50 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
 
   return { service, calls };
 }
+
+// ADMIN-1 : l'admin nomme ou retire un coach depuis « Utilisateurs », sans passer par l'import CSV.
+function coachRoleFixture() {
+  return createTestAdminService({
+    "lea@example.com": { id_judoka: "JUDO1", profile_type: "JUDOKA", role: "NORMAL", email: "lea@example.com" },
+    "noemail": { id_judoka: "JUDO2", profile_type: "JUDOKA", role: "NORMAL", email: "" },
+    "parent@example.com": { id_judoka: "PAR1", profile_type: "PARENT", role: "NORMAL", email: "parent@example.com" },
+    "coach@example.com": { id_judoka: "COACH1", profile_type: "JUDOKA", role: "COACH", email: "coach@example.com" },
+    "old-admin@example.com": { id_judoka: "ADM2", profile_type: "JUDOKA", role: "ADMIN", email: "old-admin@example.com" }
+  });
+}
+
+test("ADMIN-1 : grantCoachRole nomme coach un judoka avec e-mail, jamais un parent", async () => {
+  const { service, calls } = coachRoleFixture();
+
+  const result = await service.methods.grantCoachRole("admin@example.com", "JUDO1");
+  assert.equal(result.success, true);
+  assert.deepEqual(calls.updated, [{ idJudoka: "JUDO1", changes: { accessRole: "COACH" } }]);
+
+  await assert.rejects(() => service.methods.grantCoachRole("admin@example.com", "PAR1"), /Un profil PARENT ne peut pas être coach/);
+  await assert.rejects(() => service.methods.grantCoachRole("admin@example.com", "JUDO2"), /e-mail de connexion/);
+  await assert.rejects(() => service.methods.grantCoachRole("admin@example.com", "COACH1"), /déjà coach/);
+  await assert.rejects(() => service.methods.grantCoachRole("lea@example.com", "JUDO1"), /réservée aux admins/);
+});
+
+test("ADMIN-1 : un admin nommé coach garde ses droits admin (ROL-004a)", async () => {
+  const { service, calls } = coachRoleFixture();
+  await service.methods.grantCoachRole("admin@example.com", "ADM2");
+
+  assert.deepEqual(calls.updated, [{ idJudoka: "ADM2", changes: { accessRole: "COACH" } }]);
+  assert.deepEqual(calls.adminFlags, [["ADM2", true]]);
+});
+
+test("ADMIN-1 : revokeCoachRole retire le rôle coach et ses clubs coachés", async () => {
+  const { service, calls } = coachRoleFixture();
+
+  const result = await service.methods.revokeCoachRole("admin@example.com", "COACH1");
+
+  assert.equal(result.success, true);
+  assert.deepEqual(calls.coachClubs, [["COACH1", []]]);
+  assert.deepEqual(calls.updated, [{ idJudoka: "COACH1", changes: { accessRole: "NORMAL" } }]);
+  await assert.rejects(() => service.methods.revokeCoachRole("admin@example.com", "JUDO1"), /n'est pas coach/);
+  await assert.rejects(() => service.methods.revokeCoachRole("coach@example.com", "COACH1"), /réservée aux admins/);
+});
 
 test("getAdminsManagement lists pending invitations alongside registered users so invited parents stay visible", async () => {
   const { service } = createTestAdminService(
@@ -2605,6 +2679,25 @@ test("PAGE-3 : getUsersPage lit la page suivante par curseur et envoie la recher
   assert.deepEqual(searched.users.map((user) => user.judokaId), ["JUDO07"]);
   assert.equal(searched.totalUsers, 1);
   assert.equal(calls.lookups.allJudokas, 0);
+});
+
+// ADMIN-2 : « Sans club » et « Non réinscrits » partent au serveur ; un filtre inconnu est refusé.
+test("ADMIN-2 : getUsersPage transmet le filtre et la saison en cours au serveur", async () => {
+  // Le service de test date du 21/06/2026 : la saison en cours a commencé en septembre 2025.
+  const { service, calls } = createTestAdminService(buildUsersByEmail(3));
+  const currentSeason = 2025;
+
+  await service.methods.getUsersPage("admin@example.com", { filter: "noClub" });
+  await service.methods.getUsersPage("admin@example.com", { filter: "notRegistered", search: "nom" });
+
+  assert.deepEqual(calls.pages, [
+    { search: "", after: null, limit: 10, filter: "noClub" },
+    { search: "nom", after: null, limit: 10, filter: "notRegistered", seasonStartYear: currentSeason }
+  ]);
+  await assert.rejects(
+    () => service.methods.getUsersPage("admin@example.com", { filter: "everyone" }),
+    /Filtre d'utilisateurs inconnu/
+  );
 });
 
 test("PAGE-3 : getUsersPage est réservé aux admins", async () => {

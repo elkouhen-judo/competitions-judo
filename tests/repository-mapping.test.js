@@ -796,6 +796,28 @@ test("PAGE-3 : judokas repository reads a bounded page, by cursor, with the sear
   ]);
 });
 
+// ADMIN-2 : « Sans club » et « Non réinscrits » ne listent que des judokas, filtrés par le serveur.
+test("ADMIN-2 : judokas repository filters judokas without club or not registered for the season", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(
+    createRepositoryDeps(calls, { pageResult: { rows: [], total: 0 } })
+  );
+  const order = "order=nom.asc,prenom.asc,id_judoka.asc";
+
+  await judokasRepository.listPage({ filter: "noClub", limit: 10 });
+  await judokasRepository.listPage({ filter: "notRegistered", seasonStartYear: 2026, limit: 10 });
+
+  assert.deepEqual(calls, [
+    ["selectPage", "judokas", `select=*&profile_type=eq.JUDOKA&club_id=is.null&${order}`, 10],
+    [
+      "selectPage",
+      "judokas",
+      `select=*&profile_type=eq.JUDOKA&and=(or(saison_inscription.is.null,saison_inscription.lt.2026))&${order}`,
+      10
+    ]
+  ]);
+});
+
 test("judokas repository batches id lookups and counts a club without listing it", async () => {
   const calls = [];
   const judokasRepository = createJudokasRepository(

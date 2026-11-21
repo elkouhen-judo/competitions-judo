@@ -151,7 +151,10 @@
       ),
       isPending: false,
       clubId: user.clubId || "",
-      canHaveClub: user.profileType !== "PARENT"
+      canHaveClub: user.profileType !== "PARENT",
+      // ADMIN-1 : un judoka avec e-mail peut être nommé coach ; un parent jamais.
+      isCoach: user.accessRole === "COACH",
+      canBeCoach: user.profileType !== "PARENT" && Boolean(user.accountEmail) && user.accessRole !== "COACH"
     }));
 
     // PAGE-3 : la recherche et le total viennent du serveur ; `users` contient les pages déjà lues.
@@ -189,7 +192,9 @@
       isCurrentUser: false,
       isPending: true,
       clubId: "",
-      canHaveClub: false
+      canHaveClub: false,
+      isCoach: false,
+      canBeCoach: false
     }));
     const normalizedSearch = (search || "").toLowerCase();
     const filteredInvitations = !normalizedSearch

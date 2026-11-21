@@ -13,7 +13,8 @@
           </summary>
           <div class="page-menu-list" role="menu">
             <button id="editCompetitionButton" type="button" role="menuitem" :disabled="isSubmitting" @click="editCurrentCompetition()">Modifier la compétition</button>
-            <button id="deleteCompetitionButton" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteCurrentCompetition()">Supprimer la compétition</button>
+            <!-- PART-1 : une participation liée se retire depuis sa compétition club. -->
+            <button v-if="canDeleteCompetition" id="deleteCompetitionButton" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteCurrentCompetition()">Supprimer la compétition</button>
           </div>
         </details>
       </div>
