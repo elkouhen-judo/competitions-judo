@@ -179,10 +179,9 @@ test("competition actions live in a « ⋯ » menu and the ranking is chosen on 
 test("judoka home opens on the competition list with its actions on one line", () => {
   assert.doesNotMatch(bundle, /v-if="showJudokaHub"|class="coach-home-grid"|parent-home-card"/);
   assert.match(bundle, /id="homeAdminActions" class="home-actions-row" v-show="showHomeActions"/);
-  assert.match(bundle, /id="addCompetitionButton" v-if="showAddCompetitionAction"/);
+  // MULTI-4 : aucune création de compétition depuis l'accueil d'une famille ou d'un judoka.
+  assert.doesNotMatch(bundle, /id="addCompetitionButton"/);
   assert.match(bundle, /id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile"/);
-  // ACCUEIL-4 : sans compétition, seul l'état vide porte le bouton d'ajout.
-  assert.match(client, /showAddCompetitionAction = window\.Vue\.computed\(\(\) => canCreateCompetition\.value && hasCompetitions\(\)\)/);
   // LISTE-2 : deux intertitres au lieu d'une phrase d'explication.
   assert.match(client, /title: "À venir"/);
   assert.match(client, /title: "Passées"/);

@@ -383,6 +383,8 @@ export interface CoachDashboardCompetitionOption {
   competitionIds: string[];
   name: string;
   competitionDate: string;
+  /** MULTI-1 : club de la compétition. */
+  clubId: string;
 }
 
 export interface CoachDashboard {
@@ -396,6 +398,19 @@ export interface CoachDashboard {
    */
   previous?: { dateFrom: string; dateTo: string; stats: CoachDashboardStats } | null;
   availableCompetitions: CoachDashboardCompetitionOption[];
+  /** MULTI-6 : une ligne par club, sur « Tous mes clubs » d'un coach de plusieurs clubs ; null sinon. */
+  byClub?: CoachDashboardClubEntry[] | null;
+}
+
+/** MULTI-6 : bilan d'un club ; sous 2 judokas (DASH-027), withheld et aucun chiffre. */
+export interface CoachDashboardClubEntry {
+  clubId: string;
+  withheld: boolean;
+  engagedJudokas: number;
+  participations: number;
+  combats: number;
+  victories: number;
+  podiums: number;
 }
 
 export interface CoachChatFilters {

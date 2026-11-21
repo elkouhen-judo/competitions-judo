@@ -348,7 +348,7 @@ export interface CompetitionDetailScreen {
   openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
   openCompetitionFromClubDetail(idCompetition: string): void;
   openCompetitionFromJudokaProfile(idCompetition: string): void;
-  showCompetitionForm(idCompetition?: string): void;
+  showCompetitionForm(idCompetition: string): void;
 }
 
 export interface CombatFormDeps {
@@ -379,7 +379,7 @@ export interface CompetitionScreen {
   openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
   openCompetitionFromJudokaProfile(idCompetition: string): void;
   showClubCompetitionForm(idClubCompetition?: string): void;
-  showCompetitionForm(idCompetition?: string): void;
+  showCompetitionForm(idCompetition: string): void;
 }
 
 export interface AdminsScreen {
@@ -393,6 +393,7 @@ export interface CoachDashboardCompetitionPreset {
   competitionDate: string;
   /** Les compétitions individuelles des participants. */
   competitionIds: string[];
+  clubId: string;
 }
 
 export interface CoachDashboardScreen {
@@ -520,6 +521,7 @@ export interface KirokuApp {
   reloadInitialData(): void;
   reloadInitialDataThen(afterReload: () => void): void;
   resetApplicationState(): void;
+  setSelectedClubId(clubId: string): void;
   runServer<M extends RpcClientMethod>(
     method: M,
     args: RpcClientArgs<M>,

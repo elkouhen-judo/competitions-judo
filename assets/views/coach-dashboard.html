@@ -26,7 +26,7 @@
           <div v-show="filtersExpanded" class="form-grid">
             <div v-if="showCoachDashboardClubFilter">
               <label for="coachDashboard_club">Club</label>
-              <select id="coachDashboard_club" v-model="coachDashboardForm.clubId" @change="scheduleCoachDashboardRefresh()">
+              <select id="coachDashboard_club" v-model="coachDashboardForm.clubId" @change="changeCoachDashboardClub()">
                 <option value="">Tous mes clubs</option>
                 <option v-for="club in coachDashboardClubOptions" :key="club.clubId" :value="club.clubId">{{ club.name }}</option>
               </select>
@@ -62,7 +62,7 @@
               </label>
               <div v-if="coachDashboardSelectedCompetitions.length" class="competition-chip-list">
                 <span v-for="competition in coachDashboardSelectedCompetitions" :key="competition.competitionId" class="competition-chip">
-                  {{ formatCompetitionName(competition.name) }} — {{ formatCoachDashboardDate(competition.competitionDate) }}
+                  {{ formatCompetitionName(competition.name) }} — {{ formatCoachDashboardDate(competition.competitionDate) }}<template v-if="formatCoachDashboardOptionClub(competition)"> · {{ formatCoachDashboardOptionClub(competition) }}</template>
                   <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${formatCompetitionName(competition.name)}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
                 </span>
               </div>
@@ -71,7 +71,7 @@
                 <div v-if="!coachDashboardCompetitionSuggestions.length" class="empty-state">Aucune compétition trouvée.</div>
                 <div v-else class="list">
                   <button v-for="option in coachDashboardCompetitionSuggestions" :key="option.competitionId" type="button" class="checkbox-row competition-suggestion" @click="addCoachDashboardCompetition(option.competitionId)">
-                    <span>{{ formatCompetitionName(option.name) }} — {{ formatCoachDashboardDate(option.competitionDate) }}</span>
+                    <span>{{ formatCompetitionName(option.name) }} — {{ formatCoachDashboardDate(option.competitionDate) }}<template v-if="formatCoachDashboardOptionClub(option)"> · {{ formatCoachDashboardOptionClub(option) }}</template></span>
                   </button>
                 </div>
               </div>
@@ -180,6 +180,20 @@
           <ul id="coachDashboardActivity" class="bar-list">
             <li v-for="line in coachDashboardActivityLines" :key="line.key">
               <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.value }}</span></div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- MULTI-6 : sur « Tous mes clubs », le bilan de chaque club. -->
+        <div class="section" v-if="coachDashboardClubLines.length">
+          <h3>Par club
+            <span class="info-tip" tabindex="0" :aria-label="metricDescriptions.byClub"><span aria-hidden="true">i</span><span class="info-tip-bubble" aria-hidden="true">{{ metricDescriptions.byClub }}</span></span>
+          </h3>
+          <ul id="coachDashboardByClub" class="bar-list">
+            <li v-for="line in coachDashboardClubLines" :key="line.key">
+              <div class="bar-row-head"><span>{{ line.label }}</span><span class="bar-row-value">{{ line.text }}</span></div>
+              <p v-if="line.detailText" class="bar-row-detail">{{ line.detailText }}</p>
+              <div v-if="line.showBar" class="bar-track" aria-hidden="true"><span class="bar-fill" :style="{ width: line.rate + '%' }"></span></div>
             </li>
           </ul>
         </div>

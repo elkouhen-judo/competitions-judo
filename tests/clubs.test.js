@@ -176,9 +176,12 @@ test("a coach cannot open, edit or delete another club's competition", async () 
 
 test("coach statistics only cover judokas of the coach's clubs, and can be narrowed to one club", async () => {
   const competitionRows = [
-    { id_competition: "C_NANTES", id_judoka: "J_NANTES", date: "2026-02-10", categorie_age: "Cadet" },
-    { id_competition: "C_RENNES", id_judoka: "J_RENNES", date: "2026-02-11", categorie_age: "Cadet" },
-    { id_competition: "C_ANGERS", id_judoka: "J_ANGERS", date: "2026-02-12", categorie_age: "Cadet" }
+    // stats_club_id : le club que la fonction SQL attribue à la participation (MULTI-4).
+    { id_competition: "C_NANTES", id_judoka: "J_NANTES", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
+    { id_competition: "C_RENNES", id_judoka: "J_RENNES", date: "2026-02-11", categorie_age: "Cadet", stats_club_id: "RENNES" },
+    { id_competition: "C_ANGERS", id_judoka: "J_ANGERS", date: "2026-02-12", categorie_age: "Cadet", stats_club_id: "ANGERS" },
+    // MULTI-5 : le coach combat encore, sans être inscrit dans un de ses clubs.
+    { id_competition: "C_COACH", id_judoka: "COACH1", date: "2026-02-13", categorie_age: "Senior", stats_club_id: null }
   ];
   const combat = (id, judoka, competition) => ({
     id_combat: id,
@@ -190,9 +193,11 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
   const combatsByCompetitionId = {
     C_NANTES: [combat("K1", "J_NANTES", "C_NANTES")],
     C_RENNES: [combat("K2", "J_RENNES", "C_RENNES")],
-    C_ANGERS: [combat("K3", "J_ANGERS", "C_ANGERS")]
+    C_ANGERS: [combat("K3", "J_ANGERS", "C_ANGERS")],
+    C_COACH: [combat("K4", "COACH1", "C_COACH")]
   };
   const judokas = [
+    { id_judoka: "COACH1", club_id: "" },
     { id_judoka: "J_NANTES", club_id: "NANTES" },
     { id_judoka: "J_RENNES", club_id: "RENNES" }
   ];
@@ -226,9 +231,13 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
 
   const all = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(all.stats.totalCombats, 2);
-  assert.deepEqual(all.availableCompetitions.map((c) => c.competitionId).sort(), ["C_NANTES", "C_RENNES"]);
-  // COACH-1 : le périmètre part dans la requête (clubs du coach et lui-même).
-  assert.deepEqual(scopes[0], { clubIds: ["NANTES", "RENNES"], judokaIds: ["COACH1"] });
+  // MULTI-1 : chaque compétition proposée porte son club.
+  assert.deepEqual(
+    all.availableCompetitions.map((c) => [c.competitionId, c.clubId]).sort(),
+    [["C_NANTES", "NANTES"], ["C_RENNES", "RENNES"]]
+  );
+  // COACH-1 et MULTI-5 : le périmètre part dans la requête, clubs du coach seulement, sans le coach.
+  assert.deepEqual(scopes[0], { clubIds: ["NANTES", "RENNES"] });
 
   // STAT-20 : le club de Rennes n'a qu'un judoka : seul le volume est donné.
   const rennes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "RENNES" });
@@ -243,6 +252,57 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
 
   const search = await service.methods.searchCombats("coach@example.com", {});
   assert.deepEqual(search.matches.map((match) => match.judokaId).sort(), ["J_NANTES", "J_RENNES"]);
+});
+
+test("MULTI-4 : un résultat reste au club où il a été obtenu, même après un changement de club", async () => {
+  // J_MOVED a combattu pour Nantes la saison passée, il est à Rennes aujourd'hui.
+  const competitionRows = [
+    { id_competition: "C_OLD", id_judoka: "J_MOVED", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
+    { id_competition: "C_OLD2", id_judoka: "J_NANTES", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
+    { id_competition: "C_NEW", id_judoka: "J_MOVED", date: "2026-10-10", categorie_age: "Cadet", stats_club_id: "RENNES" }
+  ];
+  const combats = competitionRows.map((row, index) => ({
+    id_combat: `K${index}`,
+    id_judoka: row.id_judoka,
+    id_competition: row.id_competition,
+    resultat: "Victoire",
+    type_victoire: "Ippon",
+    combat_scores: []
+  }));
+  const context = coachContext({
+    judokas: [
+      { id_judoka: "J_MOVED", club_id: "RENNES" },
+      { id_judoka: "J_NANTES", club_id: "NANTES" }
+    ]
+  });
+  const service = createCoachDashboardService({
+    combatsRepository: {
+      listByCompetitionIdsWithScores: async () => [],
+      listCoachDashboardData: async () => ({ competitions: competitionRows, combats })
+    },
+    competitionsRepository: { listInScope: async () => [] },
+    userContextService: {
+      getDomainUserContext: context,
+      getIdentity: async () => {
+        const { user, coachClubIds } = await context();
+        return { user, coachClubIds, childJudokaIds: [] };
+      }
+    }
+  });
+
+  // MULTI-6 : sur « Tous mes clubs », une ligne par club ; Rennes n'a qu'un judoka : sans chiffres.
+  const all = await service.methods.getCoachDashboard("coach@example.com", {});
+  assert.deepEqual(all.byClub, [
+    { clubId: "NANTES", withheld: false, engagedJudokas: 2, participations: 2, combats: 2, victories: 2, podiums: 0 },
+    { clubId: "RENNES", withheld: true, engagedJudokas: 0, participations: 0, combats: 0, victories: 0, podiums: 0 }
+  ]);
+
+  const nantes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "NANTES" });
+  assert.equal(nantes.byClub, null);
+  assert.equal(nantes.stats.totalCombats, 2);
+  assert.deepEqual(nantes.availableCompetitions.map((c) => c.competitionId).sort(), ["C_OLD", "C_OLD2"]);
+  const rennes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "RENNES" });
+  assert.deepEqual(rennes.availableCompetitions.map((c) => [c.competitionId, c.clubId]), [["C_NEW", "RENNES"]]);
 });
 
 function createClubsServiceFor({ context = adminContext(), clubs = [], links = [], judokas = [], competitionsByClub = {}, calls = [] } = {}) {

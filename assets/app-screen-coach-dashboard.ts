@@ -1,6 +1,7 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
   type CoachDashboardStats = import("../core/types").CoachDashboardStats;
+  type CoachDashboardClubEntry = import("../core/types").CoachDashboardClubEntry;
   type CoachDashboardCompetitionOption = import("../core/types").CoachDashboardCompetitionOption;
   type CoachDashboardCompetitionPreset = import("./types").CoachDashboardCompetitionPreset;
 
@@ -22,6 +23,8 @@
       "Premières, deuxièmes et troisièmes places, sur les participations dont le classement final est saisi.",
     incomplete:
       "Combats concernés par le manque de saisie le plus fréquent. Un combat peut avoir plusieurs manques.",
+    byClub:
+      "Sur tous vos clubs : le bilan de chacun. Un résultat compte pour le club de sa compétition. Un club de moins de 2 judokas est listé sans chiffres.",
     activity:
       "Judokas différents ayant au moins un combat retenu (puis leur garde à partir de 5 judokas), participations passées, compétitions et combats par judoka engagé.",
     participations:
@@ -112,6 +115,7 @@
       coachDashboardWithheld: null as { analyzedCompetitions: number; totalCombats: number } | null,
       // STAT-23 : la même fenêtre un an plus tôt.
       coachDashboardPrevious: null as { dateFrom: string; dateTo: string; stats: CoachDashboardStats } | null,
+      coachDashboardByClub: null as CoachDashboardClubEntry[] | null,
       isLoadingCoachDashboardStats: false,
       // TDB-2 : un échec de chargement n'est jamais présenté comme « aucun combat ».
       coachDashboardLoadError: "",
@@ -326,6 +330,36 @@
     });
 
     // STAT-28 : l'activité du club, sans aucun nom, et la valeur de la période précédente.
+    // MULTI-6 : une ligne par club sur « Tous mes clubs », sans nom de judoka.
+    const coachDashboardClubLines = window.Vue.computed(() => {
+      const entries = currentStats() ? coachDashboardViewModel.coachDashboardByClub || [] : [];
+      if (entries.length < 2) return [];
+      return entries.map((entry) => {
+        const club = state.clubs.find((candidate) => candidate.clubId === entry.clubId);
+        const label = club ? club.name : "Club";
+        if (entry.withheld) {
+          return { key: entry.clubId, label, text: "moins de 2 judokas", detailText: "", rate: 0, showBar: false };
+        }
+        if (!entry.combats && !entry.participations) {
+          return { key: entry.clubId, label, text: "aucune compétition", detailText: "", rate: 0, showBar: false };
+        }
+        return {
+          key: entry.clubId,
+          label,
+          ...(entry.combats
+            ? formatWinRate(entry.victories, entry.combats)
+            : { text: "aucun combat saisi", rate: 0, showBar: false }),
+          detailText: [
+            pluralize(entry.engagedJudokas, "judoka"),
+            pluralize(entry.participations, "participation"),
+            entry.podiums ? pluralize(entry.podiums, "podium") : ""
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        };
+      });
+    });
+
     const coachDashboardActivityLines = window.Vue.computed(() => {
       const stats = currentStats();
       if (!stats) return [];
@@ -507,6 +541,13 @@
         .slice(0, COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT);
     });
 
+    // MULTI-1 : sur « Tous mes clubs », une compétition dit son club.
+    function formatCoachDashboardOptionClub(option: { clubId?: string }) {
+      if (state.clubs.length < 2 || coachDashboardViewModel.coachDashboardForm.clubId) return "";
+      const club = state.clubs.find((candidate) => candidate.clubId === String(option.clubId || ""));
+      return club ? club.name : "";
+    }
+
     function formatCoachDashboardDate(value: unknown) {
       const formatted = formatDate(value);
       if (!formatted) {
@@ -550,6 +591,7 @@
         coachDashboardViewModel,
         {
           resetCoachDashboardFilters,
+          changeCoachDashboardClub,
           retryCoachDashboard,
           returnToClubCompetition,
           scheduleCoachDashboardRefresh,
@@ -561,6 +603,7 @@
           showCoachJudoka,
           showCoachDashboard,
           formatCoachDashboardDate,
+          formatCoachDashboardOptionClub,
           formatCompetitionName: ui.formatCompetitionName
         },
         {
@@ -575,6 +618,7 @@
           coachDashboardPreviousLabel,
           coachDashboardTileDeltas,
           coachDashboardActivityLines,
+          coachDashboardClubLines,
           coachDashboardParticipationText,
           coachDashboardDistinctTechniquesText,
           coachDashboardScoreHoldingLines,
@@ -639,6 +683,7 @@
           coachDashboardViewModel.coachDashboardStats = response.stats;
           coachDashboardViewModel.coachDashboardWithheld = response.withheld || null;
           coachDashboardViewModel.coachDashboardPrevious = response.previous || null;
+          coachDashboardViewModel.coachDashboardByClub = response.byClub || null;
           coachDashboardViewModel.availableCompetitions = response.availableCompetitions;
           coachDashboardViewModel.coachDashboardLoadError = "";
           // Une compétition sélectionnée reste choisie, même si le serveur la désigne
@@ -726,12 +771,21 @@
       }
     }
 
-    // TDB-6 : réinitialiser revient à la saison en cours, tous clubs et toutes catégories.
+    // TDB-6 : réinitialiser revient à la saison en cours et à toutes les catégories ; MULTI-3 : le club reste.
     function resetCoachDashboardFilters() {
       clearCoachDashboardRefreshTimer();
-      Object.assign(coachDashboardViewModel.coachDashboardForm, getDefaultCoachDashboardFilters());
+      const { clubId } = coachDashboardViewModel.coachDashboardForm;
+      Object.assign(coachDashboardViewModel.coachDashboardForm, getDefaultCoachDashboardFilters(), { clubId });
       coachDashboardViewModel.competitionSearchText = "";
       fetchCoachDashboardStats();
+    }
+
+    // MULTI-3 : le club des statistiques est celui de l'accueil, sauf pour les statistiques d'une compétition.
+    function changeCoachDashboardClub() {
+      if (!coachDashboardViewModel.returnClubCompetitionId) {
+        app.setSelectedClubId(coachDashboardViewModel.coachDashboardForm.clubId);
+      }
+      scheduleCoachDashboardRefresh();
     }
 
     function toggleCoachDashboardFilters() {
@@ -762,7 +816,8 @@
             competitionId: firstCompetitionId,
             competitionIds: [...preset.competitionIds],
             name: preset.name,
-            competitionDate: preset.competitionDate
+            competitionDate: preset.competitionDate,
+            clubId: preset.clubId
           }
         ];
         coachDashboardViewModel.returnClubCompetitionId = preset.clubCompetitionId;
@@ -773,7 +828,8 @@
         // Retour à l'onglet « Stats » : les filtres du coach reviennent.
         Object.assign(
           form,
-          filtersBeforeCompetition || { ...getDefaultCoachDashboardFilters(), clubId: state.selectedClubId || "" }
+          filtersBeforeCompetition || getDefaultCoachDashboardFilters(),
+          { clubId: state.selectedClubId || "" }
         );
         filtersBeforeCompetition = null;
         coachDashboardViewModel.returnClubCompetitionId = "";
@@ -783,6 +839,9 @@
       } else if (!coachDashboardFiltersInitialized) {
         // TDB-6 : première ouverture sur la saison en cours et le club choisi à l'accueil.
         Object.assign(form, getDefaultCoachDashboardFilters(), { clubId: state.selectedClubId || "" });
+      } else {
+        // MULTI-3 : les autres filtres restent ; le club suit celui de l'accueil.
+        form.clubId = state.selectedClubId || "";
       }
       coachDashboardFiltersInitialized = true;
       coachDashboardViewModel.competitionSearchText = "";

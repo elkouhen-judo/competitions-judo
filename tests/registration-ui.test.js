@@ -35,7 +35,6 @@ test("INSCR-2 : un judoka non réinscrit ne peut pas être engagé dans la nouve
 test("INSCR-2 : accueil, fiche et compétitions club signalent les non-réinscrits", () => {
   const home = read("assets/app-screen-home.ts");
   assert.match(home, /Non réinscrit pour la saison \$\{ui\.formatSeasonLabel\(season\)\}/);
-  assert.match(home, /!homeRegistrationNotice\.value/);
   assert.match(home, /isRegisteredForDate\(judoka, ui\.getCurrentLocalDate\(\)\) \? "" : "Non réinscrit"/);
   assert.match(read("assets/views/home.html"), /id="homeRegistrationNotice"/);
   assert.match(read("assets/views/judoka.html"), /id="judokaHeroUnregistered"/);

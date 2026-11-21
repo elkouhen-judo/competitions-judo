@@ -32,7 +32,7 @@ Ayumi is a mobile-first competitive tracking notebook for a judo club, fed by fa
 Core product principles:
 
 - **Zero mandatory coach input**: the product must remain useful even if the coach only ever reads it.
-- **Asynchronous entry by family**: a parent (or the judoka) creates the competition and logs combats from their child's or their own space.
+- **Asynchronous entry by family**: the coach creates the competition for their club and enters the judokas; a parent (or the judoka) then logs the combats from their child's or their own space.
 - **Minimal entry friction**: the combat entry form must be simple enough for a non-judoka parent to fill out unaided.
 - **Quick entry first, detail later**: a combat is saved with its result in a few touches; the stance, score, points and notes can be completed later by the family, the judoka or the coach.
 - **Usable in the gymnasium**: once opened online, the application stays readable offline, and combats and rankings entered offline are synchronized when the network comes back.
@@ -44,7 +44,7 @@ The product is built around two primary views:
 
 Primary usage loop:
 
-1. **Entry**: a parent creates a competition and logs their child's combats, one at a time.
+1. **Entry**: the coach creates the club competition with its participants; a parent logs their child's combats, one at a time.
 2. **Aggregation**: the system automatically updates the relevant judoka's profile and feeds the global Competition view.
 3. **Consultation**: the coach opens Ayumi to debrief the weekend or prepare a class.
 4. **Feedback**: the coach and judoka discuss concrete data on the mat.

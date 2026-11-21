@@ -723,25 +723,21 @@ function domainContextFor(idJudoka, role, extras = {}) {
   });
 }
 
-test("saveCompetition creates a new competition owned by the requesting judoka", async () => {
+test("MULTI-4 : saveCompetition ne crée plus de compétition, seul le coach en crée depuis une compétition club", async () => {
   const { service, calls } = createTestCompetitionsService({
     getDomainUserContext: domainContextFor("JUDO1", "NORMAL")
   });
 
-  const result = await service.methods.saveCompetition("judoka@example.com", {
-    name: "Tournoi Nantes",
-    competitionDate: "2026-06-14",
-    ageCategory: "Cadet"
-  });
-
-  assert.equal(result.success, true);
-  assert.equal(result.message, "Compétition créée.");
-  assert.equal(calls.inserted.length, 1);
-  assert.equal(calls.inserted[0].idCompetition, "COMP_NEW");
-  assert.equal(calls.inserted[0].draft.ownerJudokaId, "JUDO1");
-  // ECRIT-2 : l'écriture renvoie la compétition enregistrée.
-  assert.equal(result.competition.competitionId, "COMP_NEW");
-  assert.equal(result.competition.ownerJudokaId, "JUDO1");
+  await assert.rejects(
+    () =>
+      service.methods.saveCompetition("judoka@example.com", {
+        name: "Tournoi Nantes",
+        competitionDate: "2026-06-14",
+        ageCategory: "Cadet"
+      }),
+    /Seul le coach crée une compétition/
+  );
+  assert.equal(calls.inserted.length, 0);
 });
 
 test("saveCompetition lets the owner edit their own competition", async () => {
@@ -862,13 +858,22 @@ test("saveCompetition rejects editing a competition owned by another judoka", as
   );
 });
 
-test("saveCompetition rejects duplicate standalone competitions for the same judoka", async () => {
+test("saveCompetition rejects renaming a detached competition into a duplicate for the same judoka", async () => {
+  // COMP-018 : une participation détachée d'une compétition club supprimée redevient individuelle.
   const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       COMP1: {
         id_competition: "COMP1",
         id_judoka: "JUDO1",
         nom: "Tournoi Nantes",
+        date: "2026-06-14",
+        categorie_age: "Cadet",
+        club_competition_id: null
+      },
+      COMP2: {
+        id_competition: "COMP2",
+        id_judoka: "JUDO1",
+        nom: "Tournoi Rennes",
         date: "2026-06-14",
         categorie_age: "Cadet",
         club_competition_id: null
@@ -880,6 +885,7 @@ test("saveCompetition rejects duplicate standalone competitions for the same jud
   await assert.rejects(
     () =>
       service.methods.saveCompetition("judoka@example.com", {
+        competitionId: "COMP2",
         name: "Tournoi Nantes",
         competitionDate: "2026-06-14",
         ageCategory: "Cadet"
@@ -1033,11 +1039,15 @@ function createTestCoachDashboardService({
 } = {}) {
   const calls = { scopes: [], combatBatches: [] };
   // Par défaut, tous les judokas des jeux de données appartiennent aux clubs du coach.
+  // MULTI-5 : seuls les judokas des clubs du coach comptent ; un judoka sans club y est rangé.
   const getContext = async (email) => {
     const context = await getDomainUserContext(email);
+    const coachClubIds = context.coachClubIds && context.coachClubIds.length ? context.coachClubIds : ["NANTES"];
     const ownerRows = competitionRows.map((row) => ({ id_judoka: row.id_judoka }));
-    const judokas = context.judokas && context.judokas.length ? context.judokas : [...judokaRows, ...ownerRows];
-    return { ...context, judokas };
+    const judokas = (context.judokas && context.judokas.length ? context.judokas : [...judokaRows, ...ownerRows]).map(
+      (judoka) => (judoka.club_id ? judoka : { ...judoka, club_id: coachClubIds[0] })
+    );
+    return { ...context, coachClubIds, judokas };
   };
   const inScope = (scope) =>
     competitionRows.filter(
@@ -1058,7 +1068,8 @@ function createTestCoachDashboardService({
       // STAT-17 : compétitions du périmètre, combats des compétitions choisies et points, en un appel.
       listCoachDashboardData: async (scope, competitionIds) => {
         calls.scopes.push(scope);
-        const competitions = inScope(scope);
+        // MULTI-4 : la fonction SQL dit le club de chaque participation.
+        const competitions = inScope(scope).map((row) => ({ stats_club_id: "NANTES", ...row }));
         const ids = competitions
           .map((row) => row.id_competition)
           .filter((id) => !competitionIds.length || competitionIds.includes(id));
@@ -1250,13 +1261,15 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       competitionId: "COMP1",
       competitionIds: ["COMP1", "COMP1_BIS"],
       name: "Compétition",
-      competitionDate: "2026-02-10"
+      competitionDate: "2026-02-10",
+      clubId: "NANTES"
     },
     {
       competitionId: "COMP2",
       competitionIds: ["COMP2"],
       name: "Compétition",
-      competitionDate: "2026-03-15"
+      competitionDate: "2026-03-15",
+      clubId: "NANTES"
     }
   ]);
   assert.equal(allResult.availableCompetitions.length, 2);
@@ -1364,7 +1377,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       competitionId: "COMP1",
       competitionIds: ["COMP1", "COMP1_BIS"],
       name: "Compétition",
-      competitionDate: "2026-02-10"
+      competitionDate: "2026-02-10",
+      clubId: "NANTES"
     }
   ]);
 
@@ -1387,7 +1401,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       competitionId: "COMP2",
       competitionIds: ["COMP2"],
       name: "Compétition",
-      competitionDate: "2026-03-15"
+      competitionDate: "2026-03-15",
+      clubId: "NANTES"
     }
   ]);
 
@@ -1402,7 +1417,8 @@ test("getCoachDashboard computes stats filtered by competition and age category"
       competitionId: "COMP1",
       competitionIds: ["COMP1", "COMP1_BIS"],
       name: "Compétition",
-      competitionDate: "2026-02-10"
+      competitionDate: "2026-02-10",
+      clubId: "NANTES"
     }
   ]);
 
@@ -3648,36 +3664,17 @@ test("INSCR-2 : un judoka non réinscrit ne peut pas être ajouté à une compé
   assert.equal(late.success, true);
 });
 
-test("INSCR-2 : une compétition individuelle se refuse pour un judoka non réinscrit, l'historique reste modifiable", async () => {
+test("INSCR-2 : une compétition d'un judoka non réinscrit ne passe pas dans la nouvelle saison, l'historique reste modifiable", async () => {
   const parent = { id_judoka: "P1", profile_type: "PARENT", role: "NORMAL" };
   const child = { id_judoka: "CHILD1", profile_type: "JUDOKA", role: "NORMAL", saison_inscription: 2025 };
-  const { service, calls } = createTestCompetitionsService({
+  const { service } = createTestCompetitionsService({
     competitionsByCompetitionId: {
       OLD: { id_competition: "OLD", id_judoka: "CHILD1", nom: "Tournoi passé", date: "2026-03-14", categorie_age: "Cadet" }
     },
     getDomainUserContext: registrationContext(parent, [child])
   });
 
-  await assert.rejects(
-    () =>
-      service.methods.saveCompetition("parent@example.com", {
-        ownerJudokaId: "CHILD1",
-        name: "Open d'automne",
-        competitionDate: "2026-10-10",
-        ageCategory: "Cadet"
-      }),
-    /Judoka non réinscrit pour la saison 2026-2027/
-  );
-  assert.equal(calls.inserted.length, 0);
-
-  // Une compétition de la saison 2025-2026 se crée ou se modifie toujours.
-  const past = await service.methods.saveCompetition("parent@example.com", {
-    ownerJudokaId: "CHILD1",
-    name: "Tournoi de printemps",
-    competitionDate: "2026-04-10",
-    ageCategory: "Cadet"
-  });
-  assert.equal(past.success, true);
+  // Une compétition de la saison 2025-2026 se modifie toujours (MULTI-4 : plus aucune création ici).
   const edited = await service.methods.saveCompetition("parent@example.com", {
     competitionId: "OLD",
     ownerJudokaId: "CHILD1",

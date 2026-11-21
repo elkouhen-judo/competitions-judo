@@ -374,13 +374,12 @@
     app: KirokuApp,
     deps: {
       openCompetition: ReturnType<typeof createCompetitionDetailController>["openCompetition"];
-      showCombatForm: CompetitionDetailDeps["showCombatForm"];
     }
   ) {
     const { state, ui, notifications } = app;
-    const { cleanText, getCurrentLocalDate, getJudokaDisplayName, toInputDate, showView } = ui;
+    const { cleanText, getJudokaDisplayName, toInputDate, showView } = ui;
     const { clearMessage, showError, showSuccess } = notifications;
-    const { openCompetition, showCombatForm } = deps;
+    const { openCompetition } = deps;
 
     const defaultCompetitionForm = {
       competitionId: "",
@@ -443,46 +442,34 @@
       );
     }
 
-    function showCompetitionForm(id?: string) {
+    // MULTI-4 : le formulaire ne fait que modifier ; seul le coach crée une compétition (compétition club).
+    function showCompetitionForm(id: string) {
       clearMessage();
       ensureCompetitionFormViewModel();
       Object.assign(competitionFormViewModel.competitionFormErrors, { name: "", ageCategory: "", owner: "" });
       previousCompetitionFormView = state.currentCompetition ? "competitionView" : "homeView";
 
-      if (id) {
-        const c: Competition | null =
-          state.competitions.find((x) => String(x.competitionId) === String(id)) ||
-          state.currentCompetition;
+      const c: Competition | null =
+        state.competitions.find((x) => String(x.competitionId) === String(id)) ||
+        state.currentCompetition;
 
-        if (!c) {
-          showError({ message: "Compétition introuvable." });
-          return;
-        }
-
-        competitionFormViewModel.competitionFormTitle = "Modifier la compétition";
-        competitionFormViewModel.competitionInheritedFieldsLocked = Boolean(c.clubCompetitionId);
-        setCompetitionOwnerField(c.ownerJudokaId || "");
-        Object.assign(competitionFormViewModel.competitionForm, {
-          competitionId: c.competitionId || "",
-          name: c.name || "",
-          competitionDate: toInputDate(c.competitionDate),
-          ageCategory: c.ageCategory || "",
-          weightCategory: c.weightCategory || "",
-          level: c.level || "",
-          result: c.result || ""
-        });
-      } else {
-        previousCompetitionFormView = "homeView";
-        competitionFormViewModel.competitionFormTitle = "Nouvelle compétition";
-        competitionFormViewModel.competitionInheritedFieldsLocked = false;
-        const ownerId = app.screens.home.getHomeActiveJudokaId();
-        setCompetitionOwnerField(ownerId);
-        Object.assign(competitionFormViewModel.competitionForm, {
-          ...defaultCompetitionForm,
-          competitionDate: getCurrentLocalDate()
-        });
-        prefillCategoryFromJudoka(ownerId || String(state.currentUser?.judokaId || ""));
+      if (!c) {
+        showError({ message: "Compétition introuvable." });
+        return;
       }
+
+      competitionFormViewModel.competitionFormTitle = "Modifier la compétition";
+      competitionFormViewModel.competitionInheritedFieldsLocked = Boolean(c.clubCompetitionId);
+      setCompetitionOwnerField(c.ownerJudokaId || "");
+      Object.assign(competitionFormViewModel.competitionForm, {
+        competitionId: c.competitionId || "",
+        name: c.name || "",
+        competitionDate: toInputDate(c.competitionDate),
+        ageCategory: c.ageCategory || "",
+        weightCategory: c.weightCategory || "",
+        level: c.level || "",
+        result: c.result || ""
+      });
 
       showView("competitionFormView");
     }
@@ -509,7 +496,6 @@
 
     function saveCompetition() {
       ensureCompetitionFormViewModel();
-      const isNewCompetition = !competitionFormViewModel.competitionForm.competitionId;
       const competition = {
         competitionId: competitionFormViewModel.competitionForm.competitionId,
         name: competitionFormViewModel.competitionForm.name,
@@ -554,8 +540,6 @@
           }
           if (!competitionId) {
             app.showHome && app.showHome();
-          } else if (isNewCompetition) {
-            openCompetition(competitionId, true, showCombatForm);
           } else {
             openCompetition(competitionId, true);
           }
@@ -755,10 +739,7 @@
       deleteCurrentCompetition
     } = detail;
 
-    const form = createCompetitionFormController(app, {
-      openCompetition,
-      showCombatForm
-    });
+    const form = createCompetitionFormController(app, { openCompetition });
     const {
       cancelCompetitionForm,
       getCompetitionOwnerRequiredMessage,

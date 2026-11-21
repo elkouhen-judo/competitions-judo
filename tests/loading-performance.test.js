@@ -266,11 +266,17 @@ function handleRpc(name, payload = {}) {
   const clubIds = payload.p_club_ids || [];
   const judokaIds = payload.p_judoka_ids || [];
   const competitionIds = payload.p_competition_ids || [];
+  // MULTI-4 : le club de la compétition club, sinon le club actuel du judoka.
+  const statsClubId = (row) => {
+    const event = (db.club_competitions || []).find((cc) => cc.id_club_competition === row.club_competition_id);
+    const owner = db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka);
+    return (event && event.club_id) || (owner && owner.club_id) || null;
+  };
   const competitions = db.competitions
+    .map((row) => ({ ...row, stats_club_id: statsClubId(row) }))
     .filter((row) => {
-      const owner = db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka);
       return (
-        (clubIds.includes(owner && owner.club_id) || judokaIds.includes(row.id_judoka)) &&
+        (clubIds.includes(row.stats_club_id) || judokaIds.includes(row.id_judoka)) &&
         (!payload.p_date_from || row.date >= payload.p_date_from) &&
         (!payload.p_date_to || row.date <= payload.p_date_to) &&
         (!payload.p_age_category || row.categorie_age === payload.p_age_category)
@@ -957,16 +963,18 @@ test("ECRIT-1 : modifier un combat remplace ses points en une suppression et une
 });
 
 test("ECRIT-2 : enregistrer ou classer une compétition renvoie la compétition enregistrée", async () => {
-  const created = await measure(() =>
+  // MULTI-4 : la compétition existe déjà (créée par le coach) ; la famille la modifie.
+  const saved = await measure(() =>
     methods.saveCompetition("solo@example.com", {
+      competitionId: "C_SOLO",
       name: "Tournoi de Noël",
       competitionDate: inSeason("12-20"),
       ageCategory: "Cadet"
     })
   );
-  assert.equal(created.result.competition.competitionId, created.result.competitionId);
-  assert.equal(created.result.competition.ownerJudokaId, "SOLO1");
-  assert.equal(created.result.competition.name, "Tournoi de Noël");
+  assert.equal(saved.result.competition.competitionId, "C_SOLO");
+  assert.equal(saved.result.competition.ownerJudokaId, "SOLO1");
+  assert.equal(saved.result.competition.name, "Tournoi de Noël");
 
   const finalized = await measure(() =>
     methods.finalizeCompetition("solo@example.com", "C_SOLO", "1er")
@@ -1370,7 +1378,8 @@ test("COACH-2 : une recherche sur 200 compétitions coûte 3 requêtes de combat
   assert.equal(combatReads.length, 2);
   combatReads.forEach((request) => assert.match(request.query, /^select=\*,combat_scores\(\*\)/));
   assert.deepEqual(reads(list, "combat_scores"), []);
-  assert.equal(reads(list, "competitions").length, 2);
+  // MULTI-5 : les compétitions des clubs du coach en une lecture, sans celles du coach lui-même.
+  assert.equal(reads(list, "competitions").length, 1);
   // Le combat de la 200e compétition (second lot) est bien trouvé.
   assert.deepEqual(
     result.matches.map((match) => match.competitionId),

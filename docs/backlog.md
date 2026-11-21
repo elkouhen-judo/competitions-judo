@@ -16,15 +16,19 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 - L'outil MCP `coach.dashboard` n'accepte ni `clubId` ni dates, et décrit des filtres `gender`, `handedness`, `categoryYear` que le service ignore. `judokas.search` et `competitions.search` n'ont pas de filtre club.
 - Un profil `PARENT` ne peut pas devenir `COACH` (`admin.service.ts`). Un coach parent d'un judoka doit donc avoir deux comptes.
 
+### Décisions prises (21/11/2026)
+
+- MULTI-3 : un seul filtre club pour l'accueil et les statistiques.
+- MULTI-4 : seul le coach crée une compétition, et il la rattache à un club. Une famille ou un judoka ne crée plus de compétition hors compétition club (fin de COMP-006).
+- MULTI-4 : aucune compétition n'a été créée par une famille à ce jour : aucune reprise de données. Pas de nouvelle colonne : le club d'un résultat est celui de sa compétition club ; une participation détachée (COMP-018) compte pour le club actuel du judoka.
+
 ### Questions ouvertes
 
-- MULTI-4 : à quel club rattacher une compétition individuelle sans compétition club (club du judoka à la date de création, ou club actuel) ?
-- MULTI-3 : un seul filtre club pour l'accueil et les statistiques, ou deux filtres indépendants comme aujourd'hui ?
 - Coach parent : faut-il permettre à un compte coach de suivre ses enfants (onglet « Famille »), ou garder deux comptes ? Hors backlog tant que ce n'est pas tranché.
 
 ### Savoir de quel club on parle
 
-#### MULTI-1 — Le club affiché partout où il manque (P1, S)
+#### MULTI-1 — Le club affiché partout où il manque (P1, S) — fait
 
 - Constat : sur « Tous mes clubs », deux « Interclubs » du même jour, l'un par club, sont indiscernables sur l'accueil, l'agenda et dans les statistiques.
 - Règle : pour un coach de plusieurs clubs, le nom du club s'affiche sur les cartes de compétition club, les lignes de l'agenda, la fiche d'une compétition club (sous le titre), les suggestions de la liste « Judokas » et les suggestions de compétitions des statistiques.
@@ -35,7 +39,7 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 - Acceptation : un coach d'un seul club voit les mêmes écrans qu'avant.
 - Fichiers : `assets/app-screen-home.ts`, `assets/views/home.html`, `assets/app-screen-club-competition.ts`, `assets/views/club-competition-detail.html`, `assets/app-screen-coach-dashboard.ts`, `assets/views/coach-dashboard.html`, `docs/spec.md` (CLUB-008, UIX-015), `tests/clubs.test.js`, `tests/mobile-first-index.test.js`.
 
-#### MULTI-2 — Le club choisi est retenu sur l'appareil (P2, S)
+#### MULTI-2 — Le club choisi est retenu sur l'appareil (P2, S) — fait
 
 - Constat : chaque rechargement remet l'accueil sur « Tous mes clubs ». Le coach qui ne suit qu'un club à la fois le rechoisit à chaque ouverture.
 - Règle : le club choisi sur l'accueil est retenu sur l'appareil, par compte, comme le choix de l'enfant (ACCUEIL-2).
@@ -45,7 +49,7 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 - Acceptation : un coach retiré du club retenu retrouve « Tous mes clubs » sans erreur.
 - Fichiers : `assets/app-screen-home.ts`, `assets/app-runtime.ts`, `assets/app-auth.ts`, `docs/spec.md` (CLUB-008), `tests/clubs.test.js`.
 
-#### MULTI-3 — Un même club sur l'accueil et les statistiques (P2, S)
+#### MULTI-3 — Un même club sur l'accueil et les statistiques (P2, S) — fait
 
 - Constat : après une première ouverture de « Stats », changer de club sur l'accueil ne change pas les statistiques. Le coach lit les chiffres d'un autre club sans le voir.
 - Règle : le filtre club de l'accueil et celui des statistiques ne font qu'un : changer l'un change l'autre.
@@ -56,12 +60,13 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 
 ### Lire juste par club
 
-#### MULTI-4 — Un résultat reste au club où il a été obtenu (P1, L)
+#### MULTI-4 — Un résultat reste au club où il a été obtenu (P1, L) — fait
 
 - Constat : les statistiques filtrent sur le club actuel du judoka. Après un changement de club, ses résultats passés quittent le club A et entrent dans le club B.
 - Constat : le coach de A et B qui transfère un judoka voit la progression des deux clubs faussée d'une saison sur l'autre.
 - Règle : une participation liée à une compétition club compte pour le club de cette compétition (`club_competitions.club_id`).
-- Règle : une participation sans compétition club compte pour le club fixé à sa création (décision à prendre, voir Questions ouvertes).
+- Règle : seul le coach crée une compétition, depuis une compétition club ; une famille ou un judoka ne crée plus de compétition (COMP-006), écrans, API et MCP confondus.
+- Règle : une participation détachée d'une compétition club supprimée (COMP-018) compte pour le club actuel du judoka.
 - Règle : l'accès suit toujours le club actuel du judoka (CLUB-003) ; seule l'attribution des statistiques change.
 - Règle : le filtre club des statistiques et la comparaison de période (DASH-028) utilisent cette attribution.
 - Règle : `getCoachDashboard` reste à 3 requêtes Supabase (PERF-009).
@@ -70,7 +75,7 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 - Acceptation : sans changement de club, les chiffres sont identiques avant et après.
 - Fichiers : `supabase/migrations/`, `core/services/coach-dashboard.service.ts`, `core/services/coach-dashboard-loader.ts`, `core/services/competitions.service.ts`, `core/repositories/competitions.repository.ts`, `docs/spec.md` (CLUB-003, DASH-028), `docs/spec-tech.md`, `docs/supabase-schema.md`, `docs/metrics.md`, `tests/application-services.test.js`, `tests/loading-performance.test.js`, `tests/supabase-schema.test.js`.
 
-#### MULTI-5 — Le coach hors des statistiques de ses clubs (P3, S)
+#### MULTI-5 — Le coach hors des statistiques de ses clubs (P3, S) — fait
 
 - Constat : sur « Tous mes clubs », le profil du coach est ajouté au périmètre des statistiques. Un coach qui combat encore compte ses propres résultats dans ceux de ses clubs.
 - Règle : le périmètre des statistiques ne contient que les judokas des clubs choisis.
@@ -78,7 +83,7 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 - Acceptation : un coach sans club de judoka ne modifie pas les chiffres de « Tous mes clubs » en saisissant une compétition.
 - Fichiers : `core/services/coach-dashboard.service.ts`, `tests/application-services.test.js`.
 
-#### MULTI-6 — Comparer ses clubs (P2, M)
+#### MULTI-6 — Comparer ses clubs (P2, M) — fait
 
 - Constat : sur « Tous mes clubs », les statistiques additionnent les clubs. Le coach ne voit pas lequel progresse.
 - Règle : sur « Tous mes clubs », une section « Par club » donne, pour chaque club, les judokas engagés, les participations, les combats, les victoires et les podiums.
@@ -90,7 +95,7 @@ Objectif : un coach de plusieurs clubs sait toujours de quel club il parle, et l
 
 ### Assistant MCP
 
-#### MULTI-7 — Le club dans les outils MCP du coach (P2, S)
+#### MULTI-7 — Le club dans les outils MCP du coach (P2, S) — fait
 
 - Constat : `coach.dashboard` ne peut viser ni un club ni une période, et annonce des filtres (`gender`, `handedness`, `categoryYear`) que le service ignore.
 - Constat : `judokas.search` et `competitions.search` ne filtrent pas par club et ne disent pas le club des résultats.

@@ -84,7 +84,7 @@
                 @click="openClubCompetition(item.clubCompetitionId)">
                 <span class="agenda-item-copy">
                   <span class="card-title">{{ item.name }}</span>
-                  <span class="agenda-item-meta">{{ item.dateLabel }}</span>
+                  <span class="agenda-item-meta">{{ item.dateLabel }}<template v-if="item.clubName"> · <span class="club-name">{{ item.clubName }}</span></template></span>
                 </span>
                 <span class="pill" :class="item.pillClass">{{ item.detail }}</span>
               </button>
@@ -100,11 +100,7 @@
         </div>
 
         <div id="homeAdminActions" class="home-actions-row" v-show="showHomeActions">
-          <button id="addCompetitionButton" v-if="showAddCompetitionAction" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span id="addCompetitionButtonText">{{ addCompetitionButtonText }}</span>
-          </button>
-          <button id="addClubCompetitionButton" v-else-if="canCreateClubCompetition" class="home-context-action" @click="showClubCompetitionForm()">
+          <button id="addClubCompetitionButton" v-if="canCreateClubCompetition" class="home-context-action" @click="showClubCompetitionForm()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             <span>Nouvelle compétition</span>
           </button>
@@ -133,7 +129,7 @@
                         <span class="card-title">{{ cc.name }}</span>
                         <span v-if="cc.whenLabel" class="pill" :class="cc.isToday ? 'pill-now' : 'pill-accent'">{{ cc.whenLabel }}</span>
                       </span>
-                      <span class="competition-card-date">{{ cc.dateLabel }}</span>
+                      <span class="competition-card-date">{{ cc.dateLabel }}<template v-if="cc.clubName"> · <span class="club-name">{{ cc.clubName }}</span></template></span>
                       <span class="competition-card-row competition-card-facts">
                         <span>{{ cc.summary }}</span>
                         <span v-if="cc.missingRankingCount" class="pill pill-todo">{{ cc.missingRankingLabel }}</span>
@@ -160,14 +156,11 @@
         </div>
 
         <div v-if="showCompetitionsSection && isHomeReady" id="homeCompetitionsSection" class="section">
-          <p v-if="homeRegistrationNotice" id="homeRegistrationNotice" class="registration-notice" role="status">{{ homeRegistrationNotice }} Les compétitions déjà saisies restent consultables ; demandez la réinscription au club pour en ajouter.</p>
+          <p v-if="homeRegistrationNotice" id="homeRegistrationNotice" class="registration-notice" role="status">{{ homeRegistrationNotice }} Les compétitions déjà saisies restent consultables ; demandez la réinscription au club pour être inscrit aux prochaines.</p>
           <div id="competitionsList">
             <div v-if="!hasCompetitions" class="empty-action">
               <p class="empty-action-title">Aucune compétition</p>
               <p class="empty-action-body">{{ competitionsEmptyMessage }}</p>
-              <div v-if="canCreateCompetition" class="empty-action-actions">
-                <button type="button" :disabled="actionDisabled" @click="showHomeCompetitionForm()">Nouvelle compétition</button>
-              </div>
             </div>
             <template v-else>
               <div v-for="group in competitionGroups" :key="group.key" class="list-group">

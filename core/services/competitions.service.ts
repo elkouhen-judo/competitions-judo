@@ -65,7 +65,6 @@ export interface CompetitionsServiceDeps {
     competition: ReturnType<typeof toCanonicalCompetition> | null | undefined,
     managedJudokaScope: ManagedJudokaScope | null | undefined
   ) => string;
-  buildCompetitionId: () => string;
   createCompetition: typeof createCompetition;
   createPersistedCompetition: typeof createPersistedCompetition;
 }
@@ -88,7 +87,6 @@ export default function createCompetitionsService(
     assertCanManageCompetition,
     resolveJudokaDataAccess,
     resolveCompetitionOwnerId,
-    buildCompetitionId,
     createCompetition,
     createPersistedCompetition
   } = deps;
@@ -210,73 +208,61 @@ export default function createCompetitionsService(
     );
 
     const competitionId = domainCompetitionInput.competitionId;
-
-    if (competitionId) {
-      const existingCompetition = await competitionsRepository.getById(competitionId);
-      if (!existingCompetition) {
-        throw new Error("Compétition introuvable.");
-      }
-      assertCanManageCompetition(
-        domainUser,
-        toCanonicalCompetition(existingCompetition),
-        managedJudokaScope,
-        "Modification de cette compétition non autorisée."
-      );
-
-      const existingDomainCompetition = toCanonicalCompetition(existingCompetition);
-      const inheritedClubFields = existingDomainCompetition.clubCompetitionId
-        ? {
-            name: existingDomainCompetition.name,
-            competitionDate: existingDomainCompetition.competitionDate,
-            ageCategory: existingDomainCompetition.ageCategory,
-            level: existingDomainCompetition.level
-          }
-        : {};
-      const competitionDraft = createCompetition(
-        {
-          ...existingDomainCompetition,
-          ...domainCompetitionInput,
-          ...inheritedClubFields,
-          competitionId,
-          clubCompetitionId:
-            domainCompetitionInput.clubCompetitionId !== null &&
-            domainCompetitionInput.clubCompetitionId !== undefined
-              ? domainCompetitionInput.clubCompetitionId
-              : existingDomainCompetition.clubCompetitionId,
-          ownerJudokaId,
-          result:
-            domainCompetitionInput.result !== null && domainCompetitionInput.result !== undefined
-              ? domainCompetitionInput.result
-              : existingDomainCompetition.result
-        },
-        ownerJudokaId
-      );
-      // INSCR-2 : seul un changement de saison est contrôlé ; une compétition déjà enregistrée reste modifiable.
-      const newDate = competitionDraft.draft.competitionDate;
-      if (getSeasonStartYear(newDate) !== getSeasonStartYear(existingDomainCompetition.competitionDate)) {
-        await assertOwnerRegistered(userContext, ownerJudokaId, newDate);
-      }
-      await assertNoStandaloneDuplicateCompetition(competitionDraft, competitionId);
-      const updated = await competitionsRepository.update(competitionId, competitionDraft);
-      return {
-        success: true,
-        competitionId,
-        message: "Compétition modifiée.",
-        ...savedCompetition(updated)
-      };
+    // MULTI-4 : seul le coach crée une compétition, depuis une compétition club (COMP-019).
+    if (!competitionId) {
+      throw new Error("Seul le coach crée une compétition, depuis une compétition club.");
     }
+    const existingCompetition = await competitionsRepository.getById(competitionId);
+    if (!existingCompetition) {
+      throw new Error("Compétition introuvable.");
+    }
+    assertCanManageCompetition(
+      domainUser,
+      toCanonicalCompetition(existingCompetition),
+      managedJudokaScope,
+      "Modification de cette compétition non autorisée."
+    );
 
-    const idCompetition = buildCompetitionId();
-    const competitionDraft = createCompetition(domainCompetitionInput, ownerJudokaId);
-    await assertOwnerRegistered(userContext, ownerJudokaId, competitionDraft.draft.competitionDate);
-    await assertNoStandaloneDuplicateCompetition(competitionDraft);
-    const inserted = await competitionsRepository.insert(competitionDraft, idCompetition);
-
+    const existingDomainCompetition = toCanonicalCompetition(existingCompetition);
+    const inheritedClubFields = existingDomainCompetition.clubCompetitionId
+      ? {
+          name: existingDomainCompetition.name,
+          competitionDate: existingDomainCompetition.competitionDate,
+          ageCategory: existingDomainCompetition.ageCategory,
+          level: existingDomainCompetition.level
+        }
+      : {};
+    const competitionDraft = createCompetition(
+      {
+        ...existingDomainCompetition,
+        ...domainCompetitionInput,
+        ...inheritedClubFields,
+        competitionId,
+        clubCompetitionId:
+          domainCompetitionInput.clubCompetitionId !== null &&
+          domainCompetitionInput.clubCompetitionId !== undefined
+            ? domainCompetitionInput.clubCompetitionId
+            : existingDomainCompetition.clubCompetitionId,
+        ownerJudokaId,
+        result:
+          domainCompetitionInput.result !== null && domainCompetitionInput.result !== undefined
+            ? domainCompetitionInput.result
+            : existingDomainCompetition.result
+      },
+      ownerJudokaId
+    );
+    // INSCR-2 : seul un changement de saison est contrôlé ; une compétition déjà enregistrée reste modifiable.
+    const newDate = competitionDraft.draft.competitionDate;
+    if (getSeasonStartYear(newDate) !== getSeasonStartYear(existingDomainCompetition.competitionDate)) {
+      await assertOwnerRegistered(userContext, ownerJudokaId, newDate);
+    }
+    await assertNoStandaloneDuplicateCompetition(competitionDraft, competitionId);
+    const updated = await competitionsRepository.update(competitionId, competitionDraft);
     return {
       success: true,
-      competitionId: idCompetition,
-      message: "Compétition créée.",
-      ...savedCompetition(inserted)
+      competitionId,
+      message: "Compétition modifiée.",
+      ...savedCompetition(updated)
     };
   }
 

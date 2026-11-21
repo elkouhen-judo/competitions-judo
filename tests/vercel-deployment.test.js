@@ -358,16 +358,13 @@ test("successful initial load leaves the login view", () => {
   assert.match(uiBundle, /function showHome\(\)[\s\S]{0,300}showView\("homeView"\)/);
 });
 
-test("judoka home keeps competition creation available", () => {
+test("MULTI-4 : judoka home lists competitions without creating any", () => {
   assert.doesNotMatch(uiBundle, /Voir mes compétitions/);
   assert.doesNotMatch(uiBundle, /id="homeActiveJudokaSummary"/);
   assert.doesNotMatch(uiBundle, /<h3>À venir<\/h3>/);
-  assert.match(
-    uiBundle,
-    /id="addCompetitionButton" v-if="showAddCompetitionAction" class="home-context-action" :disabled="actionDisabled" @click="showHomeCompetitionForm\(\)"/
-  );
-  assert.match(uiBundle, /id="addCompetitionButtonText"/);
-  assert.match(uiBundle, /function showHomeCompetitionForm\(\)/);
+  // Seul le coach crée une compétition, depuis une compétition club.
+  assert.doesNotMatch(uiBundle, /id="addCompetitionButton"/);
+  assert.doesNotMatch(uiBundle, /function showHomeCompetitionForm\(\)/);
   assert.match(uiBundle, /function resolveCompetitionOwnerSelection\(\)/);
   assert.match(uiBundle, /function getCompetitionOwnerRequiredMessage\(\)/);
   assert.match(uiBundle, /competition\.ownerJudokaId = resolveCompetitionOwnerSelection\(\);/);
@@ -400,20 +397,14 @@ test("competition persistence keeps categories and omits removed place and actua
     competitionsService,
     /const domainCompetitionInput = toCanonicalCompetition\(competition\);/
   );
-  assert.match(
-    competitionsService,
-    /const competitionDraft = createCompetition\(domainCompetitionInput,\s*ownerJudokaId\);/
-  );
   assert.match(competitionsService, /const competitionId = domainCompetitionInput\.competitionId;/);
   assert.match(coreIndex, /return toCanonicalCompetition\(competition\);/);
   assert.match(
     competitionsService,
     /await competitionsRepository\.update\(competitionId,\s*competitionDraft\);/
   );
-  assert.match(
-    competitionsService,
-    /await competitionsRepository\.insert\(competitionDraft,\s*idCompetition\);/
-  );
+  // MULTI-4 : saveCompetition ne crée plus de compétition.
+  assert.doesNotMatch(competitionsService, /competitionsRepository\.insert\(/);
   assert.match(
     competitionsService,
     /async function finalizeCompetition\(email: string,\s*idCompetition: string,\s*result: string\)/

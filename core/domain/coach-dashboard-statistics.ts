@@ -13,6 +13,7 @@ import type {
   Combat,
   CombatScore,
   Competition,
+  CoachDashboardClubEntry,
   CoachDashboardDiscipline,
   CoachDashboardGroundShare,
   CoachDashboardHandednessBreakdownEntry,
@@ -439,6 +440,37 @@ export function isGroupScope(
     competitions.map((competition) => String(competition.ownerJudokaId || "")).filter(Boolean)
   ).size;
   return owners === 0 || owners >= MIN_GROUP_JUDOKAS;
+}
+
+/**
+ * MULTI-6 : le bilan de chaque club, dans l'ordre donné. Un club sous le seuil de groupe
+ * (STAT-20, DASH-027) reste listé, sans aucun chiffre.
+ */
+export function computeClubBreakdown(
+  clubIds: string[],
+  combats: CoachDashboardCombat[],
+  competitions: DashboardCompetition[],
+  clubIdByCompetitionId: Map<string, string>,
+  today: string
+): CoachDashboardClubEntry[] {
+  const clubOf = (competitionId: unknown) => clubIdByCompetitionId.get(String(competitionId || "")) || "";
+  return clubIds.map((clubId) => {
+    const clubCompetitions = competitions.filter((competition) => clubOf(competition.competitionId) === clubId);
+    const clubCombats = combats.filter((combat) => clubOf(combat.competitionId) === clubId);
+    const empty = { clubId, engagedJudokas: 0, participations: 0, combats: 0, victories: 0, podiums: 0 };
+    if (!clubCompetitions.length || !isGroupScope(clubCombats, clubCompetitions)) {
+      return { ...empty, withheld: clubCompetitions.length > 0 };
+    }
+    return {
+      clubId,
+      withheld: false,
+      engagedJudokas: countJudokasWithCombats(clubCombats),
+      participations: clubCompetitions.filter((competition) => isPastParticipation(competition, today)).length,
+      combats: clubCombats.length,
+      victories: clubCombats.filter((combat) => isVictoryCombatResult(combat.result)).length,
+      podiums: clubCompetitions.filter((competition) => isPodium(competition.result)).length
+    };
+  });
 }
 
 /** STAT-20 : seul ce qui reste dit d'un périmètre trop petit pour des statistiques de groupe. */

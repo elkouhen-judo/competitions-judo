@@ -648,9 +648,15 @@
             clubCompetitionId: String(cc.id_club_competition || id),
             name: String(cc.nom || ""),
             competitionDate: String(cc.date || ""),
+            clubId: String(cc.club_id || ""),
             competitionIds: data.participations.map((p) => String(p.competitionId || "")).filter(Boolean)
           };
+          // MULTI-1 : un coach de plusieurs clubs lit le club de la compétition sous son titre.
+          const eventClub = state.clubs.length > 1
+            ? state.clubs.find((club) => club.clubId === String(cc.club_id || ""))
+            : undefined;
           clubCompetitionDetailViewModel.clubCompetitionDetailSummary = [
+            eventClub ? eventClub.name : "",
             ui.formatDateLong(cc.date),
             cc.categorie_age,
             cc.niveau

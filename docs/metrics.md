@@ -23,6 +23,7 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 
 | Filtre UI              | Champ technique       | Niveau d'application       | Description / correspondance en base                                      |
 | :--------------------- | :-------------------- | :------------------------- | :------------------------------------------------------------------------ |
+| **Club**               | `clubId`              | **Étape 1 : Compétitions** | Club du résultat (MULTI-4) : club de la compétition club, sinon club actuel du judoka. Vide = tous les clubs du coach. Le coach n'y entre que s'il est inscrit dans un de ses clubs (MULTI-5). |
 | **Catégorie d'âge**    | `ageCategory`         | **Étape 1 : Compétitions** | Filtre la table Compétitions sur le champ `categorie_age`.                |
 | **Date début / fin**   | `dateFrom` / `dateTo` | **Étape 1 : Compétitions** | Filtre la table Compétitions sur le champ `date`. Si les deux dates sont renseignées, `dateFrom <= dateTo` est obligatoire. |
 | **Compétitions**       | `competitionIds`      | **Étape 1 : Compétitions** | Sélecteur multi-compétitions avec recherche texte (nom ou date) côté client. Filtre la table Compétitions sur les identifiants sélectionnés ; vide = toutes les compétitions. |
@@ -96,6 +97,14 @@ Sans aucun nom de judoka. Chaque ligne affiche la valeur de la période précéd
 * **Participations par niveau** (STAT-25) : `podiumsByLevel[].participations`, participations passées du niveau, classées ou non, avec la valeur précédente entre parenthèses.
 
 *Note :* un judoka avec 5 combats compte pour `5` dans `totalCombats` et pour `1` dans les judokas engagés.
+
+### 3.3a. Par club (`byClub`, MULTI-6)
+
+* Calculé seulement sur « Tous mes clubs » d'un coach de plusieurs clubs (`clubId` vide) ; `null` sinon.
+* Une ligne par club du coach : `engagedJudokas`, `participations` (passées), `combats`, `victories`, `podiums`.
+* Club d'un résultat : celui de sa compétition club (`stats_club_id`, MULTI-4).
+* Un club sous 2 judokas (DASH-027) : `withheld = true`, tous les chiffres à 0, affiché « moins de 2 judokas ».
+* Le taux de victoire n'est affiché qu'à partir de 5 combats (DASH-011).
 
 ### 3.4. Par niveau (`byLevel`)
 *Le tour du combat reste saisi, mais aucune statistique par tour n'est calculée.*

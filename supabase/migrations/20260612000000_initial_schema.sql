@@ -707,7 +707,7 @@ grant select, insert, update, delete on table public.clubs to service_role;
 grant select, insert, update, delete on table public.coach_clubs to service_role;
 
 -- STAT-17 : données du tableau de bord coach en un appel : les compétitions du périmètre
--- (clubs ou judokas autorisés, dates, catégorie d'âge), les combats des compétitions choisies
+-- (clubs du résultat ou judokas autorisés, dates, catégorie d'âge), les combats des compétitions choisies
 -- (toutes si aucune) et leurs points. Rien n'est calculé ici : les statistiques restent en
 -- TypeScript. Le contrôle d'accès du coach est fait dans la fonction Vercel, avant l'appel.
 create or replace function public.coach_dashboard_data(
@@ -723,12 +723,15 @@ language sql
 stable
 set search_path = public
 as $$
+  -- MULTI-4 : une participation compte pour le club de sa compétition club (stats_club_id) ;
+  -- détachée (COMP-018), elle compte pour le club actuel du judoka.
   with scoped as (
-    select c.*
+    select c.*, coalesce(cc.club_id, j.club_id) as stats_club_id
     from public.competitions c
     left join public.judokas j on j.id_judoka = c.id_judoka
+    left join public.club_competitions cc on cc.id_club_competition = c.club_competition_id
     where (
-        j.club_id = any(coalesce(p_club_ids, '{}'::text[]))
+        coalesce(cc.club_id, j.club_id) = any(coalesce(p_club_ids, '{}'::text[]))
         or c.id_judoka = any(coalesce(p_judoka_ids, '{}'::text[]))
       )
       and (p_date_from is null or c.date >= p_date_from)

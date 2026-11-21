@@ -1,9 +1,9 @@
 import type { JudokaRow } from "../repositories/types";
-import type { Competition, Judoka, McpScope, McpTokenClaims, RpcMethods } from "../types";
+import type { Club, Competition, Judoka, McpScope, McpTokenClaims, RpcMethods } from "../types";
 import { toCanonicalJudoka } from "./domain-adapters";
 import { buildCoachMcpToolDefinitions, DEFAULT_LIMIT, MAX_LIMIT } from "./coach-mcp-tools";
 import { AGE_CATEGORIES } from "../domain/competitions/competition";
-import { GENDERS, HANDEDNESSES, COMPETITION_LEVELS } from "../domain/category-reference";
+import { COMPETITION_LEVELS } from "../domain/category-reference";
 import { COMPETITION_RESULTS } from "../domain/competition-results";
 import { COMBAT_RESULTS } from "../domain/competitions/combat-result";
 import { OPPONENT_STANCES } from "../domain/competitions/opponent-stance";
@@ -153,21 +153,24 @@ const COACH_DASHBOARD_FILTERS_SCHEMA: JsonSchema = {
   type: "object",
   description: "Filtres optionnels appliqués aux statistiques du tableau de bord coach. Tous les champs sont optionnels et combinables.",
   properties: {
+    // MULTI-7 : les mêmes filtres que l'écran (DASH-002), et aucun autre.
+    clubId: { type: "string", description: "Identifiant d'un club du coach (clubs.list) ; omis : tous ses clubs." },
+    dateFrom: { type: "string", description: "Date de début ISO AAAA-MM-JJ." },
+    dateTo: { type: "string", description: "Date de fin ISO AAAA-MM-JJ." },
+    ageCategory: { type: "string", enum: AGE_CATEGORIES, description: "Filtre par catégorie d'âge." },
     competitionIds: {
       type: "array",
       items: { type: "string" },
       description: "Restreint les statistiques aux compétitions listées."
-    },
-    ageCategory: { type: "string", enum: AGE_CATEGORIES, description: "Filtre par catégorie d'âge." },
-    categoryYear: { type: "string", description: "Filtre par année dans la catégorie (ex. \"1\", \"2\", \"3\")." },
-    gender: { type: "string", enum: GENDERS, description: "Filtre par genre." },
-    handedness: { type: "string", enum: HANDEDNESSES, description: "Filtre par garde du judoka." }
+    }
   }
 };
 
 export interface McpServerServiceDeps {
   methods: RpcMethods;
   getJudokas: (email: string) => Promise<JudokaRow[]>;
+  /** MULTI-7 : les clubs coachés par l'appelant (vide pour un parent ou un judoka). */
+  getClubs: (email: string) => Promise<Club[]>;
   getCurrentDate?: () => string;
 }
 
@@ -176,27 +179,62 @@ export interface McpServerService {
 }
 
 export default function createMcpServerService(deps: McpServerServiceDeps): McpServerService {
-  const { methods, getJudokas, getCurrentDate = () => new Date().toISOString().slice(0, 10) } = deps;
+  const { methods, getJudokas, getClubs, getCurrentDate = () => new Date().toISOString().slice(0, 10) } = deps;
 
   function resolveDateFilter(value: unknown): string {
     const trimmed = String(value || "").trim();
     return trimmed === "today" ? getCurrentDate() : trimmed;
   }
 
+  // MULTI-7 : un club demandé doit être un club du coach, comme à l'écran (CLUB-005).
+  function assertKnownClub(clubs: Club[], clubId: unknown) {
+    if (clubId && !clubs.some((club) => club.clubId === String(clubId))) {
+      throw new Error("Club introuvable.");
+    }
+  }
+
+  function clubNameOf(clubs: Club[], clubId: string) {
+    const club = clubs.find((candidate) => candidate.clubId === clubId);
+    return club ? club.name : "";
+  }
+
   const coachToolHandlers: Record<string, McpToolHandler> = {
     async "judokas.search"(email, args) {
-      const judokas = (await getJudokas(email)).map(toCanonicalJudoka);
+      const [rows, clubs] = await Promise.all([getJudokas(email), getClubs(email)]);
       const filters = (args.filters as Record<string, unknown>) || {};
+      assertKnownClub(clubs, filters.clubId);
+      const judokas = rows
+        .map(toCanonicalJudoka)
+        .filter((judoka) => !filters.clubId || judoka.clubId === String(filters.clubId))
+        .map((judoka) => ({ ...judoka, clubName: clubNameOf(clubs, String(judoka.clubId || "")) }));
       return applyListLimit(judokas.filter((judoka) => matchesJudokaListFilters(judoka, filters)), args.limit);
     },
     async "competitions.search"(email, args) {
       const initialData = await methods.getInitialData(email);
+      const clubs = initialData.clubs || [];
       const filters = { ...((args.filters as Record<string, unknown>) || {}) };
+      assertKnownClub(clubs, filters.clubId);
       if (filters.competitionDate) {
         filters.competitionDate = resolveDateFilter(filters.competitionDate);
       }
+      // Le club d'une compétition est celui de sa compétition club (MULTI-4), sinon celui du judoka.
+      const eventClubById = new Map(
+        (initialData.clubCompetitions || []).map((event) => [String(event.clubCompetitionId), String(event.clubId || "")])
+      );
+      const judokaClubById = new Map(
+        (initialData.judokas || []).map((judoka) => [String(judoka.judokaId), String(judoka.clubId || "")])
+      );
+      const competitions = initialData.competitions
+        .map((competition) => {
+          const clubId =
+            eventClubById.get(String(competition.clubCompetitionId || "")) ||
+            judokaClubById.get(String(competition.ownerJudokaId || "")) ||
+            "";
+          return { ...competition, clubId, clubName: clubNameOf(clubs, clubId) };
+        })
+        .filter((competition) => !filters.clubId || competition.clubId === String(filters.clubId));
       return applyListLimit(
-        initialData.competitions.filter((competition) => matchesCompetitionListFilters(competition, filters)),
+        competitions.filter((competition) => matchesCompetitionListFilters(competition, filters)),
         args.limit
       );
     },
@@ -210,6 +248,17 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
   };
 
   const tools: McpToolDefinition[] = [
+    {
+      name: "clubs.list",
+      description:
+        "Liste les clubs coachés par l'appelant (clubId et name). Le clubId sert de filtre à judokas.search, " +
+        "competitions.search et coach.dashboard.",
+      scope: "coach-dashboard:read",
+      inputSchema: { type: "object", properties: {} },
+      async handler(email) {
+        return getClubs(email);
+      }
+    },
     ...buildCoachMcpToolDefinitions().map(({ name, description, scope, inputSchema }) => ({
       name,
       description,
@@ -237,8 +286,9 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
     {
       name: "competitions.save",
       description:
-        "Crée une compétition (sans competitionId dans l'objet) ou met à jour une compétition existante " +
-        "(avec competitionId). Ne permet pas de définir le classement final : utiliser competitions.finalize pour cela.",
+        "Met à jour une compétition existante (competitionId obligatoire). Ne crée pas de compétition : " +
+        "seul le coach en crée, depuis une compétition club. Ne permet pas de définir le classement final : " +
+        "utiliser competitions.finalize pour cela.",
       scope: "competitions:write",
       inputSchema: {
         type: "object",

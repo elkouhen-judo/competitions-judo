@@ -78,6 +78,8 @@ function createInitialState(): KirokuAppState {
   const seasonCachePrefix = "kiroku_season:";
   const combatSuggestionsCachePrefix = "kiroku_combat_suggestions:";
   const pendingOperationsStoragePrefix = "kiroku_pending_ops:";
+  // MULTI-2 : club choisi par le coach, retenu sur l'appareil pour son compte.
+  const selectedClubStoragePrefix = "kiroku_selected_club:";
 
   interface HeaderViewModel {
     showHeader: boolean;
@@ -1046,6 +1048,32 @@ function createInitialState(): KirokuAppState {
       return true;
     }
 
+    function selectedClubStorageKey() {
+      return `${selectedClubStoragePrefix}${String(state.currentUser?.judokaId || "")}`;
+    }
+
+    function readRememberedClubId(): string {
+      try {
+        return localStorage.getItem(selectedClubStorageKey()) || "";
+      } catch {
+        return "";
+      }
+    }
+
+    // MULTI-2 et MULTI-3 : un seul club choisi, pour l'accueil et les statistiques, retenu sur l'appareil.
+    function setSelectedClubId(clubId: string) {
+      state.selectedClubId = String(clubId || "");
+      try {
+        if (state.selectedClubId) {
+          localStorage.setItem(selectedClubStorageKey(), state.selectedClubId);
+        } else {
+          localStorage.removeItem(selectedClubStorageKey());
+        }
+      } catch {
+        // Stockage indisponible (navigation privée) : le choix vaut pour la session.
+      }
+    }
+
     function applyInitialDataSnapshot(
       data: InitialData,
       cacheInfo: { cachedAt: string; isCached: boolean }
@@ -1063,8 +1091,11 @@ function createInitialState(): KirokuAppState {
       state.loadedSeasonStartYears = [];
       state.clubCompetitions = Array.isArray(data.clubCompetitions) ? data.clubCompetitions : [];
       state.clubs = Array.isArray(data.clubs) ? data.clubs : [];
+      if (!state.selectedClubId) {
+        state.selectedClubId = readRememberedClubId();
+      }
       if (state.selectedClubId && !state.clubs.some((club) => club.clubId === state.selectedClubId)) {
-        state.selectedClubId = "";
+        setSelectedClubId("");
       }
       state.judokas = Array.isArray(data.judokas) ? data.judokas : [];
       loadPendingOperationsForUser(getInitialDataCacheUserKey(data));
@@ -1347,6 +1378,7 @@ function createInitialState(): KirokuAppState {
       cancelPendingOperation,
       syncPendingOperations,
       setHeaderVisible,
+      setSelectedClubId,
       syncOfflineStatusHeader
     };
   }
@@ -1423,6 +1455,7 @@ function createInitialState(): KirokuAppState {
       cancelPendingOperation,
       syncPendingOperations,
       setHeaderVisible,
+      setSelectedClubId,
       syncOfflineStatusHeader
     } = data;
 
@@ -1440,6 +1473,7 @@ function createInitialState(): KirokuAppState {
       reloadInitialDataThen,
       resetApplicationState,
       runtimeConfig,
+      setSelectedClubId,
       runServer,
       runServerWithOptions,
       setHeaderVisible,
@@ -1483,6 +1517,7 @@ function createInitialState(): KirokuAppState {
         seasonCachePrefix,
         combatSuggestionsCachePrefix,
         pendingOperationsStoragePrefix,
+        selectedClubStoragePrefix,
         "kiroku_supabase_session"
       ];
       for (let index = localStorage.length - 1; index >= 0; index -= 1) {

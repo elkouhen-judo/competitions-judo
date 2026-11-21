@@ -83,6 +83,8 @@ export interface CompetitionRow {
   classement: string;
   coach_review: string;
   ai_analysis: string;
+  /** MULTI-4 : club auquel la participation compte, lu par coach_dashboard_data seulement. */
+  stats_club_id?: string | null;
 }
 
 export interface CombatRow {

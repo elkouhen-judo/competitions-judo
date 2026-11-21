@@ -208,7 +208,6 @@ const competitionsService = createCompetitionsService({
   assertCanManageCompetition: permissions.assertCanManageCompetition,
   resolveJudokaDataAccess: permissions.resolveJudokaDataAccess,
   resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
-  buildCompetitionId: ids.buildCompetitionId,
   createCompetition,
   createPersistedCompetition
 });
@@ -400,6 +399,13 @@ const mcpServerService = createMcpServerService({
   getJudokas: async (email) => {
     const { judokas } = await userContextService.getCurrentUserContext(email);
     return judokas;
+  },
+  // MULTI-7 : les clubs coachés, lus à partir du compte seulement.
+  getClubs: async (email) => {
+    const identity = await userContextService.getIdentity(email);
+    const clubIds = identity ? identity.coachClubIds : [];
+    const rows = clubIds.length ? await clubsRepository.listByIds(clubIds) : [];
+    return rows.map((club) => ({ clubId: club.id_club, name: club.nom }));
   }
 });
 

@@ -230,6 +230,9 @@ test("STAT-17 : la lecture du tableau de bord coach est une fonction réservée 
   assert.doesNotMatch(body, /\b(count|sum|avg)\s*\(|\b(insert|update|delete)\b/i);
   assert.match(body, /join public\.judokas j on j\.id_judoka = c\.id_judoka/i);
   assert.match(body, /'combat_scores'/);
+  // MULTI-4 : le club d'un résultat est celui de sa compétition club, sinon le club actuel du judoka.
+  assert.match(body, /join public\.club_competitions cc on cc\.id_club_competition = c\.club_competition_id/i);
+  assert.match(body, /coalesce\(cc\.club_id, j\.club_id\) as stats_club_id/i);
   const signature = "public\\.coach_dashboard_data\\(text\\[\\], text\\[\\], date, date, text, text\\[\\]\\)";
   assert.match(schema, new RegExp(`grant execute on function ${signature} to service_role`, "i"));
   assert.match(schema, new RegExp(`revoke execute on function ${signature} from authenticated, anon, public`, "i"));

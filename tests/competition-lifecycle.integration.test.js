@@ -11,7 +11,22 @@ const { toCanonicalJudoka } = require("../core/services/domain-adapters");
 const { normalizeLastName } = require("../core/shared/text");
 
 test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la valide", async () => {
-  const competitionRows = new Map();
+  // MULTI-4 : la participation d'Hugo est créée par le coach (compétition club) ; Hugo la remplit.
+  const competitionRows = new Map([
+    [
+      "COMP_ALI_2026_08_29",
+      {
+        id_competition: "COMP_ALI_2026_08_29",
+        id_judoka: "ALI1",
+        club_competition_id: "CLUB_COMP_1",
+        nom: "Tournoi d'été",
+        date: "2026-08-29",
+        categorie_age: "Senior",
+        niveau: "Régional",
+        classement: ""
+      }
+    ]
+  ]);
   const combatRows = new Map();
   const combatScores = new Map();
   let combatSequence = 0;
@@ -40,20 +55,6 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
           competition.date === date
       ) || null,
     getById: async (id) => competitionRows.get(id) || null,
-    insert: async (competition, id) => {
-      const row = {
-        id_competition: id,
-        id_judoka: competition.ownerJudokaId,
-        nom: competition.draft.name,
-        date: competition.draft.competitionDate,
-        categorie_age: competition.draft.ageCategory,
-        categorie_poids: competition.draft.weightCategory,
-        niveau: competition.draft.level,
-        classement: competition.result || ""
-      };
-      competitionRows.set(id, row);
-      return row;
-    },
     updateResult: async (id, finalization) => {
       const row = competitionRows.get(id);
       row.classement = finalization.result;
@@ -78,7 +79,6 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
     assertCanManageCompetition: permissions.assertCanManageCompetition,
     resolveJudokaDataAccess: permissions.resolveJudokaDataAccess,
     resolveCompetitionOwnerId: permissions.resolveCompetitionOwnerId,
-    buildCompetitionId: () => "COMP_ALI_2026_08_29",
     createCompetition,
     createPersistedCompetition
   });
@@ -116,17 +116,16 @@ test("le cycle de vie d'une compétition d'Hugo enregistre 3 combats puis la val
     buildCombatId: () => `COMBAT_ALI_${++combatSequence}`
   });
 
-  const creation = await competitionsService.methods.saveCompetition("hugo@example.com", {
-    name: "Tournoi d'été",
-    competitionDate: "2026-08-29",
-    ageCategory: "Senior",
-    level: "Régional"
-  });
-
-  assert.equal(creation.success, true);
-  assert.equal(creation.competitionId, "COMP_ALI_2026_08_29");
-  assert.equal(competitionRows.get(creation.competitionId).id_judoka, "ALI1");
-  assert.equal(competitionRows.get(creation.competitionId).date, "2026-08-29");
+  const creation = { competitionId: "COMP_ALI_2026_08_29" };
+  await assert.rejects(
+    () =>
+      competitionsService.methods.saveCompetition("hugo@example.com", {
+        name: "Tournoi d'été",
+        competitionDate: "2026-08-29",
+        ageCategory: "Senior"
+      }),
+    /Seul le coach crée une compétition/
+  );
 
   const combats = [
     { result: "Victoire", victoryType: "Ippon", opponent: "Judo 1" },

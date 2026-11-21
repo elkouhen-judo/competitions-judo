@@ -103,6 +103,11 @@ const COMBAT_FILTER_PROPERTIES: JsonSchema = {
   }
 };
 
+// MULTI-7 : un coach de plusieurs clubs restreint la recherche à l'un d'eux (identifiant de clubs.list).
+const CLUB_FILTER_PROPERTIES: JsonSchema = {
+  clubId: { type: "string", description: "Identifiant d'un club du coach, tel que renvoyé par clubs.list." }
+};
+
 function buildFilteredListSchema(filterProperties: JsonSchema): JsonSchema {
   return {
     type: "object",
@@ -126,8 +131,9 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
         `Chaque judoka inclut beltColor (une des valeurs ${BELT_COLORS.join(", ")}), ` +
         `gender (${GENDERS.join(" ou ")}), handedness (${HANDEDNESSES.join(" ou ")}) et ageCategory (${AGE_CATEGORIES.join(", ")}). ` +
         "Accepte aussi des filtres de combat (résultat, adversaire, technique, score...) : un judoka n'est alors retourné " +
-        "que s'il a au moins un combat correspondant, mais une seule ligne par judoka est renvoyée (pas une par combat).",
-      inputSchema: buildFilteredListSchema(COMBAT_FILTER_PROPERTIES)
+        "que s'il a au moins un combat correspondant, mais une seule ligne par judoka est renvoyée (pas une par combat). " +
+        "Chaque judoka donne clubId et clubName ; le filtre clubId restreint à un club du coach.",
+      inputSchema: buildFilteredListSchema({ ...COMBAT_FILTER_PROPERTIES, ...CLUB_FILTER_PROPERTIES })
     },
     {
       name: "competitions.search",
@@ -139,8 +145,9 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
         "sans le détail des combats, avec filtres optionnels sur la date et le niveau. " +
         "Accepte aussi des filtres de judoka ou de combat : une compétition n'est alors retournée que si elle contient " +
         "au moins un combat correspondant, mais une seule ligne par compétition est renvoyée (pas une par combat). " +
-        "Utiliser competitions.get pour récupérer le détail des combats d'une compétition donnée.",
-      inputSchema: buildFilteredListSchema(COMBAT_FILTER_PROPERTIES)
+        "Utiliser competitions.get pour récupérer le détail des combats d'une compétition donnée. " +
+        "Chaque compétition donne clubId et clubName (club de sa compétition club) ; le filtre clubId restreint à un club du coach.",
+      inputSchema: buildFilteredListSchema({ ...COMBAT_FILTER_PROPERTIES, ...CLUB_FILTER_PROPERTIES })
     },
     {
       name: "combats.search",
