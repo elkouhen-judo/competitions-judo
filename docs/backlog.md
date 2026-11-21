@@ -73,6 +73,13 @@ Faits vérifiés : le judoka lit ses compétitions, saisit ses combats et son cl
 
 ---
 
+## Suite (21/11/2026)
+
+#### SIMPL-2 — Plus de rappels « Bilan à écrire » (P2, XS) — fait
+
+- Retiré : la pastille « Bilan à écrire » sur la ligne d'un participant, la pastille « N bilans à écrire » des cartes de compétition club et le groupe « Bilans à écrire » de l'agenda du coach.
+- Le bilan reste écrit et lu sur la compétition du judoka (« Suivi coach »). Règles : COMP-034, UIX-015, UIX-026.
+
 ## Plan d'exécution
 
 Ordre : PART-1, FAM-1, ADMIN-3, ADMIN-2, ADMIN-1. Chaque sujet : test qui échoue, code, test qui passe, `npm test`, spec mise à jour. Captures mobile et desktop pour chaque écran touché. Relecture indépendante de l'ensemble à la fin.

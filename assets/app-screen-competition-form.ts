@@ -236,7 +236,7 @@
           if (state.currentCompetition) {
             state.currentCompetition = { ...state.currentCompetition, coachReview: review };
           }
-          // COACH-1 : l'accueil et l'agenda recomptent les bilans à écrire sans rechargement.
+          // COACH-1 : la liste des compétitions garde le bilan enregistré, sans rechargement.
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, coachReview: review } : competition
           );

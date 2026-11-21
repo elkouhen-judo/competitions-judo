@@ -21,7 +21,6 @@
     competitionId: string;
     judokaName: string;
     rawResult: string;
-    coachReview: string;
     record?: CombatRecord;
   }
 
@@ -34,7 +33,6 @@
     combatSummary: string;
     hasCombats: boolean;
     hasResult: boolean;
-    needsCoachReview: boolean;
   }
 
   // Ordre d'affichage des participants : podium d'abord, puis places suivantes, non classés en dernier.
@@ -105,7 +103,6 @@
         ageCategory: "",
         level: ""
       },
-      clubCompetitionDetailDate: "",
       clubCompetitionParticipantsRaw: [] as ClubCompetitionParticipant[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
@@ -257,18 +254,14 @@
       clubCompetitionAvailableJudokasPagination
     );
 
-    // COACH-2 : au retour de la fiche d'un participant, ses combats, son classement et son bilan
-    // sont relus dans l'état de l'appli, mis à jour par chaque enregistrement (y compris hors ligne).
+    // COACH-2 : au retour de la fiche d'un participant, ses combats et son classement sont relus
+    // dans l'état de l'appli, mis à jour par chaque enregistrement (y compris hors ligne).
     const clubCompetitionCurrentParticipants = window.Vue.computed((): ClubCompetitionParticipantCard[] => {
-      const isPast =
-        Boolean(clubCompetitionDetailViewModel.clubCompetitionDetailDate) &&
-        clubCompetitionDetailViewModel.clubCompetitionDetailDate < getCurrentLocalDate();
       const competitionsById = new Map(state.competitions.map((competition) => [String(competition.competitionId), competition]));
       return clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw.map((participant) => {
         const known = competitionsById.get(participant.competitionId);
         const record = state.combatRecords[participant.competitionId] || participant.record;
         const rawResult = known ? cleanText(known.result) : participant.rawResult;
-        const coachReview = known ? cleanText(known.coachReview || "") : participant.coachReview;
         const hasCombats = Boolean(record && record.total);
         return {
           competitionId: participant.competitionId,
@@ -278,9 +271,7 @@
           resultClass: getClassementBadgeClass(rawResult),
           combatSummary: formatCombatSummary(record),
           hasCombats,
-          hasResult: Boolean(rawResult),
-          // COACH-3 : un bilan n'est attendu qu'après la compétition, pour un participant qui a combattu.
-          needsCoachReview: isPast && hasCombats && !coachReview
+          hasResult: Boolean(rawResult)
         };
       });
     });
@@ -686,7 +677,6 @@
       clubCompetitionDetailViewModel.clubCompetitionDetailEditing = false;
       clubCompetitionDetailSnapshot = "";
       clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw = [];
-      clubCompetitionDetailViewModel.clubCompetitionDetailDate = "";
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = [];
       clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked = false;
       clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
@@ -734,7 +724,6 @@
           const combatRecords = data.combatRecords || {};
           // Le serveur fait foi au chargement : ses bilans de combats remplacent ceux gardés en mémoire.
           state.combatRecords = { ...state.combatRecords, ...combatRecords };
-          clubCompetitionDetailViewModel.clubCompetitionDetailDate = String(cc.date || "");
           clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw = data.participations
             .map((p) => {
               const judoka = judokasById.get(String(p.ownerJudokaId));
@@ -742,17 +731,15 @@
                 competitionId: String(p.competitionId || ""),
                 judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
                 rawResult: cleanText(p.result),
-                coachReview: cleanText(p.coachReview || ""),
                 record: combatRecords[String(p.competitionId || "")],
                 order: getRankingOrder(p.result)
               };
             })
             .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
-            .map(({ competitionId, judokaName, rawResult, coachReview, record }) => ({
+            .map(({ competitionId, judokaName, rawResult, record }) => ({
               competitionId,
               judokaName,
               rawResult,
-              coachReview,
               record
             }));
           const serverParticipations = new Map(data.participations.map((p) => [String(p.competitionId), p]));

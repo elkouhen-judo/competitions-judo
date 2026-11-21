@@ -191,7 +191,7 @@ for (const [name, viewport] of [
   ["desktop", { width: 1440, height: 900 }],
   ["mobile", { width: 375, height: 812 }]
 ]) {
-  test(`COACH-1 à 7 : bilans, judoka suivant et modification d'une compétition club sur ${name}`, async (t) => {
+  test(`COACH-4 à 7 : judoka suivant, agenda et modification d'une compétition club sur ${name}`, async (t) => {
     const { server, url, rpc } = await startServer();
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport });
@@ -215,24 +215,21 @@ for (const [name, viewport] of [
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
 
-    // COACH-3 : Nina n'a aucun combat, aucun bilan n'est attendu pour elle ; seul celui de Hugo manque.
-    const reviewsGroup = page.locator(".coach-agenda-group").filter({ has: page.getByRole("heading", { name: "Bilans à écrire" }) });
-    await expect(reviewsGroup.locator(".agenda-item")).toHaveCount(1);
-    await expect(reviewsGroup.locator(".agenda-item .pill")).toHaveText("1 bilan à écrire");
+    // Les bilans ne sont rappelés nulle part : ni groupe d'agenda, ni pastille.
+    await expect(page.getByRole("heading", { name: "Bilans à écrire" })).toHaveCount(0);
+    await expect(page.locator("#homeView")).not.toContainText("à écrire");
     // COACH-6 : 8 compétitions à classer, 5 affichées, le reste annoncé.
     const rankingsGroup = page.locator(".coach-agenda-group").filter({ has: page.getByRole("heading", { name: "Classements à saisir" }) });
     await expect(rankingsGroup.locator(".agenda-item")).toHaveCount(5);
     await expect(rankingsGroup.locator(".agenda-more")).toHaveText("+ 3 autres dans « Compétitions »");
     await shot("01-agenda");
 
-    // COACH-2 : sur la fiche, le bilan manquant se voit sur la ligne de Hugo, pas sur celles de Léa et Nina.
-    await reviewsGroup.locator(".agenda-item").click();
+    // Sur la fiche, aucune ligne de participant ne réclame de bilan.
+    await rankingsGroup.locator(".agenda-item").filter({ hasText: "Coupe d'automne" }).click();
     const participants = page.locator("#clubDetailParticipantsList .participant-card");
     await expect(participants).toHaveCount(3);
     const card = (judokaName) => participants.filter({ hasText: judokaName });
-    await expect(card("Hugo").locator(".pill-todo")).toHaveText("Bilan à écrire");
-    await expect(card("Léa").locator(".pill-todo")).toHaveCount(0);
-    await expect(card("Nina").locator(".pill-todo")).toHaveCount(0);
+    await expect(page.locator("#clubCompetitionDetailView")).not.toContainText("Bilan à écrire");
     // SIMPL-1 : « Aucun combat saisi » sans couleur d'alerte.
     await expect(card("Nina")).toContainText("Aucun combat saisi");
     await shot("02-participants");
@@ -246,16 +243,14 @@ for (const [name, viewport] of [
     await expect(page.locator("#coachReviewText")).toBeVisible();
     await expect(page.locator("#nextClubParticipantButton")).toHaveText("Suivant : Nina Test");
 
-    // COACH-1 : le bilan de Hugo, enregistré à la sortie du champ, efface son rappel partout.
+    // Le bilan de Hugo s'enregistre à la sortie du champ.
     await page.locator("#coachReviewText").fill("Bon combat au sol, travailler les sorties de tapis.");
     await page.locator("#competitionTitle").click();
     await expect(page.locator(".autosave-status")).toHaveText("Enregistré");
     assert.deepEqual(rpc.filter((request) => request.method === "saveCoachReview").map((request) => request.args[0]), ["p-hugo"]);
     await page.locator("#competitionView .page-back").click();
     await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
-    await expect(card("Hugo").locator(".pill-todo")).toHaveCount(0);
     await page.locator("#clubCompetitionDetailView .page-back").click();
-    await expect(page.getByRole("heading", { name: "Bilans à écrire" })).toHaveCount(0);
 
     // COACH-7 : en modification, le niveau se choisit en boutons et annuler une modification demande confirmation.
     await page.locator(".coach-agenda .agenda-item").filter({ hasText: "Coupe d'automne" }).first().click();

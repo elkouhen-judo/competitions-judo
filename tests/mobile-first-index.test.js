@@ -220,7 +220,8 @@ test("coach screens share the same four tabs and the home lists what is waiting"
   assert.match(bundle, /class="coach-agenda"/);
   assert.match(client, /title: "Cette semaine"/);
   assert.match(client, /title: "Classements à saisir"/);
-  assert.match(client, /title: "Bilans à écrire"/);
+  // Plus aucun rappel de bilan : ni groupe d'agenda, ni pastille sur les cartes ou les participants.
+  assert.doesNotMatch(bundle, /[Bb]ilans? à écrire|missingCoachReview|needsCoachReview/);
   assert.match(bundle, /@click="openClubCompetition\(item\.clubCompetitionId\)"/);
   assert.match(bundle, /id="homeClubFilter" class="pill-select"/);
 });

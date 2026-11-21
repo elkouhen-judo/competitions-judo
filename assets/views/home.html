@@ -93,7 +93,7 @@
           </div>
           <div v-if="!coachAgenda.length" class="empty-action">
             <p class="empty-action-title">Rien en attente</p>
-            <p class="empty-action-body">Aucune compétition cette semaine, et tous les classements et bilans sont saisis.</p>
+            <p class="empty-action-body">Aucune compétition cette semaine, et tous les classements sont saisis.</p>
             <div class="empty-action-actions">
               <button type="button" @click="openCoachCompetitionsHub()">Voir les compétitions</button>
             </div>
@@ -134,7 +134,6 @@
                       <span class="competition-card-row competition-card-facts">
                         <span>{{ cc.summary }}</span>
                         <span v-if="cc.missingRankingCount" class="pill pill-todo">{{ cc.missingRankingLabel }}</span>
-                        <span v-if="cc.missingCoachReviewCount" class="pill pill-todo">{{ cc.missingCoachReviewLabel }}</span>
                       </span>
                     </button>
                   </article>

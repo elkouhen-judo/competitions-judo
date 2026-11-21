@@ -43,11 +43,7 @@
                     <span class="card-title">{{ p.judokaName }}</span>
                     <span v-if="p.result" class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
                   </span>
-                  <span class="competition-card-row competition-card-facts">
-                    <span class="competition-card-date">{{ p.combatSummary }}</span>
-                    <!-- COACH-2 : le bilan à écrire se voit sur la ligne du participant. -->
-                    <span v-if="p.needsCoachReview" class="pill pill-todo">Bilan à écrire</span>
-                  </span>
+                  <span class="competition-card-date">{{ p.combatSummary }}</span>
                 </button>
                 <div v-if="clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing" class="choice-chips participant-ranking" role="radiogroup" :aria-label="'Classement de ' + p.judokaName">
                   <button
