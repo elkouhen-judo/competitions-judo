@@ -280,3 +280,72 @@ for (const [name, viewport] of [
     assert.deepEqual(nativeDialogs, []);
   });
 }
+
+// RETOUR-1 : sur mobile, glisser depuis le bord gauche revient en arrière comme la flèche « ← ».
+test("RETOUR-1 : glisser depuis le bord gauche revient en arrière sur mobile", async (t) => {
+  const { server, url } = await startServer();
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+  await context.addInitScript(
+    (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
+    { access_token: tokenFor("coach@example.com"), refresh_token: "", expires_at: Math.floor(Date.now() / 1000) + 3600 }
+  );
+  const page = await context.newPage();
+  t.after(async () => {
+    await context.close();
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const cdp = await context.newCDPSession(page);
+  const touch = (type, points) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
+  async function swipe(from, to, { release = true } = {}) {
+    await touch("touchStart", [{ x: from.x, y: from.y }]);
+    const steps = 6;
+    for (let step = 1; step <= steps; step += 1) {
+      await touch("touchMove", [
+        { x: from.x + ((to.x - from.x) * step) / steps, y: from.y + ((to.y - from.y) * step) / steps }
+      ]);
+    }
+    if (release) await touch("touchEnd", []);
+  }
+
+  await page.goto(url);
+  await page.locator("#homeView").waitFor({ state: "visible" });
+  await page.locator(".coach-agenda .agenda-item").filter({ hasText: "Coupe d'automne" }).first().tap();
+  await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
+  await page.locator("#clubDetailParticipantsList .participant-card").filter({ hasText: "Léa" }).locator(".competition-open-button").tap();
+  await expect(page.locator("#competitionView")).toBeVisible();
+
+  // Un geste trop court, ou parti du milieu de l'écran, ou vertical, ne fait rien.
+  await swipe({ x: 6, y: 400 }, { x: 50, y: 400 });
+  await swipe({ x: 120, y: 400 }, { x: 300, y: 400 });
+  await swipe({ x: 6, y: 600 }, { x: 20, y: 300 });
+  await expect(page.locator("#competitionView")).toBeVisible();
+
+  // Une flèche sort du bord et se colore au seuil ; la page ne bouge pas. Le retour se fait au lâcher.
+  await swipe({ x: 6, y: 400 }, { x: 200, y: 400 }, { release: false });
+  await expect(page.locator(".swipe-back-indicator")).toHaveClass(/swipe-back-ready/);
+  assert.equal(await page.locator("#competitionView").evaluate((element) => element.style.transform), "");
+  await page.screenshot({ path: "output/playwright/retour-swipe-mobile-01-geste.png", animations: "disabled" });
+  await touch("touchEnd", []);
+  await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
+  await expect(page.locator("#competitionView")).toBeHidden();
+  await page.screenshot({ path: "output/playwright/retour-swipe-mobile-02-retour.png", animations: "disabled" });
+
+  // Un formulaire modifié garde sa confirmation de sortie.
+  await page.locator("#clubCompetitionDetailView .page-menu summary").tap();
+  await page.getByRole("menuitem", { name: "Modifier ou ajouter des judokas" }).tap();
+  await page.locator("#club_detail_niveau").getByRole("radio", { name: "National", exact: true }).tap();
+  await swipe({ x: 6, y: 300 }, { x: 200, y: 300 });
+  await expect(page.locator("#confirmDialog")).toBeVisible();
+  await expect(page.locator("#confirmDialogConfirm")).toHaveText("Quitter sans enregistrer");
+  await page.getByRole("button", { name: "Continuer la saisie" }).tap();
+  await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
+  await expect(page.locator("#club_detail_niveau [aria-checked='true']")).toHaveText("National");
+  // Pas de flèche retour sur l'accueil : le geste n'y fait rien.
+  await page.locator("#clubCompetitionDetailView .page-back").tap();
+  await page.locator("#confirmDialogConfirm").tap();
+  await expect(page.locator("#homeView")).toBeVisible();
+  await swipe({ x: 6, y: 400 }, { x: 200, y: 400 });
+  await expect(page.locator("#homeView")).toBeVisible();
+});

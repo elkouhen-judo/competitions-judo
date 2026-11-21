@@ -257,6 +257,7 @@ This specification does not define:
 - **UIX-035**: Each home shall open on its useful content (competition list, children pills or coach to-do list) rather than on explanatory cards.
 - **UIX-037**: Competition lists in destination screens shall include competitions dated today or later, listed first by ascending date with an « Aujourd'hui » or « À venir » badge, followed by past competitions from most recent to oldest.
 - **UIX-038** (CONFIRM-1): The application shall never open a native browser dialog (`alert`, `confirm`, `prompt`). Every confirmation (deletions, removals, revoking rights, cancelling an invitation, leaving a modified club competition or combat form) uses the application's own dialog: the message, a confirmation button named after the action (red for a destructive one) and a cancel button that receives the focus; Escape or a tap outside the dialog cancels.
+- **UIX-042** (RETOUR-1): On a touch screen, sliding a finger from the left edge (first 24 px) to the right by at least 80 px, mostly horizontally, goes back exactly like the screen's back arrow, including its confirmations; an arrow follows the finger from the edge and fills in once the distance is reached. Screens without a back arrow ignore the gesture, as does an open dialog. Safari on iPhone or iPad outside the installed app keeps its own gesture and the application adds none.
 
 ### 3.9 Offline usage rules
 

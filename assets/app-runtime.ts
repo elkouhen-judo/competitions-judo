@@ -89,6 +89,113 @@ function createInitialState(): KirokuAppState {
     offlineStatusText: string;
   }
 
+  // RETOUR-1 : sur mobile, glisser depuis le bord gauche vers la droite revient en arrière,
+  // exactement comme la flèche « ← » de l'écran (mêmes confirmations de sortie).
+  const SWIPE_BACK_EDGE = 24;
+  const SWIPE_BACK_DISTANCE = 80;
+  const SWIPE_BACK_MAX_SHIFT = 60;
+
+  function isBrowserSwipeBackAvailable(): boolean {
+    // Safari sur iPhone/iPad, hors appli installée, fait déjà ce geste : pas de double retour.
+    const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isStandalone =
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone) ||
+      window.matchMedia("(display-mode: standalone)").matches;
+    return isIos && !isStandalone;
+  }
+
+  function findSwipeBackTarget(): { panel: HTMLElement; back: HTMLButtonElement } | null {
+    if (document.querySelector("dialog[open]")) return null;
+    const panels = Array.from(document.querySelectorAll<HTMLElement>("section.panel:not(.hidden)"));
+    for (const panel of panels) {
+      const back = panel.querySelector<HTMLButtonElement>(".page-back");
+      if (back && back.offsetParent !== null && !back.disabled) return { panel, back };
+    }
+    return null;
+  }
+
+  function setupSwipeBack() {
+    if (isBrowserSwipeBackAvailable()) return;
+    let gesture: { startX: number; startY: number; back: HTMLButtonElement; tracking: boolean } | null = null;
+    // Retour visuel : une flèche sort du bord gauche et se colore au seuil ; la page ne bouge pas,
+    // pour que les barres d'actions fixées en bas restent en place.
+    const indicator = document.createElement("div");
+    indicator.className = "swipe-back-indicator";
+    indicator.setAttribute("aria-hidden", "true");
+    indicator.innerHTML =
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>';
+    document.body.appendChild(indicator);
+
+    function showIndicator(dx: number, y: number) {
+      const progress = Math.max(0, Math.min(dx / SWIPE_BACK_DISTANCE, 1));
+      indicator.style.top = `${y}px`;
+      indicator.style.transform = `translate(${-48 + progress * SWIPE_BACK_MAX_SHIFT}px, -50%)`;
+      indicator.style.opacity = String(progress);
+      indicator.classList.toggle("swipe-back-ready", progress >= 1);
+    }
+
+    function hideIndicator() {
+      indicator.style.opacity = "0";
+      indicator.style.transform = "translate(-48px, -50%)";
+      indicator.classList.remove("swipe-back-ready");
+    }
+
+    window.addEventListener(
+      "touchstart",
+      (event) => {
+        gesture = null;
+        if (event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        if (touch.clientX > SWIPE_BACK_EDGE) return;
+        const target = findSwipeBackTarget();
+        if (!target) return;
+        gesture = { startX: touch.clientX, startY: touch.clientY, back: target.back, tracking: false };
+      },
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      (event) => {
+        if (!gesture || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const dx = touch.clientX - gesture.startX;
+        const dy = touch.clientY - gesture.startY;
+        if (!gesture.tracking) {
+          // Un défilement vertical abandonne le geste ; seul un mouvement surtout horizontal le suit.
+          if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
+            gesture = null;
+            return;
+          }
+          if (dx > 10 && dx > Math.abs(dy) * 1.5) gesture.tracking = true;
+          else return;
+        }
+        showIndicator(dx, gesture.startY);
+      },
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "touchend",
+      (event) => {
+        if (!gesture) return;
+        const current = gesture;
+        gesture = null;
+        if (!current.tracking) return;
+        const touch = event.changedTouches[0];
+        const dx = touch ? touch.clientX - current.startX : 0;
+        hideIndicator();
+        if (dx >= SWIPE_BACK_DISTANCE) current.back.click();
+      },
+      { passive: true }
+    );
+
+    window.addEventListener("touchcancel", () => {
+      hideIndicator();
+      gesture = null;
+    });
+  }
+
   function setupTooltipPositioning() {
     const tooltipSelector = ".tooltip, .info-tip";
     const contentSelector = ".tooltip-content, .info-tip-bubble";
@@ -1494,6 +1601,7 @@ function createInitialState(): KirokuAppState {
     setupNetworkStatus();
     setupHistoryNavigation();
     setupTooltipPositioning();
+    setupSwipeBack();
 
     function resetApplicationState() {
       Object.assign(state, createInitialState());

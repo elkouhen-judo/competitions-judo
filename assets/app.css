@@ -1719,6 +1719,34 @@ button:focus-visible,
   padding-top: 0;
 }
 
+/* RETOUR-1 : flèche qui accompagne le geste de retour depuis le bord gauche. */
+
+.swipe-back-indicator {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  transform: translate(-48px, -50%);
+  transition: opacity 120ms ease-out, background-color 120ms ease-out;
+  pointer-events: none;
+}
+
+.swipe-back-indicator.swipe-back-ready {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
 /* Statistiques du coach : trois tuiles sur une ligne, quelle que soit la largeur. */
 
 .dashboard-kpis.dashboard-kpis-three {
@@ -2674,6 +2702,10 @@ button:focus-visible,
 
 .border-collapse {
   border-collapse: collapse;
+}
+
+.transform {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
 .resize {
