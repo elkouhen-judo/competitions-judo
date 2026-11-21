@@ -552,9 +552,17 @@
     }
 
     // CREA-3 : quitter un formulaire modifié demande confirmation pour ne rien perdre.
-    function cancelClubCompetitionForm() {
+    async function cancelClubCompetitionForm() {
       const hasChanges = clubCompetitionFormSnapshot !== "" && serializeClubCompetitionForm() !== clubCompetitionFormSnapshot;
-      if (hasChanges && !window.confirm("Quitter sans enregistrer ? La compétition et ses inscriptions seront perdues.")) {
+      if (
+        hasChanges &&
+        !(await app.notifications.confirmAction({
+          message: "Quitter sans enregistrer ? La compétition et ses inscriptions seront perdues.",
+          confirmLabel: "Quitter sans enregistrer",
+          cancelLabel: "Continuer la saisie",
+          danger: true
+        }))
+      ) {
         return;
       }
       clubCompetitionFormSnapshot = "";
@@ -746,6 +754,7 @@
     ) {
       const isPast = clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked;
       app.confirmAndRun({
+        confirmLabel: "Retirer",
         message: isPast
           ? `Retirer ${judokaName} de cette compétition club ? Aucun combat ni classement n'a été saisi : sa participation sera définitivement supprimée.`
           : `Retirer ${judokaName} de cette compétition club ? La compétition n'a pas encore eu lieu : sa participation individuelle sera définitivement supprimée.`,

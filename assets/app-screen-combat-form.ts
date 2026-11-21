@@ -565,9 +565,17 @@
     }
 
     // COMBAT-QUIT : quitter un formulaire modifié demande confirmation pour ne rien perdre.
-    function cancelCombatForm() {
+    async function cancelCombatForm() {
       const hasChanges = combatFormSnapshot !== "" && serializeCombatForm() !== combatFormSnapshot;
-      if (hasChanges && !window.confirm("Quitter sans enregistrer ? Les modifications de ce combat seront perdues.")) {
+      if (
+        hasChanges &&
+        !(await app.notifications.confirmAction({
+          message: "Quitter sans enregistrer ? Les modifications de ce combat seront perdues.",
+          confirmLabel: "Quitter sans enregistrer",
+          cancelLabel: "Continuer la saisie",
+          danger: true
+        }))
+      ) {
         return;
       }
       resetCombatForm();

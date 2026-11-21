@@ -255,6 +255,7 @@ This specification does not define:
 - **UIX-036**: Combat creation actions shall remain hidden while a competition detail is loading and shall require a loaded, editable parent competition before opening the combat form.
 - **UIX-035**: Each home shall open on its useful content (competition list, children pills or coach to-do list) rather than on explanatory cards.
 - **UIX-037**: Competition lists in destination screens shall include competitions dated today or later, listed first by ascending date with an « Aujourd'hui » or « À venir » badge, followed by past competitions from most recent to oldest.
+- **UIX-038** (CONFIRM-1): The application shall never open a native browser dialog (`alert`, `confirm`, `prompt`). Every confirmation (deletions, removals, revoking rights, cancelling an invitation, leaving a modified club competition or combat form) uses the application's own dialog: the message, a confirmation button named after the action (red for a destructive one) and a cancel button that receives the focus; Escape or a tap outside the dialog cancels.
 
 ### 3.9 Offline usage rules
 

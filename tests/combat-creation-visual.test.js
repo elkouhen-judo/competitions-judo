@@ -335,8 +335,8 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.getByRole("button", { name: "Ajouter un Ippon à l'adversaire" }).click();
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
     await expect(page.locator("#combat_outcome_warning")).toHaveText("Le score indique une défaite. Vérifiez le résultat.");
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await page.locator("#confirmDialogConfirm").click();
     await expect(page.locator("#competitionView")).toBeVisible();
 
     // Ouverture en modification d'un combat complet : le haut du formulaire (tour) reste visible.
@@ -361,11 +361,11 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
 
     // COMBAT-QUIT : quitter avec des modifications demande confirmation.
     await page.fill("#combat_deroule", "Note modifiée");
-    page.once("dialog", (dialog) => dialog.dismiss());
     await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await page.getByRole("button", { name: "Continuer la saisie" }).click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Retour à la compétition" }).click();
+    await page.locator("#confirmDialogConfirm").click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await page.locator("#competitionView .combat-card").first().click();
     await expect(page.locator("#combatFormView")).toBeVisible();

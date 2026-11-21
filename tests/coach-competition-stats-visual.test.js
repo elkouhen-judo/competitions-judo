@@ -425,9 +425,9 @@ for (const [name, viewport] of [
     await expect(chips).toHaveCount(2);
     await shot("02-form-filled");
 
-    // CREA-3 : quitter un formulaire modifié demande confirmation.
-    page.once("dialog", (dialog) => dialog.dismiss());
+    // CREA-3 : quitter un formulaire modifié demande confirmation (CONFIRM-1 : fenêtre de l'appli).
     await page.getByRole("button", { name: "Retour", exact: true }).click();
+    await page.getByRole("button", { name: "Continuer la saisie" }).click();
     await expect(form).toBeVisible();
 
     // CREA-10 : la compétition créée s'ouvre, sans autre appel que l'enregistrement et l'ouverture.

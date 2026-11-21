@@ -308,7 +308,17 @@ export interface ScreenProjections {
   };
 }
 
+/** CONFIRM-1 : une confirmation affichée par l'appli. */
+export interface ConfirmOptions {
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+}
+
 export interface NotificationsApi {
+  /** CONFIRM-1 : vrai si l'utilisateur confirme ; jamais de fenêtre native du navigateur. */
+  confirmAction(options: ConfirmOptions): Promise<boolean>;
   clearMessage(): void;
   dismissToast(toastId: string): void;
   showError(error: ToastErrorLike | unknown): void;
@@ -509,10 +519,13 @@ export interface KirokuApp {
   cancelPendingOperation(operationId: string): void;
   confirmAndRun<M extends RpcClientMethod>(config: {
     message: string;
+    /** Libellé du bouton de confirmation (« Supprimer » par défaut). */
+    confirmLabel?: string;
+    cancelLabel?: string;
     method: M;
     args: RpcClientArgs<M>;
     onSuccess?: (response: RpcClientResult<M>) => void;
-  }): void;
+  }): Promise<void>;
   defaultListPageSize: number;
   loginScreen?: LoginScreen;
   loadCachedInitialData(): boolean;

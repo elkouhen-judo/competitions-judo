@@ -1528,18 +1528,24 @@ function createInitialState(): KirokuAppState {
       }
     }
 
-    function confirmAndRun<M extends RpcClientMethod>({
+    // CONFIRM-1 : toutes ces actions sont destructives ; la confirmation est dessinée par l'appli.
+    async function confirmAndRun<M extends RpcClientMethod>({
       message,
+      confirmLabel = "Supprimer",
+      cancelLabel,
       method,
       args,
       onSuccess
     }: {
       message: string;
+      confirmLabel?: string;
+      cancelLabel?: string;
       method: M;
       args: RpcClientArgs<M>;
       onSuccess?: (response: RpcClientResult<M>) => void;
     }) {
-      if (!window.confirm(message)) {
+      const options = cancelLabel ? { message, confirmLabel, cancelLabel, danger: true } : { message, confirmLabel, danger: true };
+      if (!(await notifications.confirmAction(options))) {
         return;
       }
 

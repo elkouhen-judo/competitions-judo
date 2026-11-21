@@ -463,6 +463,8 @@
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
         message: `Annuler l'invitation${label} ?`,
+        confirmLabel: "Annuler l'invitation",
+        cancelLabel: "Garder l'invitation",
         method: "deleteAccessInvitation",
         args: [email],
         onSuccess: (response) => {
@@ -520,6 +522,7 @@
       const label = name ? ` "${name}"` : "";
       app.confirmAndRun({
         message: `Retirer les droits admin${label} ?`,
+        confirmLabel: "Retirer les droits",
         method: "revokeAdminRole",
         args: [idJudoka],
         onSuccess: (response) => {

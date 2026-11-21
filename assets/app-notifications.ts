@@ -1,5 +1,6 @@
 (() => {
   type NotificationsApi = import("./types").NotificationsApi;
+  type ConfirmOptions = import("./types").ConfirmOptions;
 
   interface Toast {
     id: string;
@@ -41,6 +42,56 @@
     window.KirokuUI.mountViewModel("toastLayer", notificationsViewModel, {
       dismissToast
     });
+
+    // CONFIRM-1 : une seule confirmation à la fois ; Échap ou un toucher hors de la fenêtre annule.
+    const confirmViewModel = window.Vue.reactive({
+      message: "",
+      confirmLabel: "Confirmer",
+      cancelLabel: "Annuler",
+      danger: false
+    });
+    let resolveConfirm: ((confirmed: boolean) => void) | null = null;
+    let focusBeforeConfirm: HTMLElement | null = null;
+
+    window.KirokuUI.mountViewModel("confirmDialog", confirmViewModel, { answerConfirm });
+
+    function getConfirmDialog(): HTMLDialogElement | null {
+      return document.getElementById("confirmDialog") as HTMLDialogElement | null;
+    }
+
+    function confirmAction(options: ConfirmOptions): Promise<boolean> {
+      if (resolveConfirm) answerConfirm(false);
+      Object.assign(confirmViewModel, {
+        message: options.message,
+        confirmLabel: options.confirmLabel || "Confirmer",
+        cancelLabel: options.cancelLabel || "Annuler",
+        danger: Boolean(options.danger)
+      });
+      focusBeforeConfirm = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      return new Promise<boolean>((resolve) => {
+        resolveConfirm = resolve;
+        const dialog = getConfirmDialog();
+        if (!dialog) {
+          answerConfirm(false);
+          return;
+        }
+        if (!dialog.open) dialog.showModal();
+        // L'action la moins risquée reçoit le focus.
+        window.Vue.nextTick(() => document.getElementById("confirmDialogCancel")?.focus());
+      });
+    }
+
+    function answerConfirm(confirmed: boolean) {
+      const dialog = getConfirmDialog();
+      if (dialog && dialog.open) dialog.close();
+      const resolve = resolveConfirm;
+      resolveConfirm = null;
+      if (!confirmed && focusBeforeConfirm && document.contains(focusBeforeConfirm)) {
+        focusBeforeConfirm.focus();
+      }
+      focusBeforeConfirm = null;
+      if (resolve) resolve(confirmed);
+    }
 
     function showSuccess(message: string) {
       showToast("success", message, 4000);
@@ -100,6 +151,7 @@
     }
 
     return {
+      confirmAction,
       clearMessage,
       dismissToast,
       showError,

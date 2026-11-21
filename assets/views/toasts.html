@@ -19,3 +19,13 @@
         </p>
       </div>
     </div>
+    <!-- CONFIRM-1 : confirmation dessinée par l'appli, jamais une fenêtre du navigateur. -->
+    <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmDialogMessage" @cancel.prevent="answerConfirm(false)" @click.self="answerConfirm(false)" v-cloak>
+      <div class="confirm-dialog-body">
+        <p id="confirmDialogMessage" class="confirm-dialog-message">{{ message }}</p>
+        <div class="confirm-dialog-actions">
+          <button id="confirmDialogCancel" type="button" class="button-secondary" @click="answerConfirm(false)">{{ cancelLabel }}</button>
+          <button id="confirmDialogConfirm" type="button" :class="danger ? 'confirm-dialog-danger' : ''" @click="answerConfirm(true)">{{ confirmLabel }}</button>
+        </div>
+      </div>
+    </dialog>

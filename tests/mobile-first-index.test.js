@@ -567,3 +567,17 @@ test("combat form lets the user pick a listed technique or type another one", ()
   assert.match(screen, /function isCustomScoreTechnique\(score\)/);
   assert.match(screen, /function selectScoreTechnique\(index, value\)/);
 });
+
+test("CONFIRM-1 : l'appli n'ouvre jamais de fenêtre native du navigateur", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const assetsDir = path.join(__dirname, "..", "assets");
+  const sources = fs
+    .readdirSync(assetsDir)
+    .filter((file) => file.endsWith(".ts"))
+    .concat(fs.readdirSync(path.join(assetsDir, "views")).map((file) => path.join("views", file)));
+  sources.forEach((file) => {
+    const source = fs.readFileSync(path.join(assetsDir, file), "utf8");
+    assert.doesNotMatch(source, /\b(window\.)?(alert|confirm|prompt)\s*\(/, file);
+  });
+});

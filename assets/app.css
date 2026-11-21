@@ -806,6 +806,58 @@ h3 {
   white-space: nowrap;
 }
 
+/* CONFIRM-1 : confirmation de l'appli, centrée, au-dessus de tout ; jamais une fenêtre du navigateur. */
+
+.confirm-dialog {
+  width: min(420px, calc(100vw - 32px));
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 20px 48px rgba(14, 26, 43, 0.24);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(14, 26, 43, 0.45);
+}
+
+.confirm-dialog-body {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+}
+
+.confirm-dialog-message {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirm-dialog-actions button {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
+.confirm-dialog-actions .confirm-dialog-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.confirm-dialog-actions .confirm-dialog-danger:hover:not(:disabled) {
+  border-color: var(--danger-hover);
+  background: var(--danger-hover);
+}
+
 .toast-layer {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));

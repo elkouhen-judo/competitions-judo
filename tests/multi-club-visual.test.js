@@ -8,7 +8,9 @@ const { chromium, expect } = require("@playwright/test");
 const root = path.join(__dirname, "..");
 const clientHandler = require(path.join(root, "api", "client.js"));
 const { renderIndexHtml } = require(path.join(root, "api", "app.js"));
-const { computeCoachDashboardStats } = require(path.join(root, "core-dist", "domain", "coach-dashboard-statistics.js"));
+const { computeCoachDashboardStats } = require(
+  path.join(root, "core-dist", "domain", "coach-dashboard-statistics.js")
+);
 
 // Parcours d'un coach de deux clubs (données fictives) : MULTI-1, MULTI-2 et MULTI-3.
 
@@ -69,8 +71,18 @@ async function startServer() {
   // Deux « Interclubs » le même jour, un par club : seul le club les distingue.
   const date = localDate(2);
   const clubCompetitions = [
-    { clubCompetitionId: "cc-nantes", name: "Interclubs", competitionDate: date, clubId: NANTES.clubId },
-    { clubCompetitionId: "cc-rennes", name: "Interclubs", competitionDate: date, clubId: RENNES.clubId }
+    {
+      clubCompetitionId: "cc-nantes",
+      name: "Interclubs",
+      competitionDate: date,
+      clubId: NANTES.clubId
+    },
+    {
+      clubCompetitionId: "cc-rennes",
+      name: "Interclubs",
+      competitionDate: date,
+      clubId: RENNES.clubId
+    }
   ];
   const rpc = [];
 
@@ -119,6 +131,8 @@ async function startServer() {
             judokas,
             combatRecords: {}
           };
+        } else if (request.method === "deleteClubCompetition") {
+          result = { success: true, message: "Compétition club supprimée." };
         } else if (request.method === "getCoachDashboard") {
           result = {
             stats: computeCoachDashboardStats([], []),
@@ -126,8 +140,24 @@ async function startServer() {
             byClub: request.args[0].clubId
               ? null
               : [
-                  { clubId: NANTES.clubId, withheld: false, engagedJudokas: 3, participations: 4, combats: 10, victories: 6, podiums: 2 },
-                  { clubId: RENNES.clubId, withheld: true, engagedJudokas: 0, participations: 0, combats: 0, victories: 0, podiums: 0 }
+                  {
+                    clubId: NANTES.clubId,
+                    withheld: false,
+                    engagedJudokas: 3,
+                    participations: 4,
+                    combats: 10,
+                    victories: 6,
+                    podiums: 2
+                  },
+                  {
+                    clubId: RENNES.clubId,
+                    withheld: true,
+                    engagedJudokas: 0,
+                    participations: 0,
+                    combats: 0,
+                    victories: 0,
+                    podiums: 0
+                  }
                 ],
             withheld: null,
             previous: null,
@@ -192,7 +222,11 @@ for (const [name, viewport] of [
   test(`MULTI-1 à 3 : un coach de deux clubs sait de quel club il parle sur ${name}`, async (t) => {
     const { page, rpc } = await openApp(t, viewport);
     const shot = (step) =>
-      page.screenshot({ path: `output/playwright/multi-club-${name}-${step}.png`, fullPage: true, animations: "disabled" });
+      page.screenshot({
+        path: `output/playwright/multi-club-${name}-${step}.png`,
+        fullPage: true,
+        animations: "disabled"
+      });
     const agenda = page.locator(".coach-agenda .agenda-item");
     const clubFilter = page.locator("#homeClubFilter");
 
@@ -213,7 +247,9 @@ for (const [name, viewport] of [
 
     // La fiche d'une compétition club dit toujours son club.
     await cards.first().locator(".competition-open-button").click();
-    await expect(page.locator("#clubCompetitionDetailView .page-title .subtitle")).toContainText(RENNES.name);
+    await expect(page.locator("#clubCompetitionDetailView .page-title .subtitle")).toContainText(
+      RENNES.name
+    );
     await shot("03-detail");
 
     // MULTI-2 : le club choisi survit au rechargement.
@@ -245,9 +281,79 @@ for (const [name, viewport] of [
     await expect(clubLines.nth(1)).toContainText("moins de 2 judokas");
     await shot("04-stats-all-clubs");
     await page.locator("#coachDashboardByClub").scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `output/playwright/multi-club-${name}-05-by-club.png`, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/multi-club-${name}-05-by-club.png`,
+      animations: "disabled"
+    });
 
     await page.getByRole("button", { name: "Accueil", exact: true }).first().click();
     await expect(page.locator("#homeClubFilter")).toHaveValue("");
+  });
+}
+
+for (const [name, viewport] of [
+  ["desktop", { width: 1440, height: 900 }],
+  ["mobile", { width: 390, height: 844 }]
+]) {
+  test(`CONFIRM-1 : les confirmations sont dessinées par l'appli, jamais par le navigateur sur ${name}`, async (t) => {
+    const { page, rpc } = await openApp(t, viewport);
+    const nativeDialogs = [];
+    page.on("dialog", async (dialog) => {
+      nativeDialogs.push(dialog.message());
+      await dialog.dismiss();
+    });
+    const dialog = page.locator("#confirmDialog");
+    const deletes = () => rpc.filter((request) => request.method === "deleteClubCompetition");
+
+    // Suppression : « Annuler » ou Échap n'envoient rien ; le focus est sur l'action la moins risquée.
+    await page.getByRole("button", { name: "Compétitions", exact: true }).click();
+    await page.locator("#clubCompetitionsList .competition-open-button").first().click();
+    const openDeleteConfirm = async () => {
+      await page.locator("#clubCompetitionDetailView .page-menu summary").click();
+      await page.getByRole("menuitem", { name: "Supprimer la compétition club" }).click();
+      await expect(dialog).toBeVisible();
+    };
+    await openDeleteConfirm();
+    await expect(page.locator("#confirmDialogMessage")).toContainText(
+      "Supprimer la compétition club"
+    );
+    await expect(page.locator("#confirmDialogCancel")).toBeFocused();
+    await page.screenshot({
+      path: `output/playwright/confirm-dialog-${name}-delete.png`,
+      animations: "disabled"
+    });
+    await page.locator("#confirmDialogCancel").click();
+    await expect(dialog).toBeHidden();
+    await openDeleteConfirm();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    assert.equal(deletes().length, 0);
+
+    await openDeleteConfirm();
+    await page.locator("#confirmDialogConfirm").click();
+    await expect(dialog).toBeHidden();
+    await expect.poll(() => deletes().length).toBe(1);
+
+    // Quitter un formulaire modifié : « Continuer la saisie » garde le formulaire.
+    await page.goto(page.url().split("?")[0]);
+    await page.locator("#homeView").waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "Compétitions", exact: true }).click();
+    await page.locator("#addClubCompetitionButton").click();
+    await page.fill("#club_competition_name", "Coupe de Carquefou");
+    await page.locator("#clubCompetitionFormView .page-back").click();
+    await expect(dialog).toBeVisible();
+    await expect(page.locator("#confirmDialogConfirm")).toHaveText("Quitter sans enregistrer");
+    await page.screenshot({
+      path: `output/playwright/confirm-dialog-${name}-leave.png`,
+      animations: "disabled"
+    });
+    await page.getByRole("button", { name: "Continuer la saisie" }).click();
+    await expect(page.locator("#clubCompetitionFormView")).toBeVisible();
+    await expect(page.locator("#club_competition_name")).toHaveValue("Coupe de Carquefou");
+    await page.locator("#clubCompetitionFormView .page-back").click();
+    await page.locator("#confirmDialogConfirm").click();
+    await expect(page.locator("#homeView")).toBeVisible();
+
+    assert.deepEqual(nativeDialogs, []);
   });
 }
