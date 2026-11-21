@@ -21,7 +21,6 @@ import type {
   CoachDashboardLevelPodiumBreakdownEntry,
   CoachDashboardMatchupEntry,
   CoachDashboardPeriodEntry,
-  CoachDashboardQualityIssueEntry,
   CoachDashboardResultLine,
   CoachDashboardScoreHolding,
   CoachDashboardStats
@@ -326,75 +325,6 @@ function computeDiscipline(combats: CoachDashboardCombat[]): CoachDashboardDisci
   };
 }
 
-const COMBAT_QUALITY_CRITERIA: Array<{
-  criterion: string;
-  label: string;
-  isMissing: (combat: CoachDashboardCombat) => boolean;
-}> = [
-  {
-    criterion: "judokaHandedness",
-    label: "Droitier/gaucher du judoka non renseigné",
-    isMissing: (combat) => !combat.judokaHandedness
-  },
-  {
-    criterion: "opponentStance",
-    label: "Droitier/gaucher de l'adversaire non renseigné",
-    isMissing: (combat) => !combat.opponentStance
-  },
-  {
-    criterion: "victoryType",
-    label: "Fin du combat non renseignée",
-    isMissing: (combat) => !combat.victoryType
-  },
-  {
-    criterion: "scores",
-    label: "Points marqués non renseignés",
-    // Seule une victoire aux points (Ippon, Waza-ari, Yuko) exige un point du judoka.
-    isMissing: (combat) =>
-      isVictoryCombatResult(combat.result) &&
-      ["Ippon", "Waza-ari", "Yuko"].includes(String(combat.victoryType || "")) &&
-      !(combat.scores || []).length
-  },
-  {
-    criterion: "inconsistentIppon",
-    label: "Ippon à vérifier",
-    isMissing: (combat) =>
-      isVictoryCombatResult(combat.result) && combat.victoryType === "Ippon" && !hasAnyIpponScore(combat)
-  }
-];
-
-// Saisies à compléter : seuls les décomptes alimentent la tuile de synthèse (aucune liste).
-// STAT-14 : le niveau manquant est une donnée de compétition, compté une fois par compétition.
-function computeDataQualityIssues(
-  combats: CoachDashboardCombat[],
-  competitions: DashboardCompetition[]
-): CoachDashboardQualityIssueEntry[] {
-  const total = combats.length;
-  const combatIssues: CoachDashboardQualityIssueEntry[] = COMBAT_QUALITY_CRITERIA.map(
-    ({ criterion, label, isMissing }) => {
-      const count = combats.filter(isMissing).length;
-      return { criterion, label, count, total, rate: computeRate(count, total), unit: "combat" };
-    }
-  );
-
-  const competitionsByKey = new Map<string, DashboardCompetition>();
-  competitions.forEach((competition, index) => {
-    const key = getCompetitionKey(competition, index);
-    if (!competitionsByKey.has(key)) competitionsByKey.set(key, competition);
-  });
-  const withoutLevel = Array.from(competitionsByKey.values()).filter((competition) => !competition.level).length;
-  const levelIssue: CoachDashboardQualityIssueEntry = {
-    criterion: "competitionLevel",
-    label: "Niveau de compétition non renseigné",
-    count: withoutLevel,
-    total: competitionsByKey.size,
-    rate: computeRate(withoutLevel, competitionsByKey.size),
-    unit: "competition"
-  };
-  // Le niveau garde sa place d'origine, après les critères de saisie du combat.
-  return [...combatIssues.slice(0, 4), levelIssue, ...combatIssues.slice(4)];
-}
-
 // STAT-11 : podiums et participations classées, par niveau ; STAT-26 : 7 premiers ;
 // STAT-25 : participations passées à chaque niveau.
 function computePodiumBreakdownByLevel(
@@ -521,7 +451,6 @@ export function computeCoachDashboardStats(
     byLateralMatchup: computeMatchupBreakdown(combats),
     engagedJudokas,
     judokasByHandedness: computeJudokaCountByHandedness(combats, engagedJudokas),
-    dataQualityIssues: computeDataQualityIssues(combats, competitions),
     podiumsByLevel: computePodiumBreakdownByLevel(competitions, today),
     topWinTechniques: computeTopWinTechniques(combats, DASHBOARD_TOP_TECHNIQUES_LIMIT),
     distinctWinTechniques: countDistinctWinTechniques(combats),

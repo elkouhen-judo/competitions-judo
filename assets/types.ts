@@ -163,15 +163,6 @@ export interface ManagedUserCard {
   canHaveClub: boolean;
 }
 
-export interface CombatDataQualityIssue {
-  label: string;
-  /** Libellé court affiché « À compléter : … » sur la carte et dans le formulaire. */
-  shortLabel?: string;
-  priority: "high" | "medium";
-  /** Which form field the issue relates to, so the combat form can show it inline while editing that field. */
-  field?: "victoryType" | "scores" | "opponentStance";
-}
-
 export interface CompetitionCombatCard {
   combatId: string;
   judokaId: string;
@@ -186,7 +177,6 @@ export interface CompetitionCombatCard {
   concededScoreLabels: string[];
   /** Score officiel « IWY - IWY » ; vide si non renseigné. */
   officialScoreLabel?: string;
-  dataQualityIssues: CombatDataQualityIssue[];
   resultClass: string;
   judokaDisplayName: string;
   showJudoka: boolean;
@@ -350,13 +340,13 @@ export interface JudokaScreen {
 
 export interface CompetitionDetailDeps {
   deleteCombat(idCombat: string): void;
-  showCombatForm(idCombat?: string | Event, focusField?: string): void;
+  showCombatForm(idCombat?: string | Event): void;
 }
 
 export interface CompetitionDetailScreen {
   getCurrentCompetition(): Competition;
   openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
-  openCompetitionFromClubDetail(idCompetition: string): void;
+  openCompetitionFromClubDetail(idCompetition: string, participants?: ClubParticipantLink[]): void;
   openCompetitionFromJudokaProfile(idCompetition: string): void;
   showCompetitionForm(idCompetition: string): void;
 }
@@ -369,11 +359,17 @@ export interface CombatFormDeps {
 export interface CombatFormScreen {
   bindEvents(): void;
   deleteCombat(idCombat: string): void;
-  showCombatForm(idCombat?: string | Event, focusField?: string): void;
+  showCombatForm(idCombat?: string | Event): void;
+}
+
+/** COACH-4 : un participant d'une compétition club, dans l'ordre de sa liste. */
+export interface ClubParticipantLink {
+  competitionId: string;
+  judokaName: string;
 }
 
 export interface ClubCompetitionDeps {
-  openCompetitionFromClubDetail(idCompetition: string): void;
+  openCompetitionFromClubDetail(idCompetition: string, participants?: ClubParticipantLink[]): void;
 }
 
 export interface ClubCompetitionScreen {

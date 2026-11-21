@@ -21,8 +21,6 @@
       "Part des combats gagnés, sur tous les combats retenus. Sous 5 combats, seul le décompte s'affiche.",
     podiums:
       "Premières, deuxièmes et troisièmes places, sur les participations dont le classement final est saisi.",
-    incomplete:
-      "Combats concernés par le manque de saisie le plus fréquent. Un combat peut avoir plusieurs manques.",
     byClub:
       "Sur tous vos clubs : le bilan de chacun. Un résultat compte pour le club de sa compétition. Un club de moins de 2 judokas est listé sans chiffres.",
     activity:
@@ -417,9 +415,6 @@
         previous ? `avant ${previous.distinctWinTechniques}` : ""
       );
     });
-    const coachDashboardDataQualityIssues = window.Vue.computed(() =>
-      (currentStats()?.dataQualityIssues || []).filter((entry) => entry.count > 0)
-    );
     const coachDashboardPodiumsByLevel = window.Vue.computed(() => currentStats()?.podiumsByLevel || []);
     const coachDashboardTopWinTechniques = window.Vue.computed(() => currentStats()?.topWinTechniques || []);
     // STATS-1 : podiums écrits en toutes lettres, par niveau (« National : 1 deuxième place »).
@@ -481,13 +476,6 @@
     const coachDashboardDefeatTechniqueBars = window.Vue.computed(() =>
       toTechniqueBars(currentStats()?.topDefeatTechniques || [])
     );
-    // STAT-14 : la tuile ne compte que les critères par combat (le niveau se compte par compétition).
-    const coachDashboardIncompleteCount = window.Vue.computed(() =>
-      coachDashboardDataQualityIssues.value
-        .filter((issue) => issue.unit !== "competition")
-        .reduce((max, issue) => Math.max(max, issue.count), 0)
-    );
-
     // STAT-15 : le bilan, puis le fait le plus marquant, sans jugement.
     const coachDashboardSummaryInsight = window.Vue.computed(() => {
       const stats = currentStats();
@@ -624,7 +612,6 @@
           coachDashboardScoreHoldingLines,
           coachDashboardGroundLines,
           coachDashboardDiscipline,
-          coachDashboardDataQualityIssues,
           coachDashboardPodiumsByLevel,
           coachDashboardPodiumLines,
           coachDashboardPodiumTotal,
@@ -632,7 +619,6 @@
           coachDashboardTopWinTechniques,
           coachDashboardTopWinTechniqueBars,
           coachDashboardDefeatTechniqueBars,
-          coachDashboardIncompleteCount,
           coachDashboardSummaryInsight,
           coachDashboardSelectedCompetitions,
           coachDashboardCompetitionSuggestions,

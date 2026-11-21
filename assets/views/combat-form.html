@@ -99,9 +99,6 @@
                 {{ option }}
               </button>
             </div>
-            <ul v-if="combatFormVictoryTypeIssues.length" class="field-todo-list" aria-label="À compléter sur la fin du combat">
-              <li v-for="issue in combatFormVictoryTypeIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
-            </ul>
           </div>
 
           <!-- SAISIE-3 : le détail sert l'analyse du coach et peut attendre. -->
@@ -134,9 +131,6 @@
                 {{ option }}
               </button>
             </div>
-            <ul v-if="combatFormOpponentStanceIssues.length" class="field-todo-list" aria-label="À compléter sur la garde adverse">
-              <li v-for="issue in combatFormOpponentStanceIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
-            </ul>
           </div>
           <!-- COMBAT-SCORE : tableau de marque ; chaque + d'un Ippon, Waza-ari ou Yuko ajoute l'action au déroulé. -->
           <div id="combat_score" class="choice-field combat-official-score" tabindex="-1">
@@ -224,9 +218,6 @@
                   autocomplete="off">
               </li>
             </ol>
-            <ul v-if="combatFormScoreIssues.length" class="field-todo-list" aria-label="À compléter sur les points marqués">
-              <li v-for="issue in combatFormScoreIssues" :key="issue.label" class="field-todo">À compléter : {{ issue.shortLabel }}</li>
-            </ul>
           </div>
           <div class="choice-field">
             <label for="combat_deroule">Notes</label>

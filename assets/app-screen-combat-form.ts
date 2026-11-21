@@ -4,7 +4,6 @@
   type CombatFormDeps = import("./types").CombatFormDeps;
   type CombatSuggestions = import("./types").CombatSuggestions;
   type OperationResult = import("./types").OperationResult;
-  type CombatDataQualityIssue = import("./types").CombatDataQualityIssue;
 
   const {
     createEmptyCombatScoreRow,
@@ -115,8 +114,6 @@
 
     // SAISIE-1 : l'appareil retient si le détail était déplié ou replié.
     const COMBAT_DETAIL_STORAGE_KEY = "ayumi_combat_detail_open";
-    // SAISIE-2 : champs du détail ; les viser l'ouvre.
-    const COMBAT_DETAIL_TARGETS = ["combat_garde_adversaire", "combat_score", "combat_points", "combat_deroule"];
 
     function readCombatDetailPreference(): boolean {
       try {
@@ -307,56 +304,6 @@
       return `Le score indique ${expected}. Vérifiez le résultat.`;
     });
 
-    const combatFormDataQualityIssues = window.Vue.computed((): CombatDataQualityIssue[] => {
-      const form = combatFormViewModel.combatForm;
-      if (!form.result) {
-        return [];
-      }
-      const issues: CombatDataQualityIssue[] = [];
-      const judokaPoints = form.points.filter((score) => score.camp !== CAMP_OPPONENT);
-      if (getCombatDecisionOptions(form.result).length && !form.victoryType) {
-        issues.push({ label: "Fin du combat non renseignée", shortLabel: "fin du combat", priority: "high", field: "victoryType" });
-      }
-      const hasMissingIpponScore =
-        form.result === "Victoire" &&
-        form.victoryType === "Ippon" &&
-        !judokaPoints.some((score) => score.value === "Ippon");
-      if (hasMissingIpponScore) {
-        issues.push({
-          label: "Ippon indiqué, mais aucun point Ippon détaillé",
-          shortLabel: "détail du point Ippon",
-          priority: "high",
-          field: "scores"
-        });
-      }
-      // Une victoire aux points doit montrer au moins un point du judoka ; une défaite ou une décision n'en exige pas.
-      const isVictoryOnPoints = form.result === "Victoire" && DECISION_SCORE_VALUES.includes(form.victoryType);
-      if (isVictoryOnPoints && !judokaPoints.length && !hasMissingIpponScore) {
-        issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
-      }
-      if (form.points.some((score) => !getScoreTechnique(score))) {
-        issues.push({ label: "Technique d'un point non précisée", shortLabel: "technique d'un point", priority: "medium", field: "scores" });
-      }
-      if (!form.opponentStance) {
-        issues.push({
-          label: "Droitier/gaucher de l'adversaire non renseigné",
-          shortLabel: "garde de l'adversaire",
-          priority: "medium",
-          field: "opponentStance"
-        });
-      }
-      return issues;
-    });
-    const combatFormVictoryTypeIssues = window.Vue.computed(() =>
-      combatFormDataQualityIssues.value.filter((issue) => issue.field === "victoryType")
-    );
-    const combatFormScoreIssues = window.Vue.computed(() =>
-      combatFormDataQualityIssues.value.filter((issue) => issue.field === "scores")
-    );
-    const combatFormOpponentStanceIssues = window.Vue.computed(() =>
-      combatFormDataQualityIssues.value.filter((issue) => issue.field === "opponentStance")
-    );
-
     function ensureCombatFormViewModel() {
       if (combatFormMounted) {
         return;
@@ -407,9 +354,6 @@
           combatStageOptions,
           combatStanceOptions,
           combatTechniqueFamilies,
-          combatFormVictoryTypeIssues,
-          combatFormScoreIssues,
-          combatFormOpponentStanceIssues,
           isSubmitting,
           otherNeWazaValue,
           otherTachiWazaValue,
@@ -418,7 +362,7 @@
       );
     }
 
-    function showCombatForm(id?: string | Event, focusField?: string) {
+    function showCombatForm(id?: string | Event) {
       clearMessage();
       if (!canManageCombat.value) {
         showError({ message: "Attends le chargement de la compétition avant d'ajouter un combat." });
@@ -475,14 +419,10 @@
         combatFormViewModel.combatDetailOpen = readCombatDetailPreference();
         syncCombatDecisionVisibility(true);
       }
-      if (focusField && COMBAT_DETAIL_TARGETS.includes(focusField)) {
-        combatFormViewModel.combatDetailOpen = true;
-      }
-
       takeCombatFormSnapshot();
       showView("combatFormView");
       window.Vue.nextTick(() => {
-        const target = focusField || getCombatFormFocusTarget(isEditingExistingCombat);
+        const target = getCombatFormFocusTarget(isEditingExistingCombat);
         // Le bouton Enregistrer est en bas du formulaire : le focaliser ne doit pas faire défiler la page,
         // sinon le haut du formulaire (tour, résultat) sort de l'écran à l'ouverture.
         $(target).focus({ preventScroll: target === "saveCombatButton" });

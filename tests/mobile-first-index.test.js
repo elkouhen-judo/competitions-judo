@@ -170,7 +170,7 @@ test("competition actions live in a « ⋯ » menu and the ranking is chosen on 
   assert.match(bundle, /id="competitionRankingSection"/);
   assert.match(bundle, /@click="saveCompetitionRanking\(option\.value\)"/);
   assert.match(client, /\["1er", "2e", "3e", "5e", "7e", "Non classé"\]/);
-  assert.match(bundle, /<div v-if="canManageCombat" class="mobile-action-bar primary-action action-bar-inline">[\s\S]*id="addCombatButton"[\s\S]*Ajouter un combat/);
+  assert.match(bundle, /<div v-if="canManageCombat \|\| nextClubParticipant" class="mobile-action-bar primary-action action-bar-inline">[\s\S]*id="addCombatButton"[\s\S]*Ajouter un combat/);
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionDetail\(/);
   assert.match(bundle, /window\.KirokuScreenProjections\.projectCompetitionCombats\(/);
   assert.match(bundle, /\.hidden\s*\{\s*display: none !important;/);
@@ -445,7 +445,10 @@ test("coach can open club competition creation and participant management UI", (
   // CREA-9 : le niveau se choisit en boutons.
   assert.match(bundle, /id="club_competition_niveau"\s+class="choice-segmented choice-segmented-2"\s+role="radiogroup"/);
   assert.match(bundle, /@click="selectClubCompetitionLevel\(option\)"/);
-  assert.match(bundle, /id="club_detail_niveau" v-model="clubCompetitionDetailForm\.level"/);
+  // COACH-7 : en modification aussi, le niveau se choisit en boutons et la liste se coche d'un coup.
+  assert.match(bundle, /id="club_detail_niveau"\s+class="choice-segmented choice-segmented-2"\s+role="radiogroup"/);
+  assert.match(bundle, /@click="selectClubCompetitionDetailLevel\(option\)"/);
+  assert.match(bundle, /id="clubDetailSelectAll"[\s\S]*Tout sélectionner/);
   assert.match(bundle, /Saisie après coup possible : ajoutez les judokas oubliés/);
   assert.match(bundle, /@click="setClubParticipantRanking\(p\.competitionId, option\.value\)"/);
   assert.doesNotMatch(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);
@@ -458,7 +461,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);
-  assert.match(client, /formatCompetitionRanking\(p\.result\) \|\| ""/);
+  assert.match(client, /formatCompetitionRanking\(rawResult\) \|\| ""/);
   assert.match(bundle, /Aucun judoka disponible dans cette catégorie\./);
   assert.match(bundle, /v-else-if="!clubCompetitionAvailableJudokasFiltered\.length"/);
 });
@@ -536,21 +539,11 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
   assert.doesNotMatch(bundle, /combat_points_subis/);
 });
 
-test("combat form and cards show what is left to fill in plain words", () => {
-  assert.match(bundle, /id="combatDecisionBlock"[\s\S]*v-if="combatFormVictoryTypeIssues\.length"[\s\S]*v-for="issue in combatFormVictoryTypeIssues"/);
-  assert.match(bundle, /id="combat_garde_adversaire"[\s\S]*v-if="combatFormOpponentStanceIssues\.length"[\s\S]*v-for="issue in combatFormOpponentStanceIssues"/);
-  assert.match(bundle, /id="combat_points"[\s\S]*v-if="combatFormScoreIssues\.length"[\s\S]*v-for="issue in combatFormScoreIssues"/);
-  assert.match(bundle, /À compléter : \{\{ issue\.shortLabel \}\}/);
-  assert.doesNotMatch(bundle, /issue\.priority === 'high' \? 'Haute' : 'Moyenne'/);
-  // COMBAT-5 : toucher « À compléter » sur une carte ouvre le formulaire sur le champ concerné.
-  assert.match(bundle, /@click\.stop="openCombatIssue\(combat\.combatId, issue\.field\)"/);
-  assert.match(client, /scores: "combat_points"/);
-  assert.match(
-    client,
-    /form\.result === "Victoire" &&\s*form\.victoryType === "Ippon" &&\s*!judokaPoints\.some\(\(score\) => score\.value === "Ippon"\)/
-  );
-  assert.match(client, /Ippon indiqué, mais aucun point Ippon détaillé/);
-  assert.match(client, /getCombatDecisionOptions\(form\.result\)\.length && !form\.victoryType/);
+// SIMPL-1 : ni la carte d'un combat, ni le formulaire, ni les statistiques ne réclament de saisie.
+test("no « À compléter » reminder on combats, competitions or statistics", () => {
+  assert.doesNotMatch(bundle, /À compléter|Saisies à compléter|Niveau à compléter/);
+  assert.doesNotMatch(bundle, /dataQualityIssues|combatForm(VictoryType|Score|OpponentStance)Issues|openCombatIssue/);
+  assert.doesNotMatch(client, /getCombatDataQualityIssues|coachDashboardIncompleteCount|Ippon indiqué, mais aucun point Ippon détaillé/);
 });
 
 

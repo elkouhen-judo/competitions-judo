@@ -14,6 +14,17 @@
     registrationSeason?: number | null;
   }
 
+  type CombatRecord = { total: number; wins: number; losses: number; draws: number };
+
+  // Participant tel que lu sur le serveur ; l'affichage le complète avec l'état de l'appli (COACH-2).
+  interface ClubCompetitionParticipant {
+    competitionId: string;
+    judokaName: string;
+    rawResult: string;
+    coachReview: string;
+    record?: CombatRecord;
+  }
+
   interface ClubCompetitionParticipantCard {
     competitionId: string;
     judokaName: string;
@@ -23,6 +34,7 @@
     combatSummary: string;
     hasCombats: boolean;
     hasResult: boolean;
+    needsCoachReview: boolean;
   }
 
   // Ordre d'affichage des participants : podium d'abord, puis places suivantes, non classés en dernier.
@@ -34,7 +46,7 @@
     return RANKING_ORDER[String(value || "").trim().toLowerCase()] || 99;
   }
 
-  function formatCombatSummary(record: { total: number; wins: number; losses: number; draws: number } | undefined) {
+  function formatCombatSummary(record: CombatRecord | undefined) {
     if (!record || !record.total) return "Aucun combat saisi";
     const parts = [record.wins ? `${record.wins}V` : "", record.losses ? `${record.losses}D` : "", record.draws ? `${record.draws}N` : ""];
     return `${record.total} combat${record.total > 1 ? "s" : ""} · ${parts.filter(Boolean).join(" ")}`;
@@ -93,7 +105,8 @@
         ageCategory: "",
         level: ""
       },
-      clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
+      clubCompetitionDetailDate: "",
+      clubCompetitionParticipantsRaw: [] as ClubCompetitionParticipant[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
       clubCompetitionUnregisteredCount: 0,
@@ -111,7 +124,7 @@
     const clubCompetitionDetailViewModel = window.Vue.reactive({
       ...defaultClubCompetitionDetailViewState,
       clubCompetitionDetailForm: { ...defaultClubCompetitionDetailViewState.clubCompetitionDetailForm },
-      clubCompetitionCurrentParticipants: [] as ClubCompetitionParticipantCard[],
+      clubCompetitionParticipantsRaw: [] as ClubCompetitionParticipant[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
       clubCompetitionUnregisteredCount: 0,
@@ -226,6 +239,13 @@
           (selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query))
       );
     });
+    const clubCompetitionAvailableAllSelected = window.Vue.computed(() => {
+      const selected = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
+      return (
+        clubCompetitionAvailableJudokasFiltered.value.length > 0 &&
+        clubCompetitionAvailableJudokasFiltered.value.every((j) => selected.has(String(j.judokaId)))
+      );
+    });
     const clubCompetitionAvailableJudokasPagination = window.Vue.computed(() =>
       window.KirokuScreenProjections.paginateList(
         clubCompetitionAvailableJudokasFiltered.value,
@@ -237,9 +257,44 @@
       clubCompetitionAvailableJudokasPagination
     );
 
+    // COACH-2 : au retour de la fiche d'un participant, ses combats, son classement et son bilan
+    // sont relus dans l'état de l'appli, mis à jour par chaque enregistrement (y compris hors ligne).
+    const clubCompetitionCurrentParticipants = window.Vue.computed((): ClubCompetitionParticipantCard[] => {
+      const isPast =
+        Boolean(clubCompetitionDetailViewModel.clubCompetitionDetailDate) &&
+        clubCompetitionDetailViewModel.clubCompetitionDetailDate < getCurrentLocalDate();
+      const competitionsById = new Map(state.competitions.map((competition) => [String(competition.competitionId), competition]));
+      return clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw.map((participant) => {
+        const known = competitionsById.get(participant.competitionId);
+        const record = state.combatRecords[participant.competitionId] || participant.record;
+        const rawResult = known ? cleanText(known.result) : participant.rawResult;
+        const coachReview = known ? cleanText(known.coachReview || "") : participant.coachReview;
+        const hasCombats = Boolean(record && record.total);
+        return {
+          competitionId: participant.competitionId,
+          judokaName: participant.judokaName,
+          rawResult,
+          result: formatCompetitionRanking(rawResult) || "",
+          resultClass: getClassementBadgeClass(rawResult),
+          combatSummary: formatCombatSummary(record),
+          hasCombats,
+          hasResult: Boolean(rawResult),
+          // COACH-3 : un bilan n'est attendu qu'après la compétition, pour un participant qui a combattu.
+          needsCoachReview: isPast && hasCombats && !coachReview
+        };
+      });
+    });
+
+    function openClubParticipantCompetition(competitionId: string) {
+      openCompetitionFromClubDetail(
+        competitionId,
+        clubCompetitionCurrentParticipants.value.map(({ competitionId: id, judokaName }) => ({ competitionId: id, judokaName }))
+      );
+    }
+
     const clubCompetitionParticipantsPagination = window.Vue.computed(() =>
       window.KirokuScreenProjections.paginateList(
-        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants,
+        clubCompetitionCurrentParticipants.value,
         state.clubCompetitionParticipantsCurrentPage,
         defaultListPageSize
       )
@@ -307,7 +362,7 @@
           cancelClubCompetitionDetailEdit,
           confirmDeleteClubCompetition,
           confirmDetachClubParticipant,
-          openCompetitionFromClubDetail,
+          openClubParticipantCompetition,
           saveClubCompetitionDetails,
           updateClubCompetitionDetailAgeCategory,
           updateClubAvailableJudokaSearch,
@@ -316,12 +371,18 @@
           showClubCompetitionAvailableJudokasPreviousPage,
           showClubCompetitionAvailableJudokasNextPage,
           setClubParticipantRanking,
-          showClubCompetitionStats
+          showClubCompetitionStats,
+          selectClubCompetitionDetailLevel,
+          toggleAllClubAvailableJudokas,
+          onChoiceKeydown: ui.onChoiceKeydown
         },
         {
           isSubmitting,
           canShowClubCompetitionStats,
           clubRankingOptions,
+          clubCompetitionCurrentParticipants,
+          clubCompetitionAvailableAllSelected,
+          clubCompetitionLevelOptions,
           clubCompetitionParticipantsPage: clubCompetitionParticipantsPaginationRefs.page,
           clubCompetitionParticipantsTotalPages: clubCompetitionParticipantsPaginationRefs.totalPages,
           clubCompetitionParticipantsCurrentPage: clubCompetitionParticipantsPaginationRefs.currentPage,
@@ -346,7 +407,7 @@
     const canShowClubCompetitionStats = window.Vue.computed(
       () =>
         !clubCompetitionDetailViewModel.clubCompetitionDetailEditing &&
-        clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants.filter((p) => p.hasCombats).length >=
+        clubCompetitionCurrentParticipants.value.filter((p) => p.hasCombats).length >=
           MIN_GROUP_JUDOKAS
     );
 
@@ -362,20 +423,16 @@
     );
 
     function setClubParticipantRanking(competitionId: string, result: string) {
-      const participant = clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants.find(
+      const participant = clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw.find(
         (candidate) => candidate.competitionId === competitionId
       );
-      if (!participant || participant.rawResult === result) return;
+      const displayed = clubCompetitionCurrentParticipants.value.find((candidate) => candidate.competitionId === competitionId);
+      if (!participant || !displayed || displayed.rawResult === result) return;
       app.runServer(
         "finalizeCompetition",
         [competitionId, result],
         (response) => {
-          Object.assign(participant, {
-            rawResult: result,
-            result: formatCompetitionRanking(result),
-            resultClass: getClassementBadgeClass(result),
-            hasResult: true
-          });
+          participant.rawResult = result;
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
           );
@@ -627,7 +684,9 @@
       clubCompetitionDetailViewModel.clubCompetitionDetailTitle = "Chargement...";
       clubCompetitionDetailViewModel.clubCompetitionDetailSummary = "";
       clubCompetitionDetailViewModel.clubCompetitionDetailEditing = false;
-      clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = [];
+      clubCompetitionDetailSnapshot = "";
+      clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw = [];
+      clubCompetitionDetailViewModel.clubCompetitionDetailDate = "";
       clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas = [];
       clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked = false;
       clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [];
@@ -673,33 +732,34 @@
             .filter(Boolean)
             .join(" · ");
           const combatRecords = data.combatRecords || {};
-          clubCompetitionDetailViewModel.clubCompetitionCurrentParticipants = data.participations
+          // Le serveur fait foi au chargement : ses bilans de combats remplacent ceux gardés en mémoire.
+          state.combatRecords = { ...state.combatRecords, ...combatRecords };
+          clubCompetitionDetailViewModel.clubCompetitionDetailDate = String(cc.date || "");
+          clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw = data.participations
             .map((p) => {
               const judoka = judokasById.get(String(p.ownerJudokaId));
-              const record = combatRecords[String(p.competitionId || "")];
               return {
-                competitionId: p.competitionId || "",
+                competitionId: String(p.competitionId || ""),
                 judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
                 rawResult: cleanText(p.result),
-                result: formatCompetitionRanking(p.result) || "",
-                resultClass: getClassementBadgeClass(p.result),
-                combatSummary: formatCombatSummary(record),
-                hasCombats: Boolean(record && record.total),
-                hasResult: Boolean(cleanText(p.result)),
+                coachReview: cleanText(p.coachReview || ""),
+                record: combatRecords[String(p.competitionId || "")],
                 order: getRankingOrder(p.result)
               };
             })
             .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
-            .map(({ competitionId, judokaName, rawResult, result, resultClass, combatSummary, hasCombats, hasResult }) => ({
+            .map(({ competitionId, judokaName, rawResult, coachReview, record }) => ({
               competitionId,
               judokaName,
               rawResult,
-              result,
-              resultClass,
-              combatSummary,
-              hasCombats,
-              hasResult
+              coachReview,
+              record
             }));
+          const serverParticipations = new Map(data.participations.map((p) => [String(p.competitionId), p]));
+          state.competitions = state.competitions.map((competition) => {
+            const fresh = serverParticipations.get(String(competition.competitionId));
+            return fresh ? { ...competition, result: fresh.result, coachReview: fresh.coachReview } : competition;
+          });
           clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
             Boolean(cc.date) && String(cc.date) <= getCurrentLocalDate();
           state.clubCompetitionParticipantsCurrentPage = 1;
@@ -768,15 +828,76 @@
       });
     }
 
-    function cancelClubCompetitionDetail() {
+    async function cancelClubCompetitionDetail() {
+      const hasChanges =
+        clubCompetitionDetailViewModel.clubCompetitionDetailEditing &&
+        clubCompetitionDetailSnapshot !== "" &&
+        serializeClubCompetitionDetailForm() !== clubCompetitionDetailSnapshot;
+      if (
+        hasChanges &&
+        !(await app.notifications.confirmAction({
+          message: "Quitter sans enregistrer ? Les informations changées et les judokas cochés seront perdus.",
+          confirmLabel: "Quitter sans enregistrer",
+          cancelLabel: "Continuer la saisie",
+          danger: true
+        }))
+      ) {
+        return;
+      }
+      clubCompetitionDetailSnapshot = "";
       showView("homeView");
+    }
+
+    let clubCompetitionDetailSnapshot = "";
+
+    function serializeClubCompetitionDetailForm(): string {
+      return JSON.stringify({
+        form: clubCompetitionDetailViewModel.clubCompetitionDetailForm,
+        added: clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
+      });
     }
 
     function startClubCompetitionDetailEdit() {
       clubCompetitionDetailViewModel.clubCompetitionDetailEditing = true;
+      clubCompetitionDetailSnapshot = serializeClubCompetitionDetailForm();
     }
 
-    function cancelClubCompetitionDetailEdit() {
+    function selectClubCompetitionDetailLevel(level: string) {
+      clubCompetitionDetailViewModel.clubCompetitionDetailForm.level = level;
+    }
+
+    // COACH-7 : coche (ou décoche) d'un coup les judokas affichés, comme à la création.
+    function toggleAllClubAvailableJudokas() {
+      const listedIds = clubCompetitionAvailableJudokasFiltered.value.map((j) => String(j.judokaId));
+      const selected = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
+      if (clubCompetitionAvailableAllSelected.value) {
+        const listed = new Set(listedIds);
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds =
+          clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.filter((id) => !listed.has(String(id)));
+        return;
+      }
+      clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [
+        ...clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds,
+        ...listedIds.filter((id) => !selected.has(id))
+      ];
+    }
+
+    // COACH-7 : annuler une modification en cours demande confirmation, comme à la création.
+    async function cancelClubCompetitionDetailEdit() {
+      const hasChanges =
+        clubCompetitionDetailSnapshot !== "" && serializeClubCompetitionDetailForm() !== clubCompetitionDetailSnapshot;
+      if (
+        hasChanges &&
+        !(await app.notifications.confirmAction({
+          message: "Annuler les modifications ? Les informations changées et les judokas cochés ne seront pas enregistrés.",
+          confirmLabel: "Annuler les modifications",
+          cancelLabel: "Continuer la saisie",
+          danger: true
+        }))
+      ) {
+        return;
+      }
+      clubCompetitionDetailSnapshot = "";
       const clubCompetitionId =
         clubCompetitionDetailViewModel.clubCompetitionDetailForm.clubCompetitionId;
       if (clubCompetitionId) {

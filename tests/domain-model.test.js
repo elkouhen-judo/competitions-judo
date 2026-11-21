@@ -805,15 +805,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { handedness: "Droitier", judokaCount: 2 },
       { handedness: "Gaucher", judokaCount: 1 }
     ],
-    dataQualityIssues: [
-      { criterion: "judokaHandedness", label: "Droitier/gaucher du judoka non renseigné", count: 1, total: 6, rate: 17, unit: "combat" },
-      { criterion: "opponentStance", label: "Droitier/gaucher de l'adversaire non renseigné", count: 1, total: 6, rate: 17, unit: "combat" },
-      { criterion: "victoryType", label: "Fin du combat non renseignée", count: 0, total: 6, rate: 0, unit: "combat" },
-      { criterion: "scores", label: "Points marqués non renseignés", count: 0, total: 6, rate: 0, unit: "combat" },
-      // STAT-14 : le niveau se compte par compétition (5 compétitions, toutes avec un niveau).
-      { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 0, total: 5, rate: 0, unit: "competition" },
-      { criterion: "inconsistentIppon", label: "Ippon à vérifier", count: 0, total: 6, rate: 0, unit: "combat" }
-    ],
     podiumsByLevel: [
       {
         level: "Départemental",
@@ -917,14 +908,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     engagedJudokas: 0,
     // STAT-20 : la garde ne se ventile qu'à partir de 5 judokas.
     judokasByHandedness: [],
-    dataQualityIssues: [
-      { criterion: "judokaHandedness", label: "Droitier/gaucher du judoka non renseigné", count: 0, total: 0, rate: 0, unit: "combat" },
-      { criterion: "opponentStance", label: "Droitier/gaucher de l'adversaire non renseigné", count: 0, total: 0, rate: 0, unit: "combat" },
-      { criterion: "victoryType", label: "Fin du combat non renseignée", count: 0, total: 0, rate: 0, unit: "combat" },
-      { criterion: "scores", label: "Points marqués non renseignés", count: 0, total: 0, rate: 0, unit: "combat" },
-      { criterion: "competitionLevel", label: "Niveau de compétition non renseigné", count: 0, total: 0, rate: 0, unit: "competition" },
-      { criterion: "inconsistentIppon", label: "Ippon à vérifier", count: 0, total: 0, rate: 0, unit: "combat" }
-    ],
     podiumsByLevel: [
       {
         level: "Départemental",
@@ -984,7 +967,7 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
   });
 });
 
-test("coach dashboard statistics list judoka results, combats to complete and conceded techniques", () => {
+test("coach dashboard statistics list no judoka results nor combats to complete, and conceded techniques", () => {
   const combat = (combatId, judokaId, competitionId, result, extra = {}) => ({
     combatId,
     judokaId,
@@ -1025,15 +1008,8 @@ test("coach dashboard statistics list judoka results, combats to complete and co
 
   // STAT-18 : aucune ligne par judoka.
   assert.equal("byJudoka" in stats, false);
-  // Les saisies à compléter ne donnent que des décomptes, sans liste de combats ni de compétitions.
-  assert.deepEqual(stats.dataQualityIssues.find((entry) => entry.criterion === "opponentStance"), {
-    criterion: "opponentStance",
-    label: "Droitier/gaucher de l'adversaire non renseigné",
-    count: 1,
-    total: 3,
-    rate: 33,
-    unit: "combat"
-  });
+  // SIMPL-1 : les statistiques ne comptent plus les saisies à compléter.
+  assert.equal("dataQualityIssues" in stats, false);
   // TDB-5 : les techniques subies, de la plus fréquente à la moins fréquente.
   // STAT-4 : seules les techniques des défaites ; O-goshi, concédé dans une victoire, n'y est pas.
   assert.deepEqual(stats.topDefeatTechniques, [
@@ -1106,24 +1082,6 @@ test("STAT-21 : les statistiques du coach ne contiennent aucune donnée nominati
   ["J1", "J2", "J3", "Adversaire CB"].forEach((needle) => assert.equal(serialized.includes(needle), false, needle));
   // Le contrôle détecte bien une clé nominative.
   assert.deepEqual(findNominativeKeys({ rows: [{ judokaId: "J1" }] }), ["stats.rows[0].judokaId"]);
-});
-
-test("saisies à compléter : décomptes seuls, le niveau compté une fois par compétition club", () => {
-  const { combats, competitions } = nominativeFixture();
-  const issues = computeCoachDashboardStats(combats, competitions).dataQualityIssues;
-
-  assert.deepEqual(
-    issues.map(({ criterion, count, total, unit }) => [criterion, count, total, unit]),
-    [
-      ["judokaHandedness", 4, 4, "combat"],
-      ["opponentStance", 4, 4, "combat"],
-      ["victoryType", 2, 4, "combat"],
-      ["scores", 2, 4, "combat"],
-      ["competitionLevel", 2, 2, "competition"],
-      ["inconsistentIppon", 1, 4, "combat"]
-    ]
-  );
-  issues.forEach((entry) => assert.equal("competitions" in entry || "combats" in entry, false));
 });
 
 test("STAT-22 / STAT-24 : « Évolution » par trimestre compte le podium d'un trimestre sans combat saisi", () => {
@@ -1272,10 +1230,6 @@ test("coach dashboard statistics read rounds, months, score holding, ground shar
   assert.deepEqual(stats.byPeriod, [
     { key: "2026-T1", label: "Sept.-nov. 2026", participations: 3, combats: 4, victories: 2, defeats: 2, podiums: 1 }
   ]);
-  // STAT-14 : la compétition club sans niveau compte une fois, sur 2 compétitions.
-  const levelIssue = stats.dataQualityIssues.find((entry) => entry.criterion === "competitionLevel");
-  assert.equal(levelIssue.count, 1);
-  assert.equal(levelIssue.total, 2);
   // STAT-11 : participations classées par niveau.
   assert.equal(stats.podiumsByLevel.find((entry) => entry.level === "Régional").rankedParticipations, 1);
   // STAT-16 : la compétition sans niveau regroupe ses combats sur une ligne à part.
@@ -1308,42 +1262,6 @@ test("coach dashboard statistics domain only counts an ippon victory when the sc
 
   // STAT-2 : une seule victoire avec un point Ippon, marqué debout.
   assert.deepEqual(stats.ipponVictories, { total: 1, standing: 1, ground: 0 });
-});
-
-test("coach dashboard statistics domain flags an ippon decision with no matching ippon score as inconsistent", () => {
-  const combats = [
-    {
-      judokaId: "JUDO1",
-      result: "Victoire",
-      victoryType: "Ippon",
-      scores: []
-    },
-    {
-      judokaId: "JUDO2",
-      result: "Victoire",
-      victoryType: "Ippon",
-      scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }]
-    },
-    {
-      judokaId: "JUDO3",
-      result: "Défaite",
-      victoryType: "Ippon",
-      scores: []
-    }
-  ];
-
-  const issue = computeCoachDashboardStats(combats).dataQualityIssues.find(
-    (entry) => entry.criterion === "inconsistentIppon"
-  );
-
-  assert.deepEqual(issue, {
-    criterion: "inconsistentIppon",
-    label: "Ippon à vérifier",
-    count: 1,
-    total: 3,
-    rate: 33,
-    unit: "combat"
-  });
 });
 
 test("coach dashboard statistics domain ranks the top 3 winning techniques, ignoring losses and unscored wins", () => {

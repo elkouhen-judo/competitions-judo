@@ -2,7 +2,6 @@
   type Competition = import("./types").Competition;
   type CompetitionCombatCard = import("./types").CompetitionCombatCard;
   type CombatReadModel = import("./types").CombatReadModel;
-  type CombatDataQualityIssue = import("./types").CombatDataQualityIssue;
   type AccessInvitation = import("./types").AccessInvitation;
   type Judoka = import("./types").Judoka;
   type ManagedAdminCard = import("./types").ManagedAdminCard;
@@ -264,43 +263,6 @@
     return [detail, score.value].filter(Boolean).join(" · ");
   }
 
-  function hasMatchingIpponScore(combat: CombatReadModel): boolean {
-    return (combat.scores || []).some((score) => score.value === "Ippon");
-  }
-
-  function getCombatDataQualityIssues(
-    combat: CombatReadModel,
-    helpers: { showJudoka: boolean }
-  ): CombatDataQualityIssue[] {
-    const issues: CombatDataQualityIssue[] = [];
-    if (!combat.victoryType) {
-      issues.push({ label: "Fin du combat non renseignée", shortLabel: "fin du combat", priority: "high", field: "victoryType" });
-    }
-    const hasMissingIpponScore =
-      combat.result === "Victoire" &&
-      combat.victoryType === "Ippon" &&
-      !hasMatchingIpponScore(combat);
-    if (hasMissingIpponScore) {
-      issues.push({ label: "Ippon indiqué, mais aucun point Ippon détaillé", shortLabel: "détail du point Ippon", priority: "high", field: "scores" });
-    }
-    // Une victoire aux points doit montrer au moins un point du judoka ; une défaite ou une décision n'en exige pas.
-    const isVictoryOnPoints = combat.result === "Victoire" && ["Ippon", "Waza-ari", "Yuko"].includes(combat.victoryType || "");
-    if (isVictoryOnPoints && !(combat.scores || []).length && !hasMissingIpponScore) {
-      issues.push({ label: "Points marqués non renseignés", shortLabel: "points marqués", priority: "medium", field: "scores" });
-    }
-    const allPoints = [...(combat.scores || []), ...(combat.concededScores || [])];
-    if (allPoints.some((score) => !(score.category === "Ne-waza" ? score.neWazaType : score.technique))) {
-      issues.push({ label: "Technique d'un point non précisée", shortLabel: "technique d'un point", priority: "medium", field: "scores" });
-    }
-    if (helpers.showJudoka && !combat.judokaHandedness) {
-      issues.push({ label: "Droitier/gaucher du judoka non renseigné", shortLabel: "garde du judoka (profil)", priority: "medium" });
-    }
-    if (!combat.opponentStance) {
-      issues.push({ label: "Droitier/gaucher de l'adversaire non renseigné", shortLabel: "garde de l'adversaire", priority: "medium", field: "opponentStance" });
-    }
-    return issues;
-  }
-
   function projectCompetitionCombats(
     combats: CombatReadModel[] | null | undefined,
     helpers: {
@@ -325,7 +287,6 @@
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (c.concededScores || []).map(formatCombatScoreLabel),
       officialScoreLabel: formatCombatOfficialScore(c.officialScore),
-      dataQualityIssues: getCombatDataQualityIssues(c, helpers),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),
@@ -402,7 +363,6 @@
       scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (combatLike.concededScores || []).map(formatCombatScoreLabel),
       officialScoreLabel: formatCombatOfficialScore(combatLike.officialScore),
-      dataQualityIssues: getCombatDataQualityIssues(combatLike, helpers),
       judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: op.type === "updateCombat" && Boolean(helpers.canEdit),

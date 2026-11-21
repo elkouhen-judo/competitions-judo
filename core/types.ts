@@ -320,16 +320,6 @@ export interface CoachDashboardHandednessBreakdownEntry {
   judokaCount: number;
 }
 
-export interface CoachDashboardQualityIssueEntry {
-  criterion: string;
-  label: string;
-  count: number;
-  total: number;
-  rate: number;
-  /** STAT-14 : le niveau manquant se compte par compétition, les autres critères par combat. */
-  unit: "combat" | "competition";
-}
-
 export interface CoachDashboardPodiumBreakdownEntry {
   place: "1er" | "2e" | "3e";
   label: string;
@@ -361,7 +351,6 @@ export interface CoachDashboardStats {
   /** STAT-13 : judokas différents avec au moins un combat, puis leur garde. */
   engagedJudokas: number;
   judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
-  dataQualityIssues: CoachDashboardQualityIssueEntry[];
   podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
   topWinTechniques: TechniqueBreakdownEntry[];
   /** STAT-4 : techniques des points adverses dans les combats perdus. */

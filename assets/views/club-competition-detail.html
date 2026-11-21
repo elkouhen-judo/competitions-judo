@@ -31,19 +31,23 @@
           <div class="section-heading">
             <div>
               <h3>Participants ({{ clubCompetitionCurrentParticipants.length }})</h3>
-              <p class="subtitle">{{ clubCompetitionParticipantsLocked ? "Touchez une place pour classer, un nom pour saisir les combats." : "Touchez un judoka pour ouvrir sa fiche." }}</p>
+              <p class="subtitle">{{ clubCompetitionParticipantsLocked ? "Touchez une place pour classer, un nom pour saisir les combats et le bilan." : "Touchez un judoka pour ouvrir sa participation." }}</p>
             </div>
           </div>
           <div id="clubDetailParticipantsList">
             <div v-if="!clubCompetitionCurrentParticipants.length" class="empty-state">Aucun participant.</div>
             <div v-else class="list">
               <article v-for="p in clubCompetitionParticipantsPage" :key="p.competitionId" class="card competition-card participant-card">
-                <button class="card-button competition-open-button" type="button" @click="openCompetitionFromClubDetail(p.competitionId)">
+                <button class="card-button competition-open-button" type="button" @click="openClubParticipantCompetition(p.competitionId)">
                   <span class="competition-card-row">
                     <span class="card-title">{{ p.judokaName }}</span>
                     <span v-if="p.result" class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
                   </span>
-                  <span class="competition-card-date" :class="{ 'coach-summary-warning': !p.hasCombats }">{{ p.combatSummary }}</span>
+                  <span class="competition-card-row competition-card-facts">
+                    <span class="competition-card-date">{{ p.combatSummary }}</span>
+                    <!-- COACH-2 : le bilan à écrire se voit sur la ligne du participant. -->
+                    <span v-if="p.needsCoachReview" class="pill pill-todo">Bilan à écrire</span>
+                  </span>
                 </button>
                 <div v-if="clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing" class="choice-chips participant-ranking" role="radiogroup" :aria-label="'Classement de ' + p.judokaName">
                   <button
@@ -106,15 +110,27 @@
                 <option value="Vétéran">Vétéran</option>
               </select>
             </div>
-            <div>
-              <label for="club_detail_niveau">Niveau</label>
-              <select id="club_detail_niveau" v-model="clubCompetitionDetailForm.level">
-                <option value="">Sélectionnez un niveau</option>
-                <option value="Départemental">Départemental</option>
-                <option value="Régional">Régional</option>
-                <option value="National">National</option>
-                <option value="International">International</option>
-              </select>
+            <!-- COACH-7 : le niveau en boutons, comme à la création. -->
+            <div class="choice-field full-row">
+              <span class="choice-label" id="club_detail_niveau_label">Niveau</span>
+              <div
+                id="club_detail_niveau"
+                class="choice-segmented choice-segmented-2"
+                role="radiogroup"
+                aria-labelledby="club_detail_niveau_label"
+                tabindex="-1"
+                @keydown="onChoiceKeydown">
+                <button
+                  v-for="option in clubCompetitionLevelOptions"
+                  :key="option"
+                  type="button"
+                  role="radio"
+                  :aria-checked="clubCompetitionDetailForm.level === option ? 'true' : 'false'"
+                  :class="['choice-button', { 'choice-active': clubCompetitionDetailForm.level === option }]"
+                  @click="selectClubCompetitionDetailLevel(option)">
+                  {{ option }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -127,6 +143,10 @@
               </h3>
               <p class="subtitle">Ajoutez les judokas manquants de la même catégorie.</p>
             </div>
+            <!-- COACH-7 : toute la liste affichée en un toucher, comme à la création. -->
+            <button v-if="clubCompetitionAvailableJudokasFiltered.length" id="clubDetailSelectAll" class="button-secondary compact-button" type="button" @click="toggleAllClubAvailableJudokas()">
+              {{ clubCompetitionAvailableAllSelected ? "Tout désélectionner" : "Tout sélectionner" }}
+            </button>
           </div>
           <div v-if="clubCompetitionAvailableJudokas.length > 5" class="list-search">
             <input type="search" id="clubDetailJudokaSearch" aria-label="Rechercher un judoka" placeholder="Rechercher un judoka…" autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">

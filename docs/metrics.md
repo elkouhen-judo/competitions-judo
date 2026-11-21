@@ -58,7 +58,7 @@ Sauf mention contraire explicite ci-dessous, tous les taux respectent les règle
 
 ## 3. Synthèse et sections de résultats
 
-L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Activité, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline, puis Saisies à compléter (section 5). Une section sans donnée est masquée.
+L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Activité, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline. Une section sans donnée est masquée.
 
 ### 3.1. Synthèse
 
@@ -67,7 +67,6 @@ L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Activité, Par niveau,
 | `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées (une compétition club comptée une fois). |
 | `victoryRate`, `victories` | **Victoires** | `victories / totalCombats`, seuil de 5 (section 2). |
 | `podiumsByLevel` | **Podiums sur N classés** | Somme des podiums de tous les niveaux, rapportée à la somme des participations classées (`rankedParticipations`). |
-| `dataQualityIssues` | **Saisies à compléter** | Plus grand `count` parmi les critères comptés par combat (`unit = "combat"`, section 5). Aucune liste n'est affichée. |
 | — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
 | `previous` | Écart sous les tuiles « Combats », « Victoires », « Podiums » | Voir 3.0. Écart signé (`+12 combats`, `−2 podiums`, `+6 points`), sans couleur de jugement ; une ligne rappelle la période comparée. |
 | `participations`, `participationsWithoutCombat` | `18 participations, dont 4 sans combat saisi.` | Participations dont la date est passée (sans date : comptée), puis celles sans aucun combat saisi. Ligne masquée quand toutes ont un combat. |
@@ -163,20 +162,9 @@ Les 5 techniques les plus marquées par les adversaires (`concededScores`) dans 
 
 ---
 
-## 5. Critères de la tuile "Saisies à compléter" (`dataQualityIssues`)
+## 5. Saisies à compléter (retirées, SIMPL-1)
 
-Il n'y a plus de section dédiée : seule la tuile de synthèse (section 3.1) les utilise. Le service renvoie toujours les 6 critères, chacun avec `count`, `total`, `rate` et `unit`, sans liste de combats ni de compétitions.
-
-| Critère (`criterion`) | Unité | Libellé IHM | Condition de comptage |
-| :-- | :-- | :-- | :-- |
-| `judokaHandedness` | combat | Droitier/gaucher du judoka non renseigné | La garde du judoka suivi est absente. |
-| `opponentStance` | combat | Droitier/gaucher de l'adversaire non renseigné | La garde de l'adversaire est absente. |
-| `victoryType` | combat | Fin du combat non renseignée | `victoryType` est absent. |
-| `scores` | combat | Points marqués non renseignés | Aucun point marqué détaillé. |
-| `competitionLevel` | compétition | Niveau de compétition non renseigné | Compétitions du périmètre sans niveau, sur le nombre de compétitions du périmètre (une compétition club comptée une fois). |
-| `inconsistentIppon` | combat | Ippon à vérifier | Victoire par `Ippon` sans aucun point `Ippon` détaillé. |
-
-*Note :* le genre du judoka n'est plus un critère de saisie du tableau de bord (STAT-13) ; la recherche MCP garde son filtre par genre.
+Le tableau de bord ne compte plus les saisies manquantes : ni tuile, ni section, ni champ `dataQualityIssues` dans la réponse. Les combats incomplets restent comptés dans les statistiques qu'ils alimentent ; une donnée absente (garde, fin du combat, technique) les exclut seulement des sections qui en ont besoin.
 
 ---
 

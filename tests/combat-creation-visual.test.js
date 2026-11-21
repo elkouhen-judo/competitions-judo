@@ -108,8 +108,7 @@ async function startServer() {
             combatId: "combat-flow-combat",
             resultClass: "result-v",
             scoreLabels: (input.scores || []).map((score) => `${score.category} · ${score.value}`),
-            judokaDisplayName: "Léa Martin",
-            dataQualityIssues: []
+            judokaDisplayName: "Léa Martin"
           };
           combats = [combat];
           // ECRIT-2 : l'écriture renvoie le combat enregistré.
@@ -263,8 +262,8 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(outcomeWarning).toHaveCount(0);
     // SAISIE-6 : une technique manquante n'est signalée qu'une fois.
     await expect(page.locator("#combatFormView .combat-decision-notice")).toHaveCount(0);
-    // Les Yuko sans technique sont gardés et signalés, pas perdus.
-    await expect(page.locator("#combat_points .field-todo")).toHaveText("À compléter : technique d'un point");
+    // Les Yuko sans technique sont gardés, sans rappel « À compléter » (SIMPL-1).
+    await expect(page.locator("#combatFormView")).not.toContainText("À compléter");
     const hansokuHeight = await page.locator("#combat_type_victoire").getByRole("radio", { name: "Hansoku-make" }).evaluate((element) => element.getBoundingClientRect().height);
     assert.ok(hansokuHeight <= 46, `Hansoku-make sur une ligne (hauteur ${hansokuHeight})`);
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
@@ -378,7 +377,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
   });
 }
 
-// SAISIE-1 / SAISIE-2 : un combat s'enregistre en trois touchers, puis se complète depuis sa carte.
+// SAISIE-1 : un combat s'enregistre en trois touchers, puis se complète en rouvrant sa carte.
 for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 375, height: 812 }]]) {
   test(`saisie rapide d'un combat en trois touchers sur ${name}`, async (t) => {
     const { server, url, competition, rpcMethods } = await startServer();
@@ -424,11 +423,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(card.locator(".result-badge").first()).toHaveText("Défaite");
     await shot("03-enregistre");
 
-    // SAISIE-2 : « À compléter » sur la carte ouvre le combat, détail déplié, sur le champ concerné.
-    await card.getByRole("button", { name: "À compléter : garde de l'adversaire" }).click();
+    // SIMPL-1 : la carte ne réclame rien ; la toucher rouvre le combat pour le compléter.
+    await expect(card).not.toContainText("À compléter");
+    await card.click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combatDetail")).toBeVisible();
-    await expect(page.locator("#combat_garde_adversaire")).toBeFocused();
     // Les valeurs saisies en rapide sont retrouvées.
     await expect(resultRadioOf(page, "Défaite")).toHaveAttribute("aria-checked", "true");
     await expect(page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true })).toHaveAttribute("aria-checked", "true");

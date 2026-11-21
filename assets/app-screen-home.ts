@@ -1,6 +1,7 @@
 (() => {
   type KirokuApp = import("./types").KirokuApp;
   type Judoka = import("../core/types").Judoka;
+  type Competition = import("../core/types").Competition;
   type HomeMode = "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family";
   type AppScreens = import("./types").AppScreens;
   type KirokuAppState = import("./types").KirokuAppState;
@@ -563,6 +564,11 @@
       }
     }
 
+    function isCoachReviewMissing(competition: Competition): boolean {
+      const record = state.combatRecords[String(competition.competitionId)];
+      return Boolean(record && record.total) && !cleanText(competition.coachReview || "");
+    }
+
     function getClubCompetitionStats(clubCompetitionId: string, competitionDate: string, today: string) {
       const linked = state.competitions.filter(
         (competition) => String(competition.clubCompetitionId || "") === String(clubCompetitionId || "")
@@ -570,10 +576,11 @@
       const participantCount = linked.length;
       const rankedCount = linked.filter((competition) => cleanText(competition.result || "")).length;
       const podiumCount = linked.filter((competition) => ["1er", "2e", "3e"].includes(cleanText(competition.result || ""))).length;
-      // Un classement se saisit à partir du jour J ; un bilan ne manque qu'après la compétition.
+      // Un classement se saisit à partir du jour J ; un bilan ne manque qu'après la compétition,
+      // et seulement pour un participant qui a au moins un combat saisi (COACH-3).
       const missingRankingCount = competitionDate <= today ? participantCount - rankedCount : 0;
       const missingCoachReviewCount =
-        competitionDate < today ? linked.filter((competition) => !cleanText(competition.coachReview || "")).length : 0;
+        competitionDate < today ? linked.filter((competition) => isCoachReviewMissing(competition)).length : 0;
       return { participantCount, rankedCount, podiumCount, missingRankingCount, missingCoachReviewCount };
     }
 
@@ -662,10 +669,13 @@
         pillClass
       });
 
-      const thisWeek = events
+      // COACH-6 : 5 lignes par groupe au plus ; le reste est annoncé (« + N autres »).
+      const AGENDA_LIMIT = 5;
+      const thisWeekAll = events
         .filter((cc) => cc.competitionDate >= today && cc.competitionDate <= limitStr)
-        .sort((a, b) => a.competitionDate.localeCompare(b.competitionDate))
-        .slice(0, 5)
+        .sort((a, b) => a.competitionDate.localeCompare(b.competitionDate));
+      const thisWeek = thisWeekAll
+        .slice(0, AGENDA_LIMIT)
         .map((cc) => {
           const stats = getClubCompetitionStats(cc.clubCompetitionId, cc.competitionDate, today);
           return toItem(cc, ui.pluralize(stats.participantCount, "participant"), cc.competitionDate === today ? "pill-now" : "pill-accent");
@@ -675,22 +685,28 @@
         .sort((a, b) => b.competitionDate.localeCompare(a.competitionDate));
       // Une compétition déjà listée « Cette semaine » n'est pas répétée plus bas.
       const listedIds = new Set(thisWeek.map((item) => item.clubCompetitionId));
-      const rankings = pastByRecency
+      const rankingsAll = pastByRecency
         .filter((cc) => !listedIds.has(cc.clubCompetitionId || ""))
         .map((cc) => ({ cc, stats: getClubCompetitionStats(cc.clubCompetitionId, cc.competitionDate, today) }))
-        .filter(({ stats }) => stats.missingRankingCount > 0)
-        .slice(0, 5)
+        .filter(({ stats }) => stats.missingRankingCount > 0);
+      const rankings = rankingsAll
+        .slice(0, AGENDA_LIMIT)
         .map(({ cc, stats }) => toItem(cc, `${ui.pluralize(stats.missingRankingCount, "classement")} à saisir`, "pill-todo"));
-      const reviews = pastByRecency
+      const reviewsAll = pastByRecency
         .map((cc) => ({ cc, stats: getClubCompetitionStats(cc.clubCompetitionId, cc.competitionDate, today) }))
-        .filter(({ stats }) => stats.missingCoachReviewCount > 0)
-        .slice(0, 5)
+        .filter(({ stats }) => stats.missingCoachReviewCount > 0);
+      const reviews = reviewsAll
+        .slice(0, AGENDA_LIMIT)
         .map(({ cc, stats }) => toItem(cc, `${ui.pluralize(stats.missingCoachReviewCount, "bilan")} à écrire`, "pill-todo"));
+      const moreLabel = (total: number) => {
+        const more = total - AGENDA_LIMIT;
+        return more > 0 ? `+ ${more} ${more > 1 ? "autres" : "autre"} dans « Compétitions »` : "";
+      };
 
       return [
-        ...(thisWeek.length ? [{ key: "week", title: "Cette semaine", items: thisWeek }] : []),
-        ...(rankings.length ? [{ key: "rankings", title: "Classements à saisir", items: rankings }] : []),
-        ...(reviews.length ? [{ key: "reviews", title: "Bilans à écrire", items: reviews }] : [])
+        ...(thisWeek.length ? [{ key: "week", title: "Cette semaine", items: thisWeek, moreLabel: moreLabel(thisWeekAll.length) }] : []),
+        ...(rankings.length ? [{ key: "rankings", title: "Classements à saisir", items: rankings, moreLabel: moreLabel(rankingsAll.length) }] : []),
+        ...(reviews.length ? [{ key: "reviews", title: "Bilans à écrire", items: reviews, moreLabel: moreLabel(reviewsAll.length) }] : [])
       ];
     });
 

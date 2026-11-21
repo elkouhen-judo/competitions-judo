@@ -484,13 +484,11 @@ for (const [name, viewport] of [
     await expect(page.locator("#coachDashboardView .dashboard-summary-insight")).toHaveText(
       "1 victoire, 2 défaites sur 3 combats. Défaites le plus souvent par Waza-ari (2)."
     );
-    // Ni statistique par tour, ni section « Saisies à compléter » ; la tuile de synthèse reste.
+    // Ni statistique par tour, ni « Saisies à compléter » (SIMPL-1) : trois tuiles de synthèse.
     const headings = page.locator("#coachDashboardView h3");
     await expect(headings.filter({ hasText: "Par tour" })).toHaveCount(0);
-    await expect(headings.filter({ hasText: "Saisies à compléter" })).toHaveCount(0);
-    await expect(page.locator("#coachDashboardView .dashboard-kpis .mini-stat").nth(3)).toContainText(
-      "Saisies à compléter"
-    );
+    await expect(page.locator("#coachDashboardView .dashboard-kpis .mini-stat")).toHaveCount(3);
+    await expect(page.locator("#coachDashboardView")).not.toContainText("à compléter");
     // STAT-16 : par niveau ; STAT-10 : garde du judoka contre garde de l'adversaire.
     await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
       /Régional\s*1\/3 gagnés · trop peu de combats/

@@ -1381,7 +1381,12 @@
       white-space: pre-line;
     }
 
-    .dashboard-summary-insight {
+  /* Statistiques du coach : trois tuiles sur une ligne, quelle que soit la largeur. */
+  .dashboard-kpis.dashboard-kpis-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-summary-insight {
       margin: 0;
       color: var(--text);
       font-weight: 700;
@@ -1411,8 +1416,7 @@
     }
 
     .dashboard-filter-summary span,
-    .coach-card-status,
-    .coach-summary-warning {
+    .coach-card-status {
       display: inline-flex;
       align-items: center;
       min-height: 28px;
@@ -1433,12 +1437,6 @@
       color: var(--muted);
       font-size: 14px;
       line-height: 1.35;
-    }
-
-    .coach-summary-warning {
-      border-color: var(--warning);
-      background: var(--warning-soft);
-      color: var(--warning);
     }
 
     .coach-card-status {
@@ -3272,7 +3270,7 @@
 /* ===================================================================
    Revue ergonomique du 11/11/2026 (docs/backlog.md)
    Composants partagés : en-tête de page, menu d'actions, boutons de
-   choix, barre d'actions sur une ligne, pastilles, « À compléter ».
+   choix, barre d'actions sur une ligne, pastilles.
    =================================================================== */
 @layer utilities {
   /* NAV-1 : flèche retour à gauche du titre, actions dans un menu « ⋯ ». */
@@ -3516,16 +3514,7 @@
     border-color: var(--danger);
   }
 
-  /* COMBAT-5 : « À compléter » en langage courant, cliquable. */
-  .field-todo-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
+  /* Message d'aide sous un champ (score contradictoire, sélection modifiée). */
   .field-todo {
     display: inline-flex;
     align-items: center;
@@ -3538,11 +3527,6 @@
     font-size: 0.8rem;
     font-weight: 600;
     box-shadow: none;
-  }
-
-  button.field-todo:disabled {
-    cursor: default;
-    opacity: 1;
   }
 
   .danger-zone {
@@ -3984,10 +3968,6 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-  }
-
-  .mini-stat-todo {
-    background: var(--warning-soft);
   }
 
   .dashboard-summary-insight {

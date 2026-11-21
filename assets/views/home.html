@@ -88,6 +88,7 @@
                 </span>
                 <span class="pill" :class="item.pillClass">{{ item.detail }}</span>
               </button>
+              <button v-if="group.moreLabel" type="button" class="button-secondary agenda-more" @click="openCoachCompetitionsHub()">{{ group.moreLabel }}</button>
             </div>
           </div>
           <div v-if="!coachAgenda.length" class="empty-action">

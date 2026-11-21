@@ -5,6 +5,8 @@
   type CompetitionDetail = import("../core/types").CompetitionDetail;
   type CompetitionDetailDeps = import("./types").CompetitionDetailDeps;
 
+  type ClubParticipantLink = import("./types").ClubParticipantLink;
+
   interface CompetitionOwnerOption {
     judokaId: string;
     name: string;
@@ -38,6 +40,8 @@
     let competitionDetailRef: CompetitionDetailRef | null = null;
     let competitionDetailMounted = false;
     let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" | "judokaView" = "homeView";
+    // COACH-4 : ouverte depuis une compétition club, la compétition d'un participant propose le suivant.
+    const clubParticipantSequence = window.Vue.reactive({ items: [] as ClubParticipantLink[] });
 
     const competitionDetailProjection = window.Vue.computed(() => {
       if (!state.currentCompetition) return null;
@@ -186,10 +190,10 @@
           deleteCombat,
           editCurrentCompetition,
           navigateBackFromCompetition,
-          openCombatIssue,
           saveCompetitionRanking,
           showCombatForm,
-          saveCoachReview
+          saveCoachReview,
+          openNextClubParticipant
         },
         {
           competitionTitle,
@@ -216,6 +220,7 @@
           competitionSportSummary,
           showCoachAssessment,
           canEditCoachAssessment,
+          nextClubParticipant,
         }
       );
     }
@@ -236,6 +241,10 @@
           if (state.currentCompetition) {
             state.currentCompetition = { ...state.currentCompetition, coachReview: review };
           }
+          // COACH-1 : l'accueil et l'agenda recomptent les bilans à écrire sans rechargement.
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, coachReview: review } : competition
+          );
         },
         (error) => {
           ref.coachReviewStatus = "Non enregistré";
@@ -266,16 +275,6 @@
       );
     }
 
-    // COMBAT-5 : toucher « À compléter » ouvre le combat sur le champ concerné.
-    const issueFieldTargets: Record<string, string> = {
-      victoryType: "combat_type_victoire",
-      scores: "combat_points",
-      opponentStance: "combat_garde_adversaire"
-    };
-    function openCombatIssue(combatId: string, field?: string) {
-      showCombatForm(combatId, field ? issueFieldTargets[field] : undefined);
-    }
-
     function cancelPendingOperation(operationId: string) {
       app.cancelPendingOperation(operationId);
     }
@@ -297,9 +296,26 @@
       return state.currentCompetition;
     }
 
-    function openCompetitionFromClubDetail(competitionId: string) {
+    function openCompetitionFromClubDetail(competitionId: string, participants: ClubParticipantLink[] = []) {
       openCompetition(competitionId);
       currentCompetitionReturnView = "clubCompetitionDetailView";
+      clubParticipantSequence.items = participants.filter((participant) => participant.competitionId);
+    }
+
+    // Le suivant de la liste de la compétition club ; après le dernier, on revient au premier.
+    const nextClubParticipant = window.Vue.computed((): ClubParticipantLink | null => {
+      const items = clubParticipantSequence.items;
+      const currentId = String(state.currentCompetition?.competitionId || "");
+      if (items.length < 2 || !currentId) return null;
+      const index = items.findIndex((item) => item.competitionId === currentId);
+      if (index < 0) return null;
+      return items[(index + 1) % items.length];
+    });
+
+    function openNextClubParticipant() {
+      const next = nextClubParticipant.value;
+      if (!next) return;
+      openCompetitionFromClubDetail(next.competitionId, [...clubParticipantSequence.items]);
     }
 
     function openCompetitionFromJudokaProfile(competitionId: string) {
@@ -311,6 +327,7 @@
       if (!keepMessage) {
         clearMessage();
         currentCompetitionReturnView = "homeView";
+        clubParticipantSequence.items = [];
       }
       ensureCompetitionDetailViewModel();
       state.currentCompetition = null;
