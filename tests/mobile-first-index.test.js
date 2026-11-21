@@ -541,7 +541,7 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
 
 // SIMPL-1 : ni la carte d'un combat, ni le formulaire, ni les statistiques ne réclament de saisie.
 test("no « À compléter » reminder on combats, competitions or statistics", () => {
-  assert.doesNotMatch(bundle, /À compléter|Saisies à compléter|Niveau à compléter/);
+  assert.doesNotMatch(bundle, /À compléter|Saisies à compléter|Niveau à compléter|Points détaillés/);
   assert.doesNotMatch(bundle, /dataQualityIssues|combatForm(VictoryType|Score|OpponentStance)Issues|openCombatIssue/);
   assert.doesNotMatch(client, /getCombatDataQualityIssues|coachDashboardIncompleteCount|Ippon indiqué, mais aucun point Ippon détaillé/);
 });

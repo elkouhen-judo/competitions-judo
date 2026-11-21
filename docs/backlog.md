@@ -53,14 +53,10 @@ Objectif : le coach suit sans effort l'après-compétition (classements, bilans)
 
 #### SIMPL-1 — Plus de rappels « À compléter » (P2, S) — fait
 
-- Retiré : « À compléter : … » et ses priorités sur les cartes de combat, sous les champs du formulaire de combat, « Niveau à compléter » sur la fiche compétition, la tuile « Saisies à compléter » des statistiques et le champ `dataQualityIssues` (écran, API, MCP).
+- Retiré : « À compléter : … » et ses priorités sur les cartes de combat, sous les champs du formulaire de combat, « Niveau à compléter » et la tuile « Points détaillés » sur la fiche compétition, la tuile « Saisies à compléter » des statistiques et le champ `dataQualityIssues` (écran, API, MCP).
 - Gardé : « Aucun combat saisi » sur la ligne d'un participant, en texte neutre.
 - Règles : CBT-015, DASH-007, DASH-017.
 
 #### DOC-1 — Spécification remise à jour (P3, XS) — fait
 
 - Exemples et règles de création par la famille retirés (UIX-008, UIX-012, UIX-014), AC-021 aligné sur COMP-027, identifiants UIX en double renumérotés (UIX-039 à UIX-041).
-
-### À trancher
-
-- La fiche d'une compétition affiche encore la tuile « Points détaillés 0/3 », qui mesure aussi une saisie incomplète. La retirer avec SIMPL-1 ?

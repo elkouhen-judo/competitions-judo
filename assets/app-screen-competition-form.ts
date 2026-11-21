@@ -150,21 +150,11 @@
       const wins = state.currentCombats.filter((combat) => combat.result === "Victoire").length;
       const losses = state.currentCombats.filter((combat) => combat.result === "Défaite").length;
       const draws = state.currentCombats.filter((combat) => combat.result === "Egalité").length;
-      const scoredCombats = state.currentCombats.filter((combat) => (combat.scores || []).length > 0).length;
       const victoryRate = total ? Math.round((wins / total) * 100) : 0;
       const record = ui.formatRecord(wins, losses, draws);
-      const finalizationResult = state.currentCompetition?.result || "";
-      const finalizationStatus = finalizationResult
-        ? finalizationResult === "Non classé"
-          ? "Non classé"
-          : `Classement ${finalizationResult}`
-        : "À finaliser";
       return {
-        total,
         record,
-        victoryRate: `${victoryRate}%`,
-        scoredCombats,
-        finalizationStatus
+        victoryRate: `${victoryRate}%`
       };
     });
 
