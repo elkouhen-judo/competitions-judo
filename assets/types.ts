@@ -81,7 +81,8 @@ export type ViewId =
   | "clubCompetitionDetailView"
   | "competitionFormView"
   | "combatFormView"
-  | "coachDashboardView";
+  | "coachDashboardView"
+  | "ffjudoAgendaView";
 
 export interface NavigationSnapshot {
   viewId: ViewId;
@@ -391,6 +392,11 @@ export interface CompetitionScreen {
   showCompetitionForm(idCompetition: string): void;
 }
 
+/** AGD : agenda FFJDA en lecture seule, ouvert depuis le menu du compte. */
+export interface FfjudoAgendaScreen {
+  showFfjudoAgenda(): void;
+}
+
 export interface AdminsScreen {
   showAdminsManagement(keepMessage?: boolean): void;
 }
@@ -422,6 +428,7 @@ export interface AppScreens {
   admins: AdminsScreen;
   coachDashboard: CoachDashboardScreen;
   competition: CompetitionScreen;
+  ffjudoAgenda: FfjudoAgendaScreen;
   home: HomeScreen;
   judoka: JudokaScreen;
   login: LoginScreen;

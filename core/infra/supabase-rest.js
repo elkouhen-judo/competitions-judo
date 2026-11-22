@@ -1,5 +1,6 @@
 // Borne explicite de toute lecture de liste. Une liste plus longue est lue page par page.
 const LIST_PAGE_SIZE = 1000;
+const UPSERT_BATCH_SIZE = 500;
 
 function normalizeRows(rows) {
   return rows.map((row) => {
@@ -138,10 +139,22 @@ function createSupabaseRest({ supabaseRequest }) {
     });
   }
 
+  // Agenda FFJDA : insère ou met à jour par lots, selon la colonne de conflit.
+  async function supabaseUpsertMany(table, payloads, onConflict) {
+    for (let start = 0; start < payloads.length; start += UPSERT_BATCH_SIZE) {
+      await supabaseRequest(table, `on_conflict=${encodeURIComponent(onConflict)}`, {
+        method: "post",
+        payload: payloads.slice(start, start + UPSERT_BATCH_SIZE),
+        prefer: "resolution=merge-duplicates,return=minimal"
+      });
+    }
+  }
+
   return {
     supabaseDelete,
     supabaseInsert,
     supabaseInsertMany,
+    supabaseUpsertMany,
     supabasePatch,
     supabaseSelect,
     supabaseSelectOne,

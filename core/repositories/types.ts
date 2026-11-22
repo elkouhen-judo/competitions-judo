@@ -19,6 +19,8 @@ export interface SupabaseRestDeps {
   supabaseInsert: <T = Record<string, unknown>>(table: string, payload: unknown) => Promise<T | null>;
   /** Insère plusieurs lignes en un seul envoi. */
   supabaseInsertMany: <T = Record<string, unknown>>(table: string, payloads: unknown[]) => Promise<T[]>;
+  /** Agenda FFJDA : insère ou met à jour par lots selon la colonne de conflit. */
+  supabaseUpsertMany?: (table: string, payloads: unknown[], onConflict: string) => Promise<void>;
   supabasePatch: <T = Record<string, unknown>>(
     table: string,
     query: string,
@@ -145,4 +147,33 @@ export interface AccessInvitationRow {
 export interface ParentLinkRow {
   id_parent: string;
   id_judoka: string;
+}
+
+/** Agenda FFJDA : ligne de `ffjudo_events` (sans aucune donnée de contact). */
+export interface FfjudoEventRow {
+  event_key: string;
+  titre: string;
+  date_debut: string;
+  date_fin: string | null;
+  inscription_ouverture: string | null;
+  inscription_cloture: string | null;
+  type_evenement: string;
+  lieu: string;
+  ville: string;
+  code_postal: string;
+  proprietaire: string;
+  ligue: string;
+  source_url: string;
+  site_web: string;
+  sources: string[];
+  synced_at: string;
+}
+
+/** Agenda FFJDA : ligne de `ffjudo_sync_runs`. */
+export interface FfjudoSyncRunRow {
+  started_at: string;
+  finished_at: string;
+  status: "ok" | "partial" | "error";
+  sources: Record<string, { status: "ok" | "error"; count: number; error?: string }>;
+  event_count: number;
 }

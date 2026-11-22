@@ -1,0 +1,71 @@
+    <section id="ffjudoAgendaView" class="panel hidden" v-cloak>
+      <div class="panel-header page-header">
+        <button class="icon-button page-back" type="button" aria-label="Retour" title="Retour" @click="showHome()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <div class="page-title">
+          <h2>Agenda FFJDA</h2>
+          <p id="ffjudoAgendaLastSync" class="subtitle">{{ lastSyncLabel }}</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <!-- AGD : filtres appliqués dans le navigateur sur les événements à venir. -->
+        <div v-if="hasEvents" class="form-grid agenda-filters">
+          <div>
+            <label for="ffjudoAgendaLigue">Ligue</label>
+            <select id="ffjudoAgendaLigue" v-model="filters.ligue" :disabled="isLoading">
+              <option value="">Toutes les ligues</option>
+              <option v-for="option in ligueOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="ffjudoAgendaType">Type</label>
+            <select id="ffjudoAgendaType" v-model="filters.type" :disabled="isLoading">
+              <option value="">Tous les types</option>
+              <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="ffjudoAgendaMonth">Mois</label>
+            <select id="ffjudoAgendaMonth" v-model="filters.month" :disabled="isLoading">
+              <option value="">Tous les mois</option>
+              <option v-for="option in monthOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="dashboard-loading-state" aria-busy="true">
+          <span class="dashboard-loading-label">Chargement de l'agenda…</span>
+          <div v-for="index in 3" :key="index" class="sk-card">
+            <div class="sk-line sk-meta"></div>
+            <div class="sk-line sk-title"></div>
+          </div>
+        </div>
+        <div v-else-if="loadError" class="status-banner status-banner-warning dashboard-load-error error-state" role="status">
+          <span>{{ loadError }}</span>
+          <button v-if="canRetry" class="button-secondary compact-button" type="button" @click="retryFfjudoAgenda()">Réessayer</button>
+        </div>
+        <div v-else-if="!hasEvents" class="empty-state">Aucun événement à venir.</div>
+        <div v-else-if="!monthGroups.length" class="empty-state agenda-no-match">
+          <p>Aucun événement pour ces filtres.</p>
+          <button class="button-secondary compact-button" type="button" @click="clearFfjudoAgendaFilters()">Effacer les filtres</button>
+        </div>
+        <template v-else>
+          <section v-for="group in monthGroups" :key="group.key" class="agenda-month" :aria-label="group.label">
+            <h3 class="agenda-month-title">{{ group.label }}</h3>
+            <div class="list">
+              <article v-for="event in group.events" :key="event.eventKey" class="card agenda-card">
+                <p class="agenda-card-date">{{ event.dateLabel }}</p>
+                <p class="card-title">{{ event.titre }}</p>
+                <div class="card-meta">
+                  <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
+                  <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
+                  <p v-if="event.closingLabel" class="agenda-card-line agenda-card-closing">{{ event.closingLabel }}</p>
+                </div>
+                <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
+              </article>
+            </div>
+          </section>
+        </template>
+      </div>
+    </section>

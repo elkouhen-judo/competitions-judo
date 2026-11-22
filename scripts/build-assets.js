@@ -21,6 +21,7 @@ const entryPoints = [
   "assets/app-screen-competition.ts",
   "assets/app-screen-admins.ts",
   "assets/app-screen-coach-dashboard.ts",
+  "assets/app-screen-ffjudo-agenda.ts",
   "assets/app-runtime.ts",
   "assets/app.ts"
 ];

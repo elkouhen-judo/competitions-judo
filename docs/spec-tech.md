@@ -55,6 +55,8 @@ This specification does not redefine product behavior already described in `docs
 - **ARC-009**: Browser screens may be migrated progressively to Vue 3 while preserving existing screen IDs and global action entry points until the full frontend migration is complete. The Vue 3 browser runtime shall be vendored locally and served through `/api/client` before screen scripts.
 - **ARC-010**: `api/mcp-oauth.js` shall implement the OAuth 2.1 authorization endpoint (`/mcp/authorize`, delegating end-user authentication to the existing Google/Supabase login), the token endpoint (`/mcp/token`, exchanging a PKCE-verified authorization code for a short-lived Ayumi-signed JWT MCP access token), Dynamic Client Registration (RFC 7591, `/mcp/register`, returning a self-contained signed `client_id` rather than persisting registrations server-side), and the unauthenticated `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` discovery metadata — consolidated into a single Vercel function to stay within the Hobby plan serverless function limit (see `tests/vercel-deployment.test.js`).
 - **ARC-011**: `api/mcp.js` shall expose a remote MCP server speaking JSON-RPC 2.0 over HTTP, secured by Ayumi-issued JWT MCP access tokens, independent from Supabase access tokens.
+- **ARC-013**: `api/ffjudo-sync.js` shall run the FFJDA agenda synchronisation (`core/services/ffjudo-sync.service.ts`), triggered once a day by Vercel Cron (`vercel.json` `crons`: `/api/ffjudo-sync`, `0 4 * * *` UTC). Parsers live in `core/domain/ffjudo/` (ligue page embedded JSON, national HTML cards, organiser → ligue mapping); reads go through the RPC method `getFfjudoEvents` (`core/services/ffjudo-agenda.service.ts`).
+- **ARC-014**: The synchronisation reads only `https://pays-de-la-loire-judo.ffjudo.com/evenement`, `https://judo-bretagne.ffjudo.com/evenement`, `https://nouvelle-aquitaine-judo.ffjudo.com/evenement` and `https://www.ffjudo.com/evenements/agenda/{N}` (at most 10 pages), sequentially, one request per second at most, `User-Agent: Ayumi-agenda/1.0 (+https://competitions-judo.vercel.app/)`, 10 s timeout per request, no new request after 40 s (`SYNC_BUDGET_MS`), a source yielding no event or an unrecognised template counts as failed; never `?mois=` nor `/recherches` URLs (robots.txt).
 - **ARC-012**: Structured combat search (`core/services/coach-assistant-search.ts`, `methods.searchCombats`) shall stay transport-agnostic and deterministic; it shall not call any LLM. It serves the MCP `combats.search` tool.
 
 ### 3.2 Vercel routing and runtime injection
@@ -78,6 +80,7 @@ This specification does not redefine product behavior already described in `docs
 - **VCL-023**: The font shall be served by the app from `/assets/fonts/` (`woff2`, `font-display: swap`); the page shall not request any third-party stylesheet.
 - **VCL-024**: `vercel.json` shall pin functions to `dub1`, the Vercel region next to the production Supabase project (`eu-west-1`). The dev Supabase project is in `eu-central-1`.
 - **VCL-025**: `/api/rpc` shall return a `Server-Timing` header (`total`, `auth`, `supabase` with request and stage counts) and log the same values with the method name.
+- **VCL-026**: `vercel.json` shall cap every function at `maxDuration: 60` seconds, enough for the FFJDA synchronisation (about 8 s measured on 2026-11-22).
 - **VCL-013**: Browser reads without a local snapshot and mutations outside the offline queue shall fail explicitly when offline; supported offline mutations shall be queued locally, and slow mobile requests shall abort with a user-facing error.
 - **VCL-020**: The client router shall encode shareable navigation context in the URL hash and restore it after reload.
 - **VCL-014**: Offline business data caching shall be implemented in browser storage and shall not change the `/api/rpc` network-only service worker strategy.
@@ -124,6 +127,8 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-031**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
 - **DAT-032**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
 - **DAT-033**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
+- **DAT-034**: `ffjudo_events` stores the FFJDA agenda keyed by `event_key` (`fed:<federal id>`, `loc:<host>:<site id>`, `nat:<slug>:<start date>`), with dates, type, place, town, postal code, organiser, resolved ligue, source URL, organiser website, `sources` (hosts that listed it) and `synced_at`. It has no contact nor FFJDA level column.
+- **DAT-035**: `ffjudo_sync_runs` journals each synchronisation: start and end, status among `ok`, `partial`, `error`, per-source status and count, distinct event count.
 
 ### 3.3b Data access performance
 
@@ -175,6 +180,8 @@ This specification does not redefine product behavior already described in `docs
 - **SEC-004**: `SUPABASE_SERVICE_ROLE_KEY` shall never be sent to the browser.
 - **SEC-005**: When the service role key is an `sb_secret_...` key, it shall be sent only in the `apikey` header and not as `Authorization: Bearer`.
 - **SEC-006**: Missing or invalid bearer tokens shall cause explicit request rejection.
+- **SEC-008**: `/api/ffjudo-sync` shall reject (401) any request whose `Authorization` header is not exactly `Bearer <CRON_SECRET>` (constant-time comparison), and shall refuse every request when `CRON_SECRET` is not set.
+- **SEC-009**: FFJDA organiser contact fields (`contactNom`, `contactTelephone`, `contactEmail`) and free text (`contenu`, `intro`, `commentaires`) shall be dropped by the parser and never reach storage, logs or the browser.
 - **SEC-007**: MCP JWT signing (access tokens, authorization codes, and registered client identifiers) shall use a dedicated server-side secret (`MCP_JWT_SECRET`) distinct from Supabase and Google credentials, with each token kind segregated by a distinct `aud` claim.
 
 ### 3.6 Platform and configuration
@@ -193,6 +200,7 @@ This specification does not redefine product behavior already described in `docs
 - **CFG-008**: The hook migration shall grant `supabase_auth_admin` the schema, function, table, and RLS access needed to read `judokas` and `access_invitations`.
 - **CFG-011**: Each deployment environment (production, dev) shall use its own dedicated Supabase project (own `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, own Google OAuth redirect URI, own copy of the schema migration); environment variables and data shall never be shared across Supabase projects.
 - **CFG-012**: Environment configuration shall provide `MCP_JWT_SECRET`; `MCP_TOKEN_TTL_SECONDS` is optional and configures the MCP token lifetime when set.
+- **CFG-015**: `CRON_SECRET` is required for `/api/ffjudo-sync`; Vercel sends it to the cron call. Each environment has its own value.
 - **CFG-014**: Local Supabase backups shall use environment-specific PostgreSQL connection strings stored outside Git, retain seven timestamped backup directories, and require explicit confirmation before restoration.
 
 ### 3.7 Backup and restoration

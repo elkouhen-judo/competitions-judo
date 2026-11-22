@@ -315,6 +315,20 @@ This specification does not define:
 - **MCP-007**: The remote MCP endpoint shall enforce the minted JWT MCP access token scopes on each request and shall expose only callable tools in `tools/list`, so a `PARENT` or `JUDOKA` caller can only read or write competitions/combats within their own managed scope and cannot reach the club-wide coach dashboard, and an `ADMIN` caller cannot reach judoka, competition, or combat data through MCP.
 - **MCP-008** (MULTI-7): For a coach, `clubs.list` returns their clubs (`clubId`, `name`); it requires the coach dashboard scope, so parents and judokas do not see it. `judokas.search` and `competitions.search` accept a `clubId` filter and give each result its `clubId` and `clubName` (a competition belongs to the club of its club competition, CLUB-003a). `coach.dashboard` accepts exactly the screen filters (DASH-002): `clubId`, `dateFrom`, `dateTo`, `ageCategory`, `competitionIds`. A club the coach does not coach is refused (CLUB-005). `competitions.save` only updates an existing competition (COMP-006).
 
+### 3.12 FFJDA agenda rules
+
+- **AGD-001**: Only a `COACH` opens « Agenda FFJDA », from the account menu. Other profiles see no entry, and the server refuses `getFfjudoEvents` to them with « Accès refusé. ».
+- **AGD-002**: The agenda is read-only; it creates, edits or links no competition.
+- **AGD-003**: The agenda lists the upcoming events (start date today or later, Paris time), sorted by start date then title, grouped by month.
+- **AGD-004**: The agenda covers the national agenda of ffjudo.com and the events published by the Pays de la Loire, Bretagne and Nouvelle-Aquitaine ligue sites, which also relay other ligues' events.
+- **AGD-005**: An event seen on several sites is listed once.
+- **AGD-006**: Each card shows the date (or date range), title, town (or place), type, organiser with its ligue, the registration closing date while it is not past, and a « Voir sur ffjudo.com » link opening the source page in a new tab.
+- **AGD-007**: The agenda filters by ligue, type and month, combined, in the browser. A committee belongs to the ligue of its department; national federation events belong to `National`; an unknown organiser belongs to `Autre`; an event without type is `Non précisé`.
+- **AGD-008**: The heading shows « Mis à jour le dd/mm/yyyy à hh:mm » for the last successful synchronisation, or « Pas encore synchronisé ».
+- **AGD-009**: States: loading « Chargement de l'agenda… » ; no event « Aucun événement à venir. » (filters hidden) ; no match « Aucun événement pour ces filtres. » with « Effacer les filtres » ; failure « Impossible de charger l'agenda. » with « Réessayer » ; offline without a list loaded in the session « L'agenda n'est pas disponible hors connexion. ».
+- **AGD-010**: The agenda never stores or shows organisers' contact details (name, phone, e-mail) nor the FFJDA level code.
+- **AGD-011**: The agenda is synchronised once a day. A source that fails keeps its events from the previous synchronisation; an upcoming event that disappeared is removed only when every site that listed it was read successfully.
+
 ## 4. Acceptance Criteria
 
 - **AC-001**: Given a connected `JUDOKA`, when initial data is loaded, then only that user's competitions are visible.

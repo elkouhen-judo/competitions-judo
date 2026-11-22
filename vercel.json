@@ -4,9 +4,11 @@
   "regions": ["dub1"],
   "functions": {
     "api/*.js": {
-      "excludeFiles": "core/**/*.ts"
+      "excludeFiles": "core/**/*.ts",
+      "maxDuration": 60
     }
   },
+  "crons": [{ "path": "/api/ffjudo-sync", "schedule": "0 4 * * *" }],
   "headers": [
     {
       "source": "/assets/fonts/(.*)",

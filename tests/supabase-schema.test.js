@@ -251,3 +251,17 @@ test("INSCR-1 : le judoka garde la saison de sa dernière inscription", () => {
   // Inscription sur invitation : la saison en cours.
   assert.match(schema, /insert into public\.judokas \(id_judoka, email, prenom, nom, role, profile_type, saison_inscription\)/i);
 });
+
+test("supabase schema stores the FFJDA agenda server-side only, without contacts or level", () => {
+  assert.match(schema, /create table if not exists public\.ffjudo_events/i);
+  assert.match(schema, /event_key text primary key/i);
+  assert.match(schema, /create table if not exists public\.ffjudo_sync_runs/i);
+  assert.match(schema, /create index if not exists ffjudo_events_date_debut_idx on public\.ffjudo_events \(date_debut\)/i);
+  for (const table of ["ffjudo_events", "ffjudo_sync_runs"]) {
+    assert.match(schema, new RegExp(`alter table public\\.${table} enable row level security`, "i"));
+    assert.match(schema, new RegExp(`revoke all on table public\\.${table} from anon, authenticated`, "i"));
+    assert.match(schema, new RegExp(`grant select, insert, update, delete on table public\\.${table} to service_role`, "i"));
+  }
+  const agendaDdl = schema.slice(schema.search(/create table if not exists public\.ffjudo_events/i));
+  assert.doesNotMatch(agendaDdl.slice(0, agendaDdl.search(/create table if not exists public\.ffjudo_sync_runs/i)), /contact|niveau/i);
+});

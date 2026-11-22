@@ -489,6 +489,10 @@ function createInitialState(): KirokuAppState {
         screens.coachDashboard.showCoachDashboard();
         return;
       }
+      if (restored.viewId === "ffjudoAgendaView" && state.isCoach) {
+        screens.ffjudoAgenda.showFfjudoAgenda();
+        return;
+      }
       if (restored.viewId === "homeView") {
         if (isHomeMode(restored.homeMode)) {
           screens.home.setHomeMode(restored.homeMode);
@@ -1526,7 +1530,8 @@ function createInitialState(): KirokuAppState {
         logoutUser,
         openPersonalSpace: () => screens.home.setHomeMode("judoka"),
         openFamilySpace: () => screens.home.setHomeMode("family"),
-        openAccessManagement: () => screens.admins.showAdminsManagement()
+        openAccessManagement: () => screens.admins.showAdminsManagement(),
+        openFfjudoAgenda: () => screens.ffjudoAgenda.showFfjudoAgenda()
       },
       {
         // Le coach retrouve « Mon espace » ici ; un compte uniquement parent n'en a pas.
@@ -1534,7 +1539,9 @@ function createInitialState(): KirokuAppState {
           () => state.isCoach && state.currentUser?.profileType !== "PARENT"
         ),
         showFamilyLink: window.Vue.computed(() => state.isCoach && state.isParent),
-        showAdminLink: window.Vue.computed(() => state.isAdmin)
+        showAdminLink: window.Vue.computed(() => state.isAdmin),
+        // AGD-001 : l'agenda FFJDA est réservé aux coachs.
+        showFfjudoAgendaLink: window.Vue.computed(() => state.isCoach)
       }
     );
 
@@ -1595,6 +1602,7 @@ function createInitialState(): KirokuAppState {
     screens.competition = window.createKirokuCompetitionScreen(app);
     screens.admins = window.createKirokuAdminsScreen(app);
     screens.coachDashboard = window.createKirokuCoachDashboardScreen(app);
+    screens.ffjudoAgenda = window.createKirokuFfjudoAgendaScreen(app);
     loginScreen = window.createKirokuLoginScreen(app);
     screens.login = loginScreen;
     app.loginScreen = loginScreen;

@@ -11,7 +11,8 @@
     "clubCompetitionFormView",
     "clubCompetitionDetailView",
     "competitionFormView",
-    "combatFormView"
+    "combatFormView",
+    "ffjudoAgendaView"
   ] as const;
 
   type ActionMap = Record<string, (...args: never[]) => unknown>;

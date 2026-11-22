@@ -2,7 +2,8 @@ const {
   getSupabaseConfig,
   getSupabaseJwtSecret,
   getMcpJwtSecret,
-  getMcpTokenTtlSeconds
+  getMcpTokenTtlSeconds,
+  getCronSecret
 } = require("./config/env.js");
 const { createSupabaseClient } = require("./infra/supabase-client.js");
 const { createSupabaseRest } = require("./infra/supabase-rest.js");
@@ -48,6 +49,18 @@ const createParentLinksRepository =
 const createClubsRepository =
   /** @type {typeof import("./repositories/clubs.repository").default} */ (
     /** @type {unknown} */ (require("../core-dist/repositories/clubs.repository.js").default)
+  );
+const createFfjudoEventsRepository =
+  /** @type {typeof import("./repositories/ffjudo-events.repository").default} */ (
+    /** @type {unknown} */ (require("../core-dist/repositories/ffjudo-events.repository.js").default)
+  );
+const createFfjudoSyncService =
+  /** @type {typeof import("./services/ffjudo-sync.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/ffjudo-sync.service.js").default)
+  );
+const createFfjudoAgendaService =
+  /** @type {typeof import("./services/ffjudo-agenda.service").default} */ (
+    /** @type {unknown} */ (require("../core-dist/services/ffjudo-agenda.service.js").default)
   );
 const createUserContextService =
   /** @type {typeof import("./services/user-context.service").default} */ (
@@ -147,6 +160,26 @@ const combatScoresRepository = createCombatScoresRepository(repositoryDeps);
 const invitationsRepository = createInvitationsRepository(repositoryDeps);
 const parentLinksRepository = createParentLinksRepository(repositoryDeps);
 const clubsRepository = createClubsRepository(repositoryDeps);
+const ffjudoEventsRepository = createFfjudoEventsRepository(repositoryDeps);
+
+// Agenda FFJDA : lecture polie de ffjudo.com (User-Agent explicite, 10 s au plus par page).
+const FFJUDO_USER_AGENT = "Ayumi-agenda/1.0 (+https://competitions-judo.vercel.app/)";
+async function fetchFfjudoText(url) {
+  const response = await fetch(url, {
+    headers: { "User-Agent": FFJUDO_USER_AGENT, Accept: "text/html" },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} sur ${url}`);
+  }
+  return response.text();
+}
+const ffjudoSyncService = createFfjudoSyncService({
+  repository: ffjudoEventsRepository,
+  fetchText: fetchFfjudoText,
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  now: () => new Date()
+});
 
 const userContextService = createUserContextService({
   judokasRepository,
@@ -238,6 +271,13 @@ const registrationService = createRegistrationService({
   adminService,
   createEmail,
   supabaseRpc: supabaseClient.supabaseRpc
+});
+
+const ffjudoAgendaService = createFfjudoAgendaService({
+  repository: ffjudoEventsRepository,
+  userContextService,
+  isCoach: (user) => permissions.isCoach(toCanonicalJudoka(user)),
+  now: () => new Date()
 });
 
 const clubsService = createClubsService({
@@ -390,7 +430,8 @@ const methods = {
   ...clubsService.methods,
   ...competitionsService.methods,
   ...combatsService.methods,
-  ...coachDashboardService.methods
+  ...coachDashboardService.methods,
+  ...ffjudoAgendaService.methods
 };
 
 const mcpServerService = createMcpServerService({
@@ -411,6 +452,8 @@ const mcpServerService = createMcpServerService({
 
 module.exports = {
   getSupabaseConfig,
+  getCronSecret,
+  ffjudoSyncService,
   methods,
   mcpAuthService,
   mcpServerService,

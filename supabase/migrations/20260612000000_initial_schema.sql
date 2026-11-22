@@ -777,3 +777,63 @@ $$;
 
 grant execute on function public.coach_dashboard_data(text[], text[], date, date, text, text[]) to service_role;
 revoke execute on function public.coach_dashboard_data(text[], text[], date, date, text, text[]) from authenticated, anon, public;
+
+-- Agenda FFJDA : copie en lecture seule des événements publiés sur ffjudo.com, synchronisée
+-- chaque jour par /api/ffjudo-sync. Aucune donnée de contact ni niveau FFJDA n'est stocké.
+create table if not exists public.ffjudo_events (
+  event_key text primary key,
+  titre text not null,
+  date_debut date not null,
+  date_fin date,
+  inscription_ouverture date,
+  inscription_cloture date,
+  type_evenement text not null default '',
+  lieu text not null default '',
+  ville text not null default '',
+  code_postal text not null default '',
+  proprietaire text not null default '',
+  ligue text not null default '',
+  source_url text not null,
+  site_web text not null default '',
+  sources text[] not null default '{}',
+  synced_at timestamptz not null
+);
+
+create index if not exists ffjudo_events_date_debut_idx on public.ffjudo_events (date_debut);
+
+create table if not exists public.ffjudo_sync_runs (
+  id bigint generated always as identity primary key,
+  started_at timestamptz not null,
+  finished_at timestamptz,
+  status text not null,
+  sources jsonb not null default '{}'::jsonb,
+  event_count integer not null default 0,
+  constraint ffjudo_sync_runs_status_check check (status in ('ok', 'partial', 'error'))
+);
+
+create index if not exists ffjudo_sync_runs_finished_at_idx on public.ffjudo_sync_runs (finished_at desc);
+
+alter table public.ffjudo_events enable row level security;
+alter table public.ffjudo_sync_runs enable row level security;
+
+drop policy if exists "Service role access on ffjudo_events" on public.ffjudo_events;
+create policy "Service role access on ffjudo_events"
+on public.ffjudo_events
+for all
+to service_role
+using (true)
+with check (true);
+
+drop policy if exists "Service role access on ffjudo_sync_runs" on public.ffjudo_sync_runs;
+create policy "Service role access on ffjudo_sync_runs"
+on public.ffjudo_sync_runs
+for all
+to service_role
+using (true)
+with check (true);
+
+revoke all on table public.ffjudo_events from anon, authenticated;
+revoke all on table public.ffjudo_sync_runs from anon, authenticated;
+
+grant select, insert, update, delete on table public.ffjudo_events to service_role;
+grant select, insert, update, delete on table public.ffjudo_sync_runs to service_role;

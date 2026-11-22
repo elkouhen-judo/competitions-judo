@@ -587,10 +587,33 @@ export interface RpcMethods {
   updateCombat: (email: string, combat: Record<string, unknown>) => Promise<OperationResult>;
   /** Calcule les statistiques agrégées du tableau de bord coach selon les filtres fournis. */
   getCoachDashboard: (email: string, filters: CoachDashboardFilters) => Promise<CoachDashboard>;
+  /** Agenda FFJDA : événements à venir, réservés aux coachs (AGD-001). */
+  getFfjudoEvents: (email: string) => Promise<FfjudoAgenda>;
   /** Cherche des combats visibles par le coach selon des filtres structurés (outil MCP combats.search). */
   searchCombats: (
     email: string,
     filters?: CoachChatFilters,
     limit?: number
   ) => Promise<{ matches: CoachAssistantMatch[] }>;
+}
+
+/** Agenda FFJDA : un événement à venir tel que l'écran l'affiche (aucune donnée de contact). */
+export interface FfjudoAgendaEvent {
+  eventKey: string;
+  titre: string;
+  dateDebut: string;
+  dateFin: string;
+  inscriptionCloture: string;
+  typeEvenement: string;
+  lieu: string;
+  ville: string;
+  ligue: string;
+  proprietaire: string;
+  sourceUrl: string;
+}
+
+/** Agenda FFJDA : événements à venir et date de la dernière synchronisation réussie ("" si aucune). */
+export interface FfjudoAgenda {
+  events: FfjudoAgendaEvent[];
+  lastSyncAt: string;
 }

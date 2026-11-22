@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY_ENV = "SUPABASE_ANON_KEY";
 const SUPABASE_JWT_SECRET_ENV = "SUPABASE_JWT_SECRET";
 const MCP_JWT_SECRET_ENV = "MCP_JWT_SECRET";
 const MCP_TOKEN_TTL_SECONDS_ENV = "MCP_TOKEN_TTL_SECONDS";
+const CRON_SECRET_ENV = "CRON_SECRET";
 const DEFAULT_MCP_TOKEN_TTL_SECONDS = 900;
 
 function getRequiredEnv(name) {
@@ -36,7 +37,14 @@ function getMcpTokenTtlSeconds() {
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MCP_TOKEN_TTL_SECONDS;
 }
 
+// Agenda FFJDA : secret envoyé par Vercel Cron à /api/ffjudo-sync ; vide = synchro refusée.
+function getCronSecret() {
+  return String(process.env[CRON_SECRET_ENV] || "").trim();
+}
+
 module.exports = {
+  CRON_SECRET_ENV,
+  getCronSecret,
   SUPABASE_ANON_KEY_ENV,
   SUPABASE_SERVICE_ROLE_KEY_ENV,
   SUPABASE_URL_ENV,

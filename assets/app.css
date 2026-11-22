@@ -2676,6 +2676,87 @@ button:focus-visible,
   margin-bottom: 4px;
 }
 
+.agenda-filters {
+  margin-bottom: 16px;
+}
+
+.agenda-month + .agenda-month {
+  margin-top: 20px;
+}
+
+.agenda-month-title {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agenda-card {
+  display: grid;
+  gap: 6px;
+}
+
+.agenda-card .card-title {
+  overflow-wrap: anywhere;
+}
+
+.agenda-card-date {
+  margin: 0;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.agenda-card-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.agenda-card-closing {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.agenda-card-link {
+  justify-self: start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.agenda-card-link span {
+  margin-left: 4px;
+}
+
+.agenda-card-link:hover,
+  .agenda-card-link:focus-visible {
+  text-decoration: underline;
+}
+
+.agenda-no-match {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.agenda-no-match p {
+  margin: 0;
+}
+
+@media (min-width: 721px) {
+  .agenda-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .visible {
   visibility: visible;
 }
@@ -4828,3 +4909,5 @@ html {
    Composants partagés : en-tête de page, menu d'actions, boutons de
    choix, barre d'actions sur une ligne, pastilles.
    =================================================================== */
+
+/* AGD : agenda FFJDA (lecture seule). */

@@ -4,6 +4,7 @@ import type {
   ClubCompetitionDeps,
   ClubCompetitionScreen,
   CoachDashboardScreen,
+  FfjudoAgendaScreen,
   CombatFormDeps,
   CombatFormScreen,
   CompetitionDetailDeps,
@@ -60,6 +61,7 @@ declare global {
     createKirokuCompetitionScreen: (app: KirokuApp) => CompetitionScreen;
     createKirokuAdminsScreen: (app: KirokuApp) => AdminsScreen;
     createKirokuCoachDashboardScreen: (app: KirokuApp) => CoachDashboardScreen;
+    createKirokuFfjudoAgendaScreen: (app: KirokuApp) => FfjudoAgendaScreen;
     createKirokuLoginScreen: (app: KirokuApp) => LoginScreen;
   }
 }
