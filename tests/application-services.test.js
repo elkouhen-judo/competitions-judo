@@ -1273,21 +1273,11 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     }
   ]);
   assert.equal(allResult.availableCompetitions.length, 2);
-  // STAT-10 : garde du judoka contre garde de l'adversaire.
-  assert.deepEqual(
-    allResult.stats.byLateralMatchup.map(({ label, combats, victories }) => [label, combats, victories]),
-    [
-      ["Droitier contre droitier", 2, 2],
-      ["Droitier contre gaucher", 0, 0],
-      ["Gaucher contre droitier", 0, 0],
-      ["Gaucher contre gaucher", 1, 0]
-    ]
-  );
-  // STAT-13 : l'effectif ne se lit plus par genre.
+  // STAT-13 : l'effectif ne se lit ni par genre ni par garde.
   assert.equal(allResult.stats.engagedJudokas, 2);
-  assert.equal("judokasByGender" in allResult.stats, false);
-  // STAT-20 : sous 5 judokas, la garde de chacun se devinerait : elle n'est pas ventilée.
-  assert.deepEqual(allResult.stats.judokasByHandedness, []);
+  ["judokasByGender", "judokasByHandedness", "byLateralMatchup"].forEach((key) =>
+    assert.equal(key in allResult.stats, false, key)
+  );
   assert.equal(allResult.withheld, null);
   // STAT-21 : ni judoka, ni adversaire dans la réponse ; « name » n'y désigne qu'une compétition.
   const nominativeKeys = (value, path = "") =>
@@ -1308,70 +1298,26 @@ test("getCoachDashboard computes stats filtered by competition and age category"
     allResult.stats.victoriesByDecisionType.find((entry) => entry.decisionType === "Ippon"),
     { decisionType: "Ippon", count: 2, total: 2, rate: 100 }
   );
-  assert.deepEqual(allResult.stats.podiumsByLevel, [
-    {
-      level: "Départemental",
-      podiums: [
-        { place: "1er", label: "🥇", count: 1 },
-        { place: "2e", label: "🥈", count: 0 },
-        { place: "3e", label: "🥉", count: 0 }
-      ],
-      rankedParticipations: 1,
-      topSeven: 1,
-      participations: 2
-    },
-    {
-      level: "Régional",
-      podiums: [
-        { place: "1er", label: "🥇", count: 0 },
-        { place: "2e", label: "🥈", count: 0 },
-        { place: "3e", label: "🥉", count: 0 }
-      ],
-      rankedParticipations: 0,
-      topSeven: 0,
-      participations: 0
-    },
-    {
-      level: "National",
-      podiums: [
-        { place: "1er", label: "🥇", count: 0 },
-        { place: "2e", label: "🥈", count: 0 },
-        { place: "3e", label: "🥉", count: 1 }
-      ],
-      rankedParticipations: 1,
-      topSeven: 1,
-      participations: 1
-    },
-    {
-      level: "International",
-      podiums: [
-        { place: "1er", label: "🥇", count: 0 },
-        { place: "2e", label: "🥈", count: 0 },
-        { place: "3e", label: "🥉", count: 0 }
-      ],
-      rankedParticipations: 0,
-      topSeven: 0,
-      participations: 0
-    }
-  ]);
+  // STAT-11 : podiums sur les participations classées, par niveau.
+  assert.deepEqual(
+    allResult.stats.byLevel
+      .filter((line) => line.rankedParticipations)
+      .map(({ key, podiums, rankedParticipations }) => [key, podiums, rankedParticipations]),
+    [
+      ["Départemental", 1, 1],
+      ["National", 1, 1]
+    ]
+  );
 
   const ageFiltered = await service.methods.getCoachDashboard("coach@example.com", {
     ageCategory: "Cadet"
   });
   assert.equal(ageFiltered.stats.totalCombats, 2);
   assert.equal(ageFiltered.stats.analyzedCompetitions, 1);
-  assert.deepEqual(ageFiltered.stats.ipponVictories, { total: 1, standing: 1, ground: 0 });
-  assert.deepEqual(ageFiltered.stats.podiumsByLevel[0], {
-    level: "Départemental",
-    podiums: [
-      { place: "1er", label: "🥇", count: 1 },
-      { place: "2e", label: "🥈", count: 0 },
-      { place: "3e", label: "🥉", count: 0 }
-    ],
-    rankedParticipations: 1,
-    topSeven: 1,
-    participations: 2
-  });
+  assert.deepEqual(
+    ageFiltered.stats.byLevel.map(({ key, podiums, rankedParticipations }) => [key, podiums, rankedParticipations])[0],
+    ["Départemental", 1, 1]
+  );
   assert.deepEqual(ageFiltered.availableCompetitions, [
     {
       competitionId: "COMP1",

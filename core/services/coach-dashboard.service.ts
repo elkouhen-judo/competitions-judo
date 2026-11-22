@@ -130,14 +130,13 @@ export default function createCoachDashboardService(
     const competitionIds = Array.isArray(filters.competitionIds) ? filters.competitionIds.map(String) : [];
     const previousPeriod = getPreviousPeriod(filters);
     const readFilters = previousPeriod ? { ...filters, dateFrom: previousPeriod.dateFrom } : filters;
-    const [{ judokas }, data] = await Promise.all([
+    const [, data] = await Promise.all([
       userContextService.getDomainUserContext(email),
       combatsRepository.listCoachDashboardData(toCompetitionScopeFilter(scope, readFilters), competitionIds)
     ]);
     // MULTI-4 : une participation compte pour le club où elle a été obtenue, même si le judoka a
     // changé de club depuis ; aucune donnée nominative ne sort (DASH-026).
     const competitionRows = data.competitions.filter((row) => clubIds.includes(String(row.stats_club_id || "")));
-    const judokaRows = judokas;
     const scopedRows = filterCompetitionsByScope(competitionRows, filters);
     const selectedRows = filterCompetitionsBySelection(scopedRows, filters);
     const today = getCurrentDate();
@@ -145,8 +144,7 @@ export default function createCoachDashboardService(
       const ids = new Set(rows.map((row) => String(row.id_competition)));
       const combats = toCoachDashboardCombats(
         data.combats.filter((combat) => ids.has(String(combat.id_competition))),
-        rows,
-        judokaRows
+        rows
       );
       return { combats, competitions: rows.map(toCanonicalCompetition) };
     };

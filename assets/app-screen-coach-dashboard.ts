@@ -7,9 +7,6 @@
 
   const COACH_DASHBOARD_REFRESH_DEBOUNCE_MS = 300;
   const COACH_DASHBOARD_COMPETITION_SUGGESTION_LIMIT = 8;
-  const PODIUM_LEVEL_PRIORITY = ["International", "National", "Régional", "Départemental"];
-  const PODIUM_PLACE_PRIORITY = ["1er", "2e", "3e"];
-  const PODIUM_PLACE_EMOJIS: Record<string, string> = { "1er": "🥇", "2e": "🥈", "3e": "🥉" };
 
   // STAT-1 : en dessous de 5 combats (ou points) au dénominateur, pas de pourcentage ni de barre.
   const MIN_RATE_SAMPLE = 5;
@@ -23,28 +20,15 @@
       "Premières, deuxièmes et troisièmes places, sur les participations dont le classement final est saisi.",
     byClub:
       "Sur tous vos clubs : le bilan de chacun. Un résultat compte pour le club de sa compétition. Un club de moins de 2 judokas est listé sans chiffres.",
-    activity:
-      "Judokas différents ayant au moins un combat retenu (puis leur garde à partir de 5 judokas), participations passées, compétitions et combats par judoka engagé.",
+    engagement: "Judokas différents ayant au moins un combat retenu, et nombre moyen de combats de chacun.",
     participations:
       "Participations dont la date est passée. Une participation sans combat saisi compte dans les podiums, pas dans les taux de victoire.",
-    podiumsByLevel:
-      "Places obtenues par niveau de compétition, sur les participations classées à ce niveau, puis les classements dans les 7 premiers (1er, 2e, 3e, 5e, 7e).",
-    victoriesByType: "Comment les combats gagnés se sont terminés, en part de toutes les victoires.",
-    winTechniques:
-      "Les 5 techniques les plus marquées par les judokas dans les combats gagnés, et le nombre de techniques différentes marquées.",
-    defeatsByType: "Comment les combats perdus se sont terminés, en part de toutes les défaites.",
-    defeatTechniques: "Les 5 techniques les plus marquées par les adversaires dans les combats perdus.",
-    ippon:
-      "Part des victoires avec au moins un Ippon du judoka, puis part de ces Ippon marqués debout et au sol.",
-    lateral:
-      "Taux de victoire selon la garde du judoka et celle de l'adversaire. Seuls les combats gagnés ou perdus dont les deux gardes sont connues comptent.",
-    byLevel: "Combats, victoires et défaites selon le niveau de la compétition.",
-    scoreHolding:
-      "Qui marque le premier et qui gagne ensuite, lu sur le déroulé. Seuls les combats dont tous les points sont rangés comptent.",
-    groundShare:
-      "Part des points marqués et concédés au sol. Seuls les points dont la technique est connue comptent.",
-    discipline:
-      "Shidos reçus par combat, sur les combats dont le score est renseigné, et défaites par Hansoku-make.",
+    byLevel:
+      "Victoires selon le niveau de la compétition, puis podiums sur les participations classées à ce niveau.",
+    winning:
+      "Comment les combats gagnés se sont terminés, les 5 techniques les plus marquées dans ces combats, et la part des points marqués debout ou au sol.",
+    losing:
+      "Comment les combats perdus se sont terminés, les 5 techniques les plus marquées par les adversaires dans ces combats, et la part des points concédés debout ou au sol.",
     byPeriod:
       "Participations, combats, victoires et podiums par trimestre de saison, ou par saison quand la période en couvre plusieurs.",
     previous:
@@ -84,10 +68,18 @@
     return `${sign}${count} ${count > 1 ? plural : singular}`;
   }
 
-  // STAT-25, STAT-29 : la valeur de la période précédente, si son dénominateur atteint 5.
-  function formatPreviousRate(count: number, total: number) {
-    if (total < MIN_RATE_SAMPLE) return "";
-    return `avant ${count}/${total} (${toRate(count, total)} %)`;
+  // STAT-7 : points debout ou au sol ; les parts attendent 5 points dont la technique est connue.
+  function formatGroundSplit(share: { ground: number; counted: number }) {
+    if (!share.counted) return "";
+    const standing = share.counted - share.ground;
+    if (share.counted < MIN_RATE_SAMPLE) return `${standing} debout, ${share.ground} au sol`;
+    const groundRate = toRate(share.ground, share.counted);
+    return `${100 - groundRate} % debout, ${groundRate} % au sol (${share.counted} points)`;
+  }
+
+  // STAT-11 : les podiums de la période, sommés sur les niveaux.
+  function countPodiums(stats: CoachDashboardStats): number {
+    return (stats.byLevel || []).reduce((total, line) => total + Number(line.podiums || 0), 0);
   }
 
   function createKirokuCoachDashboardScreen(app: KirokuApp) {
@@ -147,7 +139,6 @@
     const currentStats = () => coachDashboardViewModel.coachDashboardStats;
     // STAT-23 : statistiques de la même fenêtre un an plus tôt, ou null.
     const previousStats = () => coachDashboardViewModel.coachDashboardPrevious?.stats || null;
-    const withPrevious = (text: string, previous: string) => (previous ? `${text} · ${previous}` : text);
 
     // STAT-23 : la période comparée, rappelée sous les tuiles.
     const coachDashboardPreviousLabel = window.Vue.computed(() => {
@@ -167,10 +158,7 @@
         victories: bothRated
           ? formatDelta(stats.victoryRate - previous.victoryRate, "point")
           : formatDelta(stats.victories - previous.victories, "victoire"),
-        podiums: formatDelta(
-          countAllPodiums(stats.podiumsByLevel) - countAllPodiums(previous.podiumsByLevel),
-          "podium"
-        )
+        podiums: formatDelta(countPodiums(stats) - countPodiums(previous), "podium")
       };
     });
 
@@ -200,53 +188,22 @@
       return stats ? toDecisionLines(stats.defeatsByDecisionType, stats.defeats) : [];
     });
 
-    // STAT-2 : parmi les victoires avec un Ippon du judoka, debout ou au sol.
-    // STAT-29 : la part des victoires par Ippon, et celle de la période précédente.
-    const coachDashboardIpponLines = window.Vue.computed(() => {
-      const stats = currentStats();
-      const split = stats?.ipponVictories;
-      if (!stats || !split || !split.total) return [];
-      const previous = previousStats();
-      const share = formatShare(split.total, stats.victories);
-      return [
-        {
-          key: "victories",
-          label: "Victoires avec Ippon",
-          ...share,
-          text: withPrevious(
-            share.text,
-            previous ? formatPreviousRate(previous.ipponVictories.total, previous.victories) : ""
-          )
-        },
-        { key: "standing", label: "Debout", ...formatShare(split.standing, split.total) },
-        { key: "ground", label: "Au sol", ...formatShare(split.ground, split.total) }
-      ];
-    });
-
-    // STAT-10 : quatre lignes garde du judoka / garde de l'adversaire.
-    const coachDashboardByLateralMatchup = window.Vue.computed(() =>
-      (currentStats()?.byLateralMatchup || [])
-        .filter((entry) => entry.combats > 0)
-        .map((entry) => ({ ...entry, ...formatWinRate(entry.victories, entry.combats) }))
+    // STAT-16, STAT-11 : par niveau, les victoires puis les podiums sur les participations classées.
+    const coachDashboardLevelLines = window.Vue.computed(() =>
+      (currentStats()?.byLevel || []).map((line) => ({
+        ...line,
+        ...(line.combats
+          ? formatWinRate(line.victories, line.combats)
+          : { text: "aucun combat saisi", rate: 0, showBar: false }),
+        detailText: line.rankedParticipations
+          ? `${pluralize(line.podiums, "podium")} sur ${pluralize(
+              line.rankedParticipations,
+              "participation classée",
+              "participations classées"
+            )}`
+          : ""
+      }))
     );
-
-    // STAT-5, STAT-16 : bilan par tour et par niveau.
-    function toResultLines(lines: Array<{ key: string; label: string; combats: number; victories: number; defeats: number }>) {
-      return lines
-        .filter((line) => line.combats > 0)
-        .map((line) => ({ ...line, ...formatWinRate(line.victories, line.combats) }));
-    }
-    // STAT-25 : chaque niveau rappelle son bilan de la période précédente.
-    const coachDashboardLevelLines = window.Vue.computed(() => {
-      const previousByKey = new Map((previousStats()?.byLevel || []).map((line) => [line.key, line]));
-      return toResultLines(currentStats()?.byLevel || []).map((line) => {
-        const previous = previousByKey.get(line.key);
-        return {
-          ...line,
-          text: withPrevious(line.text, previous ? formatPreviousRate(previous.victories, previous.combats) : "")
-        };
-      });
-    });
 
     // STAT-24 : une ligne par trimestre de saison, ou par saison ; affichée à partir de 2 lignes.
     const coachDashboardPeriodLines = window.Vue.computed(() => {
@@ -266,68 +223,16 @@
       }));
     });
 
-    // STAT-6 : tenue du score, sur les combats au déroulé complet.
-    const coachDashboardScoreHoldingLines = window.Vue.computed(() => {
-      const holding = currentStats()?.scoreHolding;
-      if (!holding || !holding.counted) return [];
-      return [
-        { key: "scoredFirst", label: "Marque le premier", value: `${holding.scoredFirst}/${holding.counted}` },
-        {
-          key: "wonAfterScoringFirst",
-          label: "Puis gagne",
-          value: withPrevious(
-            formatWinRate(holding.wonAfterScoringFirst, holding.scoredFirst).text,
-            formatPreviousRate(
-              previousStats()?.scoreHolding.wonAfterScoringFirst || 0,
-              previousStats()?.scoreHolding.scoredFirst || 0
-            )
-          )
-        },
-        { key: "lostAfterLeading", label: "Perd après avoir mené", value: String(holding.lostAfterLeading) },
-        { key: "wonAfterTrailing", label: "Gagne après avoir été mené", value: String(holding.wonAfterTrailing) }
-      ];
-    });
-
-    // STAT-7 : part des points au sol, marqués et concédés.
-    const coachDashboardGroundLines = window.Vue.computed(() => {
+    // STAT-7 : points marqués et concédés, debout ou au sol.
+    const coachDashboardScoredGroundText = window.Vue.computed(() => {
       const share = currentStats()?.groundShare;
-      if (!share) return [];
-      const previous = previousStats()?.groundShare;
-      const toLine = (key: "scored" | "conceded", label: string) => {
-        const current = share[key];
-        const formatted = formatShare(current.ground, current.counted);
-        const before = previous ? formatPreviousRate(previous[key].ground, previous[key].counted) : "";
-        return { key, label, ...current, ...formatted, text: withPrevious(formatted.text, before) };
-      };
-      return [toLine("scored", "Marqués au sol"), toLine("conceded", "Concédés au sol")].filter(
-        (line) => line.counted > 0
-      );
+      return share ? formatGroundSplit(share.scored) : "";
+    });
+    const coachDashboardConcededGroundText = window.Vue.computed(() => {
+      const share = currentStats()?.groundShare;
+      return share ? formatGroundSplit(share.conceded) : "";
     });
 
-    // STAT-8 : shidos reçus par combat, défaites par Hansoku-make.
-    const coachDashboardDiscipline = window.Vue.computed(() => {
-      const discipline = currentStats()?.discipline;
-      if (!discipline || !discipline.scoredCombats) return null;
-      const average = discipline.shidosReceived / discipline.scoredCombats;
-      const previous = previousStats()?.discipline;
-      // STAT-29 : « 0,4 par combat (12 combats) · avant 0,9 (8 combats) ».
-      const before =
-        previous && previous.scoredCombats >= MIN_RATE_SAMPLE
-          ? `avant ${DECIMAL_FORMATTER.format(previous.shidosReceived / previous.scoredCombats)} (${pluralize(
-              previous.scoredCombats,
-              "combat"
-            )})`
-          : "";
-      return {
-        shidoText: withPrevious(
-          `${DECIMAL_FORMATTER.format(average)} par combat (${pluralize(discipline.scoredCombats, "combat")})`,
-          before
-        ),
-        hansokuMakeText: String(discipline.hansokuMakeDefeats)
-      };
-    });
-
-    // STAT-28 : l'activité du club, sans aucun nom, et la valeur de la période précédente.
     // MULTI-6 : une ligne par club sur « Tous mes clubs », sans nom de judoka.
     const coachDashboardClubLines = window.Vue.computed(() => {
       const entries = currentStats() ? coachDashboardViewModel.coachDashboardByClub || [] : [];
@@ -358,46 +263,12 @@
       });
     });
 
-    const coachDashboardActivityLines = window.Vue.computed(() => {
+    // STAT-13 : l'effectif engagé, sans aucun nom.
+    const coachDashboardEngagementText = window.Vue.computed(() => {
       const stats = currentStats();
-      if (!stats) return [];
-      const previous = previousStats();
-      const before = (value: string) => (previous ? `avant ${value}` : "");
-      const perJudoka = (entry: CoachDashboardStats) =>
-        entry.engagedJudokas ? DECIMAL_FORMATTER.format(entry.totalCombats / entry.engagedJudokas) : "0";
-      const handedness = (stats.judokasByHandedness || [])
-        .filter((entry) => entry.judokaCount > 0)
-        .map((entry) => pluralize(entry.judokaCount, entry.handedness.toLowerCase()));
-      const levels = stats.podiumsByLevel
-        .filter((entry) => entry.participations > 0 || (previous && findLevel(previous, entry.level)?.participations))
-        .sort((a, b) => PODIUM_LEVEL_PRIORITY.indexOf(a.level) - PODIUM_LEVEL_PRIORITY.indexOf(b.level))
-        .map((entry) => {
-          const previousCount = previous ? findLevel(previous, entry.level)?.participations || 0 : null;
-          return `${entry.level} ${entry.participations}${previousCount === null ? "" : ` (avant ${previousCount})`}`;
-        });
-      return [
-        {
-          key: "judokas",
-          label: "Judokas engagés",
-          value: withPrevious([String(stats.engagedJudokas), ...handedness].join(" · "), before(String(previous?.engagedJudokas ?? "")))
-        },
-        {
-          key: "participations",
-          label: "Participations",
-          value: withPrevious(String(stats.participations), before(String(previous?.participations ?? "")))
-        },
-        {
-          key: "competitions",
-          label: "Compétitions",
-          value: withPrevious(String(stats.analyzedCompetitions), before(String(previous?.analyzedCompetitions ?? "")))
-        },
-        {
-          key: "combatsPerJudoka",
-          label: "Combats par judoka engagé",
-          value: withPrevious(perJudoka(stats), previous ? before(perJudoka(previous)) : "")
-        },
-        ...(levels.length ? [{ key: "byLevel", label: "Participations par niveau", value: levels.join(" · ") }] : [])
-      ];
+      if (!stats || !stats.engagedJudokas) return "";
+      const perJudoka = DECIMAL_FORMATTER.format(stats.totalCombats / stats.engagedJudokas);
+      return `${pluralize(stats.engagedJudokas, "judoka engagé", "judokas engagés")} · ${perJudoka} combats par judoka`;
     });
     // STAT-27 : participations passées, dont celles sans combat saisi.
     const coachDashboardParticipationText = window.Vue.computed(() => {
@@ -405,64 +276,13 @@
       if (!stats || !stats.participationsWithoutCombat) return "";
       return `${pluralize(stats.participations, "participation")}, dont ${stats.participationsWithoutCombat} sans combat saisi.`;
     });
-    // STAT-29 : techniques différentes marquées dans les combats gagnés.
-    const coachDashboardDistinctTechniquesText = window.Vue.computed(() => {
-      const stats = currentStats();
-      if (!stats || !stats.distinctWinTechniques) return "";
-      const previous = previousStats();
-      return withPrevious(
-        pluralize(stats.distinctWinTechniques, "technique différente marquée", "techniques différentes marquées"),
-        previous ? `avant ${previous.distinctWinTechniques}` : ""
-      );
-    });
-    const coachDashboardPodiumsByLevel = window.Vue.computed(() => currentStats()?.podiumsByLevel || []);
     const coachDashboardTopWinTechniques = window.Vue.computed(() => currentStats()?.topWinTechniques || []);
-    // STATS-1 : podiums écrits en toutes lettres, par niveau (« National : 1 deuxième place »).
-    const PODIUM_PLACE_WORDS: Record<string, [string, string]> = {
-      "1er": ["première place", "premières places"],
-      "2e": ["deuxième place", "deuxièmes places"],
-      "3e": ["troisième place", "troisièmes places"]
-    };
-    function countPodiums(podiums: Array<{ count: number }>): number {
-      return podiums.reduce((sum, podium) => sum + Number(podium.count || 0), 0);
-    }
-    function countAllPodiums(levels: CoachDashboardStats["podiumsByLevel"]): number {
-      return (levels || []).reduce((sum, entry) => sum + countPodiums(entry.podiums), 0);
-    }
-    function findLevel(stats: CoachDashboardStats, level: string) {
-      return (stats.podiumsByLevel || []).find((entry) => entry.level === level) || null;
-    }
-    // STAT-11 : chaque niveau rapporte ses podiums à ses participations classées.
-    const coachDashboardPodiumLines = window.Vue.computed(() =>
-      [...coachDashboardPodiumsByLevel.value]
-        .filter((entry) => entry.rankedParticipations > 0 || countPodiums(entry.podiums) > 0)
-        .sort((a, b) => PODIUM_LEVEL_PRIORITY.indexOf(a.level) - PODIUM_LEVEL_PRIORITY.indexOf(b.level))
-        .map((entry) => {
-          const places = PODIUM_PLACE_PRIORITY.map((place) => {
-            const count = Number(entry.podiums.find((podium) => podium.place === place)?.count || 0);
-            const words = PODIUM_PLACE_WORDS[place] || [place, place];
-            return count ? `${PODIUM_PLACE_EMOJIS[place]} ${count} ${count > 1 ? words[1] : words[0]}` : "";
-          }).filter(Boolean);
-          const ratio = `${pluralize(countPodiums(entry.podiums), "podium")} sur ${pluralize(
-            entry.rankedParticipations,
-            "participation classée",
-            "participations classées"
-          )}`;
-          // STAT-26 : les 7 premiers, au-delà des podiums.
-          const topSeven = entry.topSeven ? `${entry.topSeven} dans les 7 premiers` : "";
-          // STAT-25 : le rapport de la période précédente au même niveau.
-          const previous = previousStats() ? findLevel(previousStats() as CoachDashboardStats, entry.level) : null;
-          const before = previous
-            ? `avant ${countPodiums(previous.podiums)} sur ${previous.rankedParticipations}`
-            : "";
-          return { level: entry.level, text: [...places, ratio, topSeven, before].filter(Boolean).join(" · ") };
-        })
-    );
-    const coachDashboardPodiumTotal = window.Vue.computed(() =>
-      coachDashboardPodiumsByLevel.value.reduce((total, entry) => total + countPodiums(entry.podiums), 0)
-    );
+    const coachDashboardPodiumTotal = window.Vue.computed(() => {
+      const stats = currentStats();
+      return stats ? countPodiums(stats) : 0;
+    });
     const coachDashboardRankedTotal = window.Vue.computed(() =>
-      coachDashboardPodiumsByLevel.value.reduce((total, entry) => total + Number(entry.rankedParticipations || 0), 0)
+      (currentStats()?.byLevel || []).reduce((total, line) => total + Number(line.rankedParticipations || 0), 0)
     );
     // STATS-2 : les techniques s'affichent en barres relatives à la plus fréquente.
     function toTechniqueBars(entries: Array<{ technique: string; count: number }>) {
@@ -599,21 +419,15 @@
           coachDashboardVictoryTile,
           coachDashboardVictoriesByType,
           coachDashboardDefeatsByType,
-          coachDashboardIpponLines,
-          coachDashboardByLateralMatchup,
           coachDashboardLevelLines,
           coachDashboardPeriodLines,
           coachDashboardPreviousLabel,
           coachDashboardTileDeltas,
-          coachDashboardActivityLines,
+          coachDashboardEngagementText,
           coachDashboardClubLines,
           coachDashboardParticipationText,
-          coachDashboardDistinctTechniquesText,
-          coachDashboardScoreHoldingLines,
-          coachDashboardGroundLines,
-          coachDashboardDiscipline,
-          coachDashboardPodiumsByLevel,
-          coachDashboardPodiumLines,
+          coachDashboardScoredGroundText,
+          coachDashboardConcededGroundText,
           coachDashboardPodiumTotal,
           coachDashboardRankedTotal,
           coachDashboardTopWinTechniques,

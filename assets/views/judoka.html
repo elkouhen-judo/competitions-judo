@@ -42,7 +42,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
           </div>
-          <div class="dashboard-kpis">
+          <div class="dashboard-kpis dashboard-kpis-three">
             <div class="mini-stat">
               <span id="judokaSeasonCompetitionCount" class="mini-stat-value">{{ seasonCompetitionCount }}</span>
               <span class="mini-stat-label">Compétitions</span>
@@ -51,13 +51,11 @@
               <span id="judokaSeasonCombatCount" class="mini-stat-value">{{ seasonCombatCount }}</span>
               <span class="mini-stat-label">Combats</span>
             </div>
-            <div class="mini-stat">
-              <span id="judokaSeasonBalance" class="mini-stat-value">{{ seasonRecord }}</span>
-              <span class="mini-stat-label">Bilan</span>
-            </div>
+            <!-- Victoires et bilan en une tuile : « 70% », « Victoires », « 7V 3D ». -->
             <div class="mini-stat">
               <span id="judokaVictoryRate" class="mini-stat-value">{{ victoryRate }}</span>
               <span class="mini-stat-label">Victoires</span>
+              <span v-if="Number(seasonCombatCount)" id="judokaSeasonBalance" class="mini-stat-detail">{{ seasonRecord }}</span>
             </div>
           </div>
         </div>

@@ -256,22 +256,18 @@ export interface CoachDashboardFilters {
   ageCategory?: string;
 }
 
-/** STAT-10 : garde du judoka contre garde de l'adversaire (combats gagnés ou perdus). */
-export interface CoachDashboardMatchupEntry {
-  judokaHandedness: string;
-  opponentStance: string;
-  label: string;
-  combats: number;
-  victories: number;
-}
-
-/** STAT-16 : bilan d'un niveau ; `key` vide = non renseigné. */
+/**
+ * STAT-16 : bilan d'un niveau ; `key` vide = non renseigné. STAT-11 : podiums et participations
+ * classées des compétitions de ce niveau.
+ */
 export interface CoachDashboardResultLine {
   key: string;
   label: string;
   combats: number;
   victories: number;
   defeats: number;
+  podiums: number;
+  rankedParticipations: number;
 }
 
 /**
@@ -288,55 +284,10 @@ export interface CoachDashboardPeriodEntry {
   podiums: number;
 }
 
-/** STAT-2 : victoires avec un point Ippon du judoka, debout ou au sol. */
-export interface CoachDashboardIpponSplit {
-  total: number;
-  standing: number;
-  ground: number;
-}
-
-/** STAT-6 : tenue du score, lue sur le déroulé des combats dont tous les points ont un rang. */
-export interface CoachDashboardScoreHolding {
-  counted: number;
-  scoredFirst: number;
-  wonAfterScoringFirst: number;
-  lostAfterLeading: number;
-  wonAfterTrailing: number;
-}
-
 /** STAT-7 : points au sol parmi les points dont la catégorie est connue. */
 export interface CoachDashboardGroundShare {
   scored: { ground: number; counted: number };
   conceded: { ground: number; counted: number };
-}
-
-/** STAT-8 : shidos reçus sur les combats au score renseigné, défaites par Hansoku-make. */
-export interface CoachDashboardDiscipline {
-  scoredCombats: number;
-  shidosReceived: number;
-  hansokuMakeDefeats: number;
-}
-
-export interface CoachDashboardHandednessBreakdownEntry {
-  handedness: string;
-  judokaCount: number;
-}
-
-export interface CoachDashboardPodiumBreakdownEntry {
-  place: "1er" | "2e" | "3e";
-  label: string;
-  count: number;
-}
-
-export interface CoachDashboardLevelPodiumBreakdownEntry {
-  level: string;
-  podiums: CoachDashboardPodiumBreakdownEntry[];
-  /** STAT-11 : participations classées (classement final saisi) à ce niveau. */
-  rankedParticipations: number;
-  /** STAT-26 : participations classées dans les 7 premiers (1er, 2e, 3e, 5e, 7e). */
-  topSeven: number;
-  /** STAT-25 : participations passées à ce niveau, classées ou non. */
-  participations: number;
 }
 
 export interface CoachDashboardStats {
@@ -346,27 +297,20 @@ export interface CoachDashboardStats {
   defeats: number;
   draws: number;
   victoryRate: number;
-  ipponVictories: CoachDashboardIpponSplit;
   victoriesByDecisionType: DecisionBreakdownEntry[];
   defeatsByDecisionType: DecisionBreakdownEntry[];
-  byLateralMatchup: CoachDashboardMatchupEntry[];
-  /** STAT-13 : judokas différents avec au moins un combat, puis leur garde. */
+  /** STAT-13 : judokas différents avec au moins un combat. */
   engagedJudokas: number;
-  judokasByHandedness: CoachDashboardHandednessBreakdownEntry[];
-  podiumsByLevel: CoachDashboardLevelPodiumBreakdownEntry[];
   topWinTechniques: TechniqueBreakdownEntry[];
   /** STAT-4 : techniques des points adverses dans les combats perdus. */
   topDefeatTechniques: TechniqueBreakdownEntry[];
+  /** STAT-16, STAT-11 : bilan et podiums par niveau ; leur somme donne les tuiles. */
   byLevel: CoachDashboardResultLine[];
   byPeriod: CoachDashboardPeriodEntry[];
   /** STAT-27 : participations passées du périmètre, dont celles sans combat saisi. */
   participations: number;
   participationsWithoutCombat: number;
-  /** STAT-29 : techniques différentes marquées dans les combats gagnés. */
-  distinctWinTechniques: number;
-  scoreHolding: CoachDashboardScoreHolding;
   groundShare: CoachDashboardGroundShare;
-  discipline: CoachDashboardDiscipline;
 }
 
 export interface CoachDashboardCompetitionOption {

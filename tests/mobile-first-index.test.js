@@ -249,7 +249,8 @@ test("judoka profile reads as a season summary with bars and tappable results", 
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
   assert.match(bundle, /class="season-switch"[\s\S]*aria-label="Saison précédente"[\s\S]*id="judokaSeasonLabel"[\s\S]*aria-label="Saison suivante"/);
-  assert.match(bundle, /id="judokaSeasonBalance" class="mini-stat-value">\{\{ seasonRecord \}\}/);
+  // Bilan et victoires en une seule tuile.
+  assert.match(bundle, /<span class="mini-stat-label">Victoires<\/span>\s*<span v-if="Number\(seasonCombatCount\)" id="judokaSeasonBalance" class="mini-stat-detail">\{\{ seasonRecord \}\}/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
   assert.match(bundle, /v-if="Number\(seasonWins\)"/);
@@ -355,8 +356,8 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   assert.match(client, /competitionIds: getSelectedCoachDashboardCompetitionIds\(\)/);
   assert.match(client, /function scheduleCoachDashboardRefresh\(\)/);
   assert.match(bundle, /@change="scheduleCoachDashboardRefresh\(\)"/);
-  // STATS-1 : quatre chiffres de synthèse, chacun affiché une seule fois.
-  assert.match(bundle, /class="dashboard-kpis"/);
+  // STATS-1 : trois tuiles de synthèse, chaque chiffre affiché une seule fois.
+  assert.match(bundle, /class="dashboard-kpis dashboard-kpis-three"/);
   assert.equal((bundle.match(/coachDashboardStats\.analyzedCompetitions/g) || []).length, 1);
   assert.equal((bundle.match(/\{\{ coachDashboardVictoryTile\.value \}\}/g) || []).length, 1);
   // STAT-1 : sous 5 combats, ni pourcentage ni barre.
@@ -366,13 +367,18 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   // STAT-15 : la synthèse ne porte aucun jugement.
   assert.doesNotMatch(client, /Point fort|Point d'attention/);
   assert.doesNotMatch(bundle, /<h3>Volume de combats<\/h3>|<h3>Synthèse coach<\/h3>|coachDashboardTopPodiumLevel/);
-  assert.match(bundle, /v-for="line in coachDashboardPodiumLines"/);
-  assert.match(client, /"deuxième place", "deuxièmes places"/);
+  // Refonte : 5 blocs (bilan, par niveau, comment on gagne, comment on perd, évolution).
+  assert.doesNotMatch(bundle, /coachDashboardPodiumLines|coachDashboardActivityLines|coachDashboardByLateralMatchup/);
+  assert.doesNotMatch(bundle, /coachDashboardScoreHoldingLines|coachDashboardIpponLines|coachDashboardDiscipline|coachDashboardDistinctTechniquesText/);
+  assert.doesNotMatch(bundle, /<h3>(Podiums|Activité|Ippon|Debout ou au sol|Selon les gardes|Tenue du score|Discipline)\b/);
+  assert.match(bundle, /<h3>Par niveau[\s\S]*<h3>Comment on gagne[\s\S]*<h3>Comment on perd[\s\S]*<h3>Évolution/);
+  assert.match(bundle, /id="coachDashboardEngagement"/);
+  assert.match(bundle, /Points marqués : \{\{ coachDashboardScoredGroundText \}\}/);
+  assert.match(bundle, /Points concédés : \{\{ coachDashboardConcededGroundText \}\}/);
   // STATS-2 : répartitions en barres.
   assert.match(bundle, /v-for="entry in coachDashboardVictoriesByType"[\s\S]*v-if="entry\.showBar"[\s\S]*class="bar-fill" :style="\{ width: entry\.rate \+ '%' \}"/);
   assert.match(bundle, /v-for="entry in coachDashboardDefeatsByType"/);
   assert.match(bundle, /v-for="entry in coachDashboardTopWinTechniqueBars"/);
-  assert.match(bundle, /v-for="line in coachDashboardByLateralMatchup"/);
   // STAT-3 : fins de combat utiles et triées, « Non renseignée » en complément.
   assert.match(client, /decisionType: "Non renseignée"/);
   // STAT-4 à STAT-12, STAT-16 : nouvelles sections.
@@ -380,19 +386,14 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   // Le tour reste saisi, mais aucune statistique par tour.
   assert.doesNotMatch(bundle, /coachDashboardStageLines|coachDashboardByStage/);
   assert.match(bundle, /v-for="line in coachDashboardLevelLines"/);
-  // STAT-24 : « Évolution » par trimestre de saison ou par saison ; STAT-28 : section « Activité ».
+  // STAT-24 : « Évolution » par trimestre de saison ou par saison.
   assert.match(bundle, /v-for="line in coachDashboardPeriodLines"/);
   assert.doesNotMatch(bundle, /coachDashboardMonthLines|byMonth/);
-  assert.match(bundle, /v-for="line in coachDashboardActivityLines"/);
   // STAT-23 : écarts des tuiles, et rappel de la période comparée.
   assert.match(bundle, /coachDashboardTileDeltas\.victories/);
   assert.match(bundle, /id="coachDashboardPreviousLabel"/);
-  assert.match(bundle, /v-for="line in coachDashboardScoreHoldingLines"/);
-  assert.match(bundle, /v-for="line in coachDashboardGroundLines"/);
-  assert.match(bundle, /v-for="line in coachDashboardIpponLines"/);
-  assert.match(bundle, /coachDashboardDiscipline\.shidoText/);
-  // STAT-13 : plus de genre dans l'effectif ; STAT-14 : niveau compté par compétition.
-  assert.doesNotMatch(client, /judokasByGender|judokaGender/);
+  // STAT-13 : ni genre ni garde dans l'effectif.
+  assert.doesNotMatch(client, /judokasByGender|judokaGender|judokasByHandedness/);
   // « Saisies à compléter » : la tuile de synthèse seule, sans section ni liste.
   assert.doesNotMatch(bundle, /coachDashboardQualityIssues|"Voir les compétitions"|getDataQualityIssueDescription/);
   assert.match(client, /\(entry\) => entry\.count > 0/);

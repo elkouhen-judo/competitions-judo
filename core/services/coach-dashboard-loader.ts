@@ -1,12 +1,11 @@
-import { toCanonicalCombat, toCanonicalJudoka } from "./domain-adapters";
+import { toCanonicalCombat } from "./domain-adapters";
 import { isConcededScoreRow } from "../repositories/combat-scores.repository";
 import type { CompetitionScopeFilter } from "../repositories/competitions.repository";
 import type {
   CombatRow,
   CombatScoreRow,
   CombatWithScoresRow,
-  CompetitionRow,
-  JudokaRow
+  CompetitionRow
 } from "../repositories/types";
 import type { CoachDashboardFilters } from "../types";
 
@@ -108,10 +107,8 @@ export function toCompetitionScopeFilter(
 /** Combats des compétitions retenues, avec leurs points, enrichis pour les statistiques. */
 export function toCoachDashboardCombats(
   combatRows: CombatWithScoresRow[],
-  competitionRows: CompetitionRow[],
-  judokaRows: JudokaRow[]
+  competitionRows: CompetitionRow[]
 ) {
-  const judokasById = new Map(judokaRows.map((row) => [String(row.id_judoka), toCanonicalJudoka(row)]));
   const competitionLevelById = new Map(
     competitionRows.map((competition) => [
       String(competition.id_competition),
@@ -128,9 +125,7 @@ export function toCoachDashboardCombats(
       // TDB-5 : les points subis alimentent « Techniques subies », jamais les autres statistiques.
       concededScores: (Array.isArray(combat.combat_scores) ? combat.combat_scores : []).filter(isConcededScoreRow)
     }),
-    competitionLevel: competitionLevelById.get(String(combat.id_competition)) || "",
-    judokaGender: judokasById.get(String(combat.id_judoka))?.gender || "",
-    judokaHandedness: judokasById.get(String(combat.id_judoka))?.handedness || ""
+    competitionLevel: competitionLevelById.get(String(combat.id_competition)) || ""
   }));
 }
 

@@ -1,35 +1,21 @@
 import { isVictoryCombatResult, isLossCombatResult } from "./competitions/combat-result";
-import {
-  computeTopDefeatTechniques,
-  computeTopWinTechniques,
-  countDistinctWinTechniques
-} from "./competitions/combat-technique-breakdown";
+import { computeTopDefeatTechniques, computeTopWinTechniques } from "./competitions/combat-technique-breakdown";
 import { computeDecisionBreakdown, computeRate } from "./competitions/combat-decision-breakdown";
-import { OPPONENT_STANCES } from "./competitions/opponent-stance";
-import { HANDEDNESSES, COMPETITION_LEVELS } from "./category-reference";
-import { formatCompetitionRankingDisplay } from "./competition-results";
+import { COMPETITION_LEVELS } from "./category-reference";
 import { formatSeasonLabel, getSeasonStartYear } from "./season";
 import type {
   Combat,
   CombatScore,
   Competition,
   CoachDashboardClubEntry,
-  CoachDashboardDiscipline,
   CoachDashboardGroundShare,
-  CoachDashboardHandednessBreakdownEntry,
-  CoachDashboardIpponSplit,
-  CoachDashboardLevelPodiumBreakdownEntry,
-  CoachDashboardMatchupEntry,
   CoachDashboardPeriodEntry,
   CoachDashboardResultLine,
-  CoachDashboardScoreHolding,
   CoachDashboardStats
 } from "../types";
 
 export type CoachDashboardCombat = Combat & {
   competitionLevel?: string;
-  judokaGender?: string;
-  judokaHandedness?: string;
 };
 
 type DashboardCompetition = Pick<Competition, "result" | "level"> &
@@ -38,26 +24,13 @@ type DashboardCompetition = Pick<Competition, "result" | "level"> &
 // STAT-9 : le tableau de bord du coach classe 5 techniques (la fiche saison du judoka en garde 3).
 const DASHBOARD_TOP_TECHNIQUES_LIMIT = 5;
 
-// STAT-20 : hors fiche d'un judoka, une statistique porte sur un groupe d'au moins 2 judokas ;
-// la garde de l'effectif ne se ventile qu'à partir de 5 judokas.
+// STAT-20 : hors fiche d'un judoka, une statistique porte sur un groupe d'au moins 2 judokas.
 export const MIN_GROUP_JUDOKAS = 2;
-const MIN_HANDEDNESS_BREAKDOWN_JUDOKAS = 5;
 
-const PODIUM_PLACES: Array<{ place: "1er" | "2e" | "3e"; label: string }> = [
-  { place: "1er", label: formatCompetitionRankingDisplay("1er") },
-  { place: "2e", label: formatCompetitionRankingDisplay("2e") },
-  { place: "3e", label: formatCompetitionRankingDisplay("3e") }
-];
+const PODIUM_PLACES = ["1er", "2e", "3e"];
 
 function isPodium(result: unknown): boolean {
-  return PODIUM_PLACES.some(({ place }) => result === place);
-}
-
-// STAT-26 : les 7 premiers, tels que proposés à la saisie du classement (COMP-012).
-const TOP_SEVEN_PLACES = ["1er", "2e", "3e", "5e", "7e"];
-
-function isTopSeven(result: unknown): boolean {
-  return TOP_SEVEN_PLACES.includes(String(result || ""));
+  return PODIUM_PLACES.includes(String(result || ""));
 }
 
 export interface CoachDashboardStatsOptions {
@@ -88,95 +61,51 @@ function computeAnalyzedCompetitionCount(competitions: DashboardCompetition[]): 
   return new Set(competitions.map(getCompetitionKey)).size;
 }
 
-// STAT-13 : l'effectif se lit en judokas engagés, puis par garde.
-// STAT-20 : sous 5 judokas, la garde de chacun se devinerait : elle n'est pas ventilée.
-function computeJudokaCountByHandedness(
+// STAT-16 : bilan d'un niveau ; STAT-11 : podiums sur les participations classées de ce niveau.
+function toLevelLine(
+  key: string,
+  label: string,
   combats: CoachDashboardCombat[],
-  engagedJudokas: number
-): CoachDashboardHandednessBreakdownEntry[] {
-  if (engagedJudokas < MIN_HANDEDNESS_BREAKDOWN_JUDOKAS) return [];
-  return HANDEDNESSES.map((handedness) => {
-    const judokaIds = new Set(
-      combats.filter((combat) => combat.judokaHandedness === handedness).map((combat) => combat.judokaId)
-    );
-    return { handedness, judokaCount: judokaIds.size };
-  });
-}
-
-function isDecided(combat: Pick<Combat, "result">): boolean {
-  return isVictoryCombatResult(combat.result) || isLossCombatResult(combat.result);
-}
-
-function isKnownOpponentStance(stance: unknown): boolean {
-  return (OPPONENT_STANCES as readonly string[]).includes(String(stance || ""));
-}
-
-// STAT-10 : garde du judoka contre garde de l'adversaire, sur les combats gagnés ou perdus.
-function computeMatchupBreakdown(combats: CoachDashboardCombat[]): CoachDashboardMatchupEntry[] {
-  const known = combats.filter(
-    (combat) =>
-      isDecided(combat) &&
-      (HANDEDNESSES as readonly string[]).includes(combat.judokaHandedness || "") &&
-      isKnownOpponentStance(combat.opponentStance)
-  );
-  return HANDEDNESSES.flatMap((judokaHandedness) =>
-    OPPONENT_STANCES.map((opponentStance) => {
-      const matchup = known.filter(
-        (combat) => combat.judokaHandedness === judokaHandedness && combat.opponentStance === opponentStance
-      );
-      return {
-        judokaHandedness,
-        opponentStance,
-        label: `${judokaHandedness} contre ${opponentStance.toLowerCase()}`,
-        combats: matchup.length,
-        victories: matchup.filter((combat) => isVictoryCombatResult(combat.result)).length
-      };
-    })
-  );
-}
-
-function hasIpponScore(combat: CoachDashboardCombat, category: "Tachi-waza" | "Ne-waza"): boolean {
-  return (combat.scores || []).some((score) => score.value === "Ippon" && score.category === category);
-}
-
-function hasAnyIpponScore(combat: CoachDashboardCombat): boolean {
-  return (combat.scores || []).some((score) => score.value === "Ippon");
-}
-
-// STAT-2 : parmi les victoires avec un point Ippon du judoka, debout ou au sol.
-function computeIpponSplit(combats: CoachDashboardCombat[]): CoachDashboardIpponSplit {
-  const ipponVictories = combats.filter(
-    (combat) => isVictoryCombatResult(combat.result) && hasAnyIpponScore(combat)
-  );
-  return {
-    total: ipponVictories.length,
-    standing: ipponVictories.filter((combat) => hasIpponScore(combat, "Tachi-waza")).length,
-    ground: ipponVictories.filter((combat) => hasIpponScore(combat, "Ne-waza")).length
-  };
-}
-
-function toResultLine(key: string, label: string, combats: CoachDashboardCombat[]): CoachDashboardResultLine {
+  competitions: DashboardCompetition[]
+): CoachDashboardResultLine {
+  const ranked = competitions.filter((competition) => isFinalizedCompetitionResult(competition.result));
   return {
     key,
     label,
     combats: combats.length,
     victories: combats.filter((combat) => isVictoryCombatResult(combat.result)).length,
-    defeats: combats.filter((combat) => isLossCombatResult(combat.result)).length
+    defeats: combats.filter((combat) => isLossCombatResult(combat.result)).length,
+    podiums: ranked.filter((competition) => isPodium(competition.result)).length,
+    rankedParticipations: ranked.length
   };
 }
 
-// STAT-16 : une ligne par valeur présente, dans l'ordre de référence, puis « non renseigné ».
-function computeResultLines(
+// Une ligne par niveau présent, dans l'ordre de référence, puis « Niveau non renseigné ».
+// La somme des lignes donne les combats et les podiums des tuiles.
+function computeLevelLines(
   combats: CoachDashboardCombat[],
-  order: readonly string[],
-  getKey: (combat: CoachDashboardCombat) => string,
-  missingLabel: string
+  competitions: DashboardCompetition[]
 ): CoachDashboardResultLine[] {
-  const lines = order
-    .map((key) => toResultLine(key, key, combats.filter((combat) => getKey(combat) === key)))
-    .filter((line) => line.combats > 0);
-  const unknown = combats.filter((combat) => !order.includes(getKey(combat)));
-  return unknown.length ? [...lines, toResultLine("", missingLabel, unknown)] : lines;
+  const levels = COMPETITION_LEVELS as readonly string[];
+  const combatLevel = (combat: CoachDashboardCombat) => String(combat.competitionLevel || "");
+  const competitionLevel = (competition: DashboardCompetition) => String(competition.level || "");
+  const lines = levels.map((level) =>
+    toLevelLine(
+      level,
+      level,
+      combats.filter((combat) => combatLevel(combat) === level),
+      competitions.filter((competition) => competitionLevel(competition) === level)
+    )
+  );
+  lines.push(
+    toLevelLine(
+      "",
+      "Niveau non renseigné",
+      combats.filter((combat) => !levels.includes(combatLevel(combat))),
+      competitions.filter((competition) => !levels.includes(competitionLevel(competition)))
+    )
+  );
+  return lines.filter((line) => line.combats > 0 || line.rankedParticipations > 0);
 }
 
 // STAT-24 : trimestres de saison (septembre–novembre, décembre–février, mars–mai, juin–août).
@@ -247,60 +176,6 @@ function computePeriodBreakdown(
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
-const POINT_VALUE_INDEX: Record<string, number> = { Ippon: 0, "Waza-ari": 1, Yuko: 2 };
-
-// Un camp mène s'il a plus d'Ippon, à égalité plus de Waza-ari, puis plus de Yuko.
-function compareSides(judoka: number[], opponent: number[]): number {
-  for (let index = 0; index < judoka.length; index += 1) {
-    if (judoka[index] !== opponent[index]) return judoka[index] - opponent[index];
-  }
-  return 0;
-}
-
-// STAT-6 : tenue du score, lue point après point sur le déroulé.
-function computeScoreHolding(combats: CoachDashboardCombat[]): CoachDashboardScoreHolding {
-  const holding: CoachDashboardScoreHolding = {
-    counted: 0,
-    scoredFirst: 0,
-    wonAfterScoringFirst: 0,
-    lostAfterLeading: 0,
-    wonAfterTrailing: 0
-  };
-  combats.forEach((combat) => {
-    const points = [
-      ...(combat.scores || []).map((score) => ({ score, judoka: true })),
-      ...(combat.concededScores || []).map((score) => ({ score, judoka: false }))
-    ].filter(({ score }) => score.value in POINT_VALUE_INDEX);
-    const orders = points.map(({ score }) => score.order);
-    const hasFullOrder =
-      points.length > 0 &&
-      orders.every((order) => typeof order === "number" && Number.isFinite(order)) &&
-      new Set(orders).size === orders.length;
-    if (!hasFullOrder) return;
-
-    holding.counted += 1;
-    const sorted = [...points].sort((a, b) => Number(a.score.order) - Number(b.score.order));
-    const judokaCount = [0, 0, 0];
-    const opponentCount = [0, 0, 0];
-    let judokaLed = false;
-    let opponentLed = false;
-    sorted.forEach(({ score, judoka }) => {
-      (judoka ? judokaCount : opponentCount)[POINT_VALUE_INDEX[score.value]] += 1;
-      const lead = compareSides(judokaCount, opponentCount);
-      if (lead > 0) judokaLed = true;
-      if (lead < 0) opponentLed = true;
-    });
-    const won = isVictoryCombatResult(combat.result);
-    if (sorted[0].judoka) {
-      holding.scoredFirst += 1;
-      if (won) holding.wonAfterScoringFirst += 1;
-    }
-    if (isLossCombatResult(combat.result) && judokaLed) holding.lostAfterLeading += 1;
-    if (won && opponentLed) holding.wonAfterTrailing += 1;
-  });
-  return holding;
-}
-
 // STAT-7 : part au sol des points dont la catégorie (debout, au sol) est connue.
 function computeGroundShare(combats: CoachDashboardCombat[]): CoachDashboardGroundShare {
   const share = (scores: CombatScore[]) => {
@@ -311,45 +186,6 @@ function computeGroundShare(combats: CoachDashboardCombat[]): CoachDashboardGrou
     scored: share(combats.flatMap((combat) => combat.scores || [])),
     conceded: share(combats.flatMap((combat) => combat.concededScores || []))
   };
-}
-
-// STAT-8 : shidos reçus sur les combats au score renseigné, défaites par Hansoku-make.
-function computeDiscipline(combats: CoachDashboardCombat[]): CoachDashboardDiscipline {
-  const scored = combats.filter((combat) => combat.officialScore);
-  return {
-    scoredCombats: scored.length,
-    shidosReceived: scored.reduce((sum, combat) => sum + Number(combat.officialScore?.judoka.shido || 0), 0),
-    hansokuMakeDefeats: combats.filter(
-      (combat) => isLossCombatResult(combat.result) && combat.victoryType === "Hansoku-make"
-    ).length
-  };
-}
-
-// STAT-11 : podiums et participations classées, par niveau ; STAT-26 : 7 premiers ;
-// STAT-25 : participations passées à chaque niveau.
-function computePodiumBreakdownByLevel(
-  competitions: DashboardCompetition[],
-  today: string
-): CoachDashboardLevelPodiumBreakdownEntry[] {
-  const finalizedCompetitions = competitions.filter((competition) =>
-    isFinalizedCompetitionResult(competition.result)
-  );
-  return COMPETITION_LEVELS.map((level) => {
-    const levelCompetitions = finalizedCompetitions.filter((competition) => competition.level === level);
-    return {
-      level,
-      podiums: PODIUM_PLACES.map(({ place, label }) => ({
-        place,
-        label,
-        count: levelCompetitions.filter((competition) => competition.result === place).length
-      })),
-      rankedParticipations: levelCompetitions.length,
-      topSeven: levelCompetitions.filter((competition) => isTopSeven(competition.result)).length,
-      participations: competitions.filter(
-        (competition) => competition.level === level && isPastParticipation(competition, today)
-      ).length
-    };
-  });
 }
 
 function countJudokasWithCombats(combats: Array<Pick<Combat, "judokaId">>): number {
@@ -436,7 +272,6 @@ export function computeCoachDashboardStats(
   const totalCombats = combats.length;
   const victories = combats.filter((combat) => isVictoryCombatResult(combat.result)).length;
   const defeats = combats.filter((combat) => isLossCombatResult(combat.result)).length;
-  const engagedJudokas = countJudokasWithCombats(combats);
 
   return {
     analyzedCompetitions: computeAnalyzedCompetitionCount(competitions),
@@ -445,26 +280,14 @@ export function computeCoachDashboardStats(
     defeats,
     draws: totalCombats - victories - defeats,
     victoryRate: computeRate(victories, totalCombats),
-    ipponVictories: computeIpponSplit(combats),
     victoriesByDecisionType: computeDecisionBreakdown(combats, "Victoire"),
     defeatsByDecisionType: computeDecisionBreakdown(combats, "Défaite"),
-    byLateralMatchup: computeMatchupBreakdown(combats),
-    engagedJudokas,
-    judokasByHandedness: computeJudokaCountByHandedness(combats, engagedJudokas),
-    podiumsByLevel: computePodiumBreakdownByLevel(competitions, today),
+    engagedJudokas: countJudokasWithCombats(combats),
     topWinTechniques: computeTopWinTechniques(combats, DASHBOARD_TOP_TECHNIQUES_LIMIT),
-    distinctWinTechniques: countDistinctWinTechniques(combats),
     topDefeatTechniques: computeTopDefeatTechniques(combats, DASHBOARD_TOP_TECHNIQUES_LIMIT),
-    byLevel: computeResultLines(
-      combats,
-      COMPETITION_LEVELS,
-      (combat) => String(combat.competitionLevel || ""),
-      "Niveau non renseigné"
-    ),
+    byLevel: computeLevelLines(combats, competitions),
     byPeriod: computePeriodBreakdown(combats, competitions, today),
     ...computeParticipations(combats, competitions, today),
-    scoreHolding: computeScoreHolding(combats),
-    groundShare: computeGroundShare(combats),
-    discipline: computeDiscipline(combats)
+    groundShare: computeGroundShare(combats)
   };
 }

@@ -468,11 +468,8 @@ for (const [name, viewport] of [
     await expect(page.locator("#coachDashboardView h3").filter({ hasText: /^\s*Par judoka/ })).toHaveCount(0);
     const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
     ["Hugo", "Nina", "Dubois", "Durand"].forEach((name) => assert.equal(statsText.includes(name), false, name));
-    // STAT-28 : l'activité remplace l'effectif ; STAT-20 : 2 judokas, la garde n'est pas ventilée.
-    await expect(page.locator("#coachDashboardActivity .bar-row-head").first()).toHaveText(/^Judokas engagés\s*2$/);
-    await expect(page.locator("#coachDashboardActivity .bar-row-head").nth(3)).toHaveText(
-      /^Combats par judoka engagé\s*1,5$/
-    );
+    // STAT-13 : l'effectif engagé tient en une ligne sous la synthèse, sans garde.
+    await expect(page.locator("#coachDashboardEngagement")).toHaveText(/^2 judokas engagés · 1,5 combats par judoka/);
     // STAT-23 : une compétition choisie n'affiche aucun écart.
     await expect(page.locator("#coachDashboardPreviousLabel")).toHaveCount(0);
     await expect(page.locator("#coachDashboardView .mini-stat-delta")).toHaveCount(0);
@@ -489,27 +486,25 @@ for (const [name, viewport] of [
     await expect(headings.filter({ hasText: "Par tour" })).toHaveCount(0);
     await expect(page.locator("#coachDashboardView .dashboard-kpis .mini-stat")).toHaveCount(3);
     await expect(page.locator("#coachDashboardView")).not.toContainText("à compléter");
-    // STAT-16 : par niveau ; STAT-10 : garde du judoka contre garde de l'adversaire.
+    // Refonte : 5 blocs, dans l'ordre ; ni gardes, ni Ippon à part, ni podiums à part.
+    await expect(headings).toHaveText([
+      "Filtres",
+      "Analyse des combats",
+      /^Par niveau/,
+      /^Comment on gagne/,
+      /^Comment on perd/
+    ]);
+    // STAT-16, STAT-11 : par niveau, victoires puis podiums sur les participations classées.
     await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
       /Régional\s*1\/3 gagnés · trop peu de combats/
     ]);
-    await expect(page.locator("#coachDashboardMatchups .bar-row-head")).toHaveText([
-      /Droitier contre droitier\s*1\/1 gagné · trop peu de combats/,
-      /Droitier contre gaucher\s*0\/1 gagné · trop peu de combats/
-    ]);
-    // STAT-3 : une seule ligne par fin de combat présente ; STAT-2 : Ippon debout parmi les victoires.
+    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText("1 podium sur 1 participation classée");
+    // STAT-3 : une seule ligne par fin de combat présente ; STAT-7 : debout ou au sol, sous 5 points en décompte.
     await expect(page.locator("#coachDashboardDefeatsByType .bar-row-head")).toHaveText([
       /Waza-ari\s*2\/2/
     ]);
-    await expect(page.locator("#coachDashboardIppon .bar-row-head")).toHaveText([
-      /Victoires avec Ippon\s*1\/1/,
-      /Debout\s*1\/1/,
-      /Au sol\s*0\/1/
-    ]);
-    // STAT-11 : podiums rapportés aux participations classées.
-    await expect(page.locator("#coachDashboardPodiums")).toContainText(
-      "1 podium sur 1 participation classée"
-    );
+    await expect(page.locator("#coachDashboardScoredGround")).toHaveText("Points marqués : 1 debout, 0 au sol");
+    await expect(page.locator("#coachDashboardConcededGround")).toHaveText("Points concédés : 2 debout, 0 au sol");
 
 
     // TDB-9 : chaque tuile et chaque section de statistiques porte une info-bulle.
@@ -683,18 +678,9 @@ for (const [name, viewport] of [
       .evaluateAll((elements) => [...new Set(elements.map((element) => getComputedStyle(element).color))]);
     assert.equal(deltaColors.length, 1);
 
-    // STAT-28 : l'activité et la période précédente, sans aucun nom.
-    await expect(page.locator("#coachDashboardActivity .bar-row-head")).toHaveText([
-      /^Judokas engagés\s*2 · avant 2$/,
-      /^Participations\s*2 · avant 2$/,
-      /^Compétitions\s*1 · avant 2$/,
-      /^Combats par judoka engagé\s*1,5 · avant 1,0$/,
-      /^Participations par niveau\s*Régional 2 \(avant 2\)$/
-    ]);
-    // STAT-25 / STAT-26 : podiums du niveau, 7 premiers et rapport de la période précédente.
-    await expect(page.locator("#coachDashboardPodiums")).toContainText(
-      "1 podium sur 1 participation classée · 1 dans les 7 premiers · avant 0 sur 1"
-    );
+    // Refonte : la période précédente ne se lit que sur les tuiles, jamais ligne par ligne.
+    await expect(page.locator("#coachDashboardView .coach-dashboard-stats-tab")).not.toContainText("avant");
+    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText("1 podium sur 1 participation classée");
     const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
     ["Hugo", "Nina", "Dubois", "Durand"].forEach((judokaName) => assert.equal(statsText.includes(judokaName), false, judokaName));
     await page.screenshot({ path: `output/playwright/stat23-${name}-season.png`, fullPage: true, animations: "disabled" });

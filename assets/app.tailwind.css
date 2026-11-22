@@ -4058,6 +4058,16 @@
     font-size: 0.84rem;
   }
 
+  /* Sous-partie d'un bloc (« Fin des combats », « Techniques qui gagnent »). */
+  .dashboard-subtitle {
+    margin: 14px 0 6px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
   /* TDB-5 : les techniques subies se lisent comme des points adverses. */
   .bar-track-conceded .bar-fill {
     background: var(--danger);
@@ -4135,8 +4145,9 @@
   }
 
   /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */
-  /* STAT-23 : écart avec la période précédente, sans couleur de jugement. */
-  .mini-stat-delta {
+  /* STAT-23 : écart avec la période précédente, sans couleur de jugement ; détail d'une tuile. */
+  .mini-stat-delta,
+  .mini-stat-detail {
     display: block;
     margin-top: 2px;
     color: var(--muted);

@@ -775,8 +775,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     defeats: 2,
     draws: 0,
     victoryRate: 67,
-    // STAT-2 : parmi les victoires avec un point Ippon, debout ou au sol.
-    ipponVictories: { total: 2, standing: 1, ground: 1 },
     victoriesByDecisionType: [
       { decisionType: "Ippon", count: 2, total: 4, rate: 50 },
       { decisionType: "Waza-ari", count: 0, total: 4, rate: 0 },
@@ -793,86 +791,26 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { decisionType: "Hansoku-make", count: 1, total: 2, rate: 50 },
       { decisionType: "Forfait", count: 0, total: 2, rate: 0 }
     ],
-    // STAT-10 : garde du judoka contre garde de l'adversaire ; garde inconnue ou ambidextre exclue.
-    byLateralMatchup: [
-      { judokaHandedness: "Droitier", opponentStance: "Droitier", label: "Droitier contre droitier", combats: 3, victories: 2 },
-      { judokaHandedness: "Droitier", opponentStance: "Gaucher", label: "Droitier contre gaucher", combats: 0, victories: 0 },
-      { judokaHandedness: "Gaucher", opponentStance: "Droitier", label: "Gaucher contre droitier", combats: 0, victories: 0 },
-      { judokaHandedness: "Gaucher", opponentStance: "Gaucher", label: "Gaucher contre gaucher", combats: 1, victories: 1 }
-    ],
     engagedJudokas: 5,
-    judokasByHandedness: [
-      { handedness: "Droitier", judokaCount: 2 },
-      { handedness: "Gaucher", judokaCount: 1 }
-    ],
-    podiumsByLevel: [
-      {
-        level: "Départemental",
-        podiums: [
-          { place: "1er", label: "🥇", count: 1 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 1,
-        topSeven: 1,
-        participations: 1
-      },
-      {
-        level: "Régional",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 1 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 1,
-        topSeven: 1,
-        participations: 1
-      },
-      {
-        level: "National",
-        podiums: [
-          { place: "1er", label: "🥇", count: 1 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 1,
-        topSeven: 1,
-        participations: 1
-      },
-      {
-        level: "International",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 1,
-        topSeven: 1,
-        participations: 2
-      }
-    ],
     topWinTechniques: [
       { technique: "Hon-gesa-gatame", count: 1 },
       { technique: "Seoi-nage", count: 1 }
     ],
     topDefeatTechniques: [],
-    // STAT-16 : dans l'ordre des niveaux, puis le niveau non renseigné.
+    // STAT-16 : dans l'ordre des niveaux, puis le niveau non renseigné ;
+    // STAT-11 : podiums sur les participations classées du niveau (la 5e place est classée).
     byLevel: [
-      { key: "Départemental", label: "Départemental", combats: 2, victories: 1, defeats: 1 },
-      { key: "Régional", label: "Régional", combats: 1, victories: 1, defeats: 0 },
-      { key: "National", label: "National", combats: 1, victories: 1, defeats: 0 },
-      { key: "International", label: "International", combats: 1, victories: 1, defeats: 0 },
-      { key: "", label: "Niveau non renseigné", combats: 1, victories: 0, defeats: 1 }
+      { key: "Départemental", label: "Départemental", combats: 2, victories: 1, defeats: 1, podiums: 1, rankedParticipations: 1 },
+      { key: "Régional", label: "Régional", combats: 1, victories: 1, defeats: 0, podiums: 1, rankedParticipations: 1 },
+      { key: "National", label: "National", combats: 1, victories: 1, defeats: 0, podiums: 1, rankedParticipations: 1 },
+      { key: "International", label: "International", combats: 1, victories: 1, defeats: 0, podiums: 0, rankedParticipations: 1 },
+      { key: "", label: "Niveau non renseigné", combats: 1, victories: 0, defeats: 1, podiums: 0, rankedParticipations: 0 }
     ],
     byPeriod: [],
     // STAT-27 : sans date, une participation compte ; ces combats ne disent pas leur compétition.
     participations: 5,
     participationsWithoutCombat: 5,
-    distinctWinTechniques: 2,
-    // STAT-6 : aucun point n'a de rang, aucun combat n'est compté.
-    scoreHolding: { counted: 0, scoredFirst: 0, wonAfterScoringFirst: 0, lostAfterLeading: 0, wonAfterTrailing: 0 },
-    groundShare: { scored: { ground: 1, counted: 2 }, conceded: { ground: 0, counted: 0 } },
-    discipline: { scoredCombats: 0, shidosReceived: 0, hansokuMakeDefeats: 1 }
+    groundShare: { scored: { ground: 1, counted: 2 }, conceded: { ground: 0, counted: 0 } }
   });
 
   assert.deepEqual(computeCoachDashboardStats([]), {
@@ -882,7 +820,6 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     defeats: 0,
     draws: 0,
     victoryRate: 0,
-    ipponVictories: { total: 0, standing: 0, ground: 0 },
     victoriesByDecisionType: [
       { decisionType: "Ippon", count: 0, total: 0, rate: 0 },
       { decisionType: "Waza-ari", count: 0, total: 0, rate: 0 },
@@ -899,71 +836,14 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
       { decisionType: "Hansoku-make", count: 0, total: 0, rate: 0 },
       { decisionType: "Forfait", count: 0, total: 0, rate: 0 }
     ],
-    byLateralMatchup: [
-      { judokaHandedness: "Droitier", opponentStance: "Droitier", label: "Droitier contre droitier", combats: 0, victories: 0 },
-      { judokaHandedness: "Droitier", opponentStance: "Gaucher", label: "Droitier contre gaucher", combats: 0, victories: 0 },
-      { judokaHandedness: "Gaucher", opponentStance: "Droitier", label: "Gaucher contre droitier", combats: 0, victories: 0 },
-      { judokaHandedness: "Gaucher", opponentStance: "Gaucher", label: "Gaucher contre gaucher", combats: 0, victories: 0 }
-    ],
     engagedJudokas: 0,
-    // STAT-20 : la garde ne se ventile qu'à partir de 5 judokas.
-    judokasByHandedness: [],
-    podiumsByLevel: [
-      {
-        level: "Départemental",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 0,
-        topSeven: 0,
-        participations: 0
-      },
-      {
-        level: "Régional",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 0,
-        topSeven: 0,
-        participations: 0
-      },
-      {
-        level: "National",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 0,
-        topSeven: 0,
-        participations: 0
-      },
-      {
-        level: "International",
-        podiums: [
-          { place: "1er", label: "🥇", count: 0 },
-          { place: "2e", label: "🥈", count: 0 },
-          { place: "3e", label: "🥉", count: 0 }
-        ],
-        rankedParticipations: 0,
-        topSeven: 0,
-        participations: 0
-      }
-    ],
     topWinTechniques: [],
     topDefeatTechniques: [],
     byLevel: [],
     byPeriod: [],
     participations: 0,
     participationsWithoutCombat: 0,
-    distinctWinTechniques: 0,
-    scoreHolding: { counted: 0, scoredFirst: 0, wonAfterScoringFirst: 0, lostAfterLeading: 0, wonAfterTrailing: 0 },
-    groundShare: { scored: { ground: 0, counted: 0 }, conceded: { ground: 0, counted: 0 } },
-    discipline: { scoredCombats: 0, shidosReceived: 0, hansokuMakeDefeats: 0 }
+    groundShare: { scored: { ground: 0, counted: 0 }, conceded: { ground: 0, counted: 0 } }
   });
 });
 
@@ -1103,10 +983,7 @@ test("STAT-22 / STAT-24 : « Évolution » par trimestre compte le podium d'un t
     { key: "2026-T2", label: "Déc. 2026-févr. 2027", participations: 1, combats: 0, victories: 0, defeats: 0, podiums: 1 }
   ]);
   // Seul le podium sans date reste hors des trimestres.
-  const podiumTile = stats.podiumsByLevel.reduce(
-    (sum, level) => sum + level.podiums.reduce((total, podium) => total + podium.count, 0),
-    0
-  );
+  const podiumTile = stats.byLevel.reduce((sum, line) => sum + line.podiums, 0);
   assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.podiums, 0), podiumTile - 1);
   // La somme des combats des lignes égale la tuile « Combats » quand toutes les compétitions sont datées.
   assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.combats, 0), stats.totalCombats);
@@ -1133,7 +1010,7 @@ test("STAT-24 : sur plusieurs saisons, une ligne par saison", () => {
   );
 });
 
-test("STAT-26 / STAT-27 / STAT-29 : 7 premiers, participations sans combat, techniques différentes", () => {
+test("STAT-11 / STAT-27 : podiums par niveau, participations sans combat", () => {
   const point = (technique) => ({ category: "Tachi-waza", technique, value: "Waza-ari" });
   const combats = [
     { combatId: "CB1", judokaId: "J1", competitionId: "P1", result: "Victoire", scores: [point("Uchi-mata"), point("Seoi-nage")] },
@@ -1149,19 +1026,18 @@ test("STAT-26 / STAT-27 / STAT-29 : 7 premiers, participations sans combat, tech
     { competitionId: "P4", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-12-06" }
   ];
   const stats = computeCoachDashboardStats(combats, competitions, { today: "2026-11-13" });
-  const regional = stats.podiumsByLevel.find((entry) => entry.level === "Régional");
-  // Une 5e place compte dans les 7 premiers, pas dans les podiums.
-  assert.equal(regional.topSeven, 3);
-  assert.equal(regional.podiums.reduce((sum, podium) => sum + podium.count, 0), 1);
-  assert.equal(regional.participations, 3);
+  const regional = stats.byLevel.find((line) => line.key === "Régional");
+  // Une 5e ou une 7e place est classée, mais n'est pas un podium.
+  assert.equal(regional.podiums, 1);
+  assert.equal(regional.rankedParticipations, 3);
   assert.equal(stats.participations, 3);
   assert.equal(stats.participationsWithoutCombat, 1);
-  // Les points des combats perdus ne comptent pas.
-  assert.equal(stats.distinctWinTechniques, 2);
+  // Refonte des métriques : ni 7 premiers, ni nombre de techniques différentes.
+  ["podiumsByLevel", "distinctWinTechniques"].forEach((key) => assert.equal(key in stats, false, key));
 });
 
-test("STAT-20 : statistiques de groupe dès 2 judokas, garde de l'effectif dès 5", () => {
-  const fight = (judokaId, judokaHandedness = "Droitier") => ({ judokaId, judokaHandedness, result: "Victoire" });
+test("STAT-20 : statistiques de groupe dès 2 judokas", () => {
+  const fight = (judokaId) => ({ judokaId, result: "Victoire" });
   const owned = (ownerJudokaId) => ({ ownerJudokaId, result: "1er", level: "Régional" });
 
   // Ceux qui ont combattu décident, quelles que soient les compétitions retenues.
@@ -1175,16 +1051,9 @@ test("STAT-20 : statistiques de groupe dès 2 judokas, garde de l'effectif dès 
     analyzedCompetitions: 2,
     totalCombats: 2
   });
-
-  const four = ["J1", "J2", "J3", "J4"].map((id, index) => fight(id, index ? "Droitier" : "Gaucher"));
-  assert.deepEqual(computeCoachDashboardStats(four).judokasByHandedness, []);
-  assert.deepEqual(computeCoachDashboardStats([...four, fight("J5")]).judokasByHandedness, [
-    { handedness: "Droitier", judokaCount: 4 },
-    { handedness: "Gaucher", judokaCount: 1 }
-  ]);
 });
 
-test("coach dashboard statistics read rounds, months, score holding, ground share and discipline", () => {
+test("coach dashboard statistics read rounds, months, levels and ground share", () => {
   const point = (value, order, category = "Tachi-waza") => ({ category, technique: "Uchi-mata", neWazaType: "Kesa-gatame", value, order });
   const score = (shido) => ({
     judoka: { ippon: 0, wazaAri: 0, yuko: 0, shido },
@@ -1214,54 +1083,24 @@ test("coach dashboard statistics read rounds, months, score holding, ground shar
 
   // Le tour reste saisi sur le combat, mais aucune statistique par tour n'est calculée.
   assert.equal("byStage" in stats, false);
-  // STAT-6 : CB4 n'a pas de rang ; CB1, CB2, CB3 sont lus point après point.
-  assert.deepEqual(stats.scoreHolding, {
-    counted: 3,
-    scoredFirst: 2,
-    wonAfterScoringFirst: 1,
-    lostAfterLeading: 1,
-    wonAfterTrailing: 1
-  });
+  // Refonte des métriques : ni gardes, ni tenue du score, ni discipline, ni Ippon à part.
+  ["byLateralMatchup", "judokasByHandedness", "scoreHolding", "discipline", "ipponVictories"].forEach((key) =>
+    assert.equal(key in stats, false, key)
+  );
   // STAT-7 : le Yuko sans catégorie n'est pas compté.
   assert.deepEqual(stats.groundShare, { scored: { ground: 1, counted: 3 }, conceded: { ground: 1, counted: 2 } });
-  // STAT-8 : 6 shidos sur 3 combats au score renseigné ; une défaite par Hansoku-make.
-  assert.deepEqual(stats.discipline, { scoredCombats: 3, shidosReceived: 6, hansokuMakeDefeats: 1 });
   // STAT-24 : octobre et novembre tombent dans le même trimestre de saison.
   assert.deepEqual(stats.byPeriod, [
     { key: "2026-T1", label: "Sept.-nov. 2026", participations: 3, combats: 4, victories: 2, defeats: 2, podiums: 1 }
   ]);
-  // STAT-11 : participations classées par niveau.
-  assert.equal(stats.podiumsByLevel.find((entry) => entry.level === "Régional").rankedParticipations, 1);
-  // STAT-16 : la compétition sans niveau regroupe ses combats sur une ligne à part.
-  assert.deepEqual(stats.byLevel.map((line) => [line.label, line.combats]), [
-    ["Régional", 2],
-    ["Niveau non renseigné", 2]
-  ]);
-});
-
-test("coach dashboard statistics domain only counts an ippon victory when the scoring ippon matches the category", () => {
-  const combats = [
-    {
-      judokaId: "JUDO1",
-      result: "Victoire",
-      victoryType: "Waza-ari",
-      scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Waza-ari" }]
-    },
-    {
-      judokaId: "JUDO2",
-      result: "Victoire",
-      victoryType: "Ippon",
-      scores: [
-        { category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" },
-        { category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }
-      ]
-    }
-  ];
-
-  const stats = computeCoachDashboardStats(combats);
-
-  // STAT-2 : une seule victoire avec un point Ippon, marqué debout.
-  assert.deepEqual(stats.ipponVictories, { total: 1, standing: 1, ground: 0 });
+  // STAT-16 : la compétition sans niveau regroupe ses combats, et STAT-11 ses podiums, sur une ligne à part.
+  assert.deepEqual(
+    stats.byLevel.map((line) => [line.label, line.combats, line.podiums, line.rankedParticipations]),
+    [
+      ["Régional", 2, 0, 1],
+      ["Niveau non renseigné", 2, 1, 1]
+    ]
+  );
 });
 
 test("coach dashboard statistics domain ranks the top 3 winning techniques, ignoring losses and unscored wins", () => {

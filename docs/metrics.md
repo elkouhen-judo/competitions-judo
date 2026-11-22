@@ -1,7 +1,7 @@
 ---
 title: Coach Dashboard Metrics
-version: 2.0
-date_updated: 2026-11-13
+version: 3.0
+date_updated: 2026-11-22
 owner: competitions-judo
 tags:
   - dashboard
@@ -30,18 +30,17 @@ L'ordre ci-dessous correspond à l'ordre d'affichage dans l'IHM : catégorie d'�
 
 *Période par défaut :* à la première ouverture, `dateFrom`/`dateTo` couvrent la saison en cours (du 1er septembre au 31 août). Ouvertes depuis une compétition club, les statistiques portent sur cette seule compétition (`competitionIds` = ses participations), sur la saison de sa date.
 
-*Note :* les filtres par genre (`gender`) et par garde (`handedness`) ont été retirés du tableau de bord ; `gender` ne subsiste que dans les filtres de la recherche MCP (`CoachChatFilters`, périmètre distinct). Les statistiques "Judokas par genre"/"Judokas par garde" (section 3.2) restent inchangées — ce ne sont que les filtres qui ont été supprimés.
+*Note :* le tableau de bord ne filtre ni ne ventile par genre ou par garde ; `gender` ne subsiste que dans les filtres de la recherche MCP (`CoachChatFilters`, périmètre distinct).
 
 ### Confidentialité et seuil de groupe (DASH-026, DASH-027)
 * Les statistiques du coach ne contiennent ni identité, ni identifiant de judoka, ni nom d'adversaire, ni ligne par judoka. Le bilan d'un judoka se lit sur sa fiche.
 * **Seuil de 2 judokas :** sont comptés les judokas qui ont un combat dans le périmètre ; sans aucun combat, les judokas propriétaires des compétitions retenues. Sous 2, la réponse vaut `stats = null` et `withheld = { analyzedCompetitions, totalCombats }`.
-* **Seuil de 5 judokas pour la garde :** sous 5 judokas engagés, `judokasByHandedness` est vide.
-* *Limite connue :* avec peu de judokas, comparer deux sélections de compétitions permet encore de déduire le bilan d'un judoka ; les sections ventilées par garde (« Selon les gardes ») restent affichées dès 2 judokas.
+* *Limite connue :* avec peu de judokas, comparer deux sélections de compétitions permet encore de déduire le bilan d'un judoka.
 
 ### Logique d'exclusion et cas limites :
 1. **Étape 1 :** Les filtres `ageCategory`, `dateFrom`/`dateTo` et `competitionIds` restreignent d'abord la liste des **compétitions** éligibles, puis l'ensemble des combats correspondants est extrait sans filtre supplémentaire au niveau combat.
 2. **Filtres vides ou non sélectionnés :** Si un filtre n'est pas renseigné dans l'IHM, il est ignoré (aucune restriction n'est appliquée sur ce critère).
-3. **Métadonnées manquantes :** Un combat dont les métadonnées judoka sont absentes peut rester dans le périmètre global, mais il est exclu des sous-décomptes qui exigent une valeur reconnue (`Homme`/`Femme`, `Droitier`/`Gaucher`).
+3. **Métadonnées manquantes :** Un combat sans niveau de compétition, sans fin ou sans technique reste dans le périmètre global ; il est seulement exclu des décomptes qui exigent cette valeur.
 4. **Rafraîchissement :** Toute modification d'un filtre déclenche un nouveau calcul automatique côté serveur après un délai d'inactivité de 300 ms (anti-rebond), sans bouton "Actualiser".
 5. **Liste des compétitions sélectionnables :** Les options proposées par le sélecteur de compétitions sont elles-mêmes restreintes par `ageCategory` et `dateFrom`/`dateTo` (mêmes règles qu'à l'Étape 1, sans tenir compte de `competitionIds`). Modifier la catégorie d'âge ou les dates met donc à jour la liste des compétitions proposées ; toute compétition déjà sélectionnée qui sort de ce nouveau périmètre est automatiquement retirée de la sélection.
 
@@ -58,7 +57,7 @@ Sauf mention contraire explicite ci-dessous, tous les taux respectent les règle
 
 ## 3. Synthèse et sections de résultats
 
-L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Activité, Par niveau, Évolution, fins de combat et techniques (section 4), Ippon, Debout ou au sol, Selon les gardes, Tenue du score, Discipline. Une section sans donnée est masquée.
+L'ordre ci-dessous suit l'affichage (SIMPL-3) : synthèse, Par niveau, Par club, Comment on gagne, Comment on perd, Évolution. Une section sans donnée est masquée.
 
 ### 3.1. Synthèse
 
@@ -66,38 +65,31 @@ L'ordre ci-dessous suit l'affichage : synthèse, Podiums, Activité, Par niveau,
 | :-- | :-- | :-- |
 | `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées (une compétition club comptée une fois). |
 | `victoryRate`, `victories` | **Victoires** | `victories / totalCombats`, seuil de 5 (section 2). |
-| `podiumsByLevel` | **Podiums sur N classés** | Somme des podiums de tous les niveaux, rapportée à la somme des participations classées (`rankedParticipations`). |
+| `byLevel[].podiums`, `byLevel[].rankedParticipations` | **Podiums sur N classés** | Somme des podiums de toutes les lignes « Par niveau » (niveau non renseigné compris), rapportée à la somme des participations classées. |
 | — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
+| `engagedJudokas` | `12 judokas engagés · 10,0 combats par judoka` | Judokas distincts avec au moins un combat retenu ; `totalCombats / engagedJudokas` à une décimale. Ni genre ni garde. |
 | `previous` | Écart sous les tuiles « Combats », « Victoires », « Podiums » | Voir 3.0. Écart signé (`+12 combats`, `−2 podiums`, `+6 points`), sans couleur de jugement ; une ligne rappelle la période comparée. |
 | `participations`, `participationsWithoutCombat` | `18 participations, dont 4 sans combat saisi.` | Participations dont la date est passée (sans date : comptée), puis celles sans aucun combat saisi. Ligne masquée quand toutes ont un combat. |
+
+*Note :* un judoka avec 5 combats compte pour `5` dans `totalCombats` et pour `1` dans les judokas engagés.
 
 ### 3.0. Période précédente (`previous`, STAT-23)
 * Période comparée : la fenêtre `dateFrom`–`dateTo` décalée d'un an (le 29 février devient le 28), avec le même club et la même catégorie d'âge.
 * Aucune comparaison (`previous = null`) sans date de début ou de fin, avec des compétitions choisies, si les deux fenêtres se recouvrent (période de plus d'un an), si la période précédente n'a aucune participation ou si elle compte moins de 2 judokas (DASH-027).
 * `previous.stats` suit exactement les définitions de ce document.
 * Écart de la tuile « Victoires » : en points de taux si les deux périodes ont au moins 5 combats, sinon en nombre de victoires.
-* Une valeur « avant » d'un taux n'est affichée que si son dénominateur atteint 5 dans la période précédente.
+* La période précédente ne s'affiche que sur les trois tuiles, jamais ligne par ligne (SIMPL-3).
 * Lecture : la fonction `coach_dashboard_data` reçoit la date de début reculée d'un an ; le partage en deux périodes est fait en TypeScript. Toujours 3 requêtes Supabase.
 
-### 3.2. Podiums (`podiumsByLevel`)
-Par niveau (`Départemental`, `Régional`, `National`, `International`) :
-* `podiums` : nombre de participations du périmètre classées exactement `"1er"`, `"2e"` ou `"3e"`.
-* `rankedParticipations` : participations du niveau dont le classement final est saisi (tout classement non vide).
-* `topSeven` (STAT-26) : participations classées `1er`, `2e`, `3e`, `5e` ou `7e`. Une 5e place compte dans les 7 premiers, pas dans les podiums.
-* Affichage : `🥉 1 troisième place · 1 podium sur 4 participations classées · 2 dans les 7 premiers · avant 0 sur 3` (le rapport de la période précédente, STAT-25).
-* Calcul par compétition, pas par combat. Une compétition sans niveau reconnu n'est comptée dans aucun niveau.
+### 3.2. Par niveau (`byLevel`)
+*Le tour du combat reste saisi, mais aucune statistique par tour n'est calculée.*
+* Une ligne par niveau (Départemental, Régional, National, International), puis « Niveau non renseigné » ; seules les lignes avec un combat ou une participation classée s'affichent.
+* Combats : `combats`, `victories`, `defeats`, d'après le niveau de la compétition du combat. Taux `victories / combats`, seuil de 5 ; sans combat, « aucun combat saisi ».
+* Podiums (STAT-11) : calcul par participation, pas par combat. `rankedParticipations` : participations du niveau dont le classement final est saisi (tout classement non vide) ; `podiums` : celles classées exactement `"1er"`, `"2e"` ou `"3e"`. Affichage : `6 podiums sur 14 participations classées`, sans pourcentage.
+* Une compétition sans niveau reconnu est comptée sur la ligne « Niveau non renseigné ».
+* Les sommes des lignes égalent `totalCombats` et la tuile « Podiums ».
 
-### 3.3. Activité (STAT-28)
-Sans aucun nom de judoka. Chaque ligne affiche la valeur de la période précédente (`· avant …`).
-* **Judokas engagés** : `engagedJudokas`, judokas distincts avec au moins un combat retenu, puis, à partir de 5 judokas, ventilés par garde (`judokasByHandedness`). Le genre n'est pas affiché.
-* **Participations** : `participations` (participations passées).
-* **Compétitions** : `analyzedCompetitions`.
-* **Combats par judoka engagé** : `totalCombats / engagedJudokas`, à une décimale.
-* **Participations par niveau** (STAT-25) : `podiumsByLevel[].participations`, participations passées du niveau, classées ou non, avec la valeur précédente entre parenthèses.
-
-*Note :* un judoka avec 5 combats compte pour `5` dans `totalCombats` et pour `1` dans les judokas engagés.
-
-### 3.3a. Par club (`byClub`, MULTI-6)
+### 3.3. Par club (`byClub`, MULTI-6)
 
 * Calculé seulement sur « Tous mes clubs » d'un coach de plusieurs clubs (`clubId` vide) ; `null` sinon.
 * Une ligne par club du coach : `engagedJudokas`, `participations` (passées), `combats`, `victories`, `podiums`.
@@ -105,46 +97,12 @@ Sans aucun nom de judoka. Chaque ligne affiche la valeur de la période précéd
 * Un club sous 2 judokas (DASH-027) : `withheld = true`, tous les chiffres à 0, affiché « moins de 2 judokas ».
 * Le taux de victoire n'est affiché qu'à partir de 5 combats (DASH-011).
 
-### 3.4. Par niveau (`byLevel`)
-*Le tour du combat reste saisi, mais aucune statistique par tour n'est calculée.*
-* Une ligne par niveau présent (Départemental, Régional, National, International), puis « Niveau non renseigné ».
-* Chaque ligne : `combats`, `victories`, `defeats` ; taux `victories / combats`, seuil de 5. La somme des combats vaut `totalCombats`.
-* STAT-25 : chaque ligne rappelle le bilan du même niveau sur la période précédente (`· avant 3/12 (25 %)`), si celle-ci compte au moins 5 combats à ce niveau.
-
-### 3.5. Évolution (`byPeriod`, STAT-24)
+### 3.4. Évolution (`byPeriod`, STAT-24)
 Une ligne par trimestre de saison (septembre–novembre, décembre–février, mars–mai, juin–août ; clé `AAAA-T1` à `AAAA-T4`, `AAAA` = début de saison) quand toutes les compétitions datées tiennent dans une saison ; sinon une ligne par saison (clé `AAAA`, « Saison AAAA-AAAA+1 »). Chaque ligne : `participations` (passées), `combats`, `victories`, `defeats`, `podiums`. Seules les lignes avec des combats ou un podium sont listées ; une ligne de podium sans combat affiche « aucun combat saisi ». Taux `victories / combats`, seuil de 5. La section ne s'affiche qu'à partir de 2 lignes. Quand toutes les compétitions ont une date, la somme des combats égale `totalCombats` et la somme des podiums égale la tuile « Podiums ».
-
-### 3.6. Ippon (`ipponVictories`)
-* **Victoires avec Ippon** (STAT-29) : `total / victories`, avec la valeur de la période précédente.
-* Dénominateur `total` des deux lignes suivantes : victoires avec au moins un point `Ippon` du judoka.
-* `standing` : parmi elles, celles avec un Ippon `Tachi-waza` ; `ground` : avec un Ippon `Ne-waza`.
-* Affichage : `Debout 3/4`, `Au sol 1/4`, pourcentage à partir de 5. Masquée sans victoire avec point Ippon.
-
-### 3.7. Debout ou au sol (`groundShare`)
-* `scored.ground / scored.counted` : points marqués au sol, parmi les points marqués dont la catégorie est connue (`Tachi-waza` ou `Ne-waza`).
-* `conceded.ground / conceded.counted` : idem pour les points concédés.
-* Un point sans technique n'est pas compté.
-* STAT-29 : chaque ligne rappelle la valeur de la période précédente si son dénominateur atteint 5.
-
-### 3.8. Selon les gardes (`byLateralMatchup`)
-Quatre lignes : droitier contre droitier, droitier contre gaucher, gaucher contre droitier, gaucher contre gaucher (garde du judoka, puis de l'adversaire). Un combat est exclu si son résultat n'est ni `"Victoire"` ni `"Défaite"`, ou si l'une des deux gardes n'est pas `"Droitier"`/`"Gaucher"`. Taux `victories / combats`, seuil de 5. Seules les lignes avec au moins un combat s'affichent.
-
-### 3.9. Tenue du score (`scoreHolding`)
-Lue sur le déroulé, point après point, sur les seuls combats dont tous les points (des deux camps) portent un rang unique (`counted`, affiché).
-* « Mener » compare les points cumulés : un Ippon l'emporte sur les Waza-ari, un Waza-ari sur les Yuko.
-* `scoredFirst` : combats où le premier point est au judoka ; `wonAfterScoringFirst` : victoires parmi eux.
-* `lostAfterLeading` : défaites alors que le judoka a mené à un moment.
-* `wonAfterTrailing` : victoires alors que le judoka a été mené à un moment.
-* STAT-29 : « Puis gagne » rappelle la valeur de la période précédente si celle-ci compte au moins 5 combats où le judoka a marqué le premier.
-
-### 3.10. Discipline (`discipline`)
-* `shidosReceived / scoredCombats` : shidos reçus par combat, sur les combats dont le score officiel est renseigné (`scoredCombats`, affiché). Affichage : `0,4 par combat (12 combats) · avant 0,9 (8 combats)` ; la valeur précédente demande 5 combats au score renseigné.
-* `hansokuMakeDefeats` : défaites dont la fin est `Hansoku-make`.
-* Masquée si aucun combat n'a de score renseigné.
 
 ---
 
-## 4. Fins de combat et techniques
+## 4. Comment on gagne, comment on perd
 
 ### 4.1. Fin des combats gagnés (`victoriesByDecisionType`) et perdus (`defeatsByDecisionType`)
 * Dénominateur : victoires (ou défaites) du périmètre.
@@ -152,13 +110,21 @@ Lue sur le déroulé, point après point, sur les seuls combats dont tous les po
 * Affichage : `compte/total (taux %)`, pourcentage et barre à partir de 5.
 * La même règle s'applique à la fiche saison du judoka (sans seuil).
 * L'égalité (`Hiki wake`) n'entre dans aucune des deux sections.
+* Une victoire par Ippon se lit ici : il n'y a plus de section « Ippon » à part.
 
 ### 4.2. Techniques qui gagnent (`topWinTechniques`)
 Les 5 techniques les plus marquées par les judokas dans les combats gagnés (3 sur la fiche saison du judoka), ordre alphabétique à égalité. Barres relatives à la plus fréquente.
-* `distinctWinTechniques` (STAT-29) : nombre de techniques différentes marquées dans les combats gagnés, avec la valeur de la période précédente.
 
 ### 4.3. Techniques qui nous battent (`topDefeatTechniques`)
 Les 5 techniques les plus marquées par les adversaires (`concededScores`) dans les **combats perdus** uniquement. Un point concédé dans un combat gagné n'est pas compté ; un point sans technique non plus.
+
+### 4.4. Debout ou au sol (`groundShare`, STAT-7)
+* `scored` : points marqués par les judokas dont la catégorie est connue (`Tachi-waza` ou `Ne-waza`) ; `ground` : ceux au sol. `conceded` : idem pour les points concédés.
+* Un point sans technique n'est pas compté.
+* Affichage, en fin de « Comment on gagne » (marqués) et de « Comment on perd » (concédés) : `Points marqués : 64 % debout, 36 % au sol (74 points)` ; sous 5 points, les décomptes (`2 debout, 1 au sol`).
+
+### 4.5. Métriques retirées (SIMPL-3)
+Ne sont plus calculées ni affichées (écran, API, MCP) : les podiums par place et les 7 premiers, la section « Activité », la section « Ippon », la ventilation des judokas par garde, le taux de victoire selon les gardes, la tenue du score, la discipline (shidos, défaites par Hansoku-make), le nombre de techniques différentes et les valeurs « avant » ligne par ligne.
 
 ---
 
