@@ -6,6 +6,7 @@
   const OTHER_LIGUE = "__autre__";
   const UNKNOWN_TYPE = "__non_precise__";
   const NATIONAL_LIGUE = "National";
+  const UV_OPTIONS = ["UV1", "UV2", "UV3", "UV4"];
 
   const MONTH_FORMATTER = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
   const SYNC_DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
@@ -24,6 +25,8 @@
     ligue: string;
     type: string;
     month: string;
+    /** AGD-013 : UV cochées, toutes exigées. */
+    uvs: string[];
   }
 
   interface AgendaViewState {
@@ -43,7 +46,7 @@
     canRetry: true,
     lastSyncAt: "",
     events: [],
-    filters: { ligue: "", type: "", month: "" }
+    filters: { ligue: "", type: "", month: "", uvs: [] }
   };
 
   /** « 2026-12-05 » → « 05/12 ». */
@@ -95,6 +98,7 @@
     const type = event.typeEvenement ? typeLabel(event.typeEvenement) : "";
     const owner = event.proprietaire && event.ligue ? `${event.proprietaire} — ${event.ligue}` : event.proprietaire || event.ligue;
     return {
+      uvLabel: (event.uvs || []).join(" · "),
       eventKey: event.eventKey,
       titre: event.titre,
       sourceUrl: event.sourceUrl,
@@ -114,7 +118,7 @@
     const viewModel: AgendaViewState = window.Vue.reactive({
       ...defaultAgendaViewState,
       events: [],
-      filters: { ...defaultAgendaViewState.filters }
+      filters: { ...defaultAgendaViewState.filters, uvs: [] }
     });
     let mounted = false;
     let requestId = 0;
@@ -127,12 +131,14 @@
         (event) =>
           (!filters.ligue || ligueValue(event) === filters.ligue) &&
           (!filters.type || typeValue(event) === filters.type) &&
-          (!filters.month || event.dateDebut.slice(0, 7) === filters.month)
+          (!filters.month || event.dateDebut.slice(0, 7) === filters.month) &&
+          filters.uvs.every((uv) => (event.uvs || []).includes(uv))
       );
     });
 
     const computedRefs = {
       hasEvents: window.Vue.computed(() => model().events.length > 0),
+      uvOptions: window.Vue.computed(() => UV_OPTIONS),
       lastSyncLabel: window.Vue.computed(() => {
         const lastSyncAt = model().lastSyncAt;
         if (!lastSyncAt) {
@@ -174,7 +180,8 @@
         const actions = {
           showHome: () => app.showHome && app.showHome(),
           retryFfjudoAgenda: () => fetchAgenda(),
-          clearFfjudoAgendaFilters
+          clearFfjudoAgendaFilters,
+          toggleFfjudoAgendaUv
         };
         ui.mountViewModel("ffjudoAgendaView", viewModel, actions, computedRefs);
         mounted = true;
@@ -183,7 +190,12 @@
     }
 
     function clearFfjudoAgendaFilters() {
-      Object.assign(ensureViewModel().filters, { ligue: "", type: "", month: "" });
+      Object.assign(ensureViewModel().filters, { ligue: "", type: "", month: "", uvs: [] });
+    }
+
+    function toggleFfjudoAgendaUv(uv: string) {
+      const filters = ensureViewModel().filters;
+      filters.uvs = filters.uvs.includes(uv) ? filters.uvs.filter((value) => value !== uv) : [...filters.uvs, uv];
     }
 
     function fetchAgenda() {

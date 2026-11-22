@@ -394,7 +394,8 @@ test("agenda: lists upcoming events from today in Paris for a coach", async () =
       ville: "NANTES",
       ligue: "Pays de la Loire",
       proprietaire: "Comité LOIRE ATLANTIQUE JUD",
-      sourceUrl: "https://pays-de-la-loire-judo.ffjudo.com/evenement/tournoi/18"
+      sourceUrl: "https://pays-de-la-loire-judo.ffjudo.com/evenement/tournoi/18",
+      uvs: []
     }
   ]);
 });
@@ -538,4 +539,16 @@ test("review #4: the sync stops fetching once its time budget is spent", async (
   assert.equal(report.sources["www.ffjudo.com"].status, "error");
   assert.match(report.sources["www.ffjudo.com"].error, /Délai de synchronisation dépassé/);
   assert.equal(repository.calls.runs.length, 1);
+});
+
+test("agenda: a grade session carries the UVs read in its title (AGD-012)", async () => {
+  const session = {
+    ...agendaRow,
+    event_key: "fed:9",
+    titre: "Examen UV1/2/3b n°1",
+    type_evenement: "PASSAGE DE GRADE"
+  };
+  const { service } = createAgenda({ rows: [session] });
+  const agenda = await service.methods.getFfjudoEvents("coach@example.com");
+  assert.deepEqual(agenda.events[0].uvs, ["UV1", "UV2", "UV3"]);
 });

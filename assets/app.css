@@ -2680,6 +2680,29 @@ button:focus-visible,
   margin-bottom: 16px;
 }
 
+.agenda-uv-filter {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.agenda-uv-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.agenda-card-uvs {
+  justify-self: start;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .agenda-month + .agenda-month {
   margin-top: 20px;
 }

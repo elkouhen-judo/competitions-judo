@@ -10,6 +10,13 @@
       </div>
       <div class="panel-body">
         <!-- AGD : filtres appliqués dans le navigateur sur les événements à venir. -->
+        <!-- AGD-013 : cocher plusieurs UV garde les séances qui les proposent toutes. -->
+        <div v-if="hasEvents" class="agenda-uv-filter">
+          <span id="ffjudoAgendaUvLabel" class="agenda-uv-label">Passages d'UV</span>
+          <div class="choice-chips" role="group" aria-labelledby="ffjudoAgendaUvLabel">
+            <button v-for="uv in uvOptions" :key="uv" :id="'ffjudoAgenda' + uv.replace('UV', 'Uv')" type="button" :class="['choice-chip', { 'choice-active': filters.uvs.includes(uv) }]" :aria-pressed="filters.uvs.includes(uv) ? 'true' : 'false'" :disabled="isLoading" @click="toggleFfjudoAgendaUv(uv)">{{ uv }}</button>
+          </div>
+        </div>
         <div v-if="hasEvents" class="form-grid agenda-filters">
           <div>
             <label for="ffjudoAgendaLigue">Ligue</label>
@@ -56,6 +63,7 @@
             <div class="list">
               <article v-for="event in group.events" :key="event.eventKey" class="card agenda-card">
                 <p class="agenda-card-date">{{ event.dateLabel }}</p>
+                <p v-if="event.uvLabel" class="agenda-card-uvs">{{ event.uvLabel }}</p>
                 <p class="card-title">{{ event.titre }}</p>
                 <div class="card-meta">
                   <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>

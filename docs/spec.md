@@ -328,6 +328,8 @@ This specification does not define:
 - **AGD-009**: States: loading « Chargement de l'agenda… » ; no event « Aucun événement à venir. » (filters hidden) ; no match « Aucun événement pour ces filtres. » with « Effacer les filtres » ; failure « Impossible de charger l'agenda. » with « Réessayer » ; offline without a list loaded in the session « L'agenda n'est pas disponible hors connexion. ».
 - **AGD-010**: The agenda never stores or shows organisers' contact details (name, phone, e-mail) nor the FFJDA level code.
 - **AGD-011**: The agenda is synchronised once a day. A source that fails keeps its events from the previous synchronisation; an upcoming event that disappeared is removed only when every site that listed it was read successfully.
+- **AGD-012**: A grade session's UVs are read in its title: `UV` followed by its number, including chained lists (`UV1/2/3b`, `UV1-UV2`, `UV 1`); for a `PASSAGE DE GRADE` event, `TEC`, `test efficacité combat` and `shiai` also mean `UV3`. Only `PASSAGE DE GRADE` events and titles naming a UV are read; a title containing `stage` (preparation session) carries no UV; a title without a recognizable UV carries none and stays reachable through the type filter.
+- **AGD-013**: The agenda offers four toggle buttons « UV1 » to « UV4 » under « Passages d'UV ». Toggling several keeps only the sessions offering all toggled UVs (UV1 + UV2: sessions where both can be passed); the toggles combine with the other filters and « Effacer les filtres » clears them. Each session card shows its UVs (`UV1 · UV2 · UV3`).
 
 ## 4. Acceptance Criteria
 

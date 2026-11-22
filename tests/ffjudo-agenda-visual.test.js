@@ -343,3 +343,74 @@ test("AGD-001 : un judoka ne voit pas l'agenda dans le menu du compte", async (t
   await expect(page.getByRole("menuitem", { name: "Agenda FFJDA" })).toHaveCount(0);
   assert.equal(rpc.filter((request) => request.method === "getFfjudoEvents").length, 0);
 });
+
+const UV_SESSIONS = [
+  {
+    ...EVENTS[0],
+    eventKey: "fed:uv-123",
+    titre: "Examen UV1/2/3b n°1",
+    typeEvenement: "PASSAGE DE GRADE",
+    inscriptionCloture: "",
+    uvs: ["UV1", "UV2", "UV3"]
+  },
+  {
+    ...EVENTS[1],
+    eventKey: "fed:uv-2",
+    titre: "CD56 EXAMEN UV2",
+    typeEvenement: "PASSAGE DE GRADE",
+    dateFin: "",
+    uvs: ["UV2"]
+  },
+  {
+    ...EVENTS[2],
+    eventKey: "fed:uv-3",
+    titre: "TEST EFFICACITE COMBAT DU 1ER AU 4EME DAN",
+    typeEvenement: "PASSAGE DE GRADE",
+    uvs: ["UV3"]
+  },
+  { ...EVENTS[0], uvs: [] }
+];
+
+for (const [name, viewport] of VIEWPORTS) {
+  test(`AGD-013 : le filtre UV garde les séances qui proposent toutes les UV cochées sur ${name}`, async (t) => {
+    const { page } = await openAgenda(
+      t,
+      scenario([{ events: UV_SESSIONS, lastSyncAt: LAST_SYNC }]),
+      viewport
+    );
+    const cards = page.locator("#ffjudoAgendaView .agenda-card");
+    await expect(cards).toHaveCount(4);
+    const uv1 = page.locator("#ffjudoAgendaUv1");
+    const uv2 = page.locator("#ffjudoAgendaUv2");
+    await expect(uv1).toHaveAttribute("aria-pressed", "false");
+    await expect(
+      cards.filter({ hasText: "Examen UV1/2/3b" }).locator(".agenda-card-uvs")
+    ).toHaveText("UV1 · UV2 · UV3");
+    await expect(
+      cards.filter({ hasText: "TOURNOI EXCELLENCE" }).locator(".agenda-card-uvs")
+    ).toHaveCount(0);
+
+    await uv2.click();
+    await expect(uv2).toHaveAttribute("aria-pressed", "true");
+    await expect(cards).toHaveCount(2);
+    await uv1.click();
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText("Examen UV1/2/3b n°1");
+    await page.screenshot({
+      path: `output/playwright/uv-after-${name}-uv1-uv2.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+
+    await page.locator("#ffjudoAgendaUv4").click();
+    await expect(cards).toHaveCount(0);
+    await page.getByRole("button", { name: "Effacer les filtres" }).click();
+    await expect(cards).toHaveCount(4);
+    await expect(uv1).toHaveAttribute("aria-pressed", "false");
+    await page.screenshot({
+      path: `output/playwright/uv-after-${name}-liste.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+  });
+}

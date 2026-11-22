@@ -226,3 +226,43 @@ test("review #1: a national page with pagination but no card is not recognised",
   const renamed = nationalHtml.replaceAll('class="card_evenement"', 'class="carte"');
   assert.throws(() => parseNationalPage(renamed), /Gabarit FFJDA non reconnu/);
 });
+
+const { detectUvs } = require("../core/domain/ffjudo/uv");
+
+test("uv: detects the UVs of real FFJDA grade session titles", () => {
+  const grade = "PASSAGE DE GRADE";
+  const cases = [
+    ["Examen UV1/2/3b n°1", ["UV1", "UV2", "UV3"]],
+    ["PASSAGE DE GRADE 1ER & 2ÈME DAN UV1-UV2", ["UV1", "UV2"]],
+    ["PASSAGE DE GRADE BFC UV1 UV2 UV3-B", ["UV1", "UV2", "UV3"]],
+    ["CD29 - Examen UV2 + VOLET B UV3", ["UV2", "UV3"]],
+    ["TEC - UV 3", ["UV3"]],
+    ["TEST EFFICACITE COMBAT DU 1ER AU 4EME DAN", ["UV3"]],
+    ["SHIAI 1D 2D 3D BAR SUR AUBE", ["UV3"]],
+    ["CD 22 : EXAMEN UV4", ["UV4"]],
+    ["ENGAGEMENT PERSONNEL UV 4 JUJITSU", ["UV4"]],
+    [
+      "(OCC) PASSAGE DE GRADE - TOULOUSE - UV3 1D, 2D & 3D ET UV4 3D & 4D + PARA JUDO",
+      ["UV3", "UV4"]
+    ],
+    ["PASSAGE GRADES UV1 1er,2ième,3ième & 4ième DAN", ["UV1"]],
+    ["Examen UV1 /UV2 JUDO 1er & 2ème Dan", ["UV1", "UV2"]],
+    ["PASSAGE DE GRADE N AQUITAINE JURANCON UV 3", ["UV3"]],
+    ["Validation UV4 pour 1er à 4eme dan", ["UV4"]]
+  ];
+  for (const [titre, expected] of cases) {
+    assert.deepEqual(detectUvs(titre, grade), expected, titre);
+  }
+});
+
+test("uv: preparation stages, bare grade sessions and other events have no UV", () => {
+  assert.deepEqual(detectUvs("CD 22 Stage UV2 n°1Cotes d’Armor", "PASSAGE DE GRADE"), []);
+  assert.deepEqual(detectUvs("PASSAGE DE GRADE", "PASSAGE DE GRADE"), []);
+  assert.deepEqual(detectUvs("CD56 STAGE JUJITSU TECHNIQUE ET FORMATION ARBITRAGE", "STAGE"), []);
+  assert.deepEqual(
+    detectUvs("TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES 2026", "COMPETITION"),
+    []
+  );
+  assert.deepEqual(detectUvs("COUPE TECHNIQUE REGIONALE", "COMPETITION"), []);
+  assert.deepEqual(detectUvs("Rencontre ceintures noires UV3 1er dan", "COMPETITION"), ["UV3"]);
+});

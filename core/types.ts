@@ -610,6 +610,8 @@ export interface FfjudoAgendaEvent {
   ligue: string;
   proprietaire: string;
   sourceUrl: string;
+  /** AGD-012 : UV proposées par la séance (« UV1 »…« UV4 »), vide hors passage de grade. */
+  uvs: string[];
 }
 
 /** Agenda FFJDA : événements à venir et date de la dernière synchronisation réussie ("" si aucune). */

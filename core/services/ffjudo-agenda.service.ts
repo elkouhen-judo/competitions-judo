@@ -1,3 +1,4 @@
+import { detectUvs } from "../domain/ffjudo/uv";
 import type { FfjudoEventsRepository } from "../repositories/ffjudo-events.repository";
 import type { FfjudoEventRow, JudokaRow } from "../repositories/types";
 import type { UserContextService } from "./user-context.service";
@@ -28,7 +29,8 @@ function toAgendaEvent(row: FfjudoEventRow): FfjudoAgendaEvent {
     ville: String(row.ville || ""),
     ligue: String(row.ligue || ""),
     proprietaire: String(row.proprietaire || ""),
-    sourceUrl: String(row.source_url || "")
+    sourceUrl: String(row.source_url || ""),
+    uvs: detectUvs(String(row.titre || ""), String(row.type_evenement || ""))
   };
 }
 
