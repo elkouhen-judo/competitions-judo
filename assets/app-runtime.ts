@@ -262,16 +262,6 @@ function createInitialState(): KirokuAppState {
       screens.home.showHome();
     }
 
-    function readHistoryViewId(stateValue: unknown): ViewId {
-      const navigationState = readHistoryNavigationState(stateValue);
-      if (navigationState) {
-        return navigationState.viewId;
-      }
-
-      const hashView = getViewFromHash(window.location.hash);
-      return hashView || currentViewId || "homeView";
-    }
-
     function readHistoryNavigationState(stateValue: unknown): NavigationSnapshot | null {
       if (stateValue && typeof stateValue === "object" && "kirokuNavigation" in stateValue) {
         return normalizeNavigationSnapshot(
@@ -301,7 +291,7 @@ function createInitialState(): KirokuAppState {
       const query = String(hash || "").split("?")[1] || "";
       const params = new URLSearchParams(query);
       return {
-        homeMode: params.get("mode") || undefined,
+        homeMode: (params.get("mode") || undefined) as NavigationSnapshot["homeMode"],
         homeFilterJudokaId: params.get("judoka") || undefined,
         competitionId: params.get("competition") || undefined,
         clubCompetitionId: params.get("clubCompetition") || undefined

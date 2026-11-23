@@ -85,10 +85,6 @@ const judokaDomain = fs.readFileSync(
   path.join(root, "core", "domain", "access", "judoka.ts"),
   "utf8"
 );
-const emailDomain = fs.readFileSync(
-  path.join(root, "core", "domain", "access", "email.ts"),
-  "utf8"
-);
 const judokasRepository = fs.readFileSync(
   path.join(root, "core", "repositories", "judokas.repository.ts"),
   "utf8"

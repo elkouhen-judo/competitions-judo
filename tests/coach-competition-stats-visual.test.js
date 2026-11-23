@@ -1,4 +1,4 @@
-/* global document, window */
+/* global document, window, getComputedStyle */
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");

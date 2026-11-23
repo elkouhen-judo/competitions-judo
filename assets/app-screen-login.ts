@@ -2,7 +2,7 @@
   type KirokuApp = import("./types").KirokuApp;
 
   function createKirokuLoginScreen(app: KirokuApp) {
-    const { runtimeConfig, auth, applyInitialData, screens, ui, notifications } = app;
+    const { runtimeConfig, auth, applyInitialData, ui, notifications } = app;
     const { showView } = ui;
     const { clearMessage, showError } = notifications;
     const { clearVercelSession, parseVercelAuthCallback } = auth;

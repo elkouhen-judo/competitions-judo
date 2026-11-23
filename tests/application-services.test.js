@@ -2375,7 +2375,7 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
       replaceCoachClubs: async (idCoach, clubIds) => calls.coachClubs.push([idCoach, clubIds])
     },
     competitionsRepository: {
-      listByJudoka: async (idJudoka) => [],
+      listByJudoka: async () => [],
       removeByJudoka: async (idJudoka) => calls.removedCompetitionsByJudoka.push(idJudoka)
     },
     invitationsRepository: {

@@ -1,3 +1,4 @@
+/* global document, getComputedStyle -- code exécuté dans le navigateur via page.evaluate */
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");

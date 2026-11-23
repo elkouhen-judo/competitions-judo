@@ -7,7 +7,6 @@
     const {
       formatCompetitionName,
       formatCompetitionRanking,
-      formatDate,
       getClassementBadgeClass,
       getJudokaDisplayName,
       getJudokaInitials,
