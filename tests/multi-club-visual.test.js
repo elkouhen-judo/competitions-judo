@@ -258,7 +258,7 @@ for (const [name, viewport] of [
     await expect(page.locator("#homeClubFilter")).toHaveValue(RENNES.clubId);
 
     // MULTI-3 : les statistiques s'ouvrent sur le club de l'accueil.
-    await page.getByRole("button", { name: "Stats", exact: true }).click();
+    await page.getByRole("button", { name: "Statistiques", exact: true }).click();
     await expect(page.locator("#coachDashboardView")).toBeVisible();
     const dashboardCalls = () => rpc.filter((request) => request.method === "getCoachDashboard");
     await expect.poll(() => dashboardCalls().length).toBeGreaterThan(0);

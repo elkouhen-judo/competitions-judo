@@ -61,7 +61,7 @@ This specification does not define:
 - **VOC-002**: « Inscrit » alone means entered in a competition. Season registration is « réinscrit pour la saison ». An existing user is « compte existant ».
 - **VOC-003**: « Fiche » names a judoka's page. « Profil sportif » names its editable sports information.
 - **VOC-004**: « Bilan coach » names the coach's written review. « Résultat » names the win/loss record.
-- **VOC-005**: Menus and tabs use « Ma famille » and « Mon espace »; the coach tab keeps the short « Stats » to fit 375 px, the screens say « Statistiques »; filters are cleared with « Effacer les filtres »; rights are removed with « Retirer ».
+- **VOC-005**: Menus and tabs use « Ma famille » and « Mon espace »; the five coach tabs keep short labels to fit 375 px (« Compét. », « Stats »), their accessible names stay « Compétitions », « Statistiques » and « Agenda FFJDA », and the screens say the full words; filters are cleared with « Effacer les filtres »; rights are removed with « Retirer ».
 - **VOC-006**: An empty value is « Non renseigné(e) ». An address is « E-mail ». A participant without a place is « Non classé »; only the compact ranking buttons of a club competition show « NC » to fit 375 px (their accessible name stays « Non classé »).
 - **VOC-007**: The interface addresses the user with « vous », uses « … » for ellipses and « » for quoted names, and agrees plurals instead of writing « (s) ».
 
@@ -204,6 +204,7 @@ This specification does not define:
 - **AUTH-004**: The login UI shall not expose password login.
 - **AUTH-005**: The login UI shall not expose magic-link login or signup.
 - **AUTH-006**: The connected header shall show user identity and provide an explicit logout action.
+- **AUTH-006a** (NAV-5): The header is one line: logo, « Ayumi - 歩み », and the account pill with the user's first name and one role. « Suivi de compétitions » is shown only while nobody is connected; then the header shows no account pill.
 - **AUTH-007**: A user without an existing imported profile or an active invitation shall not be allowed to create an account in the application.
 - **AUTH-008**: An `ADMIN` shall be able to manage pending access invitations from the dedicated admin screen.
 - **AUTH-009**: The invitation management screen shall allow searching pending invitations by invited email and shall paginate pending invitations with 5 invitations per page.
@@ -242,7 +243,7 @@ This specification does not define:
 - **UIX-013**: For `PARENT`, a child shall always be selected: the last child chosen on the device, otherwise the first child. The parent profile itself is never offered as a child.
 - **UIX-013a** (FAM-1): When a child (or, in « Mon espace », the judoka) has no competition and belongs to no club, the empty state says so: « <Prénom> n'est rattaché à aucun club : aucun coach ne peut l'inscrire. Demandez au club de le rattacher. » (« Vous n'êtes rattaché à aucun club… » for the judoka).
 - **UIX-015**: For `COACH`, the home screen shall list what is waiting: club competitions of the week and rankings to enter; each line opens the club competition. Each group shows at most 5 lines, then « + N autres dans « Compétitions » », which opens the « Compétitions » tab (COACH-6). For `ADMIN`, access governance is reached from the account menu.
-- **UIX-016**: For `COACH`, the same four tabs shall be shown on every coach screen: « Accueil », « Compétitions », « Judokas » and « Stats ». « Mon espace », « Ma famille » and « Gestion des accès » are in the account menu opened from the header.
+- **UIX-016** (NAV-6): For `COACH`, the same five tabs shall be shown on every coach screen, the FFJDA agenda included: « Accueil », « Compét. », « Judokas », « Stats » and « Agenda » (accessible names in VOC-005). At 375 px they fit on one line without clipping. « Mon espace », « Ma famille » and « Gestion des accès » are in the account menu opened from the header.
 - **UIX-016a**: The home lists shall load the current season and upcoming competitions; a « Voir la saison AAAA-AAAA » button shall load the previous season on demand, as long as an older competition exists.
 - **UIX-016b**: A past season already viewed shall stay readable offline.
 - **UIX-016c**: « Gestion des accès » shall list users by pages of 10 loaded from the server; the search by name or e-mail shall be applied by the server.
@@ -330,7 +331,7 @@ This specification does not define:
 
 ### 3.12 FFJDA agenda rules
 
-- **AGD-001**: Only a `COACH` opens « Agenda FFJDA », from the account menu. Other profiles see no entry, and the server refuses `getFfjudoEvents` to them with « Accès refusé. ».
+- **AGD-001**: Only a `COACH` opens « Agenda FFJDA », from the « Agenda » tab (UIX-016); it is no longer in the account menu. Other profiles see no tab nor entry, and the server refuses `getFfjudoEvents` to them with « Accès refusé. ».
 - **AGD-002**: The agenda never edits its events and keeps no link to a competition. It only offers to create a club competition from a competition event (AGD-018).
 - **AGD-003**: The agenda lists the upcoming events (start date today or later, Paris time), sorted by start date then title, grouped by month.
 - **AGD-004**: The agenda covers the national agenda of ffjudo.com and the events published by the Pays de la Loire, Bretagne and Nouvelle-Aquitaine ligue sites, which also relay other ligues' events.

@@ -227,10 +227,11 @@ test("family home shows one pill per child and remembers the last child", () => 
   assert.match(client, /\{ key: "family", label: "Ma famille" \}/);
 });
 
-test("coach screens share the same four tabs and the home lists what is waiting", () => {
+test("coach screens share the same five tabs and the home lists what is waiting", () => {
+  // NAV-6 : libellés courts à l'écran, nom complet pour les lecteurs d'écran.
   assert.match(
     client,
-    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil" \},\s*\{ key: "coach", label: "Compétitions" \},\s*\{ key: "coachJudoka", label: "Judokas" \},\s*\{ key: "coachDashboard", label: "Stats" \}\s*\]\)/
+    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil", title: "Accueil" \},\s*\{ key: "coach", label: "Compét\.", title: "Compétitions" \},\s*\{ key: "coachJudoka", label: "Judokas", title: "Judokas" \},\s*\{ key: "coachDashboard", label: "Stats", title: "Statistiques" \},\s*\{ key: "coachAgenda", label: "Agenda", title: "Agenda FFJDA" \}\s*\]\)/
   );
   assert.match(
     bundle,
@@ -238,7 +239,7 @@ test("coach screens share the same four tabs and the home lists what is waiting"
   );
   assert.match(
     bundle,
-    /@click="showCoachHome\(\)">Accueil<\/button>[\s\S]*@click="showCoachCompetitions\(\)">Compétitions<\/button>[\s\S]*@click="showCoachJudoka\(\)">Judokas<\/button>[\s\S]*aria-current="page">Stats<\/button>/
+    /@click="showCoachHome\(\)">Accueil<\/button>[\s\S]*@click="showCoachCompetitions\(\)">Compét\.<\/button>[\s\S]*@click="showCoachJudoka\(\)">Judokas<\/button>[\s\S]*aria-current="page">Stats<\/button>[\s\S]*@click="showCoachAgenda\(\)">Agenda<\/button>/
   );
   assert.doesNotMatch(bundle, /label: "Gestion des accès"/);
   assert.match(bundle, /class="coach-agenda"/);

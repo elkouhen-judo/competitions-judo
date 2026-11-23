@@ -1,8 +1,15 @@
     <section id="ffjudoAgendaView" class="panel hidden" v-cloak>
+      <!-- AGD-001 / NAV-6 : l'agenda est un onglet du coach, sans flèche de retour. -->
+      <div class="dash-hero">
+        <nav class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
+          <button type="button" class="mode-tab" aria-label="Accueil" @click="showCoachHome()">Accueil</button>
+          <button type="button" class="mode-tab" aria-label="Compétitions" @click="showCoachCompetitions()">Compét.</button>
+          <button type="button" class="mode-tab" aria-label="Judokas" @click="showCoachJudoka()">Judokas</button>
+          <button type="button" class="mode-tab" aria-label="Statistiques" @click="showCoachDashboard()">Stats</button>
+          <button type="button" class="mode-tab mode-tab-active" aria-label="Agenda FFJDA" aria-current="page">Agenda</button>
+        </nav>
+      </div>
       <div class="panel-header page-header">
-        <button class="icon-button page-back" type="button" aria-label="Retour" title="Retour" @click="showHome()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        </button>
         <div class="page-title">
           <h2>Agenda FFJDA</h2>
           <p id="ffjudoAgendaLastSync" class="subtitle">{{ lastSyncLabel }}</p>

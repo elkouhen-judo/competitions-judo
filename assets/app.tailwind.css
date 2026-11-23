@@ -3789,7 +3789,7 @@
     letter-spacing: 0;
   }
 
-  /* NAV-2 : quatre onglets coach sans rognage à 390 px. */
+  /* NAV-6 : cinq onglets coach sans rognage à 375 px. */
   .coach-sub-tabs {
     min-width: 0;
     gap: 2px;
@@ -3797,7 +3797,7 @@
 
   .coach-sub-tabs .mode-tab {
     flex: 1 1 auto;
-    padding: 9px 10px;
+    padding: 9px 4px;
     text-align: center;
   }
 

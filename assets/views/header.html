@@ -1,4 +1,5 @@
-    <header id="appHeader" class="topbar" :class="{ hidden: !showHeader }" v-cloak>
+    <!-- NAV-5 : Vue monte dans #appHeader ; seul son contenu réagit à showHeader (connecté ou non). -->
+    <header id="appHeader" class="topbar" v-cloak>
       <div class="brand">
         <div class="brand-logo" aria-hidden="true">
           <svg class="brand-logo-mark" viewBox="0 0 64 64" focusable="false">
@@ -10,10 +11,10 @@
         </div>
         <div class="brand-copy">
           <h1>Ayumi - 歩み</h1>
-          <p class="subtitle">Suivi de compétitions</p>
+          <p v-if="!showHeader" class="subtitle">Suivi de compétitions</p>
         </div>
       </div>
-      <div class="user-actions">
+      <div v-if="showHeader" class="user-actions">
         <div v-if="showOfflineStatus" class="offline-status" role="status">{{ offlineStatusText }}</div>
         <!-- NAV-4 : nom et un seul rôle ; les autres espaces et la déconnexion sont dans le menu. -->
         <details id="accountMenu" class="page-menu account-menu">
@@ -26,7 +27,6 @@
             <button v-if="showPersonalSpaceLink" type="button" role="menuitem" @click="openPersonalSpace()">Mon espace</button>
             <button v-if="showFamilyLink" type="button" role="menuitem" @click="openFamilySpace()">Ma famille</button>
             <button v-if="showAdminLink" type="button" role="menuitem" @click="openAccessManagement()">Gestion des accès</button>
-            <button v-if="showFfjudoAgendaLink" type="button" role="menuitem" @click="openFfjudoAgenda()">Agenda FFJDA</button>
             <a id="privacyLink" href="/confidentialite" role="menuitem">Données personnelles</a>
             <button id="logoutButton" type="button" role="menuitem" @click="logoutUser()">Se déconnecter</button>
           </div>

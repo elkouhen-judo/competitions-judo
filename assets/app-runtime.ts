@@ -1210,7 +1210,11 @@ function createInitialState(): KirokuAppState {
             : "Judoka";
       Object.assign(headerViewModel, {
         showHeader: true,
-        userName: ui.getJudokaDisplayName(state.currentUser) || "",
+        // NAV-5 : le prénom seul tient sur la ligne de l'en-tête à 375 px.
+        userName:
+          ui.normalizeDisplayName(String(state.currentUser?.firstName || "").trim()) ||
+          ui.getJudokaDisplayName(state.currentUser) ||
+          "",
         roleLabel,
         showOfflineStatus: state.isUsingCachedData || !state.isOnline || state.pendingOperations.length > 0,
         offlineStatusText: getOfflineStatusText()
@@ -1520,8 +1524,7 @@ function createInitialState(): KirokuAppState {
         logoutUser,
         openPersonalSpace: () => screens.home.setHomeMode("judoka"),
         openFamilySpace: () => screens.home.setHomeMode("family"),
-        openAccessManagement: () => screens.admins.showAdminsManagement(),
-        openFfjudoAgenda: () => screens.ffjudoAgenda.showFfjudoAgenda()
+        openAccessManagement: () => screens.admins.showAdminsManagement()
       },
       {
         // Le coach retrouve « Mon espace » ici ; un compte uniquement parent n'en a pas.
@@ -1529,9 +1532,7 @@ function createInitialState(): KirokuAppState {
           () => state.isCoach && state.currentUser?.profileType !== "PARENT"
         ),
         showFamilyLink: window.Vue.computed(() => state.isCoach && state.isParent),
-        showAdminLink: window.Vue.computed(() => state.isAdmin),
-        // AGD-001 : l'agenda FFJDA est réservé aux coachs.
-        showFfjudoAgendaLink: window.Vue.computed(() => state.isCoach)
+        showAdminLink: window.Vue.computed(() => state.isAdmin)
       }
     );
 

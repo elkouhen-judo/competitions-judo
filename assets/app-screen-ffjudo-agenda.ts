@@ -230,7 +230,10 @@
     function ensureViewModel(): AgendaViewState {
       if (!mounted) {
         const actions = {
-          showHome: () => app.showHome && app.showHome(),
+          showCoachHome: () => showCoachHomeMode("coachHome"),
+          showCoachCompetitions: () => showCoachHomeMode("coach"),
+          showCoachJudoka: () => showCoachHomeMode("coachJudoka"),
+          showCoachDashboard: () => app.screens.coachDashboard.showCoachDashboard(),
           retryFfjudoAgenda: () => fetchAgenda(),
           createCompetitionFromEvent,
           clearFfjudoAgendaFilters,
@@ -243,6 +246,12 @@
         mounted = true;
       }
       return viewModel;
+    }
+
+    // NAV-6 : les onglets coach de l'agenda rouvrent l'accueil dans le mode choisi.
+    function showCoachHomeMode(mode: "coachHome" | "coach" | "coachJudoka") {
+      app.screens.home.setHomeMode(mode);
+      if (app.showHome) app.showHome();
     }
 
     // AGD-018 : ouvre « Nouvelle compétition » prérempli ; rien n'est enregistré avant « Enregistrer ».

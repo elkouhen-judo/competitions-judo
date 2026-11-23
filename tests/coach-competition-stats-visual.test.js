@@ -592,7 +592,10 @@ for (const [name, viewport] of [
       .getByRole("button", { name: "Retour", exact: true })
       .click();
     await expect(page.locator("#homeView")).toBeVisible();
-    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    await page
+      .locator("#homeView")
+      .getByRole("button", { name: "Statistiques", exact: true })
+      .click();
     await expect(page.locator("#coachDashboardView")).toBeVisible();
     await expect(page.locator("#coachDashboardBackButton")).toHaveCount(0);
     await expect(filterSummary).toHaveText(currentSeasonLabel());
@@ -605,7 +608,10 @@ for (const [name, viewport] of [
       .locator("#coachDashboardView")
       .getByRole("button", { name: "Accueil", exact: true })
       .click();
-    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    await page
+      .locator("#homeView")
+      .getByRole("button", { name: "Statistiques", exact: true })
+      .click();
     await expect(filterSummary).toContainText("Minime");
 
     // TDB-8 : une date de fin avant la date de début s'affiche sous les dates, sans appel.
@@ -683,7 +689,10 @@ for (const [name, viewport] of [
       .locator("#clubCompetitionDetailView")
       .getByRole("button", { name: "Retour", exact: true })
       .click();
-    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    await page
+      .locator("#homeView")
+      .getByRole("button", { name: "Statistiques", exact: true })
+      .click();
     const withheld = page.locator("#coachDashboardWithheld");
     await expect(withheld).toContainText("Trop peu de judokas pour des statistiques de groupe.");
     await expect(withheld).toContainText("2 combats sur 1 compétition.");
@@ -712,7 +721,10 @@ for (const [name, viewport] of [
       clubId: CLUB.clubId
     };
     const { page } = await openApp(t, viewport, { savedCompetition, previousSeason: true });
-    await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
+    await page
+      .locator("#homeView")
+      .getByRole("button", { name: "Statistiques", exact: true })
+      .click();
     await expect(page.locator("#coachDashboardView .dashboard-kpis")).toBeVisible();
 
     // Écarts des tuiles : sous 5 combats, la tuile « Victoires » compare des décomptes.

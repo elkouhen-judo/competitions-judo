@@ -409,6 +409,7 @@
           addCoachDashboardCompetition,
           removeCoachDashboardCompetition,
           showCoachJudoka,
+          showCoachAgenda: () => screens.ffjudoAgenda.showFfjudoAgenda(),
           showCoachDashboard,
           formatCoachDashboardDate,
           formatCoachDashboardOptionClub,

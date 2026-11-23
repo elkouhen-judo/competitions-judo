@@ -1,10 +1,11 @@
     <section id="coachDashboardView" class="panel hidden" v-cloak>
       <div class="dash-hero">
         <nav class="mode-tabs coach-sub-tabs" aria-label="Navigation coach">
-          <button type="button" class="mode-tab" @click="showCoachHome()">Accueil</button>
-          <button type="button" class="mode-tab" @click="showCoachCompetitions()">Compétitions</button>
-          <button type="button" class="mode-tab" @click="showCoachJudoka()">Judokas</button>
-          <button type="button" class="mode-tab mode-tab-active" aria-current="page">Stats</button>
+          <button type="button" class="mode-tab" aria-label="Accueil" @click="showCoachHome()">Accueil</button>
+          <button type="button" class="mode-tab" aria-label="Compétitions" @click="showCoachCompetitions()">Compét.</button>
+          <button type="button" class="mode-tab" aria-label="Judokas" @click="showCoachJudoka()">Judokas</button>
+          <button type="button" class="mode-tab mode-tab-active" aria-label="Statistiques" aria-current="page">Stats</button>
+          <button type="button" class="mode-tab" aria-label="Agenda FFJDA" @click="showCoachAgenda()">Agenda</button>
         </nav>
       </div>
       <div class="panel-body">

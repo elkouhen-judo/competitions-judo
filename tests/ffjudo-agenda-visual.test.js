@@ -9,7 +9,7 @@ const root = path.join(__dirname, "..");
 const clientHandler = require(path.join(root, "api", "client.js"));
 const { renderIndexHtml } = require(path.join(root, "api", "app.js"));
 
-// Agenda FFJDA (AGD-*) : écran en lecture seule ouvert depuis le menu du compte, données fictives.
+// Agenda FFJDA (AGD-*) : onglet du coach, données fictives.
 
 function tokenFor(email) {
   return `header.${Buffer.from(JSON.stringify({ email })).toString("base64url")}.signature`;
@@ -213,7 +213,10 @@ async function openHome(t, handle, viewport) {
 
 async function openAgenda(t, handle, viewport) {
   const { page, rpc } = await openHome(t, handle, viewport);
-  await page.getByRole("menuitem", { name: "Agenda FFJDA" }).click();
+  // AGD-001 : l'agenda est un onglet du coach, plus une entrée du menu du compte.
+  await expect(page.getByRole("menuitem", { name: "Agenda FFJDA" })).toHaveCount(0);
+  await page.locator("#accountMenu summary").click();
+  await page.locator("#homeView").getByRole("button", { name: "Agenda FFJDA" }).click();
   await expect(page.locator("#ffjudoAgendaView")).toBeVisible();
   return { page, rpc };
 }
@@ -223,13 +226,11 @@ const VIEWPORTS = [
   ["mobile", { width: 375, height: 812 }]
 ];
 
-test("agenda: the view, its menu entry and its script are shipped without native dialogs", () => {
+test("agenda: the view, its coach tab and its script are shipped without native dialogs", () => {
   const html = renderIndexHtml();
   assert.match(html, /<section id="ffjudoAgendaView" class="panel hidden"/);
-  assert.match(
-    html,
-    /v-if="showFfjudoAgendaLink" type="button" role="menuitem" @click="openFfjudoAgenda\(\)">Agenda FFJDA<\/button>/
-  );
+  assert.doesNotMatch(html, /openFfjudoAgenda/);
+  assert.match(html, /aria-label="Agenda FFJDA" aria-current="page">Agenda<\/button>/);
   const screen = fs.readFileSync(
     path.join(root, "assets", "dist", "app-screen-ffjudo-agenda.js"),
     "utf8"
@@ -314,7 +315,11 @@ for (const [name, viewport] of VIEWPORTS) {
     await page.reload();
     await expect(page.locator("#ffjudoAgendaView")).toBeVisible();
     await expect(cards).toHaveCount(3);
-    await page.locator("#ffjudoAgendaView .page-back").click();
+    // NAV-6 : l'onglet « Accueil » de l'agenda ramène à l'accueil coach.
+    await page
+      .locator("#ffjudoAgendaView")
+      .getByRole("button", { name: "Accueil", exact: true })
+      .click();
     await expect(page.locator("#homeView")).toBeVisible();
   });
 
@@ -442,6 +447,9 @@ test("AGD-001 : un judoka ne voit pas l'agenda dans le menu du compte", async (t
   );
   await expect(page.getByRole("menuitem", { name: "Données personnelles" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Agenda FFJDA" })).toHaveCount(0);
+  await expect(page.locator("#homeView").getByRole("button", { name: "Agenda FFJDA" })).toHaveCount(
+    0
+  );
   assert.equal(rpc.filter((request) => request.method === "getFfjudoEvents").length, 0);
 });
 

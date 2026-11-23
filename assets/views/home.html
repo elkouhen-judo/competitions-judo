@@ -7,6 +7,7 @@
             type="button"
             :class="['mode-tab', { 'mode-tab-active': isPrimaryModeActive(subMode.key) }]"
             :aria-current="isPrimaryModeActive(subMode.key) ? 'page' : null"
+            :aria-label="subMode.title"
             @click="handleModeTabClick(subMode.key)">
             {{ subMode.label }}
           </button>
