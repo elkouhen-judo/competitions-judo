@@ -2,7 +2,10 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const permissions = require("../core/domain/access/permission-policy");
-const { createCompetition, createPersistedCompetition } = require("../core/domain/competitions/competition");
+const {
+  createCompetition,
+  createPersistedCompetition
+} = require("../core/domain/competitions/competition");
 const { updateCombat } = require("../core/domain/competitions/combat");
 const { createManagedJudokaScope } = require("../core/domain/access/managed-judoka-scope");
 const createCombatsService = require("../core/services/combats.service");

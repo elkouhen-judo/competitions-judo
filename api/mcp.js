@@ -39,7 +39,10 @@ module.exports = async function handler(req, res) {
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (!token) {
     const origin = getRuntimeAppUrl(req);
-    res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`);
+    res.setHeader(
+      "WWW-Authenticate",
+      `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`
+    );
     res.status(401).json({ error: "Token MCP requis." });
     return;
   }
@@ -49,7 +52,10 @@ module.exports = async function handler(req, res) {
     claims = verifyMcpToken(token);
   } catch (error) {
     const origin = getRuntimeAppUrl(req);
-    res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`);
+    res.setHeader(
+      "WWW-Authenticate",
+      `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`
+    );
     res.status(401).json({ error: error.message || "Token MCP invalide." });
     return;
   }
@@ -77,7 +83,10 @@ module.exports = async function handler(req, res) {
     const result = await runInRequestScope(() => mcpServerService.handleRequest(claims, message));
     sendJsonRpcResult(res, message.id, result);
   } catch (error) {
-    const code = error.message === "Méthode MCP inconnue." ? JSON_RPC_METHOD_NOT_FOUND : JSON_RPC_APPLICATION_ERROR;
+    const code =
+      error.message === "Méthode MCP inconnue."
+        ? JSON_RPC_METHOD_NOT_FOUND
+        : JSON_RPC_APPLICATION_ERROR;
     sendJsonRpcError(res, message.id, code, error.message || "Erreur MCP.");
   }
 };

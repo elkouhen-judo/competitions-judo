@@ -64,26 +64,37 @@ const OPPONENT_FIRST_NAMES_BY_GENDER = {
     "Paul",
     "Quentin"
   ],
-  Femme: [
-    "Camille",
-    "Zoé",
-    "Louise",
-    "Mila",
-    "Sarah",
-    "Inaya",
-    "Manon",
-    "Nora",
-    "Alice",
-    "Maëlys"
-  ]
+  Femme: ["Camille", "Zoé", "Louise", "Mila", "Sarah", "Inaya", "Manon", "Nora", "Alice", "Maëlys"]
 };
 const WEIGHTS_BY_CATEGORY_AND_GENDER = {
   Benjamin: {
-    Homme: ["-30kg", "-34kg", "-38kg", "-42kg", "-46kg", "-50kg", "-55kg", "-60kg", "-66kg", "+66kg"],
+    Homme: [
+      "-30kg",
+      "-34kg",
+      "-38kg",
+      "-42kg",
+      "-46kg",
+      "-50kg",
+      "-55kg",
+      "-60kg",
+      "-66kg",
+      "+66kg"
+    ],
     Femme: ["-32kg", "-36kg", "-40kg", "-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "+63kg"]
   },
   Minime: {
-    Homme: ["-34kg", "-38kg", "-42kg", "-46kg", "-50kg", "-55kg", "-60kg", "-66kg", "-73kg", "+73kg"],
+    Homme: [
+      "-34kg",
+      "-38kg",
+      "-42kg",
+      "-46kg",
+      "-50kg",
+      "-55kg",
+      "-60kg",
+      "-66kg",
+      "-73kg",
+      "+73kg"
+    ],
     Femme: ["-36kg", "-40kg", "-44kg", "-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "+70kg"]
   },
   Cadet: {
@@ -98,7 +109,7 @@ const WEIGHTS_BY_CATEGORY_AND_GENDER = {
     Homme: ["-60kg", "-66kg", "-73kg", "-81kg", "-90kg", "-100kg", "+100kg"],
     Femme: ["-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "-78kg", "+78kg"]
   },
-  "Vétéran": {
+  Vétéran: {
     Homme: ["-60kg", "-66kg", "-73kg", "-81kg", "-90kg", "-100kg", "+100kg"],
     Femme: ["-48kg", "-52kg", "-57kg", "-63kg", "-70kg", "-78kg", "+78kg"]
   }
@@ -157,7 +168,7 @@ const EVENT_TEMPLATES = {
     ["2026-04-05", "Open national seniors", "National"],
     ["2026-05-10", "Tournoi international seniors", "International"]
   ],
-  "Vétéran": [
+  Vétéran: [
     ["2025-11-02", "Tournoi vétérans d'automne", "Régional"],
     ["2026-02-08", "Coupe régionale vétérans", "Régional"],
     ["2026-05-17", "Open national vétérans", "National"]
@@ -317,7 +328,12 @@ function getDecisionType(result, random) {
 }
 
 function createScores(combatId, result, decisionType, random) {
-  if (result === "Egalité" || decisionType === "Décision" || decisionType === "Hansoku-make" || decisionType === "Forfait") {
+  if (
+    result === "Egalité" ||
+    decisionType === "Décision" ||
+    decisionType === "Hansoku-make" ||
+    decisionType === "Forfait"
+  ) {
     return [];
   }
 
@@ -399,7 +415,9 @@ function generateDataset(judokas) {
   });
 
   judokas.forEach((judoka) => {
-    const random = createRandom(hashString(`${judoka.email}:${judoka.ageCategory}:${SEASON_LABEL}`));
+    const random = createRandom(
+      hashString(`${judoka.email}:${judoka.ageCategory}:${SEASON_LABEL}`)
+    );
     const events = [...EVENT_TEMPLATES[judoka.ageCategory]];
     const desiredCount = Math.min(events.length, getCompetitionCount(judoka.ageCategory, random));
     const selectedEvents = [];
@@ -427,7 +445,8 @@ function generateDataset(judokas) {
         const result = getResult(random, level, combatIndex);
         const decisionType = getDecisionType(result, random);
         const combatId = `${competitionId}_combat_${combatIndex + 1}`;
-        const opponentFirstNames = OPPONENT_FIRST_NAMES_BY_GENDER[judoka.genre] || OPPONENT_FIRST_NAMES_BY_GENDER.Homme;
+        const opponentFirstNames =
+          OPPONENT_FIRST_NAMES_BY_GENDER[judoka.genre] || OPPONENT_FIRST_NAMES_BY_GENDER.Homme;
 
         if (result === "Victoire") wins += 1;
         else if (result === "Défaite") losses += 1;
@@ -522,7 +541,15 @@ function renderSql(dataset) {
     "type_victoire",
     "deroule"
   ];
-  const scoreColumns = ["id_combat_score", "id_combat", "categorie", "technique", "type_ne_waza", "valeur", "ordre"];
+  const scoreColumns = [
+    "id_combat_score",
+    "id_combat",
+    "categorie",
+    "technique",
+    "type_ne_waza",
+    "valeur",
+    "ordre"
+  ];
 
   return `-- Dataset réaliste judokas/compétitions/combats pour judokas_100_utilisateurs.csv.
 -- Saison 2025-2026, généré par scripts/generate-competition-dataset.js.

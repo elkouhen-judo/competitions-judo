@@ -34,7 +34,10 @@ test("mcp token auth signs arbitrary claim shapes (authorization codes, client r
     getTtlSeconds: () => 60
   });
 
-  const token = auth.signToken({ redirectUris: ["https://client.example/callback"], clientName: "Test client" });
+  const token = auth.signToken({
+    redirectUris: ["https://client.example/callback"],
+    clientName: "Test client"
+  });
   const claims = auth.verifyToken(token);
   assert.deepEqual(claims.redirectUris, ["https://client.example/callback"]);
   assert.equal(claims.clientName, "Test client");

@@ -64,7 +64,12 @@ async function startServer() {
     clubId: CLUB.clubId,
     registrationSeason: 2099
   });
-  const judokas = [judoka("j-hugo", "Hugo"), judoka("j-lea", "Léa"), judoka("j-nina", "Nina"), judoka("j-tom", "Tom")];
+  const judokas = [
+    judoka("j-hugo", "Hugo"),
+    judoka("j-lea", "Léa"),
+    judoka("j-nina", "Nina"),
+    judoka("j-tom", "Tom")
+  ];
   const yesterday = localDate(-1);
   const participation = (competitionId, clubCompetitionId, ownerJudokaId, date, extra = {}) => ({
     competitionId,
@@ -80,16 +85,31 @@ async function startServer() {
     ...extra
   });
   // Coupe d'automne (hier) : Hugo a combattu sans bilan, Léa a combattu avec bilan, Nina n'a aucun combat.
-  const clubCompetitions = [{ clubCompetitionId: "cc-automne", name: "Coupe d'automne", competitionDate: yesterday, clubId: CLUB.clubId }];
+  const clubCompetitions = [
+    {
+      clubCompetitionId: "cc-automne",
+      name: "Coupe d'automne",
+      competitionDate: yesterday,
+      clubId: CLUB.clubId
+    }
+  ];
   const competitions = [
     participation("p-hugo", "cc-automne", "j-hugo", yesterday),
-    participation("p-lea", "cc-automne", "j-lea", yesterday, { result: "1er", coachReview: "Belle compétition." }),
+    participation("p-lea", "cc-automne", "j-lea", yesterday, {
+      result: "1er",
+      coachReview: "Belle compétition."
+    }),
     participation("p-nina", "cc-automne", "j-nina", yesterday)
   ];
   // COACH-6 : sept tournois plus anciens attendent leur classement ; l'agenda en montre 5 en tout.
   for (let index = 1; index <= 7; index += 1) {
     const date = localDate(-10 - index);
-    clubCompetitions.push({ clubCompetitionId: `cc-${index}`, name: `Tournoi ${index}`, competitionDate: date, clubId: CLUB.clubId });
+    clubCompetitions.push({
+      clubCompetitionId: `cc-${index}`,
+      name: `Tournoi ${index}`,
+      competitionDate: date,
+      clubId: CLUB.clubId
+    });
     competitions.push(participation(`p-${index}`, `cc-${index}`, "j-tom", date));
   }
   const combatRecords = {
@@ -145,7 +165,9 @@ async function startServer() {
           };
         } else if (request.method === "getClubCompetitionDetail") {
           const event = clubCompetitions.find((cc) => cc.clubCompetitionId === request.args[0]);
-          const participations = competitions.filter((c) => c.clubCompetitionId === event.clubCompetitionId);
+          const participations = competitions.filter(
+            (c) => c.clubCompetitionId === event.clubCompetitionId
+          );
           result = {
             clubCompetition: {
               id_club_competition: event.clubCompetitionId,
@@ -158,12 +180,18 @@ async function startServer() {
             participations,
             judokas,
             combatRecords: Object.fromEntries(
-              participations.filter((p) => combatRecords[p.competitionId]).map((p) => [p.competitionId, combatRecords[p.competitionId]])
+              participations
+                .filter((p) => combatRecords[p.competitionId])
+                .map((p) => [p.competitionId, combatRecords[p.competitionId]])
             )
           };
         } else if (request.method === "getCompetitionDetail") {
           const competition = competitions.find((c) => c.competitionId === request.args[0]);
-          result = { competition, combats: combatsFor(competition.competitionId), canEditCompetition: true };
+          result = {
+            competition,
+            combats: combatsFor(competition.competitionId),
+            canEditCompetition: true
+          };
         } else if (request.method === "saveCoachReview") {
           const competition = competitions.find((c) => c.competitionId === request.args[0]);
           competition.coachReview = request.args[1];
@@ -197,7 +225,11 @@ for (const [name, viewport] of [
     const context = await browser.newContext({ viewport });
     await context.addInitScript(
       (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
-      { access_token: tokenFor("coach@example.com"), refresh_token: "", expires_at: Math.floor(Date.now() / 1000) + 3600 }
+      {
+        access_token: tokenFor("coach@example.com"),
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      }
     );
     const page = await context.newPage();
     const nativeDialogs = [];
@@ -211,7 +243,11 @@ for (const [name, viewport] of [
       await new Promise((resolve) => server.close(resolve));
     });
     const shot = (step, fullPage = true) =>
-      page.screenshot({ path: `output/playwright/coach-journeys-${name}-${step}.png`, fullPage, animations: "disabled" });
+      page.screenshot({
+        path: `output/playwright/coach-journeys-${name}-${step}.png`,
+        fullPage,
+        animations: "disabled"
+      });
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
 
@@ -219,9 +255,13 @@ for (const [name, viewport] of [
     await expect(page.getByRole("heading", { name: "Bilans à écrire" })).toHaveCount(0);
     await expect(page.locator("#homeView")).not.toContainText("à écrire");
     // COACH-6 : 8 compétitions à classer, 5 affichées, le reste annoncé.
-    const rankingsGroup = page.locator(".coach-agenda-group").filter({ has: page.getByRole("heading", { name: "Classements à saisir" }) });
+    const rankingsGroup = page
+      .locator(".coach-agenda-group")
+      .filter({ has: page.getByRole("heading", { name: "Classements à saisir" }) });
     await expect(rankingsGroup.locator(".agenda-item")).toHaveCount(5);
-    await expect(rankingsGroup.locator(".agenda-more")).toHaveText("+ 3 autres dans « Compétitions »");
+    await expect(rankingsGroup.locator(".agenda-more")).toHaveText(
+      "+ 3 autres dans « Compétitions »"
+    );
     await shot("01-agenda");
 
     // Sur la fiche, aucune ligne de participant ne réclame de bilan.
@@ -244,20 +284,34 @@ for (const [name, viewport] of [
     await expect(page.locator("#nextClubParticipantButton")).toHaveText("Suivant : Nina Test");
 
     // Le bilan de Hugo s'enregistre à la sortie du champ.
-    await page.locator("#coachReviewText").fill("Bon combat au sol, travailler les sorties de tapis.");
+    await page
+      .locator("#coachReviewText")
+      .fill("Bon combat au sol, travailler les sorties de tapis.");
     await page.locator("#competitionTitle").click();
     await expect(page.locator(".autosave-status")).toHaveText("Enregistré");
-    assert.deepEqual(rpc.filter((request) => request.method === "saveCoachReview").map((request) => request.args[0]), ["p-hugo"]);
+    assert.deepEqual(
+      rpc
+        .filter((request) => request.method === "saveCoachReview")
+        .map((request) => request.args[0]),
+      ["p-hugo"]
+    );
     await page.locator("#competitionView .page-back").click();
     await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
     await page.locator("#clubCompetitionDetailView .page-back").click();
 
     // COACH-7 : en modification, le niveau se choisit en boutons et annuler une modification demande confirmation.
-    await page.locator(".coach-agenda .agenda-item").filter({ hasText: "Coupe d'automne" }).first().click();
+    await page
+      .locator(".coach-agenda .agenda-item")
+      .filter({ hasText: "Coupe d'automne" })
+      .first()
+      .click();
     await page.locator("#clubCompetitionDetailView .page-menu summary").click();
     await page.getByRole("menuitem", { name: "Modifier ou ajouter des judokas" }).click();
     await expect(page.locator("#club_detail_niveau [aria-checked='true']")).toHaveText("Régional");
-    await page.locator("#club_detail_niveau").getByRole("radio", { name: "National", exact: true }).click();
+    await page
+      .locator("#club_detail_niveau")
+      .getByRole("radio", { name: "National", exact: true })
+      .click();
     await expect(page.locator("#clubDetailSelectAll")).toHaveText("Tout sélectionner");
     await page.locator("#clubDetailSelectAll").click();
     await expect(page.locator("#clubDetailSelectAll")).toHaveText("Tout désélectionner");
@@ -280,10 +334,18 @@ for (const [name, viewport] of [
 test("RETOUR-1 : glisser depuis le bord gauche revient en arrière sur mobile", async (t) => {
   const { server, url } = await startServer();
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+  const context = await browser.newContext({
+    viewport: { width: 375, height: 812 },
+    hasTouch: true,
+    isMobile: true
+  });
   await context.addInitScript(
     (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
-    { access_token: tokenFor("coach@example.com"), refresh_token: "", expires_at: Math.floor(Date.now() / 1000) + 3600 }
+    {
+      access_token: tokenFor("coach@example.com"),
+      refresh_token: "",
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    }
   );
   const page = await context.newPage();
   t.after(async () => {
@@ -292,13 +354,17 @@ test("RETOUR-1 : glisser depuis le bord gauche revient en arrière sur mobile", 
     await new Promise((resolve) => server.close(resolve));
   });
   const cdp = await context.newCDPSession(page);
-  const touch = (type, points) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
+  const touch = (type, points) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
   async function swipe(from, to, { release = true } = {}) {
     await touch("touchStart", [{ x: from.x, y: from.y }]);
     const steps = 6;
     for (let step = 1; step <= steps; step += 1) {
       await touch("touchMove", [
-        { x: from.x + ((to.x - from.x) * step) / steps, y: from.y + ((to.y - from.y) * step) / steps }
+        {
+          x: from.x + ((to.x - from.x) * step) / steps,
+          y: from.y + ((to.y - from.y) * step) / steps
+        }
       ]);
     }
     if (release) await touch("touchEnd", []);
@@ -306,9 +372,17 @@ test("RETOUR-1 : glisser depuis le bord gauche revient en arrière sur mobile", 
 
   await page.goto(url);
   await page.locator("#homeView").waitFor({ state: "visible" });
-  await page.locator(".coach-agenda .agenda-item").filter({ hasText: "Coupe d'automne" }).first().tap();
+  await page
+    .locator(".coach-agenda .agenda-item")
+    .filter({ hasText: "Coupe d'automne" })
+    .first()
+    .tap();
   await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
-  await page.locator("#clubDetailParticipantsList .participant-card").filter({ hasText: "Léa" }).locator(".competition-open-button").tap();
+  await page
+    .locator("#clubDetailParticipantsList .participant-card")
+    .filter({ hasText: "Léa" })
+    .locator(".competition-open-button")
+    .tap();
   await expect(page.locator("#competitionView")).toBeVisible();
 
   // Un geste trop court, ou parti du milieu de l'écran, ou vertical, ne fait rien.
@@ -320,17 +394,29 @@ test("RETOUR-1 : glisser depuis le bord gauche revient en arrière sur mobile", 
   // Une flèche sort du bord et se colore au seuil ; la page ne bouge pas. Le retour se fait au lâcher.
   await swipe({ x: 6, y: 400 }, { x: 200, y: 400 }, { release: false });
   await expect(page.locator(".swipe-back-indicator")).toHaveClass(/swipe-back-ready/);
-  assert.equal(await page.locator("#competitionView").evaluate((element) => element.style.transform), "");
-  await page.screenshot({ path: "output/playwright/retour-swipe-mobile-01-geste.png", animations: "disabled" });
+  assert.equal(
+    await page.locator("#competitionView").evaluate((element) => element.style.transform),
+    ""
+  );
+  await page.screenshot({
+    path: "output/playwright/retour-swipe-mobile-01-geste.png",
+    animations: "disabled"
+  });
   await touch("touchEnd", []);
   await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
   await expect(page.locator("#competitionView")).toBeHidden();
-  await page.screenshot({ path: "output/playwright/retour-swipe-mobile-02-retour.png", animations: "disabled" });
+  await page.screenshot({
+    path: "output/playwright/retour-swipe-mobile-02-retour.png",
+    animations: "disabled"
+  });
 
   // Un formulaire modifié garde sa confirmation de sortie.
   await page.locator("#clubCompetitionDetailView .page-menu summary").tap();
   await page.getByRole("menuitem", { name: "Modifier ou ajouter des judokas" }).tap();
-  await page.locator("#club_detail_niveau").getByRole("radio", { name: "National", exact: true }).tap();
+  await page
+    .locator("#club_detail_niveau")
+    .getByRole("radio", { name: "National", exact: true })
+    .tap();
   await swipe({ x: 6, y: 300 }, { x: 200, y: 300 });
   await expect(page.locator("#confirmDialog")).toBeVisible();
   await expect(page.locator("#confirmDialogConfirm")).toHaveText("Quitter sans enregistrer");

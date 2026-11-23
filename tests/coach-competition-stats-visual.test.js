@@ -78,7 +78,12 @@ function currentSeasonLabel() {
 
 // soloFighter : seul Hugo a combattu (STAT-20) ; savedCompetition : la compétition existe déjà.
 // previousSeason : la même fenêtre un an plus tôt a ses propres combats (STAT-23).
-async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetition = null, previousSeason = false } = {}) {
+async function startServer({
+  clubs = [CLUB],
+  soloFighter = false,
+  savedCompetition = null,
+  previousSeason = false
+} = {}) {
   const coach = {
     judokaId: "coach-1",
     accountEmail: "coach@example.com",
@@ -154,7 +159,11 @@ async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetiti
   ];
 
   if (soloFighter) {
-    combats.splice(0, combats.length, ...combats.filter((combat) => combat.judokaId === hugo.judokaId));
+    combats.splice(
+      0,
+      combats.length,
+      ...combats.filter((combat) => combat.judokaId === hugo.judokaId)
+    );
   }
 
   function dashboardFor(filters) {
@@ -185,10 +194,26 @@ async function startServer({ clubs = [CLUB], soloFighter = false, savedCompetiti
     // STAT-23 : comparaison avec la même fenêtre un an plus tôt, sans compétition choisie.
     const shift = (value) => `${Number(value.slice(0, 4)) - 1}${value.slice(4)}`;
     const comparable =
-      previousSeason && isGroup && filters.dateFrom && filters.dateTo && !(filters.competitionIds || []).length;
+      previousSeason &&
+      isGroup &&
+      filters.dateFrom &&
+      filters.dateTo &&
+      !(filters.competitionIds || []).length;
     const previousCompetitions = [
-      { competitionId: "old-hugo", ownerJudokaId: hugo.judokaId, level: "Régional", result: "", competitionDate: "2026-03-10" },
-      { competitionId: "old-nina", ownerJudokaId: nina.judokaId, level: "Régional", result: "5e", competitionDate: "2026-03-10" }
+      {
+        competitionId: "old-hugo",
+        ownerJudokaId: hugo.judokaId,
+        level: "Régional",
+        result: "",
+        competitionDate: "2026-03-10"
+      },
+      {
+        competitionId: "old-nina",
+        ownerJudokaId: nina.judokaId,
+        level: "Régional",
+        result: "5e",
+        competitionDate: "2026-03-10"
+      }
     ];
     const previousCombats = previousCompetitions.map((competition, index) => ({
       combatId: `old-${index}`,
@@ -465,11 +490,19 @@ for (const [name, viewport] of [
       page.locator("#coachDashboardView .dashboard-kpis .mini-stat-label").nth(1)
     ).toContainText("trop peu de combats");
     // STAT-18 : aucune ligne par judoka, aucun nom de judoka dans les statistiques.
-    await expect(page.locator("#coachDashboardView h3").filter({ hasText: /^\s*Par judoka/ })).toHaveCount(0);
-    const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
-    ["Hugo", "Nina", "Dubois", "Durand"].forEach((name) => assert.equal(statsText.includes(name), false, name));
+    await expect(
+      page.locator("#coachDashboardView h3").filter({ hasText: /^\s*Par judoka/ })
+    ).toHaveCount(0);
+    const statsText = await page
+      .locator("#coachDashboardView .coach-dashboard-stats-tab")
+      .innerText();
+    ["Hugo", "Nina", "Dubois", "Durand"].forEach((name) =>
+      assert.equal(statsText.includes(name), false, name)
+    );
     // STAT-13 : l'effectif engagé tient en une ligne sous la synthèse, sans garde.
-    await expect(page.locator("#coachDashboardEngagement")).toHaveText(/^2 judokas engagés · 1,5 combats par judoka/);
+    await expect(page.locator("#coachDashboardEngagement")).toHaveText(
+      /^2 judokas engagés · 1,5 combats par judoka/
+    );
     // STAT-23 : une compétition choisie n'affiche aucun écart.
     await expect(page.locator("#coachDashboardPreviousLabel")).toHaveCount(0);
     await expect(page.locator("#coachDashboardView .mini-stat-delta")).toHaveCount(0);
@@ -498,14 +531,19 @@ for (const [name, viewport] of [
     await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
       /Régional\s*1\/3 gagnés · trop peu de combats/
     ]);
-    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText("1 podium sur 1 participation classée");
+    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText(
+      "1 podium sur 1 participation classée"
+    );
     // STAT-3 : une seule ligne par fin de combat présente ; STAT-7 : debout ou au sol, sous 5 points en décompte.
     await expect(page.locator("#coachDashboardDefeatsByType .bar-row-head")).toHaveText([
       /Waza-ari\s*2\/2/
     ]);
-    await expect(page.locator("#coachDashboardScoredGround")).toHaveText("Points marqués : 1 debout, 0 au sol");
-    await expect(page.locator("#coachDashboardConcededGround")).toHaveText("Points concédés : 2 debout, 0 au sol");
-
+    await expect(page.locator("#coachDashboardScoredGround")).toHaveText(
+      "Points marqués : 1 debout, 0 au sol"
+    );
+    await expect(page.locator("#coachDashboardConcededGround")).toHaveText(
+      "Points concédés : 2 debout, 0 au sol"
+    );
 
     // TDB-9 : chaque tuile et chaque section de statistiques porte une info-bulle.
     const untipped = await page.evaluate(() =>
@@ -627,14 +665,24 @@ for (const [name, viewport] of [
 
     // La fiche de la compétition ne propose pas ses statistiques.
     await page.getByRole("button", { name: "Compétitions", exact: true }).click();
-    await page.locator("#clubCompetitionsList .competition-open-button").filter({ hasText: "Coupe de Nantes" }).click();
+    await page
+      .locator("#clubCompetitionsList .competition-open-button")
+      .filter({ hasText: "Coupe de Nantes" })
+      .click();
     await expect(page.locator("#clubCompetitionDetailView")).toBeVisible();
     await expect(page.locator("#clubDetailParticipantsList article")).toHaveCount(2);
     await expect(page.locator("#clubCompetitionStatsButton")).toHaveCount(0);
-    await page.screenshot({ path: `output/playwright/stat20-${name}-01-detail.png`, fullPage: true, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/stat20-${name}-01-detail.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
 
     // L'onglet « Stats » ne donne que le volume, puis renvoie vers les judokas.
-    await page.locator("#clubCompetitionDetailView").getByRole("button", { name: "Retour", exact: true }).click();
+    await page
+      .locator("#clubCompetitionDetailView")
+      .getByRole("button", { name: "Retour", exact: true })
+      .click();
     await page.locator("#homeView").getByRole("button", { name: "Stats", exact: true }).click();
     const withheld = page.locator("#coachDashboardWithheld");
     await expect(withheld).toContainText("Trop peu de judokas pour des statistiques de groupe.");
@@ -642,7 +690,11 @@ for (const [name, viewport] of [
     await expect(page.locator("#coachDashboardView .dashboard-kpis")).toHaveCount(0);
     await expect(page.getByText("Aucun combat trouvé pour ces filtres.")).toHaveCount(0);
     assert.ok(methods(rpc).includes("getCoachDashboard"));
-    await page.screenshot({ path: `output/playwright/stat20-${name}-02-withheld.png`, fullPage: true, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/stat20-${name}-02-withheld.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
     await withheld.getByRole("button", { name: "Voir les judokas" }).click();
     await expect(page.locator("#homeView")).toBeVisible();
   });
@@ -675,15 +727,29 @@ for (const [name, viewport] of [
     // Aucune couleur de jugement sur un écart.
     const deltaColors = await page
       .locator("#coachDashboardView .mini-stat-delta")
-      .evaluateAll((elements) => [...new Set(elements.map((element) => getComputedStyle(element).color))]);
+      .evaluateAll((elements) => [
+        ...new Set(elements.map((element) => getComputedStyle(element).color))
+      ]);
     assert.equal(deltaColors.length, 1);
 
     // Refonte : la période précédente ne se lit que sur les tuiles, jamais ligne par ligne.
-    await expect(page.locator("#coachDashboardView .coach-dashboard-stats-tab")).not.toContainText("avant");
-    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText("1 podium sur 1 participation classée");
-    const statsText = await page.locator("#coachDashboardView .coach-dashboard-stats-tab").innerText();
-    ["Hugo", "Nina", "Dubois", "Durand"].forEach((judokaName) => assert.equal(statsText.includes(judokaName), false, judokaName));
-    await page.screenshot({ path: `output/playwright/stat23-${name}-season.png`, fullPage: true, animations: "disabled" });
+    await expect(page.locator("#coachDashboardView .coach-dashboard-stats-tab")).not.toContainText(
+      "avant"
+    );
+    await expect(page.locator("#coachDashboardByLevel .bar-row-detail")).toHaveText(
+      "1 podium sur 1 participation classée"
+    );
+    const statsText = await page
+      .locator("#coachDashboardView .coach-dashboard-stats-tab")
+      .innerText();
+    ["Hugo", "Nina", "Dubois", "Durand"].forEach((judokaName) =>
+      assert.equal(statsText.includes(judokaName), false, judokaName)
+    );
+    await page.screenshot({
+      path: `output/playwright/stat23-${name}-season.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
   });
 }
 

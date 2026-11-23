@@ -105,12 +105,23 @@ test("permission policy derives access from immutable profile type and role", ()
   assert.equal(coachAccess.kind, "MANAGED");
   assert.equal(coachAccess.canManageJudoka("CLUB_JUDOKA"), true);
   assert.equal(coachAccess.canManageJudoka("OTHER"), false);
-  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "CLUB_JUDOKA" }, coachClubScope), true);
-  assert.equal(permissions.canManageCompetition(coach, { ownerJudokaId: "OTHER" }, coachClubScope), false);
+  assert.equal(
+    permissions.canManageCompetition(coach, { ownerJudokaId: "CLUB_JUDOKA" }, coachClubScope),
+    true
+  );
+  assert.equal(
+    permissions.canManageCompetition(coach, { ownerJudokaId: "OTHER" }, coachClubScope),
+    false
+  );
   assert.equal(permissions.canManageCombatFor(coach, "CLUB_JUDOKA", coachClubScope), true);
   assert.equal(permissions.canManageCombatFor(coach, "OTHER", coachClubScope), false);
-  assert.doesNotThrow(() => permissions.assertCanAccessJudokaProfile(coach, "CLUB_JUDOKA", coachClubScope));
-  assert.throws(() => permissions.assertCanAccessJudokaProfile(coach, "OTHER", coachClubScope), /Accès refusé/);
+  assert.doesNotThrow(() =>
+    permissions.assertCanAccessJudokaProfile(coach, "CLUB_JUDOKA", coachClubScope)
+  );
+  assert.throws(
+    () => permissions.assertCanAccessJudokaProfile(coach, "OTHER", coachClubScope),
+    /Accès refusé/
+  );
 });
 
 test("club competition domain normalizes event details and participant ids", () => {
@@ -170,7 +181,11 @@ test("permission policy grants coach sports management without admin invitations
   const admin = { judokaId: "A1", profileType: "JUDOKA", accessRole: "ADMIN" };
   assert.equal(permissions.canManageClubCompetition(coach), true);
   assert.equal(
-    permissions.canManageCompetition(coach, { ownerJudokaId: "J1" }, createManagedJudokaScope(["J1"])),
+    permissions.canManageCompetition(
+      coach,
+      { ownerJudokaId: "J1" },
+      createManagedJudokaScope(["J1"])
+    ),
     true
   );
   assert.equal(permissions.canManageClubCompetition(admin), false);
@@ -666,21 +681,31 @@ test("combat score domain enforces the conditional sub-field per category", () =
     neWazaType: "",
     value: "Ippon"
   });
-  assert.deepEqual(createCombatScore({ value: "Yuko" }), { category: "", technique: "", neWazaType: "", value: "Yuko" });
-  assert.throws(() => createCombatScore({ category: "Debout ?", value: "Ippon" }), /Catégorie de technique invalide/);
+  assert.deepEqual(createCombatScore({ value: "Yuko" }), {
+    category: "",
+    technique: "",
+    neWazaType: "",
+    value: "Yuko"
+  });
+  assert.throws(
+    () => createCombatScore({ category: "Debout ?", value: "Ippon" }),
+    /Catégorie de technique invalide/
+  );
   assert.throws(() => createCombatScore({ category: "Ne-waza" }), /Point marqué invalide/);
   // COMBAT-CHRONO : le rang du point dans le combat est conservé.
   assert.equal(createCombatScore({ value: "Yuko", order: 3 }).order, 3);
   // Ancien libellé erroné ramené au nom de la technique.
   assert.equal(
-    createCombatScore({ category: "Tachi-waza", technique: "Sasae-tsurikomi-goshi", value: "Yuko" }).technique,
+    createCombatScore({ category: "Tachi-waza", technique: "Sasae-tsurikomi-goshi", value: "Yuko" })
+      .technique,
     "Sasae-tsurikomi-ashi"
   );
 
   assert.deepEqual(createCombatScores("not-an-array"), []);
   assert.deepEqual(createCombatScores(undefined), []);
   assert.equal(
-    createCombatScore({ category: "Tachi-waza", technique: "Technique inventée", value: "Yuko" }).technique,
+    createCombatScore({ category: "Tachi-waza", technique: "Technique inventée", value: "Yuko" })
+      .technique,
     "Technique inventée"
   );
   assert.equal(
@@ -691,7 +716,11 @@ test("combat score domain enforces the conditional sub-field per category", () =
     2
   );
   assert.equal(
-    createCombatScore({ category: "Ne-waza", neWazaType: "Technique au sol inventée", value: "Yuko" }).neWazaType,
+    createCombatScore({
+      category: "Ne-waza",
+      neWazaType: "Technique au sol inventée",
+      value: "Yuko"
+    }).neWazaType,
     "Technique au sol inventée"
   );
 });
@@ -800,11 +829,51 @@ test("coach dashboard statistics domain computes victory, tachi-waza ippon, ne-w
     // STAT-16 : dans l'ordre des niveaux, puis le niveau non renseigné ;
     // STAT-11 : podiums sur les participations classées du niveau (la 5e place est classée).
     byLevel: [
-      { key: "Départemental", label: "Départemental", combats: 2, victories: 1, defeats: 1, podiums: 1, rankedParticipations: 1 },
-      { key: "Régional", label: "Régional", combats: 1, victories: 1, defeats: 0, podiums: 1, rankedParticipations: 1 },
-      { key: "National", label: "National", combats: 1, victories: 1, defeats: 0, podiums: 1, rankedParticipations: 1 },
-      { key: "International", label: "International", combats: 1, victories: 1, defeats: 0, podiums: 0, rankedParticipations: 1 },
-      { key: "", label: "Niveau non renseigné", combats: 1, victories: 0, defeats: 1, podiums: 0, rankedParticipations: 0 }
+      {
+        key: "Départemental",
+        label: "Départemental",
+        combats: 2,
+        victories: 1,
+        defeats: 1,
+        podiums: 1,
+        rankedParticipations: 1
+      },
+      {
+        key: "Régional",
+        label: "Régional",
+        combats: 1,
+        victories: 1,
+        defeats: 0,
+        podiums: 1,
+        rankedParticipations: 1
+      },
+      {
+        key: "National",
+        label: "National",
+        combats: 1,
+        victories: 1,
+        defeats: 0,
+        podiums: 1,
+        rankedParticipations: 1
+      },
+      {
+        key: "International",
+        label: "International",
+        combats: 1,
+        victories: 1,
+        defeats: 0,
+        podiums: 0,
+        rankedParticipations: 1
+      },
+      {
+        key: "",
+        label: "Niveau non renseigné",
+        combats: 1,
+        victories: 0,
+        defeats: 1,
+        podiums: 0,
+        rankedParticipations: 0
+      }
     ],
     byPeriod: [],
     // STAT-27 : sans date, une participation compte ; ces combats ne disent pas leur compétition.
@@ -879,9 +948,27 @@ test("coach dashboard statistics list no judoka results nor combats to complete,
     })
   ];
   const competitions = [
-    { competitionId: "COMP1", ownerJudokaId: "JUDO1", name: "Open de Rennes", level: "Régional", result: "3e" },
-    { competitionId: "COMP2", ownerJudokaId: "JUDO2", name: "Open de Rennes", level: "Régional", result: "5e" },
-    { competitionId: "COMP3", ownerJudokaId: "JUDO3", name: "Tournoi d'Angers", level: "Régional", result: "1er" }
+    {
+      competitionId: "COMP1",
+      ownerJudokaId: "JUDO1",
+      name: "Open de Rennes",
+      level: "Régional",
+      result: "3e"
+    },
+    {
+      competitionId: "COMP2",
+      ownerJudokaId: "JUDO2",
+      name: "Open de Rennes",
+      level: "Régional",
+      result: "5e"
+    },
+    {
+      competitionId: "COMP3",
+      ownerJudokaId: "JUDO3",
+      name: "Tournoi d'Angers",
+      level: "Régional",
+      result: "1er"
+    }
   ];
 
   const stats = computeCoachDashboardStats(combats, competitions);
@@ -911,10 +998,21 @@ test("coach dashboard statistics counts linked club competition participations o
 });
 
 // STAT-21 : hors fiche d'un judoka, aucune clé qui désigne un judoka ou un adversaire.
-const NOMINATIVE_KEYS = ["judokaId", "ownerJudokaId", "judokaName", "opponent", "firstName", "lastName", "name", "email", "accountEmail"];
+const NOMINATIVE_KEYS = [
+  "judokaId",
+  "ownerJudokaId",
+  "judokaName",
+  "opponent",
+  "firstName",
+  "lastName",
+  "name",
+  "email",
+  "accountEmail"
+];
 
 function findNominativeKeys(value, path = "stats") {
-  if (Array.isArray(value)) return value.flatMap((item, index) => findNominativeKeys(item, `${path}[${index}]`));
+  if (Array.isArray(value))
+    return value.flatMap((item, index) => findNominativeKeys(item, `${path}[${index}]`));
   if (!value || typeof value !== "object") return [];
   return Object.entries(value).flatMap(([key, child]) => [
     ...(NOMINATIVE_KEYS.includes(key) ? [`${path}.${key}`] : []),
@@ -946,9 +1044,33 @@ function nominativeFixture() {
       combat("CB4", "J3", "P3", "Victoire", { victoryType: "Waza-ari" })
     ],
     competitions: [
-      { competitionId: "P1", clubCompetitionId: "CC1", ownerJudokaId: "J1", name: "Coupe de Nantes", level: "", result: "1er", competitionDate: "2026-10-04" },
-      { competitionId: "P2", clubCompetitionId: "CC1", ownerJudokaId: "J2", name: "Coupe de Nantes", level: "", result: "3e", competitionDate: "2026-10-04" },
-      { competitionId: "P3", clubCompetitionId: "", ownerJudokaId: "J3", name: "Open de Rennes", level: "", result: "2e", competitionDate: "2026-12-06" }
+      {
+        competitionId: "P1",
+        clubCompetitionId: "CC1",
+        ownerJudokaId: "J1",
+        name: "Coupe de Nantes",
+        level: "",
+        result: "1er",
+        competitionDate: "2026-10-04"
+      },
+      {
+        competitionId: "P2",
+        clubCompetitionId: "CC1",
+        ownerJudokaId: "J2",
+        name: "Coupe de Nantes",
+        level: "",
+        result: "3e",
+        competitionDate: "2026-10-04"
+      },
+      {
+        competitionId: "P3",
+        clubCompetitionId: "",
+        ownerJudokaId: "J3",
+        name: "Open de Rennes",
+        level: "",
+        result: "2e",
+        competitionDate: "2026-12-06"
+      }
     ]
   };
 }
@@ -959,7 +1081,9 @@ test("STAT-21 : les statistiques du coach ne contiennent aucune donnée nominati
 
   assert.deepEqual(findNominativeKeys(stats), []);
   const serialized = JSON.stringify(stats);
-  ["J1", "J2", "J3", "Adversaire CB"].forEach((needle) => assert.equal(serialized.includes(needle), false, needle));
+  ["J1", "J2", "J3", "Adversaire CB"].forEach((needle) =>
+    assert.equal(serialized.includes(needle), false, needle)
+  );
   // Le contrôle détecte bien une clé nominative.
   assert.deepEqual(findNominativeKeys({ rows: [{ judokaId: "J1" }] }), ["stats.rows[0].judokaId"]);
 });
@@ -970,23 +1094,69 @@ test("STAT-22 / STAT-24 : « Évolution » par trimestre compte le podium d'un t
     { combatId: "CB2", judokaId: "J2", competitionId: "P2", result: "Défaite" }
   ];
   const competitions = [
-    { competitionId: "P1", ownerJudokaId: "J1", level: "Régional", result: "1er", competitionDate: "2026-10-04" },
-    { competitionId: "P2", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-10-04" },
-    { competitionId: "P3", ownerJudokaId: "J2", level: "Régional", result: "3e", competitionDate: "2026-12-06" },
-    { competitionId: "P4", ownerJudokaId: "J1", level: "Régional", result: "2e", competitionDate: "" }
+    {
+      competitionId: "P1",
+      ownerJudokaId: "J1",
+      level: "Régional",
+      result: "1er",
+      competitionDate: "2026-10-04"
+    },
+    {
+      competitionId: "P2",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "",
+      competitionDate: "2026-10-04"
+    },
+    {
+      competitionId: "P3",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "3e",
+      competitionDate: "2026-12-06"
+    },
+    {
+      competitionId: "P4",
+      ownerJudokaId: "J1",
+      level: "Régional",
+      result: "2e",
+      competitionDate: ""
+    }
   ];
 
   const stats = computeCoachDashboardStats(combats, competitions, { today: "2027-01-10" });
 
   assert.deepEqual(stats.byPeriod, [
-    { key: "2026-T1", label: "Sept.-nov. 2026", participations: 2, combats: 2, victories: 1, defeats: 1, podiums: 1 },
-    { key: "2026-T2", label: "Déc. 2026-févr. 2027", participations: 1, combats: 0, victories: 0, defeats: 0, podiums: 1 }
+    {
+      key: "2026-T1",
+      label: "Sept.-nov. 2026",
+      participations: 2,
+      combats: 2,
+      victories: 1,
+      defeats: 1,
+      podiums: 1
+    },
+    {
+      key: "2026-T2",
+      label: "Déc. 2026-févr. 2027",
+      participations: 1,
+      combats: 0,
+      victories: 0,
+      defeats: 0,
+      podiums: 1
+    }
   ]);
   // Seul le podium sans date reste hors des trimestres.
   const podiumTile = stats.byLevel.reduce((sum, line) => sum + line.podiums, 0);
-  assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.podiums, 0), podiumTile - 1);
+  assert.equal(
+    stats.byPeriod.reduce((sum, entry) => sum + entry.podiums, 0),
+    podiumTile - 1
+  );
   // La somme des combats des lignes égale la tuile « Combats » quand toutes les compétitions sont datées.
-  assert.equal(stats.byPeriod.reduce((sum, entry) => sum + entry.combats, 0), stats.totalCombats);
+  assert.equal(
+    stats.byPeriod.reduce((sum, entry) => sum + entry.combats, 0),
+    stats.totalCombats
+  );
 });
 
 test("STAT-24 : sur plusieurs saisons, une ligne par saison", () => {
@@ -996,9 +1166,27 @@ test("STAT-24 : sur plusieurs saisons, une ligne par saison", () => {
     { combatId: "CB3", judokaId: "J2", competitionId: "P3", result: "Victoire" }
   ];
   const competitions = [
-    { competitionId: "P1", ownerJudokaId: "J1", level: "Régional", result: "", competitionDate: "2025-10-04" },
-    { competitionId: "P2", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-03-04" },
-    { competitionId: "P3", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-10-06" }
+    {
+      competitionId: "P1",
+      ownerJudokaId: "J1",
+      level: "Régional",
+      result: "",
+      competitionDate: "2025-10-04"
+    },
+    {
+      competitionId: "P2",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "",
+      competitionDate: "2026-03-04"
+    },
+    {
+      competitionId: "P3",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "",
+      competitionDate: "2026-10-06"
+    }
   ];
   const stats = computeCoachDashboardStats(combats, competitions);
   assert.deepEqual(
@@ -1013,17 +1201,59 @@ test("STAT-24 : sur plusieurs saisons, une ligne par saison", () => {
 test("STAT-11 / STAT-27 : podiums par niveau, participations sans combat", () => {
   const point = (technique) => ({ category: "Tachi-waza", technique, value: "Waza-ari" });
   const combats = [
-    { combatId: "CB1", judokaId: "J1", competitionId: "P1", result: "Victoire", scores: [point("Uchi-mata"), point("Seoi-nage")] },
-    { combatId: "CB2", judokaId: "J2", competitionId: "P2", result: "Victoire", scores: [point("Uchi-mata")] },
-    { combatId: "CB3", judokaId: "J2", competitionId: "P2", result: "Défaite", scores: [point("O-goshi")] }
+    {
+      combatId: "CB1",
+      judokaId: "J1",
+      competitionId: "P1",
+      result: "Victoire",
+      scores: [point("Uchi-mata"), point("Seoi-nage")]
+    },
+    {
+      combatId: "CB2",
+      judokaId: "J2",
+      competitionId: "P2",
+      result: "Victoire",
+      scores: [point("Uchi-mata")]
+    },
+    {
+      combatId: "CB3",
+      judokaId: "J2",
+      competitionId: "P2",
+      result: "Défaite",
+      scores: [point("O-goshi")]
+    }
   ];
   const competitions = [
-    { competitionId: "P1", ownerJudokaId: "J1", level: "Régional", result: "5e", competitionDate: "2026-10-04" },
-    { competitionId: "P2", ownerJudokaId: "J2", level: "Régional", result: "2e", competitionDate: "2026-10-04" },
+    {
+      competitionId: "P1",
+      ownerJudokaId: "J1",
+      level: "Régional",
+      result: "5e",
+      competitionDate: "2026-10-04"
+    },
+    {
+      competitionId: "P2",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "2e",
+      competitionDate: "2026-10-04"
+    },
     // Passée, classée, sans combat saisi.
-    { competitionId: "P3", ownerJudokaId: "J1", level: "Régional", result: "7e", competitionDate: "2026-10-18" },
+    {
+      competitionId: "P3",
+      ownerJudokaId: "J1",
+      level: "Régional",
+      result: "7e",
+      competitionDate: "2026-10-18"
+    },
     // À venir : ni participation, ni participation sans combat.
-    { competitionId: "P4", ownerJudokaId: "J2", level: "Régional", result: "", competitionDate: "2026-12-06" }
+    {
+      competitionId: "P4",
+      ownerJudokaId: "J2",
+      level: "Régional",
+      result: "",
+      competitionDate: "2026-12-06"
+    }
   ];
   const stats = computeCoachDashboardStats(combats, competitions, { today: "2026-11-13" });
   const regional = stats.byLevel.find((line) => line.key === "Régional");
@@ -1033,7 +1263,9 @@ test("STAT-11 / STAT-27 : podiums par niveau, participations sans combat", () =>
   assert.equal(stats.participations, 3);
   assert.equal(stats.participationsWithoutCombat, 1);
   // Refonte des métriques : ni 7 premiers, ni nombre de techniques différentes.
-  ["podiumsByLevel", "distinctWinTechniques"].forEach((key) => assert.equal(key in stats, false, key));
+  ["podiumsByLevel", "distinctWinTechniques"].forEach((key) =>
+    assert.equal(key in stats, false, key)
+  );
 });
 
 test("STAT-20 : statistiques de groupe dès 2 judokas", () => {
@@ -1047,10 +1279,16 @@ test("STAT-20 : statistiques de groupe dès 2 judokas", () => {
   assert.equal(isGroupScope([], [owned("J1"), owned("J1")]), false);
   assert.equal(isGroupScope([], [owned("J1"), owned("J2")]), true);
   assert.equal(isGroupScope([], []), true);
-  assert.deepEqual(computeWithheldScope([fight("J1"), fight("J1")], [{ competitionId: "P1" }, { competitionId: "P2" }]), {
-    analyzedCompetitions: 2,
-    totalCombats: 2
-  });
+  assert.deepEqual(
+    computeWithheldScope(
+      [fight("J1"), fight("J1")],
+      [{ competitionId: "P1" }, { competitionId: "P2" }]
+    ),
+    {
+      analyzedCompetitions: 2,
+      totalCombats: 2
+    }
+  );
   // DASH-007 : une compétition à venir n'est pas encore analysée ; celle du jour l'est.
   const dated = [
     { competitionId: "P1", competitionDate: "2026-11-22" },
@@ -1061,14 +1299,50 @@ test("STAT-20 : statistiques de groupe dès 2 judokas", () => {
 
 test("coach dashboard podiums ignore Non classé and future competitions are not analyzed", () => {
   const combats = [
-    { combatId: "A", judokaId: "J1", competitionId: "P1", competitionLevel: "Régional", result: "Victoire" },
-    { combatId: "B", judokaId: "J2", competitionId: "P2", competitionLevel: "Régional", result: "Défaite" }
+    {
+      combatId: "A",
+      judokaId: "J1",
+      competitionId: "P1",
+      competitionLevel: "Régional",
+      result: "Victoire"
+    },
+    {
+      combatId: "B",
+      judokaId: "J2",
+      competitionId: "P2",
+      competitionLevel: "Régional",
+      result: "Défaite"
+    }
   ];
   const competitions = [
-    { competitionId: "P1", ownerJudokaId: "J1", competitionDate: "2026-11-01", level: "Régional", result: "1er" },
-    { competitionId: "P2", ownerJudokaId: "J2", competitionDate: "2026-11-01", level: "Régional", result: "Non classé" },
-    { competitionId: "P3", ownerJudokaId: "J2", competitionDate: "2026-11-01", level: "Régional", result: "5e" },
-    { competitionId: "P4", ownerJudokaId: "J1", competitionDate: "2027-03-10", level: "Régional", result: "" }
+    {
+      competitionId: "P1",
+      ownerJudokaId: "J1",
+      competitionDate: "2026-11-01",
+      level: "Régional",
+      result: "1er"
+    },
+    {
+      competitionId: "P2",
+      ownerJudokaId: "J2",
+      competitionDate: "2026-11-01",
+      level: "Régional",
+      result: "Non classé"
+    },
+    {
+      competitionId: "P3",
+      ownerJudokaId: "J2",
+      competitionDate: "2026-11-01",
+      level: "Régional",
+      result: "5e"
+    },
+    {
+      competitionId: "P4",
+      ownerJudokaId: "J1",
+      competitionDate: "2027-03-10",
+      level: "Régional",
+      result: ""
+    }
   ];
 
   const stats = computeCoachDashboardStats(combats, competitions, { today: "2026-11-22" });
@@ -1083,29 +1357,96 @@ test("coach dashboard podiums ignore Non classé and future competitions are not
 });
 
 test("coach dashboard statistics read rounds, months, levels and ground share", () => {
-  const point = (value, order, category = "Tachi-waza") => ({ category, technique: "Uchi-mata", neWazaType: "Kesa-gatame", value, order });
+  const point = (value, order, category = "Tachi-waza") => ({
+    category,
+    technique: "Uchi-mata",
+    neWazaType: "Kesa-gatame",
+    value,
+    order
+  });
   const score = (shido) => ({
     judoka: { ippon: 0, wazaAri: 0, yuko: 0, shido },
     opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 0 }
   });
   const combats = [
     // Mène (Yuko), puis subit un Ippon : perdu après avoir mené.
-    { combatId: "CB1", judokaId: "J1", competitionId: "C1", stage: "1/4", result: "Défaite", victoryType: "Ippon", officialScore: score(2),
-      scores: [point("Yuko", 0)], concededScores: [point("Ippon", 1, "Ne-waza")] },
+    {
+      combatId: "CB1",
+      judokaId: "J1",
+      competitionId: "C1",
+      stage: "1/4",
+      result: "Défaite",
+      victoryType: "Ippon",
+      officialScore: score(2),
+      scores: [point("Yuko", 0)],
+      concededScores: [point("Ippon", 1, "Ne-waza")]
+    },
     // Mené (Waza-ari), puis marque un Ippon : gagné après avoir été mené.
-    { combatId: "CB2", judokaId: "J1", competitionId: "C1", stage: "Poule", result: "Victoire", victoryType: "Ippon", officialScore: score(1),
-      scores: [point("Ippon", 1, "Ne-waza")], concededScores: [point("Waza-ari", 0)] },
+    {
+      combatId: "CB2",
+      judokaId: "J1",
+      competitionId: "C1",
+      stage: "Poule",
+      result: "Victoire",
+      victoryType: "Ippon",
+      officialScore: score(1),
+      scores: [point("Ippon", 1, "Ne-waza")],
+      concededScores: [point("Waza-ari", 0)]
+    },
     // Marque le premier et gagne.
-    { combatId: "CB3", judokaId: "J1", competitionId: "C2", competitionLevel: "Régional", stage: "1/4", result: "Victoire", victoryType: "Waza-ari", officialScore: null,
-      scores: [point("Waza-ari", 0)], concededScores: [] },
+    {
+      combatId: "CB3",
+      judokaId: "J1",
+      competitionId: "C2",
+      competitionLevel: "Régional",
+      stage: "1/4",
+      result: "Victoire",
+      victoryType: "Waza-ari",
+      officialScore: null,
+      scores: [point("Waza-ari", 0)],
+      concededScores: []
+    },
     // Points sans rang (combat ancien) : non compté dans la tenue du score ; défaite par Hansoku-make.
-    { combatId: "CB4", judokaId: "J1", competitionId: "C2", competitionLevel: "Régional", stage: "", result: "Défaite", victoryType: "Hansoku-make", officialScore: score(3),
-      scores: [{ category: "", technique: "", neWazaType: "", value: "Yuko" }], concededScores: [] }
+    {
+      combatId: "CB4",
+      judokaId: "J1",
+      competitionId: "C2",
+      competitionLevel: "Régional",
+      stage: "",
+      result: "Défaite",
+      victoryType: "Hansoku-make",
+      officialScore: score(3),
+      scores: [{ category: "", technique: "", neWazaType: "", value: "Yuko" }],
+      concededScores: []
+    }
   ];
   const competitions = [
-    { competitionId: "C1", clubCompetitionId: "CLUB1", ownerJudokaId: "J1", competitionDate: "2026-10-04", level: "", result: "2e", name: "Open" },
-    { competitionId: "C1B", clubCompetitionId: "CLUB1", ownerJudokaId: "J2", competitionDate: "2026-10-04", level: "", result: "", name: "Open" },
-    { competitionId: "C2", ownerJudokaId: "J1", competitionDate: "2026-11-15", level: "Régional", result: "5e", name: "Coupe" }
+    {
+      competitionId: "C1",
+      clubCompetitionId: "CLUB1",
+      ownerJudokaId: "J1",
+      competitionDate: "2026-10-04",
+      level: "",
+      result: "2e",
+      name: "Open"
+    },
+    {
+      competitionId: "C1B",
+      clubCompetitionId: "CLUB1",
+      ownerJudokaId: "J2",
+      competitionDate: "2026-10-04",
+      level: "",
+      result: "",
+      name: "Open"
+    },
+    {
+      competitionId: "C2",
+      ownerJudokaId: "J1",
+      competitionDate: "2026-11-15",
+      level: "Régional",
+      result: "5e",
+      name: "Coupe"
+    }
   ];
 
   const stats = computeCoachDashboardStats(combats, competitions);
@@ -1113,18 +1454,38 @@ test("coach dashboard statistics read rounds, months, levels and ground share", 
   // Le tour reste saisi sur le combat, mais aucune statistique par tour n'est calculée.
   assert.equal("byStage" in stats, false);
   // Refonte des métriques : ni gardes, ni tenue du score, ni discipline, ni Ippon à part.
-  ["byLateralMatchup", "judokasByHandedness", "scoreHolding", "discipline", "ipponVictories"].forEach((key) =>
-    assert.equal(key in stats, false, key)
-  );
+  [
+    "byLateralMatchup",
+    "judokasByHandedness",
+    "scoreHolding",
+    "discipline",
+    "ipponVictories"
+  ].forEach((key) => assert.equal(key in stats, false, key));
   // STAT-7 : points marqués dans les victoires, concédés dans les défaites ; le Yuko sans catégorie n'est pas compté.
-  assert.deepEqual(stats.groundShare, { scored: { ground: 1, counted: 2 }, conceded: { ground: 1, counted: 1 } });
+  assert.deepEqual(stats.groundShare, {
+    scored: { ground: 1, counted: 2 },
+    conceded: { ground: 1, counted: 1 }
+  });
   // STAT-24 : octobre et novembre tombent dans le même trimestre de saison.
   assert.deepEqual(stats.byPeriod, [
-    { key: "2026-T1", label: "Sept.-nov. 2026", participations: 3, combats: 4, victories: 2, defeats: 2, podiums: 1 }
+    {
+      key: "2026-T1",
+      label: "Sept.-nov. 2026",
+      participations: 3,
+      combats: 4,
+      victories: 2,
+      defeats: 2,
+      podiums: 1
+    }
   ]);
   // STAT-16 : la compétition sans niveau regroupe ses combats, et STAT-11 ses podiums, sur une ligne à part.
   assert.deepEqual(
-    stats.byLevel.map((line) => [line.label, line.combats, line.podiums, line.rankedParticipations]),
+    stats.byLevel.map((line) => [
+      line.label,
+      line.combats,
+      line.podiums,
+      line.rankedParticipations
+    ]),
     [
       ["Régional", 2, 0, 1],
       ["Niveau non renseigné", 2, 1, 1]
@@ -1134,13 +1495,34 @@ test("coach dashboard statistics read rounds, months, levels and ground share", 
 
 test("coach dashboard statistics domain ranks the top 3 winning techniques, ignoring losses and unscored wins", () => {
   const combats = [
-    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }] },
-    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Waza-ari" }] },
-    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" }] },
-    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Ippon" }] },
-    { result: "Victoire", scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }] },
-    { result: "Victoire", scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }] },
-    { result: "Défaite", scores: [{ category: "Tachi-waza", technique: "O-soto-gari", value: "Ippon" }] },
+    {
+      result: "Victoire",
+      scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Ippon" }]
+    },
+    {
+      result: "Victoire",
+      scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Waza-ari" }]
+    },
+    {
+      result: "Victoire",
+      scores: [{ category: "Tachi-waza", technique: "Uchi-mata", value: "Yuko" }]
+    },
+    {
+      result: "Victoire",
+      scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Ippon" }]
+    },
+    {
+      result: "Victoire",
+      scores: [{ category: "Ne-waza", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }]
+    },
+    {
+      result: "Victoire",
+      scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Ippon" }]
+    },
+    {
+      result: "Défaite",
+      scores: [{ category: "Tachi-waza", technique: "O-soto-gari", value: "Ippon" }]
+    },
     { result: "Victoire", scores: [] }
   ];
 
@@ -1562,7 +1944,10 @@ test("normalizeBeltColor ramène la casse et les accents à la couleur proposée
 });
 
 test("combat round is optional, normalized and validated", () => {
-  const { createCombatStage, getCombatStageOrder } = require("../core/domain/competitions/combat-stage");
+  const {
+    createCombatStage,
+    getCombatStageOrder
+  } = require("../core/domain/competitions/combat-stage");
   assert.equal(createCombatStage(""), "");
   assert.equal(createCombatStage("1/4 de finale"), "1/4");
   assert.equal(createCombatStage("demi-finale"), "1/2");
@@ -1581,11 +1966,17 @@ test("combat round is optional, normalized and validated", () => {
   });
   assert.equal(combat.stage, "1/8");
   assert.equal(combat.draft.stage, "1/8");
-  assert.equal(createCombat({ competitionId: "COMP1", judokaId: "J1", result: "Egalité" }).stage, "");
+  assert.equal(
+    createCombat({ competitionId: "COMP1", judokaId: "J1", result: "Egalité" }).stage,
+    ""
+  );
 });
 
 test("tani-otoshi is a standing technique distinct from tai-otoshi", () => {
-  const { TACHI_WAZA_TECHNIQUES, normalizeTachiWazaTechnique } = require("../core/domain/competitions/tachi-waza-technique");
+  const {
+    TACHI_WAZA_TECHNIQUES,
+    normalizeTachiWazaTechnique
+  } = require("../core/domain/competitions/tachi-waza-technique");
   assert.ok(TACHI_WAZA_TECHNIQUES.includes("Tani-otoshi"));
   assert.equal(normalizeTachiWazaTechnique("tani otoshi"), "Tani-otoshi");
   assert.equal(normalizeTachiWazaTechnique("tai otoshi"), "Tai-otoshi");
@@ -1601,9 +1992,21 @@ test("a combat keeps the opponent's points (conceded scores) apart from the judo
     scores: [{ category: "Tachi-waza", technique: "Seoi-nage", value: "Waza-ari" }],
     concededScores: [{ category: "Tachi-waza", technique: "uchi mata", value: "Ippon" }]
   });
-  assert.deepEqual(combat.scores, [{ category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Waza-ari" }]);
-  assert.deepEqual(combat.draft.concededScores, [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Ippon" }]);
-  assert.deepEqual(createCombat({ competitionId: "COMP1", judokaId: "JUDO1", result: "Victoire", victoryType: "Décision" }).concededScores, []);
+  assert.deepEqual(combat.scores, [
+    { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Waza-ari" }
+  ]);
+  assert.deepEqual(combat.draft.concededScores, [
+    { category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Ippon" }
+  ]);
+  assert.deepEqual(
+    createCombat({
+      competitionId: "COMP1",
+      judokaId: "JUDO1",
+      result: "Victoire",
+      victoryType: "Décision"
+    }).concededScores,
+    []
+  );
 });
 
 test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et distingue vide et inchangé", () => {
@@ -1617,19 +2020,29 @@ test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et disti
 
   const scored = createCombat({
     ...base,
-    officialScore: { judoka: { ippon: 0, wazaAri: 1, yuko: 2 }, opponent: { ippon: 0, wazaAri: 0, yuko: 1 } }
+    officialScore: {
+      judoka: { ippon: 0, wazaAri: 1, yuko: 2 },
+      opponent: { ippon: 0, wazaAri: 0, yuko: 1 }
+    }
   });
   assert.deepEqual(scored.officialScore, {
     judoka: { ippon: 0, wazaAri: 1, yuko: 2, shido: 0 },
     opponent: { ippon: 0, wazaAri: 0, yuko: 1, shido: 0 }
   });
   // Valeur manquante dans un camp : 0.
-  assert.deepEqual(createCombat({ ...base, officialScore: { judoka: { yuko: 1 } } }).officialScore, {
-    judoka: { ippon: 0, wazaAri: 0, yuko: 1, shido: 0 },
-    opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 0 }
-  });
+  assert.deepEqual(
+    createCombat({ ...base, officialScore: { judoka: { yuko: 1 } } }).officialScore,
+    {
+      judoka: { ippon: 0, wazaAri: 0, yuko: 1, shido: 0 },
+      opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 0 }
+    }
+  );
   // COMBAT-SHIDO : shidos de 0 à 3 ; un Ippon par camp au plus.
-  assert.equal(createCombat({ ...base, officialScore: { judoka: { shido: 3 }, opponent: {} } }).officialScore.judoka.shido, 3);
+  assert.equal(
+    createCombat({ ...base, officialScore: { judoka: { shido: 3 }, opponent: {} } }).officialScore
+      .judoka.shido,
+    3
+  );
   assert.throws(
     () => createCombat({ ...base, officialScore: { judoka: { shido: 4 }, opponent: {} } }),
     /Shido doit être un entier entre 0 et 3/
@@ -1655,7 +2068,11 @@ test("COMBAT-SCORE : le score officiel IWY - IWY est facultatif, borné et disti
 });
 
 test("INSCR-2 : saison d'une date et inscription pour une compétition", () => {
-  const { getSeasonStartYear, isRegisteredForCompetitionDate, formatSeasonLabel } = require("../core/domain/season");
+  const {
+    getSeasonStartYear,
+    isRegisteredForCompetitionDate,
+    formatSeasonLabel
+  } = require("../core/domain/season");
   assert.equal(getSeasonStartYear("2026-08-31"), 2025);
   assert.equal(getSeasonStartYear("2026-09-01"), 2026);
   assert.equal(getSeasonStartYear(""), null);

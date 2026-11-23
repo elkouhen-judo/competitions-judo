@@ -9,11 +9,19 @@ const createClubCompetitionsRepository = require("../core/repositories/club-comp
 const createInvitationsRepository = require("../core/repositories/invitations.repository");
 const createJudokasRepository = require("../core/repositories/judokas.repository");
 const createParentLinksRepository = require("../core/repositories/parent-links.repository");
-const { toCanonicalCombat, toCanonicalCombatScore, toCombatReadModelsWithJudokas } = require("../core/services/domain-adapters");
+const {
+  toCanonicalCombat,
+  toCanonicalCombatScore,
+  toCombatReadModelsWithJudokas
+} = require("../core/services/domain-adapters");
 const { createCombat } = require("../core/domain/competitions/combat");
 
 function createRepositoryDeps(calls, options = {}) {
-  const { selectOneResult = null, selectResult = [], pageResult = { rows: [], total: 0 } } = options;
+  const {
+    selectOneResult = null,
+    selectResult = [],
+    pageResult = { rows: [], total: 0 }
+  } = options;
   return {
     eqFilter: (field, value) => `${field}=eq.${value}`,
     supabaseDelete: async (table, query) => calls.push(["delete", table, query]),
@@ -281,12 +289,14 @@ test("combat scores repository replaces a combat's scores with deterministic ids
   const calls = [];
   const combatScoresRepository = createCombatScoresRepository(createRepositoryDeps(calls));
 
-  const inserted = await combatScoresRepository.replaceForCombat("CB1", [
-    { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Ippon" },
-    { category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }
-  ], [
-    { category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Waza-ari" }
-  ]);
+  const inserted = await combatScoresRepository.replaceForCombat(
+    "CB1",
+    [
+      { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Ippon" },
+      { category: "Ne-waza", technique: "", neWazaType: "Hon-gesa-gatame", value: "Waza-ari" }
+    ],
+    [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Waza-ari" }]
+  );
 
   // ECRIT-1 : une suppression, puis une seule insertion pour tous les points.
   assert.deepEqual(calls, [
@@ -350,10 +360,24 @@ test("COMBAT-CHRONO : le rang global du point est écrit dans ordre, tous camps 
   await combatScoresRepository.replaceForCombat(
     "CB1",
     [
-      { category: "Tachi-waza", technique: "Seoi-nage", neWazaType: "", value: "Waza-ari", order: 0 },
+      {
+        category: "Tachi-waza",
+        technique: "Seoi-nage",
+        neWazaType: "",
+        value: "Waza-ari",
+        order: 0
+      },
       { category: "", technique: "", neWazaType: "", value: "Yuko", order: 2 }
     ],
-    [{ category: "Tachi-waza", technique: "Uchi-mata", neWazaType: "", value: "Waza-ari", order: 1 }]
+    [
+      {
+        category: "Tachi-waza",
+        technique: "Uchi-mata",
+        neWazaType: "",
+        value: "Waza-ari",
+        order: 1
+      }
+    ]
   );
 
   const inserted = calls
@@ -365,20 +389,30 @@ test("COMBAT-CHRONO : le rang global du point est écrit dans ordre, tous camps 
     ["JUDOKA", 2, ""],
     ["ADVERSAIRE", 1, "Tachi-waza"]
   ]);
-  assert.deepEqual(toCanonicalCombatScore({ categorie: "", technique: "", type_ne_waza: "", valeur: "Yuko", ordre: 2 }), {
-    category: "",
-    technique: "",
-    neWazaType: "",
-    value: "Yuko",
-    order: 2
-  });
+  assert.deepEqual(
+    toCanonicalCombatScore({
+      categorie: "",
+      technique: "",
+      type_ne_waza: "",
+      valeur: "Yuko",
+      ordre: 2
+    }),
+    {
+      category: "",
+      technique: "",
+      neWazaType: "",
+      value: "Yuko",
+      order: 2
+    }
+  );
 });
 
 test("combats repository reads combats with their scores, in batches for several competitions", async () => {
   const calls = [];
   const combatsRepository = createCombatsRepository(createRepositoryDeps(calls));
   const competitionIds = Array.from({ length: 205 }, (_, index) => `COMP${index + 1}`);
-  const withScores = "select=*,combat_scores(*)&combat_scores.order=ordre.asc&order=created_at.asc,id_combat.asc";
+  const withScores =
+    "select=*,combat_scores(*)&combat_scores.order=ordre.asc&order=created_at.asc,id_combat.asc";
 
   // DETAIL-1 : les combats d'une compétition et leurs points en une requête.
   await combatsRepository.listByCompetitionWithScores("COMP1");
@@ -391,10 +425,26 @@ test("combats repository reads combats with their scores, in batches for several
 
   assert.deepEqual(calls, [
     ["select", "combats", `${withScores}&id_competition=eq.COMP1`],
-    ["select", "combats", `${withScores}&id_competition=in.(${competitionIds.slice(0, 100).join(",")})`],
-    ["select", "combats", `${withScores}&id_competition=in.(${competitionIds.slice(100, 200).join(",")})`],
-    ["select", "combats", `${withScores}&id_competition=in.(${competitionIds.slice(200).join(",")})`],
-    ["select", "combats", "select=*&id_competition=in.(COMP1,COMP2)&order=created_at.asc,id_combat.asc"],
+    [
+      "select",
+      "combats",
+      `${withScores}&id_competition=in.(${competitionIds.slice(0, 100).join(",")})`
+    ],
+    [
+      "select",
+      "combats",
+      `${withScores}&id_competition=in.(${competitionIds.slice(100, 200).join(",")})`
+    ],
+    [
+      "select",
+      "combats",
+      `${withScores}&id_competition=in.(${competitionIds.slice(200).join(",")})`
+    ],
+    [
+      "select",
+      "combats",
+      "select=*&id_competition=in.(COMP1,COMP2)&order=created_at.asc,id_combat.asc"
+    ],
     [
       "select",
       "combats",
@@ -409,12 +459,20 @@ test("STAT-17 : combats repository reads the coach dashboard data in one read-on
     ...createRepositoryDeps([]),
     supabaseRpc: async (name, payload, options) => {
       calls.push([name, payload, options]);
-      return { competitions: [{ id_competition: "C1" }], combats: [{ id_combat: "CB1", combat_scores: [] }] };
+      return {
+        competitions: [{ id_competition: "C1" }],
+        combats: [{ id_combat: "CB1", combat_scores: [] }]
+      };
     }
   });
 
   const data = await combatsRepository.listCoachDashboardData(
-    { clubIds: ["NANTES", "NANTES", ""], judokaIds: ["COACH1"], dateFrom: "2026-09-01", ageCategory: "Cadet" },
+    {
+      clubIds: ["NANTES", "NANTES", ""],
+      judokaIds: ["COACH1"],
+      dateFrom: "2026-09-01",
+      ageCategory: "Cadet"
+    },
     ["C1", "C1"]
   );
 
@@ -432,10 +490,16 @@ test("STAT-17 : combats repository reads the coach dashboard data in one read-on
       { readOnly: true }
     ]
   ]);
-  assert.deepEqual(data, { competitions: [{ id_competition: "C1" }], combats: [{ id_combat: "CB1", combat_scores: [] }] });
+  assert.deepEqual(data, {
+    competitions: [{ id_competition: "C1" }],
+    combats: [{ id_combat: "CB1", combat_scores: [] }]
+  });
 
   // Une réponse vide ne casse pas la lecture.
-  const empty = createCombatsRepository({ ...createRepositoryDeps([]), supabaseRpc: async () => null });
+  const empty = createCombatsRepository({
+    ...createRepositoryDeps([]),
+    supabaseRpc: async () => null
+  });
   assert.deepEqual(await empty.listCoachDashboardData({}, []), { competitions: [], combats: [] });
 });
 
@@ -746,7 +810,9 @@ test("CTX-1 : judokas repository reads the account with coached clubs and childr
   assert.equal(await unknown.getIdentityByEmail("ghost@example.com"), null);
   // Une ligne sans lien (colonnes embarquées vides) donne des listes vides.
   const alone = createJudokasRepository(
-    createRepositoryDeps([], { selectOneResult: { id_judoka: "JUDO1", coach_clubs: "", parent_judokas: [] } })
+    createRepositoryDeps([], {
+      selectOneResult: { id_judoka: "JUDO1", coach_clubs: "", parent_judokas: [] }
+    })
   );
   assert.deepEqual(await alone.getIdentityByEmail("judoka@example.com"), {
     user: { id_judoka: "JUDO1" },
@@ -846,8 +912,20 @@ test("PAGE-4 : competitions repository filters a coach scope by club, not by a l
   const rowsByQuery = (query) =>
     query.includes("judokas!inner")
       ? [
-          { id_competition: "C2", id_judoka: "JUDO1", date: "2026-10-02", judokas: { club_id: "NANTES" }, combats: [{ resultat: "Victoire" }] },
-          { id_competition: "C1", id_judoka: "COACH1", date: "2026-09-12", judokas: { club_id: "NANTES" }, combats: [] }
+          {
+            id_competition: "C2",
+            id_judoka: "JUDO1",
+            date: "2026-10-02",
+            judokas: { club_id: "NANTES" },
+            combats: [{ resultat: "Victoire" }]
+          },
+          {
+            id_competition: "C1",
+            id_judoka: "COACH1",
+            date: "2026-09-12",
+            judokas: { club_id: "NANTES" },
+            combats: []
+          }
         ]
       : [
           { id_competition: "C1", id_judoka: "COACH1", date: "2026-09-12", combats: [] },
@@ -872,12 +950,21 @@ test("PAGE-4 : competitions repository filters a coach scope by club, not by a l
       "competitions",
       `select=*,combats(resultat),judokas!inner(club_id)&judokas.club_id=in.(NANTES,RENNES)&date=gte.2026-09-01&${order}`
     ],
-    ["select", "competitions", `select=*,combats(resultat)&id_judoka=in.(COACH1)&date=gte.2026-09-01&${order}`]
+    [
+      "select",
+      "competitions",
+      `select=*,combats(resultat)&id_judoka=in.(COACH1)&date=gte.2026-09-01&${order}`
+    ]
   ]);
   // Les deux lectures sont fusionnées sans doublon, triées par date décroissante, sans la jointure.
   assert.deepEqual(rows, [
     { id_competition: "C3", id_judoka: "COACH1", date: "2026-11-20", combats: [] },
-    { id_competition: "C2", id_judoka: "JUDO1", date: "2026-10-02", combats: [{ resultat: "Victoire" }] },
+    {
+      id_competition: "C2",
+      id_judoka: "JUDO1",
+      date: "2026-10-02",
+      combats: [{ resultat: "Victoire" }]
+    },
     { id_competition: "C1", id_judoka: "COACH1", date: "2026-09-12", combats: [] }
   ]);
 
@@ -911,11 +998,18 @@ test("PAGE-2 : competitions repository reads the oldest date of a scope without 
   };
   const competitionsRepository = createCompetitionsRepository(deps);
 
-  const oldest = await competitionsRepository.getOldestDate({ clubIds: ["NANTES"], judokaIds: ["COACH1"] });
+  const oldest = await competitionsRepository.getOldestDate({
+    clubIds: ["NANTES"],
+    judokaIds: ["COACH1"]
+  });
 
   assert.equal(oldest, "2023-10-07");
   assert.deepEqual(calls, [
-    ["selectOne", "competitions", "select=date,judokas!inner(club_id)&judokas.club_id=in.(NANTES)&order=date.asc"],
+    [
+      "selectOne",
+      "competitions",
+      "select=date,judokas!inner(club_id)&judokas.club_id=in.(NANTES)&order=date.asc"
+    ],
     ["selectOne", "competitions", "select=date&id_judoka=in.(COACH1)&order=date.asc"]
   ]);
 
@@ -929,7 +1023,13 @@ test("ECRIT-3 : competitions repository writes club participations in one insert
   const participation = (ownerJudokaId) => ({
     ownerJudokaId,
     clubCompetitionId: "CLUB1",
-    draft: { name: "Tournoi", competitionDate: "2026-06-11", ageCategory: "Minime", weightCategory: "", level: "Régional" },
+    draft: {
+      name: "Tournoi",
+      competitionDate: "2026-06-11",
+      ageCategory: "Minime",
+      weightCategory: "",
+      level: "Régional"
+    },
     result: ""
   });
 
@@ -1024,10 +1124,16 @@ test("COMBAT-SCORE : le score officiel est écrit sur 6 colonnes, effacé avec n
     victoryType: "Décision"
   };
 
-  await combatsRepository.update("CB1", createCombat({
-    ...base,
-    officialScore: { judoka: { ippon: 1, wazaAri: 0, yuko: 2 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0 } }
-  }));
+  await combatsRepository.update(
+    "CB1",
+    createCombat({
+      ...base,
+      officialScore: {
+        judoka: { ippon: 1, wazaAri: 0, yuko: 2 },
+        opponent: { ippon: 0, wazaAri: 1, yuko: 0 }
+      }
+    })
+  );
   await combatsRepository.update("CB1", createCombat({ ...base, officialScore: null }));
   await combatsRepository.update("CB1", createCombat(base));
 
@@ -1080,7 +1186,10 @@ test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colon
       score_adversaire_wazaari: 1,
       score_adversaire_yuko: 0
     }).officialScore,
-    { judoka: { ippon: 1, wazaAri: 0, yuko: 2, shido: 0 }, opponent: { ippon: 0, wazaAri: 1, yuko: 0, shido: 0 } }
+    {
+      judoka: { ippon: 1, wazaAri: 0, yuko: 2, shido: 0 },
+      opponent: { ippon: 0, wazaAri: 1, yuko: 0, shido: 0 }
+    }
   );
   // COMBAT-SHIDO : les shidos sont relus avec le score.
   assert.deepEqual(
@@ -1095,7 +1204,10 @@ test("COMBAT-SCORE : la lecture reconstruit le score officiel, null si les colon
       score_judoka_shido: 1,
       score_adversaire_shido: 2
     }).officialScore,
-    { judoka: { ippon: 0, wazaAri: 1, yuko: 0, shido: 1 }, opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 2 } }
+    {
+      judoka: { ippon: 0, wazaAri: 1, yuko: 0, shido: 1 },
+      opponent: { ippon: 0, wazaAri: 0, yuko: 0, shido: 2 }
+    }
   );
 });
 
@@ -1106,10 +1218,18 @@ test("SCORE-VIDE : un score entièrement nul n'est ni relu ni enregistré comme 
       [`score_adversaire_${value}`, 0]
     ])
   );
-  const row = { id_combat: "CB1", id_judoka: "JUDO1", id_competition: "COMP1", resultat: "Victoire" };
+  const row = {
+    id_combat: "CB1",
+    id_judoka: "JUDO1",
+    id_competition: "COMP1",
+    resultat: "Victoire"
+  };
   assert.equal(toCanonicalCombat({ ...row, ...zeroColumns }).officialScore, null);
   // Un seul shido suffit à rendre le score utile.
-  assert.notEqual(toCanonicalCombat({ ...row, ...zeroColumns, score_adversaire_shido: 1 }).officialScore, null);
+  assert.notEqual(
+    toCanonicalCombat({ ...row, ...zeroColumns, score_adversaire_shido: 1 }).officialScore,
+    null
+  );
 
   const calls = [];
   const combatsRepository = createCombatsRepository(createRepositoryDeps(calls));

@@ -276,7 +276,10 @@ test("AGD-015 : grade read in real FFJDA grade session titles", () => {
     ["TEST EFFICACITE COMBAT DU 1ER AU 4EME DAN", [1, 2, 3, 4]],
     ["Validation UV4 pour 1er à 4eme dan", [1, 2, 3, 4]],
     ["SHIAI 1D 2D 3D BAR SUR AUBE", [1, 2, 3]],
-    ["(OCC) PASSAGE DE GRADE - TOULOUSE - UV3 1D, 2D & 3D ET UV4 3D & 4D + PARA JUDO", [1, 2, 3, 4]],
+    [
+      "(OCC) PASSAGE DE GRADE - TOULOUSE - UV3 1D, 2D & 3D ET UV4 3D & 4D + PARA JUDO",
+      [1, 2, 3, 4]
+    ],
     ["PASSAGE GRADES UV1 1er,2ième,3ième & 4ième DAN", [1, 2, 3, 4]],
     ["Examen UV1 /UV2 JUDO 1er & 2ème Dan", [1, 2]],
     ["Kata shodan UV1", [1]],

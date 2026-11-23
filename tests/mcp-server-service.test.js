@@ -289,7 +289,13 @@ test("MULTI-7 : le coach vise un club dans les outils MCP", async () => {
         clubCompetitions: [{ clubCompetitionId: "CC1", clubId: "NANTES" }],
         judokas: [{ judokaId: "J2", clubId: "RENNES" }],
         competitions: [
-          { competitionId: "P1", ownerJudokaId: "J2", clubCompetitionId: "CC1", name: "Interclubs", competitionDate: "2026-11-21" }
+          {
+            competitionId: "P1",
+            ownerJudokaId: "J2",
+            clubCompetitionId: "CC1",
+            name: "Interclubs",
+            competitionDate: "2026-11-21"
+          }
         ]
       }),
       getCoachDashboard: async (_email, filters) => {
@@ -302,21 +308,52 @@ test("MULTI-7 : le coach vise un club dans les outils MCP", async () => {
 
   assert.deepEqual(await callTool(service, claims, "clubs.list", {}), clubs);
 
-  const rennes = await callTool(service, claims, "judokas.search", { filters: { clubId: "RENNES" } });
-  assert.deepEqual(rennes.map((judoka) => [judoka.firstName, judoka.clubName]), [["Nina", "Dojo de Rennes"]]);
-  await assert.rejects(() => callTool(service, claims, "judokas.search", { filters: { clubId: "ANGERS" } }), /Club introuvable/);
+  const rennes = await callTool(service, claims, "judokas.search", {
+    filters: { clubId: "RENNES" }
+  });
+  assert.deepEqual(
+    rennes.map((judoka) => [judoka.firstName, judoka.clubName]),
+    [["Nina", "Dojo de Rennes"]]
+  );
+  await assert.rejects(
+    () => callTool(service, claims, "judokas.search", { filters: { clubId: "ANGERS" } }),
+    /Club introuvable/
+  );
 
   // Une participation compte pour le club de sa compétition club (MULTI-4), même si le judoka a changé de club.
-  const nantes = await callTool(service, claims, "competitions.search", { filters: { clubId: "NANTES" } });
-  assert.deepEqual(nantes.map((competition) => [competition.competitionId, competition.clubName]), [["P1", "Judo Club Nantes"]]);
+  const nantes = await callTool(service, claims, "competitions.search", {
+    filters: { clubId: "NANTES" }
+  });
+  assert.deepEqual(
+    nantes.map((competition) => [competition.competitionId, competition.clubName]),
+    [["P1", "Judo Club Nantes"]]
+  );
 
-  await callTool(service, claims, "coach.dashboard", { filters: { clubId: "RENNES", dateFrom: "2026-09-01", dateTo: "2027-08-31" } });
-  assert.deepEqual(dashboardCalls[0], { clubId: "RENNES", dateFrom: "2026-09-01", dateTo: "2027-08-31" });
+  await callTool(service, claims, "coach.dashboard", {
+    filters: { clubId: "RENNES", dateFrom: "2026-09-01", dateTo: "2027-08-31" }
+  });
+  assert.deepEqual(dashboardCalls[0], {
+    clubId: "RENNES",
+    dateFrom: "2026-09-01",
+    dateTo: "2027-08-31"
+  });
 
   const { tools } = await service.handleRequest(claims, { method: "tools/list" });
-  const dashboardFilters = tools.find((tool) => tool.name === "coach.dashboard").inputSchema.properties.filters.properties;
-  assert.deepEqual(Object.keys(dashboardFilters).sort(), ["ageCategory", "clubId", "competitionIds", "dateFrom", "dateTo"]);
+  const dashboardFilters = tools.find((tool) => tool.name === "coach.dashboard").inputSchema
+    .properties.filters.properties;
+  assert.deepEqual(Object.keys(dashboardFilters).sort(), [
+    "ageCategory",
+    "clubId",
+    "competitionIds",
+    "dateFrom",
+    "dateTo"
+  ]);
   // Un parent ne voit pas clubs.list.
-  const parent = await service.handleRequest(createClaims(["judokas:read"]), { method: "tools/list" });
-  assert.equal(parent.tools.some((tool) => tool.name === "clubs.list"), false);
+  const parent = await service.handleRequest(createClaims(["judokas:read"]), {
+    method: "tools/list"
+  });
+  assert.equal(
+    parent.tools.some((tool) => tool.name === "clubs.list"),
+    false
+  );
 });

@@ -16,7 +16,10 @@ function loadEnvLocal() {
       continue;
     }
     const [key, ...rest] = trimmed.split("=");
-    env[key] = rest.join("=").trim().replace(/^"(.*)"$/, "$1");
+    env[key] = rest
+      .join("=")
+      .trim()
+      .replace(/^"(.*)"$/, "$1");
   }
   return env;
 }

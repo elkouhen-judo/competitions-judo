@@ -100,7 +100,11 @@ async function openApp(t, scenario, email, viewport) {
   const context = await browser.newContext({ viewport });
   await context.addInitScript(
     (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
-    { access_token: tokenFor(email), refresh_token: "", expires_at: Math.floor(Date.now() / 1000) + 3600 }
+    {
+      access_token: tokenFor(email),
+      refresh_token: "",
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    }
   );
   const page = await context.newPage();
   const nativeDialogs = [];
@@ -125,7 +129,12 @@ const VIEWPORTS = [
 ];
 
 function adminScenario() {
-  const admin = person("admin-1", "Alice", { accessRole: "NORMAL", isAdmin: true, adminAccess: true, clubId: "" });
+  const admin = person("admin-1", "Alice", {
+    accessRole: "NORMAL",
+    isAdmin: true,
+    adminAccess: true,
+    clubId: ""
+  });
   const users = [
     admin,
     person("j-lea", "Léa"),
@@ -136,7 +145,16 @@ function adminScenario() {
   const page = (list) => ({ users: list, totalUsers: list.length, nextCursor: null });
   return (request) => {
     if (request.method === "getInitialData") {
-      return { user: admin, isAdmin: true, isCoach: false, isParent: false, competitions: [], clubCompetitions: [], clubs: [], judokas: [admin] };
+      return {
+        user: admin,
+        isAdmin: true,
+        isCoach: false,
+        isParent: false,
+        competitions: [],
+        clubCompetitions: [],
+        clubs: [],
+        judokas: [admin]
+      };
     }
     if (request.method === "getAdminsManagement") {
       return { user: admin, admins: [admin], ...page(users), accessInvitations: [] };
@@ -146,12 +164,18 @@ function adminScenario() {
     }
     if (request.method === "getUsersPage") {
       const filter = request.args[0].filter;
-      if (filter === "noClub") return page(users.filter((user) => user.profileType === "JUDOKA" && !user.clubId && user !== admin));
+      if (filter === "noClub")
+        return page(
+          users.filter((user) => user.profileType === "JUDOKA" && !user.clubId && user !== admin)
+        );
       if (filter === "notRegistered") return page([]);
       return page(users);
     }
     if (request.method === "grantCoachRole" || request.method === "revokeCoachRole") {
-      return { success: true, message: request.method === "grantCoachRole" ? "Rôle coach accordé." : "Rôle coach retiré." };
+      return {
+        success: true,
+        message: request.method === "grantCoachRole" ? "Rôle coach accordé." : "Rôle coach retiré."
+      };
     }
     return null;
   };
@@ -171,18 +195,29 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(cards).toHaveCount(1);
     await expect(cards.first()).toContainText("Sam Test");
     assert.equal(rpc.filter((r) => r.method === "getUsersPage").at(-1).args[0].filter, "noClub");
-    await page.screenshot({ path: `output/playwright/profiles-admin-${name}-01-sans-club.png`, fullPage: true, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/profiles-admin-${name}-01-sans-club.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Non réinscrits" }).click();
-    await expect(page.locator("#usersList .empty-state")).toHaveText("Tous les judokas sont réinscrits pour la saison en cours.");
+    await expect(page.locator("#usersList .empty-state")).toHaveText(
+      "Tous les judokas sont réinscrits pour la saison en cours."
+    );
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Tous" }).click();
     await expect(cards).toHaveCount(5);
 
     // ADMIN-1 : nommer coach un judoka ; jamais un parent.
     const card = (fullName) => cards.filter({ hasText: fullName });
     await card("Léa Test").locator(".card-menu summary").click();
-    await page.screenshot({ path: `output/playwright/profiles-admin-${name}-02-nommer-coach.png`, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/profiles-admin-${name}-02-nommer-coach.png`,
+      animations: "disabled"
+    });
     await card("Léa Test").getByRole("menuitem", { name: "Nommer coach" }).click();
-    await expect.poll(() => rpc.filter((r) => r.method === "grantCoachRole").map((r) => r.args[0])).toEqual(["j-lea"]);
+    await expect
+      .poll(() => rpc.filter((r) => r.method === "grantCoachRole").map((r) => r.args[0]))
+      .toEqual(["j-lea"]);
     await expect(card("Max Test").getByRole("menuitem", { name: "Nommer coach" })).toHaveCount(0);
 
     // Retirer le rôle coach demande confirmation dans l'appli.
@@ -191,7 +226,9 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(page.locator("#confirmDialog")).toBeVisible();
     await expect(page.locator("#confirmDialogConfirm")).toHaveText("Retirer le rôle coach");
     await page.locator("#confirmDialogConfirm").click();
-    await expect.poll(() => rpc.filter((r) => r.method === "revokeCoachRole").map((r) => r.args[0])).toEqual(["j-tom"]);
+    await expect
+      .poll(() => rpc.filter((r) => r.method === "revokeCoachRole").map((r) => r.args[0]))
+      .toEqual(["j-tom"]);
   });
 }
 
@@ -233,21 +270,38 @@ function familyScenario({ childClubId }) {
 
 for (const [name, viewport] of VIEWPORTS) {
   test(`FAM-1 : un enfant sans club dit pourquoi il n'a aucune compétition sur ${name}`, async (t) => {
-    const { page } = await openApp(t, familyScenario({ childClubId: "" }), "claire@example.com", viewport);
+    const { page } = await openApp(
+      t,
+      familyScenario({ childClubId: "" }),
+      "claire@example.com",
+      viewport
+    );
     await expect(page.locator("#competitionsList .empty-action-body")).toHaveText(
       "Hugo n'est rattaché à aucun club : aucun coach ne peut l'inscrire. Demandez au club de le rattacher."
     );
-    await page.screenshot({ path: `output/playwright/profiles-family-${name}-01-sans-club.png`, fullPage: true, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/profiles-family-${name}-01-sans-club.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
   });
 
   test(`PART-1 : une participation à une compétition club ne se supprime pas depuis sa fiche sur ${name}`, async (t) => {
-    const { page } = await openApp(t, familyScenario({ childClubId: CLUB.clubId }), "claire@example.com", viewport);
+    const { page } = await openApp(
+      t,
+      familyScenario({ childClubId: CLUB.clubId }),
+      "claire@example.com",
+      viewport
+    );
     await page.getByRole("button", { name: /Coupe d'automne/ }).click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await page.locator("#competitionAdminActions summary").click();
     await expect(page.getByRole("menuitem", { name: "Modifier la compétition" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Supprimer la compétition" })).toHaveCount(0);
-    await page.screenshot({ path: `output/playwright/profiles-family-${name}-02-menu.png`, animations: "disabled" });
+    await page.screenshot({
+      path: `output/playwright/profiles-family-${name}-02-menu.png`,
+      animations: "disabled"
+    });
   });
 }
 
@@ -257,7 +311,16 @@ test("FAM-1 : un judoka sans club le lit dans « Mon espace »", async (t) => {
     t,
     (request) =>
       request.method === "getInitialData"
-        ? { user: judoka, isAdmin: false, isCoach: false, isParent: false, competitions: [], clubCompetitions: [], clubs: [], judokas: [judoka] }
+        ? {
+            user: judoka,
+            isAdmin: false,
+            isCoach: false,
+            isParent: false,
+            competitions: [],
+            clubCompetitions: [],
+            clubs: [],
+            judokas: [judoka]
+          }
         : null,
     "inès@example.com",
     { width: 375, height: 812 }
@@ -265,5 +328,9 @@ test("FAM-1 : un judoka sans club le lit dans « Mon espace »", async (t) => {
   await expect(page.locator("#competitionsList .empty-action-body")).toHaveText(
     "Vous n'êtes rattaché à aucun club : aucun coach ne peut vous inscrire. Demandez au club de vous rattacher."
   );
-  await page.screenshot({ path: "output/playwright/profiles-judoka-mobile-01-sans-club.png", fullPage: true, animations: "disabled" });
+  await page.screenshot({
+    path: "output/playwright/profiles-judoka-mobile-01-sans-club.png",
+    fullPage: true,
+    animations: "disabled"
+  });
 });

@@ -11,7 +11,14 @@ const {
 const { getRuntimeAppUrl } = require("./app.js").__internal;
 const { readRawBody } = require("./_read-body");
 
-const MCP_SCOPES = ["access:read", "judokas:read", "competitions:read", "competitions:write", "combats:read", "combats:write"];
+const MCP_SCOPES = [
+  "access:read",
+  "judokas:read",
+  "competitions:read",
+  "competitions:write",
+  "combats:read",
+  "combats:write"
+];
 
 function getPathname(req) {
   return new URL(req.url, "http://localhost").pathname;
@@ -49,7 +56,12 @@ function handleAuthorizationServerMetadata(req, res) {
 // --- /mcp/register (Dynamic Client Registration, RFC 7591) ---
 
 function isLoopbackHost(hostname) {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]" || hostname === "::1";
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname === "::1"
+  );
 }
 
 function isAllowedRedirectUri(value) {
@@ -347,22 +359,32 @@ async function handleAuthorizePost(req, res) {
   try {
     client = verifyMcpClient(clientId);
   } catch (_error) {
-    res.status(400).json({ error: "invalid_client", error_description: "client_id MCP invalide ou expiré." });
+    res
+      .status(400)
+      .json({ error: "invalid_client", error_description: "client_id MCP invalide ou expiré." });
     return;
   }
   if (!Array.isArray(client.redirectUris) || !client.redirectUris.includes(redirectUri)) {
-    res
-      .status(400)
-      .json({ error: "invalid_request", error_description: "redirect_uri non enregistrée pour ce client MCP." });
+    res.status(400).json({
+      error: "invalid_request",
+      error_description: "redirect_uri non enregistrée pour ce client MCP."
+    });
     return;
   }
 
   try {
     const email = await verifySupabaseUser(accessToken);
-    const code = await mcpAuthService.issueAuthorizationCode({ email, clientId, redirectUri, codeChallenge });
+    const code = await mcpAuthService.issueAuthorizationCode({
+      email,
+      clientId,
+      redirectUri,
+      codeChallenge
+    });
     res.status(200).json({ code });
   } catch (error) {
-    res.status(403).json({ error: "access_denied", error_description: error.message || "Accès refusé." });
+    res
+      .status(403)
+      .json({ error: "access_denied", error_description: error.message || "Accès refusé." });
   }
 }
 
@@ -429,7 +451,12 @@ async function handleToken(req, res) {
   }
 
   if (claims.redirectUri !== redirectUri || claims.clientId !== clientId) {
-    sendOAuthError(res, 400, "invalid_grant", "redirect_uri ou client_id ne correspond pas au code.");
+    sendOAuthError(
+      res,
+      400,
+      "invalid_grant",
+      "redirect_uri ou client_id ne correspond pas au code."
+    );
     return;
   }
 

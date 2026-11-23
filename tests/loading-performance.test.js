@@ -268,7 +268,9 @@ function handleRpc(name, payload = {}) {
   const competitionIds = payload.p_competition_ids || [];
   // MULTI-4 : le club de la compétition club, sinon le club actuel du judoka.
   const statsClubId = (row) => {
-    const event = (db.club_competitions || []).find((cc) => cc.id_club_competition === row.club_competition_id);
+    const event = (db.club_competitions || []).find(
+      (cc) => cc.id_club_competition === row.club_competition_id
+    );
     const owner = db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka);
     return (event && event.club_id) || (owner && owner.club_id) || null;
   };
@@ -282,7 +284,9 @@ function handleRpc(name, payload = {}) {
         (!payload.p_age_category || row.categorie_age === payload.p_age_category)
       );
     })
-    .sort((a, b) => b.date.localeCompare(a.date) || a.id_competition.localeCompare(b.id_competition));
+    .sort(
+      (a, b) => b.date.localeCompare(a.date) || a.id_competition.localeCompare(b.id_competition)
+    );
   const scopedIds = new Set(competitions.map((row) => row.id_competition));
   const combats = db.combats
     .filter(
@@ -290,7 +294,11 @@ function handleRpc(name, payload = {}) {
         scopedIds.has(row.id_competition) &&
         (!competitionIds.length || competitionIds.includes(row.id_competition))
     )
-    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || a.id_combat.localeCompare(b.id_combat))
+    .sort(
+      (a, b) =>
+        String(a.created_at).localeCompare(String(b.created_at)) ||
+        a.id_combat.localeCompare(b.id_combat)
+    )
     .map((row) => ({ ...row, combat_scores: EMBEDS.combats.combat_scores(row) }));
   return respond(200, { competitions, combats });
 }
@@ -749,7 +757,8 @@ test("PAGE-4 : le périmètre d'un coach se filtre par club, sans liste d'identi
 test("aucune lecture ne renvoie l'ancien objectif du coach resté en base", async () => {
   const calls = {
     getInitialData: () => methods.getInitialData("coach@example.com"),
-    getSeasonCompetitions: () => methods.getSeasonCompetitions("coach@example.com", seasonStartYear),
+    getSeasonCompetitions: () =>
+      methods.getSeasonCompetitions("coach@example.com", seasonStartYear),
     getCompetitionDetail: () => methods.getCompetitionDetail("coach@example.com", "C_N01"),
     getClubCompetitionDetail: () => methods.getClubCompetitionDetail("coach@example.com", "EVENT1"),
     getJudokaProfile: () => methods.getJudokaProfile("coach@example.com", "N01"),
@@ -1274,7 +1283,11 @@ test("COACH-1 / STAT-17 : le tableau de bord lit ses données en un appel, filtr
   );
 
   // STAT-17 : 2 requêtes de contexte, 1 pour les données ; aucune lecture de table pour les combats.
-  assert.equal(scope.requests, 3, list.map((request) => `${request.method} ${request.table} ${request.query}`).join("\n"));
+  assert.equal(
+    scope.requests,
+    3,
+    list.map((request) => `${request.method} ${request.table} ${request.query}`).join("\n")
+  );
   const [dataCall] = rpcCalls(list, "coach_dashboard_data");
   assert.equal(rpcCalls(list, "coach_dashboard_data").length, 1);
   assert.deepEqual(dataCall.payload, {
@@ -1294,7 +1307,9 @@ test("COACH-1 / STAT-17 : le tableau de bord lit ses données en un appel, filtr
   assert.equal(judokaReads.length, 1);
   assert.match(judokaReads[0].query, /club_id=in\.\(NANTES,RENNES\)/);
   // Un coach ne lit aucune ligne d'un autre club.
-  list.forEach((request) => assert.doesNotMatch(`${request.query}${JSON.stringify(request.payload || "")}`, /ANGERS|C_A01/));
+  list.forEach((request) =>
+    assert.doesNotMatch(`${request.query}${JSON.stringify(request.payload || "")}`, /ANGERS|C_A01/)
+  );
   assert.deepEqual(reads(list, "combats"), []);
   assert.deepEqual(reads(list, "combat_scores"), []);
   assert.ok(scope.stages <= 2, `${scope.stages} étapes`);
@@ -1321,7 +1336,12 @@ test("STAT-17 : 250 participations coûtent toujours 3 requêtes, et les combats
     competition(`S${String(index).padStart(3, "0")}`, index % 2 ? "N01" : "N02", inSeason("10-10"))
   );
   db.combats = db.competitions.map((row, index) =>
-    combat(`Q${String(index).padStart(3, "0")}`, row.id_judoka, row.id_competition, index % 3 ? "Victoire" : "Défaite")
+    combat(
+      `Q${String(index).padStart(3, "0")}`,
+      row.id_judoka,
+      row.id_competition,
+      index % 3 ? "Victoire" : "Défaite"
+    )
   );
 
   const all = await measureWithoutReset(() => methods.getCoachDashboard("coach@example.com", {}));
@@ -1334,7 +1354,10 @@ test("STAT-17 : 250 participations coûtent toujours 3 requêtes, et les combats
     methods.getCoachDashboard("coach@example.com", { competitionIds: ["S000", "S001"] })
   );
   assert.equal(chosen.scope.requests, 3);
-  assert.deepEqual(rpcCalls(chosen.requests, "coach_dashboard_data")[0].payload.p_competition_ids, ["S000", "S001"]);
+  assert.deepEqual(rpcCalls(chosen.requests, "coach_dashboard_data")[0].payload.p_competition_ids, [
+    "S000",
+    "S001"
+  ]);
   assert.equal(chosen.result.stats.totalCombats, 2);
   assert.equal(chosen.result.availableCompetitions.length, 250);
 

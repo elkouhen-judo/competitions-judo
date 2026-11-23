@@ -105,7 +105,10 @@ test("mcp-register mints a client_id encoding the registered redirect_uris", asy
   const req = createRequest({
     method: "POST",
     url: "/mcp/register",
-    body: JSON.stringify({ redirect_uris: ["https://client.example/callback"], client_name: "Test client" })
+    body: JSON.stringify({
+      redirect_uris: ["https://client.example/callback"],
+      client_name: "Test client"
+    })
   });
   const { res, captured } = createResponse();
   await handler(req, res);
@@ -120,8 +123,7 @@ test("mcp-authorize GET rejects an unregistered redirect_uri", async () => {
     verifyMcpClient: () => ({ redirectUris: ["https://client.example/callback"] })
   });
   const req = createRequest({
-    url:
-      "/mcp/authorize?response_type=code&code_challenge=abc&code_challenge_method=S256&client_id=client-1&redirect_uri=https://evil.example/callback"
+    url: "/mcp/authorize?response_type=code&code_challenge=abc&code_challenge_method=S256&client_id=client-1&redirect_uri=https://evil.example/callback"
   });
   const { res, captured } = createResponse();
   await handler(req, res);
@@ -133,8 +135,7 @@ test("mcp-authorize GET renders the consent page for a valid request", async () 
     verifyMcpClient: () => ({ redirectUris: ["https://client.example/callback"] })
   });
   const req = createRequest({
-    url:
-      "/mcp/authorize?response_type=code&code_challenge=abc&code_challenge_method=S256&client_id=client-1&redirect_uri=https://client.example/callback&state=xyz"
+    url: "/mcp/authorize?response_type=code&code_challenge=abc&code_challenge_method=S256&client_id=client-1&redirect_uri=https://client.example/callback&state=xyz"
   });
   const { res, captured } = createResponse();
   await handler(req, res);
@@ -285,8 +286,7 @@ test("mcp-token rejects a redirect_uri that doesn't match the authorization code
     method: "POST",
     url: "/mcp/token",
     headers: { "content-type": "application/x-www-form-urlencoded" },
-    body:
-      "grant_type=authorization_code&code=auth-code&code_verifier=correct-verifier&redirect_uri=https://other.example/callback&client_id=client-1"
+    body: "grant_type=authorization_code&code=auth-code&code_verifier=correct-verifier&redirect_uri=https://other.example/callback&client_id=client-1"
   });
   const { res, captured } = createResponse();
   await handler(req, res);
@@ -305,7 +305,10 @@ test("mcp rejects requests without a bearer token and advertises discovery via W
       }
     }
   });
-  const req = createRequest({ method: "POST", body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) });
+  const req = createRequest({
+    method: "POST",
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" })
+  });
   const { res, captured } = createResponse();
   await handler(req, res);
   assert.equal(captured.statusCode, 401);

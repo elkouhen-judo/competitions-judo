@@ -21,20 +21,30 @@ function readEnvFile(filePath) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
     const [key, ...rest] = trimmed.split("=");
-    values[key.trim()] = rest.join("=").trim().replace(/^"(.*)"$/, "$1");
+    values[key.trim()] = rest
+      .join("=")
+      .trim()
+      .replace(/^"(.*)"$/, "$1");
   }
   return values;
 }
 
 function run(command, args, env = process.env) {
-  const result = spawnSync(command, args, { cwd: root, stdio: "inherit", env: { ...env, SUPABASE_CLI_TELEMETRY_OPTOUT: "1" } });
+  const result = spawnSync(command, args, {
+    cwd: root,
+    stdio: "inherit",
+    env: { ...env, SUPABASE_CLI_TELEMETRY_OPTOUT: "1" }
+  });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} a échoué avec le code ${result.status}.`);
 }
 
 function copyFieldToSql(field) {
   if (field === "\\N") return "NULL";
-  const value = field.replace(/\\([\\tbnrfv])/g, (_, escaped) => ({ t: "\t", b: "\b", n: "\n", r: "\r", f: "\f", v: "\v" }[escaped]));
+  const value = field.replace(
+    /\\([\\tbnrfv])/g,
+    (_, escaped) => ({ t: "\t", b: "\b", n: "\n", r: "\r", f: "\f", v: "\v" })[escaped]
+  );
   return `'${value.replace(/\\\\/g, "\\").replace(/'/g, "''")}'`;
 }
 
@@ -52,14 +62,16 @@ function publicDataFile(dataFile) {
       let field = "";
       for (let cursor = 0; cursor < lines[index].length; cursor += 1) {
         const character = lines[index][cursor];
-        if (character === "\\") field += character + (lines[index][cursor += 1] || "");
+        if (character === "\\") field += character + (lines[index][(cursor += 1)] || "");
         else if (character === "\t") {
           fields.push(field);
           field = "";
         } else field += character;
       }
       fields.push(field);
-      statements.push(`INSERT INTO "public"."${table}" (${columns}) VALUES (${fields.map(copyFieldToSql).join(", ")});`);
+      statements.push(
+        `INSERT INTO "public"."${table}" (${columns}) VALUES (${fields.map(copyFieldToSql).join(", ")});`
+      );
       index += 1;
     }
   }
@@ -89,7 +101,9 @@ function main() {
     throw new Error("--environment et --target doivent être prod ou dev.");
   }
   if (target === "prod" && process.env.CONFIRM_PROD_RESTORE !== "yes") {
-    throw new Error("Restauration production bloquée. Ajoutez CONFIRM_PROD_RESTORE=yes après vérification.");
+    throw new Error(
+      "Restauration production bloquée. Ajoutez CONFIRM_PROD_RESTORE=yes après vérification."
+    );
   }
   if (process.env.CONFIRM_RESTORE !== "yes") {
     throw new Error("Restauration bloquée. Ajoutez CONFIRM_RESTORE=yes après vérification.");
@@ -97,31 +111,53 @@ function main() {
 
   const environmentRoot = path.join(backupRoot, environment);
   const directories = fs.existsSync(environmentRoot)
-    ? fs.readdirSync(environmentRoot).map((name) => path.join(environmentRoot, name)).filter((entry) => fs.statSync(entry).isDirectory()).sort().reverse()
+    ? fs
+        .readdirSync(environmentRoot)
+        .map((name) => path.join(environmentRoot, name))
+        .filter((entry) => fs.statSync(entry).isDirectory())
+        .sort()
+        .reverse()
     : [];
   const directory = backup === "latest" ? directories[0] : path.resolve(backup);
   if (!directory || !fs.existsSync(directory)) throw new Error(`Backup introuvable : ${backup}`);
   verifyManifest(directory);
 
   const config = readEnvFile(path.join(configRoot, `.env.${target}`));
-  const databaseUrl = process.env[`SUPABASE_DB_URL_${target.toUpperCase()}`] || config.SUPABASE_DB_URL;
-  const projectRef = process.env[`SUPABASE_PROJECT_REF_${target.toUpperCase()}`] || config.SUPABASE_PROJECT_REF;
-  if (!databaseUrl && !projectRef) throw new Error(`SUPABASE_PROJECT_REF ou SUPABASE_DB_URL absent pour ${target}.`);
+  const databaseUrl =
+    process.env[`SUPABASE_DB_URL_${target.toUpperCase()}`] || config.SUPABASE_DB_URL;
+  const projectRef =
+    process.env[`SUPABASE_PROJECT_REF_${target.toUpperCase()}`] || config.SUPABASE_PROJECT_REF;
+  if (!databaseUrl && !projectRef)
+    throw new Error(`SUPABASE_PROJECT_REF ou SUPABASE_DB_URL absent pour ${target}.`);
   const psql = process.env.PSQL_BIN || "/opt/homebrew/opt/libpq/bin/psql";
-  const supabase = process.env.SUPABASE_CLI_BIN || (fs.existsSync("/opt/homebrew/bin/supabase") ? "/opt/homebrew/bin/supabase" : "supabase");
+  const supabase =
+    process.env.SUPABASE_CLI_BIN ||
+    (fs.existsSync("/opt/homebrew/bin/supabase") ? "/opt/homebrew/bin/supabase" : "supabase");
 
   function executeSql(file) {
     if (projectRef) {
       run(supabase, ["db", "query", "--linked", "--project-ref", projectRef, "--file", file]);
       return;
     }
-    run(psql, ["--dbname", databaseUrl, "--single-transaction", "--set", "ON_ERROR_STOP=1", "--file", file]);
+    run(psql, [
+      "--dbname",
+      databaseUrl,
+      "--single-transaction",
+      "--set",
+      "ON_ERROR_STOP=1",
+      "--file",
+      file
+    ]);
   }
 
-  console.log(`Restauration ${environment} → ${target} depuis ${directory}${clean ? " avec nettoyage préalable" : ""}`);
+  console.log(
+    `Restauration ${environment} → ${target} depuis ${directory}${clean ? " avec nettoyage préalable" : ""}`
+  );
   if (clean) executeSql(path.join(root, "supabase", "scripts", "reset_public_schema.sql"));
   executeSql(path.join(directory, "schema.sql"));
-  executeSql(projectRef ? publicDataFile(path.join(directory, "data.sql")) : path.join(directory, "data.sql"));
+  executeSql(
+    projectRef ? publicDataFile(path.join(directory, "data.sql")) : path.join(directory, "data.sql")
+  );
   console.log("Restauration terminée. Vérifiez les données avec : npm run db:check");
 }
 

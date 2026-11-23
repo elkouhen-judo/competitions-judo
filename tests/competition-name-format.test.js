@@ -14,8 +14,14 @@ function loadKirokuUi() {
 
 test("les noms de compétition tout en capitales s'affichent en casse de titre française", () => {
   const { formatCompetitionName } = loadKirokuUi();
-  assert.equal(formatCompetitionName("TOURNOI LABEL A CADET(TE) DE LAMBALLE"), "Tournoi Label A Cadet(te) de Lamballe");
-  assert.equal(formatCompetitionName("TOURNOI LABEL A CADETS DE SAINT GREGOIRE"), "Tournoi Label A Cadets de Saint Gregoire");
+  assert.equal(
+    formatCompetitionName("TOURNOI LABEL A CADET(TE) DE LAMBALLE"),
+    "Tournoi Label A Cadet(te) de Lamballe"
+  );
+  assert.equal(
+    formatCompetitionName("TOURNOI LABEL A CADETS DE SAINT GREGOIRE"),
+    "Tournoi Label A Cadets de Saint Gregoire"
+  );
   assert.equal(formatCompetitionName("OPEN DE SAINT-MALO"), "Open de Saint-Malo");
   assert.equal(formatCompetitionName("COUPE D’ILLE-ET-VILAINE"), "Coupe d’Ille-et-Vilaine");
   assert.equal(formatCompetitionName("L'OPEN DU MANS"), "L'Open du Mans");
@@ -24,7 +30,10 @@ test("les noms de compétition tout en capitales s'affichent en casse de titre f
 
 test("un nom déjà saisi en casse mixte est conservé tel quel", () => {
   const { formatCompetitionName } = loadKirokuUi();
-  assert.equal(formatCompetitionName("Grand Prix des Jeunes de Craon"), "Grand Prix des Jeunes de Craon");
+  assert.equal(
+    formatCompetitionName("Grand Prix des Jeunes de Craon"),
+    "Grand Prix des Jeunes de Craon"
+  );
   assert.equal(formatCompetitionName("Open de printemps"), "Open de printemps");
   assert.equal(formatCompetitionName("  Tournoi   de  Rennes "), "Tournoi de Rennes");
   assert.equal(formatCompetitionName(""), "");

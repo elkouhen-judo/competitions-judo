@@ -31,7 +31,12 @@ function adminContext({ coach = false } = {}) {
   return async () => ({ user, domainUser: toCanonicalJudoka(user) });
 }
 
-function createClubCompetitionsServiceFor({ events = {}, judokas = {}, calls = [], context = coachContext() } = {}) {
+function createClubCompetitionsServiceFor({
+  events = {},
+  judokas = {},
+  calls = [],
+  context = coachContext()
+} = {}) {
   return createClubCompetitionsService({
     clubCompetitionsRepository: {
       getById: async (id) => events[id] || null,
@@ -52,7 +57,8 @@ function createClubCompetitionsServiceFor({ events = {}, judokas = {}, calls = [
     },
     judokasRepository: {
       // INSCR-2 : les judokas des jeux de données sont inscrits pour la saison en cours.
-      listByIds: async (ids) => ids.map((id) => judokas[id] && { saison_inscription: 2026, ...judokas[id] }).filter(Boolean)
+      listByIds: async (ids) =>
+        ids.map((id) => judokas[id] && { saison_inscription: 2026, ...judokas[id] }).filter(Boolean)
     },
     userContextService: { getDomainUserContext: context },
     canManageClubCompetition: permissions.canManageClubCompetition,
@@ -96,7 +102,10 @@ test("a coach of a single club does not have to choose the club", async () => {
     judokas: { J1: { id_judoka: "J1", categorie_age: "Cadet", club_id: "NANTES" } }
   });
 
-  await service.methods.saveClubCompetition("coach@example.com", { ...baseEvent, participantJudokaIds: ["J1"] });
+  await service.methods.saveClubCompetition("coach@example.com", {
+    ...baseEvent,
+    participantJudokaIds: ["J1"]
+  });
 
   assert.equal(calls.find(([kind]) => kind === "insertClub")[1].clubId, "NANTES");
 });
@@ -107,7 +116,11 @@ test("a coach of several clubs must choose the club", async () => {
   });
 
   await assert.rejects(
-    () => service.methods.saveClubCompetition("coach@example.com", { ...baseEvent, participantJudokaIds: ["J1"] }),
+    () =>
+      service.methods.saveClubCompetition("coach@example.com", {
+        ...baseEvent,
+        participantJudokaIds: ["J1"]
+      }),
     /Club de la compétition obligatoire/
   );
 });
@@ -158,16 +171,36 @@ test("a coach cannot open, edit or delete another club's competition", async () 
   const service = createClubCompetitionsServiceFor({
     calls,
     events: {
-      ANGERS_EVENT: { id_club_competition: "ANGERS_EVENT", nom: "Tournoi", date: "2026-09-26", club_id: "ANGERS" },
-      NO_CLUB_EVENT: { id_club_competition: "NO_CLUB_EVENT", nom: "Tournoi", date: "2026-09-26", club_id: null }
+      ANGERS_EVENT: {
+        id_club_competition: "ANGERS_EVENT",
+        nom: "Tournoi",
+        date: "2026-09-26",
+        club_id: "ANGERS"
+      },
+      NO_CLUB_EVENT: {
+        id_club_competition: "NO_CLUB_EVENT",
+        nom: "Tournoi",
+        date: "2026-09-26",
+        club_id: null
+      }
     }
   });
 
   for (const id of ["ANGERS_EVENT", "NO_CLUB_EVENT"]) {
-    await assert.rejects(() => service.methods.getClubCompetitionDetail("coach@example.com", id), /introuvable/);
-    await assert.rejects(() => service.methods.deleteClubCompetition("coach@example.com", id), /introuvable/);
     await assert.rejects(
-      () => service.methods.saveClubCompetition("coach@example.com", { ...baseEvent, clubCompetitionId: id }),
+      () => service.methods.getClubCompetitionDetail("coach@example.com", id),
+      /introuvable/
+    );
+    await assert.rejects(
+      () => service.methods.deleteClubCompetition("coach@example.com", id),
+      /introuvable/
+    );
+    await assert.rejects(
+      () =>
+        service.methods.saveClubCompetition("coach@example.com", {
+          ...baseEvent,
+          clubCompetitionId: id
+        }),
       /introuvable/
     );
   }
@@ -177,11 +210,35 @@ test("a coach cannot open, edit or delete another club's competition", async () 
 test("coach statistics only cover judokas of the coach's clubs, and can be narrowed to one club", async () => {
   const competitionRows = [
     // stats_club_id : le club que la fonction SQL attribue à la participation (MULTI-4).
-    { id_competition: "C_NANTES", id_judoka: "J_NANTES", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
-    { id_competition: "C_RENNES", id_judoka: "J_RENNES", date: "2026-02-11", categorie_age: "Cadet", stats_club_id: "RENNES" },
-    { id_competition: "C_ANGERS", id_judoka: "J_ANGERS", date: "2026-02-12", categorie_age: "Cadet", stats_club_id: "ANGERS" },
+    {
+      id_competition: "C_NANTES",
+      id_judoka: "J_NANTES",
+      date: "2026-02-10",
+      categorie_age: "Cadet",
+      stats_club_id: "NANTES"
+    },
+    {
+      id_competition: "C_RENNES",
+      id_judoka: "J_RENNES",
+      date: "2026-02-11",
+      categorie_age: "Cadet",
+      stats_club_id: "RENNES"
+    },
+    {
+      id_competition: "C_ANGERS",
+      id_judoka: "J_ANGERS",
+      date: "2026-02-12",
+      categorie_age: "Cadet",
+      stats_club_id: "ANGERS"
+    },
     // MULTI-5 : le coach combat encore, sans être inscrit dans un de ses clubs.
-    { id_competition: "C_COACH", id_judoka: "COACH1", date: "2026-02-13", categorie_age: "Senior", stats_club_id: null }
+    {
+      id_competition: "C_COACH",
+      id_judoka: "COACH1",
+      date: "2026-02-13",
+      categorie_age: "Senior",
+      stats_club_id: null
+    }
   ];
   const combat = (id, judoka, competition) => ({
     id_combat: id,
@@ -208,12 +265,16 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
     // les compétitions et les combats des judokas des clubs du coach.
     combatsRepository: {
       listByCompetitionIdsWithScores: async (ids) =>
-        ids.flatMap((id) => (combatsByCompetitionId[id] || []).map((row) => ({ ...row, combat_scores: [] }))),
+        ids.flatMap((id) =>
+          (combatsByCompetitionId[id] || []).map((row) => ({ ...row, combat_scores: [] }))
+        ),
       listCoachDashboardData: async (scope) => {
         scopes.push(scope);
         return {
           competitions: competitionRows,
-          combats: Object.values(combatsByCompetitionId).flat().map((row) => ({ ...row, combat_scores: [] }))
+          combats: Object.values(combatsByCompetitionId)
+            .flat()
+            .map((row) => ({ ...row, combat_scores: [] }))
         };
       }
     },
@@ -232,10 +293,10 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
   const all = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.equal(all.stats.totalCombats, 2);
   // MULTI-1 : chaque compétition proposée porte son club.
-  assert.deepEqual(
-    all.availableCompetitions.map((c) => [c.competitionId, c.clubId]).sort(),
-    [["C_NANTES", "NANTES"], ["C_RENNES", "RENNES"]]
-  );
+  assert.deepEqual(all.availableCompetitions.map((c) => [c.competitionId, c.clubId]).sort(), [
+    ["C_NANTES", "NANTES"],
+    ["C_RENNES", "RENNES"]
+  ]);
   // COACH-1 et MULTI-5 : le périmètre part dans la requête, clubs du coach seulement, sans le coach.
   assert.deepEqual(scopes[0], { clubIds: ["NANTES", "RENNES"] });
 
@@ -257,9 +318,27 @@ test("coach statistics only cover judokas of the coach's clubs, and can be narro
 test("MULTI-4 : un résultat reste au club où il a été obtenu, même après un changement de club", async () => {
   // J_MOVED a combattu pour Nantes la saison passée, il est à Rennes aujourd'hui.
   const competitionRows = [
-    { id_competition: "C_OLD", id_judoka: "J_MOVED", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
-    { id_competition: "C_OLD2", id_judoka: "J_NANTES", date: "2026-02-10", categorie_age: "Cadet", stats_club_id: "NANTES" },
-    { id_competition: "C_NEW", id_judoka: "J_MOVED", date: "2026-10-10", categorie_age: "Cadet", stats_club_id: "RENNES" }
+    {
+      id_competition: "C_OLD",
+      id_judoka: "J_MOVED",
+      date: "2026-02-10",
+      categorie_age: "Cadet",
+      stats_club_id: "NANTES"
+    },
+    {
+      id_competition: "C_OLD2",
+      id_judoka: "J_NANTES",
+      date: "2026-02-10",
+      categorie_age: "Cadet",
+      stats_club_id: "NANTES"
+    },
+    {
+      id_competition: "C_NEW",
+      id_judoka: "J_MOVED",
+      date: "2026-10-10",
+      categorie_age: "Cadet",
+      stats_club_id: "RENNES"
+    }
   ];
   const combats = competitionRows.map((row, index) => ({
     id_combat: `K${index}`,
@@ -293,19 +372,48 @@ test("MULTI-4 : un résultat reste au club où il a été obtenu, même après u
   // MULTI-6 : sur « Tous mes clubs », une ligne par club ; Rennes n'a qu'un judoka : sans chiffres.
   const all = await service.methods.getCoachDashboard("coach@example.com", {});
   assert.deepEqual(all.byClub, [
-    { clubId: "NANTES", withheld: false, engagedJudokas: 2, participations: 2, combats: 2, victories: 2, podiums: 0 },
-    { clubId: "RENNES", withheld: true, engagedJudokas: 0, participations: 0, combats: 0, victories: 0, podiums: 0 }
+    {
+      clubId: "NANTES",
+      withheld: false,
+      engagedJudokas: 2,
+      participations: 2,
+      combats: 2,
+      victories: 2,
+      podiums: 0
+    },
+    {
+      clubId: "RENNES",
+      withheld: true,
+      engagedJudokas: 0,
+      participations: 0,
+      combats: 0,
+      victories: 0,
+      podiums: 0
+    }
   ]);
 
   const nantes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "NANTES" });
   assert.equal(nantes.byClub, null);
   assert.equal(nantes.stats.totalCombats, 2);
-  assert.deepEqual(nantes.availableCompetitions.map((c) => c.competitionId).sort(), ["C_OLD", "C_OLD2"]);
+  assert.deepEqual(nantes.availableCompetitions.map((c) => c.competitionId).sort(), [
+    "C_OLD",
+    "C_OLD2"
+  ]);
   const rennes = await service.methods.getCoachDashboard("coach@example.com", { clubId: "RENNES" });
-  assert.deepEqual(rennes.availableCompetitions.map((c) => [c.competitionId, c.clubId]), [["C_NEW", "RENNES"]]);
+  assert.deepEqual(
+    rennes.availableCompetitions.map((c) => [c.competitionId, c.clubId]),
+    [["C_NEW", "RENNES"]]
+  );
 });
 
-function createClubsServiceFor({ context = adminContext(), clubs = [], links = [], judokas = [], competitionsByClub = {}, calls = [] } = {}) {
+function createClubsServiceFor({
+  context = adminContext(),
+  clubs = [],
+  links = [],
+  judokas = [],
+  competitionsByClub = {},
+  calls = []
+} = {}) {
   return createClubsService({
     clubsRepository: {
       listAll: async () => clubs,
@@ -314,7 +422,8 @@ function createClubsServiceFor({ context = adminContext(), clubs = [], links = [
       rename: async (id, nom) => calls.push(["rename", id, nom]),
       remove: async (id) => calls.push(["remove", id]),
       listCoachLinks: async () => links,
-      replaceCoachClubs: async (idCoach, clubIds) => calls.push(["replaceCoachClubs", idCoach, clubIds])
+      replaceCoachClubs: async (idCoach, clubIds) =>
+        calls.push(["replaceCoachClubs", idCoach, clubIds])
     },
     clubCompetitionsRepository: { countByClub: async (id) => competitionsByClub[id] || 0 },
     judokasRepository: {
@@ -337,7 +446,10 @@ function createClubsServiceFor({ context = adminContext(), clubs = [], links = [
 
 test("only an admin manages clubs; a coach who is also admin can", async () => {
   const coachOnly = createClubsServiceFor({ context: coachContext() });
-  await assert.rejects(() => coachOnly.methods.saveClub("coach@example.com", { name: "Judo Club Nantes" }), /admins/);
+  await assert.rejects(
+    () => coachOnly.methods.saveClub("coach@example.com", { name: "Judo Club Nantes" }),
+    /admins/
+  );
   await assert.rejects(() => coachOnly.methods.getClubsManagement("coach@example.com"), /admins/);
 
   const calls = [];
@@ -347,12 +459,20 @@ test("only an admin manages clubs; a coach who is also admin can", async () => {
 });
 
 test("club names are unique regardless of case", async () => {
-  const service = createClubsServiceFor({ clubs: [{ id_club: "NANTES", nom: "Judo Club Nantes" }] });
-  await assert.rejects(() => service.methods.saveClub("admin@example.com", { name: "judo club nantes" }), /déjà/);
+  const service = createClubsServiceFor({
+    clubs: [{ id_club: "NANTES", nom: "Judo Club Nantes" }]
+  });
+  await assert.rejects(
+    () => service.methods.saveClub("admin@example.com", { name: "judo club nantes" }),
+    /déjà/
+  );
 });
 
 test("a club can only be deleted when it has no judoka, no coach and no competition", async () => {
-  const clubs = [{ id_club: "NANTES", nom: "Nantes" }, { id_club: "EMPTY", nom: "Vide" }];
+  const clubs = [
+    { id_club: "NANTES", nom: "Nantes" },
+    { id_club: "EMPTY", nom: "Vide" }
+  ];
   const calls = [];
   const service = createClubsServiceFor({
     clubs,
@@ -361,12 +481,18 @@ test("a club can only be deleted when it has no judoka, no coach and no competit
     links: [{ id_coach: "COACH1", id_club: "NANTES" }]
   });
 
-  await assert.rejects(() => service.methods.deleteClub("admin@example.com", "NANTES"), /sans judoka/);
+  await assert.rejects(
+    () => service.methods.deleteClub("admin@example.com", "NANTES"),
+    /sans judoka/
+  );
   await service.methods.deleteClub("admin@example.com", "EMPTY");
   assert.deepEqual(calls, [["remove", "EMPTY"]]);
 
   const withCompetition = createClubsServiceFor({ clubs, competitionsByClub: { EMPTY: 1 } });
-  await assert.rejects(() => withCompetition.methods.deleteClub("admin@example.com", "EMPTY"), /sans compétition/);
+  await assert.rejects(
+    () => withCompetition.methods.deleteClub("admin@example.com", "EMPTY"),
+    /sans compétition/
+  );
 });
 
 test("clubs can only be assigned to coaches, and only existing clubs", async () => {
@@ -382,12 +508,21 @@ test("clubs can only be assigned to coaches, and only existing clubs", async () 
 
   await service.methods.setCoachClubs("admin@example.com", "COACH1", ["NANTES", "NANTES"]);
   assert.deepEqual(calls, [["replaceCoachClubs", "COACH1", ["NANTES"]]]);
-  await assert.rejects(() => service.methods.setCoachClubs("admin@example.com", "J1", ["NANTES"]), /Coach introuvable/);
-  await assert.rejects(() => service.methods.setCoachClubs("admin@example.com", "COACH1", ["GHOST"]), /Club introuvable/);
+  await assert.rejects(
+    () => service.methods.setCoachClubs("admin@example.com", "J1", ["NANTES"]),
+    /Coach introuvable/
+  );
+  await assert.rejects(
+    () => service.methods.setCoachClubs("admin@example.com", "COACH1", ["GHOST"]),
+    /Club introuvable/
+  );
 
   await service.methods.setJudokaClub("admin@example.com", "J1", "NANTES");
   await service.methods.setJudokaClub("admin@example.com", "J1", null);
-  assert.deepEqual(calls.slice(1), [["setClub", "J1", "NANTES"], ["setClub", "J1", null]]);
+  assert.deepEqual(calls.slice(1), [
+    ["setClub", "J1", "NANTES"],
+    ["setClub", "J1", null]
+  ]);
 });
 
 test("permission policy keeps admin rights separate from the coach role", () => {
@@ -402,10 +537,20 @@ test("permission policy keeps admin rights separate from the coach role", () => 
 
 test("club management reads only coaches and per-club counts, never the whole judoka list", async () => {
   const service = createClubsServiceFor({
-    clubs: [{ id_club: "NANTES", nom: "Nantes" }, { id_club: "RENNES", nom: "Rennes" }],
+    clubs: [
+      { id_club: "NANTES", nom: "Nantes" },
+      { id_club: "RENNES", nom: "Rennes" }
+    ],
     links: [{ id_coach: "COACH1", id_club: "NANTES" }],
     judokas: [
-      { id_judoka: "COACH1", role: "COACH", profile_type: "JUDOKA", prenom: "Alex", nom: "Coach", email: "alex@example.com" },
+      {
+        id_judoka: "COACH1",
+        role: "COACH",
+        profile_type: "JUDOKA",
+        prenom: "Alex",
+        nom: "Coach",
+        email: "alex@example.com"
+      },
       { id_judoka: "J1", role: "NORMAL", profile_type: "JUDOKA", club_id: "NANTES" },
       { id_judoka: "J2", role: "NORMAL", profile_type: "JUDOKA", club_id: "NANTES" }
     ]
@@ -417,5 +562,8 @@ test("club management reads only coaches and per-club counts, never the whole ju
     { clubId: "NANTES", name: "Nantes", coachIds: ["COACH1"], judokaCount: 2 },
     { clubId: "RENNES", name: "Rennes", coachIds: [], judokaCount: 0 }
   ]);
-  assert.deepEqual(management.coaches.map((coach) => coach.judokaId), ["COACH1"]);
+  assert.deepEqual(
+    management.coaches.map((coach) => coach.judokaId),
+    ["COACH1"]
+  );
 });

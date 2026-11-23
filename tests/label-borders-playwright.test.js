@@ -17,7 +17,9 @@ const viewMarkup = renderIndexHtml()
 async function inspectHeadingBorders(viewport) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport });
-  await page.setContent(`<!doctype html><html><head><style>${css}</style></head><body>${viewMarkup}</body></html>`);
+  await page.setContent(
+    `<!doctype html><html><head><style>${css}</style></head><body>${viewMarkup}</body></html>`
+  );
 
   const result = await page.evaluate(() => {
     document.querySelectorAll("[v-cloak]").forEach((element) => element.removeAttribute("v-cloak"));
@@ -37,9 +39,9 @@ async function inspectHeadingBorders(viewport) {
       [...document.querySelectorAll(selector)].map((element) => {
         const style = window.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
-        const container = element.closest(
-          ".section-heading, .panel-header, .form-section, .stat-card, .card"
-        ) || element.parentElement;
+        const container =
+          element.closest(".section-heading, .panel-header, .form-section, .stat-card, .card") ||
+          element.parentElement;
         const containerRect = container.getBoundingClientRect();
         return {
           selector,
@@ -60,7 +62,9 @@ async function inspectHeadingBorders(viewport) {
 async function captureLogo(viewport, name) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport });
-  await page.setContent(`<!doctype html><html><head><style>${css}</style></head><body>${viewMarkup}</body></html>`);
+  await page.setContent(
+    `<!doctype html><html><head><style>${css}</style></head><body>${viewMarkup}</body></html>`
+  );
   await page.evaluate(() => {
     document.querySelectorAll("[v-cloak]").forEach((element) => element.removeAttribute("v-cloak"));
     document.querySelectorAll(".hidden").forEach((element) => element.classList.remove("hidden"));

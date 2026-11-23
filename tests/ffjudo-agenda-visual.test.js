@@ -259,8 +259,12 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(cards.nth(1).locator(".agenda-card-closed")).toHaveText("Inscriptions closes");
     await expect(cards.nth(2)).not.toContainText("Inscriptions");
     // AGD-017 : le jour de la semaine précède la date.
-    await expect(first.locator(".agenda-card-date")).toHaveText(/^(lun|mar|mer|jeu|ven|sam|dim)\. \d{2}\/\d{2}$/);
-    await expect(cards.nth(1).locator(".agenda-card-date")).toHaveText(/^\w+\. \d{2}\/\d{2} → \w+\. \d{2}\/\d{2}$/);
+    await expect(first.locator(".agenda-card-date")).toHaveText(
+      /^(lun|mar|mer|jeu|ven|sam|dim)\. \d{2}\/\d{2}$/
+    );
+    await expect(cards.nth(1).locator(".agenda-card-date")).toHaveText(
+      /^\w+\. \d{2}\/\d{2} → \w+\. \d{2}\/\d{2}$/
+    );
     await expect(cards.nth(1)).toContainText("→");
     const link = first.getByRole("link", { name: /Voir sur ffjudo\.com/ });
     await expect(link).toHaveAttribute("href", EVENTS[0].sourceUrl);
@@ -424,7 +428,9 @@ for (const [name, viewport] of VIEWPORTS) {
     });
     await hint.getByRole("button", { name: "Afficher" }).click();
     await expect(page.locator("#ffjudoAgendaUnlabeledGrades .agenda-card")).toHaveCount(1);
-    await expect(page.locator("#ffjudoAgendaUnlabeledGrades")).toContainText("PASSAGE DE GRADE CEINTURE NOIRE");
+    await expect(page.locator("#ffjudoAgendaUnlabeledGrades")).toContainText(
+      "PASSAGE DE GRADE CEINTURE NOIRE"
+    );
     await page.screenshot({
       path: `output/playwright/uv-after-${name}-uv2-sans-uv-affiche.png`,
       fullPage: true,
@@ -441,7 +447,9 @@ for (const [name, viewport] of VIEWPORTS) {
     });
 
     await page.locator("#ffjudoAgendaUv4").click();
-    await expect(page.locator("#ffjudoAgendaView .agenda-month:not(#ffjudoAgendaUnlabeledGrades) .agenda-card")).toHaveCount(0);
+    await expect(
+      page.locator("#ffjudoAgendaView .agenda-month:not(#ffjudoAgendaUnlabeledGrades) .agenda-card")
+    ).toHaveCount(0);
     await page.getByRole("button", { name: "Effacer les filtres" }).click();
     await expect(cards).toHaveCount(5);
     await expect(page.locator("#ffjudoAgendaUnlabeledHint")).toHaveCount(0);

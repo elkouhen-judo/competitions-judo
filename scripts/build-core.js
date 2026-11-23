@@ -10,7 +10,10 @@ const coreDir = path.join(root, "core");
 function listCoreEntryPoints(dir) {
   return fs
     .readdirSync(dir, { recursive: true })
-    .filter((entry) => entry.endsWith(".ts") && !entry.endsWith(".d.ts") && path.basename(entry) !== "types.ts")
+    .filter(
+      (entry) =>
+        entry.endsWith(".ts") && !entry.endsWith(".d.ts") && path.basename(entry) !== "types.ts"
+    )
     .map((entry) => path.join(dir, entry))
     .sort();
 }

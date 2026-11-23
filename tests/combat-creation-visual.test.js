@@ -86,7 +86,15 @@ async function startServer() {
         rpcMethods.push(request.method);
         let result = null;
         if (request.method === "getInitialData") {
-          result = { user, isAdmin: false, isCoach: false, isParent: false, competitions: [competition], clubCompetitions: [], judokas: [user] };
+          result = {
+            user,
+            isAdmin: false,
+            isCoach: false,
+            isParent: false,
+            competitions: [competition],
+            clubCompetitions: [],
+            judokas: [user]
+          };
         } else if (request.method === "getCompetitionDetail") {
           result = {
             competition,
@@ -113,7 +121,12 @@ async function startServer() {
           };
           combats = [combat];
           // ECRIT-2 : l'écriture renvoie le combat enregistré.
-          result = { success: true, message: "Combat enregistré.", competitionId: input.competitionId, combat };
+          result = {
+            success: true,
+            message: "Combat enregistré.",
+            competitionId: input.competitionId,
+            combat
+          };
         }
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ result }));
@@ -133,18 +146,25 @@ async function startServer() {
   return { server, url: `http://127.0.0.1:${server.address().port}`, competition, rpcMethods };
 }
 
-const resultRadioOf = (page, label) => page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
+const resultRadioOf = (page, label) =>
+  page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
 
-for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
+for (const [name, viewport] of [
+  ["desktop", { width: 1440, height: 900 }],
+  ["mobile", { width: 390, height: 844 }]
+]) {
   test(`parcours visuel de création d'un combat sur ${name}`, async (t) => {
     const { server, url, competition, rpcMethods } = await startServer();
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport });
-    await context.addInitScript((session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)), {
-      access_token: tokenFor("combat-flow@example.com"),
-      refresh_token: "",
-      expires_at: Math.floor(Date.now() / 1000) + 3600
-    });
+    await context.addInitScript(
+      (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
+      {
+        access_token: tokenFor("combat-flow@example.com"),
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      }
+    );
     const page = await context.newPage();
     t.after(async () => {
       await context.close();
@@ -152,7 +172,12 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
       await new Promise((resolve) => server.close(resolve));
     });
 
-    const shot = (step) => page.screenshot({ path: `output/playwright/combat-flow-${name}-${step}.png`, fullPage: true, animations: "disabled" });
+    const shot = (step) =>
+      page.screenshot({
+        path: `output/playwright/combat-flow-${name}-${step}.png`,
+        fullPage: true,
+        animations: "disabled"
+      });
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
     await expect(page.getByText(competition.name, { exact: true })).toBeVisible();
@@ -169,7 +194,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
       "rgb(255, 255, 255)"
     );
     if (name === "desktop") {
-      await expect(page.locator("#combatFormView .form-actions")).toHaveCSS("flex-direction", "row");
+      await expect(page.locator("#combatFormView .form-actions")).toHaveCSS(
+        "flex-direction",
+        "row"
+      );
     }
     await shot("03-form-empty");
 
@@ -183,7 +211,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     // COMBAT-CHRONO : le tour, sans menu déroulant ; toutes les étapes sont visibles une fois la liste ouverte.
     assert.equal(await page.locator("#combatFormView .combat-quick-section select").count(), 0);
     await page.locator("#combat_etape_toggle").click();
-    const stageOverflow = await page.locator("#combat_etape").evaluate((element) => element.scrollWidth > element.clientWidth);
+    const stageOverflow = await page
+      .locator("#combat_etape")
+      .evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(stageOverflow, false);
     await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
     // SAISIE-1 : un toucher sur un tour referme la liste sur une pastille.
@@ -193,7 +223,8 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatDetail")).toBeVisible();
     await expect(page.locator("#combat_adversaire_suggestions option")).toHaveCount(2);
     // SAISIE-3 : un adversaire déjà rencontré remplit sa garde ; un inconnu la laisse vide.
-    const stanceRadio = (label) => page.locator("#combat_garde_adversaire").getByRole("radio", { name: label });
+    const stanceRadio = (label) =>
+      page.locator("#combat_garde_adversaire").getByRole("radio", { name: label });
     await page.fill("#combat_adversaire", "Inconnu");
     await expect(page.locator("#combat_garde_adversaire [aria-checked='true']")).toHaveCount(0);
     await page.fill("#combat_adversaire", "camille durand");
@@ -217,8 +248,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
     await expect(page.getByRole("button", { name: "Ajouter un Ippon au judoka" })).toBeDisabled();
     // SAISIE-1 : l'Ippon du judoka décide l'issue, sans autre toucher.
-    const resultRadio = (label) => page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
-    const decisionRadio = (label) => page.locator("#combat_type_victoire").getByRole("radio", { name: label, exact: true });
+    const resultRadio = (label) =>
+      page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
+    const decisionRadio = (label) =>
+      page.locator("#combat_type_victoire").getByRole("radio", { name: label, exact: true });
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
     await expect(decisionRadio("Ippon")).toHaveAttribute("aria-checked", "true");
     await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
@@ -229,14 +262,23 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     ]);
     // Une action saisie dans le désordre se remet à sa place.
     await page.getByRole("button", { name: "Reculer l'action 1" }).click();
-    await expect(timelineRows.nth(1).locator(".combat-point-badge")).toHaveText("Adversaire · Waza-ari");
+    await expect(timelineRows.nth(1).locator(".combat-point-badge")).toHaveText(
+      "Adversaire · Waza-ari"
+    );
     await page.getByRole("button", { name: "Avancer l'action 2" }).click();
-    await expect(timelineRows.first().locator(".combat-point-badge")).toHaveText("Adversaire · Waza-ari");
+    await expect(timelineRows.first().locator(".combat-point-badge")).toHaveText(
+      "Adversaire · Waza-ari"
+    );
 
     // Technique : liste groupée (debout ou au sol déduit), favoris du judoka, ou saisie libre.
-    await timelineRows.first().locator("select.combat-technique-select").selectOption("T:Uchi-mata");
+    await timelineRows
+      .first()
+      .locator("select.combat-technique-select")
+      .selectOption("T:Uchi-mata");
     const ipponSelect = timelineRows.nth(3).locator("select.combat-technique-select");
-    await expect(ipponSelect.locator("optgroup[label='Déjà marquées par le judoka'] option")).toHaveText(["Uchi-mata"]);
+    await expect(
+      ipponSelect.locator("optgroup[label='Déjà marquées par le judoka'] option")
+    ).toHaveText(["Uchi-mata"]);
     await ipponSelect.selectOption("T:__autre__");
     const customTechnique = timelineRows.nth(3).locator(".combat-technique-custom");
     await expect(customTechnique).toBeFocused();
@@ -245,7 +287,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await shot("04a-custom-technique");
     await ipponSelect.selectOption("T:O-soto-gari");
     await expect(customTechnique).toHaveCount(0);
-    const scoreOverflow = await page.locator("#combat_score").evaluate((element) => element.scrollWidth > element.clientWidth);
+    const scoreOverflow = await page
+      .locator("#combat_score")
+      .evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(scoreOverflow, false);
 
     // Fin du combat : l'issue déduite ne double pas le point déjà dans le déroulé.
@@ -265,19 +309,26 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatFormView .combat-decision-notice")).toHaveCount(0);
     // Les Yuko sans technique sont gardés, sans rappel « À compléter » (SIMPL-1).
     await expect(page.locator("#combatFormView")).not.toContainText("À compléter");
-    const hansokuHeight = await page.locator("#combat_type_victoire").getByRole("radio", { name: "Hansoku-make" }).evaluate((element) => element.getBoundingClientRect().height);
+    const hansokuHeight = await page
+      .locator("#combat_type_victoire")
+      .getByRole("radio", { name: "Hansoku-make" })
+      .evaluate((element) => element.getBoundingClientRect().height);
     assert.ok(hansokuHeight <= 46, `Hansoku-make sur une ligne (hauteur ${hansokuHeight})`);
     await page.fill("#combat_deroule", "Ippon sur o-soto-gari");
-    const borderedLabels = await page.locator(
-      ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
-    ).evaluateAll((elements) =>
-      elements
-        .filter((element) => Number.parseFloat(getComputedStyle(element).borderLeftWidth) > 0)
-        .map((element) => element.textContent.trim())
-    );
+    const borderedLabels = await page
+      .locator(
+        ".form-section-heading h3, .stat-label, .meta-label, label:not(.checkbox-row), .combat-section-kicker, .combat-score-row-title"
+      )
+      .evaluateAll((elements) =>
+        elements
+          .filter((element) => Number.parseFloat(getComputedStyle(element).borderLeftWidth) > 0)
+          .map((element) => element.textContent.trim())
+      );
     assert.deepEqual(borderedLabels, []);
     const actionOverlap = await page.evaluate(() => {
-      const actions = document.querySelector("#combatFormView .mobile-action-bar").getBoundingClientRect();
+      const actions = document
+        .querySelector("#combatFormView .mobile-action-bar")
+        .getBoundingClientRect();
       const notes = document.querySelector("#combat_deroule").getBoundingClientRect();
       return actions.top < notes.bottom && actions.bottom > notes.top;
     });
@@ -288,14 +339,20 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.locator("#saveCombatButton").click();
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.getByText("Camille Durand · Gaucher", { exact: true })).toBeVisible();
-    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
-    await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText("Uchi-mata · Waza-ari");
+    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText(
+      "Repêchage"
+    );
+    await expect(page.locator(".combat-conceded-line .badge-conceded")).toHaveText(
+      "Uchi-mata · Waza-ari"
+    );
     await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText([
       "Technique non précisée · Yuko",
       "Technique non précisée · Yuko",
       "O-soto-gari · Ippon"
     ]);
-    await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText("1 0 2 - 0 1 0 · Shidos 0 - 1");
+    await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText(
+      "1 0 2 - 0 1 0 · Shidos 0 - 1"
+    );
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     // ECRIT-2 : enregistrer un combat déclenche un seul appel RPC, la fiche n'est pas rechargée.
     assert.deepEqual(rpcMethods.slice(callsBeforeSave), ["ajouterCombat"]);
@@ -334,7 +391,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     // Un choix fait à la main n'est pas écrasé par un Ippon ajouté ensuite : il est signalé.
     await page.getByRole("button", { name: "Ajouter un Ippon à l'adversaire" }).click();
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
-    await expect(page.locator("#combat_outcome_warning")).toHaveText("Le score indique une défaite. Vérifiez le résultat.");
+    await expect(page.locator("#combat_outcome_warning")).toHaveText(
+      "Le score indique une défaite. Vérifiez le résultat."
+    );
     await page.getByRole("button", { name: "Retour à la compétition" }).click();
     await page.locator("#confirmDialogConfirm").click();
     await expect(page.locator("#competitionView")).toBeVisible();
@@ -374,28 +433,41 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await page.reload();
     await expect(page.locator("#competitionView")).toBeVisible();
     await expect(page.locator("#combatFormView")).toBeHidden();
-    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText("Repêchage");
+    await expect(page.locator("#competitionView .combat-card .combat-stage")).toHaveText(
+      "Repêchage"
+    );
   });
 }
 
 // SAISIE-1 : un combat s'enregistre en trois touchers, puis se complète en rouvrant sa carte.
-for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 375, height: 812 }]]) {
+for (const [name, viewport] of [
+  ["desktop", { width: 1440, height: 900 }],
+  ["mobile", { width: 375, height: 812 }]
+]) {
   test(`saisie rapide d'un combat en trois touchers sur ${name}`, async (t) => {
     const { server, url, competition, rpcMethods } = await startServer();
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ viewport });
-    await context.addInitScript((session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)), {
-      access_token: tokenFor("combat-flow@example.com"),
-      refresh_token: "",
-      expires_at: Math.floor(Date.now() / 1000) + 3600
-    });
+    await context.addInitScript(
+      (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
+      {
+        access_token: tokenFor("combat-flow@example.com"),
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      }
+    );
     const page = await context.newPage();
     t.after(async () => {
       await context.close();
       await browser.close();
       await new Promise((resolve) => server.close(resolve));
     });
-    const shot = (step) => page.screenshot({ path: `output/playwright/saisie-rapide-${name}-${step}.png`, fullPage: true, animations: "disabled" });
+    const shot = (step) =>
+      page.screenshot({
+        path: `output/playwright/saisie-rapide-${name}-${step}.png`,
+        fullPage: true,
+        animations: "disabled"
+      });
 
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
@@ -413,7 +485,10 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     // SAISIE-3 : la manière est facultative et expliquée en mots simples.
     await expect(page.locator("#combat_type_victoire_label")).toHaveText("Défaite par facultatif");
     await expect(page.locator("#combatDecisionBlock .combat-decision-hint")).toBeVisible();
-    await page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true }).click();
+    await page
+      .locator("#combat_type_victoire")
+      .getByRole("radio", { name: "Waza-ari", exact: true })
+      .click();
     await expect(page.locator("#combat_type_victoire")).toBeInViewport();
     await shot("02-rempli");
     const callsBefore = rpcMethods.length;
@@ -430,7 +505,9 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
     await expect(page.locator("#combatFormView")).toBeVisible();
     // Les valeurs saisies en rapide sont retrouvées.
     await expect(resultRadioOf(page, "Défaite")).toHaveAttribute("aria-checked", "true");
-    await expect(page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.locator("#combat_type_victoire").getByRole("radio", { name: "Waza-ari", exact: true })
+    ).toHaveAttribute("aria-checked", "true");
     await shot("04-completer");
   });
 }

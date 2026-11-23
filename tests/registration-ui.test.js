@@ -26,22 +26,34 @@ test("INSCR-2 : un judoka non réinscrit ne peut pas être engagé dans la nouve
   const registered2025 = { profileType: "JUDOKA", registrationSeason: 2025 };
   assert.equal(isRegisteredForDate(registered2025, "2026-06-10"), true);
   assert.equal(isRegisteredForDate(registered2025, "2026-10-10"), false);
-  assert.equal(isRegisteredForDate({ profileType: "JUDOKA", registrationSeason: null }, "2026-10-10"), false);
+  assert.equal(
+    isRegisteredForDate({ profileType: "JUDOKA", registrationSeason: null }, "2026-10-10"),
+    false
+  );
   // Saison inconnue côté client (donnée non chargée) ou profil parent : on ne bloque pas.
   assert.equal(isRegisteredForDate({ profileType: "JUDOKA" }, "2026-10-10"), true);
-  assert.equal(isRegisteredForDate({ profileType: "PARENT", registrationSeason: null }, "2026-10-10"), true);
+  assert.equal(
+    isRegisteredForDate({ profileType: "PARENT", registrationSeason: null }, "2026-10-10"),
+    true
+  );
 });
 
 test("INSCR-2 : accueil, fiche et compétitions club signalent les non-réinscrits", () => {
   const home = read("assets/app-screen-home.ts");
   assert.match(home, /Non réinscrit pour la saison \$\{ui\.formatSeasonLabel\(season\)\}/);
-  assert.match(home, /isRegisteredForDate\(judoka, ui\.getCurrentLocalDate\(\)\) \? "" : "Non réinscrit"/);
+  assert.match(
+    home,
+    /isRegisteredForDate\(judoka, ui\.getCurrentLocalDate\(\)\) \? "" : "Non réinscrit"/
+  );
   assert.match(read("assets/views/home.html"), /id="homeRegistrationNotice"/);
   assert.match(read("assets/views/judoka.html"), /id="judokaHeroUnregistered"/);
   assert.match(read("assets/app-judoka-presentation.ts"), /"Non réinscrit"/);
   const club = read("assets/app-screen-club-competition.ts");
   assert.match(club, /p\.ageCategory === ageCategory && isOptionRegistered\(p\)/);
   assert.match(club, /ne sont pas réinscrits pour la saison/);
-  assert.match(read("assets/views/club-competition-form.html"), /@input="updateClubCompetitionDate\(\)"/);
+  assert.match(
+    read("assets/views/club-competition-form.html"),
+    /@input="updateClubCompetitionDate\(\)"/
+  );
   assert.match(read("assets/views/club-competition-detail.html"), /id="clubDetailUnregistered"/);
 });

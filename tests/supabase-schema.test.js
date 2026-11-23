@@ -51,7 +51,10 @@ test("supabase schema includes role and result constraints", () => {
 
 test("supabase schema stores the combat round", () => {
   assert.match(schema, /add column if not exists etape text not null default ''/i);
-  assert.match(schema, /combats_etape_check[\s\S]*etape in \('', 'Poule', '1\/32', '1\/16', '1\/8', '1\/4', '1\/2', 'Finale', 'Repêchage', 'Place de 3'\)/i);
+  assert.match(
+    schema,
+    /combats_etape_check[\s\S]*etape in \('', 'Poule', '1\/32', '1\/16', '1\/8', '1\/4', '1\/2', 'Finale', 'Repêchage', 'Place de 3'\)/i
+  );
 });
 
 test("supabase schema stores opponent stance on combats", () => {
@@ -70,7 +73,10 @@ test("supabase schema stores combat scores in a dedicated table", () => {
     /combat_scores_categorie_check[\s\S]*categorie in \('Tachi-waza', 'Ne-waza'\)/i
   );
   // COMBAT-TECH-OPT et COMBAT-SHIDO.
-  assert.match(schema, /add constraint combat_scores_categorie_check check \(categorie in \('Tachi-waza', 'Ne-waza', ''\)\)/i);
+  assert.match(
+    schema,
+    /add constraint combat_scores_categorie_check check \(categorie in \('Tachi-waza', 'Ne-waza', ''\)\)/i
+  );
   assert.match(
     schema,
     /combats_shido_check[\s\S]*score_judoka_shido is null or score_judoka_shido between 0 and 3/i
@@ -96,7 +102,10 @@ test("supabase schema stores club competitions and linked participations", () =>
   assert.match(schema, /create table if not exists public\.club_competitions/i);
   assert.match(schema, /id_club_competition text primary key/i);
   assert.match(schema, /niveau text not null default ''/i);
-  assert.match(schema, /alter table public\.club_competitions[\s\S]*add column if not exists niveau text not null default ''/i);
+  assert.match(
+    schema,
+    /alter table public\.club_competitions[\s\S]*add column if not exists niveau text not null default ''/i
+  );
   assert.match(
     schema,
     /competitions_club_competition_id_fkey[\s\S]*references public\.club_competitions \(id_club_competition\)[\s\S]*on delete set null/i
@@ -219,49 +228,96 @@ test("supabase schema stores the official IWY - IWY score on combats", () => {
 });
 
 test("STAT-17 : la lecture du tableau de bord coach est une fonction réservée au rôle service, sans calcul", () => {
-  const match = /create or replace function public\.coach_dashboard_data\(([\s\S]*?)\)\s*returns jsonb([\s\S]*?)\$\$;/i.exec(schema);
+  const match =
+    /create or replace function public\.coach_dashboard_data\(([\s\S]*?)\)\s*returns jsonb([\s\S]*?)\$\$;/i.exec(
+      schema
+    );
   assert.ok(match, "fonction coach_dashboard_data absente");
   const [, params, body] = match;
-  ["p_club_ids text[]", "p_judoka_ids text[]", "p_date_from date", "p_date_to date", "p_age_category text", "p_competition_ids text[]"].forEach(
-    (param) => assert.ok(params.includes(param), param)
-  );
+  [
+    "p_club_ids text[]",
+    "p_judoka_ids text[]",
+    "p_date_from date",
+    "p_date_to date",
+    "p_age_category text",
+    "p_competition_ids text[]"
+  ].forEach((param) => assert.ok(params.includes(param), param));
   // Lecture seule, sans statistique calculée en SQL.
   assert.match(body, /\bstable\b/i);
   assert.doesNotMatch(body, /\b(count|sum|avg)\s*\(|\b(insert|update|delete)\b/i);
   assert.match(body, /join public\.judokas j on j\.id_judoka = c\.id_judoka/i);
   assert.match(body, /'combat_scores'/);
   // MULTI-4 : le club d'un résultat est celui de sa compétition club, sinon le club actuel du judoka.
-  assert.match(body, /join public\.club_competitions cc on cc\.id_club_competition = c\.club_competition_id/i);
+  assert.match(
+    body,
+    /join public\.club_competitions cc on cc\.id_club_competition = c\.club_competition_id/i
+  );
   assert.match(body, /coalesce\(cc\.club_id, j\.club_id\) as stats_club_id/i);
-  const signature = "public\\.coach_dashboard_data\\(text\\[\\], text\\[\\], date, date, text, text\\[\\]\\)";
+  const signature =
+    "public\\.coach_dashboard_data\\(text\\[\\], text\\[\\], date, date, text, text\\[\\]\\)";
   assert.match(schema, new RegExp(`grant execute on function ${signature} to service_role`, "i"));
-  assert.match(schema, new RegExp(`revoke execute on function ${signature} from authenticated, anon, public`, "i"));
+  assert.match(
+    schema,
+    new RegExp(`revoke execute on function ${signature} from authenticated, anon, public`, "i")
+  );
 });
 
 test("supabase schema no longer stores a coach objective", () => {
   assert.doesNotMatch(schema, /add column if not exists coach_objective/i);
-  assert.match(schema, /alter table public\.competitions\s+drop column if exists coach_objective;/i);
+  assert.match(
+    schema,
+    /alter table public\.competitions\s+drop column if exists coach_objective;/i
+  );
   assert.match(schema, /add column if not exists coach_review text not null default ''/i);
 });
 
 test("INSCR-1 : le judoka garde la saison de sa dernière inscription", () => {
-  assert.match(schema, /alter table public\.judokas\s+add column if not exists saison_inscription integer;/i);
+  assert.match(
+    schema,
+    /alter table public\.judokas\s+add column if not exists saison_inscription integer;/i
+  );
   // Mise en service : les judokas déjà présents sont inscrits pour 2026-2027, une seule fois.
-  assert.match(schema, /update public\.judokas\s+set saison_inscription = 2026\s+where saison_inscription is null\s+and profile_type = 'JUDOKA'\s+and created_at < '2026-11-14';/i);
+  assert.match(
+    schema,
+    /update public\.judokas\s+set saison_inscription = 2026\s+where saison_inscription is null\s+and profile_type = 'JUDOKA'\s+and created_at < '2026-11-14';/i
+  );
   // Inscription sur invitation : la saison en cours.
-  assert.match(schema, /insert into public\.judokas \(id_judoka, email, prenom, nom, role, profile_type, saison_inscription\)/i);
+  assert.match(
+    schema,
+    /insert into public\.judokas \(id_judoka, email, prenom, nom, role, profile_type, saison_inscription\)/i
+  );
 });
 
 test("supabase schema stores the FFJDA agenda server-side only, without contacts or level", () => {
   assert.match(schema, /create table if not exists public\.ffjudo_events/i);
   assert.match(schema, /event_key text primary key/i);
   assert.match(schema, /create table if not exists public\.ffjudo_sync_runs/i);
-  assert.match(schema, /create index if not exists ffjudo_events_date_debut_idx on public\.ffjudo_events \(date_debut\)/i);
+  assert.match(
+    schema,
+    /create index if not exists ffjudo_events_date_debut_idx on public\.ffjudo_events \(date_debut\)/i
+  );
   for (const table of ["ffjudo_events", "ffjudo_sync_runs"]) {
-    assert.match(schema, new RegExp(`alter table public\\.${table} enable row level security`, "i"));
-    assert.match(schema, new RegExp(`revoke all on table public\\.${table} from anon, authenticated`, "i"));
-    assert.match(schema, new RegExp(`grant select, insert, update, delete on table public\\.${table} to service_role`, "i"));
+    assert.match(
+      schema,
+      new RegExp(`alter table public\\.${table} enable row level security`, "i")
+    );
+    assert.match(
+      schema,
+      new RegExp(`revoke all on table public\\.${table} from anon, authenticated`, "i")
+    );
+    assert.match(
+      schema,
+      new RegExp(
+        `grant select, insert, update, delete on table public\\.${table} to service_role`,
+        "i"
+      )
+    );
   }
-  const agendaDdl = schema.slice(schema.search(/create table if not exists public\.ffjudo_events/i));
-  assert.doesNotMatch(agendaDdl.slice(0, agendaDdl.search(/create table if not exists public\.ffjudo_sync_runs/i)), /contact|niveau/i);
+  const agendaDdl = schema.slice(
+    schema.search(/create table if not exists public\.ffjudo_events/i)
+  );
+  assert.doesNotMatch(
+    agendaDdl.slice(0, agendaDdl.search(/create table if not exists public\.ffjudo_sync_runs/i)),
+    /contact|niveau/i
+  );
 });

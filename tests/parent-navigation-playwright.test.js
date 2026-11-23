@@ -17,10 +17,19 @@ function callHandler(handler, req) {
   return new Promise((resolve) => {
     const headers = {};
     handler(req, {
-      setHeader(name, value) { headers[name.toLowerCase()] = value; },
-      status(code) { this.statusCode = code; return this; },
-      send(body) { resolve({ statusCode: this.statusCode || 200, headers, body: String(body) }); },
-      json(body) { resolve({ statusCode: this.statusCode || 200, headers, body: JSON.stringify(body) }); }
+      setHeader(name, value) {
+        headers[name.toLowerCase()] = value;
+      },
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      send(body) {
+        resolve({ statusCode: this.statusCode || 200, headers, body: String(body) });
+      },
+      json(body) {
+        resolve({ statusCode: this.statusCode || 200, headers, body: JSON.stringify(body) });
+      }
     });
   });
 }
@@ -28,12 +37,32 @@ function callHandler(handler, req) {
 // Compte uniquement parent avec deux enfants : cas qui n'avait plus de retour vers l'accueil parent.
 async function startServer() {
   const parent = {
-    judokaId: "p1", accountEmail: "parent@example.com", firstName: "Claire", lastName: "Durand",
-    profileType: "PARENT", accessRole: "NORMAL"
+    judokaId: "p1",
+    accountEmail: "parent@example.com",
+    firstName: "Claire",
+    lastName: "Durand",
+    profileType: "PARENT",
+    accessRole: "NORMAL"
   };
   const children = [
-    { judokaId: "c1", accountEmail: "", firstName: "Hugo", lastName: "Durand", profileType: "JUDOKA", accessRole: "NORMAL", ageCategory: "Cadet" },
-    { judokaId: "c2", accountEmail: "", firstName: "Nina", lastName: "Durand", profileType: "JUDOKA", accessRole: "NORMAL", ageCategory: "Minime" }
+    {
+      judokaId: "c1",
+      accountEmail: "",
+      firstName: "Hugo",
+      lastName: "Durand",
+      profileType: "JUDOKA",
+      accessRole: "NORMAL",
+      ageCategory: "Cadet"
+    },
+    {
+      judokaId: "c2",
+      accountEmail: "",
+      firstName: "Nina",
+      lastName: "Durand",
+      profileType: "JUDOKA",
+      accessRole: "NORMAL",
+      ageCategory: "Minime"
+    }
   ];
   const server = http.createServer(async (req, res) => {
     if (req.url.split("?")[0] === "/api/client") {
@@ -52,9 +81,18 @@ async function startServer() {
       req.on("data", (chunk) => (body += chunk));
       req.on("end", () => {
         const request = JSON.parse(body || "{}");
-        const result = request.method === "getInitialData"
-          ? { user: parent, isAdmin: false, isCoach: false, isParent: true, competitions: [], clubCompetitions: [], judokas: [parent, ...children] }
-          : null;
+        const result =
+          request.method === "getInitialData"
+            ? {
+                user: parent,
+                isAdmin: false,
+                isCoach: false,
+                isParent: true,
+                competitions: [],
+                clubCompetitions: [],
+                judokas: [parent, ...children]
+              }
+            : null;
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ result }));
       });
@@ -78,9 +116,14 @@ test("un compte parent choisit l'enfant en un geste, ne se voit pas parmi ses en
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-    await context.addInitScript((session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)), {
-      access_token: tokenFor("parent@example.com"), refresh_token: "", expires_at: Math.floor(Date.now() / 1000) + 3600
-    });
+    await context.addInitScript(
+      (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
+      {
+        access_token: tokenFor("parent@example.com"),
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      }
+    );
     const page = await context.newPage();
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
@@ -89,9 +132,16 @@ test("un compte parent choisit l'enfant en un geste, ne se voit pas parmi ses en
     const pills = page.locator("#homeChildPills [role='radio']");
     await expect(pills).toHaveCount(2);
     const labels = await pills.allInnerTexts();
-    assert.ok(labels.every((text) => !/Claire/.test(text)), "le parent ne doit pas être proposé comme judoka");
+    assert.ok(
+      labels.every((text) => !/Claire/.test(text)),
+      "le parent ne doit pas être proposé comme judoka"
+    );
     await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Hugo");
-    assert.equal(await page.locator("#homeView button:disabled").count(), 0, "aucun bouton grisé sur l'accueil");
+    assert.equal(
+      await page.locator("#homeView button:disabled").count(),
+      0,
+      "aucun bouton grisé sur l'accueil"
+    );
 
     await pills.filter({ hasText: "Nina" }).click();
     await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Nina");

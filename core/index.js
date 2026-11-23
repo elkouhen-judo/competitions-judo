@@ -52,7 +52,9 @@ const createClubsRepository =
   );
 const createFfjudoEventsRepository =
   /** @type {typeof import("./repositories/ffjudo-events.repository").default} */ (
-    /** @type {unknown} */ (require("../core-dist/repositories/ffjudo-events.repository.js").default)
+    /** @type {unknown} */ (
+      require("../core-dist/repositories/ffjudo-events.repository.js").default
+    )
   );
 const createFfjudoSyncService =
   /** @type {typeof import("./services/ffjudo-sync.service").default} */ (
@@ -94,10 +96,9 @@ const createRegistrationService =
   /** @type {typeof import("./services/registration.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/registration.service.js").default)
   );
-const createMcpAuthService =
-  /** @type {typeof import("./services/mcp-auth.service").default} */ (
-    /** @type {unknown} */ (require("../core-dist/services/mcp-auth.service.js").default)
-  );
+const createMcpAuthService = /** @type {typeof import("./services/mcp-auth.service").default} */ (
+  /** @type {unknown} */ (require("../core-dist/services/mcp-auth.service.js").default)
+);
 const createMcpServerService =
   /** @type {typeof import("./services/mcp-server.service").default} */ (
     /** @type {unknown} */ (require("../core-dist/services/mcp-server.service.js").default)
