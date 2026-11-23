@@ -166,9 +166,9 @@
 
     return {
       users: projectedUsers,
-      usersSummary: `${total} utilisateur(s)${search ? " trouvé(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      usersSummary: `${total} utilisateur${total > 1 ? "s" : ""}${search ? ` trouvé${total > 1 ? "s" : ""}` : ""} · page ${safeCurrentPage} / ${totalPages}.`,
       usersEmptyMessage: search
-        ? `Aucun utilisateur trouvé pour "${search}".`
+        ? `Aucun utilisateur trouvé pour « ${search} ».`
         : "Aucun utilisateur trouvé.",
       canResetUsersSearch: Boolean(search),
       canShowPreviousUsersPage: safeCurrentPage > 1,
@@ -200,15 +200,16 @@
     const filteredInvitations = !normalizedSearch
       ? invitationCards
       : invitationCards.filter((card) => card.accountEmail.toLowerCase().includes(normalizedSearch));
-    const totalPages = Math.max(Math.ceil(filteredInvitations.length / pageSize), 1);
+    const invitationCount = filteredInvitations.length;
+    const totalPages = Math.max(Math.ceil(invitationCount / pageSize), 1);
     const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
     const startIndex = (safeCurrentPage - 1) * pageSize;
 
     return {
       invitations: filteredInvitations.slice(startIndex, startIndex + pageSize),
-      invitationsSummary: `${filteredInvitations.length} invitation(s)${search ? " trouvée(s)" : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      invitationsSummary: `${invitationCount} invitation${invitationCount > 1 ? "s" : ""}${search ? ` trouvée${invitationCount > 1 ? "s" : ""}` : ""} · page ${safeCurrentPage} / ${totalPages}.`,
       invitationsEmptyMessage: search
-        ? `Aucune invitation trouvée pour "${search}".`
+        ? `Aucune invitation trouvée pour « ${search} ».`
         : "Aucune invitation en attente.",
       canShowPreviousInvitationsPage: safeCurrentPage > 1,
       canShowNextInvitationsPage: safeCurrentPage < totalPages,
@@ -263,7 +264,7 @@
   }
 
   function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
-    const fallback = score.category === "Tachi-waza" ? "Debout" : score.category === "Ne-waza" ? "Au sol" : "Technique non précisée";
+    const fallback = score.category === "Tachi-waza" ? "Debout" : score.category === "Ne-waza" ? "Au sol" : "Technique non renseignée";
     const detail = score.category === "Tachi-waza" ? score.technique || fallback : score.neWazaType || fallback;
     return [detail, score.value].filter(Boolean).join(" · ");
   }

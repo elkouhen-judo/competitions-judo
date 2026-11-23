@@ -94,7 +94,7 @@
       heroAvatar: getJudokaInitials(judoka),
       heroName: getJudokaDisplayName(judoka) || "Judoka",
       heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
-      heroCategory: ageCategory || "Catégorie à renseigner",
+      heroCategory: ageCategory || "Catégorie non renseignée",
       heroWeightCategory: String(weightCategory || "").trim().replace(/\s*kg$/i, " kg"),
       heroBeltColor: beltColor,
       heroGender: gender,

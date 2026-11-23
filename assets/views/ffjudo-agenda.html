@@ -77,8 +77,8 @@
         </template>
         <!-- AGD-016 : passages de grade sans UV reconnue, que le filtre UV ne garde pas. -->
         <template v-if="!isLoading && !loadError && unlabeledGradeCount">
-          <section v-if="unlabeledGradeCards.length" id="ffjudoAgendaUnlabeledGrades" class="agenda-month" aria-label="UV non précisées">
-            <h3 class="agenda-month-title">UV non précisées</h3>
+          <section v-if="unlabeledGradeCards.length" id="ffjudoAgendaUnlabeledGrades" class="agenda-month" aria-label="UV non renseignées">
+            <h3 class="agenda-month-title">UV non renseignées</h3>
             <div class="list">
               <article v-for="event in unlabeledGradeCards" :key="event.eventKey" class="card agenda-card">
                 <p class="agenda-card-date">{{ event.dateLabel }}</p>
@@ -93,7 +93,7 @@
             </div>
           </section>
           <div v-else id="ffjudoAgendaUnlabeledHint" class="agenda-unlabeled">
-            <p>{{ unlabeledGradeCount }} passage{{ unlabeledGradeCount > 1 ? 's' : '' }} de grade sans UV précisée</p>
+            <p>{{ unlabeledGradeCount }} passage{{ unlabeledGradeCount > 1 ? 's' : '' }} de grade sans UV renseignée</p>
             <button class="button-secondary compact-button" type="button" @click="showUnlabeledGradeSessions()">Afficher</button>
           </div>
         </template>

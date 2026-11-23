@@ -224,7 +224,7 @@ test("family home shows one pill per child and remembers the last child", () => 
   assert.match(client, /\.filter\(\(j\) => String\(j\.judokaId\) !== selfId\)/);
   assert.doesNotMatch(bundle, /parentSubModes|openParentJudokaSelectionHub|Accueil parent/);
   assert.match(client, /mode === "parentHome" \? "family" : mode/);
-  assert.match(client, /\{ key: "family", label: "Famille" \}/);
+  assert.match(client, /\{ key: "family", label: "Ma famille" \}/);
 });
 
 test("coach screens share the same four tabs and the home lists what is waiting", () => {

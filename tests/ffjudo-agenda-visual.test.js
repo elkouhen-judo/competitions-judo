@@ -418,9 +418,9 @@ for (const [name, viewport] of VIEWPORTS) {
     await uv2.click();
     await expect(uv2).toHaveAttribute("aria-pressed", "true");
     await expect(cards).toHaveCount(2);
-    // AGD-016 : le passage de grade sans UV précisée est signalé, puis affiché à la demande.
+    // AGD-016 : le passage de grade sans UV renseignée est signalé, puis affiché à la demande.
     const hint = page.locator("#ffjudoAgendaUnlabeledHint");
-    await expect(hint).toContainText("1 passage de grade sans UV précisée");
+    await expect(hint).toContainText("1 passage de grade sans UV renseignée");
     await page.screenshot({
       path: `output/playwright/uv-after-${name}-uv2-sans-uv.png`,
       fullPage: true,

@@ -87,7 +87,7 @@
       const hasOwnSpace = state.currentUser?.profileType !== "PARENT";
       const modes: Array<{ key: string; label: string }> = hasOwnSpace ? [{ key: "judoka", label: "Mon espace" }] : [];
       if (state.isParent) {
-        modes.push({ key: "family", label: "Famille" });
+        modes.push({ key: "family", label: "Ma famille" });
       }
       return modes;
     });

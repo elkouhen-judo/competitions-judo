@@ -29,7 +29,7 @@
         <div v-if="hasCombats" class="competition-sport-summary" aria-label="Synthèse sportive">
           <div class="mini-stat">
             <span class="mini-stat-value">{{ competitionSportSummary.record }}</span>
-            <span class="mini-stat-label">Bilan</span>
+            <span class="mini-stat-label">Résultat</span>
           </div>
           <div class="mini-stat">
             <span class="mini-stat-value">{{ competitionSportSummary.victoryRate }}</span>
@@ -72,7 +72,7 @@
           </div>
           <div class="coach-assessment-block">
             <div class="coach-assessment-label-row">
-              <label class="coach-assessment-label" for="coachReviewText">Bilan</label>
+              <label class="coach-assessment-label" for="coachReviewText">Bilan coach</label>
               <span v-if="coachReviewStatus" class="autosave-status" role="status">{{ coachReviewStatus }}</span>
             </div>
             <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Aucun bilan rédigé.</p>

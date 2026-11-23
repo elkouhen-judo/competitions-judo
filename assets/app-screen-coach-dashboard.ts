@@ -19,7 +19,7 @@
     podiums:
       "Premières, deuxièmes et troisièmes places, sur les participations dont le classement final est saisi.",
     byClub:
-      "Sur tous vos clubs : le bilan de chacun. Un résultat compte pour le club de sa compétition. Un club de moins de 2 judokas est listé sans chiffres.",
+      "Sur tous vos clubs : le résultat de chacun. Un résultat compte pour le club de sa compétition. Un club de moins de 2 judokas est listé sans chiffres.",
     engagement: "Judokas différents ayant au moins un combat retenu, et nombre moyen de combats de chacun.",
     participations:
       "Participations dont la date est passée. Une participation sans combat saisi compte dans les podiums, pas dans les taux de victoire.",

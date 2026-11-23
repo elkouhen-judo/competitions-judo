@@ -3956,7 +3956,7 @@ test("INSCR-1 : sans saison choisie, l'import inscrit pour la saison en cours ; 
 
   await assert.rejects(
     () => service.methods.importUsersCsv("admin@example.com", csv, "abc"),
-    /Saison d'inscription invalide/
+    /Saison de réinscription invalide/
   );
 });
 

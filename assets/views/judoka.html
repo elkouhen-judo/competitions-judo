@@ -8,11 +8,11 @@
           <p id="judokaProfileSubtitle" class="subtitle">{{ profileSubtitle }}</p>
         </div>
         <details v-if="canEditJudokaInfo" class="page-menu">
-          <summary class="icon-button" aria-label="Actions sur le profil" title="Actions">
+          <summary class="icon-button" aria-label="Actions sur la fiche" title="Actions">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
           </summary>
           <div class="page-menu-list" role="menu">
-            <button type="button" role="menuitem" @click="startProfileEdit()">Modifier le profil</button>
+            <button type="button" role="menuitem" @click="startProfileEdit()">Modifier le profil sportif</button>
           </div>
         </details>
       </div>
@@ -118,7 +118,7 @@
         <div v-if="canEditJudokaInfo && profileEditing" id="judokaProfileEditSection" class="section">
           <div class="section-heading">
             <div>
-              <h3>Profil judoka
+              <h3>Profil sportif
                 <span class="tooltip" tabindex="0" aria-label="Informations utilisées pour qualifier les analyses et préparer les compétitions du judoka.">
                   <span class="tooltip-trigger" aria-hidden="true">i</span>
                   <span class="tooltip-content" aria-hidden="true">Informations utilisées pour qualifier les analyses et préparer les compétitions du judoka.</span>
@@ -155,7 +155,7 @@
             <option value="">Non renseignée</option>
             <option v-for="weightOption in weightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
           </select>
-          <input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing" :placeholder="ageCategoryEditing ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
+          <input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing" :placeholder="ageCategoryEditing ? 'Ex : -24kg' : 'Sélectionnez une catégorie d'âge'">
           <template v-if="yearInCategoryOptions.length">
             <label for="judoka_annee_categorie">Année dans la catégorie</label>
             <select id="judoka_annee_categorie" v-model="yearInCategoryEditing">

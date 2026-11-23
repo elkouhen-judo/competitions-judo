@@ -346,8 +346,8 @@ for (const [name, viewport] of [
       "Uchi-mata · Waza-ari"
     );
     await expect(page.locator(".combat-scored-line .badge-scored")).toHaveText([
-      "Technique non précisée · Yuko",
-      "Technique non précisée · Yuko",
+      "Technique non renseignée · Yuko",
+      "Technique non renseignée · Yuko",
       "O-soto-gari · Ippon"
     ]);
     await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText(

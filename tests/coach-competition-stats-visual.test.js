@@ -618,7 +618,7 @@ for (const [name, viewport] of [
     );
     await page.waitForTimeout(400);
     assert.equal(rpc.length, callsBeforeDates);
-    await page.getByRole("button", { name: "Réinitialiser" }).click();
+    await page.getByRole("button", { name: "Effacer les filtres" }).click();
     await expect(page.locator("#coachDashboardDateError")).toHaveCount(0);
 
     // TDB-2 : un échec garde les dernières statistiques et propose de réessayer.

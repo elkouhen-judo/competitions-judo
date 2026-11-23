@@ -2,7 +2,7 @@
   type KirokuApp = import("./types").KirokuApp;
   type FfjudoAgendaEvent = import("../core/types").FfjudoAgendaEvent;
 
-  // AGD : valeurs des options « Autre » (ligue inconnue) et « Non précisé » (type absent).
+  // AGD : valeurs des options « Autre » (ligue inconnue) et « Non renseigné » (type absent).
   const OTHER_LIGUE = "__autre__";
   const UNKNOWN_TYPE = "__non_precise__";
   const NATIONAL_LIGUE = "National";
@@ -102,7 +102,7 @@
 
   function typeLabel(type: string): string {
     if (!type) {
-      return "Non précisé";
+      return "Non renseigné";
     }
     return TYPE_LABELS[type.toUpperCase()] ?? capitalize(type.toLocaleLowerCase("fr-FR"));
   }
@@ -206,7 +206,7 @@
       typeOptions: window.Vue.computed(() =>
         [...new Set(model().events.map(typeValue))]
           .sort((a, b) => (a === UNKNOWN_TYPE ? 1 : b === UNKNOWN_TYPE ? -1 : a.localeCompare(b, "fr")))
-          .map((value) => ({ value, label: value === UNKNOWN_TYPE ? "Non précisé" : typeLabel(value) }))
+          .map((value) => ({ value, label: value === UNKNOWN_TYPE ? "Non renseigné" : typeLabel(value) }))
       ),
       monthOptions: window.Vue.computed(() =>
         [...new Set(model().events.map((event) => event.dateDebut.slice(0, 7)))]

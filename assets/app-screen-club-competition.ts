@@ -904,7 +904,7 @@
 
     function confirmDeleteClubCompetitionById(clubCompetitionId: string, name?: string) {
       app.confirmAndRun({
-        message: `Supprimer la compétition club "${name}" ? Les participations individuelles seront détachées et leurs combats seront conservés.`,
+        message: `Supprimer la compétition club « ${name} » ? Les participations individuelles seront détachées et leurs combats seront conservés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
         onSuccess: (response) => {

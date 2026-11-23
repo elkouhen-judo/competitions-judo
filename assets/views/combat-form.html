@@ -194,7 +194,7 @@
                   :value="getScoreTechniqueSelectValue(score)"
                   :aria-label="'Technique, action ' + (index + 1)"
                   @change="selectScoreTechnique(index, $event.target.value)">
-                  <option value="">Technique non précisée</option>
+                  <option value="">Technique non renseignée</option>
                   <optgroup v-if="combatFavoriteTechniques.length" label="Déjà marquées par le judoka">
                     <option v-for="favorite in combatFavoriteTechniques" :key="'fav' + favorite.value" :value="favorite.value">{{ favorite.label }}</option>
                   </optgroup>
@@ -221,7 +221,7 @@
           </div>
           <div class="choice-field">
             <label for="combat_deroule">Notes</label>
-            <textarea id="combat_deroule" rows="3" placeholder="Ex : ressenti, tactique, consigne du coach..." v-model.trim="combatForm.notes"></textarea>
+            <textarea id="combat_deroule" rows="3" placeholder="Ex : ressenti, tactique, consigne du coach…" v-model.trim="combatForm.notes"></textarea>
           </div>
           </div>
         </div>

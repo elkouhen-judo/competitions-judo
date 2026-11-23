@@ -260,7 +260,11 @@
         (response) => {
           // INSCR-1 : le résumé dit qui est inscrit pour la saison et combien ne sont pas réinscrits.
           const seasonLabel = `${response.seasonStartYear}-${response.seasonStartYear + 1}`;
-          const importSummary = `Import CSV terminé : ${response.imported} ligne(s) OK, ${response.failed} ligne(s) KO. ${response.registered} judoka(s) inscrit(s) pour ${seasonLabel}, ${response.notReregistered} non réinscrit(s).`;
+          const imported = ui.pluralize(response.imported, "ligne importée", "lignes importées");
+          const failed = ui.pluralize(response.failed, "ligne en erreur", "lignes en erreur");
+          const registered = ui.pluralize(response.registered, "judoka réinscrit", "judokas réinscrits");
+          const missing = ui.pluralize(response.notReregistered, "non réinscrit", "non réinscrits");
+          const importSummary = `Import CSV terminé : ${imported}, ${failed}. ${registered} pour ${seasonLabel}, ${missing}.`;
           viewModel.importUsersFileName = "";
           viewModel.importUsersCsvContent = "";
           const fileInput = document.getElementById("importUsersFile") as HTMLInputElement | null;
@@ -424,7 +428,7 @@
 
     function deleteClub(clubId: string, name: string) {
       app.confirmAndRun({
-        message: `Supprimer le club "${name}" ?`,
+        message: `Supprimer le club « ${name} » ?`,
         method: "deleteClub",
         args: [clubId],
         onSuccess: (response) => {
@@ -519,7 +523,7 @@
     }
 
     function cancelInvitation(email: string, name?: string) {
-      const label = name ? ` "${name}"` : "";
+      const label = name ? ` « ${name} »` : "";
       app.confirmAndRun({
         message: `Annuler l'invitation${label} ?`,
         confirmLabel: "Annuler l'invitation",
@@ -534,7 +538,7 @@
     }
 
     function deleteUser(idJudoka: string, name?: string) {
-      const label = name ? ` "${name}"` : "";
+      const label = name ? ` « ${name} »` : "";
       app.confirmAndRun({
         message: `Supprimer définitivement${label} ? Ses compétitions futures et combats associés seront aussi supprimés.`,
         method: "deleteUser",
@@ -578,7 +582,7 @@
     }
 
     function revokeAdminRole(idJudoka: string, name?: string) {
-      const label = name ? ` "${name}"` : "";
+      const label = name ? ` « ${name} »` : "";
       app.confirmAndRun({
         message: `Retirer les droits admin${label} ?`,
         confirmLabel: "Retirer les droits",

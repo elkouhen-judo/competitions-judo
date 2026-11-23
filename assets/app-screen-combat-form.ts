@@ -365,7 +365,7 @@
     function showCombatForm(id?: string | Event) {
       clearMessage();
       if (!canManageCombat.value) {
-        showError({ message: "Attends le chargement de la compétition avant d'ajouter un combat." });
+        showError({ message: "Attendez le chargement de la compétition avant d'ajouter un combat." });
         return;
       }
       ensureCombatFormViewModel();
@@ -727,7 +727,7 @@
 
     function addCombat(afterReload?: () => void) {
       if (!state.currentCompetition) {
-        showError({ message: "Ouvre une compétition avant d'ajouter un combat." });
+        showError({ message: "Ouvrez une compétition avant d'ajouter un combat." });
         return;
       }
 

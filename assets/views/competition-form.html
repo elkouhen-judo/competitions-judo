@@ -10,13 +10,13 @@
       <div class="panel-body">
         <input type="hidden" id="competition_id" v-model="competitionForm.competitionId">
         <div v-if="competitionInheritedFieldsLocked" class="status-banner status-banner-warning">
-          Compétition liée à un événement club — le nom, la date, la catégorie d'âge et le niveau sont hérités et se modifient depuis la compétition club.
+          Compétition liée à une compétition club — le nom, la date, la catégorie d'âge et le niveau sont hérités et se modifient depuis la compétition club.
         </div>
 
         <div id="competitionOwnerBlock" class="full-row" :class="{ hidden: !showCompetitionOwnerBlock }">
           <label for="competition_judoka_text">Judoka <span class="required-mark" aria-hidden="true">*</span></label>
           <div class="autocomplete-wrapper">
-            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom..." autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="hideCompetitionOwnerOptions()">
+            <input type="text" id="competition_judoka_text" placeholder="Tapez un nom…" autocomplete="off" v-model="ownerJudokaText" @focus="showCompetitionOwnerOptions()" @input="updateCompetitionOwnerText()" @blur="hideCompetitionOwnerOptions()">
             <div class="autocomplete-dropdown" id="competition_judoka_dropdown" v-show="showOwnerOptions">
               <div v-if="!ownerOptions.length" class="autocomplete-empty">Aucun résultat</div>
               <button v-for="option in ownerOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectCompetitionOwner(option)">
@@ -68,7 +68,7 @@
                 <option value="">Non renseignée</option>
                 <option v-for="weightOption in competitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
               </select>
-              <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
+              <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d'âge'">
             </div>
           </div>
         </div>

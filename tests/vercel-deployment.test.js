@@ -516,7 +516,7 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   assert.match(uiBundle, /id="importUsersFile" accept="\.csv,text\/csv"/);
   assert.match(
     uiBundle,
-    /Import CSV terminé : \$\{response\.imported\} ligne\(s\) OK, \$\{response\.failed\} ligne\(s\) KO\./
+    /pluralize\(\w+\.imported,\s*"ligne importée",\s*"lignes importées"\)[\s\S]*?Import CSV terminé : \$\{\w+\}, \$\{\w+\}\./
   );
   assert.doesNotMatch(
     uiBundle,

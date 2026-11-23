@@ -66,7 +66,7 @@
                   <button type="button" class="competition-chip-remove" :aria-label="`Retirer ${formatCompetitionName(competition.name)}`" @click="removeCoachDashboardCompetition(competition.competitionId)">×</button>
                 </span>
               </div>
-              <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher une compétition par nom ou date..." autocomplete="off" v-model="competitionSearchText">
+              <input type="search" id="coachDashboardCompetitionSearch" placeholder="Rechercher une compétition par nom ou date…" autocomplete="off" v-model="competitionSearchText">
               <div v-if="competitionSearchText.trim()" id="coachDashboardCompetitionOptions">
                 <div v-if="!coachDashboardCompetitionSuggestions.length" class="empty-state">Aucune compétition trouvée.</div>
                 <div v-else class="list">
@@ -79,7 +79,7 @@
           </div>
 
           <div v-show="filtersExpanded" class="form-actions mobile-action-bar">
-            <button class="button-secondary" type="button" @click="resetCoachDashboardFilters()">Réinitialiser</button>
+            <button class="button-secondary" type="button" @click="resetCoachDashboardFilters()">Effacer les filtres</button>
           </div>
           <div v-show="!filtersExpanded" class="dashboard-filter-summary">
             <span v-if="coachDashboardClubName">{{ coachDashboardClubName }}</span>

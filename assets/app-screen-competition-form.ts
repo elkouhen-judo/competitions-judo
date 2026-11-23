@@ -136,7 +136,7 @@
       return combatsProjection.value.combats;
     });
     const combatsEmptyMessage = window.Vue.computed(() => {
-      if (state.isLoadingCompetition) return "Chargement des combats...";
+      if (state.isLoadingCompetition) return "Chargement des combats…";
       return combatsProjection.value.combatsEmptyMessage;
     });
     const hasCombats = window.Vue.computed(() => !state.isLoadingCompetition && combatsProjection.value.hasCombats);
@@ -356,7 +356,7 @@
       if (!state.currentCompetition) return;
 
       const competitionId = state.currentCompetition.competitionId;
-      const label = state.currentCompetition.name ? ` "${state.currentCompetition.name}"` : "";
+      const label = state.currentCompetition.name ? ` « ${state.currentCompetition.name} »` : "";
       app.confirmAndRun({
         message: `Supprimer la compétition${label} et tous ses combats ?`,
         method: "deleteCompetition",
