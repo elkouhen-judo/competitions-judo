@@ -68,12 +68,34 @@
                 <div class="card-meta">
                   <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
                   <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
-                  <p v-if="event.closingLabel" class="agenda-card-line agenda-card-closing">{{ event.closingLabel }}</p>
+                  <p v-if="event.closingLabel" :class="['agenda-card-line', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
                 </div>
                 <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
               </article>
             </div>
           </section>
+        </template>
+        <!-- AGD-016 : passages de grade sans UV reconnue, que le filtre UV ne garde pas. -->
+        <template v-if="!isLoading && !loadError && unlabeledGradeCount">
+          <section v-if="unlabeledGradeCards.length" id="ffjudoAgendaUnlabeledGrades" class="agenda-month" aria-label="UV non précisées">
+            <h3 class="agenda-month-title">UV non précisées</h3>
+            <div class="list">
+              <article v-for="event in unlabeledGradeCards" :key="event.eventKey" class="card agenda-card">
+                <p class="agenda-card-date">{{ event.dateLabel }}</p>
+                <p class="card-title">{{ event.titre }}</p>
+                <div class="card-meta">
+                  <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
+                  <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
+                  <p v-if="event.closingLabel" :class="['agenda-card-line', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
+                </div>
+                <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
+              </article>
+            </div>
+          </section>
+          <div v-else id="ffjudoAgendaUnlabeledHint" class="agenda-unlabeled">
+            <p>{{ unlabeledGradeCount }} passage{{ unlabeledGradeCount > 1 ? 's' : '' }} de grade sans UV précisée</p>
+            <button class="button-secondary compact-button" type="button" @click="showUnlabeledGradeSessions()">Afficher</button>
+          </div>
         </template>
       </div>
     </section>

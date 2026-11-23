@@ -266,3 +266,30 @@ test("uv: preparation stages, bare grade sessions and other events have no UV", 
   assert.deepEqual(detectUvs("COUPE TECHNIQUE REGIONALE", "COMPETITION"), []);
   assert.deepEqual(detectUvs("Rencontre ceintures noires UV3 1er dan", "COMPETITION"), ["UV3"]);
 });
+
+const { detectGrades } = require("../core/domain/ffjudo/grade");
+
+test("AGD-015 : grade read in real FFJDA grade session titles", () => {
+  const uvs = ["UV1"];
+  const cases = [
+    ["PASSAGE DE GRADE 1ER & 2ÈME DAN UV1-UV2", [1, 2]],
+    ["TEST EFFICACITE COMBAT DU 1ER AU 4EME DAN", [1, 2, 3, 4]],
+    ["Validation UV4 pour 1er à 4eme dan", [1, 2, 3, 4]],
+    ["SHIAI 1D 2D 3D BAR SUR AUBE", [1, 2, 3]],
+    ["(OCC) PASSAGE DE GRADE - TOULOUSE - UV3 1D, 2D & 3D ET UV4 3D & 4D + PARA JUDO", [1, 2, 3, 4]],
+    ["PASSAGE GRADES UV1 1er,2ième,3ième & 4ième DAN", [1, 2, 3, 4]],
+    ["Examen UV1 /UV2 JUDO 1er & 2ème Dan", [1, 2]],
+    ["Kata shodan UV1", [1]],
+    ["Rencontre ceintures noires UV3 1er dan", [1]]
+  ];
+  for (const [titre, expected] of cases) {
+    assert.deepEqual(detectGrades(titre, uvs), expected, titre);
+  }
+});
+
+test("AGD-015 : no grade without a recognizable one, above 6th dan, or without UV", () => {
+  assert.deepEqual(detectGrades("Examen UV1/2/3b n°1", ["UV1"]), []);
+  assert.deepEqual(detectGrades("CD 22 : EXAMEN UV4", ["UV4"]), []);
+  assert.deepEqual(detectGrades("UV4 7EME DAN", ["UV4"]), []);
+  assert.deepEqual(detectGrades("STAGE PREPARATION 1ER DAN", []), []);
+});

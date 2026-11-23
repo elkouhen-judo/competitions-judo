@@ -4705,6 +4705,28 @@
     font-weight: 600;
   }
 
+  .agenda-card-closed {
+    font-style: italic;
+  }
+
+  .agenda-unlabeled {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .agenda-unlabeled p {
+    margin: 0;
+  }
+
   .agenda-card-link {
     justify-self: start;
     min-height: 44px;

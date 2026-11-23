@@ -395,7 +395,8 @@ test("agenda: lists upcoming events from today in Paris for a coach", async () =
       ligue: "Pays de la Loire",
       proprietaire: "Comité LOIRE ATLANTIQUE JUD",
       sourceUrl: "https://pays-de-la-loire-judo.ffjudo.com/evenement/tournoi/18",
-      uvs: []
+      uvs: [],
+      grades: []
     }
   ]);
 });

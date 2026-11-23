@@ -1,3 +1,4 @@
+import { detectGrades } from "../domain/ffjudo/grade";
 import { detectUvs } from "../domain/ffjudo/uv";
 import type { FfjudoEventsRepository } from "../repositories/ffjudo-events.repository";
 import type { FfjudoEventRow, JudokaRow } from "../repositories/types";
@@ -18,6 +19,7 @@ function parisDate(date: Date): string {
 }
 
 function toAgendaEvent(row: FfjudoEventRow): FfjudoAgendaEvent {
+  const uvs = detectUvs(String(row.titre || ""), String(row.type_evenement || ""));
   return {
     eventKey: String(row.event_key || ""),
     titre: String(row.titre || ""),
@@ -30,7 +32,8 @@ function toAgendaEvent(row: FfjudoEventRow): FfjudoAgendaEvent {
     ligue: String(row.ligue || ""),
     proprietaire: String(row.proprietaire || ""),
     sourceUrl: String(row.source_url || ""),
-    uvs: detectUvs(String(row.titre || ""), String(row.type_evenement || ""))
+    uvs,
+    grades: detectGrades(String(row.titre || ""), uvs)
   };
 }
 

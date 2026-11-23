@@ -7,7 +7,10 @@
   const UNKNOWN_TYPE = "__non_precise__";
   const NATIONAL_LIGUE = "National";
   const UV_OPTIONS = ["UV1", "UV2", "UV3", "UV4"];
+  const GRADE_TYPE = "PASSAGE DE GRADE";
 
+  // AGD-017 : jour de la semaine d'une date du calendrier, sans décalage de fuseau.
+  const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("fr-FR", { weekday: "short", timeZone: "UTC" });
   const MONTH_FORMATTER = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
   const SYNC_DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
@@ -37,6 +40,8 @@
     lastSyncAt: string;
     events: FfjudoAgendaEvent[];
     filters: AgendaFilters;
+    /** AGD-016 : passages de grade sans UV reconnue, affichés à la demande. */
+    showUnlabeledGrades: boolean;
   }
 
   const defaultAgendaViewState: AgendaViewState = {
@@ -46,13 +51,35 @@
     canRetry: true,
     lastSyncAt: "",
     events: [],
-    filters: { ligue: "", type: "", month: "", uvs: [] }
+    filters: { ligue: "", type: "", month: "", uvs: [] },
+    showUnlabeledGrades: false
   };
 
   /** « 2026-12-05 » → « 05/12 ». */
   function shortDate(isoDate: string): string {
     const [, month = "", day = ""] = String(isoDate || "").split("-");
     return day && month ? `${day}/${month}` : "";
+  }
+
+  /** AGD-017 : « 2026-11-28 » → « sam. 28/11 ». */
+  function dayDate(isoDate: string): string {
+    const short = shortDate(isoDate);
+    const date = new Date(`${String(isoDate).slice(0, 10)}T00:00:00Z`);
+    return short && !Number.isNaN(date.getTime()) ? `${WEEKDAY_FORMATTER.format(date)} ${short}` : short;
+  }
+
+  function danOrdinal(dan: number): string {
+    return dan === 1 ? "1er" : `${dan}e`;
+  }
+
+  /** AGD-015 : [1] → « 1er dan » ; [1, 2] → « 1er/2e dan » ; [1, 2, 3, 4] → « 1er au 4e dan ». */
+  function gradeLabel(grades: number[]): string {
+    if (!grades.length) return "";
+    const first = grades[0];
+    const last = grades[grades.length - 1];
+    const isRange = grades.length >= 3 && last - first === grades.length - 1;
+    const label = isRange ? `${danOrdinal(first)} au ${danOrdinal(last)}` : grades.map(danOrdinal).join("/");
+    return `${label} dan`;
   }
 
   function capitalize(value: string): string {
@@ -93,22 +120,27 @@
     return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
   }
 
+  /** AGD-014 : date limite tant qu'elle n'est pas passée, puis « Inscriptions closes ». */
+  function closingLabel(closing: string, today: string): string {
+    if (!closing) return "";
+    return closing >= today ? `Inscriptions jusqu'au ${shortDate(closing)}` : "Inscriptions closes";
+  }
+
   function toCard(event: FfjudoAgendaEvent, today: string) {
     const place = event.ville || event.lieu;
     const type = event.typeEvenement ? typeLabel(event.typeEvenement) : "";
     const owner = event.proprietaire && event.ligue ? `${event.proprietaire} — ${event.ligue}` : event.proprietaire || event.ligue;
     return {
-      uvLabel: (event.uvs || []).join(" · "),
+      uvLabel: [gradeLabel(event.grades || []), ...(event.uvs || [])].filter(Boolean).join(" · "),
       eventKey: event.eventKey,
       titre: event.titre,
       sourceUrl: event.sourceUrl,
-      dateLabel: event.dateFin ? `${shortDate(event.dateDebut)} → ${shortDate(event.dateFin)}` : shortDate(event.dateDebut),
+      dateLabel: event.dateFin ? `${dayDate(event.dateDebut)} → ${dayDate(event.dateFin)}` : dayDate(event.dateDebut),
       placeLabel: [place, type].filter(Boolean).join(" · "),
       ownerLabel: owner,
-      closingLabel:
-        event.inscriptionCloture && event.inscriptionCloture >= today
-          ? `Inscriptions jusqu'au ${shortDate(event.inscriptionCloture)}`
-          : ""
+      closingLabel: closingLabel(event.inscriptionCloture, today),
+      // AGD-014 : une clôture passée se lit sans être une alerte.
+      isClosed: Boolean(event.inscriptionCloture) && event.inscriptionCloture < today
     };
   }
 
@@ -120,6 +152,10 @@
       events: [],
       filters: { ...defaultAgendaViewState.filters, uvs: [] }
     });
+    const matchesOtherFilters = (event: FfjudoAgendaEvent, filters: AgendaFilters) =>
+      (!filters.ligue || ligueValue(event) === filters.ligue) &&
+      (!filters.type || typeValue(event) === filters.type) &&
+      (!filters.month || event.dateDebut.slice(0, 7) === filters.month);
     let mounted = false;
     let requestId = 0;
 
@@ -128,16 +164,29 @@
     const filteredEvents = window.Vue.computed(() => {
       const { events, filters } = model();
       return events.filter(
+        (event) => matchesOtherFilters(event, filters) && filters.uvs.every((uv) => (event.uvs || []).includes(uv))
+      );
+    });
+
+    // AGD-016 : avec une UV cochée, les passages de grade dont le titre ne nomme aucune UV.
+    const unlabeledGradeEvents = window.Vue.computed(() => {
+      const { events, filters } = model();
+      if (!filters.uvs.length) return [];
+      return events.filter(
         (event) =>
-          (!filters.ligue || ligueValue(event) === filters.ligue) &&
-          (!filters.type || typeValue(event) === filters.type) &&
-          (!filters.month || event.dateDebut.slice(0, 7) === filters.month) &&
-          filters.uvs.every((uv) => (event.uvs || []).includes(uv))
+          matchesOtherFilters(event, filters) &&
+          typeValue(event).toUpperCase() === GRADE_TYPE &&
+          !(event.uvs || []).length
       );
     });
 
     const computedRefs = {
       hasEvents: window.Vue.computed(() => model().events.length > 0),
+      unlabeledGradeCount: window.Vue.computed(() => unlabeledGradeEvents.value.length),
+      unlabeledGradeCards: window.Vue.computed(() => {
+        const today = todayInParis();
+        return model().showUnlabeledGrades ? unlabeledGradeEvents.value.map((event) => toCard(event, today)) : [];
+      }),
       uvOptions: window.Vue.computed(() => UV_OPTIONS),
       lastSyncLabel: window.Vue.computed(() => {
         const lastSyncAt = model().lastSyncAt;
@@ -181,7 +230,10 @@
           showHome: () => app.showHome && app.showHome(),
           retryFfjudoAgenda: () => fetchAgenda(),
           clearFfjudoAgendaFilters,
-          toggleFfjudoAgendaUv
+          toggleFfjudoAgendaUv,
+          showUnlabeledGradeSessions: () => {
+            ensureViewModel().showUnlabeledGrades = true;
+          }
         };
         ui.mountViewModel("ffjudoAgendaView", viewModel, actions, computedRefs);
         mounted = true;
@@ -190,12 +242,15 @@
     }
 
     function clearFfjudoAgendaFilters() {
-      Object.assign(ensureViewModel().filters, { ligue: "", type: "", month: "", uvs: [] });
+      const current = ensureViewModel();
+      Object.assign(current.filters, { ligue: "", type: "", month: "", uvs: [] });
+      current.showUnlabeledGrades = false;
     }
 
     function toggleFfjudoAgendaUv(uv: string) {
       const filters = ensureViewModel().filters;
       filters.uvs = filters.uvs.includes(uv) ? filters.uvs.filter((value) => value !== uv) : [...filters.uvs, uv];
+      if (!filters.uvs.length) ensureViewModel().showUnlabeledGrades = false;
     }
 
     function fetchAgenda() {

@@ -255,6 +255,12 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(first).toContainText("Comité LOIRE ATLANTIQUE JUD — Pays de la Loire");
     await expect(first).toContainText("Inscriptions jusqu'au");
     await expect(cards.nth(1)).not.toContainText("Inscriptions jusqu'au");
+    // AGD-014 : une clôture passée se lit « Inscriptions closes ».
+    await expect(cards.nth(1).locator(".agenda-card-closed")).toHaveText("Inscriptions closes");
+    await expect(cards.nth(2)).not.toContainText("Inscriptions");
+    // AGD-017 : le jour de la semaine précède la date.
+    await expect(first.locator(".agenda-card-date")).toHaveText(/^(lun|mar|mer|jeu|ven|sam|dim)\. \d{2}\/\d{2}$/);
+    await expect(cards.nth(1).locator(".agenda-card-date")).toHaveText(/^\w+\. \d{2}\/\d{2} → \w+\. \d{2}\/\d{2}$/);
     await expect(cards.nth(1)).toContainText("→");
     const link = first.getByRole("link", { name: /Voir sur ffjudo\.com/ });
     await expect(link).toHaveAttribute("href", EVENTS[0].sourceUrl);
@@ -366,9 +372,19 @@ const UV_SESSIONS = [
     eventKey: "fed:uv-3",
     titre: "TEST EFFICACITE COMBAT DU 1ER AU 4EME DAN",
     typeEvenement: "PASSAGE DE GRADE",
-    uvs: ["UV3"]
+    uvs: ["UV3"],
+    grades: [1, 2, 3, 4]
   },
-  { ...EVENTS[0], uvs: [] }
+  { ...EVENTS[0], uvs: [] },
+  // AGD-016 : un passage de grade dont le titre ne nomme aucune UV.
+  {
+    ...EVENTS[0],
+    eventKey: "fed:grade-sans-uv",
+    titre: "PASSAGE DE GRADE CEINTURE NOIRE",
+    typeEvenement: "PASSAGE DE GRADE",
+    inscriptionCloture: "",
+    uvs: []
+  }
 ];
 
 for (const [name, viewport] of VIEWPORTS) {
@@ -379,7 +395,12 @@ for (const [name, viewport] of VIEWPORTS) {
       viewport
     );
     const cards = page.locator("#ffjudoAgendaView .agenda-card");
-    await expect(cards).toHaveCount(4);
+    await expect(cards).toHaveCount(5);
+    // AGD-015 : le grade visé précède les UV.
+    await expect(
+      cards.filter({ hasText: "TEST EFFICACITE COMBAT" }).locator(".agenda-card-uvs")
+    ).toHaveText("1er au 4e dan · UV3");
+    await expect(page.locator("#ffjudoAgendaUnlabeledHint")).toHaveCount(0);
     const uv1 = page.locator("#ffjudoAgendaUv1");
     const uv2 = page.locator("#ffjudoAgendaUv2");
     await expect(uv1).toHaveAttribute("aria-pressed", "false");
@@ -393,8 +414,25 @@ for (const [name, viewport] of VIEWPORTS) {
     await uv2.click();
     await expect(uv2).toHaveAttribute("aria-pressed", "true");
     await expect(cards).toHaveCount(2);
+    // AGD-016 : le passage de grade sans UV précisée est signalé, puis affiché à la demande.
+    const hint = page.locator("#ffjudoAgendaUnlabeledHint");
+    await expect(hint).toContainText("1 passage de grade sans UV précisée");
+    await page.screenshot({
+      path: `output/playwright/uv-after-${name}-uv2-sans-uv.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+    await hint.getByRole("button", { name: "Afficher" }).click();
+    await expect(page.locator("#ffjudoAgendaUnlabeledGrades .agenda-card")).toHaveCount(1);
+    await expect(page.locator("#ffjudoAgendaUnlabeledGrades")).toContainText("PASSAGE DE GRADE CEINTURE NOIRE");
+    await page.screenshot({
+      path: `output/playwright/uv-after-${name}-uv2-sans-uv-affiche.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+    await expect(cards).toHaveCount(3);
     await uv1.click();
-    await expect(cards).toHaveCount(1);
+    await expect(cards).toHaveCount(2);
     await expect(cards.first()).toContainText("Examen UV1/2/3b n°1");
     await page.screenshot({
       path: `output/playwright/uv-after-${name}-uv1-uv2.png`,
@@ -403,9 +441,10 @@ for (const [name, viewport] of VIEWPORTS) {
     });
 
     await page.locator("#ffjudoAgendaUv4").click();
-    await expect(cards).toHaveCount(0);
+    await expect(page.locator("#ffjudoAgendaView .agenda-month:not(#ffjudoAgendaUnlabeledGrades) .agenda-card")).toHaveCount(0);
     await page.getByRole("button", { name: "Effacer les filtres" }).click();
-    await expect(cards).toHaveCount(4);
+    await expect(cards).toHaveCount(5);
+    await expect(page.locator("#ffjudoAgendaUnlabeledHint")).toHaveCount(0);
     await expect(uv1).toHaveAttribute("aria-pressed", "false");
     await page.screenshot({
       path: `output/playwright/uv-after-${name}-liste.png`,
