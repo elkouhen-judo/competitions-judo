@@ -62,7 +62,7 @@ This specification does not define:
 - **VOC-003**: « Fiche » names a judoka's page. « Profil sportif » names its editable sports information.
 - **VOC-004**: « Bilan coach » names the coach's written review. « Résultat » names the win/loss record.
 - **VOC-005**: Menus and tabs use « Ma famille » and « Mon espace »; the coach tab keeps the short « Stats » to fit 375 px, the screens say « Statistiques »; filters are cleared with « Effacer les filtres »; rights are removed with « Retirer ».
-- **VOC-006**: An empty value is « Non renseigné(e) ». An address is « E-mail ».
+- **VOC-006**: An empty value is « Non renseigné(e) ». An address is « E-mail ». A participant without a place is « Non classé »; only the compact ranking buttons of a club competition show « NC » to fit 375 px (their accessible name stays « Non classé »).
 - **VOC-007**: The interface addresses the user with « vous », uses « … » for ellipses and « » for quoted names, and agrees plurals instead of writing « (s) ».
 
 ## 3. Functional Requirements, Constraints & Guidelines
@@ -186,6 +186,8 @@ This specification does not define:
 - **STA-005**: The season shall run from September 1st to August 31st.
 - **STA-006**: The displayed season shall use the current season when the judoka has competitions in it, otherwise it shall fall back to the most recent season containing competition data for that judoka.
 - **STA-007**: The judoka profile shall display the judoka category derived from the latest competition of the displayed season.
+- **STA-008**: A competition dated after today stays in « Compétitions de la saison » with « Dans N jours » instead of a ranking. It is not counted in the season totals (competitions, combats, victories) nor used as the latest competition.
+- **STA-009**: A competition's win/loss record shows no zero counter (« 1D », « 2V 1D »), as on the home and competition screens.
 - **STA-008**: The judoka profile hero shall display the judoka's garde when it is known.
 - **STA-009**: The judoka profile shall display a short competition-results list for the displayed season with date, competition name, final ranking, combat record, and a ranking badge.
 - **STA-010**: Competition ranking badges shall distinguish podium, top 5, and non-classed results; 1st place shall use a gold badge, 2nd place a silver badge, and 3rd place a bronze badge.
@@ -245,6 +247,7 @@ This specification does not define:
 - **UIX-016b**: A past season already viewed shall stay readable offline.
 - **UIX-016c**: « Gestion des accès » shall list users by pages of 10 loaded from the server; the search by name or e-mail shall be applied by the server.
 - **UIX-016d** (ADMIN-2): « Utilisateurs » offers « Tous », « Sans club » and « Non réinscrits » (registration season before the current one). Both filters list `JUDOKA` profiles only, are applied by the server with the search and pagination, and are kept after an action on a user.
+- **UIX-016e**: In the coach « Judokas » tab, while no judoka is chosen, the judokas of the coach's clubs (or of the chosen club) are listed by age category then name, 10 per page, each with category, weight, club and a « Non réinscrit » badge when relevant. Typing in the search filters this list. Touching a judoka chooses them and shows their competitions and « Fiche de … ».
 - **UIX-017**: When the connected user has an underlying `JUDOKA` profile, that judoka shall be selected by default as the active judoka context.
 - **UIX-018**: For `COACH`, the `Compétition` home mode shall stay club-centered and shall not expose a judoka selector or individual judoka context.
 - **UIX-019**: For `COACH`, a separate `Judoka` home mode shall allow selecting a judoka to consult their profile, upcoming competitions, and past competition history.

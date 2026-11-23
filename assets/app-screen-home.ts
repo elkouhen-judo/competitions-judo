@@ -10,6 +10,9 @@
     judokaId: string;
     name: string;
     meta: string;
+    /** UIX-016e : catégorie, poids et club, sans la mention « Non réinscrit ». */
+    details: string;
+    isUnregistered: boolean;
     ageCategory: string;
     searchText: string;
   }
@@ -234,7 +237,9 @@
     const defaultHomeViewState = {
       filterJudokaText: "",
       filterOptions: [] as HomeFilterOption[],
-      showFilterOptions: false
+      showFilterOptions: false,
+      judokaRosterPage: 1,
+      judokaRosterPageSize: defaultListPageSize
     };
     let homeViewModelRef: (typeof defaultHomeViewState) | null = null;
     let hideFilterOptionsTimer: number | null = null;
@@ -335,6 +340,13 @@
       }
       viewModel.filterJudokaText = autoJudoka ? getJudokaDisplayName(autoJudoka) : "";
       state.homeFilterJudokaId = autoJudoka ? String(autoJudoka.judokaId) : "";
+      if (mode === "coachJudoka") refreshJudokaRoster();
+    }
+
+    // UIX-016e : sans judoka choisi, l'onglet « Judokas » liste les judokas du club.
+    function refreshJudokaRoster() {
+      getHomeViewModel().judokaRosterPage = 1;
+      refreshHomeFilterOptions();
     }
 
     function openHomeJudokaProfile() {
@@ -395,6 +407,9 @@
         name: getJudokaDisplayName(child),
         ageCategory: cleanText(child.ageCategory)
       }))
+    );
+    const showJudokaRoster = window.Vue.computed(
+      () => getCurrentMode() === "coachJudoka" && state.judokas.length > 0 && !state.homeFilterJudokaId
     );
     const showChildPills = window.Vue.computed(
       () => (getCurrentMode() === "family" || getCurrentMode() === "parentHome") && childOptions.value.length > 1
@@ -566,6 +581,7 @@
         state.homeFilterJudokaId = "";
         getHomeViewModel().filterJudokaText = "";
       }
+      if (getCurrentMode() === "coachJudoka") refreshJudokaRoster();
     }
 
     function getClubCompetitionStats(clubCompetitionId: string, competitionDate: string, today: string) {
@@ -735,6 +751,7 @@
         showHomeHero,
         showHomeActions,
         showChildPills,
+        showJudokaRoster,
         childOptions,
         coachAgenda,
         isHomeReady,
@@ -795,19 +812,18 @@
     }
 
     function getHomeFilterOption(judoka: Judoka): HomeFilterOption {
+      const isUnregistered = !ui.isRegisteredForDate(judoka, ui.getCurrentLocalDate());
+      const details = [judoka.ageCategory, ui.formatWeight(judoka.weightCategory), getListClubName(judoka.clubId)]
+        .map((value) => cleanText(value))
+        .filter(Boolean)
+        .join(" · ");
       return {
         judokaId: String(judoka.judokaId || ""),
         name: getJudokaDisplayName(judoka) || "Judoka",
         // INSCR-2 : le coach voit qui n'est pas réinscrit pour la saison en cours.
-        meta: [
-          judoka.ageCategory,
-          judoka.weightCategory,
-          getListClubName(judoka.clubId),
-          ui.isRegisteredForDate(judoka, ui.getCurrentLocalDate()) ? "" : "Non réinscrit"
-        ]
-          .map((value) => cleanText(value))
-          .filter(Boolean)
-          .join(" · "),
+        meta: [details, isUnregistered ? "Non réinscrit" : ""].filter(Boolean).join(" · "),
+        details,
+        isUnregistered,
         ageCategory: cleanText(judoka.ageCategory),
         searchText: `${getJudokaDisplayName(judoka)} ${judoka.ageCategory || ""}`.toLowerCase()
       };
@@ -835,7 +851,8 @@
         window.clearTimeout(hideFilterOptionsTimer);
         hideFilterOptionsTimer = null;
       }
-      refreshHomeFilterOptions("");
+      // Judoka déjà choisi : toute la liste ; sinon, la recherche en cours.
+      refreshHomeFilterOptions(state.homeFilterJudokaId ? "" : undefined);
       getHomeViewModel().showFilterOptions = true;
     }
 
@@ -853,6 +870,7 @@
     function updateFilterJudokaText() {
       const viewModel = getHomeViewModel();
       state.homeFilterJudokaId = "";
+      viewModel.judokaRosterPage = 1;
       refreshHomeFilterOptions();
       viewModel.showFilterOptions = true;
       state.competitionsCurrentPage = 1;

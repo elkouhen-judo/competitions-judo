@@ -398,6 +398,8 @@ export interface SeasonCompetitionResult {
   weightCategory: string;
   resultBadge: CompetitionResultBadge;
   combatRecord: CompetitionCombatRecord;
+  /** STA-008 : compétition pas encore disputée, hors bilan de la saison. */
+  isUpcoming?: boolean;
 }
 
 export interface JudokaProfileLastCompetition {

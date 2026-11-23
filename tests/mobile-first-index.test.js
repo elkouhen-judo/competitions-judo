@@ -581,7 +581,7 @@ test("owner autocomplete provides disambiguation metadata", () => {
   );
   assert.match(client, /function hideHomeFilterOptions\(\)/);
   assert.match(client, /function hideCompetitionOwnerOptions\(\)/);
-  assert.match(client, /refreshHomeFilterOptions\(""\)/);
+  assert.match(client, /refreshHomeFilterOptions\(state\.homeFilterJudokaId \? "" : void 0\)/);
   assert.match(client, /refreshCompetitionOwnerOptions\(""\)/);
   assert.match(
     client,

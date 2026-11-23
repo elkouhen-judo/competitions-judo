@@ -80,6 +80,7 @@
           getJudokaDisplayName,
           getJudokaInitials,
           getCurrentLocalDate: ui.getCurrentLocalDate,
+          formatRelativeDay: ui.formatRelativeDay,
           isRegisteredForDate: ui.isRegisteredForDate
         }) ?? defaultJudokaProfile
       );

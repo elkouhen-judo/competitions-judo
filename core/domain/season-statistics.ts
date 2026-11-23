@@ -20,6 +20,13 @@ export interface BuildJudokaProfileSnapshotInput {
   getCompetitionCategoryLabel: (competition: Competition) => string;
   getCurrentSeasonBounds: (referenceDate?: Date) => SeasonBounds;
   isDateWithinSeason: (dateValue: unknown, bounds: SeasonBounds) => boolean;
+  /** STA-008 : date du jour (AAAA-MM-JJ) ; une compétition plus tardive est à venir. */
+  today?: string;
+}
+
+function isUpcomingCompetition(competition: Competition, today: string): boolean {
+  const date = String(competition.competitionDate || "");
+  return Boolean(today && date && date > today);
 }
 
 export function buildJudokaProfileSnapshot({
@@ -28,7 +35,8 @@ export function buildJudokaProfileSnapshot({
   combats,
   getCompetitionCategoryLabel,
   getCurrentSeasonBounds,
-  isDateWithinSeason
+  isDateWithinSeason,
+  today = ""
 }: BuildJudokaProfileSnapshotInput): JudokaProfile {
   const currentBounds = getCurrentSeasonBounds();
   const sortedCompetitions = [...competitions].sort((a, b) =>
@@ -47,8 +55,10 @@ export function buildJudokaProfileSnapshot({
   const seasonCompetitions = currentSeasonCompetitions.length
     ? currentSeasonCompetitions
     : sortedCompetitions.filter((c) => isDateWithinSeason(c.competitionDate, bounds));
-  const lastCompetition = seasonCompetitions[0] || null;
-  const seasonCompetitionIds = new Set(seasonCompetitions.map((c) => String(c.competitionId)));
+  // STA-008 : une compétition à venir reste listée mais ne compte pas dans le bilan de la saison.
+  const pastSeasonCompetitions = seasonCompetitions.filter((c) => !isUpcomingCompetition(c, today));
+  const lastCompetition = pastSeasonCompetitions[0] || null;
+  const seasonCompetitionIds = new Set(pastSeasonCompetitions.map((c) => String(c.competitionId)));
   const seasonCombats = combats.filter((c) => seasonCompetitionIds.has(String(c.competitionId)));
   const seasonWins = seasonCombats.filter((c) => isVictoryCombatResult(c.result)).length;
   const seasonLosses = seasonCombats.filter((c) => isLossCombatResult(c.result)).length;
@@ -65,7 +75,8 @@ export function buildJudokaProfileSnapshot({
     category: getCompetitionCategoryLabel(c),
     weightCategory: c.weightCategory || "",
     resultBadge: getCompetitionResultBadge(c.result),
-    combatRecord: getCompetitionCombatRecord(seasonCombats, c.competitionId)
+    combatRecord: getCompetitionCombatRecord(seasonCombats, c.competitionId),
+    isUpcoming: isUpcomingCompetition(c, today)
   }));
 
   const lastCompetitionSummary: JudokaProfileLastCompetition | null = lastCompetition
@@ -87,7 +98,7 @@ export function buildJudokaProfileSnapshot({
     topWinTechniques: computeTopWinTechniques(seasonCombats),
     competitionResults,
     seasonCombatCount: seasonCombats.length,
-    seasonCompetitionCount: seasonCompetitions.length,
+    seasonCompetitionCount: pastSeasonCompetitions.length,
     seasonWins,
     seasonLosses,
     seasonDraws,

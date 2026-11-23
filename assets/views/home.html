@@ -58,7 +58,7 @@
           <label id="homeFilterLabel" for="filterJudokaText">{{ homeFilterLabel }}</label>
           <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
-            <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions">
+            <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions && !showJudokaRoster">
               <div v-if="!filterOptions.length" class="autocomplete-empty">Aucun résultat</div>
               <button v-for="option in filterOptions" :key="option.judokaId" type="button" class="autocomplete-option" @click="selectFilterJudoka(option)">
                 <div class="autocomplete-option-copy">
@@ -66,6 +66,30 @@
                   <span v-if="option.meta" class="autocomplete-option-meta">{{ option.meta }}</span>
                 </div>
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- UIX-016e : sans judoka choisi, la liste des judokas du club ; la recherche la filtre. -->
+        <div v-if="showJudokaRoster && isHomeReady" id="homeJudokaRoster" class="section">
+          <h3>{{ filterOptions.length }} judoka{{ filterOptions.length > 1 ? "s" : "" }}</h3>
+          <p v-if="!filterOptions.length" class="empty-state">Aucun judoka ne correspond à cette recherche.</p>
+          <div v-else class="list">
+            <article v-for="option in filterOptions.slice((judokaRosterPage - 1) * judokaRosterPageSize, judokaRosterPage * judokaRosterPageSize)" :key="option.judokaId" class="card competition-card">
+              <button class="card-button competition-open-button" type="button" @click="selectFilterJudoka(option)">
+                <span class="competition-card-row">
+                  <span class="card-title">{{ option.name }}</span>
+                  <span v-if="option.isUnregistered" class="result-badge badge-unregistered">Non réinscrit</span>
+                </span>
+                <span v-if="option.details" class="competition-card-date">{{ option.details }}</span>
+              </button>
+            </article>
+          </div>
+          <div v-if="filterOptions.length > judokaRosterPageSize" class="list-summary">
+            <p class="list-summary-text">Page {{ judokaRosterPage }} / {{ Math.ceil(filterOptions.length / judokaRosterPageSize) }}</p>
+            <div class="list-summary-actions">
+              <button v-if="judokaRosterPage > 1" class="button-secondary" type="button" @click="judokaRosterPage -= 1">Page précédente</button>
+              <button v-if="judokaRosterPage * judokaRosterPageSize < filterOptions.length" class="button-secondary" type="button" @click="judokaRosterPage += 1">Page suivante</button>
             </div>
           </div>
         </div>
@@ -113,7 +137,7 @@
 
         <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
           <div class="list-search">
-            <input type="search" id="clubCompetitionsSearch" aria-label="Rechercher une compétition" placeholder="Rechercher : nom ou date (jj/mm/aaaa)" autocomplete="off" :value="clubCompetitionsSearchText" @input="updateClubCompetitionsSearch($event.target.value)">
+            <input type="search" id="clubCompetitionsSearch" aria-label="Rechercher une compétition" placeholder="Nom ou date" autocomplete="off" :value="clubCompetitionsSearchText" @input="updateClubCompetitionsSearch($event.target.value)">
           </div>
           <div id="clubCompetitionsList">
             <div v-if="!hasClubCompetitions" class="empty-action">

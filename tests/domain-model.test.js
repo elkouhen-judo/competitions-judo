@@ -1639,6 +1639,43 @@ test("season statistics domain computes current season snapshot", () => {
   assert.deepEqual(snapshot.topWinTechniques, []);
 });
 
+test("STA-008 : une compétition à venir reste listée mais ne compte pas dans le bilan de la saison", () => {
+  const snapshot = buildJudokaProfileSnapshot({
+    judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },
+    competitions: [
+      {
+        competitionId: "FUTURE",
+        name: "Interclubs",
+        competitionDate: "2026-03-20",
+        ageCategory: "Cadet"
+      },
+      {
+        competitionId: "PAST",
+        name: "Tournoi",
+        competitionDate: "2026-03-01",
+        ageCategory: "Cadet",
+        result: "3e"
+      }
+    ],
+    combats: [{ combatId: "CB1", competitionId: "PAST", result: "V", victoryType: "Ippon" }],
+    getCompetitionCategoryLabel: (competition) => competition.ageCategory,
+    getCurrentSeasonBounds: () => ({ start: "2025-09-01", end: "2026-08-31", label: "2025-2026" }),
+    isDateWithinSeason: (dateValue, bounds) => dateValue >= bounds.start && dateValue <= bounds.end,
+    today: "2026-03-14"
+  });
+
+  assert.equal(snapshot.seasonCompetitionCount, 1);
+  assert.equal(snapshot.victoryRate, 100);
+  assert.equal(snapshot.lastCompetition.competitionId, "PAST");
+  assert.deepEqual(
+    snapshot.competitionResults.map((result) => [result.competitionId, result.isUpcoming]),
+    [
+      ["FUTURE", true],
+      ["PAST", false]
+    ]
+  );
+});
+
 test("season statistics domain ranks the judoka's top winning techniques for the season", () => {
   const snapshot = buildJudokaProfileSnapshot({
     judoka: { judokaId: "JUDO123", firstName: "Aya", lastName: "Martin" },

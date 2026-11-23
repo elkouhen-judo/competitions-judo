@@ -571,6 +571,7 @@ export interface JudokaProfilePresentationHelpers {
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate?(): string;
+  formatRelativeDay?(value: unknown): string;
   isRegisteredForDate?(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
 }
 
@@ -637,6 +638,7 @@ export interface JudokaProfileViewModel {
     resultClass: string;
     badgeClass: string;
     combatRecord: string;
+    whenLabel: string;
   }>;
   hasCompetitionResults: boolean;
 }

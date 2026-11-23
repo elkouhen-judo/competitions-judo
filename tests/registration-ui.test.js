@@ -43,7 +43,7 @@ test("INSCR-2 : accueil, fiche et compétitions club signalent les non-réinscri
   assert.match(home, /Non réinscrit pour la saison \$\{ui\.formatSeasonLabel\(season\)\}/);
   assert.match(
     home,
-    /isRegisteredForDate\(judoka, ui\.getCurrentLocalDate\(\)\) \? "" : "Non réinscrit"/
+    /isUnregistered = !ui\.isRegisteredForDate\(judoka, ui\.getCurrentLocalDate\(\)\);[\s\S]*?isUnregistered \? "Non réinscrit" : ""/
   );
   assert.match(read("assets/views/home.html"), /id="homeRegistrationNotice"/);
   assert.match(read("assets/views/judoka.html"), /id="judokaHeroUnregistered"/);

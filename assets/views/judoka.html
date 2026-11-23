@@ -100,7 +100,8 @@
                 <button class="card-button competition-open-button" type="button" :disabled="!result.competitionId" @click="openCompetitionFromProfile(result.competitionId)">
                   <span class="competition-card-row">
                     <span class="card-title">{{ result.name }}</span>
-                    <span class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
+                    <span v-if="result.whenLabel" class="pill pill-accent">{{ result.whenLabel }}</span>
+                    <span v-else class="result-badge classement-badge" :class="[result.resultClass, result.badgeClass]">{{ result.result }}</span>
                   </span>
                   <span class="competition-card-date">{{ result.date }}<span v-if="result.combatRecord"> · {{ result.combatRecord }}</span></span>
                 </button>

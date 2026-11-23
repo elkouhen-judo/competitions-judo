@@ -328,6 +328,53 @@ for (const [name, viewport] of [
 
     assert.deepEqual(nativeDialogs, []);
   });
+
+  test(`UIX-016e : l'onglet « Judokas » liste les judokas du club sur ${name}`, async (t) => {
+    const { server, url } = await startServer();
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ viewport });
+    await context.addInitScript(
+      (session) => localStorage.setItem("kiroku_supabase_session", JSON.stringify(session)),
+      {
+        access_token: tokenFor("coach@example.com"),
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      }
+    );
+    const page = await context.newPage();
+    t.after(async () => {
+      await context.close();
+      await browser.close();
+      await new Promise((resolve) => server.close(resolve));
+    });
+    await page.goto(url);
+    await page.locator("#homeView").waitFor({ state: "visible" });
+    await page.locator("#homeView").getByRole("button", { name: "Judokas", exact: true }).click();
+
+    // Sans rien taper, le coach voit ses judokas, la recherche filtre la liste.
+    const roster = page.locator("#homeJudokaRoster .competition-card");
+    await expect(roster).toHaveCount(5);
+    await expect(roster.filter({ hasText: "Hugo Test" })).toContainText("Minime");
+    await page.screenshot({
+      path: `output/playwright/coach-judokas-${name}-01-liste.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+    await page.locator("#filterJudokaText").fill("nin");
+    await expect(roster).toHaveCount(1);
+    await expect(page.locator("#filterJudokaDropdown")).toBeHidden();
+
+    // Toucher un judoka le choisit : ses compétitions et sa fiche, la liste disparaît.
+    await roster.first().locator("button").click();
+    await expect(page.locator("#homeJudokaRoster")).toHaveCount(0);
+    await expect(page.locator("#openHomeJudokaProfileButton")).toHaveText(/Fiche de Nina/);
+    await expect(page.locator("#competitionsList")).toContainText("Coupe d'automne");
+    await page.screenshot({
+      path: `output/playwright/coach-judokas-${name}-02-choisi.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+  });
 }
 
 // RETOUR-1 : sur mobile, glisser depuis le bord gauche revient en arrière comme la flèche « ← ».

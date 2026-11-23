@@ -23,6 +23,19 @@
     return lines;
   }
 
+  // Bilan sans compteurs à zéro : « 1D », « 2V 1D ».
+  function formatCombatRecord(record: { total: number; wins: number; losses: number; draws: number } | undefined) {
+    if (!record || !record.total) return "";
+    const parts = [record.wins ? `${record.wins}V` : "", record.losses ? `${record.losses}D` : "", record.draws ? `${record.draws}N` : ""];
+    return parts.filter(Boolean).join(" ");
+  }
+
+  // STA-008 : « Dans 6 jours » pour une compétition pas encore disputée.
+  function formatWhenLabel(dateValue: unknown, formatRelativeDay?: (value: unknown) => string) {
+    const label = formatRelativeDay ? formatRelativeDay(dateValue) : "";
+    return label ? label.charAt(0).toUpperCase() + label.slice(1) : "À venir";
+  }
+
   function createJudokaProfileViewModel(
     profile: JudokaProfile | null,
     helpers: JudokaProfilePresentationHelpers
@@ -37,7 +50,8 @@
       formatDate,
       getClassementBadgeClass,
       getJudokaDisplayName,
-      getJudokaInitials
+      getJudokaInitials,
+      formatRelativeDay
     } = helpers;
     const {
       judoka,
@@ -78,7 +92,7 @@
 
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
-      profileSubtitle: "Profil sportif et résultats",
+      profileSubtitle: "Fiche et résultats de la saison",
       seasonLabel: `Saison ${season.label}`,
       seasonCompetitionCount: String(seasonCompetitionCount || 0),
       seasonCombatCount: String(seasonCombatCount || 0),
@@ -114,7 +128,8 @@
         result: formatCompetitionRanking(result.result) || "Non classé",
         resultClass: getClassementBadgeClass(result.result),
         badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
-        combatRecord: result.combatRecord && result.combatRecord.total ? result.combatRecord.label.replace(/ · /g, " ") : ""
+        combatRecord: formatCombatRecord(result.combatRecord),
+        whenLabel: result.isUpcoming ? formatWhenLabel(result.competitionDate, formatRelativeDay) : ""
       })),
       hasCompetitionResults: Boolean((competitionResults || []).length)
     };

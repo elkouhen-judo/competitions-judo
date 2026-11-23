@@ -19,6 +19,7 @@ export interface ProfileServiceDeps {
   getCompetitionCategoryLabel: (competition: Competition) => string;
   getCurrentSeasonBounds: (referenceDate?: Date) => { start: string; end: string; label: string };
   isDateWithinSeason: (dateValue: unknown, bounds: { start: string; end: string; label: string }) => boolean;
+  getCurrentDate?: () => string;
 }
 
 export interface ProfileService {
@@ -33,7 +34,8 @@ export default function createProfileService(deps: ProfileServiceDeps): ProfileS
     userContextService,
     getCompetitionCategoryLabel,
     getCurrentSeasonBounds,
-    isDateWithinSeason
+    isDateWithinSeason,
+    getCurrentDate = () => new Date().toISOString().slice(0, 10)
   } = deps;
 
   async function getJudokaProfile(email: string, idJudoka?: string, seasonStartYear?: number): Promise<JudokaProfile> {
@@ -50,7 +52,8 @@ export default function createProfileService(deps: ProfileServiceDeps): ProfileS
       combats: combats.map(toCanonicalCombat),
       getCompetitionCategoryLabel,
       getCurrentSeasonBounds: getPinnedSeasonBounds,
-      isDateWithinSeason
+      isDateWithinSeason,
+      today: getCurrentDate()
     });
 
     return {
