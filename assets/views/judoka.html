@@ -155,7 +155,7 @@
             <option value="">Non renseignée</option>
             <option v-for="weightOption in weightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
           </select>
-          <input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing" :placeholder="ageCategoryEditing ? 'Ex : -24kg' : 'Sélectionnez une catégorie d'âge'">
+          <input v-else id="judoka_categorie_poids" v-model="weightCategoryEditing" type="text" :disabled="!ageCategoryEditing" :placeholder="ageCategoryEditing ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
           <template v-if="yearInCategoryOptions.length">
             <label for="judoka_annee_categorie">Année dans la catégorie</label>
             <select id="judoka_annee_categorie" v-model="yearInCategoryEditing">

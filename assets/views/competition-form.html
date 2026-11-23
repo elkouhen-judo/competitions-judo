@@ -68,7 +68,7 @@
                 <option value="">Non renseignée</option>
                 <option v-for="weightOption in competitionWeightCategoryOptions" :key="weightOption" :value="weightOption">{{ weightOption }}</option>
               </select>
-              <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d'âge'">
+              <input v-else id="competition_categorie_poids" v-model="competitionForm.weightCategory" type="text" :disabled="!competitionForm.ageCategory" :placeholder="competitionForm.ageCategory ? 'Ex : -24kg' : 'Sélectionnez une catégorie d’âge'">
             </div>
           </div>
         </div>
