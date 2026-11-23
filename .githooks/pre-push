@@ -1,0 +1,7 @@
+#!/bin/sh
+# Gate locale : suite de tests complète avant chaque push.
+# Contournement d'urgence : git push --no-verify
+npm test || {
+  echo "Push bloqué : npm test échoue." >&2
+  exit 1
+}

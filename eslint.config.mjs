@@ -32,7 +32,7 @@ export default defineConfig([
     }
   },
   {
-    files: ["api/**/*.js", "core/**/*.js", "tests/**/*.js"],
+    files: ["api/**/*.js", "core/**/*.js", "scripts/**/*.js", "tests/**/*.js"],
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: {

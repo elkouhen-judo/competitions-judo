@@ -67,4 +67,4 @@ async function runSupabaseQuery(sql) {
   }
 }
 
-module.exports = { runSupabaseQuery };
+module.exports = { runSupabaseQuery, loadEnvLocal, getProjectRef };

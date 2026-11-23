@@ -17,7 +17,9 @@ try {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"]
   });
-} catch {}
+} catch {
+  // Pas de crontab existante : on part d'une liste vide.
+}
 const retained = current
   .split("\n")
   .filter(

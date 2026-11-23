@@ -6,7 +6,6 @@ const SOURCE_CSV = path.join(ROOT, "judokas_100_utilisateurs.csv");
 const OUTPUT_SQL = path.join(ROOT, "supabase", "seed_competitions_combats.sql");
 const SEASON_LABEL = "2025_2026";
 
-const COMPETITION_LEVELS = ["Départemental", "Régional", "National", "International"];
 const RANKINGS = ["1er", "2e", "3e", "4e", "5e", "Non classé"];
 const HANDEDNESSES = ["Droitier", "Gaucher"];
 const OPPONENT_STANCES = ["Droitier", "Gaucher"];

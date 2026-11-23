@@ -18,13 +18,13 @@ Cible demandée : `$ARGUMENTS` (par défaut `dev`). Ne jamais déployer la prod 
 
 `npm run db:deploy` demande `SUPABASE_ACCESS_TOKEN` ; s'il manque, passer par la CLI Supabase déjà authentifiée.
 
-1. Prod concernée : sauvegarde d'abord, `npm run db:backup:prod` (dossier `backups/supabase/prod/<horodatage>`).
+1. Prod concernée : sauvegarde d'abord, `npm run db:backup:prod` (dossier `backups/supabase/prod/<horodatage>`). `npm run db:deploy` la fait seul (GAT-008).
 2. Dev (`ogjrxvoqrjstlarwennh`) : `supabase db query --remote=ogjrxvoqrjstlarwennh --yes -f supabase/migrations/20260612000000_initial_schema.sql`, puis vérifier la fonction ou la colonne modifiée par une requête de lecture.
 3. Prod (`dqtdbfmehwdexikkblwg`), seulement si demandée et si le dev est vérifié : même commande avec `--remote=dqtdbfmehwdexikkblwg`, même vérification.
 
 ## 3. Application
 
-Les scripts lancent `npm test` avant de publier : un test en échec arrête le déploiement, ne pas contourner.
+Les scripts passent par `scripts/predeploy.js` (fichiers suivis tous commités, prod depuis `main` poussé, `npm run check`, `npm test`), puis `scripts/smoke-check.js` contrôle le `200` après publication (GAT-005 à 007). Une gate en échec arrête le déploiement : ne pas contourner.
 
 - Dev : `npm run app:deploy:dev`
 - Prod : `npm run app:deploy:prod`

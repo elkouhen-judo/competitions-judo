@@ -213,6 +213,18 @@ This specification does not redefine product behavior already described in `docs
 - **BKP-006**: Backup connection strings and generated backup data shall remain outside version control.
 - **BKP-007**: Supabase Auth configuration, API keys, and Storage objects shall be treated as separate recovery items and shall not be assumed to be restored by the local database dump.
 
+### 3.8 Local validation gates
+
+- **GAT-001**: Validation gates shall run locally; the project has no CI/CD pipeline.
+- **GAT-002**: `npm run check` shall run `tsc`, `eslint` and `prettier --check`; any error fails it.
+- **GAT-003**: Git hooks shall live in `.githooks/` and be enabled by `postinstall` (`core.hooksPath`); outside a git repository the step shall do nothing.
+- **GAT-004**: The `pre-commit` hook shall run `npm run check`; the `pre-push` hook shall run `npm test`.
+- **GAT-005**: `app:deploy:dev` and `app:deploy:prod` shall refuse to publish uncommitted tracked changes, then run `npm run check` and `npm test`.
+- **GAT-006**: `app:deploy:prod` shall additionally require the `main` branch, identical to its upstream.
+- **GAT-007**: After publishing, the deploy scripts shall check that `/` and `/api/client` answer `200` on the target URL.
+- **GAT-008**: `db:deploy` shall back up the Supabase project targeted by `.env.local` before applying the migration, and shall abort if the backup fails or the project is unknown.
+- **GAT-009**: `--no-verify` (git) and `--skip-backup` (`db:deploy`) are emergency bypasses only.
+
 ## 4. Interfaces & Data Contracts
 
 ### 4.1 Runtime surfaces
