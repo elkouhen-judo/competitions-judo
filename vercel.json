@@ -8,7 +8,7 @@
       "maxDuration": 60
     }
   },
-  "crons": [{ "path": "/api/ffjudo-sync", "schedule": "0 4 * * *" }],
+  "crons": [{ "path": "/api/ffjudo-sync", "schedule": "0 4 * * 1" }],
   "headers": [
     {
       "source": "/assets/fonts/(.*)",

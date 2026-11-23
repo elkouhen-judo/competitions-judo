@@ -1032,7 +1032,7 @@ test("the app ships its Ayumi icons for the browser tab and the home screen", ()
 });
 
 test("vercel runs the FFJDA agenda sync once a day", () => {
-  assert.deepEqual(vercel.crons, [{ path: "/api/ffjudo-sync", schedule: "0 4 * * *" }]);
+  assert.deepEqual(vercel.crons, [{ path: "/api/ffjudo-sync", schedule: "0 4 * * 1" }]);
   assert.equal(vercel.functions["api/*.js"].maxDuration, 60);
   assert.ok(fs.existsSync(path.join(root, "api", "ffjudo-sync.js")));
 });
