@@ -1051,6 +1051,35 @@ test("STAT-20 : statistiques de groupe dès 2 judokas", () => {
     analyzedCompetitions: 2,
     totalCombats: 2
   });
+  // DASH-007 : une compétition à venir n'est pas encore analysée ; celle du jour l'est.
+  const dated = [
+    { competitionId: "P1", competitionDate: "2026-11-22" },
+    { competitionId: "P2", competitionDate: "2027-03-10" }
+  ];
+  assert.equal(computeWithheldScope([fight("J1")], dated, "2026-11-22").analyzedCompetitions, 1);
+});
+
+test("coach dashboard podiums ignore Non classé and future competitions are not analyzed", () => {
+  const combats = [
+    { combatId: "A", judokaId: "J1", competitionId: "P1", competitionLevel: "Régional", result: "Victoire" },
+    { combatId: "B", judokaId: "J2", competitionId: "P2", competitionLevel: "Régional", result: "Défaite" }
+  ];
+  const competitions = [
+    { competitionId: "P1", ownerJudokaId: "J1", competitionDate: "2026-11-01", level: "Régional", result: "1er" },
+    { competitionId: "P2", ownerJudokaId: "J2", competitionDate: "2026-11-01", level: "Régional", result: "Non classé" },
+    { competitionId: "P3", ownerJudokaId: "J2", competitionDate: "2026-11-01", level: "Régional", result: "5e" },
+    { competitionId: "P4", ownerJudokaId: "J1", competitionDate: "2027-03-10", level: "Régional", result: "" }
+  ];
+
+  const stats = computeCoachDashboardStats(combats, competitions, { today: "2026-11-22" });
+
+  // STAT-11 : « Non classé » n'est pas une participation classée.
+  assert.deepEqual(
+    stats.byLevel.map((line) => [line.label, line.podiums, line.rankedParticipations]),
+    [["Régional", 1, 2]]
+  );
+  // DASH-007 : la compétition de mars n'est pas encore analysée.
+  assert.equal(stats.analyzedCompetitions, 3);
 });
 
 test("coach dashboard statistics read rounds, months, levels and ground share", () => {
@@ -1087,8 +1116,8 @@ test("coach dashboard statistics read rounds, months, levels and ground share", 
   ["byLateralMatchup", "judokasByHandedness", "scoreHolding", "discipline", "ipponVictories"].forEach((key) =>
     assert.equal(key in stats, false, key)
   );
-  // STAT-7 : le Yuko sans catégorie n'est pas compté.
-  assert.deepEqual(stats.groundShare, { scored: { ground: 1, counted: 3 }, conceded: { ground: 1, counted: 2 } });
+  // STAT-7 : points marqués dans les victoires, concédés dans les défaites ; le Yuko sans catégorie n'est pas compté.
+  assert.deepEqual(stats.groundShare, { scored: { ground: 1, counted: 2 }, conceded: { ground: 1, counted: 1 } });
   // STAT-24 : octobre et novembre tombent dans le même trimestre de saison.
   assert.deepEqual(stats.byPeriod, [
     { key: "2026-T1", label: "Sept.-nov. 2026", participations: 3, combats: 4, victories: 2, defeats: 2, podiums: 1 }

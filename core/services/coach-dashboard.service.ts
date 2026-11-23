@@ -158,7 +158,7 @@ export default function createCoachDashboardService(
       const isGroup = isGroupScope(combats, competitions);
       return {
         stats: isGroup ? computeCoachDashboardStats(combats, competitions, { today }) : null,
-        withheld: isGroup ? null : computeWithheldScope(combats, competitions)
+        withheld: isGroup ? null : computeWithheldScope(combats, competitions, today)
       };
     };
     const current = computePeriod(selectedRows);

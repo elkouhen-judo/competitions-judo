@@ -1,7 +1,7 @@
 ---
 title: Coach Dashboard Metrics
-version: 3.0
-date_updated: 2026-11-22
+version: 3.1
+date_updated: 2026-11-23
 owner: competitions-judo
 tags:
   - dashboard
@@ -63,7 +63,7 @@ L'ordre ci-dessous suit l'affichage (SIMPL-3) : synthèse, Par niveau, Par club,
 
 | Métrique technique | Libellé IHM | Règle de calcul |
 | :-- | :-- | :-- |
-| `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées (une compétition club comptée une fois). |
+| `totalCombats`, `analyzedCompetitions` | **Combats · N compét.** | Combats restants après filtres ; compétitions analysées : celles dont la date est passée (date du jour comprise, sans date : comptée), une compétition club comptée une fois. |
 | `victoryRate`, `victories` | **Victoires** | `victories / totalCombats`, seuil de 5 (section 2). |
 | `byLevel[].podiums`, `byLevel[].rankedParticipations` | **Podiums sur N classés** | Somme des podiums de toutes les lignes « Par niveau » (niveau non renseigné compris), rapportée à la somme des participations classées. |
 | — | Phrase de synthèse | `V victoires, D défaites sur N combats.` puis le fait le plus marquant : la fin de défaite la plus fréquente, sinon la technique qui gagne le plus. Aucun jugement (« point fort », « point d'attention »). |
@@ -85,7 +85,7 @@ L'ordre ci-dessous suit l'affichage (SIMPL-3) : synthèse, Par niveau, Par club,
 *Le tour du combat reste saisi, mais aucune statistique par tour n'est calculée.*
 * Une ligne par niveau (Départemental, Régional, National, International), puis « Niveau non renseigné » ; seules les lignes avec un combat ou une participation classée s'affichent.
 * Combats : `combats`, `victories`, `defeats`, d'après le niveau de la compétition du combat. Taux `victories / combats`, seuil de 5 ; sans combat, « aucun combat saisi ».
-* Podiums (STAT-11) : calcul par participation, pas par combat. `rankedParticipations` : participations du niveau dont le classement final est saisi (tout classement non vide) ; `podiums` : celles classées exactement `"1er"`, `"2e"` ou `"3e"`. Affichage : `6 podiums sur 14 participations classées`, sans pourcentage.
+* Podiums (STAT-11) : calcul par participation, pas par combat. `rankedParticipations` : participations du niveau dont le classement final est un rang (tout classement saisi sauf « Non classé ») ; `podiums` : celles classées exactement `"1er"`, `"2e"` ou `"3e"`. Affichage : `6 podiums sur 14 participations classées`, sans pourcentage.
 * Une compétition sans niveau reconnu est comptée sur la ligne « Niveau non renseigné ».
 * Les sommes des lignes égalent `totalCombats` et la tuile « Podiums ».
 
@@ -119,7 +119,8 @@ Les 5 techniques les plus marquées par les judokas dans les combats gagnés (3 
 Les 5 techniques les plus marquées par les adversaires (`concededScores`) dans les **combats perdus** uniquement. Un point concédé dans un combat gagné n'est pas compté ; un point sans technique non plus.
 
 ### 4.4. Debout ou au sol (`groundShare`, STAT-7)
-* `scored` : points marqués par les judokas dont la catégorie est connue (`Tachi-waza` ou `Ne-waza`) ; `ground` : ceux au sol. `conceded` : idem pour les points concédés.
+* `scored` : points marqués par les judokas dans les **combats gagnés** dont la catégorie est connue (`Tachi-waza` ou `Ne-waza`) ; `ground` : ceux au sol. `conceded` : idem pour les points concédés dans les **combats perdus**.
+* Même périmètre que les techniques du bloc : les égalités n'entrent dans aucune des deux lignes.
 * Un point sans technique n'est pas compté.
 * Affichage, en fin de « Comment on gagne » (marqués) et de « Comment on perd » (concédés) : `Points marqués : 64 % debout, 36 % au sol (74 points)` ; sous 5 points, les décomptes (`2 debout, 1 au sol`).
 

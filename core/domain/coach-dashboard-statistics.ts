@@ -44,8 +44,10 @@ function isPastParticipation(competition: DashboardCompetition, today: string): 
   return !today || !date || date <= today;
 }
 
-function isFinalizedCompetitionResult(result: unknown): boolean {
-  return Boolean(String(result || "").trim());
+// STAT-11 : une participation est classée quand un rang est saisi ; « Non classé » n'en est pas un.
+function isRankedCompetitionResult(result: unknown): boolean {
+  const value = String(result || "").trim();
+  return Boolean(value) && value.toLowerCase() !== "non classé";
 }
 
 // Une compétition club comptée une fois, quel que soit son nombre de participants.
@@ -57,8 +59,10 @@ function getCompetitionKey(competition: DashboardCompetition, index: number): st
   );
 }
 
-function computeAnalyzedCompetitionCount(competitions: DashboardCompetition[]): number {
-  return new Set(competitions.map(getCompetitionKey)).size;
+// DASH-007 : seules les compétitions passées (date du jour comprise) sont analysées.
+function computeAnalyzedCompetitionCount(competitions: DashboardCompetition[], today = ""): number {
+  const past = competitions.filter((competition) => isPastParticipation(competition, today));
+  return new Set(past.map(getCompetitionKey)).size;
 }
 
 // STAT-16 : bilan d'un niveau ; STAT-11 : podiums sur les participations classées de ce niveau.
@@ -68,7 +72,7 @@ function toLevelLine(
   combats: CoachDashboardCombat[],
   competitions: DashboardCompetition[]
 ): CoachDashboardResultLine {
-  const ranked = competitions.filter((competition) => isFinalizedCompetitionResult(competition.result));
+  const ranked = competitions.filter((competition) => isRankedCompetitionResult(competition.result));
   return {
     key,
     label,
@@ -176,15 +180,20 @@ function computePeriodBreakdown(
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
-// STAT-7 : part au sol des points dont la catégorie (debout, au sol) est connue.
+// STAT-7 : part au sol des points dont la catégorie (debout, au sol) est connue ;
+// points marqués dans les victoires, points concédés dans les défaites.
 function computeGroundShare(combats: CoachDashboardCombat[]): CoachDashboardGroundShare {
   const share = (scores: CombatScore[]) => {
     const known = scores.filter((score) => score.category === "Tachi-waza" || score.category === "Ne-waza");
     return { ground: known.filter((score) => score.category === "Ne-waza").length, counted: known.length };
   };
   return {
-    scored: share(combats.flatMap((combat) => combat.scores || [])),
-    conceded: share(combats.flatMap((combat) => combat.concededScores || []))
+    scored: share(
+      combats.filter((combat) => isVictoryCombatResult(combat.result)).flatMap((combat) => combat.scores || [])
+    ),
+    conceded: share(
+      combats.filter((combat) => isLossCombatResult(combat.result)).flatMap((combat) => combat.concededScores || [])
+    )
   };
 }
 
@@ -242,9 +251,10 @@ export function computeClubBreakdown(
 /** STAT-20 : seul ce qui reste dit d'un périmètre trop petit pour des statistiques de groupe. */
 export function computeWithheldScope(
   combats: Array<Pick<Combat, "judokaId">>,
-  competitions: DashboardCompetition[]
+  competitions: DashboardCompetition[],
+  today = ""
 ): { analyzedCompetitions: number; totalCombats: number } {
-  return { analyzedCompetitions: computeAnalyzedCompetitionCount(competitions), totalCombats: combats.length };
+  return { analyzedCompetitions: computeAnalyzedCompetitionCount(competitions, today), totalCombats: combats.length };
 }
 
 // STAT-27 : participations passées, et celles qui n'ont aucun combat saisi.
@@ -274,7 +284,7 @@ export function computeCoachDashboardStats(
   const defeats = combats.filter((combat) => isLossCombatResult(combat.result)).length;
 
   return {
-    analyzedCompetitions: computeAnalyzedCompetitionCount(competitions),
+    analyzedCompetitions: computeAnalyzedCompetitionCount(competitions, today),
     totalCombats,
     victories,
     defeats,
