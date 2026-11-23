@@ -120,7 +120,7 @@
                 @keydown.enter="combat.canEdit && showCombatForm(combat.combatId)">
                 <div class="combat-header">
                   <div class="combat-heading">
-                    <span v-if="combat.stage" class="combat-stage">{{ combat.stage }}</span>
+                    <span v-if="combat.stage" class="combat-stage">{{ combat.stageLabel }}</span>
                     <p class="card-title">{{ combat.opponent }}<span v-if="combat.opponentStance" class="opponent-stance"> · {{ combat.opponentStance }}</span></p>
                   </div>
                   <div class="combat-badges">
@@ -128,7 +128,7 @@
                     <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
                   </div>
                 </div>
-                <p v-if="combat.officialScoreLabel" class="combat-official-score-line" :aria-label="'Score ' + combat.officialScoreLabel + ' (Ippon, Waza-ari, Yuko du judoka puis de l’adversaire)'">
+                <p v-if="combat.officialScoreLabel" class="combat-official-score-line" :aria-label="'Score : ' + combat.officialScoreLabel">
                   <span class="combat-official-score-line-label">Score</span>
                   <span class="combat-official-score-line-value">{{ combat.officialScoreLabel }}</span>
                 </p>

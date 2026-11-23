@@ -174,6 +174,7 @@ export interface CompetitionCombatCard {
   opponent: string;
   opponentStance: string;
   stage: string;
+  stageLabel: string;
   judokaHandedness: string;
   result: string;
   victoryType?: string;
@@ -207,6 +208,7 @@ export interface PendingOfflineOperation {
 }
 
 export interface ScreenProjections {
+  formatCombatStage(stage: unknown): string;
   getWeightCategoryOptions(ageCategory: string, gender?: string): string[];
   getYearInCategoryOptions(ageCategory: string): string[];
   mergePendingCombatCards(

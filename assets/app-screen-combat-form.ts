@@ -319,6 +319,7 @@
           changeCombatOfficialScore,
           clearCombatOfficialScore,
           deleteCombatFromForm,
+          formatCombatStage: window.KirokuScreenProjections.formatCombatStage,
           getCombatPointCampLabel,
           getCombatScoreCount,
           getScoreTechnique,
@@ -423,6 +424,7 @@
       showView("combatFormView");
       window.Vue.nextTick(() => {
         const target = getCombatFormFocusTarget(isEditingExistingCombat);
+        if (!target) return;
         // Le bouton Enregistrer est en bas du formulaire : le focaliser ne doit pas faire défiler la page,
         // sinon le haut du formulaire (tour, résultat) sort de l'écran à l'ouverture.
         $(target).focus({ preventScroll: target === "saveCombatButton" });
@@ -470,9 +472,9 @@
 
     function getCombatFormFocusTarget(isEditingExistingCombat: boolean): string {
       const form = combatFormViewModel.combatForm;
-      // SAISIE-1 : le tour est proposé sur une pastille ; un nouveau combat commence par l'adversaire.
+      // SAISIE-1 : un nouveau combat ne place pas le focus, pour que le clavier mobile ne cache pas le résultat.
       if (!isEditingExistingCombat) {
-        return "combat_adversaire";
+        return "";
       }
       if (!form.result) {
         return "combat_resultat";
@@ -555,7 +557,6 @@
         showCombatForm();
         combatFormViewModel.combatForm.stage = nextStage;
         takeCombatFormSnapshot();
-        window.Vue.nextTick(() => $("combat_adversaire").focus());
       });
     }
 

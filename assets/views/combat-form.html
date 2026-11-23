@@ -24,7 +24,7 @@
           <div class="choice-field">
             <span class="choice-label" id="combat_etape_label">Tour</span>
             <div v-if="!combatStagePickerOpen" class="combat-stage-summary">
-              <span v-if="combatForm.stage" class="choice-chip choice-active combat-stage-current">{{ combatForm.stage }}</span>
+              <span v-if="combatForm.stage" class="choice-chip choice-active combat-stage-current">{{ formatCombatStage(combatForm.stage) }}</span>
               <button id="combat_etape_toggle" class="button-link" type="button" :aria-expanded="combatStagePickerOpen ? 'true' : 'false'" @click="openCombatStagePicker()">
                 {{ combatForm.stage ? "Changer" : "Préciser le tour" }}
               </button>
@@ -38,7 +38,7 @@
                 :aria-checked="combatForm.stage === option ? 'true' : 'false'"
                 :class="['choice-chip', { 'choice-active': combatForm.stage === option }]"
                 @click="selectCombatStage(option, $event)">
-                {{ option }}
+                {{ formatCombatStage(option) }}
               </button>
             </div>
           </div>

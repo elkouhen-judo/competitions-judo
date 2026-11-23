@@ -206,7 +206,8 @@ for (const [name, viewport] of [
     await expect(page.locator("#combatDetailToggle")).toHaveText("Détailler ce combat");
     await expect(page.locator("#combat_resultat")).toBeInViewport();
     await expect(page.locator("#saveCombatButton")).toBeInViewport();
-    await expect(page.locator("#combat_adversaire")).toBeFocused();
+    // SAISIE-1 : aucun champ n'a le focus, le clavier mobile ne cache pas le résultat.
+    await expect(page.locator("#combat_adversaire")).not.toBeFocused();
 
     // COMBAT-CHRONO : le tour, sans menu déroulant ; toutes les étapes sont visibles une fois la liste ouverte.
     assert.equal(await page.locator("#combatFormView .combat-quick-section select").count(), 0);
@@ -215,6 +216,18 @@ for (const [name, viewport] of [
       .locator("#combat_etape")
       .evaluate((element) => element.scrollWidth > element.clientWidth);
     assert.equal(stageOverflow, false);
+    // SAISIE-6 : les tours en mots de parents.
+    await expect(page.locator("#combat_etape [role='radio']")).toHaveText([
+      "Poule",
+      "1/32",
+      "1/16",
+      "1/8",
+      "Quart de finale",
+      "Demi-finale",
+      "Repêchage",
+      "Combat pour la 3e place",
+      "Finale"
+    ]);
     await page.locator("#combat_etape").getByRole("radio", { name: "Repêchage" }).click();
     // SAISIE-1 : un toucher sur un tour referme la liste sur une pastille.
     await expect(page.locator("#combat_etape")).toHaveCount(0);
@@ -351,7 +364,7 @@ for (const [name, viewport] of [
       "O-soto-gari · Ippon"
     ]);
     await expect(page.locator(".combat-card .combat-official-score-line-value")).toHaveText(
-      "1 0 2 - 0 1 0 · Shidos 0 - 1"
+      "Léa : 1 Ippon, 2 Yuko · Adversaire : 1 Waza-ari, 1 Shido"
     );
     await expect(page.getByText("Combat enregistré.", { exact: true })).toBeVisible();
     // ECRIT-2 : enregistrer un combat déclenche un seul appel RPC, la fiche n'est pas rechargée.
@@ -359,13 +372,15 @@ for (const [name, viewport] of [
     assert.equal(rpcMethods.filter((method) => method === "getCombatSuggestions").length, 1);
     await shot("05-saved");
 
-    // SAISIE-4 : après une victoire en repêchage, le combat suivant propose « Place de 3 ».
+    // SAISIE-4 : après une victoire en repêchage, le combat suivant propose le combat pour la 3e place.
     await page.getByRole("button", { name: "Ajouter un combat" }).click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Place de 3");
+    await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText(
+      "Combat pour la 3e place"
+    );
     // SAISIE-1 : l'appareil a retenu le détail déplié.
     await expect(page.locator("#combatDetail")).toBeVisible();
-    await expect(page.locator("#combat_adversaire")).toBeFocused();
+    await expect(page.locator("#combat_adversaire")).not.toBeFocused();
 
     // SAISIE-1 : 3 shidos de l'adversaire décident l'issue ; en retirer un l'efface.
     for (let index = 0; index < 3; index += 1) {

@@ -219,6 +219,18 @@
 
   const COMBAT_STAGE_ORDER = ["Poule", "1/32", "1/16", "1/8", "1/4", "1/2", "Repêchage", "Place de 3", "Finale"];
 
+  // SAISIE-6 : les tours en mots de parents ; la valeur enregistrée (1/4, 1/2, Place de 3) ne change pas.
+  const COMBAT_STAGE_LABELS: Record<string, string> = {
+    "1/4": "Quart de finale",
+    "1/2": "Demi-finale",
+    "Place de 3": "Combat pour la 3e place"
+  };
+
+  function formatCombatStage(stage: unknown): string {
+    const value = String(stage || "");
+    return COMBAT_STAGE_LABELS[value] || value;
+  }
+
   function getCombatStageOrder(stage: string): number {
     const index = COMBAT_STAGE_ORDER.indexOf(stage);
     return index === -1 ? COMBAT_STAGE_ORDER.length : index;
@@ -246,11 +258,22 @@
     };
   }
 
-  // COMBAT-SCORE : « IWY - IWY », suivi des shidos s'il y en a ; vide si le score n'est pas renseigné.
-  function formatCombatOfficialScore(score: CombatReadModel["officialScore"]): string {
+  // COMBAT-SCORE / SAISIE-7 : score en clair, « Hugo : 1 Ippon, 1 Waza-ari · Adversaire : 1 Shido »,
+  // sans compteur à zéro ; vide si le score n'est pas renseigné.
+  function formatCombatOfficialScore(score: CombatReadModel["officialScore"], judokaName = ""): string {
     if (!score) return "";
-    const side = (value: { ippon: number; wazaAri: number; yuko: number }) =>
-      [value.ippon, value.wazaAri, value.yuko].join(" ");
+    const side = (value: { ippon: number; wazaAri: number; yuko: number; shido?: number }) => {
+      const counts: Array<[number, string]> = [
+        [Number(value.ippon || 0), "Ippon"],
+        [Number(value.wazaAri || 0), "Waza-ari"],
+        [Number(value.yuko || 0), "Yuko"],
+        [Number(value.shido || 0), Number(value.shido || 0) > 1 ? "Shidos" : "Shido"]
+      ];
+      return counts
+        .filter(([count]) => count > 0)
+        .map(([count, label]) => `${count} ${label}`)
+        .join(", ");
+    };
     const judokaShidos = Number(score.judoka.shido || 0);
     const opponentShidos = Number(score.opponent.shido || 0);
     // SCORE-VIDE : un score entièrement nul vaut « non renseigné » (combat en attente compris).
@@ -259,8 +282,12 @@
       judokaShidos + opponentShidos
     );
     if (!total) return "";
-    const shidos = judokaShidos || opponentShidos ? ` · Shidos ${judokaShidos} - ${opponentShidos}` : "";
-    return `${side(score.judoka)} - ${side(score.opponent)}${shidos}`;
+    const firstName = String(judokaName || "").trim().split(/\s+/)[0] || "Judoka";
+    const judokaSide = side(score.judoka);
+    const opponentSide = side(score.opponent);
+    return [judokaSide && `${firstName} : ${judokaSide}`, opponentSide && `Adversaire : ${opponentSide}`]
+      .filter(Boolean)
+      .join(" · ");
   }
 
   function formatCombatScoreLabel(score: { category?: string; technique?: string; neWazaType?: string; value?: string }): string {
@@ -286,13 +313,14 @@
       opponent: c.opponent || "Adversaire non renseigné",
       opponentStance: c.opponentStance || "",
       stage: c.stage || "",
+      stageLabel: formatCombatStage(c.stage),
       judokaHandedness: c.judokaHandedness || "",
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (c.concededScores || []).map(formatCombatScoreLabel),
-      officialScoreLabel: formatCombatOfficialScore(c.officialScore),
+      officialScoreLabel: formatCombatOfficialScore(c.officialScore, normalizeDisplayName(c.judokaDisplayName || "")),
       judokaDisplayName: normalizeDisplayName(c.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: Boolean(helpers.canEdit),
@@ -362,13 +390,17 @@
       opponent: combatLike.opponent || "Adversaire non renseigné",
       opponentStance: combatLike.opponentStance || "",
       stage: combatLike.stage || "",
+      stageLabel: formatCombatStage(combatLike.stage),
       judokaHandedness: combatLike.judokaHandedness || "",
       result: helpers.formatResultat(combatLike.result),
       resultClass: `result-${String(combatLike.result || "").toLowerCase()}`,
       victoryType: combatLike.victoryType || "",
       scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (combatLike.concededScores || []).map(formatCombatScoreLabel),
-      officialScoreLabel: formatCombatOfficialScore(combatLike.officialScore),
+      officialScoreLabel: formatCombatOfficialScore(
+        combatLike.officialScore,
+        helpers.normalizeDisplayName(combatLike.judokaDisplayName || "")
+      ),
       judokaDisplayName: helpers.normalizeDisplayName(combatLike.judokaDisplayName || ""),
       showJudoka: Boolean(helpers.showJudoka),
       canEdit: op.type === "updateCombat" && Boolean(helpers.canEdit),
@@ -429,6 +461,7 @@
   }
 
   window.KirokuScreenProjections = {
+    formatCombatStage,
     getWeightCategoryOptions,
     getYearInCategoryOptions,
     mergePendingCombatCards,
