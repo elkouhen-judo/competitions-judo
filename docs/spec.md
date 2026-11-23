@@ -331,7 +331,7 @@ This specification does not define:
 ### 3.12 FFJDA agenda rules
 
 - **AGD-001**: Only a `COACH` opens « Agenda FFJDA », from the account menu. Other profiles see no entry, and the server refuses `getFfjudoEvents` to them with « Accès refusé. ».
-- **AGD-002**: The agenda is read-only; it creates, edits or links no competition.
+- **AGD-002**: The agenda never edits its events and keeps no link to a competition. It only offers to create a club competition from a competition event (AGD-018).
 - **AGD-003**: The agenda lists the upcoming events (start date today or later, Paris time), sorted by start date then title, grouped by month.
 - **AGD-004**: The agenda covers the national agenda of ffjudo.com and the events published by the Pays de la Loire, Bretagne and Nouvelle-Aquitaine ligue sites, which also relay other ligues' events.
 - **AGD-005**: An event seen on several sites is listed once.
@@ -347,6 +347,9 @@ This specification does not define:
 - **AGD-015**: A session with UVs shows the targeted dans (1 to 6) read in its title, before its UVs: `1er dan · UV1 · UV2`, `1er/2e dan · UV1`, `1er au 4e dan · UV3` (three or more consecutive dans). Recognized forms: `1ER DAN`, `2EME`/`2E`/`2IEME DAN`, lists joined by `/`, `,`, `&`, `+`, `-` or `ET`, ranges `DU 1ER AU 4EME DAN` and `1ER A 4EME DAN`, `1D`, and `SHODAN` to `ROKUDAN`. A title without a recognizable dan shows none; nothing is guessed.
 - **AGD-016**: When at least one UV is toggled, the `PASSAGE DE GRADE` events without a recognized UV that match the other filters are counted under the list: « 2 passages de grade sans UV renseignée », with « Afficher ». « Afficher » lists them in an « UV non renseignées » group after the months, without untoggling the UVs. Untoggling every UV or « Effacer les filtres » hides the group again.
 - **AGD-017**: Card dates show the short weekday: `sam. 28/11`, `sam. 28/11 → dim. 29/11`.
+- **AGD-018**: A card whose type is « Compétition » offers « Créer la compétition ». It opens « Nouvelle compétition » prefilled with the event title as name and its start date; every field stays editable and nothing is saved before « Enregistrer ». Other types (grade session, stage, training, kata, unknown) offer no button. Leaving the form returns to the agenda; an untouched prefilled form leaves without confirmation. The created club competition keeps no link to the event, so one event can give one club competition per age category.
+- **AGD-019**: The prefilled level comes from the organiser: a « Comité » gives `Départemental`, a « Ligue » gives `Régional`, the federation (or the national agenda without organiser) gives `National`. Any other organiser leaves the level empty.
+- **AGD-020**: The prefilled age category is the one named by the title (Poussinet, Poussin, Benjamin, Minime, Cadet, Junior, Senior or Vétéran, masculine, feminine or plural), only when the title names exactly one. Otherwise the coach chooses it. Age codes such as `U15` are not read.
 
 ## 4. Acceptance Criteria
 

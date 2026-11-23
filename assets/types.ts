@@ -378,10 +378,18 @@ export interface ClubCompetitionDeps {
   openCompetitionFromClubDetail(idCompetition: string, participants?: ClubParticipantLink[]): void;
 }
 
+/** AGD-018 : champs du formulaire « Nouvelle compétition » préremplis depuis l'agenda FFJDA. */
+export interface ClubCompetitionPrefill {
+  name: string;
+  competitionDate: string;
+  level: string;
+  ageCategory: string;
+}
+
 export interface ClubCompetitionScreen {
   confirmDeleteClubCompetitionById(idClubCompetition: string, name?: string): void;
   openClubCompetition(idClubCompetition: string): void;
-  showClubCompetitionForm(idClubCompetition?: string): void;
+  showClubCompetitionForm(prefill?: ClubCompetitionPrefill): void;
 }
 
 export interface CompetitionScreen {
@@ -390,7 +398,7 @@ export interface CompetitionScreen {
   openClubCompetition(idClubCompetition: string): void;
   openCompetition(idCompetition: string, keepMessage?: boolean, onLoaded?: () => void): void;
   openCompetitionFromJudokaProfile(idCompetition: string): void;
-  showClubCompetitionForm(idClubCompetition?: string): void;
+  showClubCompetitionForm(prefill?: ClubCompetitionPrefill): void;
   showCompetitionForm(idCompetition: string): void;
 }
 

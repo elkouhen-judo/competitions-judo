@@ -519,7 +519,7 @@ test("competition form keeps age and weight categories without place or actual w
 
 test("new competition form defaults the date to today", () => {
   assert.match(bundle, /function getCurrentLocalDate\(\)/);
-  assert.match(bundle, /competitionDate: getCurrentLocalDate\(\)/);
+  assert.match(bundle, /competitionDate: prefill\?\.competitionDate \|\| getCurrentLocalDate\(\)/);
 });
 
 test("coach can open club competition creation and participant management UI", () => {
@@ -553,7 +553,7 @@ test("coach can open club competition creation and participant management UI", (
   assert.match(bundle, /v-if="!hasClubCompetitionFormAgeCategory"/);
   assert.match(bundle, /id="clubCompetitionParticipants"/);
   assert.match(bundle, /v-for="participant in clubCompetitionFormParticipantsPage"/);
-  assert.match(client, /function showClubCompetitionForm\(\)/);
+  assert.match(client, /function showClubCompetitionForm\(prefill\)/);
   assert.match(client, /function updateClubCompetitionAgeCategory\(\)/);
   assert.match(client, /"saveClubCompetition"/);
   assert.match(client, /detachClubCompetitionParticipant/);

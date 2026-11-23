@@ -2781,6 +2781,20 @@ button:focus-visible,
   margin-left: 4px;
 }
 
+/* AGD-018 : « Créer la compétition » à côté du lien ffjudo.com, l'un sous l'autre si la place manque. */
+
+.agenda-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.agenda-card-actions .button-secondary {
+  width: auto;
+  min-height: 44px;
+}
+
 .agenda-card-link:hover,
   .agenda-card-link:focus-visible {
   text-decoration: underline;

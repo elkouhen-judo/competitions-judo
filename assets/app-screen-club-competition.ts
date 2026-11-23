@@ -5,6 +5,8 @@
   type ClubCompetitionDeps = import("./types").ClubCompetitionDeps;
   type OperationResult = import("./types").OperationResult;
   type CoachDashboardCompetitionPreset = import("./types").CoachDashboardCompetitionPreset;
+  type ClubCompetitionPrefill = import("./types").ClubCompetitionPrefill;
+  type ViewId = import("./types").ViewId;
 
   interface ClubCompetitionJudokaOption {
     judokaId: string;
@@ -563,8 +565,12 @@
       state.clubCompetitionParticipantsCurrentPage += 1;
     }
 
-    function showClubCompetitionForm() {
+    // AGD-018 : vue rouverte en quittant le formulaire (l'agenda quand il en vient).
+    let clubCompetitionFormReturnView: ViewId = "homeView";
+
+    function showClubCompetitionForm(prefill?: ClubCompetitionPrefill) {
       clearMessage();
+      clubCompetitionFormReturnView = prefill ? "ffjudoAgendaView" : "homeView";
       ensureClubCompetitionFormViewModel();
       const allParticipants = state.judokas.map(toJudokaOption);
       // Club par défaut : celui filtré sur l'accueil, ou l'unique club du coach.
@@ -576,10 +582,10 @@
       clubCompetitionFormViewModel.clubCompetitionFormNotice = "";
       Object.assign(clubCompetitionFormViewModel.clubCompetitionForm, {
         clubCompetitionId: "",
-        name: "",
-        competitionDate: getCurrentLocalDate(),
-        ageCategory: "",
-        level: "",
+        name: prefill?.name || "",
+        competitionDate: prefill?.competitionDate || getCurrentLocalDate(),
+        ageCategory: prefill?.ageCategory || "",
+        level: prefill?.level || "",
         clubId: defaultClubId,
         participantJudokaIds: []
       });
@@ -614,7 +620,7 @@
         return;
       }
       clubCompetitionFormSnapshot = "";
-      showView("homeView");
+      showView(clubCompetitionFormReturnView);
     }
 
     function saveClubCompetition() {

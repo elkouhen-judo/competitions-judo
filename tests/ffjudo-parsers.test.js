@@ -296,3 +296,34 @@ test("AGD-015 : no grade without a recognizable one, above 6th dan, or without U
   assert.deepEqual(detectGrades("UV4 7EME DAN", ["UV4"]), []);
   assert.deepEqual(detectGrades("STAGE PREPARATION 1ER DAN", []), []);
 });
+
+const {
+  detectAgeCategory,
+  detectCompetitionLevel
+} = require("../core/domain/ffjudo/competition-prefill");
+
+test("AGD-019 : le niveau d'une compétition se déduit de son organisateur", () => {
+  assert.equal(
+    detectCompetitionLevel("Comité LOIRE ATLANTIQUE JUD", "Pays de la Loire"),
+    "Départemental"
+  );
+  assert.equal(detectCompetitionLevel("Ligue BRETAGNE JUDO", "Bretagne"), "Régional");
+  assert.equal(detectCompetitionLevel("FFJDA", "National"), "National");
+  assert.equal(
+    detectCompetitionLevel("Ligue FEDERATION FRANCAISE - AUTRES", "National"),
+    "National"
+  );
+  assert.equal(detectCompetitionLevel("", "National"), "National");
+  assert.equal(detectCompetitionLevel("", "Bretagne"), "");
+  assert.equal(detectCompetitionLevel("JUDO CLUB DE REZE", "Pays de la Loire"), "");
+});
+
+test("AGD-020 : la catégorie d'âge n'est retenue que si le titre en cite exactement une", () => {
+  assert.equal(detectAgeCategory("TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES"), "Cadet");
+  assert.equal(detectAgeCategory("Coupe départementale minimes"), "Minime");
+  assert.equal(detectAgeCategory("CHAMPIONNAT RÉGIONAL VÉTÉRANS"), "Vétéran");
+  assert.equal(detectAgeCategory("Animation poussinets"), "Poussinet");
+  assert.equal(detectAgeCategory("Tournoi poussines et poussins"), "Poussin");
+  assert.equal(detectAgeCategory("TOURNOI BENJAMINS / MINIMES"), "");
+  assert.equal(detectAgeCategory("CHAMPIONNAT DE FRANCE INDIVIDUEL 1ÈRE DIVISION"), "");
+});

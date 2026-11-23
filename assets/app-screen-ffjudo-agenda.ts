@@ -8,6 +8,7 @@
   const NATIONAL_LIGUE = "National";
   const UV_OPTIONS = ["UV1", "UV2", "UV3", "UV4"];
   const GRADE_TYPE = "PASSAGE DE GRADE";
+  const COMPETITION_TYPE = "COMPETITION";
 
   // AGD-017 : jour de la semaine d'une date du calendrier, sans décalage de fuseau.
   const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("fr-FR", { weekday: "short", timeZone: "UTC" });
@@ -140,7 +141,9 @@
       ownerLabel: owner,
       closingLabel: closingLabel(event.inscriptionCloture, today),
       // AGD-014 : une clôture passée se lit sans être une alerte.
-      isClosed: Boolean(event.inscriptionCloture) && event.inscriptionCloture < today
+      isClosed: Boolean(event.inscriptionCloture) && event.inscriptionCloture < today,
+      // AGD-018 : seule une compétition peut devenir une compétition club.
+      canCreateCompetition: String(event.typeEvenement || "").toUpperCase() === COMPETITION_TYPE
     };
   }
 
@@ -229,6 +232,7 @@
         const actions = {
           showHome: () => app.showHome && app.showHome(),
           retryFfjudoAgenda: () => fetchAgenda(),
+          createCompetitionFromEvent,
           clearFfjudoAgendaFilters,
           toggleFfjudoAgendaUv,
           showUnlabeledGradeSessions: () => {
@@ -239,6 +243,18 @@
         mounted = true;
       }
       return viewModel;
+    }
+
+    // AGD-018 : ouvre « Nouvelle compétition » prérempli ; rien n'est enregistré avant « Enregistrer ».
+    function createCompetitionFromEvent(eventKey: string) {
+      const event = ensureViewModel().events.find((candidate) => candidate.eventKey === eventKey);
+      if (!event) return;
+      app.screens.competition.showClubCompetitionForm({
+        name: event.titre,
+        competitionDate: event.dateDebut,
+        level: event.suggestedLevel || "",
+        ageCategory: event.suggestedAgeCategory || ""
+      });
     }
 
     function clearFfjudoAgendaFilters() {

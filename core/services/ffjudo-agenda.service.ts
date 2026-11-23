@@ -1,3 +1,4 @@
+import { detectAgeCategory, detectCompetitionLevel } from "../domain/ffjudo/competition-prefill";
 import { detectGrades } from "../domain/ffjudo/grade";
 import { detectUvs } from "../domain/ffjudo/uv";
 import type { FfjudoEventsRepository } from "../repositories/ffjudo-events.repository";
@@ -33,7 +34,9 @@ function toAgendaEvent(row: FfjudoEventRow): FfjudoAgendaEvent {
     proprietaire: String(row.proprietaire || ""),
     sourceUrl: String(row.source_url || ""),
     uvs,
-    grades: detectGrades(String(row.titre || ""), uvs)
+    grades: detectGrades(String(row.titre || ""), uvs),
+    suggestedLevel: detectCompetitionLevel(String(row.proprietaire || ""), String(row.ligue || "")),
+    suggestedAgeCategory: detectAgeCategory(String(row.titre || ""))
   };
 }
 

@@ -74,7 +74,9 @@ const EVENTS = [
     ville: "NANTES",
     ligue: "Pays de la Loire",
     proprietaire: "Comité LOIRE ATLANTIQUE JUD",
-    sourceUrl: "https://pays-de-la-loire-judo.ffjudo.com/evenement/tournoi-nantes/18"
+    sourceUrl: "https://pays-de-la-loire-judo.ffjudo.com/evenement/tournoi-nantes/18",
+    suggestedLevel: "Départemental",
+    suggestedAgeCategory: "Cadet"
   },
   {
     eventKey: "fed:2",
@@ -87,7 +89,9 @@ const EVENTS = [
     ville: "VANNES",
     ligue: "Bretagne",
     proprietaire: "Comité MORBIHAN JUDO",
-    sourceUrl: "https://judo-bretagne.ffjudo.com/evenement/stage-morbihan/7"
+    sourceUrl: "https://judo-bretagne.ffjudo.com/evenement/stage-morbihan/7",
+    suggestedLevel: "Départemental",
+    suggestedAgeCategory: ""
   },
   {
     eventKey: "nat:championnat:x",
@@ -100,7 +104,9 @@ const EVENTS = [
     ville: "",
     ligue: "National",
     proprietaire: "",
-    sourceUrl: "https://www.ffjudo.com/evenement/championnat-de-france-individuel-1ere-division-2"
+    sourceUrl: "https://www.ffjudo.com/evenement/championnat-de-france-individuel-1ere-division-2",
+    suggestedLevel: "National",
+    suggestedAgeCategory: ""
   }
 ];
 
@@ -337,6 +343,91 @@ for (const [name, viewport] of VIEWPORTS) {
       fullPage: true,
       animations: "disabled"
     });
+  });
+}
+
+for (const [name, viewport] of VIEWPORTS) {
+  test(`AGD-018 : une compétition de l'agenda devient une compétition club préremplie sur ${name}`, async (t) => {
+    const cadet = {
+      ...judoka,
+      judokaId: "j-ines",
+      firstName: "Inès",
+      lastName: "Durand",
+      accountEmail: "",
+      ageCategory: "Cadet",
+      clubId: "club-1",
+      registrationSeason: 2099
+    };
+    const base = scenario([{ events: EVENTS, lastSyncAt: LAST_SYNC }]);
+    const handle = (request) => {
+      if (request.method === "getInitialData") return { ...base(request), judokas: [coach, cadet] };
+      if (request.method === "saveClubCompetition") {
+        const input = request.args[0];
+        return {
+          success: true,
+          message: "Compétition club enregistrée.",
+          clubCompetition: {
+            clubCompetitionId: "cc-new",
+            name: input.name,
+            competitionDate: input.competitionDate,
+            clubId: input.clubId
+          },
+          competitions: []
+        };
+      }
+      return base(request);
+    };
+    const { page, rpc } = await openAgenda(t, handle, viewport);
+    const cards = page.locator("#ffjudoAgendaView .agenda-card");
+    await expect(cards).toHaveCount(3);
+    // Seule une compétition propose le bouton : ni le stage, ni l'événement sans type.
+    await expect(page.getByRole("button", { name: "Créer la compétition" })).toHaveCount(1);
+    await page.screenshot({
+      path: `output/playwright/agenda-creer-${name}-01-carte.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+
+    await cards.first().getByRole("button", { name: "Créer la compétition" }).click();
+    await expect(page.locator("#clubCompetitionFormView")).toBeVisible();
+    await expect(page.locator("#club_competition_name")).toHaveValue(
+      "TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES"
+    );
+    await expect(page.locator("#club_competition_date")).toHaveValue(EVENTS[0].dateDebut);
+    await expect(page.locator("#club_competition_categorie_age")).toHaveValue("Cadet");
+    await expect(
+      page
+        .locator("#club_competition_niveau")
+        .getByRole("radio", { name: "Départemental", exact: true })
+    ).toHaveAttribute("aria-checked", "true");
+    await page.screenshot({
+      path: `output/playwright/agenda-creer-${name}-02-formulaire.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+
+    // Sans modification, « Retour » revient à l'agenda sans confirmation.
+    await page.locator("#clubCompetitionFormView .page-back").click();
+    await expect(page.locator("#ffjudoAgendaView")).toBeVisible();
+
+    // Rien n'est enregistré avant « Enregistrer » ; l'enregistrement reprend les champs préremplis.
+    assert.equal(
+      rpc.some((request) => request.method === "saveClubCompetition"),
+      false
+    );
+    await cards.first().getByRole("button", { name: "Créer la compétition" }).click();
+    await page.locator("#clubCompetitionFormView").getByText("Inès Durand").click();
+    await page.locator("#saveClubCompetitionButton").click();
+    await expect
+      .poll(() => rpc.filter((request) => request.method === "saveClubCompetition").length)
+      .toBe(1);
+    const saved = rpc.find((request) => request.method === "saveClubCompetition").args[0];
+    assert.equal(saved.name, "TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES");
+    assert.equal(saved.competitionDate, EVENTS[0].dateDebut);
+    assert.equal(saved.ageCategory, "Cadet");
+    assert.equal(saved.level, "Départemental");
+    assert.equal(saved.clubId, "club-1");
+    assert.deepEqual(saved.participantJudokaIds, ["j-ines"]);
   });
 }
 

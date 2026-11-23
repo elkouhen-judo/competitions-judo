@@ -616,6 +616,10 @@ export interface FfjudoAgendaEvent {
   uvs: string[];
   /** AGD-015 : dans visés (1 à 6), lus dans le titre d'une séance d'UV ; vide si inconnus. */
   grades: number[];
+  /** AGD-019 : niveau suggéré pour la compétition club, déduit de l'organisateur ; vide si inconnu. */
+  suggestedLevel: string;
+  /** AGD-020 : catégorie d'âge citée seule par le titre ; vide sinon. */
+  suggestedAgeCategory: string;
 }
 
 /** Agenda FFJDA : événements à venir et date de la dernière synchronisation réussie ("" si aucune). */

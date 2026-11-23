@@ -70,7 +70,10 @@
                   <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
                   <p v-if="event.closingLabel" :class="['agenda-card-line', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
                 </div>
-                <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
+                <div class="agenda-card-actions">
+                  <button v-if="event.canCreateCompetition" class="button-secondary compact-button" type="button" @click="createCompetitionFromEvent(event.eventKey)">Créer la compétition</button>
+                  <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
+                </div>
               </article>
             </div>
           </section>
