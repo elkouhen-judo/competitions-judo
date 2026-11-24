@@ -70,9 +70,17 @@
                 <!-- CLUB-001 : un judoka appartient à plusieurs structures (club, pôle espoir…), dont un club principal. -->
                 <div v-if="changingClubUserId === managedUser.judokaId" class="admin-user-club-choice" role="group" :aria-label="'Clubs de ' + managedUser.fullName">
                   <span class="choice-label">Clubs et structures</span>
-                  <div class="choice-chips choice-chips-wrap">
-                    <button v-for="club in clubOptions" :key="club.clubId" type="button" :class="['choice-chip', { 'choice-active': userClubDraft.clubIds.includes(club.clubId) }]" :aria-pressed="userClubDraft.clubIds.includes(club.clubId) ? 'true' : 'false'" :disabled="isSubmitting" @click="toggleUserClubDraft(club.clubId)">{{ club.name }}</button>
+                  <!-- UIX-043 : les clubs choisis en pastilles ; un menu ne propose que les autres. -->
+                  <div v-if="userClubDraftOptions.length" class="competition-chip-list">
+                    <span v-for="club in userClubDraftOptions" :key="club.clubId" class="competition-chip">
+                      {{ club.name }}
+                      <button type="button" class="competition-chip-remove" :aria-label="'Retirer ' + club.name" :disabled="isSubmitting" @click="toggleUserClubDraft(club.clubId)">×</button>
+                    </span>
                   </div>
+                  <select v-if="userClubDraftOptions.length < clubOptions.length" class="pick-select" :aria-label="'Ajouter un club à ' + managedUser.fullName" :disabled="isSubmitting" @change="toggleUserClubDraft($event.target.value); $event.target.value = ''">
+                    <option value="">Ajouter un club…</option>
+                    <option v-for="club in clubOptions.filter((option) => !userClubDraft.clubIds.includes(option.clubId))" :key="club.clubId" :value="club.clubId">{{ club.name }}</option>
+                  </select>
                   <template v-if="userClubDraft.clubIds.length > 1">
                     <span class="choice-label">Club principal</span>
                     <div class="choice-chips choice-chips-wrap" role="radiogroup" aria-label="Club principal">
@@ -208,10 +216,18 @@
             <div class="list">
               <article v-for="coach in coachCards" :key="coach.judokaId" class="card admin-card">
                 <p class="card-title">{{ coach.fullName }}</p>
-                <label v-for="club in clubOptions" :key="club.clubId" class="checkbox-row">
-                  <input type="checkbox" :checked="coach.clubIds.includes(club.clubId)" :disabled="isSubmitting" @change="toggleCoachClub(coach.judokaId, club.clubId, $event.target.checked)">
-                  <span>{{ club.name }}</span>
-                </label>
+                <!-- UIX-043 : les clubs coachés en pastilles ; un menu ne propose que les autres. -->
+                <div v-if="coach.clubIds.length" class="competition-chip-list">
+                  <span v-for="club in clubOptions.filter((option) => coach.clubIds.includes(option.clubId))" :key="club.clubId" class="competition-chip">
+                    {{ club.name }}
+                    <button type="button" class="competition-chip-remove" :aria-label="'Retirer ' + club.name + ' à ' + coach.fullName" :disabled="isSubmitting" @click="toggleCoachClub(coach.judokaId, club.clubId, false)">×</button>
+                  </span>
+                </div>
+                <p v-else class="field-hint">Aucun club coaché.</p>
+                <select v-if="coach.clubIds.length < clubOptions.length" class="pick-select" :aria-label="'Ajouter un club coaché par ' + coach.fullName" :disabled="isSubmitting" @change="toggleCoachClub(coach.judokaId, $event.target.value, true); $event.target.value = ''">
+                  <option value="">Ajouter un club…</option>
+                  <option v-for="club in clubOptions.filter((option) => !coach.clubIds.includes(option.clubId))" :key="club.clubId" :value="club.clubId">{{ club.name }}</option>
+                </select>
               </article>
             </div>
           </div>

@@ -178,6 +178,9 @@ function adminScenario() {
       if (filter === "coach") return page(users.filter((user) => user.accessRole === "COACH"));
       return page(users);
     }
+    if (request.method === "setCoachClubs") {
+      return { success: true, message: "Clubs coachés mis à jour." };
+    }
     if (request.method === "setJudokaClubs") {
       return { success: true, message: "Club modifié." };
     }
@@ -233,9 +236,12 @@ for (const [name, viewport] of VIEWPORTS) {
     await row("Sam Test").getByRole("menuitem", { name: "Modifier les clubs" }).click();
     const choice = row("Sam Test").locator(".admin-user-club-choice");
     await expect(choice.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
-    await choice.getByRole("button", { name: "Judo Club Nantes" }).click();
+    // UIX-043 : les clubs choisis en pastilles, les autres dans le menu « Ajouter un club… ».
+    const addClub = choice.getByRole("combobox", { name: "Ajouter un club à Sam Test" });
+    await addClub.selectOption({ label: "Judo Club Nantes" });
+    await expect(choice.locator(".competition-chip")).toHaveText(["Judo Club Nantes ×"]);
     await expect(choice.getByRole("radiogroup", { name: "Club principal" })).toHaveCount(0);
-    await choice.getByRole("button", { name: "Pôle Espoir" }).click();
+    await addClub.selectOption({ label: "Pôle Espoir" });
     const main = choice.getByRole("radiogroup", { name: "Club principal" });
     await expect(main.getByRole("radio", { name: "Judo Club Nantes" })).toHaveAttribute(
       "aria-checked",
@@ -262,6 +268,25 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect
       .poll(() => rpc.filter((r) => r.method === "setJudokaClubs").map((r) => r.args))
       .toEqual([["j-sam", ["club-nantes", "pole-espoir"], "pole-espoir"]]);
+
+    // UIX-043 : les clubs coachés en pastilles ; le menu ne propose que les autres clubs.
+    await page.locator(".admin-sub-tabs").getByRole("button", { name: "Clubs" }).click();
+    const coachClubs = page.locator("#coachClubsList .admin-card").filter({ hasText: "Tom Test" });
+    await expect(coachClubs.locator(".competition-chip")).toHaveText(["Judo Club Nantes ×"]);
+    const addCoachClub = coachClubs.getByRole("combobox", {
+      name: "Ajouter un club coaché par Tom Test"
+    });
+    await expect(addCoachClub.locator("option")).toHaveText(["Ajouter un club…", "Pôle Espoir"]);
+    await page.screenshot({
+      path: `output/playwright/profiles-admin-${name}-01d-clubs-coaches.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+    await addCoachClub.selectOption({ label: "Pôle Espoir" });
+    await expect
+      .poll(() => rpc.filter((r) => r.method === "setCoachClubs").map((r) => r.args))
+      .toEqual([["j-tom", ["club-nantes", "pole-espoir"]]]);
+    await page.locator(".admin-sub-tabs").getByRole("button", { name: "Utilisateurs" }).click();
 
     // ADMIN-1 : nommer coach un judoka ; jamais un parent.
     const card = (fullName) => cards.filter({ hasText: fullName });

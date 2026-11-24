@@ -312,9 +312,19 @@ for (const [name, viewport] of [
       .locator("#club_detail_niveau")
       .getByRole("radio", { name: "National", exact: true })
       .click();
-    await expect(page.locator("#clubDetailSelectAll")).toHaveText("Tout sélectionner");
+    // UIX-043 : un judoka ajouté passe en pastille et sort de la liste ; « Tout ajouter » prend le reste.
+    const newChips = page.locator("#clubDetailNewJudokas .competition-chip");
+    const candidates = page.locator("#clubDetailAvailableJudokas .pick-row");
+    await expect(page.locator("#clubDetailSelectAll")).toHaveText("Tout ajouter");
+    const firstName = (await candidates.first().locator("span").first().textContent()).trim();
+    const candidateCount = await candidates.count();
+    await candidates.first().click();
+    await expect(newChips).toHaveText([`${firstName} ×`]);
+    await expect(candidates).toHaveCount(candidateCount - 1);
+    await page.getByRole("button", { name: `Retirer ${firstName}` }).click();
+    await expect(newChips).toHaveCount(0);
     await page.locator("#clubDetailSelectAll").click();
-    await expect(page.locator("#clubDetailSelectAll")).toHaveText("Tout désélectionner");
+    await expect(candidates).toHaveCount(0);
     await shot("04-modifier");
     await page.getByRole("button", { name: "Annuler", exact: true }).click();
     await expect(page.locator("#confirmDialog")).toBeVisible();

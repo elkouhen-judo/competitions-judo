@@ -395,7 +395,7 @@ for (const [name, viewport] of [
       "Indiquez la date.",
       "Choisissez la catégorie d'âge.",
       "Choisissez le niveau.",
-      "Cochez au moins un judoka."
+      "Ajoutez au moins un judoka."
     ]);
     await expect(page.locator("#club_competition_name")).toBeFocused();
     assert.equal(methods(rpc).includes("saveClubCompetition"), false);
@@ -410,29 +410,32 @@ for (const [name, viewport] of [
       "1 judoka du club n'a pas de catégorie d'âge."
     );
 
-    // CREA-4 : toute la catégorie en un toucher, toutes pages confondues.
+    // CREA-4 : toute la catégorie en un toucher, toutes pages confondues ;
+    // UIX-043 : la liste ne garde que les judokas à ajouter, les inscrits passent en pastilles.
+    const candidates = page.locator("#clubCompetitionParticipants .pick-row span:first-child");
+    await expect(selectAll).toHaveText("Tout ajouter");
     await selectAll.click();
     await expect(chips).toHaveCount(12);
-    await expect(selectAll).toHaveText("Tout désélectionner");
-    await selectAll.click();
+    await expect(candidates).toHaveCount(0);
+    await expect(page.locator("#clubCompetitionParticipants .empty-state")).toHaveText(
+      "Tous les judokas de cette catégorie sont inscrits."
+    );
+    await expect(selectAll).toHaveCount(0);
+    await page.selectOption("#club_competition_categorie_age", "Cadet");
+    await page.selectOption("#club_competition_categorie_age", "Minime");
     await expect(chips).toHaveCount(0);
 
-    // CREA-5 : un judoka coché en page 2 reste visible en page 1.
+    // CREA-5 : un judoka ajouté en page 2 reste visible en page 1.
     await page.getByRole("button", { name: "Page suivante" }).click();
-    await page
-      .locator("#clubCompetitionParticipants label")
-      .filter({ hasText: "Inès Bonnet" })
-      .locator("input")
-      .check();
+    await page.getByRole("button", { name: "Ajouter Inès Bonnet" }).click();
     await page.getByRole("button", { name: "Page précédente" }).click();
     await expect(chips).toHaveText(["Inès Bonnet ×"]);
+    await expect(page.getByRole("button", { name: "Ajouter Inès Bonnet" })).toHaveCount(0);
+    await shot("01b-ajout-judokas");
 
     // CREA-6 : la recherche ne liste que les noms qui correspondent.
     await page.fill("#clubFormJudokaSearch", "du");
-    await expect(page.locator("#clubCompetitionParticipants label")).toHaveText([
-      "Hugo Dubois",
-      "Nina Durand"
-    ]);
+    await expect(candidates).toHaveText(["Hugo Dubois", "Nina Durand"]);
     await selectAll.click();
     await expect(chips).toHaveCount(3);
     await page.getByRole("button", { name: "Retirer Inès Bonnet" }).click();

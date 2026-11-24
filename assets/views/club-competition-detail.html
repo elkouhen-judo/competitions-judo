@@ -140,9 +140,13 @@
               <p class="subtitle">Ajoutez les judokas manquants de la même catégorie.</p>
             </div>
             <!-- COACH-7 : toute la liste affichée en un toucher, comme à la création. -->
-            <button v-if="clubCompetitionAvailableJudokasFiltered.length" id="clubDetailSelectAll" class="button-secondary compact-button" type="button" @click="toggleAllClubAvailableJudokas()">
-              {{ clubCompetitionAvailableAllSelected ? "Tout désélectionner" : "Tout sélectionner" }}
-            </button>
+            <button v-if="clubCompetitionAvailableJudokasFiltered.length" id="clubDetailSelectAll" class="button-secondary compact-button" type="button" @click="addAllClubAvailableJudokas()">Tout ajouter</button>
+          </div>
+          <div v-if="clubCompetitionNewJudokas.length" id="clubDetailNewJudokas" class="competition-chip-list" aria-label="Judokas à ajouter">
+            <span v-for="j in clubCompetitionNewJudokas" :key="j.judokaId" class="competition-chip">
+              {{ j.name }}
+              <button type="button" class="competition-chip-remove" :aria-label="'Retirer ' + j.name" @click="removeClubAvailableJudoka(j.judokaId)">×</button>
+            </span>
           </div>
           <div v-if="clubCompetitionAvailableJudokas.length > 5" class="list-search">
             <input type="search" id="clubDetailJudokaSearch" aria-label="Rechercher un judoka" placeholder="Rechercher un judoka…" autocomplete="off" v-model="judokaAvailableSearchText" @input="updateClubAvailableJudokaSearch()">
@@ -150,12 +154,13 @@
           <p v-if="clubCompetitionUnregisteredCount" id="clubDetailUnregistered" class="field-hint">{{ clubCompetitionUnregisteredCount > 1 ? `${clubCompetitionUnregisteredCount} judokas du club ne sont pas réinscrits pour la saison de cette compétition.` : "1 judoka du club n'est pas réinscrit pour la saison de cette compétition." }}</p>
           <div id="clubDetailAvailableJudokas">
             <div v-if="!clubCompetitionAvailableJudokas.length" class="empty-state">Aucun judoka disponible dans cette catégorie.</div>
-            <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>
+            <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun autre judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>
+            <!-- UIX-043 : seuls les judokas pas encore choisis sont listés. -->
             <div v-else class="list">
-              <label v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" class="checkbox-row">
-                <input type="checkbox" :value="j.judokaId" v-model="clubCompetitionNewJudokaIds">
+              <button v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" type="button" class="pick-row" :aria-label="'Ajouter ' + j.name" @click="addClubAvailableJudoka(j.judokaId)">
                 <span>{{ j.name }}</span>
-              </label>
+                <span class="pick-row-add" aria-hidden="true">+</span>
+              </button>
             </div>
             <div v-if="clubCompetitionAvailableJudokasTotalPages > 1" class="list-summary">
               <p class="list-summary-text">Page {{ clubCompetitionAvailableJudokasCurrentPage }} / {{ clubCompetitionAvailableJudokasTotalPages }} ({{ clubCompetitionAvailableJudokasTotalCount }} judokas)</p>

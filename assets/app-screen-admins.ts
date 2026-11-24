@@ -469,6 +469,7 @@
     }
 
     function toggleCoachClub(coachId: string, clubId: string, checked: boolean) {
+      if (!clubId) return;
       const coach = coachCards.value.find((card) => card.judokaId === coachId);
       const current = coach ? coach.clubIds : [];
       const next = checked ? [...new Set([...current, clubId])] : current.filter((id) => id !== clubId);
@@ -490,6 +491,7 @@
 
     // Un club coché devient principal s'il est le seul ; décocher le principal passe au suivant.
     function toggleUserClubDraft(clubId: string) {
+      if (!clubId) return;
       const draft = getAdminsViewModel().userClubDraft;
       const clubIds = draft.clubIds.includes(clubId)
         ? draft.clubIds.filter((id) => id !== clubId)

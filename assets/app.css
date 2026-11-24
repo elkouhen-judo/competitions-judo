@@ -1219,6 +1219,49 @@ button:focus-visible,
   flex-shrink: 0;
 }
 
+/* UIX-043 : une ligne à toucher pour ajouter l'élément ; la sélection est ailleurs, en pastilles. */
+
+.list > .pick-row {
+  min-width: 0;
+}
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: normal;
+  text-align: left;
+}
+
+.pick-row:hover:not(:disabled),
+    .pick-row:active:not(:disabled),
+    .pick-row:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: none;
+}
+
+.pick-row-add {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.pick-select {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .card {
   border: 1px solid var(--line);
   border-radius: var(--radius-card);

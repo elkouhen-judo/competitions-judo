@@ -542,7 +542,10 @@ test("coach can open club competition creation and participant management UI", (
     /id="club_detail_niveau"\s+class="choice-segmented choice-segmented-2"\s+role="radiogroup"/
   );
   assert.match(bundle, /@click="selectClubCompetitionDetailLevel\(option\)"/);
-  assert.match(bundle, /id="clubDetailSelectAll"[\s\S]*Tout sélectionner/);
+  assert.match(bundle, /id="clubDetailSelectAll"[^>]*>Tout ajouter</);
+  // UIX-043 : plus de liste à cocher dont seuls certains éléments sont cochés, sauf liste courte et fixe.
+  assert.doesNotMatch(bundle, /<input type="checkbox"/);
+  assert.match(bundle, /class="pick-row"/);
   assert.match(bundle, /Saisie après coup possible : ajoutez les judokas oubliés/);
   assert.match(bundle, /@click="setClubParticipantRanking\(p\.competitionId, option\.value\)"/);
   assert.doesNotMatch(bundle, /v-if="!clubCompetitionParticipantsLocked" class="section"/);

@@ -83,9 +83,7 @@
               </h3>
             </div>
             <!-- CREA-4 : toute la liste affichée (club, catégorie, recherche) en un toucher. -->
-            <button v-if="clubCompetitionFormParticipantsFiltered.length" id="clubCompetitionSelectAll" class="button-secondary compact-button" type="button" @click="toggleAllClubCompetitionParticipants()">
-              {{ clubCompetitionFormAllSelected ? "Tout désélectionner" : "Tout sélectionner" }}
-            </button>
+            <button v-if="clubCompetitionFormParticipantsFiltered.length" id="clubCompetitionSelectAll" class="button-secondary compact-button" type="button" @click="addAllClubCompetitionParticipants()">Tout ajouter</button>
           </div>
           <!-- CREA-7 : un changement de catégorie ou de club qui retire des judokas est annoncé. -->
           <p v-if="clubCompetitionFormNotice" id="clubCompetitionFormNotice" class="field-todo" role="status">{{ clubCompetitionFormNotice }}</p>
@@ -103,12 +101,13 @@
             <div v-if="!hasClubCompetitionFormAgeCategory" class="empty-state">Sélectionnez une catégorie pour afficher les judokas.</div>
             <div v-else-if="!clubCompetitionForm.clubId" class="empty-state">Sélectionnez un club pour afficher ses judokas.</div>
             <div v-else-if="!clubCompetitionFormCategoryParticipants.length" class="empty-state">Aucun judoka de ce club dans cette catégorie.</div>
-            <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">Aucun judoka ne correspond à cette recherche.</div>
+            <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">{{ judokaSearchText ? "Aucun autre judoka ne correspond à cette recherche." : "Tous les judokas de cette catégorie sont inscrits." }}</div>
+            <!-- UIX-043 : seuls les judokas à ajouter sont listés ; les inscrits sont dans les pastilles. -->
             <div v-else class="list">
-              <label v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" class="checkbox-row">
-                <input type="checkbox" :value="participant.judokaId" v-model="clubCompetitionForm.participantJudokaIds" @change="clubCompetitionFormErrors.participants = ''">
+              <button v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" type="button" class="pick-row" :aria-label="'Ajouter ' + participant.name" @click="addClubCompetitionParticipant(participant.judokaId)">
                 <span>{{ participant.name }}</span>
-              </label>
+                <span class="pick-row-add" aria-hidden="true">+</span>
+              </button>
             </div>
             <div v-if="clubCompetitionFormParticipantsTotalPages > 1" class="list-summary">
               <p class="list-summary-text">Page {{ clubCompetitionFormParticipantsCurrentPage }} / {{ clubCompetitionFormParticipantsTotalPages }} ({{ clubCompetitionFormParticipantsTotalCount }} judokas)</p>

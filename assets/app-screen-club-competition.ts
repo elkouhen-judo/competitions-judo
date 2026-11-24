@@ -176,17 +176,19 @@
         ? `${count} judokas de la catégorie ne sont pas réinscrits pour la saison ${label}.`
         : `1 judoka de la catégorie n'est pas réinscrit pour la saison ${label}.`;
     });
-    // CREA-6 : la recherche ne liste que les noms qui correspondent ; la sélection reste dans les pastilles.
-    const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
-      const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
-      return clubCompetitionFormCategoryParticipants.value.filter(
-        (p) => !query || p.name.toLowerCase().includes(query)
-      );
-    });
     const clubCompetitionFormSelectedIds = window.Vue.computed(
       () => new Set(clubCompetitionFormViewModel.clubCompetitionForm.participantJudokaIds.map(String))
     );
-    // CREA-5 : les judokas inscrits, dans l'ordre où ils ont été cochés.
+    // CREA-6 / UIX-043 : la liste ne propose que les judokas à ajouter ; les inscrits sont dans les pastilles.
+    const clubCompetitionFormParticipantsFiltered = window.Vue.computed(() => {
+      const query = cleanText(clubCompetitionFormViewModel.judokaSearchText).toLowerCase();
+      return clubCompetitionFormCategoryParticipants.value.filter(
+        (p) =>
+          !clubCompetitionFormSelectedIds.value.has(String(p.judokaId)) &&
+          (!query || p.name.toLowerCase().includes(query))
+      );
+    });
+    // CREA-5 : les judokas inscrits, dans l'ordre où ils ont été ajoutés.
     const clubCompetitionFormSelectedParticipants = window.Vue.computed(() => {
       const participantsById = new Map(
         clubCompetitionFormViewModel.clubCompetitionParticipants.map((p) => [String(p.judokaId), p])
@@ -195,11 +197,6 @@
         .map((id) => participantsById.get(String(id)))
         .filter((participant): participant is ClubCompetitionJudokaOption => Boolean(participant));
     });
-    const clubCompetitionFormAllSelected = window.Vue.computed(
-      () =>
-        clubCompetitionFormParticipantsFiltered.value.length > 0 &&
-        clubCompetitionFormParticipantsFiltered.value.every((p) => clubCompetitionFormSelectedIds.value.has(String(p.judokaId)))
-    );
     // CREA-8 : un judoka sans catégorie d'âge n'apparaît dans aucune catégorie : il est signalé.
     const clubCompetitionFormUncategorizedText = window.Vue.computed(() => {
       const clubId = clubCompetitionFormViewModel.clubCompetitionForm.clubId;
@@ -237,15 +234,18 @@
       return clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.filter(
         (j) =>
           (!ageCategory || j.ageCategory === ageCategory) &&
-          (selectedIds.has(String(j.judokaId)) || !query || j.name.toLowerCase().includes(query))
+          !selectedIds.has(String(j.judokaId)) &&
+          (!query || j.name.toLowerCase().includes(query))
       );
     });
-    const clubCompetitionAvailableAllSelected = window.Vue.computed(() => {
-      const selected = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
-      return (
-        clubCompetitionAvailableJudokasFiltered.value.length > 0 &&
-        clubCompetitionAvailableJudokasFiltered.value.every((j) => selected.has(String(j.judokaId)))
+    // UIX-043 : les judokas à ajouter, en pastilles, dans l'ordre où ils ont été choisis.
+    const clubCompetitionNewJudokas = window.Vue.computed(() => {
+      const judokasById = new Map(
+        clubCompetitionDetailViewModel.clubCompetitionAvailableJudokas.map((j) => [String(j.judokaId), j])
       );
+      return clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
+        .map((id) => judokasById.get(String(id)))
+        .filter((judoka): judoka is ClubCompetitionJudokaOption => Boolean(judoka));
     });
     const clubCompetitionAvailableJudokasPagination = window.Vue.computed(() =>
       window.KirokuScreenProjections.paginateList(
@@ -312,7 +312,8 @@
           removeClubCompetitionParticipant,
           saveClubCompetition,
           selectClubCompetitionLevel,
-          toggleAllClubCompetitionParticipants,
+          addAllClubCompetitionParticipants,
+          addClubCompetitionParticipant,
           updateClubCompetitionAgeCategory,
           updateClubCompetitionDate,
           updateClubCompetitionJudokaSearch,
@@ -322,7 +323,6 @@
         },
         {
           isSubmitting,
-          clubCompetitionFormAllSelected,
           clubCompetitionFormCategoryParticipants,
           clubCompetitionFormParticipantsFiltered,
           clubCompetitionFormSelectedParticipants,
@@ -368,7 +368,9 @@
           setClubParticipantRanking,
           showClubCompetitionStats,
           selectClubCompetitionDetailLevel,
-          toggleAllClubAvailableJudokas,
+          addAllClubAvailableJudokas,
+          addClubAvailableJudoka,
+          removeClubAvailableJudoka,
           onChoiceKeydown: ui.onChoiceKeydown
         },
         {
@@ -376,7 +378,7 @@
           canShowClubCompetitionStats,
           clubRankingOptions,
           clubCompetitionCurrentParticipants,
-          clubCompetitionAvailableAllSelected,
+          clubCompetitionNewJudokas,
           clubCompetitionLevelOptions,
           clubCompetitionParticipantsPage: clubCompetitionParticipantsPaginationRefs.page,
           clubCompetitionParticipantsTotalPages: clubCompetitionParticipantsPaginationRefs.totalPages,
@@ -497,17 +499,19 @@
       clubCompetitionFormViewModel.clubCompetitionFormErrors.level = "";
     }
 
-    // CREA-4 : coche (ou décoche) d'un coup toute la liste affichée, toutes pages confondues.
-    function toggleAllClubCompetitionParticipants() {
+    // CREA-4 : ajoute d'un coup toute la liste affichée, toutes pages confondues.
+    function addAllClubCompetitionParticipants() {
       const form = clubCompetitionFormViewModel.clubCompetitionForm;
       const listedIds = clubCompetitionFormParticipantsFiltered.value.map((p) => String(p.judokaId));
-      if (clubCompetitionFormAllSelected.value) {
-        const listed = new Set(listedIds);
-        form.participantJudokaIds = form.participantJudokaIds.filter((id) => !listed.has(String(id)));
-        return;
+      form.participantJudokaIds = [...form.participantJudokaIds, ...listedIds];
+      clubCompetitionFormViewModel.clubCompetitionFormErrors.participants = "";
+    }
+
+    function addClubCompetitionParticipant(judokaId: string) {
+      const form = clubCompetitionFormViewModel.clubCompetitionForm;
+      if (!clubCompetitionFormSelectedIds.value.has(String(judokaId))) {
+        form.participantJudokaIds = [...form.participantJudokaIds, String(judokaId)];
       }
-      const selected = clubCompetitionFormSelectedIds.value;
-      form.participantJudokaIds = [...form.participantJudokaIds, ...listedIds.filter((id) => !selected.has(id))];
       clubCompetitionFormViewModel.clubCompetitionFormErrors.participants = "";
     }
 
@@ -637,7 +641,7 @@
       errors.competitionDate = form.competitionDate ? "" : "Indiquez la date.";
       errors.ageCategory = form.ageCategory ? "" : "Choisissez la catégorie d'âge.";
       errors.level = form.level ? "" : "Choisissez le niveau.";
-      errors.participants = form.participantJudokaIds.length ? "" : "Cochez au moins un judoka.";
+      errors.participants = form.participantJudokaIds.length ? "" : "Ajoutez au moins un judoka.";
       const fieldByError: Array<[string, string]> = [
         [errors.clubId, "club_competition_club"],
         [errors.name, "club_competition_name"],
@@ -861,20 +865,25 @@
       clubCompetitionDetailViewModel.clubCompetitionDetailForm.level = level;
     }
 
-    // COACH-7 : coche (ou décoche) d'un coup les judokas affichés, comme à la création.
-    function toggleAllClubAvailableJudokas() {
+    // COACH-7 : ajoute d'un coup les judokas affichés, comme à la création.
+    function addAllClubAvailableJudokas() {
       const listedIds = clubCompetitionAvailableJudokasFiltered.value.map((j) => String(j.judokaId));
-      const selected = new Set(clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.map(String));
-      if (clubCompetitionAvailableAllSelected.value) {
-        const listed = new Set(listedIds);
-        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds =
-          clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.filter((id) => !listed.has(String(id)));
-        return;
-      }
       clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [
         ...clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds,
-        ...listedIds.filter((id) => !selected.has(id))
+        ...listedIds
       ];
+    }
+
+    function addClubAvailableJudoka(judokaId: string) {
+      const ids = clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds;
+      if (!ids.map(String).includes(String(judokaId))) {
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds = [...ids, String(judokaId)];
+      }
+    }
+
+    function removeClubAvailableJudoka(judokaId: string) {
+      clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds =
+        clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds.filter((id) => String(id) !== String(judokaId));
     }
 
     // COACH-7 : annuler une modification en cours demande confirmation, comme à la création.
