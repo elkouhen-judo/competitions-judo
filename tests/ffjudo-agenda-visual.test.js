@@ -260,9 +260,13 @@ for (const [name, viewport] of VIEWPORTS) {
       "Mis à jour le 22/11/2026 à 04:00"
     );
     const first = cards.first();
-    await expect(first).toContainText("TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES");
-    await expect(first).toContainText("NANTES · Compétition");
-    await expect(first).toContainText("Comité LOIRE ATLANTIQUE JUD — Pays de la Loire");
+    // AGD-022 : titres, villes et organisateurs en casse normale.
+    await expect(first).toContainText("Tournoi Excellence Cadets / Cadettes de Nantes");
+    await expect(first).toContainText("Nantes · Compétition");
+    await expect(first).toContainText("Comité Loire Atlantique Jud — Pays de la Loire");
+    // AGD-021 : la date en tuile ; les filtres repliés derrière « Filtres ».
+    await expect(first.locator(".agenda-date-tile strong")).toHaveText(/^\d{1,2}$/);
+    await expect(page.locator("#ffjudoAgendaFilters")).toBeHidden();
     await expect(first).toContainText("Inscriptions jusqu'au");
     await expect(cards.nth(1)).not.toContainText("Inscriptions jusqu'au");
     // AGD-014 : une clôture passée se lit « Inscriptions closes ».
@@ -276,7 +280,7 @@ for (const [name, viewport] of VIEWPORTS) {
       /^\w+\. \d{2}\/\d{2} → \w+\. \d{2}\/\d{2}$/
     );
     await expect(cards.nth(1)).toContainText("→");
-    const link = first.getByRole("link", { name: /Voir sur ffjudo\.com/ });
+    const link = first.getByRole("link", { name: /ffjudo\.com/ });
     await expect(link).toHaveAttribute("href", EVENTS[0].sourceUrl);
     await expect(link).toHaveAttribute("target", "_blank");
     await page.screenshot({
@@ -285,9 +289,11 @@ for (const [name, viewport] of VIEWPORTS) {
       animations: "disabled"
     });
 
+    await page.locator("#ffjudoAgendaFiltersToggle").click();
     await page.locator("#ffjudoAgendaLigue").selectOption("Bretagne");
     await expect(cards).toHaveCount(1);
-    await expect(cards.first()).toContainText("STAGE TECHNIQUE DU MORBIHAN");
+    await expect(cards.first()).toContainText("Stage Technique du Morbihan");
+    await expect(page.locator("#ffjudoAgendaView .agenda-filter-pill")).toHaveText(["Bretagne"]);
     await page.screenshot({
       path: `output/playwright/agenda-after-${name}-02-bretagne.png`,
       fullPage: true,
@@ -304,7 +310,7 @@ for (const [name, viewport] of VIEWPORTS) {
       fullPage: true,
       animations: "disabled"
     });
-    await page.getByRole("button", { name: "Effacer les filtres" }).click();
+    await page.locator("#ffjudoAgendaView .agenda-filter-clear").click();
     await expect(cards).toHaveCount(3);
 
     await page.locator("#ffjudoAgendaLigue").selectOption("National");
@@ -399,7 +405,7 @@ for (const [name, viewport] of VIEWPORTS) {
     await cards.first().getByRole("button", { name: "Créer la compétition" }).click();
     await expect(page.locator("#clubCompetitionFormView")).toBeVisible();
     await expect(page.locator("#club_competition_name")).toHaveValue(
-      "TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES"
+      "Tournoi Excellence Cadets / Cadettes de Nantes"
     );
     await expect(page.locator("#club_competition_date")).toHaveValue(EVENTS[0].dateDebut);
     await expect(page.locator("#club_competition_categorie_age")).toHaveValue("Cadet");
@@ -430,7 +436,7 @@ for (const [name, viewport] of VIEWPORTS) {
       .poll(() => rpc.filter((request) => request.method === "saveClubCompetition").length)
       .toBe(1);
     const saved = rpc.find((request) => request.method === "saveClubCompetition").args[0];
-    assert.equal(saved.name, "TOURNOI EXCELLENCE CADETS / CADETTES DE NANTES");
+    assert.equal(saved.name, "Tournoi Excellence Cadets / Cadettes de Nantes");
     assert.equal(saved.competitionDate, EVENTS[0].dateDebut);
     assert.equal(saved.ageCategory, "Cadet");
     assert.equal(saved.level, "Départemental");
@@ -504,7 +510,7 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(cards).toHaveCount(5);
     // AGD-015 : le grade visé précède les UV.
     await expect(
-      cards.filter({ hasText: "TEST EFFICACITE COMBAT" }).locator(".agenda-card-uvs")
+      cards.filter({ hasText: "Test Efficacite Combat" }).locator(".agenda-card-uvs")
     ).toHaveText("1er au 4e dan · UV3");
     await expect(page.locator("#ffjudoAgendaUnlabeledHint")).toHaveCount(0);
     const uv1 = page.locator("#ffjudoAgendaUv1");
@@ -514,9 +520,12 @@ for (const [name, viewport] of VIEWPORTS) {
       cards.filter({ hasText: "Examen UV1/2/3b" }).locator(".agenda-card-uvs")
     ).toHaveText("UV1 · UV2 · UV3");
     await expect(
-      cards.filter({ hasText: "TOURNOI EXCELLENCE" }).locator(".agenda-card-uvs")
+      cards.filter({ hasText: "Tournoi Excellence" }).locator(".agenda-card-uvs")
     ).toHaveCount(0);
 
+    // AGD-022 : les sigles avec chiffres restent en capitales.
+    await expect(cards.filter({ hasText: "CD56 Examen UV2" })).toHaveCount(1);
+    await page.locator("#ffjudoAgendaFiltersToggle").click();
     await uv2.click();
     await expect(uv2).toHaveAttribute("aria-pressed", "true");
     await expect(cards).toHaveCount(2);
@@ -531,7 +540,7 @@ for (const [name, viewport] of VIEWPORTS) {
     await hint.getByRole("button", { name: "Afficher" }).click();
     await expect(page.locator("#ffjudoAgendaUnlabeledGrades .agenda-card")).toHaveCount(1);
     await expect(page.locator("#ffjudoAgendaUnlabeledGrades")).toContainText(
-      "PASSAGE DE GRADE CEINTURE NOIRE"
+      "Passage de Grade Ceinture Noire"
     );
     await page.screenshot({
       path: `output/playwright/uv-after-${name}-uv2-sans-uv-affiche.png`,
@@ -552,7 +561,7 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(
       page.locator("#ffjudoAgendaView .agenda-month:not(#ffjudoAgendaUnlabeledGrades) .agenda-card")
     ).toHaveCount(0);
-    await page.getByRole("button", { name: "Effacer les filtres" }).click();
+    await page.locator("#ffjudoAgendaView .agenda-filter-clear").click();
     await expect(cards).toHaveCount(5);
     await expect(page.locator("#ffjudoAgendaUnlabeledHint")).toHaveCount(0);
     await expect(uv1).toHaveAttribute("aria-pressed", "false");

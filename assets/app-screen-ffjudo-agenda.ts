@@ -43,6 +43,8 @@
     filters: AgendaFilters;
     /** AGD-016 : passages de grade sans UV reconnue, affichés à la demande. */
     showUnlabeledGrades: boolean;
+    /** AGD-021 : panneau des filtres, replié à l'ouverture. */
+    filtersOpen: boolean;
   }
 
   const defaultAgendaViewState: AgendaViewState = {
@@ -53,8 +55,47 @@
     lastSyncAt: "",
     events: [],
     filters: { ligue: "", type: "", month: "", uvs: [] },
-    showUnlabeledGrades: false
+    showUnlabeledGrades: false,
+    filtersOpen: false
   };
+
+  // AGD-022 : titres, villes et organisateurs en casse normale ; les sigles (CD56, UV2, FFJDA) restent.
+  const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "à", "au", "aux", "en", "sur", "sous", "pour", "par"]);
+  const KEPT_ACRONYMS = new Set(["FFJDA", "FFJ", "UV", "TEC", "CD"]);
+
+  function capitalizeWord(word: string): string {
+    return word
+      .split("-")
+      .map((part, index) =>
+        index > 0 && SMALL_WORDS.has(part) ? part : part.charAt(0).toLocaleUpperCase("fr") + part.slice(1)
+      )
+      .join("-");
+  }
+
+  function formatEventWord(word: string, index: number): string {
+    if (/\p{Ll}/u.test(word)) return word;
+    if (KEPT_ACRONYMS.has(word) || (/\d/.test(word) && !/^\d+(?:ER|ERE|ÈRE|E|EME|ÈME|IEME|IÈME)$/u.test(word))) {
+      return word;
+    }
+    if (/^\p{Lu}$/u.test(word)) return word;
+    const lower = word.toLocaleLowerCase("fr");
+    if (index > 0 && SMALL_WORDS.has(lower)) return lower;
+    const elision = /^([dl])(['’])(.+)$/u.exec(lower);
+    if (elision) {
+      const article = index > 0 ? elision[1] : elision[1].toLocaleUpperCase("fr");
+      return `${article}${elision[2]}${capitalizeWord(elision[3])}`;
+    }
+    return /^\d/.test(lower) ? lower : capitalizeWord(lower);
+  }
+
+  function formatEventText(value: string): string {
+    return String(value || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ")
+      .map(formatEventWord)
+      .join(" ");
+  }
 
   /** « 2026-12-05 » → « 05/12 ». */
   function shortDate(isoDate: string): string {
@@ -128,15 +169,22 @@
   }
 
   function toCard(event: FfjudoAgendaEvent, today: string) {
-    const place = event.ville || event.lieu;
+    const place = formatEventText(event.ville || event.lieu);
     const type = event.typeEvenement ? typeLabel(event.typeEvenement) : "";
-    const owner = event.proprietaire && event.ligue ? `${event.proprietaire} — ${event.ligue}` : event.proprietaire || event.ligue;
+    const proprietaire = formatEventText(event.proprietaire);
+    const owner = proprietaire && event.ligue ? `${proprietaire} — ${event.ligue}` : proprietaire || event.ligue;
+    const start = new Date(`${String(event.dateDebut).slice(0, 10)}T00:00:00Z`);
+    const validStart = !Number.isNaN(start.getTime());
     return {
       uvLabel: [gradeLabel(event.grades || []), ...(event.uvs || [])].filter(Boolean).join(" · "),
       eventKey: event.eventKey,
-      titre: event.titre,
+      titre: formatEventText(event.titre),
       sourceUrl: event.sourceUrl,
       dateLabel: event.dateFin ? `${dayDate(event.dateDebut)} → ${dayDate(event.dateFin)}` : dayDate(event.dateDebut),
+      // AGD-021 : la date en tuile, jour de la semaine au-dessus du quantième.
+      tileWeekday: validStart ? WEEKDAY_FORMATTER.format(start).toLocaleUpperCase("fr") : "",
+      tileDay: validStart ? String(start.getUTCDate()) : "",
+      rangeEndLabel: event.dateFin ? `→ ${dayDate(event.dateFin)}` : "",
       placeLabel: [place, type].filter(Boolean).join(" · "),
       ownerLabel: owner,
       closingLabel: closingLabel(event.inscriptionCloture, today),
@@ -191,6 +239,14 @@
         return model().showUnlabeledGrades ? unlabeledGradeEvents.value.map((event) => toCard(event, today)) : [];
       }),
       uvOptions: window.Vue.computed(() => UV_OPTIONS),
+      // AGD-021 : une pastille par filtre actif, à côté du bouton « Filtres ».
+      activeFilterPills: window.Vue.computed(() => {
+        const { filters } = model();
+        const month = filters.month ? capitalize(monthLabel(filters.month)) : "";
+        const type = filters.type ? (filters.type === UNKNOWN_TYPE ? "Type non renseigné" : typeLabel(filters.type)) : "";
+        const ligue = filters.ligue ? (filters.ligue === OTHER_LIGUE ? "Autre ligue" : filters.ligue) : "";
+        return [ligue, type, month, ...filters.uvs].filter(Boolean);
+      }),
       lastSyncLabel: window.Vue.computed(() => {
         const lastSyncAt = model().lastSyncAt;
         if (!lastSyncAt) {
@@ -238,6 +294,10 @@
           createCompetitionFromEvent,
           clearFfjudoAgendaFilters,
           toggleFfjudoAgendaUv,
+          toggleFfjudoAgendaFilters: () => {
+            const current = ensureViewModel();
+            current.filtersOpen = !current.filtersOpen;
+          },
           showUnlabeledGradeSessions: () => {
             ensureViewModel().showUnlabeledGrades = true;
           }
@@ -259,7 +319,7 @@
       const event = ensureViewModel().events.find((candidate) => candidate.eventKey === eventKey);
       if (!event) return;
       app.screens.competition.showClubCompetitionForm({
-        name: event.titre,
+        name: formatEventText(event.titre),
         competitionDate: event.dateDebut,
         level: event.suggestedLevel || "",
         ageCategory: event.suggestedAgeCategory || ""

@@ -9,22 +9,26 @@
           <button type="button" class="mode-tab mode-tab-active" aria-current="page"><svg class="mode-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg><span>Agenda</span></button>
         </nav>
       </div>
-      <div class="panel-header page-header">
-        <div class="page-title">
-          <h2>Agenda FFJDA</h2>
-          <p id="ffjudoAgendaLastSync" class="subtitle">{{ lastSyncLabel }}</p>
-        </div>
+      <div class="agenda-title-row">
+        <h2>Agenda FFJDA</h2>
+        <p id="ffjudoAgendaLastSync" class="agenda-last-sync">{{ lastSyncLabel }}</p>
       </div>
       <div class="panel-body">
         <!-- AGD : filtres appliqués dans le navigateur sur les événements à venir. -->
         <!-- AGD-013 : cocher plusieurs UV garde les séances qui les proposent toutes. -->
-        <div v-if="hasEvents" class="agenda-uv-filter">
+        <!-- AGD-021 : les filtres actifs en pastilles ; « Filtres » ouvre le panneau, replié au départ. -->
+        <div v-if="hasEvents" class="agenda-filter-bar">
+          <span v-for="pill in activeFilterPills" :key="pill" class="agenda-filter-pill">{{ pill }}</span>
+          <button id="ffjudoAgendaFiltersToggle" class="agenda-filter-toggle" type="button" :aria-expanded="filtersOpen ? 'true' : 'false'" aria-controls="ffjudoAgendaFilters" @click="toggleFfjudoAgendaFilters()">{{ filtersOpen ? "Masquer les filtres" : "Filtres" }}</button>
+        </div>
+        <div v-if="hasEvents" v-show="filtersOpen" id="ffjudoAgendaFilters" class="agenda-filter-panel">
+        <div class="agenda-uv-filter">
           <span id="ffjudoAgendaUvLabel" class="agenda-uv-label">Passages d'UV</span>
           <div class="choice-chips" role="group" aria-labelledby="ffjudoAgendaUvLabel">
             <button v-for="uv in uvOptions" :key="uv" :id="'ffjudoAgenda' + uv.replace('UV', 'Uv')" type="button" :class="['choice-chip', { 'choice-active': filters.uvs.includes(uv) }]" :aria-pressed="filters.uvs.includes(uv) ? 'true' : 'false'" :disabled="isLoading" @click="toggleFfjudoAgendaUv(uv)">{{ uv }}</button>
           </div>
         </div>
-        <div v-if="hasEvents" class="form-grid agenda-filters">
+        <div class="form-grid agenda-filters">
           <div>
             <label for="ffjudoAgendaLigue">Ligue</label>
             <select id="ffjudoAgendaLigue" v-model="filters.ligue" :disabled="isLoading">
@@ -46,6 +50,8 @@
               <option v-for="option in monthOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </div>
+        </div>
+        <button class="button-secondary agenda-filter-clear" type="button" @click="clearFfjudoAgendaFilters()">Effacer les filtres</button>
         </div>
 
         <div v-if="isLoading" class="dashboard-loading-state" aria-busy="true">
@@ -69,17 +75,21 @@
             <h3 class="agenda-month-title">{{ group.label }}</h3>
             <div class="list">
               <article v-for="event in group.events" :key="event.eventKey" class="card agenda-card">
-                <p class="agenda-card-date">{{ event.dateLabel }}</p>
-                <p v-if="event.uvLabel" class="agenda-card-uvs">{{ event.uvLabel }}</p>
-                <p class="card-title">{{ event.titre }}</p>
-                <div class="card-meta">
-                  <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
-                  <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
-                  <p v-if="event.closingLabel" :class="['agenda-card-line', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
-                </div>
-                <div class="agenda-card-actions">
-                  <button v-if="event.canCreateCompetition" class="button-secondary compact-button" type="button" @click="createCompetitionFromEvent(event.eventKey)">Créer la compétition</button>
-                  <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
+                <div class="agenda-date-tile" aria-hidden="true"><span>{{ event.tileWeekday }}</span><strong>{{ event.tileDay }}</strong></div>
+                <div class="agenda-card-body">
+                  <p class="agenda-card-date sr-only">{{ event.dateLabel }}</p>
+                  <p v-if="event.rangeEndLabel" class="agenda-card-range" aria-hidden="true">{{ event.rangeEndLabel }}</p>
+                  <p v-if="event.uvLabel" class="agenda-card-uvs">{{ event.uvLabel }}</p>
+                  <p class="card-title">{{ event.titre }}</p>
+                  <div class="card-meta">
+                    <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
+                    <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
+                    <p v-if="event.closingLabel" :class="['agenda-card-closing-pill', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
+                  </div>
+                  <div class="agenda-card-actions">
+                    <button v-if="event.canCreateCompetition" class="agenda-create-button" type="button" @click="createCompetitionFromEvent(event.eventKey)">Créer la compétition</button>
+                    <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">ffjudo.com <span aria-hidden="true">↗</span></a>
+                  </div>
                 </div>
               </article>
             </div>
@@ -91,14 +101,18 @@
             <h3 class="agenda-month-title">UV non renseignées</h3>
             <div class="list">
               <article v-for="event in unlabeledGradeCards" :key="event.eventKey" class="card agenda-card">
-                <p class="agenda-card-date">{{ event.dateLabel }}</p>
-                <p class="card-title">{{ event.titre }}</p>
-                <div class="card-meta">
-                  <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
-                  <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
-                  <p v-if="event.closingLabel" :class="['agenda-card-line', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
+                <div class="agenda-date-tile" aria-hidden="true"><span>{{ event.tileWeekday }}</span><strong>{{ event.tileDay }}</strong></div>
+                <div class="agenda-card-body">
+                  <p class="agenda-card-date sr-only">{{ event.dateLabel }}</p>
+                  <p v-if="event.rangeEndLabel" class="agenda-card-range" aria-hidden="true">{{ event.rangeEndLabel }}</p>
+                  <p class="card-title">{{ event.titre }}</p>
+                  <div class="card-meta">
+                    <p v-if="event.placeLabel" class="agenda-card-line">{{ event.placeLabel }}</p>
+                    <p v-if="event.ownerLabel" class="agenda-card-line">{{ event.ownerLabel }}</p>
+                    <p v-if="event.closingLabel" :class="['agenda-card-closing-pill', event.isClosed ? 'agenda-card-closed' : 'agenda-card-closing']">{{ event.closingLabel }}</p>
+                  </div>
+                  <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">ffjudo.com <span aria-hidden="true">↗</span></a>
                 </div>
-                <a class="agenda-card-link" :href="event.sourceUrl" target="_blank" rel="noopener">Voir sur ffjudo.com <span aria-hidden="true">↗</span></a>
               </article>
             </div>
           </section>
