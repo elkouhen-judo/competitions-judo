@@ -65,10 +65,11 @@
       --button-danger-bg-hover: var(--danger-soft);
       --button-danger-border: #efc9c5;
       --button-danger-text: var(--danger);
-      --success: #346538;
-      --success-soft: #edf3ec;
-      --warning: #855a00;
-      --warning-soft: #fbf3db;
+      /* Une seule teinte par état : celle des designs B (--win, --pending). */
+      --success: var(--win);
+      --success-soft: var(--win-soft);
+      --warning: var(--pending);
+      --warning-soft: var(--pending-soft);
       --gold: #b8912f;
       --gold-soft: #fff4d8;
       --gold-text: #7a5c00;

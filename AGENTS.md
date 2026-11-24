@@ -141,6 +141,7 @@ Règle impérative :
 - Prévoir les états chargement, vide, erreur et succès.
 - Les actions principales doivent être tactiles et explicites.
 - Vérifier les textes longs et petits écrans.
+- Couleurs, rayons et espacements : uniquement les variables de `:root` (`assets/app.tailwind.css`), miroir du design system « Ayumi design system » (UI-TOK-001). Une nouvelle valeur devient d'abord un token.
 
 ## Analyse d'impact avant changement à risque
 
