@@ -24,8 +24,12 @@ test("UI-TOK-001 : aucune transparence rgba() hors de :root", () => {
 });
 
 test("UI-TOK-001 : les rayons du design system passent par leurs variables", () => {
-  const found = outsideRoot().match(/border-radius:\s*(?:999|12|6)px\b/g) || [];
-  assert.deepEqual(found, [], "utiliser var(--radius-pill), var(--radius) ou var(--radius-sm)");
+  const found = outsideRoot().match(/border-radius:[^;]*\b\d+px/g) || [];
+  assert.deepEqual(
+    found,
+    [],
+    "utiliser var(--radius-sm), var(--radius), var(--radius-card) ou var(--radius-pill)"
+  );
 });
 
 test("UI-TOK-001 : un espacement entièrement dans l'échelle passe par --space-*", () => {

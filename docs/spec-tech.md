@@ -228,7 +228,7 @@ This specification does not redefine product behavior already described in `docs
 
 ### 3.9 Design system
 
-- **UI-TOK-001**: Colors, border radii and spacing of the app shall come from the CSS variables declared once in `:root` of `assets/app.tailwind.css`: no hexadecimal color nor `rgba()` outside `:root` (overlay, tints and shadows are tokens: `--overlay`, `--hover-tint`, `--shadow-*`), `--radius-pill` / `--radius` / `--radius-sm` for 999px / 12px / 6px, `--space-1` to `--space-6` for spacing made only of 4–24px steps. `tests/design-tokens.test.js` enforces it.
+- **UI-TOK-001**: Colors, border radii and spacing of the app shall come from the CSS variables declared once in `:root` of `assets/app.tailwind.css`: no hexadecimal color nor `rgba()` outside `:root` (overlay, tints and shadows are tokens: `--overlay`, `--hover-tint`, `--shadow-*`), every border radius is `0`, `50%` or one of `--radius-sm` (6px), `--radius` (12px), `--radius-card` (16px), `--radius-pill`, `--space-1` to `--space-6` for spacing made only of 4–24px steps. `tests/design-tokens.test.js` enforces it.
 - **UI-TOK-002**: Each state has one hue: `--success` is `--win`, `--warning` is `--pending`.
 - **UI-TOK-003**: The design system « Ayumi design system » (claude.ai Design System artifact) mirrors these variables in its `tokens.json` and documents the components and usage rules; the « Ayumi ergonomie » mockups load its `tokens.css`. A token added or changed in `:root` is copied there, then the copy installed on the mockups canvas is refreshed.
 

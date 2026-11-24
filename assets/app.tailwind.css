@@ -139,7 +139,7 @@
 
     input, select, textarea, button, .button {
       width: 100%;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font: inherit;
     }
 
@@ -1586,7 +1586,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: var(--accent-soft);
       color: var(--accent);
     }
@@ -1640,7 +1640,7 @@
       gap: 5px;
       background: var(--warning-soft);
       color: var(--warning);
-      border-radius: 9999px;
+      border-radius: var(--radius-pill);
       padding: 2px 9px;
       font-size: 12px;
       font-weight: 700;
@@ -1848,7 +1848,7 @@
     }
 
     .sk-line {
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       background: linear-gradient(90deg, var(--line) 25%, var(--tatami) 50%, var(--line) 75%);
       background-size: 200% 100%;
       animation: sk-shimmer 1.6s ease-in-out infinite;
@@ -2014,7 +2014,7 @@
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: var(--radius);
         box-shadow: none;
       }
 
@@ -2474,7 +2474,7 @@
     .hero-avatar {
       width: 64px;
       height: 64px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2620,7 +2620,7 @@
       font-size: 0.72rem;
       font-weight: 600;
       padding: 2px 7px;
-      border-radius: 10px;
+      border-radius: var(--radius);
       background: var(--accent-soft);
       color: var(--accent);
       border: 1px solid var(--accent);
@@ -2669,7 +2669,7 @@
     width: 36px;
     height: 36px;
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--radius);
   }
 
   .brand-logo-field { fill: var(--primary); }
@@ -3320,7 +3320,7 @@
     .brand-logo {
       width: 52px;
       height: 52px;
-      border-radius: 14px;
+      border-radius: var(--radius);
     }
 
     .brand-copy h1 { font-size: 21px; }
@@ -4081,7 +4081,7 @@
     height: 28px;
     margin-top: var(--space-3);
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     background: var(--line);
   }
 
@@ -4856,7 +4856,7 @@
     margin: 0 0 var(--space-3);
     padding: 10px 12px;
     border: 1px solid var(--warning);
-    border-radius: 10px;
+    border-radius: var(--radius);
     background: var(--warning-soft);
     color: var(--warning);
     font-size: 0.9rem;
