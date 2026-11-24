@@ -129,6 +129,13 @@
     return [...roles, profileTypeLabel].join(" · ");
   }
 
+  function getManagedUserFlag(user: Judoka, currentSeasonStartYear: number): string {
+    if (user.profileType !== "JUDOKA" || user.accessRole === "COACH") return "";
+    if (!user.clubId) return "Sans club";
+    const season = Number(user.registrationSeason || 0);
+    return currentSeasonStartYear && season < currentSeasonStartYear ? "Non réinscrit" : "";
+  }
+
   function projectManagedUsers(
     users: Judoka[] | null | undefined,
     totalCount: number,
@@ -136,7 +143,8 @@
     currentPage: number,
     pageSize: number,
     currentUser: Judoka | null | undefined,
-    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string }
+    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string },
+    currentSeasonStartYear = 0
   ) {
     const { getJudokaDisplayName } = helpers;
 
@@ -154,7 +162,9 @@
       canHaveClub: user.profileType !== "PARENT",
       // ADMIN-1 : un judoka avec e-mail peut être nommé coach ; un parent jamais.
       isCoach: user.accessRole === "COACH",
-      canBeCoach: user.profileType !== "PARENT" && Boolean(user.accountEmail) && user.accessRole !== "COACH"
+      canBeCoach: user.profileType !== "PARENT" && Boolean(user.accountEmail) && user.accessRole !== "COACH",
+      ageCategory: user.profileType === "PARENT" ? "" : user.ageCategory || "",
+      flag: getManagedUserFlag(user, currentSeasonStartYear)
     }));
 
     // PAGE-3 : la recherche et le total viennent du serveur ; `users` contient les pages déjà lues.
@@ -162,16 +172,16 @@
     const totalPages = Math.max(Math.ceil(total / pageSize), 1);
     const safeCurrentPage = Math.min(Math.max(currentPage || 1, 1), totalPages);
     const startIndex = (safeCurrentPage - 1) * pageSize;
-    const projectedUsers = registeredCards.slice(startIndex, startIndex + pageSize);
+    // ADMIN-3 : « Afficher plus » ajoute la page suivante sous les précédentes.
+    const projectedUsers = registeredCards.slice(0, startIndex + pageSize);
 
     return {
       users: projectedUsers,
-      usersSummary: `${total} utilisateur${total > 1 ? "s" : ""}${search ? ` trouvé${total > 1 ? "s" : ""}` : ""} · page ${safeCurrentPage} / ${totalPages}.`,
+      usersSummary: `${total} utilisateur${total > 1 ? "s" : ""}${search ? ` trouvé${total > 1 ? "s" : ""}` : ""}.`,
       usersEmptyMessage: search
         ? `Aucun utilisateur trouvé pour « ${search} ».`
         : "Aucun utilisateur trouvé.",
       canResetUsersSearch: Boolean(search),
-      canShowPreviousUsersPage: safeCurrentPage > 1,
       canShowNextUsersPage: safeCurrentPage < totalPages,
       hasUsers: Boolean(total)
     };
@@ -194,7 +204,9 @@
       clubId: "",
       canHaveClub: false,
       isCoach: false,
-      canBeCoach: false
+      canBeCoach: false,
+      ageCategory: "",
+      flag: ""
     }));
     const normalizedSearch = (search || "").toLowerCase();
     const filteredInvitations = !normalizedSearch

@@ -732,17 +732,36 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
     getCurrentDate
   });
 
+  // ADMIN-3 : un mot de la recherche retrouve aussi les utilisateurs des clubs dont le nom le contient.
+  async function findClubIdsByWord(search: string): Promise<Record<string, string[]> | null> {
+    const words = search.replace(/[%_*]/g, " ").split(/\s+/).filter(Boolean);
+    if (!words.length || !clubsRepository) return null;
+    const clubs = await clubsRepository.listAll();
+    const byWord: Record<string, string[]> = {};
+    words.forEach((word) => {
+      const needle = word.toLocaleLowerCase("fr");
+      const ids = clubs
+        .filter((club) => String(club.nom || "").toLocaleLowerCase("fr").includes(needle))
+        .map((club) => String(club.id_club));
+      if (ids.length) byWord[needle] = ids;
+    });
+    return Object.keys(byWord).length ? byWord : null;
+  }
+
   // PAGE-3 : le serveur renvoie une page d'utilisateurs et le total ; la recherche part au serveur.
   async function loadUsersPage(request: UsersPageRequest = {}): Promise<UsersPage> {
     const after = request && request.after;
     const rawFilter = cleanText(request && request.filter);
-    if (rawFilter && rawFilter !== "noClub" && rawFilter !== "notRegistered") {
+    if (rawFilter && !["noClub", "notRegistered", "coach"].includes(rawFilter)) {
       throw new Error("Filtre d'utilisateurs inconnu.");
     }
-    const filter = rawFilter as "" | "noClub" | "notRegistered";
+    const filter = rawFilter as "" | "noClub" | "notRegistered" | "coach";
+    const search = cleanText(request && request.search);
+    const clubIdsByWord = await findClubIdsByWord(search);
     const { rows, total } = await judokasRepository.listPage({
-      search: cleanText(request && request.search),
+      search,
       filter,
+      ...(clubIdsByWord ? { clubIdsByWord } : {}),
       ...(filter === "notRegistered" ? { seasonStartYear: getSeasonStartYear(getCurrentDate()) as number } : {}),
       after: after
         ? { nom: String(after.lastName || ""), prenom: String(after.firstName || ""), id_judoka: String(after.judokaId || "") }

@@ -165,6 +165,9 @@ export interface ManagedUserCard {
   /** ADMIN-1 : rôle coach actuel, et possibilité de le donner. */
   isCoach: boolean;
   canBeCoach: boolean;
+  /** ADMIN-3 : catégorie d'âge, et signal « Sans club » / « Non réinscrit » d'un judoka. */
+  ageCategory: string;
+  flag: string;
 }
 
 export interface CompetitionCombatCard {
@@ -293,13 +296,13 @@ export interface ScreenProjections {
     currentPage: number,
     pageSize: number,
     currentUser: Judoka | null,
-    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string }
+    helpers: { getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string },
+    currentSeasonStartYear?: number
   ): {
     users: ManagedUserCard[];
     usersSummary: string;
     usersEmptyMessage: string;
     canResetUsersSearch: boolean;
-    canShowPreviousUsersPage: boolean;
     canShowNextUsersPage: boolean;
     hasUsers: boolean;
   };

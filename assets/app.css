@@ -4206,6 +4206,20 @@ input[aria-invalid="true"],
   letter-spacing: 0;
 }
 
+/* ADMIN-1 : les onglets de la gestion des accès restent en haut, sans rognage à 375 px. */
+
+.admin-sub-tabs {
+  width: 100%;
+  min-width: 0;
+  gap: 2px;
+}
+
+.admin-sub-tabs .mode-tab {
+  flex: 1 1 auto;
+  padding: 9px 4px;
+  text-align: center;
+}
+
 /* NAV-7 : sur mobile, les cinq onglets coach forment une barre fixe en bas, icône et libellé entier. */
 
 .coach-sub-tabs {
@@ -4513,6 +4527,88 @@ input[aria-invalid="true"],
 .ranking-status-done {
   background: #e7f3ec;
   color: #1f6b3a;
+}
+
+/* ADMIN-3 : une ligne par utilisateur, actions dans le menu « … ». */
+
+.admin-user-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-user-row {
+  padding: 12px 12px 12px 16px;
+}
+
+.admin-user-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-user-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.admin-user-text .card-title {
+  margin: 0;
+  padding-right: 0;
+}
+
+.admin-user-row .card-menu {
+  position: static;
+}
+
+.admin-user-meta,
+  .admin-user-email {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user-email {
+  font-size: 12px;
+}
+
+.admin-user-flag {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff4dc;
+  color: #5c3a00;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-user-club-choice {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-user-club-choice .button-link {
+  justify-self: start;
+}
+
+.admin-users-more {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.page-menu-separator {
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 
 /* ACCUEIL-5 : carte « À faire » de l'accueil, classement en un toucher. */

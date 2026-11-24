@@ -2609,13 +2609,14 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
         return Object.values(judokasByEmail);
       },
       // PAGE-3 : une page triée par nom, lue après un curseur, et le total de la recherche.
-      listPage: async ({ search, after, limit, filter, seasonStartYear }) => {
+      listPage: async ({ search, after, limit, filter, seasonStartYear, clubIdsByWord }) => {
         calls.pages.push({
           search,
           after,
           limit,
           ...(filter ? { filter } : {}),
-          ...(seasonStartYear ? { seasonStartYear } : {})
+          ...(seasonStartYear ? { seasonStartYear } : {}),
+          ...(clubIdsByWord ? { clubIdsByWord } : {})
         });
         const key = (row) => [
           String(row.nom || ""),
@@ -2913,6 +2914,18 @@ test("ADMIN-2 : getUsersPage transmet le filtre et la saison en cours au serveur
     () => service.methods.getUsersPage("admin@example.com", { filter: "everyone" }),
     /Filtre d'utilisateurs inconnu/
   );
+});
+
+test("ADMIN-3 : getUsersPage filtre les coachs et cherche aussi par nom de club", async () => {
+  const { service, calls } = createTestAdminService(buildUsersByEmail(3));
+
+  await service.methods.getUsersPage("admin@example.com", { filter: "coach" });
+  await service.methods.getUsersPage("admin@example.com", { search: "Nantes léa" });
+
+  assert.deepEqual(calls.pages, [
+    { search: "", after: null, limit: 10, filter: "coach" },
+    { search: "Nantes léa", after: null, limit: 10, clubIdsByWord: { nantes: ["NANTES"] } }
+  ]);
 });
 
 test("PAGE-3 : getUsersPage est réservé aux admins", async () => {

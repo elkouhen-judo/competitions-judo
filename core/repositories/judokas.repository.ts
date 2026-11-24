@@ -12,7 +12,7 @@ export interface JudokaPageCursor {
 }
 
 /** ADMIN-2 : filtres de la liste des utilisateurs, appliqués par le serveur. */
-export type JudokaPageFilter = "" | "noClub" | "notRegistered";
+export type JudokaPageFilter = "" | "noClub" | "notRegistered" | "coach";
 
 type JudokaIdentityRow = JudokaRow & {
   coach_clubs?: { id_club: string }[] | "";
@@ -204,6 +204,8 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     after?: JudokaPageCursor | null;
     filter?: JudokaPageFilter;
     seasonStartYear?: number;
+    /** ADMIN-3 : clubs dont le nom contient chaque mot de la recherche (mot en minuscules). */
+    clubIdsByWord?: Record<string, string[]>;
     limit: number;
   }): Promise<{ rows: JudokaRow[]; total: number }> {
     const filters: string[] = [];
@@ -215,16 +217,21 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     if (options.filter === "noClub") {
       filters.push("club_id=is.null");
     }
+    if (options.filter === "coach") {
+      filters.push("role=eq.COACH");
+    }
     if (options.filter === "notRegistered") {
       const season = Number(options.seasonStartYear);
       if (!Number.isInteger(season)) throw new Error("Saison obligatoire pour le filtre « Non réinscrits ».");
       logicFilters.push(`or(saison_inscription.is.null,saison_inscription.lt.${season})`);
     }
-    // Chaque mot de la recherche doit se trouver dans le nom, le prénom ou l'e-mail.
+    // Chaque mot de la recherche doit se trouver dans le nom, le prénom, l'e-mail ou le club (ADMIN-3).
     const words = String(options.search || "").replace(/[%_*]/g, " ").split(/\s+/).filter(Boolean);
     words.forEach((word) => {
       const pattern = quoteLogicValue(`*${word}*`);
-      logicFilters.push(`or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern})`);
+      const clubIds = (options.clubIdsByWord || {})[word.toLocaleLowerCase("fr")] || [];
+      const clubFilter = clubIds.length ? `,club_id.in.(${clubIds.map(quoteLogicValue).join(",")})` : "";
+      logicFilters.push(`or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern}${clubFilter})`);
     });
     if (logicFilters.length) {
       filters.push(`and=(${logicFilters.join(",")})`);

@@ -159,7 +159,7 @@ export interface UsersPage {
 export interface UsersPageRequest {
   search?: string;
   after?: UsersPageCursor | null;
-  /** ADMIN-2 : "noClub" (judokas sans club) ou "notRegistered" (non réinscrits pour la saison en cours). */
+  /** ADMIN-2 : "noClub" (judokas sans club), "notRegistered" (non réinscrits pour la saison en cours) ; ADMIN-3 : "coach". */
   filter?: string;
 }
 

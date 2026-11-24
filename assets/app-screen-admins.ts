@@ -26,7 +26,9 @@
       adminTab: "users",
       newClubName: "",
       renamingClubId: "",
-      renamingClubName: ""
+      renamingClubName: "",
+      // ADMIN-3 : utilisateur dont le choix de club est ouvert.
+      changingClubUserId: ""
     };
     // Clubs et coachs (gestion des clubs, réservée aux admins).
     const clubsData = window.Vue.reactive({
@@ -35,8 +37,15 @@
     });
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
     // ADMIN-2 : filtre de la liste des utilisateurs, appliqué par le serveur ("" = tous).
-    const usersFilterState = window.Vue.reactive({ value: "" as "" | "noClub" | "notRegistered" });
+    const usersFilterState = window.Vue.reactive({ value: "" as "" | "noClub" | "notRegistered" | "coach" });
+    const USERS_FILTER_OPTIONS = [
+      { value: "", label: "Tous" },
+      { value: "noClub", label: "Sans club" },
+      { value: "notRegistered", label: "Non réinscrits" },
+      { value: "coach", label: "Coachs" }
+    ];
     const USERS_FILTER_EMPTY_MESSAGES: Record<string, string> = {
+      coach: "Aucun coach.",
       noClub: "Aucun judoka sans club.",
       notRegistered: "Tous les judokas sont réinscrits pour la saison en cours."
     };
@@ -61,7 +70,8 @@
         state.usersCurrentPage,
         defaultListPageSize,
         state.currentUser,
-        { getJudokaDisplayName }
+        { getJudokaDisplayName },
+        currentSeasonStartYear
       )
     );
     const accessInvitationsProjection = window.Vue.computed(() =>
@@ -77,7 +87,15 @@
     const hasAdmins = window.Vue.computed(() => adminsProjection.value.hasAdmins);
     const adminsPaginationRefs = ui.createPaginationRefs(adminsPagination);
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
-    const managedUsersPage = window.Vue.computed(() => usersProjection.value.users);
+    // ADMIN-3 : une ligne par utilisateur : nom, puis rôle · catégorie · club.
+    const managedUsersPage = window.Vue.computed(() =>
+      usersProjection.value.users.map((user) => {
+        const club = clubsData.clubs.find((option) => option.clubId === user.clubId);
+        const meta = [user.roleLabel, user.ageCategory, club ? club.name : ""].filter(Boolean).join(" · ");
+        return { ...user, meta };
+      })
+    );
+    const usersFilterOptions = window.Vue.computed(() => USERS_FILTER_OPTIONS);
     const usersSearch = window.Vue.computed(() => state.usersSearch);
     const usersSummary = window.Vue.computed(() => usersProjection.value.usersSummary);
     const usersFilter = window.Vue.computed(() => usersFilterState.value);
@@ -88,9 +106,6 @@
     );
     const canResetUsersSearch = window.Vue.computed(
       () => usersProjection.value.canResetUsersSearch || Boolean(usersFilterState.value)
-    );
-    const canShowPreviousUsersPage = window.Vue.computed(
-      () => usersProjection.value.canShowPreviousUsersPage
     );
     const canShowNextUsersPage = window.Vue.computed(
       () => usersProjection.value.canShowNextUsersPage
@@ -163,7 +178,6 @@
           showAdminsPreviousPage,
           showAdminsNextPage,
           showNextUsersPage,
-          showPreviousUsersPage,
           showNextAccessInvitationsPage,
           showPreviousAccessInvitationsPage,
           showHome: () => app.showHome && app.showHome(),
@@ -174,7 +188,8 @@
           saveRenameClub,
           deleteClub,
           toggleCoachClub,
-          setUserClub
+          setUserClub,
+          openUserClubChoice
         },
         {
           importSeasonOptions: window.Vue.computed(() => importSeasonOptions),
@@ -195,10 +210,10 @@
           managedUsersPage,
           usersSearch,
           usersFilter,
+          usersFilterOptions,
           usersSummary,
           usersEmptyMessage,
           canResetUsersSearch,
-          canShowPreviousUsersPage,
           canShowNextUsersPage,
           hasUsers,
           accessInvitationsPage,
@@ -445,12 +460,29 @@
       runClubAction("setCoachClubs", [coachId, next]);
     }
 
-    function setUserClub(judokaId: string, clubId: string) {
-      // Une fois enregistré, le judoka change de club dans l'état local, pour l'espace coach.
-      runClubAction("setJudokaClub", [judokaId, clubId || null], () => {
-        state.judokas = state.judokas.map((judoka) =>
-          String(judoka.judokaId) === String(judokaId) ? { ...judoka, clubId: clubId || "" } : judoka
-        );
+    // ADMIN-3 : « Changer de club » ouvre le choix sous la ligne ; le changement se confirme.
+    function openUserClubChoice(judokaId: string) {
+      const viewModel = getAdminsViewModel();
+      viewModel.changingClubUserId = viewModel.changingClubUserId === judokaId ? "" : judokaId;
+    }
+
+    function setUserClub(judokaId: string, clubId: string, fullName: string) {
+      const club = clubsData.clubs.find((option) => option.clubId === clubId);
+      const target = club ? `à ${club.name}` : "sans club";
+      app.confirmAndRun({
+        message: `Rattacher ${fullName} ${target} ? Les coachs de son ancien club ne le verront plus.`,
+        confirmLabel: "Changer de club",
+        method: "setJudokaClub",
+        args: [judokaId, clubId || null],
+        onSuccess: (response) => {
+          // Une fois enregistré, le judoka change de club dans l'état local, pour l'espace coach.
+          state.judokas = state.judokas.map((judoka) =>
+            String(judoka.judokaId) === String(judokaId) ? { ...judoka, clubId: clubId || "" } : judoka
+          );
+          getAdminsViewModel().changingClubUserId = "";
+          showSuccess(response.message || "Modification enregistrée.");
+          refreshAdminsManagement();
+        }
       });
     }
 
@@ -493,7 +525,7 @@
     }
 
     function selectUsersFilter(value: string) {
-      usersFilterState.value = value === "noClub" || value === "notRegistered" ? value : "";
+      usersFilterState.value = value === "noClub" || value === "notRegistered" || value === "coach" ? value : "";
       state.usersCurrentPage = 1;
       loadUsersPage(false);
     }
@@ -508,10 +540,6 @@
       loadUsersPage(true, () => {
         state.usersCurrentPage = nextPage;
       });
-    }
-
-    function showPreviousUsersPage() {
-      state.usersCurrentPage = Math.max(state.usersCurrentPage - 1, 1);
     }
 
     function showNextAccessInvitationsPage() {
@@ -606,7 +634,6 @@
       showAdminsNextPage,
       showAdminsPreviousPage,
       showNextUsersPage,
-      showPreviousUsersPage,
       updateUsersSearch
     };
   }

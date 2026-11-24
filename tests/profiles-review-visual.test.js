@@ -169,7 +169,11 @@ function adminScenario() {
           users.filter((user) => user.profileType === "JUDOKA" && !user.clubId && user !== admin)
         );
       if (filter === "notRegistered") return page([]);
+      if (filter === "coach") return page(users.filter((user) => user.accessRole === "COACH"));
       return page(users);
+    }
+    if (request.method === "setJudokaClub") {
+      return { success: true, message: "Club modifié." };
     }
     if (request.method === "grantCoachRole" || request.method === "revokeCoachRole") {
       return {
@@ -189,6 +193,11 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(page.locator("#adminsView")).toBeVisible();
     const cards = page.locator("#usersList .admin-card");
     await expect(cards).toHaveCount(5);
+    // ADMIN-3 : une ligne par utilisateur ; le judoka sans club est signalé.
+    await expect(cards.filter({ hasText: "Sam Test" }).locator(".admin-user-flag")).toHaveText(
+      "Sans club"
+    );
+    await expect(cards.filter({ hasText: "Léa Test" })).toContainText("Judo Club Nantes");
 
     // ADMIN-2 : « Sans club » part au serveur et ne garde que les judokas sans club.
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Sans club" }).click();
@@ -204,8 +213,32 @@ for (const [name, viewport] of VIEWPORTS) {
     await expect(page.locator("#usersList .empty-state")).toHaveText(
       "Tous les judokas sont réinscrits pour la saison en cours."
     );
+    // ADMIN-3 : « Coachs » part au serveur.
+    await page.locator("#usersKindFilter").getByRole("radio", { name: "Coachs" }).click();
+    await expect(cards).toHaveCount(1);
+    assert.equal(rpc.filter((r) => r.method === "getUsersPage").at(-1).args[0].filter, "coach");
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Tous" }).click();
     await expect(cards).toHaveCount(5);
+
+    // ADMIN-3 : changer de club passe par le menu, puis une confirmation dans l'appli.
+    const row = (fullName) => cards.filter({ hasText: fullName });
+    await row("Sam Test").locator(".card-menu summary").click();
+    await row("Sam Test").getByRole("menuitem", { name: "Changer de club" }).click();
+    await row("Sam Test")
+      .locator(".admin-user-club-choice")
+      .getByRole("button", { name: "Judo Club Nantes" })
+      .click();
+    await expect(page.locator("#confirmDialog")).toContainText(
+      "Rattacher Sam Test à Judo Club Nantes ?"
+    );
+    await page.screenshot({
+      path: `output/playwright/profiles-admin-${name}-01b-changer-club.png`,
+      animations: "disabled"
+    });
+    await page.locator("#confirmDialogConfirm").click();
+    await expect
+      .poll(() => rpc.filter((r) => r.method === "setJudokaClub").map((r) => r.args))
+      .toEqual([["j-sam", "club-nantes"]]);
 
     // ADMIN-1 : nommer coach un judoka ; jamais un parent.
     const card = (fullName) => cards.filter({ hasText: fullName });

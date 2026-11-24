@@ -862,6 +862,34 @@ test("PAGE-3 : judokas repository reads a bounded page, by cursor, with the sear
   ]);
 });
 
+// ADMIN-3 : « Coachs » filtre le rôle ; un mot de la recherche peut désigner un club.
+test("ADMIN-3 : judokas repository filters coaches and matches a search word on club ids", async () => {
+  const calls = [];
+  const judokasRepository = createJudokasRepository(
+    createRepositoryDeps(calls, { pageResult: { rows: [], total: 0 } })
+  );
+  const order = "order=nom.asc,prenom.asc,id_judoka.asc";
+  const quoted = (value) => encodeURIComponent(`"${value}"`);
+
+  await judokasRepository.listPage({ filter: "coach", limit: 10 });
+  await judokasRepository.listPage({
+    search: "Nantes",
+    clubIdsByWord: { nantes: ["CLUB1", "CLUB2"] },
+    limit: 10
+  });
+
+  const pattern = quoted("*Nantes*");
+  assert.deepEqual(calls, [
+    ["selectPage", "judokas", `select=*&role=eq.COACH&${order}`, 10],
+    [
+      "selectPage",
+      "judokas",
+      `select=*&and=(or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern},club_id.in.(${quoted("CLUB1")},${quoted("CLUB2")})))&${order}`,
+      10
+    ]
+  ]);
+});
+
 // ADMIN-2 : « Sans club » et « Non réinscrits » ne listent que des judokas, filtrés par le serveur.
 test("ADMIN-2 : judokas repository filters judokas without club or not registered for the season", async () => {
   const calls = [];
