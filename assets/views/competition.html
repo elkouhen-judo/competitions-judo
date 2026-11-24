@@ -26,21 +26,11 @@
           <span v-if="competitionResult" id="competitionClassement" class="pill" :class="competitionResultClass">{{ competitionResultLabel }}</span>
         </div>
 
-        <div v-if="hasCombats" class="competition-sport-summary" aria-label="Synthèse sportive">
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ competitionSportSummary.record }}</span>
-            <span class="mini-stat-label">Résultat</span>
-          </div>
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ competitionSportSummary.victoryRate }}</span>
-            <span class="mini-stat-label">Victoires</span>
-          </div>
-        </div>
-
-        <div v-if="showRankingSection" id="competitionRankingSection" class="section competition-ranking-section">
+        <!-- FICHE-5 : le classement en premier, mis en avant tant qu'il n'est pas saisi. -->
+        <div v-if="showRankingSection" id="competitionRankingSection" class="section competition-ranking-section" :class="{ 'ranking-pending': !competitionResult }">
           <div class="section-heading">
             <div>
-              <h3>Classement</h3>
+              <h3>Classement <span id="competitionRankingStatus" :class="['ranking-status', competitionResult ? 'ranking-status-done' : 'ranking-status-todo']">{{ competitionResult ? "Enregistré" : "À saisir" }}</span></h3>
               <p v-if="!competitionResult" class="subtitle">Touchez la place obtenue.</p>
             </div>
           </div>
@@ -59,26 +49,25 @@
           </div>
         </div>
 
+        <!-- FICHE-6 : trois tuiles, combats, victoires, défaites. -->
+        <div v-if="hasCombats" class="competition-sport-summary competition-sport-summary-three" aria-label="Synthèse sportive">
+          <div class="mini-stat">
+            <span class="mini-stat-value">{{ competitionSportSummary.total }}</span>
+            <span class="mini-stat-label">{{ competitionSportSummary.totalLabel }}</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-stat-value mini-stat-value-win">{{ competitionSportSummary.wins }}</span>
+            <span class="mini-stat-label">{{ competitionSportSummary.winsLabel }}</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-stat-value">{{ competitionSportSummary.losses }}</span>
+            <span class="mini-stat-label">{{ competitionSportSummary.lossesLabel }}</span>
+          </div>
+        </div>
+
         <div v-if="competitionTiming.isUpcoming" class="empty-action competition-upcoming-note">
           <p class="empty-action-title">Compétition {{ competitionTiming.relative }}</p>
           <p class="empty-action-body">Les combats et le classement se saisiront à partir du jour de la compétition.</p>
-        </div>
-
-        <div v-if="showCoachAssessment && !competitionTiming.isUpcoming" class="section coach-assessment-section">
-          <div class="section-heading">
-            <div>
-              <h3>Suivi coach</h3>
-            </div>
-          </div>
-          <div class="coach-assessment-block">
-            <div class="coach-assessment-label-row">
-              <label class="coach-assessment-label" for="coachReviewText">Bilan coach</label>
-              <span v-if="coachReviewStatus" class="autosave-status" role="status">{{ coachReviewStatus }}</span>
-            </div>
-            <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Aucun bilan rédigé.</p>
-            <textarea v-if="canEditCoachAssessment" id="coachReviewText" class="coach-assessment-textarea" v-model="coachReviewText" placeholder="Bilan après la compétition…" rows="2" @input="coachReviewStatus = ''" @blur="saveCoachReview()"></textarea>
-            <p v-else-if="coachReviewText" class="coach-assessment-text">{{ coachReviewText }}</p>
-          </div>
         </div>
 
         <div v-if="!competitionTiming.isUpcoming" class="section competition-combats-section">
@@ -119,6 +108,8 @@
                 @click="combat.canEdit && showCombatForm(combat.combatId)"
                 @keydown.enter="combat.canEdit && showCombatForm(combat.combatId)">
                 <div class="combat-header">
+                  <!-- FICHE-7 : la lettre du résultat, lisible sans la couleur. -->
+                  <span :class="['combat-letter', combat.resultClass]" aria-hidden="true">{{ combat.resultLetter }}</span>
                   <div class="combat-heading">
                     <span v-if="combat.stage" class="combat-stage">{{ combat.stageLabel }}</span>
                     <p class="card-title">{{ combat.opponent }}<span v-if="combat.opponentStance" class="opponent-stance"> · {{ combat.opponentStance }}</span></p>
@@ -148,16 +139,32 @@
               </article>
             </div>
           </div>
-          <div v-if="canManageCombat || nextClubParticipant" class="mobile-action-bar primary-action action-bar-inline">
-            <!-- COACH-4 : le jour J, passer au participant suivant de la compétition club. -->
-            <button v-if="nextClubParticipant" id="nextClubParticipantButton" class="button-secondary" type="button" :aria-label="'Judoka suivant : ' + nextClubParticipant.judokaName" @click="openNextClubParticipant()">
-              Suivant : {{ nextClubParticipant.judokaName }}
-            </button>
-            <button v-if="canManageCombat" id="addCombatButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="showCombatForm()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Ajouter un combat
-            </button>
+        </div>
+        <div v-if="showCoachAssessment && !competitionTiming.isUpcoming" class="section coach-assessment-section">
+          <div class="section-heading">
+            <div>
+              <h3>Bilan coach</h3>
+            </div>
           </div>
+          <div class="coach-assessment-block">
+            <div class="coach-assessment-label-row">
+              <span v-if="coachReviewStatus" class="autosave-status" role="status">{{ coachReviewStatus }}</span>
+            </div>
+            <p v-if="!canEditCoachAssessment && !coachReviewText" class="coach-assessment-empty">Le coach n'a pas encore écrit de bilan.</p>
+            <textarea v-if="canEditCoachAssessment" id="coachReviewText" aria-label="Bilan coach" class="coach-assessment-textarea" v-model="coachReviewText" placeholder="Bilan après la compétition…" rows="2" @input="coachReviewStatus = ''" @blur="saveCoachReview()"></textarea>
+            <p v-else-if="coachReviewText" class="coach-assessment-text">{{ coachReviewText }}</p>
+          </div>
+        </div>
+
+        <div v-if="canManageCombat || nextClubParticipant" class="mobile-action-bar primary-action action-bar-inline">
+          <!-- COACH-4 : le jour J, passer au participant suivant de la compétition club. -->
+          <button v-if="nextClubParticipant" id="nextClubParticipantButton" class="button-secondary" type="button" :aria-label="'Judoka suivant : ' + nextClubParticipant.judokaName" @click="openNextClubParticipant()">
+            Suivant : {{ nextClubParticipant.judokaName }}
+          </button>
+          <button v-if="canManageCombat" id="addCombatButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="showCombatForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Ajouter un combat
+          </button>
         </div>
       </div>
     </section>

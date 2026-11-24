@@ -157,12 +157,14 @@
       const total = state.currentCombats.length;
       const wins = state.currentCombats.filter((combat) => combat.result === "Victoire").length;
       const losses = state.currentCombats.filter((combat) => combat.result === "Défaite").length;
-      const draws = state.currentCombats.filter((combat) => combat.result === "Egalité").length;
-      const victoryRate = total ? Math.round((wins / total) * 100) : 0;
-      const record = ui.formatRecord(wins, losses, draws);
+      // FICHE-6 : trois tuiles, accordées au nombre.
       return {
-        record,
-        victoryRate: `${victoryRate}%`
+        total,
+        totalLabel: total > 1 ? "combats" : "combat",
+        wins,
+        winsLabel: wins > 1 ? "victoires" : "victoire",
+        losses,
+        lossesLabel: losses > 1 ? "défaites" : "défaite"
       };
     });
 

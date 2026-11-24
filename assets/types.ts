@@ -175,6 +175,7 @@ export interface CompetitionCombatCard {
   opponentStance: string;
   stage: string;
   stageLabel: string;
+  resultLetter: string;
   judokaHandedness: string;
   result: string;
   victoryType?: string;

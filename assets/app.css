@@ -2616,14 +2616,6 @@ button:focus-visible,
   margin-bottom: 16px;
 }
 
-.coach-assessment-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-}
-
 .coach-assessment-textarea {
   width: 100%;
   padding: 10px 12px;
@@ -4487,6 +4479,63 @@ input[aria-invalid="true"],
 
 #coachDashboardDefeatsByType .bar-fill {
   background: var(--text);
+}
+
+/* FICHE-5 : le classement non saisi est mis en avant ; son état est écrit. */
+
+.competition-ranking-section {
+  margin-bottom: 12px;
+}
+
+.competition-ranking-section.ranking-pending {
+  padding: 14px;
+  border: 2px solid #f0b429;
+  border-radius: var(--radius-card);
+  background: #fff8e8;
+}
+
+.ranking-status {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  vertical-align: 2px;
+}
+
+.ranking-status-todo {
+  background: #fff4dc;
+  color: #7a4b00;
+}
+
+.ranking-status-done {
+  background: #e7f3ec;
+  color: #1f6b3a;
+}
+
+/* FICHE-6 : trois tuiles. */
+
+.competition-sport-summary-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* FICHE-7 : la lettre du résultat en pastille ronde, avant le tour et l'adversaire. */
+
+.combat-letter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.combat-header > .combat-heading {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .dash-hero {

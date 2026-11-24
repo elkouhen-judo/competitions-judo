@@ -136,6 +136,9 @@ This specification does not define:
 - **COMP-036** (COACH-4): A participant's competition opened from the club competition detail offers « Suivant : <judoka> », which opens the next participant in the order of the detail list, the last leading back to the first. It is offered only with at least 2 participants.
 - **COMP-037** (COACH-7): Editing a club competition uses the same controls as creating one: the level with four buttons, « Tout sélectionner » / « Tout désélectionner » on the judokas to add. Leaving the edit (« Annuler » or back arrow) with unsaved changes asks for confirmation.
 - **COMP-038** (PART-1): A participation linked to a club competition is removed only with « Retirer » on the club competition (COMP-027). Its own detail offers no « Supprimer la compétition », and the server refuses its direct deletion for every profile (screens, API and MCP alike) with « Retirez ce judoka depuis la compétition club. ». A detached competition (COMP-018) can still be deleted.
+- **COMP-039** (FICHE-5): On a competition screen, the ranking comes first, under the competition pills. While no ranking is saved it is highlighted (yellow frame) with « À saisir »; once saved it shows « Enregistré ». On the competition day, the existing order still puts the combats first.
+- **COMP-040** (FICHE-6): The summary shows three tiles: the number of combats, of victories (in green) and of defeats, each agreed in number.
+- **COMP-041** (FICHE-7): Each combat card starts with a round « V », « D » or « N » letter, so the result reads without colour. The « Bilan coach » section comes after the combats; when empty, parents and judokas read « Le coach n'a pas encore écrit de bilan. ».
 
 ### 3.4 Combat rules
 

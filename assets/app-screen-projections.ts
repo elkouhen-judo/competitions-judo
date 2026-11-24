@@ -231,6 +231,14 @@
     return COMBAT_STAGE_LABELS[value] || value;
   }
 
+  // FICHE-7 : V, D ou N, pour lire le résultat sans la couleur.
+  function getResultLetter(result: unknown): string {
+    const value = String(result || "");
+    if (value === "Victoire" || value === "V") return "V";
+    if (value === "Défaite" || value === "D") return "D";
+    return value ? "N" : "";
+  }
+
   function getCombatStageOrder(stage: string): number {
     const index = COMBAT_STAGE_ORDER.indexOf(stage);
     return index === -1 ? COMBAT_STAGE_ORDER.length : index;
@@ -317,6 +325,7 @@
       judokaHandedness: c.judokaHandedness || "",
       result: formatResultat(c.result),
       resultClass: `result-${String(c.result || "").toLowerCase()}`,
+      resultLetter: getResultLetter(c.result),
       victoryType: c.victoryType || "",
       scoreLabels: (c.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (c.concededScores || []).map(formatCombatScoreLabel),
@@ -394,6 +403,7 @@
       judokaHandedness: combatLike.judokaHandedness || "",
       result: helpers.formatResultat(combatLike.result),
       resultClass: `result-${String(combatLike.result || "").toLowerCase()}`,
+      resultLetter: getResultLetter(combatLike.result),
       victoryType: combatLike.victoryType || "",
       scoreLabels: (combatLike.scores || []).map(formatCombatScoreLabel),
       concededScoreLabels: (combatLike.concededScores || []).map(formatCombatScoreLabel),
