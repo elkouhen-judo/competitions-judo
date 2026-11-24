@@ -203,10 +203,16 @@ export default function createMcpServerService(deps: McpServerServiceDeps): McpS
       const [rows, clubs] = await Promise.all([getJudokas(email), getClubs(email)]);
       const filters = (args.filters as Record<string, unknown>) || {};
       assertKnownClub(clubs, filters.clubId);
+      // CLUB-001 : un judoka de plusieurs structures répond au filtre de chacune ; il est présenté
+      // avec le club filtré, sinon son club principal s'il est coaché, sinon son premier club coaché.
       const judokas = rows
         .map(toCanonicalJudoka)
-        .filter((judoka) => !filters.clubId || judoka.clubId === String(filters.clubId))
-        .map((judoka) => ({ ...judoka, clubName: clubNameOf(clubs, String(judoka.clubId || "")) }));
+        .filter((judoka) => !filters.clubId || (judoka.clubIds || []).includes(String(filters.clubId)))
+        .map((judoka) => {
+          const clubIds = (judoka.clubIds || []).filter((id) => clubs.some((club) => club.clubId === id));
+          const clubId = String(filters.clubId || "") || (clubIds.includes(String(judoka.clubId)) ? String(judoka.clubId) : clubIds[0] || "");
+          return { ...judoka, clubId, clubIds, clubName: clubNameOf(clubs, clubId) };
+        });
       return applyListLimit(judokas.filter((judoka) => matchesJudokaListFilters(judoka, filters)), args.limit);
     },
     async "competitions.search"(email, args) {

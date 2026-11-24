@@ -166,6 +166,29 @@ test("a coach cannot enter a judoka from another club", async () => {
   assert.deepEqual(calls, []);
 });
 
+test("a judoka of a club and a pôle can be entered in a competition of either structure (CLUB-001)", async () => {
+  const calls = [];
+  const service = createClubCompetitionsServiceFor({
+    calls,
+    judokas: {
+      J1: {
+        id_judoka: "J1",
+        categorie_age: "Cadet",
+        club_id: "NANTES",
+        club_ids: ["NANTES", "RENNES"]
+      }
+    }
+  });
+
+  await service.methods.saveClubCompetition("coach@example.com", {
+    ...baseEvent,
+    clubId: "RENNES",
+    participantJudokaIds: ["J1"]
+  });
+
+  assert.equal(calls.find(([kind]) => kind === "insertClub")[1].clubId, "RENNES");
+});
+
 test("a coach cannot open, edit or delete another club's competition", async () => {
   const calls = [];
   const service = createClubCompetitionsServiceFor({
@@ -430,7 +453,7 @@ function createClubsServiceFor({
       getById: async (id) => judokas.find((judoka) => judoka.id_judoka === id) || null,
       listCoaches: async () => judokas.filter((judoka) => judoka.role === "COACH"),
       countByClub: async (id) => judokas.filter((judoka) => judoka.club_id === id).length,
-      setClub: async (id, clubId) => calls.push(["setClub", id, clubId])
+      setClubs: async (id, clubIds, mainClubId) => calls.push(["setClubs", id, clubIds, mainClubId])
     },
     // Le contrôle d'accès des clubs ne lit que le compte (getIdentity), pas le périmètre.
     userContextService: {
@@ -499,7 +522,10 @@ test("clubs can only be assigned to coaches, and only existing clubs", async () 
   const calls = [];
   const service = createClubsServiceFor({
     calls,
-    clubs: [{ id_club: "NANTES", nom: "Nantes" }],
+    clubs: [
+      { id_club: "NANTES", nom: "Nantes" },
+      { id_club: "RENNES", nom: "Rennes" }
+    ],
     judokas: [
       { id_judoka: "COACH1", role: "COACH", profile_type: "JUDOKA" },
       { id_judoka: "J1", role: "NORMAL", profile_type: "JUDOKA" }
@@ -517,12 +543,28 @@ test("clubs can only be assigned to coaches, and only existing clubs", async () 
     /Club introuvable/
   );
 
-  await service.methods.setJudokaClub("admin@example.com", "J1", "NANTES");
-  await service.methods.setJudokaClub("admin@example.com", "J1", null);
+  // CLUB-001 : plusieurs structures, le club principal parmi elles (le premier par défaut).
+  await service.methods.setJudokaClubs("admin@example.com", "J1", ["NANTES"]);
+  await service.methods.setJudokaClubs(
+    "admin@example.com",
+    "J1",
+    ["NANTES", "RENNES", "NANTES"],
+    "RENNES"
+  );
+  await service.methods.setJudokaClubs("admin@example.com", "J1", []);
   assert.deepEqual(calls.slice(1), [
-    ["setClub", "J1", "NANTES"],
-    ["setClub", "J1", null]
+    ["setClubs", "J1", ["NANTES"], "NANTES"],
+    ["setClubs", "J1", ["NANTES", "RENNES"], "RENNES"],
+    ["setClubs", "J1", [], null]
   ]);
+  await assert.rejects(
+    () => service.methods.setJudokaClubs("admin@example.com", "J1", ["NANTES"], "RENNES"),
+    /club principal doit faire partie/
+  );
+  await assert.rejects(
+    () => service.methods.setJudokaClubs("admin@example.com", "J1", ["GHOST"]),
+    /Club introuvable/
+  );
 });
 
 test("permission policy keeps admin rights separate from the coach role", () => {

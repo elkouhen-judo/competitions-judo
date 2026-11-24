@@ -1,7 +1,7 @@
 import type { JudokaModel } from "../domain/access/judoka";
 import type { AccessRole } from "../domain/access/role";
 import type { PersonName } from "../domain/access/person-name";
-import { ID_BATCH_SIZE, inFilter, selectByIdBatches, uniqueIds } from "../shared/query";
+import { ID_BATCH_SIZE, inFilter, overlapsFilter, selectByIdBatches, uniqueIds } from "../shared/query";
 import type { JudokaIdentity, JudokaRow, SupabaseRestDeps } from "./types";
 
 /** Curseur de la liste paginée des utilisateurs : dernière ligne de la page précédente. */
@@ -68,7 +68,7 @@ export interface JudokasRepository {
   listByIds(ids: string[]): Promise<JudokaRow[]>;
   listByClubIds(clubIds: string[]): Promise<JudokaRow[]>;
   countByClub(idClub: string): Promise<number>;
-  setClub(idJudoka: string, idClub: string | null): Promise<void>;
+  setClubs(idJudoka: string, clubIds: string[], mainClubId: string | null): Promise<void>;
   setRegistrationSeason(idJudoka: string, seasonStartYear: number): Promise<void>;
   setAdminFlag(idJudoka: string, isAdmin: boolean): Promise<void>;
   remove(idJudoka: string): Promise<void>;
@@ -230,7 +230,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     words.forEach((word) => {
       const pattern = quoteLogicValue(`*${word}*`);
       const clubIds = (options.clubIdsByWord || {})[word.toLocaleLowerCase("fr")] || [];
-      const clubFilter = clubIds.length ? `,club_id.in.(${clubIds.map(quoteLogicValue).join(",")})` : "";
+      const clubFilter = clubIds.length ? `,club_ids.ov.{${clubIds.map(quoteLogicValue).join(",")}}` : "";
       logicFilters.push(`or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern}${clubFilter})`);
     });
     if (logicFilters.length) {
@@ -328,13 +328,13 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     if (!ids.length) {
       return [];
     }
-    return supabaseSelect<JudokaRow>("judokas", `select=*&${inFilter("club_id", ids)}&${JUDOKA_ORDER}`);
+    return supabaseSelect<JudokaRow>("judokas", `select=*&${overlapsFilter("club_ids", ids)}&${JUDOKA_ORDER}`);
   }
 
   async function countByClub(idClub: string): Promise<number> {
     const { total } = await supabaseSelectPage<Pick<JudokaRow, "id_judoka">>(
       "judokas",
-      `select=id_judoka&${eqFilter("club_id", idClub)}`,
+      `select=id_judoka&${overlapsFilter("club_ids", [idClub])}`,
       1
     );
     return total;
@@ -345,8 +345,12 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { saison_inscription: seasonStartYear });
   }
 
-  async function setClub(idJudoka: string, idClub: string | null): Promise<void> {
-    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), { club_id: idClub || null });
+  // CLUB-001 : les structures et le club principal s'écrivent ensemble (contrainte judokas_main_club_member).
+  async function setClubs(idJudoka: string, clubIds: string[], mainClubId: string | null): Promise<void> {
+    await supabasePatch("judokas", eqFilter("id_judoka", idJudoka), {
+      club_ids: uniqueIds(clubIds),
+      club_id: mainClubId || null
+    });
   }
 
   async function setAdminFlag(idJudoka: string, isAdmin: boolean): Promise<void> {
@@ -400,7 +404,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     listByIds,
     listByClubIds,
     countByClub,
-    setClub,
+    setClubs,
     setRegistrationSeason,
     setAdminFlag,
     remove,

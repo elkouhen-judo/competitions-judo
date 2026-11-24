@@ -28,7 +28,9 @@
       renamingClubId: "",
       renamingClubName: "",
       // ADMIN-3 : utilisateur dont le choix de club est ouvert.
-      changingClubUserId: ""
+      changingClubUserId: "",
+      // CLUB-001 : clubs cochés et club principal en cours de choix, enregistrés ensemble.
+      userClubDraft: { clubIds: [] as string[], mainClubId: "" }
     };
     // Clubs et coachs (gestion des clubs, réservée aux admins).
     const clubsData = window.Vue.reactive({
@@ -90,8 +92,13 @@
     // ADMIN-3 : une ligne par utilisateur : nom, puis rôle · catégorie · club.
     const managedUsersPage = window.Vue.computed(() =>
       usersProjection.value.users.map((user) => {
-        const club = clubsData.clubs.find((option) => option.clubId === user.clubId);
-        const meta = [user.roleLabel, user.ageCategory, club ? club.name : ""].filter(Boolean).join(" · ");
+        // CLUB-001 : le club principal d'abord, puis les autres structures.
+        const clubNames = [user.clubId, ...user.clubIds.filter((id) => id !== user.clubId)]
+          .map((id) => clubsData.clubs.find((option) => option.clubId === id))
+          .filter((club): club is { clubId: string; name: string; coachIds: string[]; judokaCount: number } => Boolean(club))
+          .map((club) => club.name)
+          .join(", ");
+        const meta = [user.roleLabel, user.ageCategory, clubNames].filter(Boolean).join(" · ");
         return { ...user, meta };
       })
     );
@@ -132,6 +139,11 @@
     const clubOptions = window.Vue.computed(() =>
       clubsData.clubs.map((club) => ({ clubId: club.clubId, name: club.name }))
     );
+    // CLUB-001 : le club principal se choisit parmi les clubs cochés.
+    const userClubDraftOptions = window.Vue.computed(() => {
+      const draft = adminsViewModel ? adminsViewModel.userClubDraft : { clubIds: [] as string[] };
+      return clubOptions.value.filter((club) => draft.clubIds.includes(club.clubId));
+    });
     const clubCards = window.Vue.computed(() =>
       clubsData.clubs.map((club) => {
         const coachNames = clubsData.coaches
@@ -188,7 +200,9 @@
           saveRenameClub,
           deleteClub,
           toggleCoachClub,
-          setUserClub,
+          saveUserClubs,
+          toggleUserClubDraft,
+          setUserMainClubDraft,
           openUserClubChoice
         },
         {
@@ -224,6 +238,7 @@
           hasAccessInvitations,
           isSubmitting,
           clubOptions,
+          userClubDraftOptions,
           clubCards,
           coachCards,
           hasClubs
@@ -389,7 +404,7 @@
     }
 
     // Après une modification de club, on recharge la gestion (utilisateurs et clubs) pour rester cohérent.
-    function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClub">(
+    function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs">(
       method: M,
       args: import("./types").RpcClientArgs<M>,
       onSuccess?: () => void
@@ -460,24 +475,49 @@
       runClubAction("setCoachClubs", [coachId, next]);
     }
 
-    // ADMIN-3 : « Changer de club » ouvre le choix sous la ligne ; le changement se confirme.
-    function openUserClubChoice(judokaId: string) {
-      const viewModel = getAdminsViewModel();
-      viewModel.changingClubUserId = viewModel.changingClubUserId === judokaId ? "" : judokaId;
+    function getClubName(clubId: string): string {
+      const club = clubsData.clubs.find((option) => option.clubId === clubId);
+      return club ? club.name : "";
     }
 
-    function setUserClub(judokaId: string, clubId: string, fullName: string) {
-      const club = clubsData.clubs.find((option) => option.clubId === clubId);
-      const target = club ? `à ${club.name}` : "sans club";
+    // ADMIN-3 / CLUB-001 : « Modifier les clubs » ouvre le choix sous la ligne, prérempli.
+    function openUserClubChoice(judokaId: string, clubIds: string[] = [], mainClubId = "") {
+      const viewModel = getAdminsViewModel();
+      const isOpen = viewModel.changingClubUserId === judokaId;
+      viewModel.changingClubUserId = isOpen ? "" : judokaId;
+      viewModel.userClubDraft = { clubIds: isOpen ? [] : [...clubIds], mainClubId: isOpen ? "" : mainClubId };
+    }
+
+    // Un club coché devient principal s'il est le seul ; décocher le principal passe au suivant.
+    function toggleUserClubDraft(clubId: string) {
+      const draft = getAdminsViewModel().userClubDraft;
+      const clubIds = draft.clubIds.includes(clubId)
+        ? draft.clubIds.filter((id) => id !== clubId)
+        : [...draft.clubIds, clubId];
+      const mainClubId = clubIds.includes(draft.mainClubId) ? draft.mainClubId : clubIds[0] || "";
+      getAdminsViewModel().userClubDraft = { clubIds, mainClubId };
+    }
+
+    function setUserMainClubDraft(clubId: string) {
+      const draft = getAdminsViewModel().userClubDraft;
+      if (draft.clubIds.includes(clubId)) draft.mainClubId = clubId;
+    }
+
+    function saveUserClubs(judokaId: string, fullName: string, previousClubIds: string[] = []) {
+      const { clubIds, mainClubId } = getAdminsViewModel().userClubDraft;
+      const names = clubIds.map((id) => (id === mainClubId && clubIds.length > 1 ? `${getClubName(id)} (principal)` : getClubName(id)));
+      const removed = previousClubIds.filter((id) => !clubIds.includes(id)).map(getClubName).filter(Boolean);
+      const target = names.length ? `à ${names.join(", ")}` : "sans club";
+      const warning = removed.length ? ` Les coachs de ${removed.join(", ")} ne le verront plus.` : "";
       app.confirmAndRun({
-        message: `Rattacher ${fullName} ${target} ? Les coachs de son ancien club ne le verront plus.`,
-        confirmLabel: "Changer de club",
-        method: "setJudokaClub",
-        args: [judokaId, clubId || null],
+        message: `Rattacher ${fullName} ${target} ?${warning}`,
+        confirmLabel: "Enregistrer les clubs",
+        method: "setJudokaClubs",
+        args: [judokaId, clubIds, mainClubId || null],
         onSuccess: (response) => {
-          // Une fois enregistré, le judoka change de club dans l'état local, pour l'espace coach.
+          // Une fois enregistrés, les clubs du judoka changent dans l'état local, pour l'espace coach.
           state.judokas = state.judokas.map((judoka) =>
-            String(judoka.judokaId) === String(judokaId) ? { ...judoka, clubId: clubId || "" } : judoka
+            String(judoka.judokaId) === String(judokaId) ? { ...judoka, clubId: mainClubId || "", clubIds: [...clubIds] } : judoka
           );
           getAdminsViewModel().changingClubUserId = "";
           showSuccess(response.message || "Modification enregistrée.");

@@ -93,7 +93,7 @@ This specification does not redefine product behavior already described in `docs
 ### 3.3 Data model constraints
 
 - **DAT-001**: Main business tables are `judokas`, `parent_judokas`, `clubs`, `coach_clubs`, `club_competitions`, `competitions`, and `combats`.
-- **DAT-001a**: `clubs.id_club` is the club business identifier; `clubs.nom` is unique case-insensitively. `judokas.club_id` optionally references the judoka's club, `club_competitions.club_id` references the owning club, and `coach_clubs (id_coach, id_club)` links a coach to the clubs they coach. Club references use `on delete restrict`; a club can only be deleted once empty.
+- **DAT-001a**: `clubs.id_club` is the club business identifier; `clubs.nom` is unique case-insensitively. `judokas.club_id` optionally references the judoka's main club and `judokas.club_ids` (text array, GIN index, constraint `judokas_main_club_member`) lists all their clubs (CLUB-001), `club_competitions.club_id` references the owning club, and `coach_clubs (id_coach, id_club)` links a coach to the clubs they coach. Club references use `on delete restrict`; a club can only be deleted once empty.
 - **DAT-001b**: `judokas.is_admin` stores admin rights independently of `judokas.role`, so a `COACH` can also be admin. A user is admin when `role = ADMIN` or `is_admin = true`.
 - **DAT-002**: `access_invitations` shall store admin-managed pending access invitations for first-time users together with the invited target profile type.
 - **DAT-003**: `club_competitions.id_club_competition` is the club event business identifier.
@@ -135,7 +135,7 @@ This specification does not redefine product behavior already described in `docs
 - **PERF-001**: The user context shall cost at most 2 Supabase requests (account with its coached clubs and children, then the judokas in scope) and shall be computed once per RPC call.
 - **PERF-002**: Independent reads of one RPC shall be sent in parallel.
 - **PERF-003**: Every list read shall carry a stable `order`, an explicit `limit` and `Prefer: count=exact`; when the announced total is not reached, the remaining pages are read, and an incomplete list raises an error.
-- **PERF-004**: A coach scope shall be filtered by club (`judokas.club_id` join), never by a list of judoka ids in the URL; id lists are sent in batches of 100, in parallel.
+- **PERF-004**: A coach scope shall be filtered by club (`judokas.club_ids=ov.{…}` filter or join), never by a list of judoka ids in the URL; id lists are sent in batches of 100, in parallel.
 - **PERF-005**: `getInitialData` shall load the current season and upcoming competitions, with each competition's combat results embedded (`combats(resultat)`); `getSeasonCompetitions` loads one past season on demand.
 - **PERF-006**: Combats shall be read with their points in one request (`combat_scores(*)`); combat points are written in one insert.
 - **PERF-007**: A write RPC shall return the saved element (`competition`, `combat`, `clubCompetition`, `competitions`); the browser updates its state and cache. `getInitialData` is only called at opening, when back online and after a CSV import.
@@ -156,7 +156,7 @@ This specification does not redefine product behavior already described in `docs
 - **AUTH-008b**: Accepted limit: a revoked session stays valid until its access token expires (1 h).
 - **AUTH-009**: The backend shall read the email from the verified token before applying business permissions.
 - **AUTH-010**: Effective application permissions shall be derived from `judokas.role` plus `judokas.profile_type`. `COACH` grants sports visibility and mutations over club sports data; `ADMIN` grants access governance only and does not inherit coach permissions.
-- **AUTH-010a**: A coach's sports scope shall be resolved server-side as the judokas whose `club_id` belongs to the coach's `coach_clubs` (plus their own profile), carried by the same managed-judoka scope as parents; every service (competitions, combats, club competitions, dashboard, combat search, MCP) shall filter on it. The dashboard and the combat search cover the judokas of the chosen clubs only: the coach's own profile counts there only when it belongs to one of those clubs (MULTI-5).
+- **AUTH-010a**: A coach's sports scope shall be resolved server-side as the judokas whose `club_ids` overlap the coach's `coach_clubs` (plus their own profile), carried by the same managed-judoka scope as parents; every service (competitions, combats, club competitions, dashboard, combat search, MCP) shall filter on it. The dashboard and the combat search cover the judokas of the chosen clubs only: the coach's own profile counts there only when it belongs to one of those clubs (MULTI-5).
 - **AUTH-011**: A Google signup shall be allowed when the email already exists on an imported `judokas` profile.
 - **AUTH-012**: Backend profile registration shall reject any email that is neither already linked to a judoka profile nor present in `access_invitations`.
 - **AUTH-013**: A Supabase `before-user-created` hook shall reject Google signups whose verified email is neither linked to an existing imported profile nor present in `access_invitations`, except for pre-seeded admin accounts explicitly allowed by the backend.

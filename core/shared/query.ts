@@ -6,6 +6,11 @@ export function inFilter(column: string, values: unknown[]): string {
   return `${column}=in.(${values.map((value) => encodeURIComponent(String(value))).join(",")})`;
 }
 
+/** CLUB-001 : filtre PostgREST « la colonne tableau partage au moins une valeur avec la liste ». */
+export function overlapsFilter(column: string, values: unknown[]): string {
+  return `${column}=ov.{${values.map((value) => encodeURIComponent(String(value))).join(",")}}`;
+}
+
 export function uniqueIds(values: unknown[] | null | undefined): string[] {
   return [...new Set((values || []).map(String).filter(Boolean))];
 }

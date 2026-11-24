@@ -161,6 +161,13 @@
     return `${startYear}-${startYear + 1}`;
   }
 
+  // CLUB-001 : les structures d'un judoka (club, pôle espoir…), club principal compris.
+  function getJudokaClubIds(judoka: Partial<Judoka> | null | undefined): string[] {
+    if (!judoka) return [];
+    if (Array.isArray(judoka.clubIds) && judoka.clubIds.length) return judoka.clubIds.map(String);
+    return judoka.clubId ? [String(judoka.clubId)] : [];
+  }
+
   // Une compétition est ouverte au judoka si sa saison ne dépasse pas sa dernière
   // inscription. Sans saison d'inscription connue (profil non chargé), on ne bloque pas.
   function isRegisteredForDate(judoka: Partial<Judoka> | null | undefined, dateValue: unknown) {
@@ -348,6 +355,7 @@
     getSeasonStartYear,
     formatSeasonLabel,
     isRegisteredForDate,
+    getJudokaClubIds,
     getJudokaDisplayName,
     getJudokaInitials,
     createMountedViewModel,

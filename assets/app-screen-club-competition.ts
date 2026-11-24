@@ -12,7 +12,8 @@
     judokaId: string;
     name: string;
     ageCategory: string;
-    clubId: string;
+    /** CLUB-001 : toutes les structures du judoka. */
+    clubIds: string[];
     registrationSeason?: number | null;
   }
 
@@ -61,6 +62,7 @@
       getClassementBadgeClass,
       formatSeasonLabel,
       getCurrentLocalDate,
+      getJudokaClubIds,
       getJudokaDisplayName,
       getSeasonStartYear,
       isRegisteredForDate,
@@ -138,7 +140,7 @@
         judokaId: String(j.judokaId || ""),
         name: getJudokaDisplayName(j) || "Judoka",
         ageCategory: String(j.ageCategory || ""),
-        clubId: String(j.clubId || ""),
+        clubIds: getJudokaClubIds(j),
         registrationSeason: j.registrationSeason
       };
     }
@@ -156,7 +158,7 @@
         return [];
       }
       return clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
-        (p) => p.clubId === clubId && p.ageCategory === ageCategory && isOptionRegistered(p)
+        (p) => p.clubIds.includes(clubId) && p.ageCategory === ageCategory && isOptionRegistered(p)
       );
     });
     // INSCR-2 : les judokas de la catégorie non réinscrits pour la saison de la compétition.
@@ -166,7 +168,7 @@
       const season = getSeasonStartYear(form.competitionDate);
       if (!ageCategory || !form.clubId || season === null) return "";
       const count = clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
-        (p) => p.clubId === form.clubId && p.ageCategory === ageCategory && !isOptionRegistered(p)
+        (p) => p.clubIds.includes(form.clubId) && p.ageCategory === ageCategory && !isOptionRegistered(p)
       ).length;
       if (!count) return "";
       const label = formatSeasonLabel(season);
@@ -203,7 +205,7 @@
       const clubId = clubCompetitionFormViewModel.clubCompetitionForm.clubId;
       if (!clubId) return "";
       const count = clubCompetitionFormViewModel.clubCompetitionParticipants.filter(
-        (p) => p.clubId === clubId && !cleanText(p.ageCategory)
+        (p) => p.clubIds.includes(clubId) && !cleanText(p.ageCategory)
       ).length;
       if (!count) return "";
       return count > 1
@@ -602,7 +604,7 @@
     function updateClubCompetitionClub() {
       const form = clubCompetitionFormViewModel.clubCompetitionForm;
       clubCompetitionFormViewModel.clubCompetitionFormErrors.clubId = "";
-      keepClubCompetitionParticipants((p) => p.clubId === form.clubId, "ce club");
+      keepClubCompetitionParticipants((p) => p.clubIds.includes(form.clubId), "ce club");
     }
 
     // CREA-3 : quitter un formulaire modifié demande confirmation pour ne rien perdre.
@@ -760,7 +762,7 @@
           const eventClubId = String(cc.club_id || "");
           let available = state.judokas
             .filter((j) => !participantJudokaIds.has(String(j.judokaId)))
-            .filter((j) => String(j.clubId || "") === eventClubId)
+            .filter((j) => getJudokaClubIds(j).includes(eventClubId))
             .map(toJudokaOption);
           // INSCR-2 : les judokas non réinscrits pour la saison de la compétition ne sont pas proposés.
           clubCompetitionDetailViewModel.clubCompetitionUnregisteredCount = available.filter(

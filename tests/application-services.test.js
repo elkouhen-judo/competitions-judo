@@ -2647,7 +2647,8 @@ function createTestAdminService(judokasByEmail = {}, invitationsByEmail = {}, ju
       },
       setAdminFlag: async (idJudoka, isAdmin) =>
         (calls.adminFlags = [...(calls.adminFlags || []), [idJudoka, isAdmin]]),
-      setClub: async (idJudoka, idClub) => calls.clubAssignments.push([idJudoka, idClub]),
+      setClubs: async (idJudoka, clubIds, mainClubId) =>
+        calls.clubAssignments.push([idJudoka, mainClubId, clubIds]),
       setRegistrationSeason: async (idJudoka, season) =>
         calls.registrations.push([idJudoka, season]),
       listByClubIds: async (clubIds) =>
@@ -3865,6 +3866,28 @@ test("importUsersCsv processes the bundled sample file: children link, the alrea
   assert.ok(calls.clubAssignments.every(([, idClub]) => idClub === "NANTES"));
   assert.equal(calls.coachClubs.length, 1);
   assert.deepEqual(calls.coachClubs[0][1], ["NANTES"]);
+});
+
+test("importUsersCsv adds the club to a judoka's structures and keeps their main club (CLUB-007)", async () => {
+  const { service, calls } = createTestAdminService({
+    "lina@example.com": {
+      id_judoka: "LINA",
+      profile_type: "JUDOKA",
+      role: "NORMAL",
+      email: "lina@example.com",
+      prenom: "Lina",
+      nom: "Martin",
+      club_id: "RENNES",
+      club_ids: ["RENNES"]
+    }
+  });
+  const csv =
+    "profileType,prenom,nom,email,parentEmail,club\nJUDOKA,Lina,Martin,lina@example.com,,Judo Club Nantes\n";
+
+  const summary = await service.methods.importUsersCsv("admin@example.com", csv);
+
+  assert.equal(summary.failed, 0, JSON.stringify(summary.results));
+  assert.deepEqual(calls.clubAssignments, [["LINA", "RENNES", ["RENNES", "NANTES"]]]);
 });
 
 test("importUsersCsv rejects an unknown club or a club on a parent row without writing", async () => {

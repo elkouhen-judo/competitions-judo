@@ -160,7 +160,13 @@ function adminScenario() {
       return { user: admin, admins: [admin], ...page(users), accessInvitations: [] };
     }
     if (request.method === "getClubsManagement") {
-      return { clubs: [{ ...CLUB, coachIds: ["j-tom"], judokaCount: 2 }], coaches: [users[3]] };
+      return {
+        clubs: [
+          { ...CLUB, coachIds: ["j-tom"], judokaCount: 2 },
+          { clubId: "pole-espoir", name: "Pôle Espoir", coachIds: [], judokaCount: 0 }
+        ],
+        coaches: [users[3]]
+      };
     }
     if (request.method === "getUsersPage") {
       const filter = request.args[0].filter;
@@ -172,7 +178,7 @@ function adminScenario() {
       if (filter === "coach") return page(users.filter((user) => user.accessRole === "COACH"));
       return page(users);
     }
-    if (request.method === "setJudokaClub") {
+    if (request.method === "setJudokaClubs") {
       return { success: true, message: "Club modifié." };
     }
     if (request.method === "grantCoachRole" || request.method === "revokeCoachRole") {
@@ -220,25 +226,42 @@ for (const [name, viewport] of VIEWPORTS) {
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Tous" }).click();
     await expect(cards).toHaveCount(5);
 
-    // ADMIN-3 : changer de club passe par le menu, puis une confirmation dans l'appli.
+    // ADMIN-3 / CLUB-001 : les clubs se choisissent par le menu (club et pôle), avec un club principal,
+    // puis une confirmation dans l'appli.
     const row = (fullName) => cards.filter({ hasText: fullName });
     await row("Sam Test").locator(".card-menu summary").click();
-    await row("Sam Test").getByRole("menuitem", { name: "Changer de club" }).click();
-    await row("Sam Test")
-      .locator(".admin-user-club-choice")
-      .getByRole("button", { name: "Judo Club Nantes" })
-      .click();
-    await expect(page.locator("#confirmDialog")).toContainText(
-      "Rattacher Sam Test à Judo Club Nantes ?"
+    await row("Sam Test").getByRole("menuitem", { name: "Modifier les clubs" }).click();
+    const choice = row("Sam Test").locator(".admin-user-club-choice");
+    await expect(choice.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
+    await choice.getByRole("button", { name: "Judo Club Nantes" }).click();
+    await expect(choice.getByRole("radiogroup", { name: "Club principal" })).toHaveCount(0);
+    await choice.getByRole("button", { name: "Pôle Espoir" }).click();
+    const main = choice.getByRole("radiogroup", { name: "Club principal" });
+    await expect(main.getByRole("radio", { name: "Judo Club Nantes" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    await main.getByRole("radio", { name: "Pôle Espoir" }).click();
+    await expect(main.getByRole("radio", { name: "Pôle Espoir" })).toHaveAttribute(
+      "aria-checked",
+      "true"
     );
     await page.screenshot({
-      path: `output/playwright/profiles-admin-${name}-01b-changer-club.png`,
+      path: `output/playwright/profiles-admin-${name}-01b-clubs.png`,
+      animations: "disabled"
+    });
+    await choice.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.locator("#confirmDialog")).toContainText(
+      "Rattacher Sam Test à Judo Club Nantes, Pôle Espoir (principal) ?"
+    );
+    await page.screenshot({
+      path: `output/playwright/profiles-admin-${name}-01c-confirmer-clubs.png`,
       animations: "disabled"
     });
     await page.locator("#confirmDialogConfirm").click();
     await expect
-      .poll(() => rpc.filter((r) => r.method === "setJudokaClub").map((r) => r.args))
-      .toEqual([["j-sam", "club-nantes"]]);
+      .poll(() => rpc.filter((r) => r.method === "setJudokaClubs").map((r) => r.args))
+      .toEqual([["j-sam", ["club-nantes", "pole-espoir"], "pole-espoir"]]);
 
     // ADMIN-1 : nommer coach un judoka ; jamais un parent.
     const card = (fullName) => cards.filter({ hasText: fullName });

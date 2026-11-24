@@ -7,7 +7,7 @@ import type { ClubsManagement, OperationResult, RpcMethods } from "../types";
 
 type ClubMethods = Pick<
   RpcMethods,
-  "getClubsManagement" | "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClub"
+  "getClubsManagement" | "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClubs"
 >;
 
 export interface ClubsServiceDeps {
@@ -15,7 +15,7 @@ export interface ClubsServiceDeps {
   clubCompetitionsRepository: Pick<ClubCompetitionsRepository, "countByClub">;
   judokasRepository: Pick<
     JudokasRepository,
-    "getById" | "listCoaches" | "countByClub" | "setClub"
+    "getById" | "listCoaches" | "countByClub" | "setClubs"
   >;
   userContextService: Pick<UserContextService, "getIdentity">;
   isAdmin: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
@@ -144,21 +144,32 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     return { success: true, message: "Clubs du coach mis à jour." };
   }
 
-  async function setJudokaClub(email: string, idJudoka: string, idClub: string | null): Promise<OperationResult> {
+  // CLUB-001 : les structures d'un judoka (club, pôle espoir…) et son club principal, choisi parmi elles.
+  async function setJudokaClubs(
+    email: string,
+    idJudoka: string,
+    clubIds: string[],
+    mainClubId?: string | null
+  ): Promise<OperationResult> {
     await requireAdmin(email);
     const judoka = await judokasRepository.getById(String(idJudoka || ""));
     if (!judoka) {
       throw new Error("Judoka introuvable.");
     }
-    const clubId = String(idClub || "").trim();
-    if (clubId) {
-      await requireClub(clubId);
+    const ids = [...new Set((clubIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
+    for (const id of ids) {
+      await requireClub(id);
     }
-    await judokasRepository.setClub(judoka.id_judoka, clubId || null);
-    return { success: true, message: clubId ? "Club du judoka mis à jour." : "Judoka retiré de son club." };
+    const requestedMain = String(mainClubId || "").trim();
+    if (requestedMain && !ids.includes(requestedMain)) {
+      throw new Error("Le club principal doit faire partie des clubs du judoka.");
+    }
+    const main = requestedMain || ids[0] || null;
+    await judokasRepository.setClubs(judoka.id_judoka, ids, main);
+    return { success: true, message: ids.length ? "Clubs du judoka mis à jour." : "Judoka retiré de ses clubs." };
   }
 
   return {
-    methods: { getClubsManagement, saveClub, deleteClub, setCoachClubs, setJudokaClub }
+    methods: { getClubsManagement, saveClub, deleteClub, setCoachClubs, setJudokaClubs }
   };
 }

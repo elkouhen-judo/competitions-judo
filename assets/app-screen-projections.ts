@@ -159,6 +159,7 @@
       ),
       isPending: false,
       clubId: user.clubId || "",
+      clubIds: Array.isArray(user.clubIds) && user.clubIds.length ? user.clubIds : user.clubId ? [user.clubId] : [],
       canHaveClub: user.profileType !== "PARENT",
       // ADMIN-1 : un judoka avec e-mail peut être nommé coach ; un parent jamais.
       isCoach: user.accessRole === "COACH",
@@ -202,6 +203,7 @@
       isCurrentUser: false,
       isPending: true,
       clubId: "",
+      clubIds: [],
       canHaveClub: false,
       isCoach: false,
       canBeCoach: false,

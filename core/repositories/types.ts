@@ -51,6 +51,8 @@ export interface JudokaRow {
   lateralite?: string;
   pending_parent_email?: string | null;
   club_id?: string | null;
+  /** CLUB-001 : toutes les structures du judoka (club_id en fait partie). */
+  club_ids?: string[] | null;
   is_admin?: boolean;
   /** INSCR-1 : année de début de la saison de la dernière inscription (null = jamais inscrit). */
   saison_inscription?: number | null;

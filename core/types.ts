@@ -20,8 +20,10 @@ export interface Judoka {
   gender: string;
   yearInCategory: string;
   handedness: string;
-  /** Club du judoka ("" si non rattaché). */
+  /** Club principal du judoka ("" si non rattaché, CLUB-003a). */
   clubId?: string;
+  /** CLUB-001 : toutes ses structures (club, pôle espoir…), club principal compris. */
+  clubIds?: string[];
   /** Droit admin indépendant du rôle (un coach peut aussi être admin). */
   adminAccess?: boolean;
   /** INSCR-1 : année de début de la saison de la dernière inscription (null = jamais inscrit). */
@@ -537,8 +539,13 @@ export interface RpcMethods {
   deleteClub: (email: string, idClub: string) => Promise<OperationResult>;
   /** Remplace la liste des clubs coachés par un coach. Admin uniquement. */
   setCoachClubs: (email: string, idCoach: string, clubIds: string[]) => Promise<OperationResult>;
-  /** Rattache un judoka à un club (ou l'en retire avec null). Admin uniquement. */
-  setJudokaClub: (email: string, idJudoka: string, idClub: string | null) => Promise<OperationResult>;
+  /** CLUB-001 : remplace les clubs d'un judoka et choisit son club principal (le premier par défaut). Admin uniquement. */
+  setJudokaClubs: (
+    email: string,
+    idJudoka: string,
+    clubIds: string[],
+    mainClubId?: string | null
+  ) => Promise<OperationResult>;
   /** Importe des profils JUDOKA/PARENT en masse depuis un fichier CSV. */
   importUsersCsv: (email: string, csvContent: string, seasonStartYear?: number) => Promise<UserImportSummary>;
   /** Supprime une compétition de club. */

@@ -658,6 +658,24 @@ alter table public.judokas
 
 create index if not exists judokas_club_id_idx on public.judokas (club_id);
 
+-- CLUB-001 : un judoka appartient à plusieurs structures (club, pôle espoir…) ; club_id reste
+-- son club principal (CLUB-003a) et figure toujours parmi club_ids.
+alter table public.judokas
+  add column if not exists club_ids text[] not null default '{}';
+
+update public.judokas
+set club_ids = array_append(club_ids, club_id)
+where club_id is not null and not (club_ids @> array[club_id]);
+
+alter table public.judokas
+  drop constraint if exists judokas_main_club_member;
+
+alter table public.judokas
+  add constraint judokas_main_club_member
+  check ((club_id is null and cardinality(club_ids) = 0) or club_id = any(club_ids));
+
+create index if not exists judokas_club_ids_idx on public.judokas using gin (club_ids);
+
 -- Droit admin indépendant du rôle : un coach peut aussi être admin.
 alter table public.judokas
   add column if not exists is_admin boolean not null default false;

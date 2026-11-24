@@ -40,7 +40,7 @@ Les identifiants existants sont conservés en `text` pour simplifier l'import de
 Il crée aussi les fonctions appelables par le rôle service (`service_role`) uniquement :
 
 - `public.register_profile` : inscription d'un profil invité.
-- `public.coach_dashboard_data(p_club_ids, p_judoka_ids, p_date_from, p_date_to, p_age_category, p_competition_ids)` : lecture du tableau de bord coach en un appel (STAT-17). Renvoie `{ competitions, combats }` : les compétitions dont le club de résultat (`stats_club_id` : club de la compétition club, sinon club actuel du judoka, MULTI-4) est dans `p_club_ids`, ou dont le judoka est listé dans `p_judoka_ids`, filtrées par dates et catégorie d'âge, puis les combats des compétitions choisies (toutes si `p_competition_ids` est vide) avec leurs `combat_scores` triés par `ordre`. Aucun calcul.
+- `public.coach_dashboard_data(p_club_ids, p_judoka_ids, p_date_from, p_date_to, p_age_category, p_competition_ids)` : lecture du tableau de bord coach en un appel (STAT-17). Renvoie `{ competitions, combats }` : les compétitions dont le club de résultat (`stats_club_id` : club de la compétition club, sinon club principal du judoka, MULTI-4) est dans `p_club_ids`, ou dont le judoka est listé dans `p_judoka_ids`, filtrées par dates et catégorie d'âge, puis les combats des compétitions choisies (toutes si `p_competition_ids` est vide) avec leurs `combat_scores` triés par `ordre`. Aucun calcul.
 
 ## Relations
 
@@ -49,7 +49,8 @@ Il crée aussi les fonctions appelables par le rôle service (`service_role`) un
 - `combats.id_judoka` référence `judokas.id_judoka`.
 - `combats.id_competition` référence `competitions.id_competition` avec `on delete cascade`.
 - `combat_scores.id_combat` référence `combats.id_combat` avec `on delete cascade` (une ligne par prise marquée, ordre préservé par la colonne `ordre`).
-- `judokas.club_id` référence optionnellement `clubs.id_club` (`on delete restrict`) : le club du judoka.
+- `judokas.club_id` référence optionnellement `clubs.id_club` (`on delete restrict`) : le club principal du judoka (CLUB-003a).
+- `judokas.club_ids text[]` (index GIN) : tous les clubs du judoka (CLUB-001). La contrainte `judokas_main_club_member` impose `club_id` parmi `club_ids`, et `club_id` nul seulement si `club_ids` est vide. Les deux colonnes s'écrivent ensemble.
 - `club_competitions.club_id` référence `clubs.id_club` (`on delete restrict`) : le club propriétaire de la compétition club.
 - `coach_clubs (id_coach, id_club)` relie un coach (`judokas.id_judoka`) aux clubs qu'il coache, avec `on delete cascade` des deux côtés.
 

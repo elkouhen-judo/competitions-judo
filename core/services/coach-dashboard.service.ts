@@ -15,7 +15,7 @@ import {
   validateCoachDashboardFilters,
   withoutScores
 } from "./coach-dashboard-loader";
-import { toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
+import { getJudokaClubIds, toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
 import type { CombatsRepository } from "../repositories/combats.repository";
 import type { CompetitionRow, JudokaRow } from "../repositories/types";
 import type { CompetitionScopeFilter, CompetitionsRepository } from "../repositories/competitions.repository";
@@ -107,7 +107,7 @@ export default function createCoachDashboardService(
     competitionRows: CompetitionRow[],
     clubIds: string[]
   ): { competitionRows: CompetitionRow[]; judokaRows: JudokaRow[] } {
-    const judokaRows = judokas.filter((judoka) => clubIds.includes(String(judoka.club_id || "")));
+    const judokaRows = judokas.filter((judoka) => getJudokaClubIds(judoka).some((id) => clubIds.includes(id)));
     const allowed = new Set(judokaRows.map((judoka) => String(judoka.id_judoka)));
     return {
       competitionRows: competitionRows.filter((row) => allowed.has(String(row.id_judoka))),

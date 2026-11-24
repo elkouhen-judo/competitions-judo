@@ -132,7 +132,8 @@ export function buildCoachMcpToolDefinitions(): CoachMcpToolDefinition[] {
         `gender (${GENDERS.join(" ou ")}), handedness (${HANDEDNESSES.join(" ou ")}) et ageCategory (${AGE_CATEGORIES.join(", ")}). ` +
         "Accepte aussi des filtres de combat (résultat, adversaire, technique, score...) : un judoka n'est alors retourné " +
         "que s'il a au moins un combat correspondant, mais une seule ligne par judoka est renvoyée (pas une par combat). " +
-        "Chaque judoka donne clubId et clubName ; le filtre clubId restreint à un club du coach.",
+        "Chaque judoka donne clubId et clubName, et clubIds (tous ses clubs coachés : un judoka peut appartenir " +
+        "à plusieurs structures, club et pôle) ; le filtre clubId restreint aux judokas de ce club du coach.",
       inputSchema: buildFilteredListSchema({ ...COMBAT_FILTER_PROPERTIES, ...CLUB_FILTER_PROPERTIES })
     },
     {

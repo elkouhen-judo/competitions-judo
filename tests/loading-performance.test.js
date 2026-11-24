@@ -71,8 +71,8 @@ function splitTopLevel(value) {
   let depth = 0;
   let current = "";
   for (const char of value) {
-    if (char === "(") depth += 1;
-    if (char === ")") depth -= 1;
+    if (char === "(" || char === "{") depth += 1;
+    if (char === ")" || char === "}") depth -= 1;
     if (char === "," && depth === 0) {
       parts.push(current);
       current = "";
@@ -109,6 +109,15 @@ function matchesOperator(actual, expression) {
       return value <= unquote(operand);
     case "in":
       return splitTopLevel(operand.slice(1, -1)).map(unquote).includes(value);
+    case "ov":
+    case "cs": {
+      // Colonne tableau (CLUB-001 : judokas.club_ids) comparée à une liste « {a,b} ».
+      const values = Array.isArray(actual) ? actual.map(String) : [];
+      const wanted = splitTopLevel(operand.slice(1, -1)).map(unquote);
+      return operator === "ov"
+        ? wanted.some((item) => values.includes(item))
+        : wanted.every((item) => values.includes(item));
+    }
     case "ilike": {
       const needle = unquote(operand).toLowerCase();
       const pattern = needle.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/[*%]/g, ".*");
@@ -376,7 +385,9 @@ function judoka(id, extras = {}) {
     is_admin: false,
     // INSCR-2 : inscrit pour la saison en cours.
     saison_inscription: seasonStartYear,
-    ...extras
+    ...extras,
+    // CLUB-001 : le club principal fait partie des structures du judoka.
+    club_ids: extras.club_ids || (extras.club_id ? [extras.club_id] : [])
   };
 }
 
@@ -547,6 +558,37 @@ const reads = (list, table) =>
 const writes = (list) => list.filter((request) => request.method !== "GET");
 
 // ---------------------------------------------------------------------------------------------
+// CLUB-001 : un judoka de deux structures (club et pôle) est vu par les coachs de chacune.
+// ---------------------------------------------------------------------------------------------
+
+test("CLUB-001 : le coach d'une structure secondaire voit le judoka et ses compétitions", async () => {
+  resetDatabase();
+  // A01 : club principal Angers (non coaché), inscrit aussi à Rennes (coaché par COACH1).
+  Object.assign(
+    db.judokas.find((row) => row.id_judoka === "A01"),
+    { club_ids: ["ANGERS", "RENNES"] }
+  );
+  const { result } = await measureWithoutReset(() => methods.getInitialData("coach@example.com"));
+
+  assert.ok(result.judokas.some((judoka) => judoka.judokaId === "A01"));
+  const a01 = result.judokas.find((judoka) => judoka.judokaId === "A01");
+  assert.equal(a01.clubId, "ANGERS");
+  assert.deepEqual(a01.clubIds, ["ANGERS", "RENNES"]);
+  assert.ok(result.competitions.some((competition) => competition.competitionId === "C_A01"));
+  // La compétition club d'Angers reste invisible : elle appartient à un club que le coach ne coache pas.
+  assert.ok(
+    !(result.clubCompetitions || []).some((event) => event.clubCompetitionId === "EVENT_ANGERS")
+  );
+
+  // Sans structure à Rennes, A01 n'est plus visible.
+  resetDatabase();
+  const { result: before } = await measureWithoutReset(() =>
+    methods.getInitialData("coach@example.com")
+  );
+  assert.ok(!before.judokas.some((judoka) => judoka.judokaId === "A01"));
+});
+
+// ---------------------------------------------------------------------------------------------
 // CTX-1
 // ---------------------------------------------------------------------------------------------
 
@@ -563,7 +605,7 @@ test("CTX-1 : le contexte coûte 2 requêtes au plus, quel que soit le rôle", a
     coach.requests[0].query,
     /^select=\*,coach_clubs\(id_club\),parent_judokas!parent_judokas_id_parent_fkey\(id_judoka\)&email=ilike\.coach@example\.com&limit=1$/
   );
-  assert.match(coach.requests[1].query, /club_id=in\.\(NANTES,RENNES\)/);
+  assert.match(coach.requests[1].query, /club_ids=ov\.\{NANTES,RENNES\}/);
   // Aucune requête séparée sur coach_clubs ni parent_judokas.
   assert.deepEqual(reads(coach.requests, "coach_clubs"), []);
 
@@ -743,10 +785,10 @@ test("PAGE-4 : le périmètre d'un coach se filtre par club, sans liste d'identi
   const { requests: list } = await measure(() => methods.getInitialData("coach@example.com"));
 
   const byClub = reads(list, "competitions").filter((request) =>
-    request.query.includes("judokas.club_id=in.(NANTES,RENNES)")
+    request.query.includes("judokas.club_ids=ov.{NANTES,RENNES}")
   );
   assert.equal(byClub.length, 2); // la liste et la plus ancienne date
-  byClub.forEach((request) => assert.match(request.query, /judokas!inner\(club_id\)/));
+  byClub.forEach((request) => assert.match(request.query, /judokas!inner\(club_ids\)/));
   // Aucun identifiant de judoka d'un club ne part dans une URL de compétitions.
   reads(list, "competitions").forEach((request) => {
     assert.doesNotMatch(request.query, /N01|N30|R01|SOLO1/);
@@ -1305,7 +1347,7 @@ test("COACH-1 / STAT-17 : le tableau de bord lit ses données en un appel, filtr
     (request) => !request.query.includes("email=ilike.")
   );
   assert.equal(judokaReads.length, 1);
-  assert.match(judokaReads[0].query, /club_id=in\.\(NANTES,RENNES\)/);
+  assert.match(judokaReads[0].query, /club_ids=ov\.\{NANTES,RENNES\}/);
   // Un coach ne lit aucune ligne d'un autre club.
   list.forEach((request) =>
     assert.doesNotMatch(`${request.query}${JSON.stringify(request.payload || "")}`, /ANGERS|C_A01/)

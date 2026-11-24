@@ -56,6 +56,18 @@ function toRegistrationSeason(value: unknown): number | null {
   return value !== null && value !== undefined && value !== "" && Number.isInteger(season) ? season : null;
 }
 
+// CLUB-001 : les structures du judoka ; un enregistrement sans liste garde son seul club principal.
+function toClubIds(clubIds: unknown, mainClubId: unknown): string[] {
+  const ids = Array.isArray(clubIds) ? clubIds.map(String).filter(Boolean) : [];
+  const main = String(mainClubId || "");
+  return main && !ids.includes(main) ? [main, ...ids] : ids;
+}
+
+/** CLUB-001 : structures d'une ligne judokas (club principal compris). */
+export function getJudokaClubIds(row: { club_ids?: unknown; club_id?: unknown } | null | undefined): string[] {
+  return toClubIds(row && row.club_ids, row && row.club_id);
+}
+
 export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
   return {
     judokaId: String(pick(user, "judokaId", "id_judoka") || ""),
@@ -71,6 +83,7 @@ export function toCanonicalJudoka(user: SourceRecord = {}): Judoka {
     yearInCategory: String(pick(user, "yearInCategory", "annee_categorie") || ""),
     handedness: String(pick(user, "handedness", "lateralite") || ""),
     clubId: String(pick(user, "clubId", "club_id") || ""),
+    clubIds: toClubIds(pick(user, "clubIds", "club_ids"), pick(user, "clubId", "club_id")),
     adminAccess: pick(user, "adminAccess", "is_admin") === true,
     registrationSeason: toRegistrationSeason(pick(user, "registrationSeason", "saison_inscription"))
   };

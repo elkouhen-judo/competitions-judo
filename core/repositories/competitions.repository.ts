@@ -1,5 +1,5 @@
 import type { CompetitionModel } from "../domain/competitions/competition";
-import { inFilter, selectByIdBatches, uniqueIds } from "../shared/query";
+import { inFilter, overlapsFilter, selectByIdBatches, uniqueIds } from "../shared/query";
 import type { CompetitionRow, CompetitionWithResultsRow, SupabaseRestDeps } from "./types";
 
 /** Périmètre et période d'une lecture de compétitions. Un périmètre vide ne lit rien. */
@@ -116,7 +116,7 @@ export default function createCompetitionsRepository(
 
   type ScopedRow = CompetitionRow & { judokas?: unknown };
 
-  // PAGE-4 : le périmètre d'un coach se filtre par club (jointure sur judokas.club_id) ;
+  // PAGE-4 : le périmètre d'un coach se filtre par club (jointure sur judokas.club_ids, CLUB-001) ;
   // les identifiants de judokas, peu nombreux (soi-même, ses enfants), partent par lots.
   async function selectInScope<T extends ScopedRow>(
     scope: CompetitionScopeFilter,
@@ -130,8 +130,8 @@ export default function createCompetitionsRepository(
         supabaseSelect<T>(
           "competitions",
           [
-            `select=${columns},judokas!inner(club_id)`,
-            inFilter("judokas.club_id", clubIds),
+            `select=${columns},judokas!inner(club_ids)`,
+            overlapsFilter("judokas.club_ids", clubIds),
             ...period,
             COMPETITION_ORDER
           ].join("&")
@@ -181,7 +181,7 @@ export default function createCompetitionsRepository(
       reads.push(
         supabaseSelectOne<Pick<CompetitionRow, "date">>(
           "competitions",
-          `select=date,judokas!inner(club_id)&${inFilter("judokas.club_id", clubIds)}&order=date.asc`
+          `select=date,judokas!inner(club_ids)&${overlapsFilter("judokas.club_ids", clubIds)}&order=date.asc`
         )
       );
     }

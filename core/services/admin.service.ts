@@ -1,5 +1,5 @@
 import { normalizeBeltColor } from "../domain/access/belt-color";
-import { toCanonicalJudoka, toInvitationReadModel } from "./domain-adapters";
+import { getJudokaClubIds, toCanonicalJudoka, toInvitationReadModel } from "./domain-adapters";
 import {
   applyImportProfileUpdatesToRow,
   buildChangedImportProfileUpdates,
@@ -587,8 +587,10 @@ function createUserImportController(deps: UserImportControllerDeps) {
     if (!judoka) {
       return;
     }
-    if (String(judoka.club_id || "") !== clubId) {
-      await judokasRepository.setClub(judoka.id_judoka, clubId);
+    // CLUB-007 : le club du CSV s'ajoute aux structures du judoka ; il devient principal s'il n'en avait pas.
+    const clubIds = getJudokaClubIds(judoka);
+    if (!clubIds.includes(clubId)) {
+      await judokasRepository.setClubs(judoka.id_judoka, [...clubIds, clubId], String(judoka.club_id || "") || clubId);
     }
     // Un coach importé avec un club coache ce club (en plus de ses clubs existants).
     if (clubsRepository && String(judoka.role || "").toUpperCase() === "COACH") {

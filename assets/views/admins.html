@@ -58,7 +58,7 @@
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
                     </summary>
                     <div class="page-menu-list" role="menu">
-                      <button v-if="managedUser.canHaveClub && hasClubs" type="button" role="menuitem" :disabled="isSubmitting" @click="openUserClubChoice(managedUser.judokaId); $event.target.closest('details').open = false">Changer de club</button>
+                      <button v-if="managedUser.canHaveClub && hasClubs" type="button" role="menuitem" :disabled="isSubmitting" @click="openUserClubChoice(managedUser.judokaId, managedUser.clubIds, managedUser.clubId); $event.target.closest('details').open = false">Modifier les clubs</button>
                       <!-- ADMIN-1 : le rôle coach se donne et se retire ici, sans import CSV. -->
                       <button v-if="managedUser.canBeCoach" type="button" role="menuitem" :disabled="isSubmitting" @click="grantCoachRole(managedUser.judokaId, managedUser.fullName)">Nommer coach</button>
                       <button v-if="managedUser.isCoach" type="button" role="menuitem" :disabled="isSubmitting" @click="revokeCoachRole(managedUser.judokaId, managedUser.fullName)">Retirer le rôle coach</button>
@@ -67,12 +67,24 @@
                     </div>
                   </details>
                 </div>
-                <div v-if="changingClubUserId === managedUser.judokaId" class="admin-user-club-choice" role="group" :aria-label="'Club de ' + managedUser.fullName">
-                  <span class="choice-label">Nouveau club</span>
+                <!-- CLUB-001 : un judoka appartient à plusieurs structures (club, pôle espoir…), dont un club principal. -->
+                <div v-if="changingClubUserId === managedUser.judokaId" class="admin-user-club-choice" role="group" :aria-label="'Clubs de ' + managedUser.fullName">
+                  <span class="choice-label">Clubs et structures</span>
                   <div class="choice-chips choice-chips-wrap">
-                    <button v-for="club in [{ clubId: '', name: 'Aucun club' }, ...clubOptions]" :key="club.clubId" type="button" :class="['choice-chip', { 'choice-active': managedUser.clubId === club.clubId }]" :disabled="isSubmitting || managedUser.clubId === club.clubId" @click="setUserClub(managedUser.judokaId, club.clubId, managedUser.fullName)">{{ club.name }}</button>
+                    <button v-for="club in clubOptions" :key="club.clubId" type="button" :class="['choice-chip', { 'choice-active': userClubDraft.clubIds.includes(club.clubId) }]" :aria-pressed="userClubDraft.clubIds.includes(club.clubId) ? 'true' : 'false'" :disabled="isSubmitting" @click="toggleUserClubDraft(club.clubId)">{{ club.name }}</button>
                   </div>
-                  <button class="button-link" type="button" @click="openUserClubChoice(managedUser.judokaId)">Annuler</button>
+                  <template v-if="userClubDraft.clubIds.length > 1">
+                    <span class="choice-label">Club principal</span>
+                    <div class="choice-chips choice-chips-wrap" role="radiogroup" aria-label="Club principal">
+                      <button v-for="club in userClubDraftOptions" :key="club.clubId" type="button" role="radio" :aria-checked="userClubDraft.mainClubId === club.clubId ? 'true' : 'false'" :class="['choice-chip', { 'choice-active': userClubDraft.mainClubId === club.clubId }]" :disabled="isSubmitting" @click="setUserMainClubDraft(club.clubId)">{{ club.name }}</button>
+                    </div>
+                    <p class="field-hint">Les coachs de chaque club voient le judoka. Un résultat hors compétition club compte pour le club principal.</p>
+                  </template>
+                  <p v-else-if="!userClubDraft.clubIds.length" class="field-hint">Sans club, le judoka n'est visible d'aucun coach.</p>
+                  <div class="admin-user-club-actions">
+                    <button class="button-secondary" type="button" @click="openUserClubChoice(managedUser.judokaId)">Annuler</button>
+                    <button type="button" :disabled="isSubmitting || (userClubDraft.clubIds.join() === managedUser.clubIds.join() && userClubDraft.mainClubId === managedUser.clubId)" @click="saveUserClubs(managedUser.judokaId, managedUser.fullName, managedUser.clubIds)">Enregistrer</button>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -147,7 +159,7 @@
           <div class="section-heading">
             <div>
               <h3>Clubs</h3>
-              <p class="subtitle">Un judoka appartient à un club ; un coach ne voit que les judokas des clubs qu'il coache.</p>
+              <p class="subtitle">Un judoka peut appartenir à plusieurs clubs (club, pôle espoir…) ; un coach ne voit que les judokas des clubs qu'il coache.</p>
             </div>
           </div>
           <div class="form-grid club-create-row">

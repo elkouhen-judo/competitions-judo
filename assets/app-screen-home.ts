@@ -284,7 +284,7 @@
       }
       // Coach de plusieurs clubs : le filtre club de l'accueil restreint la liste des judokas.
       if (state.isCoach && state.selectedClubId) {
-        return state.judokas.filter((j) => String(j.clubId || "") === state.selectedClubId);
+        return state.judokas.filter((j) => ui.getJudokaClubIds(j).includes(state.selectedClubId));
       }
       return state.judokas.length > 0 ? state.judokas : [state.currentUser];
     }
@@ -878,7 +878,8 @@
 
     function getHomeFilterOption(judoka: Judoka): HomeFilterOption {
       const isUnregistered = !ui.isRegisteredForDate(judoka, ui.getCurrentLocalDate());
-      const details = [judoka.ageCategory, ui.formatWeight(judoka.weightCategory), getListClubName(judoka.clubId)]
+      const clubNames = ui.getJudokaClubIds(judoka).map(getListClubName).filter(Boolean).join(", ");
+      const details = [judoka.ageCategory, ui.formatWeight(judoka.weightCategory), clubNames]
         .map((value) => cleanText(value))
         .filter(Boolean)
         .join(" · ");

@@ -119,6 +119,7 @@ export interface KirokuUi {
   getSeasonStartYear(dateValue: unknown): number | null;
   formatSeasonLabel(startYear: number): string;
   isRegisteredForDate(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
+  getJudokaClubIds(judoka: Partial<Judoka> | null | undefined): string[];
   onChoiceKeydown(event: KeyboardEvent): void;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
@@ -159,8 +160,10 @@ export interface ManagedUserCard {
   isAdmin: boolean;
   isCurrentUser: boolean;
   isPending: boolean;
-  /** Club du judoka ("" si aucun) ; les profils PARENT n'appartiennent à aucun club. */
+  /** Club principal du judoka ("" si aucun) ; les profils PARENT n'appartiennent à aucun club. */
   clubId: string;
+  /** CLUB-001 : toutes ses structures (club, pôle espoir…), club principal compris. */
+  clubIds: string[];
   canHaveClub: boolean;
   /** ADMIN-1 : rôle coach actuel, et possibilité de le donner. */
   isCoach: boolean;

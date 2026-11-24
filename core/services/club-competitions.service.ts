@@ -1,5 +1,5 @@
 import { formatSeasonLabel, getSeasonStartYear, isRegisteredForCompetitionDate } from "../domain/season";
-import { toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
+import { getJudokaClubIds, toCanonicalCompetition, toCanonicalJudoka } from "./domain-adapters";
 import type { createClubCompetition, ClubCompetitionInput } from "../domain/competitions/club-competition";
 import type { createCompetition } from "../domain/competitions/competition";
 import type { ClubCompetitionsRepository } from "../repositories/club-competitions.repository";
@@ -91,7 +91,7 @@ export default function createClubCompetitionsService(
   }
 
   function assertParticipantsInClub(rows: JudokaRow[], clubId: string): void {
-    const outside = rows.filter((row) => String(row.club_id || "") !== clubId);
+    const outside = rows.filter((row) => !getJudokaClubIds(row).includes(clubId));
     if (outside.length) {
       throw new Error("Tous les judokas sélectionnés doivent appartenir au club de la compétition.");
     }

@@ -884,7 +884,7 @@ test("ADMIN-3 : judokas repository filters coaches and matches a search word on 
     [
       "selectPage",
       "judokas",
-      `select=*&and=(or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern},club_id.in.(${quoted("CLUB1")},${quoted("CLUB2")})))&${order}`,
+      `select=*&and=(or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern},club_ids.ov.{${quoted("CLUB1")},${quoted("CLUB2")}}))&${order}`,
       10
     ]
   ]);
@@ -929,8 +929,8 @@ test("judokas repository batches id lookups and counts a club without listing it
   assert.deepEqual(calls, [
     ["select", "judokas", `select=*&id_judoka=in.(${ids.slice(0, 100).join(",")})&${order}`],
     ["select", "judokas", `select=*&id_judoka=in.(${ids.slice(100).join(",")})&${order}`],
-    ["select", "judokas", `select=*&club_id=in.(NANTES,RENNES)&${order}`],
-    ["selectPage", "judokas", "select=id_judoka&club_id=eq.NANTES", 1]
+    ["select", "judokas", `select=*&club_ids=ov.{NANTES,RENNES}&${order}`],
+    ["selectPage", "judokas", "select=id_judoka&club_ids=ov.{NANTES}", 1]
   ]);
 });
 
@@ -976,7 +976,7 @@ test("PAGE-4 : competitions repository filters a coach scope by club, not by a l
     [
       "select",
       "competitions",
-      `select=*,combats(resultat),judokas!inner(club_id)&judokas.club_id=in.(NANTES,RENNES)&date=gte.2026-09-01&${order}`
+      `select=*,combats(resultat),judokas!inner(club_ids)&judokas.club_ids=ov.{NANTES,RENNES}&date=gte.2026-09-01&${order}`
     ],
     [
       "select",
@@ -1036,7 +1036,7 @@ test("PAGE-2 : competitions repository reads the oldest date of a scope without 
     [
       "selectOne",
       "competitions",
-      "select=date,judokas!inner(club_id)&judokas.club_id=in.(NANTES)&order=date.asc"
+      "select=date,judokas!inner(club_ids)&judokas.club_ids=ov.{NANTES}&order=date.asc"
     ],
     ["selectOne", "competitions", "select=date&id_judoka=in.(COACH1)&order=date.asc"]
   ]);
