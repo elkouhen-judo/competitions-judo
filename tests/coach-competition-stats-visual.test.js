@@ -519,14 +519,19 @@ for (const [name, viewport] of [
     await expect(headings.filter({ hasText: "Par tour" })).toHaveCount(0);
     await expect(page.locator("#coachDashboardView .dashboard-kpis .mini-stat")).toHaveCount(3);
     await expect(page.locator("#coachDashboardView")).not.toContainText("à compléter");
-    // Refonte : 5 blocs, dans l'ordre ; ni gardes, ni Ippon à part, ni podiums à part.
+    // DASH-031 : le titre et la pastille des filtres, puis les blocs dans l'ordre.
+    await expect(page.locator("#coachDashboardView .dashboard-title")).toHaveText("Statistiques");
+    await expect(page.locator("#coachDashboardFilterToggle")).toHaveAttribute(
+      "aria-expanded",
+      "false"
+    );
     await expect(headings).toHaveText([
-      "Filtres",
-      "Analyse des combats",
       /^Par niveau/,
-      /^Comment on gagne/,
-      /^Comment on perd/
+      /^Comment on gagne · 1 victoire/,
+      /^Comment on perd · 2 défaites/
     ]);
+    // DASH-032 : victoires et défaites sur une barre.
+    await expect(page.locator("#coachDashboardWinLossBar")).toHaveText("1 V2 D");
     // STAT-16, STAT-11 : par niveau, victoires puis podiums sur les participations classées.
     await expect(page.locator("#coachDashboardByLevel .bar-row-head")).toHaveText([
       /Régional\s*1\/3 gagnés · trop peu de combats/
@@ -551,9 +556,6 @@ for (const [name, viewport] of [
         ...document.querySelectorAll("#coachDashboardView .mini-stat"),
         ...document.querySelectorAll("#coachDashboardView .section h3")
       ]
-        .filter(
-          (element) => !["Filtres", "Analyse des combats"].includes(element.textContent.trim())
-        )
         .filter((element) => !element.querySelector(".info-tip"))
         .map((element) => element.textContent.trim())
     );
@@ -601,7 +603,7 @@ for (const [name, viewport] of [
     await expect(filterSummary).toHaveText(currentSeasonLabel());
 
     // Les filtres choisis sont gardés en quittant l'onglet.
-    await page.getByRole("button", { name: "Afficher" }).click();
+    await page.locator("#coachDashboardFilterToggle").click();
     await page.selectOption("#coachDashboard_categorie_age", "Minime");
     await expect(page.locator("#coachDashboardView .dashboard-kpis")).toBeVisible();
     await page
@@ -615,7 +617,7 @@ for (const [name, viewport] of [
     await expect(filterSummary).toContainText("Minime");
 
     // TDB-8 : une date de fin avant la date de début s'affiche sous les dates, sans appel.
-    await page.getByRole("button", { name: "Afficher" }).click();
+    await page.locator("#coachDashboardFilterToggle").click();
     const callsBeforeDates = rpc.length;
     await page.fill("#coachDashboard_date_fin", "2020-01-01");
     await page.locator("#coachDashboard_date_fin").dispatchEvent("change");

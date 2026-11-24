@@ -265,7 +265,7 @@ for (const [name, viewport] of [
     assert.equal(dashboardCalls().at(-1).args[0].clubId, RENNES.clubId);
 
     // Changer de club dans les statistiques change celui de l'accueil.
-    await page.locator("#coachDashboardView").getByRole("button", { name: "Afficher" }).click();
+    await page.locator("#coachDashboardFilterToggle").click();
     await page.locator("#coachDashboard_club").selectOption("");
     await expect.poll(() => dashboardCalls().at(-1).args[0].clubId).toBe("");
     // Sur « Tous mes clubs », les suggestions de compétitions disent leur club.

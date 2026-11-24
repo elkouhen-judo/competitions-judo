@@ -1645,11 +1645,6 @@ button:focus-visible,
   max-width: 42rem;
 }
 
-.coach-filter-heading {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-}
-
 .compact-button {
   width: auto;
   min-height: 40px;
@@ -4195,6 +4190,154 @@ input[aria-invalid="true"],
 .rank-3,
   .rank-bronze {
   --medal-color: #a8622b;
+}
+
+/* DASH-031 : titre « Statistiques » et pastille des filtres actifs. */
+
+.dashboard-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+
+.dashboard-filter-pill {
+  flex: 0 1 auto;
+  width: auto;
+  justify-content: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.dashboard-filter-pill .dashboard-filter-summary {
+  display: inline;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.dashboard-filter-pill .dashboard-filter-summary > span {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.dashboard-filter-pill .dashboard-filter-summary > span + span::before {
+  content: " · ";
+}
+
+.dashboard-filter-pill-action {
+  flex: none;
+  color: var(--accent);
+}
+
+.dashboard-states:empty {
+  display: none;
+}
+
+/* DASH-032 : le pourcentage de victoires en vert, la barre victoires / défaites. */
+
+.mini-stat-value-win {
+  color: #1f6b3a;
+}
+
+.win-loss-bar {
+  display: flex;
+  height: 28px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.win-loss-bar > span {
+  display: flex;
+  align-items: center;
+  min-width: 2.8em;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.win-loss-win {
+  background: #1f6b3a;
+  color: #ffffff;
+}
+
+.win-loss-draw {
+  justify-content: center;
+  background: #e7c66a;
+  color: #0e1a2b;
+}
+
+.win-loss-loss {
+  justify-content: flex-end;
+  background: #c9d1dd;
+  color: #0e1a2b;
+}
+
+.dashboard-h3-count {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* DASH-033 : fins de combat sur une ligne : libellé, barre, nombre. */
+
+.bar-list-inline li {
+  display: grid;
+  grid-template-columns: minmax(84px, 30%) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-list-inline .bar-row-head {
+  display: contents;
+}
+
+.bar-list-inline .bar-row-value {
+  grid-column: 3;
+  grid-row: 1;
+  font-weight: 800;
+}
+
+.bar-list-inline .bar-track {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+#coachDashboardVictoriesByType .bar-fill {
+  background: #1f6b3a;
+}
+
+#coachDashboardDefeatsByType .bar-fill {
+  background: var(--text);
 }
 
 .dash-hero {
