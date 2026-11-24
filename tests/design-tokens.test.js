@@ -32,23 +32,15 @@ test("UI-TOK-001 : les rayons du design system passent par leurs variables", () 
   );
 });
 
-test("UI-TOK-001 : un espacement entièrement dans l'échelle passe par --space-*", () => {
-  const scale = new Set(["4px", "8px", "12px", "16px", "20px", "24px"]);
+test("UI-TOK-001 : les espacements passent par --space-* (sauf la hauteur des barres en zone sûre)", () => {
   const offenders = [];
   const declaration =
     /^\s+((?:row-|column-)?gap|padding(?:-[a-z]+)?|margin(?:-[a-z]+)?):\s*([^;]+);$/gm;
   for (const match of outsideRoot().matchAll(declaration)) {
-    const parts = match[2].trim().split(/\s+/);
-    const literal = parts.every((part) => /^(\d+px|0|auto)$/.test(part));
-    if (
-      literal &&
-      parts.every((part) => scale.has(part) || part === "0" || part === "auto") &&
-      parts.some((part) => scale.has(part))
-    ) {
-      offenders.push(match[0].trim());
-    }
+    const withoutSafeArea = match[2].replace(/calc\([^()]*env\(safe-area-inset-[a-z]+\)\)/g, "");
+    if (/(?<![\w-])\d+px/.test(withoutSafeArea)) offenders.push(match[0].trim());
   }
-  assert.deepEqual(offenders, [], "utiliser var(--space-1) … var(--space-6)");
+  assert.deepEqual(offenders, [], "utiliser var(--space-0-5) … var(--space-8)");
 });
 
 test("UI-TOK-001 : une seule teinte par état (success = win, warning = pending)", () => {
