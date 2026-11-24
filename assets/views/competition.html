@@ -51,7 +51,7 @@
               type="button"
               role="radio"
               :aria-checked="competitionResult === option.value ? 'true' : 'false'"
-              :class="['choice-chip', { 'choice-active': competitionResult === option.value }]"
+              :class="['choice-chip', option.medalClass, { 'choice-active': competitionResult === option.value }]"
               :disabled="isSubmitting"
               @click="saveCompetitionRanking(option.value)">
               {{ option.label }}

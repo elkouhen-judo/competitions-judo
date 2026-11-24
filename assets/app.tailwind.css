@@ -3789,16 +3789,130 @@
     letter-spacing: 0;
   }
 
-  /* NAV-6 : cinq onglets coach sans rognage à 375 px. */
+  /* NAV-7 : sur mobile, les cinq onglets coach forment une barre fixe en bas, icône et libellé entier. */
   .coach-sub-tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
     min-width: 0;
-    gap: 2px;
+    min-height: 0;
+    margin: 0;
+    padding: 4px 0 calc(6px + env(safe-area-inset-bottom));
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    border-bottom: 0;
   }
 
   .coach-sub-tabs .mode-tab {
-    flex: 1 1 auto;
-    padding: 9px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 56px;
+    padding: 0 2px;
+    border-bottom: 0;
+    font-size: 0.69rem;
     text-align: center;
+  }
+
+  .coach-sub-tabs .mode-tab-active,
+  .coach-sub-tabs .mode-tab-active:hover:not(:disabled) {
+    color: var(--accent);
+    border-bottom-color: transparent;
+  }
+
+  .mode-tab-icon {
+    width: 22px;
+    height: 22px;
+    flex: none;
+  }
+
+  /* Le contenu ne passe jamais sous la barre ; les barres d'action restent au-dessus d'elle. */
+  .app-shell:has(.panel:not(.hidden) .coach-sub-tabs) {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .panel:has(.coach-sub-tabs) .mobile-action-bar {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 721px) {
+    .coach-sub-tabs {
+      position: static;
+      display: flex;
+      gap: 2px;
+      min-height: 48px;
+      padding: 0;
+      background: transparent;
+      border-top: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .coach-sub-tabs .mode-tab {
+      flex: 1 1 auto;
+      flex-direction: row;
+      min-height: 44px;
+      padding: 9px 4px;
+      border-bottom: 2px solid transparent;
+      font-size: 0.9rem;
+    }
+
+    .coach-sub-tabs .mode-tab-active,
+    .coach-sub-tabs .mode-tab-active:hover:not(:disabled) {
+      border-bottom-color: var(--accent);
+    }
+
+    .mode-tab-icon {
+      display: none;
+    }
+
+    .app-shell:has(.panel:not(.hidden) .coach-sub-tabs) {
+      padding-bottom: 44px;
+    }
+
+    .panel:has(.coach-sub-tabs) .mobile-action-bar {
+      bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  /* MEDAL-1 : médailles dessinées (pastille or, argent, bronze) devant 1er, 2e, 3e, jamais d'emoji. */
+  .rank-1::before,
+  .rank-2::before,
+  .rank-3::before,
+  .rank-gold::before,
+  .rank-silver::before,
+  .rank-bronze::before {
+    content: "";
+    display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
+    margin-right: 0.35em;
+    border-radius: 999px;
+    background: var(--medal-color);
+    box-shadow: inset 0 0 0 1px rgba(14, 26, 43, 0.15);
+    vertical-align: -0.05em;
+  }
+
+  .rank-1,
+  .rank-gold {
+    --medal-color: #c99a12;
+  }
+
+  .rank-2,
+  .rank-silver {
+    --medal-color: #8a94a3;
+  }
+
+  .rank-3,
+  .rank-bronze {
+    --medal-color: #a8622b;
   }
 
   .dash-hero {

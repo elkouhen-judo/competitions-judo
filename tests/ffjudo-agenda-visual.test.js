@@ -216,7 +216,7 @@ async function openAgenda(t, handle, viewport) {
   // AGD-001 : l'agenda est un onglet du coach, plus une entrée du menu du compte.
   await expect(page.getByRole("menuitem", { name: "Agenda FFJDA" })).toHaveCount(0);
   await page.locator("#accountMenu summary").click();
-  await page.locator("#homeView").getByRole("button", { name: "Agenda FFJDA" }).click();
+  await page.locator("#homeView").getByRole("button", { name: "Agenda", exact: true }).click();
   await expect(page.locator("#ffjudoAgendaView")).toBeVisible();
   return { page, rpc };
 }
@@ -230,7 +230,10 @@ test("agenda: the view, its coach tab and its script are shipped without native 
   const html = renderIndexHtml();
   assert.match(html, /<section id="ffjudoAgendaView" class="panel hidden"/);
   assert.doesNotMatch(html, /openFfjudoAgenda/);
-  assert.match(html, /aria-label="Agenda FFJDA" aria-current="page">Agenda<\/button>/);
+  assert.match(
+    html,
+    /class="mode-tab mode-tab-active" aria-current="page"><svg[^>]*class="mode-tab-icon"[\s\S]*?<span>Agenda<\/span><\/button>/
+  );
   const screen = fs.readFileSync(
     path.join(root, "assets", "dist", "app-screen-ffjudo-agenda.js"),
     "utf8"
@@ -447,9 +450,9 @@ test("AGD-001 : un judoka ne voit pas l'agenda dans le menu du compte", async (t
   );
   await expect(page.getByRole("menuitem", { name: "Données personnelles" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Agenda FFJDA" })).toHaveCount(0);
-  await expect(page.locator("#homeView").getByRole("button", { name: "Agenda FFJDA" })).toHaveCount(
-    0
-  );
+  await expect(
+    page.locator("#homeView").getByRole("button", { name: "Agenda", exact: true })
+  ).toHaveCount(0);
   assert.equal(rpc.filter((request) => request.method === "getFfjudoEvents").length, 0);
 });
 

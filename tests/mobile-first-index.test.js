@@ -228,10 +228,10 @@ test("family home shows one pill per child and remembers the last child", () => 
 });
 
 test("coach screens share the same five tabs and the home lists what is waiting", () => {
-  // NAV-6 : libellés courts à l'écran, nom complet pour les lecteurs d'écran.
+  // NAV-7 : libellés entiers avec icône ; barre en bas sur mobile, en haut sur desktop.
   assert.match(
     client,
-    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil", title: "Accueil" \},\s*\{ key: "coach", label: "Compét\.", title: "Compétitions" \},\s*\{ key: "coachJudoka", label: "Judokas", title: "Judokas" \},\s*\{ key: "coachDashboard", label: "Stats", title: "Statistiques" \},\s*\{ key: "coachAgenda", label: "Agenda", title: "Agenda FFJDA" \}\s*\]\)/
+    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil", icon: "home" \},\s*\{ key: "coach", label: "Compétitions", icon: "comp" \},\s*\{ key: "coachJudoka", label: "Judokas", icon: "judokas" \},\s*\{ key: "coachDashboard", label: "Statistiques", icon: "stats" \},\s*\{ key: "coachAgenda", label: "Agenda", icon: "agenda" \}\s*\]\)/
   );
   assert.match(
     bundle,
@@ -239,7 +239,7 @@ test("coach screens share the same five tabs and the home lists what is waiting"
   );
   assert.match(
     bundle,
-    /@click="showCoachHome\(\)">Accueil<\/button>[\s\S]*@click="showCoachCompetitions\(\)">Compét\.<\/button>[\s\S]*@click="showCoachJudoka\(\)">Judokas<\/button>[\s\S]*aria-current="page">Stats<\/button>[\s\S]*@click="showCoachAgenda\(\)">Agenda<\/button>/
+    /@click="showCoachHome\(\)">[\s\S]*?<span>Accueil<\/span><\/button>[\s\S]*@click="showCoachCompetitions\(\)">[\s\S]*?<span>Compétitions<\/span><\/button>[\s\S]*@click="showCoachJudoka\(\)">[\s\S]*?<span>Judokas<\/span><\/button>[\s\S]*aria-current="page">[\s\S]*?<span>Statistiques<\/span><\/button>[\s\S]*@click="showCoachAgenda\(\)">[\s\S]*?<span>Agenda<\/span><\/button>/
   );
   assert.doesNotMatch(bundle, /label: "Gestion des accès"/);
   assert.match(bundle, /class="coach-agenda"/);

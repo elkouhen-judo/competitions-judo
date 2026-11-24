@@ -122,7 +122,11 @@
     });
     // FICHE-2 : le classement se choisit sur la fiche, sans écran dédié.
     const rankingOptions = window.Vue.computed(() =>
-      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({ value, label: ui.formatCompetitionRanking(value) }))
+      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
+        value,
+        label: ui.formatCompetitionRanking(value),
+        medalClass: ui.getClassementBadgeClass(value).replace("rank-finalist", "")
+      }))
     );
     const showRankingSection = window.Vue.computed(
       () => Boolean(state.currentCompetition) && !state.isLoadingCompetition && canEditCompetition.value && !competitionTiming.value.isUpcoming

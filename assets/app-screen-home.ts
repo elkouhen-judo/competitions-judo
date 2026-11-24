@@ -97,13 +97,13 @@
 
     // NAV-2 : les mêmes onglets sur tous les écrans coach ; « Mon espace » et « Gestion des accès »
     // passent dans le menu du compte (en-tête).
-    // NAV-6 : cinq onglets à 375 px, libellés courts ; le nom complet reste pour les lecteurs d'écran.
+    // NAV-7 : cinq onglets aux libellés entiers ; barre en bas sur mobile, en haut sur desktop.
     const coachSubModes = window.Vue.computed(() => [
-      { key: "coachHome", label: "Accueil", title: "Accueil" },
-      { key: "coach", label: "Compét.", title: "Compétitions" },
-      { key: "coachJudoka", label: "Judokas", title: "Judokas" },
-      { key: "coachDashboard", label: "Stats", title: "Statistiques" },
-      { key: "coachAgenda", label: "Agenda", title: "Agenda FFJDA" }
+      { key: "coachHome", label: "Accueil", icon: "home" },
+      { key: "coach", label: "Compétitions", icon: "comp" },
+      { key: "coachJudoka", label: "Judokas", icon: "judokas" },
+      { key: "coachDashboard", label: "Statistiques", icon: "stats" },
+      { key: "coachAgenda", label: "Agenda", icon: "agenda" }
     ]);
 
     const showCoachSubTabs = window.Vue.computed(() => state.isCoach);
