@@ -574,6 +574,12 @@ video {
   --radius-card: 16px;
   --radius-pill: 999px;
   --radius-sm: 6px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
   --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --danger: #9f2f2d;
@@ -697,7 +703,7 @@ label {
 
 .topbar {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 16px 16px 14px;
   margin-bottom: 0;
   background: rgba(255, 255, 255, 0.94);
@@ -707,7 +713,7 @@ label {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -766,7 +772,7 @@ label {
 }
 
 h1 {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
   font-size: 26px;
 }
 
@@ -776,7 +782,7 @@ h2 {
 }
 
 h3 {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
   font-size: 21px;
 }
 
@@ -841,8 +847,8 @@ h3 {
 
 .confirm-dialog-body {
   display: grid;
-  gap: 20px;
-  padding: 20px;
+  gap: var(--space-5);
+  padding: var(--space-5);
 }
 
 .confirm-dialog-message {
@@ -855,7 +861,7 @@ h3 {
   display: flex;
   flex-wrap: wrap-reverse;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .confirm-dialog-actions button {
@@ -880,7 +886,7 @@ h3 {
   left: 12px;
   right: 12px;
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   z-index: 1000;
   pointer-events: none;
 }
@@ -979,15 +985,15 @@ h3 {
 
 .panel-header {
   display: grid;
-  gap: 12px;
-  padding: 24px 16px;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
 .panel-header > div:first-child {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -997,7 +1003,7 @@ h3 {
 }
 
 .panel-body {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 input[type="date"] {
@@ -1010,13 +1016,13 @@ input[type="date"] {
 input[type="file"] {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: var(--space-2);
   color: var(--muted);
   font-size: 14px;
 }
 
 input[type="file"]::file-selector-button {
-  margin-right: 12px;
+  margin-right: var(--space-3);
   min-height: 36px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1034,7 +1040,7 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .field-hint {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 13px;
   color: var(--muted);
 }
@@ -1176,9 +1182,9 @@ button:focus-visible,
 }
 
 .filter-bar {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .filter-bar input {
@@ -1202,7 +1208,7 @@ button:focus-visible,
 
 .list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .list > .card,
@@ -1213,7 +1219,7 @@ button:focus-visible,
 .checkbox-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -1245,7 +1251,7 @@ button:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
   min-height: 44px;
   padding: 10px 12px;
@@ -1275,14 +1281,14 @@ button:focus-visible,
 
 .pick-select {
   width: 100%;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .card {
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--panel);
-  padding: 16px;
+  padding: var(--space-4);
   box-shadow: none;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
@@ -1308,7 +1314,7 @@ button:focus-visible,
   border-color: var(--button-secondary-border);
   background: var(--button-secondary-bg);
   color: var(--button-secondary-text);
-  padding: 16px;
+  padding: var(--space-4);
   text-align: left;
 }
 
@@ -1345,9 +1351,9 @@ button:focus-visible,
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   border-top: 1px solid var(--line);
-  padding: 8px 0;
+  padding: var(--space-2) 0;
 }
 
 .meta-row:first-of-type {
@@ -1377,8 +1383,8 @@ button:focus-visible,
 
 .card-actions {
   display: grid;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 .competition-card .card-actions {
@@ -1469,12 +1475,12 @@ button:focus-visible,
 }
 
 .primary-action {
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 
 .combat-card {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .combat-score-rows {
@@ -1486,8 +1492,8 @@ button:focus-visible,
 .combat-score-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -1496,7 +1502,7 @@ button:focus-visible,
 .combat-score-block {
   display: grid;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .combat-score-header,
@@ -1526,7 +1532,7 @@ button:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .combat-header .card-title {
@@ -1535,7 +1541,7 @@ button:focus-visible,
 }
 
 .combat-stage {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1678,12 +1684,12 @@ button:focus-visible,
 .danger-zone {
   border-top: 1px solid var(--danger-soft);
   margin-top: 22px;
-  padding-top: 16px;
+  padding-top: var(--space-4);
 }
 
 .section {
   border-top: 1px solid var(--line);
-  margin-top: 24px;
+  margin-top: var(--space-6);
   padding-top: 22px;
 }
 
@@ -1695,8 +1701,8 @@ button:focus-visible,
 
 .section-heading {
   display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .section-heading .subtitle {
@@ -1713,14 +1719,14 @@ button:focus-visible,
 .competition-chip-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 7px 0;
 }
 
 .competition-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
@@ -1739,7 +1745,7 @@ button:focus-visible,
   color: var(--muted);
   font-size: 16px;
   line-height: 1;
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .competition-chip-remove:hover:not(:disabled),
@@ -1769,7 +1775,7 @@ button:focus-visible,
 
 .dashboard-summary-section {
   border-top: 0;
-  margin-top: 16px;
+  margin-top: var(--space-4);
   padding-top: 0;
 }
 
@@ -1817,12 +1823,12 @@ button:focus-visible,
 .dashboard-filter-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .dashboard-date-range {
   display: grid;
-  gap: 0 12px;
+  gap: 0 var(--space-3);
   align-items: end;
 }
 
@@ -1869,7 +1875,7 @@ button:focus-visible,
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .dash-hero .mode-tabs {
@@ -1883,7 +1889,7 @@ button:focus-visible,
 .dash-hero .home-context-card {
   background: transparent;
   border: 0;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
 }
 
 .dash-context-line .subtitle {
@@ -1968,7 +1974,7 @@ button:focus-visible,
 
 .dashboard-loading-state {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px 0;
 }
 
@@ -1986,7 +1992,7 @@ button:focus-visible,
 
 .dashboard-loading-card {
   min-height: 92px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 /* Skeleton loading cards */
@@ -2089,16 +2095,16 @@ button:focus-visible,
 
 .empty-action-actions {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   width: min(100%, 320px);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .csv-import-help {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 14px;
-  padding: 12px;
+  padding: var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -2106,7 +2112,7 @@ button:focus-visible,
 
 .csv-checklist {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
   padding-left: 18px;
   color: var(--muted);
@@ -2121,7 +2127,7 @@ button:focus-visible,
 .list-summary {
   display: grid;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -2136,7 +2142,7 @@ button:focus-visible,
 
 .list-summary-actions {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .success,
@@ -2211,23 +2217,23 @@ button:focus-visible,
   }
 
   .panel-header {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .mobile-action-bar {
     margin-left: -20px;
     margin-right: -20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
   }
 
   .dash-hero {
-    padding: 16px 20px;
+    padding: var(--space-4) var(--space-5);
   }
 
   .dash-secondary-row {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .dash-secondary-row button {
@@ -2235,7 +2241,7 @@ button:focus-visible,
   }
 
   .panel-body {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   h1 {
@@ -2354,7 +2360,7 @@ button:focus-visible,
   }
 
   .combat-score-row {
-    padding: 12px;
+    padding: var(--space-3);
   }
 
   .combat-score-row-fields {
@@ -2364,7 +2370,7 @@ button:focus-visible,
   .combat-score-row .button-danger {
     width: auto;
     min-height: 40px;
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
   }
 
   .full-row {
@@ -2395,14 +2401,14 @@ button:focus-visible,
 
 @media (max-width: 360px) {
   .app-shell {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
   }
 
   .panel-header,
       .panel-body {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
   }
 
   .meta-row {
@@ -2436,21 +2442,21 @@ button:focus-visible,
   justify-content: center;
   min-height: 60vh;
   text-align: center;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .login-container svg {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   color: var(--text);
 }
 
 .login-container h2 {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .login-container p {
   color: var(--muted);
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .login-form .button {
@@ -2478,7 +2484,7 @@ button:focus-visible,
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
   min-width: 0;
 }
@@ -2602,7 +2608,7 @@ button:focus-visible,
 
 .hero-copy {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .hero-kicker {
@@ -2616,13 +2622,13 @@ button:focus-visible,
 .hero-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .classement-badge {
   min-width: 0;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -2665,14 +2671,14 @@ button:focus-visible,
 
 .coach-assessment-section {
   border-top: 1px solid var(--line);
-  padding-top: 8px;
+  padding-top: var(--space-2);
 }
 
 .coach-assessment-block {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .coach-assessment-textarea {
@@ -2719,17 +2725,17 @@ button:focus-visible,
   background: var(--accent-soft);
   color: var(--accent);
   border: 1px solid var(--accent);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .agenda-filters {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .agenda-uv-filter {
   display: grid;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .agenda-uv-label {
@@ -2750,7 +2756,7 @@ button:focus-visible,
 }
 
 .agenda-month + .agenda-month {
-  margin-top: 20px;
+  margin-top: var(--space-5);
 }
 
 .agenda-month-title {
@@ -2841,8 +2847,8 @@ button:focus-visible,
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 4px 12px;
-  margin: 16px 0 12px;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-4) 0 var(--space-3);
 }
 
 .agenda-title-row h2 {
@@ -2861,8 +2867,8 @@ button:focus-visible,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .agenda-filter-pill {
@@ -2890,14 +2896,14 @@ button:focus-visible,
 }
 
 .agenda-filter-panel {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
   padding: 14px;
   border-radius: var(--radius-card);
   background: var(--panel);
 }
 
 .agenda-filter-panel .agenda-filters {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .agenda-filter-clear {
@@ -2937,8 +2943,8 @@ button:focus-visible,
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  margin-top: 16px;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-4);
   padding: 12px 14px;
   border: 1px dashed var(--line);
   border-radius: var(--radius);
@@ -2961,7 +2967,7 @@ button:focus-visible,
 }
 
 .agenda-card-link span {
-  margin-left: 4px;
+  margin-left: var(--space-1);
 }
 
 /* AGD-018 : « Créer la compétition » à côté du lien ffjudo.com, l'un sous l'autre si la place manque. */
@@ -2970,7 +2976,7 @@ button:focus-visible,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
+  gap: var(--space-1) var(--space-4);
 }
 
 .agenda-card-actions .button-secondary {
@@ -3084,8 +3090,8 @@ h1, h2, h3, h4, .hero-title, .card-title {
 .topbar {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 16px 0 12px;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-3);
   background: transparent;
   border-bottom: 0;
 }
@@ -3129,7 +3135,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
   width: auto;
   justify-content: flex-end;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .user-pill {
@@ -3196,7 +3202,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
 
 .panel-header {
   gap: 14px;
-  padding: 20px 0 8px;
+  padding: var(--space-5) 0 var(--space-2);
   border-bottom: 0;
   background: transparent;
 }
@@ -3212,8 +3218,8 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .dash-hero {
-  gap: 16px;
-  padding: 12px 0 0;
+  gap: var(--space-4);
+  padding: var(--space-3) 0 0;
   border: 0;
   background: transparent;
 }
@@ -3272,7 +3278,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .form-section {
-  padding: 20px 0 0;
+  padding: var(--space-5) 0 0;
   border-top: 0;
 }
 
@@ -3416,8 +3422,8 @@ button,
 }
 
 .dashboard-summary-insight {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--line);
 }
 
@@ -3469,7 +3475,7 @@ button,
   display: block;
   width: 100%;
   min-width: 0;
-  padding: 16px;
+  padding: var(--space-4);
   border: 0;
   border-radius: var(--radius-card);
   background: transparent;
@@ -3551,8 +3557,8 @@ button,
 /* Jour J coach : compétitions de la semaine en tête de l'accueil */
 
 .list-search {
-  margin-bottom: 12px;
-  padding: 12px 16px 0;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4) 0;
 }
 
 .list-search input {
@@ -3578,7 +3584,7 @@ button,
 
 #homeAdminActions {
   gap: 10px;
-  margin-top: 24px;
+  margin-top: var(--space-6);
   padding-top: 0;
   border-top: 0;
 }
@@ -3656,8 +3662,8 @@ button,
 
 #combatFormView .panel-body > .form-section,
   .combat-quick-section {
-  margin: 12px 0 0;
-  padding: 16px;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-4);
   border: 0;
   border-radius: var(--radius-card);
   background: var(--panel);
@@ -3682,7 +3688,7 @@ button,
 
 #combatFormView .mobile-action-bar {
   position: static;
-  margin: 24px 0 0;
+  margin: var(--space-6) 0 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -3748,15 +3754,15 @@ button,
   .form-actions {
     flex-direction: row;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
   }
 }
 
 @media (max-width: 360px) {
   .app-shell {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
   }
 
   .mobile-action-bar {
@@ -3770,7 +3776,7 @@ button,
 .page-header {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .page-header .page-title {
@@ -3850,7 +3856,7 @@ button,
 .page-menu-list a {
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   border-radius: var(--radius);
   text-decoration: none;
 }
@@ -3873,7 +3879,7 @@ button,
 
 .choice-field {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 18px;
 }
 
@@ -3891,7 +3897,7 @@ button,
 
 .choice-segmented {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .choice-segmented-2 {
@@ -3904,7 +3910,7 @@ button,
 
 .choice-chips {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
@@ -4026,7 +4032,7 @@ input[aria-invalid="true"],
 }
 
 .danger-zone {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .danger-zone .button-danger {
@@ -4039,7 +4045,7 @@ input[aria-invalid="true"],
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .action-bar-inline > button {
@@ -4069,7 +4075,7 @@ input[aria-invalid="true"],
 
 .panel-body:has(> .mobile-action-bar),
   .panel-body:has(.competition-combats-section > .mobile-action-bar) {
-  padding-bottom: 8px;
+  padding-bottom: var(--space-2);
 }
 
 /* FICHE-3 : synthèse en pastilles. */
@@ -4077,15 +4083,15 @@ input[aria-invalid="true"],
 .competition-summary-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
   min-height: 30px;
-  padding: 4px 12px;
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   background: var(--panel);
@@ -4110,8 +4116,8 @@ input[aria-invalid="true"],
 .competition-sport-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .mini-stat {
@@ -4150,7 +4156,7 @@ input[aria-invalid="true"],
 }
 
 .combat-card {
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .combat-heading {
@@ -4184,7 +4190,7 @@ input[aria-invalid="true"],
 .combat-pending {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 /* FICHE-4 : enregistrement automatique. */
@@ -4193,7 +4199,7 @@ input[aria-invalid="true"],
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .autosave-status {
@@ -4211,8 +4217,8 @@ input[aria-invalid="true"],
   #combatFormView .mobile-action-bar.action-bar-inline {
     position: sticky;
     bottom: 0;
-    margin: 24px 0 0;
-    padding: 12px 0;
+    margin: var(--space-6) 0 0;
+    padding: var(--space-3) 0;
     border-top: 1px solid var(--line);
     background: var(--panel);
   }
@@ -4415,7 +4421,7 @@ input[aria-invalid="true"],
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: var(--space-2) var(--space-3);
 }
 
 .dashboard-title {
@@ -4430,7 +4436,7 @@ input[aria-invalid="true"],
   justify-content: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   max-width: 100%;
   min-height: 44px;
   padding: 0 14px;
@@ -4484,7 +4490,7 @@ input[aria-invalid="true"],
 .win-loss-bar {
   display: flex;
   height: 28px;
-  margin-top: 12px;
+  margin-top: var(--space-3);
   overflow: hidden;
   border-radius: 8px;
   background: var(--line);
@@ -4529,7 +4535,7 @@ input[aria-invalid="true"],
   display: grid;
   grid-template-columns: minmax(84px, 30%) minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .bar-list-inline .bar-row-head {
@@ -4559,7 +4565,7 @@ input[aria-invalid="true"],
 /* FICHE-5 : le classement non saisi est mis en avant ; son état est écrit. */
 
 .competition-ranking-section {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .competition-ranking-section.ranking-pending {
@@ -4599,8 +4605,8 @@ input[aria-invalid="true"],
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr);
     align-items: start;
-    -moz-column-gap: 24px;
-         column-gap: 24px;
+    -moz-column-gap: var(--space-6);
+         column-gap: var(--space-6);
   }
 
   #competitionView.hidden {
@@ -4615,7 +4621,7 @@ input[aria-invalid="true"],
     gap: 6px;
     max-height: calc(100vh - 32px);
     overflow-y: auto;
-    padding: 12px;
+    padding: var(--space-3);
     border-radius: var(--radius-card);
     background: var(--panel);
   }
@@ -4675,14 +4681,14 @@ input[aria-invalid="true"],
 
 .admin-user-list {
   display: grid;
-  gap: 8px;
-  margin: 12px 0 0;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
   padding: 0;
   list-style: none;
 }
 
 .admin-user-row {
-  padding: 12px 12px 12px 16px;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
 }
 
 .admin-user-line {
@@ -4732,9 +4738,9 @@ input[aria-invalid="true"],
 
 .admin-user-club-choice {
   display: grid;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--line);
 }
 
@@ -4742,7 +4748,7 @@ input[aria-invalid="true"],
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 @media (min-width: 721px) {
@@ -4754,11 +4760,11 @@ input[aria-invalid="true"],
 
 .admin-users-more {
   width: 100%;
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .page-menu-separator {
-  margin: 4px 0;
+  margin: var(--space-1) 0;
   border: 0;
   border-top: 1px solid var(--line);
 }
@@ -4768,7 +4774,7 @@ input[aria-invalid="true"],
 .home-todo {
   display: grid;
   gap: 10px;
-  margin: 12px 0;
+  margin: var(--space-3) 0;
   padding: 14px 16px;
   border: 1px solid var(--pending-border);
   border-radius: var(--radius-card);
@@ -4790,7 +4796,7 @@ input[aria-invalid="true"],
 }
 
 .home-todo-done {
-  margin: 12px 0;
+  margin: var(--space-3) 0;
   padding: 12px 14px;
   border-radius: var(--radius);
   background: var(--win-soft);
@@ -4882,8 +4888,8 @@ input[aria-invalid="true"],
 
 .home-actions-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .home-actions-row > button {
@@ -4901,12 +4907,12 @@ input[aria-invalid="true"],
 
 .coach-agenda {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .coach-agenda-group h3,
   .list-group-title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 800;
@@ -4967,7 +4973,7 @@ input[aria-invalid="true"],
   justify-content: stretch;
   justify-items: stretch;
   align-items: start;
-  gap: 4px;
+  gap: var(--space-1);
   width: 100%;
   padding: 12px 14px;
   text-align: left;
@@ -5039,7 +5045,7 @@ input[aria-invalid="true"],
 .dashboard-kpis {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .dashboard-summary-insight {
@@ -5051,7 +5057,7 @@ input[aria-invalid="true"],
 .bar-list {
   display: grid;
   gap: 10px;
-  margin: 8px 0 0;
+  margin: var(--space-2) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -5059,7 +5065,7 @@ input[aria-invalid="true"],
 .bar-row-head {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 0.88rem;
   font-weight: 600;
 }
@@ -5072,7 +5078,7 @@ input[aria-invalid="true"],
 
 .bar-track {
   height: 8px;
-  margin-top: 4px;
+  margin-top: var(--space-1);
   overflow: hidden;
   border-radius: var(--radius-pill);
   background: var(--soft);
@@ -5118,7 +5124,7 @@ input[aria-invalid="true"],
   .dashboard-back-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: auto;
   margin: 0 0 14px;
 }
@@ -5145,13 +5151,13 @@ input[aria-invalid="true"],
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: var(--space-2) var(--space-3);
 }
 
 .button-link {
   width: auto;
   min-height: 44px;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   border: 0;
   background: none;
   box-shadow: none;
@@ -5175,7 +5181,7 @@ input[aria-invalid="true"],
 }
 
 .combat-decision-hint {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 /* SAISIE-8 / SAISIE-9 : fin du combat à la demande ; score Rapide ou Précis. */
@@ -5202,13 +5208,13 @@ input[aria-invalid="true"],
   .combat-score-section .combat-score-block {
   display: grid;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .combat-score-totals {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .combat-score-total {
@@ -5234,13 +5240,13 @@ input[aria-invalid="true"],
 .combat-point-add {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .combat-point-chooser {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
@@ -5273,7 +5279,7 @@ input[aria-invalid="true"],
 /* INSCR-2 : judoka non réinscrit pour la saison. */
 
 .registration-notice {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   padding: 10px 12px;
   border: 1px solid var(--warning);
   border-radius: 10px;
@@ -5292,7 +5298,7 @@ input[aria-invalid="true"],
 .dashboard-withheld {
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .dashboard-withheld p {
@@ -5348,7 +5354,7 @@ html,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 10px;
 }
 
@@ -5365,8 +5371,8 @@ html,
 .technique-list {
   display: grid;
   gap: 6px;
-  margin: 8px 0 0;
-  padding-left: 20px;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
 }
 
 .technique-list li {
@@ -5429,8 +5435,8 @@ html,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin: 12px 0;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
 }
 
 .import-file-row input[type="file"] {
@@ -5519,7 +5525,7 @@ html {
   width: auto;
   min-height: 32px;
   margin: 0 0 0 auto;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -5621,7 +5627,7 @@ html {
 
 .combat-timeline .combat-score-row-header {
   justify-content: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .combat-point-number {
@@ -5683,7 +5689,7 @@ html {
 .combat-outcome-proposal {
   width: auto;
   min-height: 44px;
-  margin: 8px 0 0;
+  margin: var(--space-2) 0 0;
   padding: 8px 14px;
   border: 1px solid var(--accent);
   border-radius: var(--radius-pill);
@@ -5695,7 +5701,7 @@ html {
 }
 
 .combat-outcome-warning {
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 /* Étapes sur plusieurs lignes : aucune option cachée hors de l'écran. */
@@ -5707,7 +5713,7 @@ html {
 
 .choice-chips-wrap .choice-chip {
   min-width: 56px;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
 }
 
 /* « Hansoku-make » tient sur une ligne. */
@@ -5734,7 +5740,7 @@ html {
 .combat-official-score-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
 }
 
