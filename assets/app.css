@@ -3596,7 +3596,6 @@ button,
 /* Saisie d'un combat : chaque étape est une carte */
 
 #combatFormView .panel-body > .form-section,
-  #combatDetail > .form-section,
   .combat-quick-section {
   margin: 12px 0 0;
   padding: 16px;
@@ -4148,12 +4147,15 @@ input[aria-invalid="true"],
 }
 
 @media (min-width: 721px) {
+  /* SAISIE-9 : les boutons d'enregistrement restent visibles pendant la saisie. */
+
   #combatFormView .mobile-action-bar.action-bar-inline {
-    position: static;
+    position: sticky;
+    bottom: 0;
     margin: 24px 0 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
   }
 
   .action-bar-inline {
@@ -4928,15 +4930,75 @@ input[aria-invalid="true"],
   margin: 0 0 8px;
 }
 
-/* SAISIE-1 : le détail se déplie sous l'essentiel. */
+/* SAISIE-8 / SAISIE-9 : fin du combat à la demande ; score Rapide ou Précis. */
 
-.combat-detail-toggle {
-  width: 100%;
-  margin-top: 4px;
+.combat-decision-toggle {
+  justify-self: start;
+  min-height: 44px;
 }
 
-.combat-detail-hint {
-  margin: 8px 0 0;
+.combat-score-mode .choice-button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 56px;
+}
+
+.combat-score-mode-sub {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.combat-score-section .combat-official-score,
+  .combat-score-section .combat-score-block {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.combat-score-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.combat-score-total {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.combat-score-total-side {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.combat-score-total-value {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.combat-point-add {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.combat-point-chooser {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.combat-point-chooser .button-link {
+  justify-self: start;
 }
 
 /* STAT-20 : périmètre trop petit, le message reste centré avec son action. */

@@ -202,8 +202,11 @@ for (const [name, viewport] of [
     await shot("03-form-empty");
 
     // SAISIE-1 : saisie rapide par défaut ; le résultat et l'enregistrement se voient sans défiler.
-    await expect(page.locator("#combatDetail")).toBeHidden();
-    await expect(page.locator("#combatDetailToggle")).toHaveText("Détailler ce combat");
+    // SAISIE-9 : le score s'ouvre en mode Rapide ; la fin du combat attend un résultat.
+    await expect(
+      page.locator("#combat_score_mode").getByRole("radio", { name: /^Rapide/ })
+    ).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator("#combatDecisionToggle")).toHaveCount(0);
     await expect(page.locator("#combat_resultat")).toBeInViewport();
     await expect(page.locator("#saveCombatButton")).toBeInViewport();
     // SAISIE-1 : aucun champ n'a le focus, le clavier mobile ne cache pas le résultat.
@@ -232,8 +235,6 @@ for (const [name, viewport] of [
     // SAISIE-1 : un toucher sur un tour referme la liste sur une pastille.
     await expect(page.locator("#combat_etape")).toHaveCount(0);
     await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Repêchage");
-    await page.locator("#combatDetailToggle").click();
-    await expect(page.locator("#combatDetail")).toBeVisible();
     await expect(page.locator("#combat_adversaire_suggestions option")).toHaveCount(2);
     // SAISIE-3 : un adversaire déjà rencontré remplit sa garde ; un inconnu la laisse vide.
     const stanceRadio = (label) =>
@@ -260,6 +261,19 @@ for (const [name, viewport] of [
     await page.getByRole("button", { name: "Ajouter un Shido à l'adversaire" }).click();
     await page.getByRole("button", { name: "Ajouter un Ippon au judoka" }).click();
     await expect(page.getByRole("button", { name: "Ajouter un Ippon au judoka" })).toBeDisabled();
+    const scoreOverflow = await page
+      .locator("#combat_score")
+      .evaluate((element) => element.scrollWidth > element.clientWidth);
+    assert.equal(scoreOverflow, false);
+    // SAISIE-9 : passer en Précis reprend les points du score rapide, à remettre dans l'ordre.
+    await page.locator("#combatScoreToPrecise").click();
+    await expect(page.locator("#combatPointsConverted")).toHaveText(
+      "Points repris du score rapide : vérifiez leur ordre."
+    );
+    await expect(page.locator("#combat_points .combat-score-total-value")).toHaveText([
+      "1 Ippon, 2 Yuko",
+      "1 Waza-ari, 1 Shido"
+    ]);
     // SAISIE-1 : l'Ippon du judoka décide l'issue, sans autre toucher.
     const resultRadio = (label) =>
       page.locator("#combat_resultat").getByRole("radio", { name: label, exact: true });
@@ -300,10 +314,12 @@ for (const [name, viewport] of [
     await shot("04a-custom-technique");
     await ipponSelect.selectOption("T:O-soto-gari");
     await expect(customTechnique).toHaveCount(0);
-    const scoreOverflow = await page
-      .locator("#combat_score")
-      .evaluate((element) => element.scrollWidth > element.clientWidth);
-    assert.equal(scoreOverflow, false);
+    await shot("04b-precis");
+    // SAISIE-9 : en Précis, un point s'ajoute par camp puis par valeur.
+    await page.locator("#combatAddPoint-opponent").click();
+    await expect(page.locator("#combatPointChooser")).toContainText("Point pour l'adversaire");
+    await page.locator("#combatPointChooser").getByRole("button", { name: "Annuler" }).click();
+    await expect(page.locator("#combatPointChooser")).toHaveCount(0);
 
     // Fin du combat : l'issue déduite ne double pas le point déjà dans le déroulé.
     await expect(page.locator("#combat_type_victoire_label")).toHaveText("Victoire par facultatif");
@@ -316,6 +332,8 @@ for (const [name, viewport] of [
     await expect(page.locator("#combat_type_victoire [aria-checked='true']")).toHaveCount(0);
     await expect(timelineRows).toHaveCount(4);
     await resultRadio("Victoire").click();
+    // SAISIE-8 : la manière se précise à la demande.
+    await page.locator("#combatDecisionToggle").click();
     await decisionRadio("Ippon").click();
     await expect(outcomeWarning).toHaveCount(0);
     // SAISIE-6 : une technique manquante n'est signalée qu'une fois.
@@ -378,8 +396,10 @@ for (const [name, viewport] of [
     await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText(
       "Combat pour la 3e place"
     );
-    // SAISIE-1 : l'appareil a retenu le détail déplié.
-    await expect(page.locator("#combatDetail")).toBeVisible();
+    // SAISIE-9 : un nouveau combat repart en mode Rapide.
+    await expect(
+      page.locator("#combat_score_mode").getByRole("radio", { name: /^Rapide/ })
+    ).toHaveAttribute("aria-checked", "true");
     await expect(page.locator("#combat_adversaire")).not.toBeFocused();
 
     // SAISIE-1 : 3 shidos de l'adversaire décident l'issue ; en retirer un l'efface.
@@ -401,7 +421,7 @@ for (const [name, viewport] of [
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
     await expect(decisionRadio("Waza-ari")).toHaveAttribute("aria-checked", "true");
     await expect(proposal).toHaveCount(0);
-    await expect(page.locator("#combat_points .combat-score-row")).toHaveCount(1);
+    await expect(page.getByRole("status", { name: "Waza-ari au judoka" })).toHaveText("1");
 
     // Un choix fait à la main n'est pas écrasé par un Ippon ajouté ensuite : il est signalé.
     await page.getByRole("button", { name: "Ajouter un Ippon à l'adversaire" }).click();
@@ -420,9 +440,15 @@ for (const [name, viewport] of [
     await expect(page.locator("#combatFormView")).toBeVisible();
     await expect(page.locator("#combatFormView .combat-stage-current")).toHaveText("Repêchage");
     await expect(page.locator("#combatFormView .combat-stage-current")).toBeInViewport();
-    await expect(page.locator("#combatDetail")).toBeVisible();
+    // SAISIE-9 : un combat aux points détaillés se rouvre en Précis.
+    await expect(
+      page.locator("#combat_score_mode").getByRole("radio", { name: /^Précis/ })
+    ).toHaveAttribute("aria-checked", "true");
     // Rouvert : score, shidos et déroulé dans l'ordre du combat ; l'issue enregistrée n'est pas recalculée.
-    await expect(page.getByRole("status", { name: "Shido à l'adversaire" })).toHaveText("1");
+    await expect(page.locator("#combat_points .combat-score-total-value")).toHaveText([
+      "1 Ippon, 2 Yuko",
+      "1 Waza-ari, 1 Shido"
+    ]);
     await expect(resultRadio("Victoire")).toHaveAttribute("aria-checked", "true");
     await expect(decisionRadio("Ippon")).toHaveAttribute("aria-checked", "true");
     await expect(timelineRows.locator(".combat-point-badge")).toHaveText([
@@ -489,7 +515,9 @@ for (const [name, viewport] of [
     await page.getByRole("button", { name: competition.name }).click();
     await page.getByRole("button", { name: "Ajouter un combat" }).click();
     await expect(page.locator("#combatFormView")).toBeVisible();
-    await expect(page.locator("#combatDetail")).toBeHidden();
+    await expect(
+      page.locator("#combat_score_mode").getByRole("radio", { name: /^Rapide/ })
+    ).toHaveAttribute("aria-checked", "true");
     // Sans défiler : le résultat, la manière et l'enregistrement.
     await expect(page.locator("#combat_resultat")).toBeInViewport();
     await expect(page.locator("#saveCombatButton")).toBeInViewport();
@@ -497,6 +525,9 @@ for (const [name, viewport] of [
 
     // Trois touchers : résultat, manière, Enregistrer.
     await resultRadioOf(page, "Défaite").click();
+    // SAISIE-8 : la manière se précise d'un toucher, sans être imposée.
+    await expect(page.locator("#combatDecisionBlock")).toBeHidden();
+    await page.locator("#combatDecisionToggle").click();
     // SAISIE-3 : la manière est facultative et expliquée en mots simples.
     await expect(page.locator("#combat_type_victoire_label")).toHaveText("Défaite par facultatif");
     await expect(page.locator("#combatDecisionBlock .combat-decision-hint")).toBeVisible();

@@ -608,7 +608,7 @@ test("owner autocomplete provides disambiguation metadata", () => {
 test("combat quick entry uses buttons, checks the result first and offers « save and next »", () => {
   assert.match(
     bundle,
-    /id="combatDecisionBlock" class="choice-field" :class="\{ hidden: !showCombatDecisionBlock \}"/
+    /id="combatDecisionBlock" class="choice-field" :class="\{ hidden: !combatDecisionVisible \}"/
   );
   assert.match(bundle, /id="combat_resultat"[\s\S]*?role="radiogroup"[\s\S]*?aria-required="true"/);
   assert.match(bundle, /@click="selectCombatResult\(option\.value\)"/);
@@ -641,12 +641,12 @@ test("combat quick entry uses buttons, checks the result first and offers « sav
     bundle,
     /id="combat_score"[\s\S]*?@click="changeCombatOfficialScore\(side\.key, valueKey\.key, 1\)"/
   );
-  // SAISIE-1 : l'essentiel d'abord (tour, adversaire, résultat), le détail replié dessous.
+  // SAISIE-9 : l'essentiel d'abord (tour, résultat), puis le score Rapide/Précis, puis adversaire, garde et notes.
   assert.match(
     bundle,
-    /<h3>Le combat<\/h3>[\s\S]*id="combat_adversaire"[\s\S]*id="combat_resultat"[\s\S]*id="combatDetailToggle"[\s\S]*<div id="combatDetail" v-show="combatDetailOpen">[\s\S]*id="combat_garde_adversaire"[\s\S]*id="combat_score"[\s\S]*id="combat_deroule"/
+    /<h3>Le combat<\/h3>[\s\S]*id="combat_resultat"[\s\S]*id="combatScoreSection"[\s\S]*id="combat_score_mode"[\s\S]*id="combat_score"[\s\S]*id="combat_points"[\s\S]*id="combat_adversaire"[\s\S]*id="combat_garde_adversaire"[\s\S]*id="combat_deroule"/
   );
-  assert.match(client, /const COMBAT_DETAIL_STORAGE_KEY = "ayumi_combat_detail_open";/);
+  assert.doesNotMatch(bundle, /combatDetailToggle|ayumi_combat_detail_open/);
   assert.doesNotMatch(bundle, /<h3>Avant le combat<\/h3>|<h3>Fin du combat<\/h3>/);
   // SAISIE-3 : la manière de gagner est facultative.
   assert.match(bundle, /<span class="choice-optional">facultatif<\/span>/);
