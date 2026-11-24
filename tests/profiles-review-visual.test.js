@@ -264,6 +264,10 @@ function familyScenario({ childClubId }) {
     if (request.method === "getCompetitionDetail") {
       return { competition: linked, combats: [], canEditCompetition: true };
     }
+    if (request.method === "finalizeCompetition") {
+      linked.result = request.args[1];
+      return { success: true, message: "Classement enregistré.", competition: { ...linked } };
+    }
     return null;
   };
 }
@@ -302,6 +306,32 @@ for (const [name, viewport] of VIEWPORTS) {
       path: `output/playwright/profiles-family-${name}-02-menu.png`,
       animations: "disabled"
     });
+  });
+}
+
+for (const [name, viewport] of VIEWPORTS) {
+  test(`ACCUEIL-5 : le parent classe la dernière compétition depuis l'accueil sur ${name}`, async (t) => {
+    const { page, rpc } = await openApp(
+      t,
+      familyScenario({ childClubId: CLUB.clubId }),
+      "claire@example.com",
+      viewport
+    );
+    const todo = page.locator("#homePendingRanking");
+    await expect(todo).toContainText("À faire");
+    await expect(todo).toContainText("Quelle place pour Hugo à Coupe d'automne ?");
+    await page.screenshot({
+      path: `output/playwright/profiles-family-${name}-03-a-faire.png`,
+      fullPage: true,
+      animations: "disabled"
+    });
+    await todo.getByRole("button", { name: "3e", exact: true }).click();
+    await expect(page.locator("#homeRankingSaved")).toContainText("Classement enregistré : 3e.");
+    await expect(todo).toHaveCount(0);
+    assert.deepEqual(rpc.find((request) => request.method === "finalizeCompetition").args, [
+      "p-hugo",
+      "3e"
+    ]);
   });
 }
 

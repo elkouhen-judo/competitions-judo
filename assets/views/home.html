@@ -53,6 +53,7 @@
               :aria-checked="filterJudokaId === child.judokaId ? 'true' : 'false'"
               :class="['choice-chip', { 'choice-active': filterJudokaId === child.judokaId }]"
               @click="selectFilterJudoka(child)">
+              <span class="child-pill-avatar" aria-hidden="true">{{ child.initials }}</span>
               {{ child.firstName }}
               <span v-if="child.ageCategory" class="chip-meta">{{ child.ageCategory }}</span>
             </button>
@@ -139,6 +140,19 @@
             <span id="openHomeJudokaProfileButtonText">{{ profileButtonText }}</span>
           </button>
         </div>
+
+        <!-- ACCUEIL-5 : la dernière compétition passée sans classement se classe d'ici. -->
+        <section v-if="homePendingRanking && isHomeReady" id="homePendingRanking" class="home-todo" aria-labelledby="homePendingRankingQuestion">
+          <span class="home-todo-kicker">À faire</span>
+          <p id="homePendingRankingQuestion" class="home-todo-question">{{ homePendingRanking.question }}</p>
+          <div class="choice-chips choice-chips-wrap" role="group" aria-labelledby="homePendingRankingQuestion">
+            <button v-for="option in homeRankingOptions" :key="option.value" type="button" :class="['choice-chip', option.medalClass]" :disabled="isSubmitting" @click="saveHomeRanking(homePendingRanking.competitionId, option.value)">{{ option.value }}</button>
+          </div>
+        </section>
+        <p v-if="homeRankingSavedText" id="homeRankingSaved" class="home-todo-done" role="status">
+          {{ homeRankingSavedText }}
+          <button class="button-link" type="button" @click="openCompetition(homeRankingSavedCompetitionId)">Voir la compétition</button>
+        </p>
 
         <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
           <div class="list-search">

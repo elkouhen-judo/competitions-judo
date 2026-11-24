@@ -49,6 +49,7 @@
     firstName: string;
     name: string;
     ageCategory: string;
+    initials: string;
   }
 
   // Mode/context concern: which modes are available, which one is active, and the
@@ -240,13 +241,16 @@
   function createKirokuHomeScreen(app: KirokuApp) {
     const { defaultListPageSize, state, screens, ui, notifications } = app;
     const { cleanText, formatCompetitionName, formatDate, getJudokaDisplayName, showView } = ui;
-    const { showError } = notifications;
+    const { showError, showSuccess } = notifications;
     const defaultHomeViewState = {
       filterJudokaText: "",
       filterOptions: [] as HomeFilterOption[],
       showFilterOptions: false,
       judokaRosterPage: 1,
-      judokaRosterPageSize: defaultListPageSize
+      judokaRosterPageSize: defaultListPageSize,
+      /** ACCUEIL-5 : confirmation du classement saisi depuis l'accueil. */
+      homeRankingSavedText: "",
+      homeRankingSavedCompetitionId: ""
     };
     let homeViewModelRef: (typeof defaultHomeViewState) | null = null;
     let hideFilterOptionsTimer: number | null = null;
@@ -412,9 +416,60 @@
         judokaId: String(child.judokaId || ""),
         firstName: ui.normalizeDisplayName(cleanText(child.firstName)) || getJudokaDisplayName(child),
         name: getJudokaDisplayName(child),
-        ageCategory: cleanText(child.ageCategory)
+        ageCategory: cleanText(child.ageCategory),
+        initials: ui.getJudokaInitials(child)
       }))
     );
+
+    // ACCUEIL-5 : la compétition passée la plus récente sans classement se classe depuis l'accueil.
+    const homePendingRanking = window.Vue.computed(() => {
+      const mode = getCurrentMode();
+      if (mode !== "family" && mode !== "judoka") return null;
+      const owner = mode === "judoka" ? state.currentUser : getHomeActiveJudoka();
+      if (!owner) return null;
+      const ownerId = String(owner.judokaId || "");
+      const today = getTodayStr();
+      const pending = state.competitions
+        .filter(
+          (competition) =>
+            String(competition.ownerJudokaId) === ownerId &&
+            Boolean(competition.competitionDate) &&
+            competition.competitionDate <= today &&
+            !cleanText(competition.result)
+        )
+        .sort((a, b) => b.competitionDate.localeCompare(a.competitionDate))[0];
+      if (!pending) return null;
+      const name = formatCompetitionName(pending.name) || "cette compétition";
+      const firstName = ui.normalizeDisplayName(cleanText(owner.firstName)) || getJudokaDisplayName(owner);
+      return {
+        competitionId: String(pending.competitionId),
+        question: mode === "judoka" ? `Quelle place à ${name} ?` : `Quelle place pour ${firstName} à ${name} ?`
+      };
+    });
+    const homeRankingOptions = window.Vue.computed(() =>
+      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
+        value,
+        medalClass: ui.getClassementBadgeClass(value).replace("rank-finalist", "")
+      }))
+    );
+
+    function saveHomeRanking(competitionId: string, result: string) {
+      app.runServer(
+        "finalizeCompetition",
+        [competitionId, result],
+        (response) => {
+          showSuccess(response.message);
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
+          );
+          if (response.competition) app.local.saveCompetition(response.competition);
+          const viewModel = getHomeViewModel();
+          viewModel.homeRankingSavedText = `Classement enregistré : ${result}.`;
+          viewModel.homeRankingSavedCompetitionId = competitionId;
+        },
+        showError
+      );
+    }
     const showJudokaRoster = window.Vue.computed(
       () => getCurrentMode() === "coachJudoka" && state.judokas.length > 0 && !state.homeFilterJudokaId
     );
@@ -727,6 +782,7 @@
         openCompetition: screens.competition.openCompetition,
         openHomeJudokaProfile,
         selectFilterJudoka,
+        saveHomeRanking,
         setHomeMode,
         handleModeTabClick,
         isPrimaryModeActive,
@@ -759,6 +815,8 @@
         showHomeActions,
         showChildPills,
         showJudokaRoster,
+        homePendingRanking,
+        homeRankingOptions,
         childOptions,
         coachAgenda,
         isHomeReady,
@@ -889,6 +947,7 @@
         hideFilterOptionsTimer = null;
       }
       const viewModel = getHomeViewModel();
+      viewModel.homeRankingSavedText = "";
       state.homeFilterJudokaId = option ? option.judokaId : "";
       viewModel.filterJudokaText = option ? option.name : "";
       if (option && getCurrentMode() === "family") {
