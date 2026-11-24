@@ -265,7 +265,7 @@ for (const [name, viewport] of VIEWPORTS) {
   });
 }
 
-function familyScenario({ childClubId }) {
+function familyScenario({ childClubId, extraCompetitions = [] }) {
   const parent = person("p-1", "Claire", { profileType: "PARENT", clubId: "" });
   const child = person("j-hugo", "Hugo", { clubId: childClubId, accountEmail: "" });
   const linked = {
@@ -287,7 +287,7 @@ function familyScenario({ childClubId }) {
         isAdmin: false,
         isCoach: false,
         isParent: true,
-        competitions: childClubId ? [linked] : [],
+        competitions: childClubId ? [linked, ...extraCompetitions] : [],
         combatRecords: {},
         clubCompetitions: [],
         clubs: [],
@@ -295,7 +295,9 @@ function familyScenario({ childClubId }) {
       };
     }
     if (request.method === "getCompetitionDetail") {
-      return { competition: linked, combats: [], canEditCompetition: true };
+      const competition =
+        extraCompetitions.find((item) => item.competitionId === request.args[0]) || linked;
+      return { competition, combats: [], canEditCompetition: true };
     }
     if (request.method === "finalizeCompetition") {
       linked.result = request.args[1];
@@ -365,6 +367,58 @@ for (const [name, viewport] of VIEWPORTS) {
       "p-hugo",
       "3e"
     ]);
+  });
+}
+
+for (const [name, viewport] of VIEWPORTS) {
+  test(`FICHE-8 : la compétition liste les autres compétitions du judoka sur ${name}`, async (t) => {
+    const other = (competitionId, label, days, result) => ({
+      competitionId,
+      ownerJudokaId: "j-hugo",
+      name: label,
+      competitionDate: localDate(days),
+      ageCategory: "Minime",
+      weightCategory: "",
+      level: "Départemental",
+      result,
+      coachReview: ""
+    });
+    const extraCompetitions = [
+      other("p-reze", "Tournoi de Rezé", -20, "3e"),
+      other("p-noel", "Interclubs de Noël", 6, "")
+    ];
+    const { page, rpc } = await openApp(
+      t,
+      familyScenario({ childClubId: CLUB.clubId, extraCompetitions }),
+      "claire@example.com",
+      viewport
+    );
+    await page
+      .getByRole("button", { name: /Coupe d'automne/ })
+      .first()
+      .click();
+    await expect(page.locator("#competitionView")).toBeVisible();
+    const side = page.locator("#competitionSideList");
+    if (name === "mobile") {
+      await expect(side).toBeHidden();
+      return;
+    }
+    await expect(side).toBeVisible();
+    await expect(side.locator(".competition-side-heading")).toHaveText(["À venir", "Passées"]);
+    await expect(side.locator(".competition-side-item strong")).toHaveText([
+      "Interclubs de Noël",
+      "Coupe d'automne",
+      "Tournoi de Rezé"
+    ]);
+    await expect(side.locator("[aria-current='page']")).toContainText("Classement à saisir");
+    await page.screenshot({
+      path: `output/playwright/competition-side-${name}-01.png`,
+      animations: "disabled"
+    });
+    await side.getByRole("button", { name: /Tournoi de Rezé/ }).click();
+    await expect(page.locator("#competitionTitle")).toHaveText("Tournoi de Rezé");
+    await expect(side.locator("[aria-current='page']")).toContainText("Tournoi de Rezé");
+    assert.equal(rpc.filter((r) => r.method === "getCompetitionDetail").at(-1).args[0], "p-reze");
   });
 }
 

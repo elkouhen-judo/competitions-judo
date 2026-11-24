@@ -42,6 +42,42 @@
     let currentCompetitionReturnView: "homeView" | "clubCompetitionDetailView" | "judokaView" = "homeView";
     // COACH-4 : ouverte depuis une compétition club, la compétition d'un participant propose le suivant.
     const clubParticipantSequence = window.Vue.reactive({ items: [] as ClubParticipantLink[] });
+    // FICHE-8 : sur grand écran, les compétitions du même judoka restent listées à gauche.
+    const competitionSideOwner = window.Vue.reactive({ judokaId: "" });
+    const competitionSideList = window.Vue.computed(() => {
+      const ownerId = String(state.currentCompetition?.ownerJudokaId || competitionSideOwner.judokaId || "");
+      if (!ownerId) return null;
+      const currentId = String(state.currentCompetition?.competitionId || "");
+      const today = ui.getCurrentLocalDate();
+      const toItem = (competition: (typeof state.competitions)[number]) => {
+        const isPast = competition.competitionDate < today;
+        const ranking = competition.result ? ui.formatCompetitionRanking(competition.result) : isPast ? "Classement à saisir" : "";
+        return {
+          competitionId: String(competition.competitionId),
+          name: formatCompetitionName(competition.name) || "Compétition",
+          meta: [ui.formatDateLong(competition.competitionDate), ranking].filter(Boolean).join(" · "),
+          isCurrent: String(competition.competitionId) === currentId
+        };
+      };
+      const owned = state.competitions.filter((competition) => String(competition.ownerJudokaId) === ownerId);
+      if (owned.length < 2) return null;
+      const upcoming = owned
+        .filter((competition) => competition.competitionDate >= today)
+        .sort((a, b) => a.competitionDate.localeCompare(b.competitionDate))
+        .map(toItem);
+      const past = owned
+        .filter((competition) => competition.competitionDate < today)
+        .sort((a, b) => b.competitionDate.localeCompare(a.competitionDate))
+        .map(toItem);
+      return { upcoming, past };
+    });
+
+    function openSideCompetition(id: string) {
+      if (String(state.currentCompetition?.competitionId || "") === String(id)) return;
+      const returnView = currentCompetitionReturnView;
+      openCompetition(id);
+      currentCompetitionReturnView = returnView;
+    }
 
     const competitionDetailProjection = window.Vue.computed(() => {
       if (!state.currentCompetition) return null;
@@ -193,7 +229,8 @@
           saveCompetitionRanking,
           showCombatForm,
           saveCoachReview,
-          openNextClubParticipant
+          openNextClubParticipant,
+          openSideCompetition
         },
         {
           competitionTitle,
@@ -222,6 +259,7 @@
           showCoachAssessment,
           canEditCoachAssessment,
           nextClubParticipant,
+          competitionSideList,
         }
       );
     }
@@ -331,6 +369,8 @@
         clubParticipantSequence.items = [];
       }
       ensureCompetitionDetailViewModel();
+      const known = state.competitions.find((competition) => String(competition.competitionId) === String(id));
+      competitionSideOwner.judokaId = known ? String(known.ownerJudokaId || "") : "";
       state.currentCompetition = null;
       state.currentCombats = [];
       state.currentCombatSuggestions = null;

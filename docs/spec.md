@@ -139,6 +139,7 @@ This specification does not define:
 - **COMP-039** (FICHE-5): On a competition screen, the ranking comes first, under the competition pills. While no ranking is saved it is highlighted (yellow frame) with « À saisir »; once saved it shows « Enregistré ». On the competition day, the existing order still puts the combats first.
 - **COMP-040** (FICHE-6): The summary shows three tiles: the number of combats, of victories (in green) and of defeats, each agreed in number.
 - **COMP-041** (FICHE-7): Each combat card starts with a round « V », « D » or « N » letter, so the result reads without colour. The « Bilan coach » section comes after the combats; when empty, parents and judokas read « Le coach n'a pas encore écrit de bilan. ».
+- **COMP-042** (FICHE-8): From 1100 px wide, the competition screen lists on its left the other competitions of the same judoka, under « À venir » (soonest first) and « Passées » (latest first), each with its date and its ranking or « Classement à saisir ». The open competition is highlighted; touching another opens it in place, keeping the back destination. The list is hidden below 1100 px and when the judoka has a single competition.
 
 ### 3.4 Combat rules
 
