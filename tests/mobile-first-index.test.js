@@ -231,7 +231,7 @@ test("coach screens share the same five tabs and the home lists what is waiting"
   // NAV-7 : libellés entiers avec icône ; barre en bas sur mobile, en haut sur desktop.
   assert.match(
     client,
-    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil", icon: "home" \},\s*\{ key: "coach", label: "Compétitions", icon: "comp" \},\s*\{ key: "coachJudoka", label: "Judokas", icon: "judokas" \},\s*\{ key: "coachDashboard", label: "Statistiques", icon: "stats" \},\s*\{ key: "coachAgenda", label: "Agenda", icon: "agenda" \}\s*\]\)/
+    /coachSubModes = window\.Vue\.computed\(\(\) => \[\s*\{ key: "coachHome", label: "Accueil", icon: "home" \},\s*\{ key: "coachJudoka", label: "Judokas", icon: "judokas" \},\s*\{ key: "coachAgenda", label: "Agenda", icon: "agenda" \},\s*\{ key: "coach", label: "Compétitions", icon: "comp" \},\s*\{ key: "coachDashboard", label: "Statistiques", icon: "stats" \}\s*\]\)/
   );
   assert.match(
     bundle,
@@ -239,7 +239,7 @@ test("coach screens share the same five tabs and the home lists what is waiting"
   );
   assert.match(
     bundle,
-    /@click="showCoachHome\(\)">[\s\S]*?<span>Accueil<\/span><\/button>[\s\S]*@click="showCoachCompetitions\(\)">[\s\S]*?<span>Compétitions<\/span><\/button>[\s\S]*@click="showCoachJudoka\(\)">[\s\S]*?<span>Judokas<\/span><\/button>[\s\S]*aria-current="page">[\s\S]*?<span>Statistiques<\/span><\/button>[\s\S]*@click="showCoachAgenda\(\)">[\s\S]*?<span>Agenda<\/span><\/button>/
+    /@click="showCoachHome\(\)">[\s\S]*?<span>Accueil<\/span><\/button>[\s\S]*?@click="showCoachJudoka\(\)">[\s\S]*?<span>Judokas<\/span><\/button>[\s\S]*?@click="showCoachAgenda\(\)">[\s\S]*?<span>Agenda<\/span><\/button>[\s\S]*?@click="showCoachCompetitions\(\)">[\s\S]*?<span>Compétitions<\/span><\/button>[\s\S]*?aria-current="page">[\s\S]*?<span>Statistiques<\/span><\/button>/
   );
   assert.doesNotMatch(bundle, /label: "Gestion des accès"/);
   assert.match(bundle, /class="coach-agenda"/);

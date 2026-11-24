@@ -98,13 +98,13 @@
 
     // NAV-2 : les mêmes onglets sur tous les écrans coach ; « Mon espace » et « Gestion des accès »
     // passent dans le menu du compte (en-tête).
-    // NAV-7 : cinq onglets aux libellés entiers ; barre en bas sur mobile, en haut sur desktop.
+    // NAV-7 : cinq onglets dans l'ordre d'une saison ; barre en bas sur mobile, en haut sur desktop.
     const coachSubModes = window.Vue.computed(() => [
       { key: "coachHome", label: "Accueil", icon: "home" },
-      { key: "coach", label: "Compétitions", icon: "comp" },
       { key: "coachJudoka", label: "Judokas", icon: "judokas" },
-      { key: "coachDashboard", label: "Statistiques", icon: "stats" },
-      { key: "coachAgenda", label: "Agenda", icon: "agenda" }
+      { key: "coachAgenda", label: "Agenda", icon: "agenda" },
+      { key: "coach", label: "Compétitions", icon: "comp" },
+      { key: "coachDashboard", label: "Statistiques", icon: "stats" }
     ]);
 
     const showCoachSubTabs = window.Vue.computed(() => state.isCoach);
