@@ -73,6 +73,21 @@
       --bronze-soft: #f9efe6;
       --soft: #eef1f7;
       --shadow: none;
+      /* Couleurs des designs B, nommées pour le design system (mêmes valeurs qu'avant). */
+      --on-accent: #ffffff;
+      --win: #1f6b3a;
+      --win-soft: #e7f3ec;
+      --draw: #e7c66a;
+      --loss: #c9d1dd;
+      --pending: #7a4b00;
+      --pending-strong: #5c3a00;
+      --pending-soft: #fff4dc;
+      --pending-bg: #fff8e8;
+      --pending-line: #f0b429;
+      --pending-border: #f0d58a;
+      --medal-gold: #c99a12;
+      --medal-silver: #8a94a3;
+      --medal-bronze: #a8622b;
     }
 
     html {
@@ -316,7 +331,7 @@
     .confirm-dialog-actions .confirm-dialog-danger {
       border-color: var(--danger);
       background: var(--danger);
-      color: #ffffff;
+      color: var(--on-accent);
     }
 
     .confirm-dialog-actions .confirm-dialog-danger:hover:not(:disabled) {
@@ -1447,7 +1462,7 @@
   .swipe-back-indicator.swipe-back-ready {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 
   /* Statistiques du coach : trois tuiles sur une ligne, quelle que soit la largeur. */
@@ -3528,7 +3543,7 @@
   .choice-chip.choice-active:focus {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 
   .choice-button.choice-win.choice-active:hover,
@@ -3547,7 +3562,7 @@
   .choice-chip.choice-active {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 
   .choice-button.choice-win.choice-active {
@@ -3958,17 +3973,17 @@
 
   .rank-1,
   .rank-gold {
-    --medal-color: #c99a12;
+    --medal-color: var(--medal-gold);
   }
 
   .rank-2,
   .rank-silver {
-    --medal-color: #8a94a3;
+    --medal-color: var(--medal-silver);
   }
 
   .rank-3,
   .rank-bronze {
-    --medal-color: #a8622b;
+    --medal-color: var(--medal-bronze);
   }
 
   /* DASH-031 : titre « Statistiques » et pastille des filtres actifs. */
@@ -4039,7 +4054,7 @@
 
   /* DASH-032 : le pourcentage de victoires en vert, la barre victoires / défaites. */
   .mini-stat-value-win {
-    color: #1f6b3a;
+    color: var(--win);
   }
 
   .win-loss-bar {
@@ -4062,20 +4077,20 @@
   }
 
   .win-loss-win {
-    background: #1f6b3a;
-    color: #ffffff;
+    background: var(--win);
+    color: var(--on-accent);
   }
 
   .win-loss-draw {
     justify-content: center;
-    background: #e7c66a;
-    color: #0e1a2b;
+    background: var(--draw);
+    color: var(--text);
   }
 
   .win-loss-loss {
     justify-content: flex-end;
-    background: #c9d1dd;
-    color: #0e1a2b;
+    background: var(--loss);
+    color: var(--text);
   }
 
   .dashboard-h3-count {
@@ -4109,7 +4124,7 @@
   }
 
   #coachDashboardVictoriesByType .bar-fill {
-    background: #1f6b3a;
+    background: var(--win);
   }
 
   #coachDashboardDefeatsByType .bar-fill {
@@ -4123,9 +4138,9 @@
 
   .competition-ranking-section.ranking-pending {
     padding: 14px;
-    border: 2px solid #f0b429;
+    border: 2px solid var(--pending-line);
     border-radius: var(--radius-card);
-    background: #fff8e8;
+    background: var(--pending-bg);
   }
 
   .ranking-status {
@@ -4138,13 +4153,13 @@
   }
 
   .ranking-status-todo {
-    background: #fff4dc;
-    color: #7a4b00;
+    background: var(--pending-soft);
+    color: var(--pending);
   }
 
   .ranking-status-done {
-    background: #e7f3ec;
-    color: #1f6b3a;
+    background: var(--win-soft);
+    color: var(--win);
   }
 
   /* FICHE-8 : liste latérale des compétitions, réservée aux grands écrans. */
@@ -4280,8 +4295,8 @@
     flex: none;
     padding: 3px 10px;
     border-radius: 999px;
-    background: #fff4dc;
-    color: #5c3a00;
+    background: var(--pending-soft);
+    color: var(--pending-strong);
     font-size: 12px;
     font-weight: 700;
   }
@@ -4325,13 +4340,13 @@
     gap: 10px;
     margin: 12px 0;
     padding: 14px 16px;
-    border: 1px solid #f0d58a;
+    border: 1px solid var(--pending-border);
     border-radius: var(--radius-card);
-    background: #fff8e8;
+    background: var(--pending-bg);
   }
 
   .home-todo-kicker {
-    color: #7a4b00;
+    color: var(--pending);
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.06em;
@@ -4348,8 +4363,8 @@
     margin: 12px 0;
     padding: 12px 14px;
     border-radius: 12px;
-    background: #e7f3ec;
-    color: #1f6b3a;
+    background: var(--win-soft);
+    color: var(--win);
     font-size: 14px;
     font-weight: 700;
   }
@@ -4561,7 +4576,7 @@
   .pill-now {
     border-color: var(--accent);
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 
   .pill.pill-accent,
@@ -5262,7 +5277,7 @@
   }
 
   .combat-official-score-value-label.is-penalty {
-    color: var(--warning, #b45309);
+    color: var(--warning);
   }
 
   /* Score sur la carte du combat. */
@@ -5382,8 +5397,8 @@
   }
 
   .agenda-card-closing-pill.agenda-card-closing {
-    background: #fff4dc;
-    color: #7a4b00;
+    background: var(--pending-soft);
+    color: var(--pending);
     font-weight: 700;
   }
 
@@ -5399,7 +5414,7 @@
     border: 0;
     border-radius: 12px;
     background: var(--accent);
-    color: #ffffff;
+    color: var(--on-accent);
     font-size: 14px;
     font-weight: 800;
   }
@@ -5440,7 +5455,7 @@
     padding: 0 14px;
     border-radius: var(--radius-pill);
     background: var(--text);
-    color: #ffffff;
+    color: var(--on-accent);
     font-size: 13px;
     font-weight: 700;
   }
