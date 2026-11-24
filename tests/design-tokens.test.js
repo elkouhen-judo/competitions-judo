@@ -18,6 +18,11 @@ test("UI-TOK-001 : aucune couleur hexadécimale hors de :root", () => {
   assert.deepEqual(found, [], "utiliser une variable de :root (ajouter un token si besoin)");
 });
 
+test("UI-TOK-001 : aucune transparence rgba() hors de :root", () => {
+  const found = outsideRoot().match(/rgba?\([^)]*\)/g) || [];
+  assert.deepEqual(found, [], "utiliser --overlay, --hover-tint, --shadow-* ou ajouter un token");
+});
+
 test("UI-TOK-001 : les rayons du design system passent par leurs variables", () => {
   const found = outsideRoot().match(/border-radius:\s*(?:999|12|6)px\b/g) || [];
   assert.deepEqual(found, [], "utiliser var(--radius-pill), var(--radius) ou var(--radius-sm)");

@@ -580,6 +580,17 @@ video {
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
+  /* Transparences : un seul encre de base (--text = rgb 14, 26, 43). */
+  --overlay: rgba(14, 26, 43, 0.45);
+  --hover-tint: rgba(14, 26, 43, 0.06);
+  --focus-outline: rgba(14, 26, 43, 0.14);
+  --surface-translucent: rgba(255, 255, 255, 0.96);
+  --surface-veil: rgba(255, 255, 255, 0.74);
+  --logo-tatami-line: rgba(255, 255, 255, 0.22);
+  --shadow-raised: 0 4px 12px rgba(14, 26, 43, 0.06);
+  --shadow-floating: 0 12px 32px rgba(14, 26, 43, 0.14);
+  --shadow-dialog: 0 20px 48px rgba(14, 26, 43, 0.24);
+  --shadow-action-bar: 0 -4px 12px rgba(14, 26, 43, 0.04);
   --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --danger: #9f2f2d;
@@ -707,7 +718,7 @@ label {
   gap: var(--space-2);
   padding: 16px 16px 14px;
   margin-bottom: 0;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--surface-translucent);
   border-bottom: 1px solid var(--line);
 }
 
@@ -744,7 +755,7 @@ label {
 
 .brand-logo-tatami {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.22);
+  stroke: var(--logo-tatami-line);
   stroke-width: 1.5;
 }
 
@@ -839,11 +850,11 @@ h3 {
   border-radius: var(--radius-card);
   background: var(--panel);
   color: var(--text);
-  box-shadow: 0 20px 48px rgba(14, 26, 43, 0.24);
+  box-shadow: var(--shadow-dialog);
 }
 
 .confirm-dialog::backdrop {
-  background: rgba(14, 26, 43, 0.45);
+  background: var(--overlay);
 }
 
 .confirm-dialog-body {
@@ -949,7 +960,7 @@ h3 {
 }
 
 .toast-close:hover {
-  background: rgba(17, 17, 17, 0.06);
+  background: var(--hover-tint);
   transform: none;
 }
 
@@ -980,7 +991,7 @@ h3 {
 }
 
 .panel:focus-visible {
-  outline: 3px solid rgba(17, 17, 17, 0.14);
+  outline: 3px solid var(--focus-outline);
   outline-offset: -3px;
 }
 
@@ -1143,7 +1154,7 @@ button:focus-visible,
   max-height: 220px;
   overflow-y: auto;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.05);
+  box-shadow: var(--shadow-raised);
   top: calc(100% - 10px);
 }
 
@@ -1471,8 +1482,8 @@ button:focus-visible,
   margin: 16px -16px 0;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 -4px 12px rgba(17, 17, 17, 0.04);
+  background: var(--surface-translucent);
+  box-shadow: var(--shadow-action-bar);
 }
 
 .primary-action {
@@ -1795,7 +1806,7 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--shadow-floating);
   opacity: 0;
   transform: translate(-48px, -50%);
   transition: opacity 120ms ease-out, background-color 120ms ease-out;
@@ -2076,7 +2087,7 @@ button:focus-visible,
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(17, 17, 17, 0.05);
+  background: var(--hover-tint);
   color: var(--text);
 }
 
@@ -2386,7 +2397,7 @@ button:focus-visible,
       .summary:hover,
       .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(17, 17, 17, 0.04);
+    box-shadow: var(--shadow-raised);
   }
 
   button:hover:not(:disabled),
@@ -3527,7 +3538,7 @@ button,
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
-  box-shadow: 0 8px 24px rgba(14, 26, 43, 0.08);
+  box-shadow: var(--shadow-raised);
 }
 
 .autocomplete-option {
@@ -3839,7 +3850,7 @@ button,
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--panel);
-  box-shadow: 0 12px 32px rgba(14, 26, 43, 0.14);
+  box-shadow: var(--shadow-floating);
 }
 
 .page-menu-list button,
@@ -4396,7 +4407,7 @@ input[aria-invalid="true"],
   margin-right: 0.35em;
   border-radius: var(--radius-pill);
   background: var(--medal-color);
-  box-shadow: inset 0 0 0 1px rgba(14, 26, 43, 0.15);
+  box-shadow: inset 0 0 0 1px var(--focus-outline);
   vertical-align: -0.05em;
 }
 
