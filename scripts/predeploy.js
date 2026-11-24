@@ -42,6 +42,8 @@ function main() {
     throw new Error("--environment doit être prod ou dev.");
   }
   checkGit(environment);
+  // GAT-010 : aucune donnée personnelle dans les fichiers suivis ni dans les messages de commit publiés.
+  run("node", ["scripts/check-personal-data.js", "--all"]);
   run("npm", ["run", "--silent", "check"]);
   run("npm", ["test"]);
   console.log(`Gate de déploiement ${environment} : OK.`);

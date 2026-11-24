@@ -1,6 +1,11 @@
 #!/bin/sh
 # Gate locale : typage, lint et formatage avant chaque commit.
 # Contournement d'urgence : git commit --no-verify
+# GAT-010 : aucune donnée personnelle dans les lignes ajoutées.
+node scripts/check-personal-data.js --staged || {
+  echo "Commit bloqué : données personnelles dans le commit." >&2
+  exit 1
+}
 npm run --silent check || {
   echo "Commit bloqué : corrige les erreurs ci-dessus (ou npm run format)." >&2
   exit 1

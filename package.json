@@ -13,6 +13,8 @@
     "format": "prettier --write \"**/*.js\"",
     "format:check": "prettier --check \"**/*.js\"",
     "lint": "eslint .",
+    "privacy:check": "node scripts/check-personal-data.js --all",
+    "privacy:refresh": "node scripts/refresh-personal-data-denylist.js",
     "typecheck": "tsc -p jsconfig.json",
     "check": "tsc -p jsconfig.json && eslint . && prettier --check \"**/*.js\"",
     "dev:prod": "vercel dev --listen 3100",

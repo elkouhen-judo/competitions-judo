@@ -11,6 +11,7 @@ Cible demandée : `$ARGUMENTS` (par défaut `dev`). Ne jamais déployer la prod 
 
 ## 1. Avant
 
+0. `npm run privacy:refresh` : met à jour la liste locale des noms réels refusés par la gate GAT-010 (fichier ignoré par git).
 1. `git status -sb` : l'arbre doit être propre et `main` à jour avec `origin/main`. Sinon, s'arrêter et demander s'il faut commiter et pousser (description technique validée au préalable, AGENTS.md).
 2. Repérer une migration à appliquer : `git diff --name-only <dernier déploiement>..HEAD -- supabase/migrations/`. Le schéma tient dans un seul fichier idempotent, `supabase/migrations/20260612000000_initial_schema.sql`.
 

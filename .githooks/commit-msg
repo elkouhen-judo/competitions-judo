@@ -1,0 +1,7 @@
+#!/bin/sh
+# GAT-010 : aucune donnée personnelle dans le message de commit.
+# Contournement d'urgence : git commit --no-verify
+node scripts/check-personal-data.js --message="$1" || {
+  echo "Commit bloqué : données personnelles dans le message de commit." >&2
+  exit 1
+}

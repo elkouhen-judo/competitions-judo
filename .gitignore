@@ -3,6 +3,7 @@ node_modules
 .worktrees/
 .env*
 backups/supabase/
+.personal-data-denylist
 .backup/.env.*
 !.backup/.env.example
 assets/dist/

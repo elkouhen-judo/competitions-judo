@@ -224,6 +224,7 @@ This specification does not redefine product behavior already described in `docs
 - **GAT-007**: After publishing, the deploy scripts shall check that `/` and `/api/client` answer `200` on the target URL.
 - **GAT-008**: `db:deploy` shall back up the Supabase project targeted by `.env.local` before applying the migration, and shall abort if the backup fails or the project is unknown.
 - **GAT-009**: `--no-verify` (git) and `--skip-backup` (`db:deploy`) are emergency bypasses only.
+- **GAT-010**: No personal data shall be committed. `scripts/check-personal-data.js` refuses real e-mail addresses (only fictional domains such as `example.com` and public organisation addresses are allowed), real database identifiers (`JUDO…`, `CLUB…` + 32 hex), mobile numbers (demo numbers such as `0600000000` allowed) and the real names and e-mails listed in `.personal-data-denylist`. That file is ignored by git and generated from the prod database by `npm run privacy:refresh`. The check runs on the lines added to each commit (`pre-commit`), on each commit message (`commit-msg`), and on all tracked files and all commit messages before each deployment (`predeploy`, `npm run privacy:check`).
 
 ## 4. Interfaces & Data Contracts
 
