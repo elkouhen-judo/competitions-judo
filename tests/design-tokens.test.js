@@ -35,12 +35,16 @@ test("UI-TOK-001 : les rayons du design system passent par leurs variables", () 
 test("UI-TOK-001 : les espacements passent par --space-* (sauf la hauteur des barres en zone sûre)", () => {
   const offenders = [];
   const declaration =
-    /^\s+((?:row-|column-)?gap|padding(?:-[a-z]+)?|margin(?:-[a-z]+)?):\s*([^;]+);$/gm;
+    /(?<![\w-])((?:row-|column-)?gap|padding(?:-[a-z]+)?|margin(?:-[a-z]+)?):\s*([^;}]+?)\s*(?=[;}])/g;
   for (const match of outsideRoot().matchAll(declaration)) {
     const withoutSafeArea = match[2].replace(/calc\([^()]*env\(safe-area-inset-[a-z]+\)\)/g, "");
-    if (/(?<![\w-])\d+px/.test(withoutSafeArea)) offenders.push(match[0].trim());
+    if (/\d+px/.test(withoutSafeArea)) offenders.push(match[0].trim());
   }
-  assert.deepEqual(offenders, [], "utiliser var(--space-0-5) … var(--space-8)");
+  assert.deepEqual(
+    offenders,
+    [],
+    "utiliser var(--space-0-5) … var(--space-14), ou calc(-1 * var(--space-n)) pour une marge négative"
+  );
 });
 
 test("UI-TOK-001 : une seule teinte par état (success = win, warning = pending)", () => {
@@ -66,4 +70,15 @@ test("UI-TOK-004 : la typographie passe par --font-size-*, --font-weight-*, --li
     "utiliser un token typographique de :root (ajouter un token si besoin)"
   );
   assert.equal(tailwindType, null, "pas de taille ni de graisse Tailwind en dur dans @apply");
+});
+test("UI-TOK-005 : toute variable utilisée sans valeur de repli est déclarée", () => {
+  const declared = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1]));
+  const missing = [...css.matchAll(/var\((--[\w-]+)\s*\)/g)]
+    .map((match) => match[1])
+    .filter((name) => !declared.has(name));
+  assert.deepEqual(
+    [...new Set(missing)],
+    [],
+    "déclarer la variable dans :root (token du design system)"
+  );
 });

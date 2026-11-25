@@ -566,9 +566,7 @@ video {
   --accent: #1f4fd8;
   --accent-soft: #e8eefc;
   --hajime: #9f2f2d;
-  --hajime-soft: #fdebec;
   --tatami: #f3f5fa;
-  --tatami-line: #e3e8f0;
   --surface: #ffffff;
   --radius: 12px;
   --radius-card: 16px;
@@ -582,6 +580,11 @@ video {
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  /* Cibles tactiles : hauteur minimale d'une cible et d'un bouton. */
+  --touch-min: 44px;
+  --control-height: 48px;
   /* Transparences : un seul encre de base (--text = rgb 14, 26, 43). */
   --overlay: rgba(14, 26, 43, 0.45);
   --hover-tint: rgba(14, 26, 43, 0.06);
@@ -645,11 +648,10 @@ video {
   --gold: #b8912f;
   --gold-soft: #fff4d8;
   --gold-text: #7a5c00;
-  --silver: #6b7280;
   --silver-soft: #eceef3;
   --silver-line: #9aa3b0;
   --silver-text: #3d4452;
-  --bronze: #9c6532;
+  --bronze: #8a5628;
   --bronze-soft: #f9efe6;
   --soft: #eef1f7;
   --shadow: none;
@@ -1480,7 +1482,7 @@ button:focus-visible,
 }
 
 .combat-quick-section {
-  margin: -2px -4px 0;
+  margin: calc(-1 * var(--space-0-5)) calc(-1 * var(--space-1)) 0;
   border: 1px solid var(--accent);
   border-radius: var(--radius-card);
   background: var(--accent-soft);
@@ -1507,7 +1509,7 @@ button:focus-visible,
   position: sticky;
   bottom: env(safe-area-inset-bottom);
   z-index: 5;
-  margin: var(--space-4) -16px 0;
+  margin: var(--space-4) calc(-1 * var(--space-4)) 0;
   padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
   background: var(--surface-translucent);
@@ -2261,8 +2263,8 @@ button:focus-visible,
   }
 
   .mobile-action-bar {
-    margin-left: -20px;
-    margin-right: -20px;
+    margin-left: calc(-1 * var(--space-5));
+    margin-right: calc(-1 * var(--space-5));
     padding-left: var(--space-5);
     padding-right: var(--space-5);
   }
@@ -3137,7 +3139,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .brand {
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .brand-logo {
@@ -3254,7 +3256,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .panel-body {
-  padding: 16px 0 40px;
+  padding: var(--space-4) 0 var(--space-10);
 }
 
 .dash-hero {
@@ -3307,7 +3309,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .section-heading {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .section-heading h3 {
@@ -3359,13 +3361,13 @@ label:not(.checkbox-row),
 }
 
 .field-hint {
-  margin: -10px 0 var(--space-5);
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   color: var(--muted);
 }
 
 .combat-score-header .field-hint,
   .form-section-heading .field-hint {
-  margin: 2px 0 0;
+  margin: var(--space-0-5) 0 0;
 }
 
 /* Champs et boutons */
@@ -3443,7 +3445,7 @@ button,
   .stat-card,
   .judoka-hero,
   .dashboard-summary-card {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .meta-row {
@@ -3490,7 +3492,7 @@ button,
 /* Listes de compétitions */
 
 .list {
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .list > .card {
@@ -3549,7 +3551,7 @@ button,
 }
 
 .competition-day-first > .competition-summary {
-  margin-top: 28px;
+  margin-top: var(--space-8);
 }
 
 .combat-scores-line {
@@ -3602,11 +3604,11 @@ button,
 }
 
 .list-search input {
-  margin: 6px 0 12px;
+  margin: var(--space-2) 0 var(--space-3);
 }
 
 .participant-card .card-actions {
-  padding: 0 16px 16px;
+  padding: 0 var(--space-4) var(--space-4);
 }
 
 /* Cases à cocher : taille propre, sans hériter de la hauteur des champs texte. */
@@ -3719,8 +3721,8 @@ button,
 /* Barre d'action collante en mobile */
 
 .mobile-action-bar {
-  margin-left: -16px;
-  margin-right: -16px;
+  margin-left: calc(-1 * var(--space-4));
+  margin-right: calc(-1 * var(--space-4));
   border-top: 1px solid var(--line);
   background: var(--panel);
   box-shadow: none;
@@ -3742,11 +3744,11 @@ button,
 
 @media (min-width: 721px) {
   .app-shell {
-    padding: 24px 24px 56px;
+    padding: var(--space-6) var(--space-6) var(--space-14);
   }
 
   .topbar {
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .brand-logo {
@@ -3770,11 +3772,11 @@ button,
   }
 
   .panel-header {
-    padding-top: 28px;
+    padding-top: var(--space-8);
   }
 
   .panel-body {
-    padding: 20px 0 56px;
+    padding: var(--space-5) 0 var(--space-14);
   }
 
   .coach-home-grid {
@@ -3782,7 +3784,7 @@ button,
   }
 
   .stats-grid {
-    gap: 10px;
+    gap: var(--space-3);
   }
 
   .mobile-action-bar {
@@ -3806,8 +3808,8 @@ button,
   }
 
   .mobile-action-bar {
-    margin-left: -12px;
-    margin-right: -12px;
+    margin-left: calc(-1 * var(--space-3));
+    margin-right: calc(-1 * var(--space-3));
   }
 }
 
@@ -3847,7 +3849,7 @@ button,
 }
 
 .page-back {
-  margin-left: -10px;
+  margin-left: calc(-1 * var(--space-3));
 }
 
 .page-menu {
@@ -4105,7 +4107,7 @@ input[aria-invalid="true"],
 
 #combatFormView .mobile-action-bar.action-bar-inline {
   position: sticky;
-  margin: var(--space-4) -16px 0;
+  margin: var(--space-4) calc(-1 * var(--space-4)) 0;
   padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
   background: var(--panel);
@@ -4851,7 +4853,7 @@ input[aria-invalid="true"],
   justify-content: center;
   width: 28px;
   height: 28px;
-  margin-left: -6px;
+  margin-left: calc(-1 * var(--space-2));
   margin-right: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
