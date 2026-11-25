@@ -1,4 +1,4 @@
-// UI-TOK-001 : les couleurs, rayons et espacements de l'appli viennent des variables de :root,
+// UI-TOK-001/004 : les couleurs, rayons, espacements et la typographie de l'appli viennent des variables de :root,
 // la même source que le design system « Ayumi design system ».
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -46,4 +46,24 @@ test("UI-TOK-001 : les espacements passent par --space-* (sauf la hauteur des ba
 test("UI-TOK-001 : une seule teinte par état (success = win, warning = pending)", () => {
   assert.match(rootBlock[1], /--success: var\(--win\);/);
   assert.match(rootBlock[1], /--warning: var\(--pending\);/);
+});
+
+test("UI-TOK-004 : la typographie passe par --font-size-*, --font-weight-*, --line-height-*, --letter-spacing-*", () => {
+  const offenders = [];
+  const withoutFontFaces = outsideRoot().replace(/@font-face \{[^}]*\}/g, "");
+  const declaration =
+    /(?<![\w-])(font-size|font-weight|line-height|letter-spacing):\s*([^;}]+?)\s*(?=[;}])/g;
+  for (const match of withoutFontFaces.matchAll(declaration)) {
+    const allowed = new RegExp(`^(var\\(--${match[1]}-[a-z0-9-]+\\)|inherit|normal|0)$`);
+    if (!allowed.test(match[2])) offenders.push(match[0]);
+  }
+  const tailwindType = withoutFontFaces.match(
+    /@apply[^;]*\b(text-(xs|sm|base|lg|\d?xl|\[[^\]]+\])|font-(normal|medium|semibold|bold|extrabold|black)|leading-\S+|tracking-\S+)/g
+  );
+  assert.deepEqual(
+    offenders,
+    [],
+    "utiliser un token typographique de :root (ajouter un token si besoin)"
+  );
+  assert.equal(tailwindType, null, "pas de taille ni de graisse Tailwind en dur dans @apply");
 });

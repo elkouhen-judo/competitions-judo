@@ -63,6 +63,33 @@
       --shadow-action-bar: 0 -4px 12px rgba(14, 26, 43, 0.04);
       --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
       --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      /* Typographie : échelle entière du design system (UI-TOK-004). */
+      --font-size-2xs: 11px;
+      --font-size-xs: 12px;
+      --font-size-sm: 13px;
+      --font-size-md: 14px;
+      --font-size-base: 16px;
+      --font-size-lg: 18px;
+      --font-size-xl: 20px;
+      --font-size-2xl: 22px;
+      --font-size-3xl: 24px;
+      --font-size-4xl: 30px;
+      --font-size-brand: clamp(1rem, 4.5vw, 1.25rem);
+      --font-size-display: clamp(1.6rem, 6vw, 2.1rem);
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      --font-weight-extrabold: 800;
+      --line-height-none: 1;
+      --line-height-tight: 1.1;
+      --line-height-snug: 1.2;
+      --line-height-normal: 1.3;
+      --line-height-relaxed: 1.4;
+      --line-height-body: 1.55;
+      --letter-spacing-tight: -0.02em;
+      --letter-spacing-wide: 0.04em;
+      --letter-spacing-caps: 0.06em;
       --danger: #9f2f2d;
       --danger-hover: #7d2422;
       --danger-soft: #fdebec;
@@ -120,9 +147,10 @@
     }
 
     body {
-      @apply min-h-screen bg-bg text-text font-body text-base;
+      @apply min-h-screen bg-bg text-text font-body;
+      font-size: var(--font-size-base);
       margin: 0;
-      line-height: 1.55;
+      line-height: var(--line-height-body);
     }
 
     h1, h2, h3, p {
@@ -134,9 +162,10 @@
     h2,
     h3,
     .hero-title {
-      @apply font-display font-bold;
-      letter-spacing: -0.025em;
-      line-height: 1.1;
+      @apply font-display;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-tight);
+      line-height: var(--line-height-tight);
     }
 
     input, select, textarea, button, .button {
@@ -156,7 +185,9 @@
     }
 
     label {
-      @apply block text-[15px] font-bold text-muted;
+      @apply block text-muted;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 }
 
@@ -227,8 +258,8 @@
     .brand-logo-mark text {
       fill: var(--panel);
       font-family: var(--font-heading);
-      font-size: 25px;
-      font-weight: 700;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
     }
 
     .brand-copy {
@@ -236,29 +267,30 @@
     }
 
     .card-title {
-      @apply font-display font-bold;
-      letter-spacing: 0.01em;
+      @apply font-display;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0;
     }
 
     h1 {
       margin-bottom: var(--space-1);
-      font-size: 26px;
+      font-size: var(--font-size-3xl);
     }
 
     h2 {
       margin-bottom: 0;
-      font-size: 23px;
+      font-size: var(--font-size-2xl);
     }
 
     h3 {
       margin-bottom: var(--space-1);
-      font-size: 21px;
+      font-size: var(--font-size-xl);
     }
 
     .subtitle {
       margin-bottom: 0;
       color: var(--muted);
-      font-size: 15px;
+      font-size: var(--font-size-md);
     }
 
     .user-pill {
@@ -270,8 +302,8 @@
       min-height: 38px;
       max-height: 38px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1;
+      font-size: var(--font-size-md);
+      line-height: var(--line-height-none);
       display: flex;
       align-items: center;
       overflow: hidden;
@@ -291,9 +323,9 @@
       max-height: 38px;
       display: inline-flex;
       align-items: center;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.15;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-tight);
       white-space: nowrap;
     }
 
@@ -333,8 +365,8 @@
 
     .confirm-dialog-message {
       margin: 0;
-      font-size: 1rem;
-      line-height: 1.5;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-body);
     }
 
     .confirm-dialog-actions {
@@ -498,7 +530,7 @@
       align-items: center;
       padding: var(--space-2);
       color: var(--muted);
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     input[type="file"]::file-selector-button {
@@ -509,7 +541,7 @@
       background: var(--panel);
       color: var(--text);
       font: inherit;
-      font-weight: bold;
+      font-weight: var(--font-weight-bold);
       padding: var(--space-2) var(--space-4);
       cursor: pointer;
       transition: background-color 160ms ease;
@@ -521,7 +553,7 @@
 
     .field-hint {
       margin: var(--space-1) 0 0;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--muted);
     }
 
@@ -536,7 +568,7 @@
       color: var(--button-primary-text);
       padding: var(--space-3) var(--space-4);
       cursor: pointer;
-      font-weight: bold;
+      font-weight: var(--font-weight-bold);
       border-radius: var(--radius-sm);
       text-decoration: none;
       touch-action: manipulation;
@@ -627,7 +659,7 @@
     .autocomplete-option {
       padding: var(--space-4);
       cursor: pointer;
-      font-size: 16px;
+      font-size: var(--font-size-base);
       border-bottom: 1px solid var(--line);
       min-height: 48px;
       display: flex;
@@ -639,7 +671,7 @@
     .autocomplete-empty {
       padding: var(--space-3) var(--space-4);
       color: var(--muted);
-      font-size: 15px;
+      font-size: var(--font-size-md);
     }
     .autocomplete-option-copy {
       display: grid;
@@ -647,7 +679,7 @@
     }
     .autocomplete-option-meta {
       color: var(--muted);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
     }
 
     .data-table {
@@ -662,8 +694,8 @@
     .data-table th {
       background: var(--soft);
       color: var(--muted);
-      font-weight: bold;
-      font-size: 14px;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-md);
     }
     .data-table tr:hover td {
       background: var(--soft);
@@ -708,20 +740,20 @@
 
     .home-context-label {
       color: var(--muted);
-      font-size: 14px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
     }
 
     .home-context-value {
-      font-size: 20px;
-      font-weight: bold;
-      line-height: 1.25;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-snug);
     }
 
     .home-context-meta {
       color: var(--muted);
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     .button-copy {
@@ -733,9 +765,9 @@
 
     .button-meta {
       color: inherit;
-      font-size: 12px;
-      font-weight: normal;
-      line-height: 1.2;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-regular);
+      line-height: var(--line-height-snug);
       opacity: 0.78;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -776,7 +808,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius-sm);
       background: var(--panel);
-      font-weight: normal;
+      font-weight: var(--font-weight-regular);
       transition: border-color 180ms ease, background-color 180ms ease;
     }
 
@@ -809,7 +841,7 @@
       border-radius: var(--radius-sm);
       background: var(--panel);
       color: var(--text);
-      font-weight: normal;
+      font-weight: var(--font-weight-regular);
       text-align: left;
     }
 
@@ -824,9 +856,9 @@
     .pick-row-add {
       flex-shrink: 0;
       color: var(--accent);
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 1;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--line-height-none);
     }
 
     .pick-select {
@@ -892,9 +924,9 @@
 
     .card-title {
       margin-bottom: var(--space-1);
-      font-size: 16px;
-      font-weight: bold;
-      line-height: 1.25;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-snug);
     }
 
     .card-meta {
@@ -924,13 +956,13 @@
 
     .meta-label {
       color: var(--muted);
-      font-size: 14px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
     }
 
     .meta-value {
-      font-size: 16px;
+      font-size: var(--font-size-base);
       text-align: right;
       overflow-wrap: anywhere;
     }
@@ -952,8 +984,8 @@
 
     .card-open-hint {
       color: var(--accent);
-      font-size: 14px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 
     .card-open-hint::after {
@@ -1001,7 +1033,7 @@
 
     .form-section-heading h3 {
       margin-bottom: 0;
-      font-size: 16px;
+      font-size: var(--font-size-base);
     }
 
     .form-section-heading > div {
@@ -1012,9 +1044,9 @@
       display: inline-flex;
       margin-bottom: var(--space-1);
       color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-caps);
       text-transform: uppercase;
     }
 
@@ -1027,7 +1059,7 @@
     }
 
     .combat-quick-section .form-section-heading h3 {
-      font-size: 18px;
+      font-size: var(--font-size-lg);
     }
 
     .combat-fast-grid {
@@ -1113,7 +1145,7 @@
       background: var(--panel);
       color: var(--muted);
       padding: var(--space-3);
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     .combat-score-row-fields {
@@ -1122,8 +1154,8 @@
     }
 
     .combat-score-row-title {
-      font-size: 13px;
-      font-weight: bold;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       color: var(--muted);
     }
 
@@ -1151,23 +1183,23 @@
 
     .combat-stage {
       margin: 0 0 var(--space-1);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-wide);
       color: var(--accent);
     }
 
     .opponent-stance {
-      font-size: 13px;
-      font-weight: 400;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-regular);
       color: var(--muted);
     }
 
     .field-hint {
       margin: var(--space-2) 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.3;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
     }
 
     .metric-missing-list {
@@ -1190,9 +1222,9 @@
       background: var(--warning-soft);
       color: var(--warning);
       padding: var(--space-1) var(--space-2);
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.2;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-snug);
     }
 
     .metric-warning-high {
@@ -1203,8 +1235,8 @@
 
     .metric-warning-priority {
       text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 0.04em;
+      font-size: var(--font-size-2xs);
+      letter-spacing: var(--letter-spacing-wide);
       opacity: 0.75;
     }
 
@@ -1212,9 +1244,9 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: var(--space-3) var(--space-3);
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.35;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-relaxed);
     }
 
     .status-banner-warning {
@@ -1232,11 +1264,11 @@
       background: var(--panel);
       color: var(--text);
       padding: var(--space-1) var(--space-3);
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-none);
       text-align: center;
-      letter-spacing: 0.04em;
+      letter-spacing: var(--letter-spacing-wide);
     }
 
     /* ── Combat results ── */
@@ -1247,7 +1279,7 @@
       border-color: var(--success);
       color: var(--success);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: var(--letter-spacing-caps);
     }
 
     /* Défaite : pastel rouge — miroir de la victoire */
@@ -1256,7 +1288,7 @@
       border-color: var(--danger);
       color: var(--danger);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: var(--letter-spacing-caps);
     }
 
     /* Égalité : pastel jaune — rare en judo */
@@ -1265,7 +1297,7 @@
       border-color: var(--warning);
       color: var(--warning);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: var(--letter-spacing-caps);
     }
 
     /* Technique de victoire (ippon, waza-ari…) */
@@ -1374,8 +1406,8 @@
       background: var(--accent-soft);
       color: var(--text);
       padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
-      font-size: 13px;
-      line-height: 1.3;
+      font-size: var(--font-size-sm);
+      line-height: var(--line-height-normal);
     }
 
     .competition-chip-remove {
@@ -1385,8 +1417,8 @@
       border: none;
       background: transparent;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-none);
       padding: var(--space-1);
     }
 
@@ -1400,7 +1432,7 @@
     .competition-suggestion {
       justify-content: flex-start;
       text-align: left;
-      font-weight: normal;
+      font-weight: var(--font-weight-regular);
       color: var(--text);
     }
 
@@ -1494,8 +1526,8 @@
   .dashboard-summary-insight {
       margin: 0;
       color: var(--text);
-      font-weight: 700;
-      line-height: 1.35;
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-relaxed);
     }
 
     .dashboard-competition-list {
@@ -1530,9 +1562,9 @@
       background: var(--surface);
       color: var(--text);
       padding: var(--space-1) var(--space-2);
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.2;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-snug);
     }
 
     .coach-club-summary {
@@ -1540,8 +1572,8 @@
       flex-wrap: wrap;
       gap: var(--space-2);
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
+      font-size: var(--font-size-md);
+      line-height: var(--line-height-relaxed);
     }
 
     .coach-card-status {
@@ -1600,22 +1632,22 @@
 
     .coach-home-card-kicker {
       color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-caps);
       text-transform: uppercase;
     }
 
     .coach-home-card h4 {
       margin: 0;
-      font-size: 19px;
-      line-height: 1.15;
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-tight);
     }
 
     .coach-home-card p {
       margin: 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     .section-heading h3 {
@@ -1624,7 +1656,7 @@
     }
 
     .compact-stats-grid .stat-value {
-      font-size: 20px;
+      font-size: var(--font-size-xl);
     }
 
     .season-nav {
@@ -1644,10 +1676,10 @@
       color: var(--warning);
       border-radius: var(--radius-pill);
       padding: var(--space-0-5) var(--space-2);
-      font-size: 12px;
-      font-weight: 700;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: var(--letter-spacing-caps);
       margin-left: var(--space-2);
       vertical-align: middle;
     }
@@ -1700,8 +1732,8 @@
     }
 
     .dash-mode-label {
-      font-size: 15px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 
     .dash-secondary-row {
@@ -1737,8 +1769,8 @@
       background: transparent;
       color: var(--muted);
       font-family: var(--font-body);
-      font-weight: 700;
-      font-size: 0.8125rem;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-sm);
       letter-spacing: 0;
       cursor: pointer;
       border-radius: var(--radius-pill);
@@ -1809,8 +1841,8 @@
 
     .dashboard-loading-label {
       color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 
     .dashboard-loading-grid {
@@ -1885,14 +1917,14 @@
 
     .empty-action-title {
       margin: 0;
-      font-size: 16px;
-      font-weight: bold;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
       color: var(--text);
     }
 
     .empty-action-body {
       margin: 0;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--muted);
       max-width: 26rem;
     }
@@ -1920,8 +1952,8 @@
       margin: 0;
       padding-left: var(--space-5);
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
+      font-size: var(--font-size-md);
+      line-height: var(--line-height-relaxed);
     }
 
     .csv-checklist strong {
@@ -1941,7 +1973,7 @@
     .list-summary-text {
       margin: 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     .list-summary-actions {
@@ -2049,33 +2081,33 @@
       }
 
       h1 {
-        font-size: 30px;
+        font-size: var(--font-size-4xl);
       }
 
       h2 {
-        font-size: 21px;
+        font-size: var(--font-size-xl);
       }
 
       h3 {
-        font-size: 18px;
+        font-size: var(--font-size-lg);
       }
 
       .subtitle,
       .user-pill,
       .meta-value {
-        font-size: 14px;
+        font-size: var(--font-size-md);
       }
 
       label {
-        font-size: 13px;
+        font-size: var(--font-size-sm);
       }
 
       .card-title {
-        font-size: 16px;
+        font-size: var(--font-size-base);
       }
 
       .meta-label {
-        font-size: 12px;
+        font-size: var(--font-size-xs);
       }
 
       .toolbar,
@@ -2230,7 +2262,7 @@
       input,
       select,
       textarea {
-        font-size: 16px;
+        font-size: var(--font-size-base);
       }
 
       button {
@@ -2298,8 +2330,8 @@
 
     .current-admin-note {
       color: var(--muted);
-      font-size: 14px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
 
     .stats-grid {
@@ -2319,17 +2351,17 @@
 
     .stat-label {
       color: var(--muted);
-      font-size: 14px;
-      font-weight: bold;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
     }
 
     .stat-value {
       display: block;
       margin-top: var(--space-2);
-      font-size: 24px;
-      font-weight: bold;
-      line-height: 1.1;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-tight);
     }
 
     .stat-card-split {
@@ -2356,15 +2388,15 @@
 
     .split-stat-label {
       color: var(--muted);
-      font-size: 13px;
-      font-weight: bold;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
       text-transform: uppercase;
     }
 
     .split-stat-value {
-      font-size: 24px;
-      font-weight: bold;
-      line-height: 1.1;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-tight);
     }
 
     .stat-card-highlight {
@@ -2394,10 +2426,10 @@
       border-radius: var(--radius-pill);
       background: var(--soft);
       color: var(--muted);
-      font-size: 10px;
-      font-weight: bold;
+      font-size: var(--font-size-2xs);
+      font-weight: var(--font-weight-bold);
       font-style: italic;
-      line-height: 1;
+      line-height: var(--line-height-none);
       text-transform: none;
       letter-spacing: normal;
       vertical-align: middle;
@@ -2424,10 +2456,10 @@
       border-radius: var(--radius);
       background: var(--text);
       color: var(--panel);
-      font-size: 12px;
-      font-weight: normal;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-regular);
       font-style: normal;
-      line-height: 1.35;
+      line-height: var(--line-height-relaxed);
       text-align: left;
       text-transform: none;
       letter-spacing: normal;
@@ -2482,9 +2514,9 @@
       justify-content: center;
       background: var(--primary);
       color: var(--panel);
-      font-size: 24px;
-      font-weight: bold;
-      letter-spacing: 0.04em;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-wide);
       box-shadow: none;
     }
 
@@ -2495,21 +2527,21 @@
 
     .hero-kicker {
       color: var(--hajime);
-      font-size: 13px;
-      font-weight: bold;
-      letter-spacing: 0.12em;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: var(--letter-spacing-caps);
       text-transform: uppercase;
     }
 
     .hero-title {
       margin: 0;
-      font-size: 26px;
-      line-height: 1.1;
+      font-size: var(--font-size-3xl);
+      line-height: var(--line-height-tight);
     }
 
     .hero-highlight {
       color: var(--muted);
-      font-size: 15px;
+      font-size: var(--font-size-md);
       margin: 0;
     }
 
@@ -2524,7 +2556,7 @@
       padding-left: var(--space-3);
       padding-right: var(--space-3);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: var(--letter-spacing-caps);
     }
 
     /* ── Podium / classement (UI side — identiques aux classes core) ── */
@@ -2571,10 +2603,10 @@
     }
 
     .coach-assessment-label {
-      font-size: 0.78rem;
-      font-weight: 600;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: var(--letter-spacing-caps);
       color: var(--muted);
     }
 
@@ -2583,12 +2615,12 @@
       padding: var(--space-3) var(--space-3);
       border: 1px solid var(--line);
       border-radius: var(--radius-sm);
-      font-size: 0.95rem;
+      font-size: var(--font-size-base);
       font-family: inherit;
       color: var(--text);
       background: var(--panel);
       resize: vertical;
-      line-height: 1.5;
+      line-height: var(--line-height-body);
     }
 
     .coach-assessment-textarea:focus {
@@ -2599,28 +2631,28 @@
     .coach-assessment-text {
       margin: 0;
       color: var(--text);
-      font-size: 0.95rem;
-      line-height: 1.55;
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-body);
       white-space: pre-wrap;
     }
 
     .coach-assessment-empty {
       margin: 0;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: var(--font-size-md);
       font-style: italic;
     }
 
     .coach-assessment-save {
       align-self: flex-start;
-      font-size: 0.875rem;
+      font-size: var(--font-size-md);
     }
 
     /* Badge "Bilan coach" dans la liste des compétitions */
     .coach-review-badge {
       display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 600;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
       padding: var(--space-0-5) var(--space-2);
       border-radius: var(--radius);
       background: var(--accent-soft);
@@ -2647,7 +2679,7 @@
 
   h1, h2, h3, h4, .hero-title, .card-title {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: var(--letter-spacing-tight);
   }
 
   .app-shell {
@@ -2680,12 +2712,12 @@
 
   .brand-copy h1 {
     margin-bottom: 0;
-    font-size: clamp(1rem, 4.5vw, 1.25rem);
-    font-weight: 800;
+    font-size: var(--font-size-brand);
+    font-weight: var(--font-weight-extrabold);
     white-space: nowrap;
   }
 
-  .brand-copy .subtitle { font-size: 0.75rem; }
+  .brand-copy .subtitle { font-size: var(--font-size-xs); }
 
   .user-actions {
     width: auto;
@@ -2704,9 +2736,9 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 600;
-    line-height: 1.3;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
     text-align: right;
     white-space: normal;
   }
@@ -2716,12 +2748,12 @@
 
   .user-pill strong {
     color: var(--text);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
   }
 
   .user-pill-role {
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
+    font-size: var(--font-size-2xs);
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .logout-button {
@@ -2764,9 +2796,9 @@
   }
 
   .panel-header > div:first-child > h2 {
-    font-size: clamp(1.6rem, 6vw, 2.1rem);
-    font-weight: 800;
-    line-height: 1.12;
+    font-size: var(--font-size-display);
+    font-weight: var(--font-weight-extrabold);
+    line-height: var(--line-height-tight);
   }
 
   .panel-body { padding: 16px 0 40px; }
@@ -2794,8 +2826,8 @@
     background: transparent;
     color: var(--muted);
     font-family: var(--font-body);
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
   }
 
   .mode-tabs .mode-tab:hover:not(:disabled) {
@@ -2808,7 +2840,7 @@
     border-bottom-color: var(--accent);
     background: transparent;
     color: var(--accent);
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
   }
 
   /* Sections et titres, sans filet décoratif */
@@ -2823,8 +2855,8 @@
   .section-heading h3 {
     padding-left: 0;
     border-left: 0;
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .form-section {
@@ -2833,13 +2865,13 @@
   }
 
   .form-section-heading h3 {
-    font-size: 1.05rem;
-    font-weight: 800;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .subtitle {
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: var(--font-size-md);
   }
 
   label:not(.checkbox-row),
@@ -2851,8 +2883,8 @@
     padding-left: 0;
     border-left: 0;
     color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
     letter-spacing: 0;
     text-transform: none;
   }
@@ -2863,9 +2895,9 @@
     padding-left: 0;
     border-left: 0;
     color: var(--accent);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
   }
 
   .field-hint {
@@ -2898,7 +2930,7 @@
   button,
   .button {
     border-radius: var(--radius);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
   }
 
   .button-secondary,
@@ -2967,7 +2999,7 @@
   .stat-value,
   .split-stat-value {
     font-family: var(--font-heading);
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
   }
 
   .stat-card-highlight,
@@ -3041,13 +3073,13 @@
   }
 
   .card-title {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
   }
 
   .card-open-hint {
     color: var(--accent);
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
   }
 
   .coach-review-badge,
@@ -3076,8 +3108,8 @@
 
   .combat-scores-label {
     color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
   }
 
   /* Listes d'autocomplétion : lignes claires, alignées à gauche (pas des boutons pleins). */
@@ -3098,7 +3130,7 @@
     border-radius: 0;
     background: var(--panel);
     color: var(--text);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     text-align: left;
   }
 
@@ -3109,7 +3141,7 @@
     transform: none;
   }
 
-  .autocomplete-option-copy strong { font-weight: 700; }
+  .autocomplete-option-copy strong { font-weight: var(--font-weight-bold); }
 
   /* Jour J coach : compétitions de la semaine en tête de l'accueil */
   .coach-today {
@@ -3142,19 +3174,19 @@
   .coach-today-card-now:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
 
   .coach-today-day {
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
     text-transform: uppercase;
   }
 
   .coach-today-name {
     font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-extrabold);
   }
 
-  .coach-today-meta { font-size: 0.85rem; font-weight: 600; opacity: 0.85; }
+  .coach-today-meta { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); opacity: 0.85; }
 
   .list-search {
     margin-bottom: var(--space-3);
@@ -3209,8 +3241,8 @@
 
   .coach-home-card h4 {
     font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-extrabold);
   }
 
   #homeAdminActions {
@@ -3243,7 +3275,7 @@
     border-color: var(--accent);
     background: var(--accent);
     color: var(--panel);
-    letter-spacing: 0.02em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .result-défaite,
@@ -3251,7 +3283,7 @@
     border: 1.5px solid var(--muted);
     background: var(--panel);
     color: var(--text);
-    letter-spacing: 0.02em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .result-egalité,
@@ -3260,7 +3292,7 @@
     border-color: var(--accent-soft);
     background: var(--accent-soft);
     color: var(--accent);
-    letter-spacing: 0.02em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .badge-technique,
@@ -3271,7 +3303,7 @@
   }
 
   .classement-badge {
-    letter-spacing: 0.02em;
+    letter-spacing: var(--letter-spacing-wide);
     text-transform: none;
   }
 
@@ -3325,11 +3357,11 @@
       border-radius: var(--radius);
     }
 
-    .brand-copy h1 { font-size: 21px; }
+    .brand-copy h1 { font-size: var(--font-size-xl); }
 
     .user-pill {
       max-width: 260px;
-      font-size: 0.875rem;
+      font-size: var(--font-size-md);
     }
 
     .panel {
@@ -3454,7 +3486,7 @@
     border: 0;
     background: transparent;
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-align: left;
   }
 
@@ -3491,8 +3523,8 @@
   .choice-label {
     margin: 0;
     color: var(--text);
-    font-size: 0.86rem;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
   }
 
   .required-mark {
@@ -3530,13 +3562,13 @@
     border: 1px solid var(--line);
     background: var(--panel);
     color: var(--text);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     box-shadow: none;
   }
 
   .choice-button {
     padding: var(--space-2) var(--space-2);
-    font-size: 0.92rem;
+    font-size: var(--font-size-md);
   }
 
   .choice-chip {
@@ -3609,8 +3641,8 @@
   .field-error {
     margin: 0;
     color: var(--danger);
-    font-size: 0.86rem;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
   }
 
   input[aria-invalid="true"],
@@ -3628,8 +3660,8 @@
     border-radius: var(--radius-pill);
     background: var(--warning-soft);
     color: var(--text);
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
     box-shadow: none;
   }
 
@@ -3695,8 +3727,8 @@
     border-radius: var(--radius-pill);
     background: var(--panel);
     color: var(--text);
-    font-size: 0.86rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
     white-space: nowrap;
   }
 
@@ -3729,13 +3761,13 @@
 
   .mini-stat-value {
     color: var(--text);
-    font-size: 1.1rem;
-    font-weight: 800;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .mini-stat-label {
     color: var(--muted);
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
 
   /* COMBAT-4 : carte de combat cliquable, compacte. */
@@ -3801,7 +3833,7 @@
 
   .autosave-status {
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs);
   }
 
   .competition-ranking-section .choice-chips {
@@ -3854,7 +3886,7 @@
     display: inline;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
   }
 
   .account-menu > summary.user-pill .user-pill-role {
@@ -3863,8 +3895,8 @@
     border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--accent);
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-bold);
     letter-spacing: 0;
   }
 
@@ -3910,7 +3942,7 @@
     min-height: 56px;
     padding: 0 var(--space-0-5);
     border-bottom: 0;
-    font-size: 0.69rem;
+    font-size: var(--font-size-2xs);
     text-align: center;
   }
 
@@ -3953,7 +3985,7 @@
       min-height: 44px;
       padding: var(--space-2) var(--space-1);
       border-bottom: 2px solid transparent;
-      font-size: 0.9rem;
+      font-size: var(--font-size-md);
     }
 
     .coach-sub-tabs .mode-tab-active,
@@ -4018,8 +4050,8 @@
 
   .dashboard-title {
     margin: 0;
-    font-size: 1.375rem;
-    font-weight: 800;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .dashboard-filter-pill {
@@ -4036,8 +4068,8 @@
     border-radius: var(--radius-pill);
     background: var(--panel);
     color: var(--text);
-    font-size: 0.8125rem;
-    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
     text-align: left;
   }
 
@@ -4092,8 +4124,8 @@
     align-items: center;
     min-width: 2.8em;
     padding: 0 var(--space-3);
-    font-size: 0.8125rem;
-    font-weight: 800;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
     white-space: nowrap;
   }
 
@@ -4115,8 +4147,8 @@
   }
 
   .dashboard-h3-count {
-    font-size: 0.8125rem;
-    font-weight: 400;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
     color: var(--muted);
   }
 
@@ -4135,7 +4167,7 @@
   .bar-list-inline .bar-row-value {
     grid-column: 3;
     grid-row: 1;
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
   }
 
   .bar-list-inline .bar-track {
@@ -4168,8 +4200,8 @@
     margin-left: var(--space-2);
     padding: var(--space-0-5) var(--space-2);
     border-radius: var(--radius-pill);
-    font-size: 12px;
-    font-weight: 800;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
     vertical-align: 2px;
   }
 
@@ -4222,9 +4254,9 @@
   .competition-side-heading {
     margin: var(--space-2) var(--space-1) var(--space-0-5);
     color: var(--muted);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
     text-transform: uppercase;
   }
 
@@ -4249,13 +4281,13 @@
   }
 
   .competition-side-item strong {
-    font-size: 15px;
+    font-size: var(--font-size-md);
   }
 
   .competition-side-item span {
     color: var(--muted);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
   }
 
   .competition-side-item.is-current,
@@ -4303,13 +4335,13 @@
   .admin-user-email {
     overflow: hidden;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .admin-user-email {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .admin-user-flag {
@@ -4318,8 +4350,8 @@
     border-radius: var(--radius-pill);
     background: var(--pending-soft);
     color: var(--pending-strong);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
   }
 
   .admin-user-club-choice {
@@ -4368,16 +4400,16 @@
 
   .home-todo-kicker {
     color: var(--pending);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
     text-transform: uppercase;
   }
 
   .home-todo-question {
     margin: 0;
-    font-size: 16px;
-    font-weight: 800;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .home-todo-done {
@@ -4386,8 +4418,8 @@
     border-radius: var(--radius);
     background: var(--win-soft);
     color: var(--win);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
   }
 
   .child-pill-avatar {
@@ -4401,8 +4433,8 @@
     border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--accent);
-    font-size: 11px;
-    font-weight: 800;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .choice-active .child-pill-avatar {
@@ -4423,8 +4455,8 @@
     width: 32px;
     height: 32px;
     border-radius: var(--radius-pill);
-    font-size: 14px;
-    font-weight: 800;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .combat-header > .combat-heading {
@@ -4446,8 +4478,8 @@
     min-height: 36px;
     padding: var(--space-1) var(--space-8) var(--space-1) var(--space-3);
     border-radius: var(--radius-pill);
-    font-size: 0.86rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
   }
 
   /* ACCUEIL-2 : pastilles des enfants. */
@@ -4461,8 +4493,8 @@
   }
 
   .chip-meta {
-    font-size: 0.74rem;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
     opacity: 0.8;
   }
 
@@ -4494,9 +4526,9 @@
   .list-group-title {
     margin: 0 0 var(--space-2);
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
     text-transform: uppercase;
   }
 
@@ -4511,7 +4543,7 @@
     border: 1px solid var(--line);
     background: var(--panel);
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-align: left;
     box-shadow: none;
   }
@@ -4534,8 +4566,8 @@
 
   .agenda-item-meta {
     color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   /* LISTE-1 / LISTE-2 : cartes compactes groupées. */
@@ -4578,15 +4610,15 @@
 
   .competition-card-date {
     color: var(--muted);
-    font-size: 0.84rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   .competition-card-facts {
     justify-content: flex-start;
     color: var(--text);
-    font-size: 0.84rem;
-    font-weight: 600;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
   }
 
   .competition-card-now {
@@ -4605,7 +4637,7 @@
   .pill.pill-todo {
     min-height: 26px;
     padding: var(--space-0-5) var(--space-3);
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
 
   @media (min-width: 721px) {
@@ -4631,7 +4663,7 @@
   .dashboard-summary-insight {
     margin: var(--space-3) 0 0;
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   .podium-lines {
@@ -4654,8 +4686,8 @@
     display: flex;
     justify-content: space-between;
     gap: var(--space-2);
-    font-size: 0.88rem;
-    font-weight: 600;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
   }
 
   .bar-row-value {
@@ -4686,16 +4718,16 @@
   .dashboard-effectif {
     margin: var(--space-3) 0 0;
     color: var(--muted);
-    font-size: 0.84rem;
+    font-size: var(--font-size-sm);
   }
 
   /* Sous-partie d'un bloc (« Fin des combats », « Techniques qui gagnent »). */
   .dashboard-subtitle {
     margin: var(--space-4) 0 var(--space-2);
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
     text-transform: uppercase;
   }
 
@@ -4744,7 +4776,7 @@
     background: none;
     box-shadow: none;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -4757,8 +4789,8 @@
   /* SAISIE-3 : ce qui n'est pas obligatoire le dit. */
   .choice-optional {
     color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   .combat-decision-hint {
@@ -4779,8 +4811,8 @@
   }
 
   .combat-score-mode-sub {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
     opacity: 0.8;
   }
 
@@ -4807,14 +4839,14 @@
 
   .combat-score-total-side {
     color: var(--muted);
-    font-size: 12px;
-    font-weight: 800;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
     text-transform: uppercase;
   }
 
   .combat-score-total-value {
-    font-size: 15px;
-    font-weight: 800;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .combat-point-add {
@@ -4842,7 +4874,7 @@
     display: block;
     margin-top: var(--space-0-5);
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs);
     font-variant-numeric: tabular-nums;
   }
 
@@ -4850,7 +4882,7 @@
   .bar-row-detail {
     margin: var(--space-0-5) 0 0;
     color: var(--muted);
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 
   /* INSCR-2 : judoka non réinscrit pour la saison. */
@@ -4861,8 +4893,8 @@
     border-radius: var(--radius);
     background: var(--warning-soft);
     color: var(--warning);
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-relaxed);
   }
 
   .result-badge.badge-unregistered {
@@ -4934,7 +4966,7 @@
 
   .season-switch-label {
     margin: 0;
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
     text-align: center;
   }
 
@@ -4954,7 +4986,7 @@
   }
 
   .technique-list li > span:first-child {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   .technique-list li > .bar-row-value {
@@ -5002,7 +5034,7 @@
     min-height: 44px;
     padding: var(--space-3) 0;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     cursor: pointer;
   }
 
@@ -5036,27 +5068,27 @@
   .choice-chip-compact {
     min-width: 44px;
     padding: var(--space-2) var(--space-3);
-    font-size: 0.82rem;
+    font-size: var(--font-size-sm);
   }
 }
 
 @layer utilities {
   /* Prises subies : distinguées des points marqués sur la carte du combat. */
   .combat-conceded-label {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     color: var(--danger);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   /* Prises faites : même lecture que les prises subies, en vert. */
   .combat-scored-label {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     color: var(--success);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .badge-scored {
@@ -5093,7 +5125,7 @@
   }
 
   .combat-official-score-summary {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--muted);
   }
 
@@ -5105,7 +5137,7 @@
     border: 0;
     background: transparent;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     text-decoration: underline;
   }
 
@@ -5119,18 +5151,18 @@
 
   .combat-official-score-side {
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .combat-official-score-side.side-judoka { color: var(--success); }
   .combat-official-score-side.side-opponent { color: var(--danger); }
 
   .combat-official-score-value-label {
-    font-size: 0.86rem;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
     color: var(--text);
   }
 
@@ -5153,8 +5185,8 @@
     border-radius: 0;
     background: transparent;
     color: var(--text);
-    font-size: 1.2rem;
-    line-height: 1;
+    font-size: var(--font-size-xl);
+    line-height: var(--line-height-none);
     box-shadow: none;
   }
 
@@ -5169,8 +5201,8 @@
 
   .score-stepper-value {
     text-align: center;
-    font-size: 1.05rem;
-    font-weight: 800;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-extrabold);
     font-variant-numeric: tabular-nums;
   }
 
@@ -5209,17 +5241,17 @@
     background: var(--panel);
     border: 1px solid var(--line);
     color: var(--muted);
-    font-size: 0.75rem;
-    font-weight: 800;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
     font-variant-numeric: tabular-nums;
   }
 
   .combat-point-badge {
     min-width: 0;
     overflow-wrap: anywhere;
-    line-height: 1.25;
-    font-size: 0.9rem;
-    font-weight: 800;
+    line-height: var(--line-height-snug);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .combat-point-badge.is-judoka {
@@ -5250,7 +5282,7 @@
   .combat-timeline-empty {
     margin: 0;
     color: var(--muted);
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
   }
 
   /* SAISIE-1 : proposition d'issue tirée du score, à confirmer d'un toucher. */
@@ -5263,8 +5295,8 @@
     border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--accent);
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
     box-shadow: none;
   }
 
@@ -5287,14 +5319,14 @@
   .combat-decision-choices .choice-button {
     padding-left: var(--space-0-5);
     padding-right: var(--space-0-5);
-    font-size: 0.86rem;
-    letter-spacing: -0.01em;
+    font-size: var(--font-size-md);
+    letter-spacing: var(--letter-spacing-tight);
     white-space: nowrap;
   }
 
   .score-stepper-value.is-unset {
     color: var(--muted);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   .combat-official-score-value-label.is-penalty {
@@ -5311,17 +5343,17 @@
 
   .combat-official-score-line-label {
     min-width: 4.5em;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .combat-official-score-line-value {
     font-variant-numeric: tabular-nums;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-wide);
   }
 }
 
@@ -5339,8 +5371,8 @@
 
   .agenda-uv-label {
     color: var(--muted);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
   }
 
   .agenda-card-uvs {
@@ -5350,8 +5382,8 @@
     border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--accent);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .agenda-month + .agenda-month {
@@ -5361,9 +5393,9 @@
   .agenda-month-title {
     margin: 0 0 var(--space-3);
     color: var(--muted);
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-caps);
     text-transform: uppercase;
   }
 
@@ -5393,20 +5425,20 @@
   }
 
   .agenda-date-tile span {
-    font-size: 11px;
-    font-weight: 800;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .agenda-date-tile strong {
-    font-size: 20px;
-    line-height: 1.1;
+    font-size: var(--font-size-xl);
+    line-height: var(--line-height-tight);
   }
 
   .agenda-card-range {
     margin: 0;
     color: var(--accent);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .agenda-card-closing-pill {
@@ -5414,13 +5446,13 @@
     margin: 0;
     padding: var(--space-0-5) var(--space-3);
     border-radius: var(--radius-pill);
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .agenda-card-closing-pill.agenda-card-closing {
     background: var(--pending-soft);
     color: var(--pending);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
   }
 
   .agenda-card-closing-pill.agenda-card-closed {
@@ -5436,8 +5468,8 @@
     border-radius: var(--radius);
     background: var(--accent);
     color: var(--on-accent);
-    font-size: 14px;
-    font-weight: 800;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .agenda-title-row {
@@ -5451,14 +5483,14 @@
 
   .agenda-title-row h2 {
     margin: 0;
-    font-size: 1.375rem;
-    font-weight: 800;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-extrabold);
   }
 
   .agenda-last-sync {
     margin: 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .agenda-filter-bar {
@@ -5477,8 +5509,8 @@
     border-radius: var(--radius-pill);
     background: var(--text);
     color: var(--on-accent);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
   }
 
   .agenda-filter-toggle {
@@ -5489,8 +5521,8 @@
     border-radius: var(--radius-pill);
     background: var(--panel);
     color: var(--text);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
   }
 
   .agenda-filter-panel {
@@ -5515,21 +5547,21 @@
   .agenda-card-date {
     margin: 0;
     color: var(--accent);
-    font-size: 14px;
-    font-weight: 800;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-extrabold);
     font-variant-numeric: tabular-nums;
   }
 
   .agenda-card-line {
     margin: 0;
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--font-size-md);
     overflow-wrap: anywhere;
   }
 
   .agenda-card-closing {
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   .agenda-card-closed {
@@ -5547,7 +5579,7 @@
     border: 1px dashed var(--line);
     border-radius: var(--radius);
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--font-size-md);
   }
 
   .agenda-unlabeled p {
@@ -5560,7 +5592,7 @@
     display: inline-flex;
     align-items: center;
     color: var(--accent);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     text-decoration: none;
   }
 

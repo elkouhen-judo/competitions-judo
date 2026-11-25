@@ -705,7 +705,7 @@ test("vercel runtime lets the connected user log out", () => {
   assert.match(uiBundle, /\.user-actions\s*\{[\s\S]*?display: flex;/);
   assert.match(
     css,
-    /\.user-pill\s*\{[\s\S]*?padding:\s*0 var\(--space-3\);[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;[\s\S]*?line-height:\s*1;[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/
+    /\.user-pill\s*\{[\s\S]*?padding:\s*0 var\(--space-3\);[\s\S]*?height:\s*38px;[\s\S]*?min-height:\s*38px;[\s\S]*?max-height:\s*38px;[\s\S]*?line-height:\s*var\(--line-height-none\);[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*center;/
   );
   // NAV-4 : nom et rôle ouvrent le menu du compte, qui porte la déconnexion.
   assert.match(uiBundle, /<details id="accountMenu" class="page-menu account-menu">/);

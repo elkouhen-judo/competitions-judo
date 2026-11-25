@@ -595,6 +595,33 @@ video {
   --shadow-action-bar: 0 -4px 12px rgba(14, 26, 43, 0.04);
   --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Typographie : échelle entière du design system (UI-TOK-004). */
+  --font-size-2xs: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 24px;
+  --font-size-4xl: 30px;
+  --font-size-brand: clamp(1rem, 4.5vw, 1.25rem);
+  --font-size-display: clamp(1.6rem, 6vw, 2.1rem);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --line-height-none: 1;
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.2;
+  --line-height-normal: 1.3;
+  --line-height-relaxed: 1.4;
+  --line-height-body: 1.55;
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-wide: 0.04em;
+  --letter-spacing-caps: 0.06em;
   --danger: #9f2f2d;
   --danger-hover: #7d2422;
   --danger-soft: #fdebec;
@@ -655,11 +682,10 @@ body {
   min-height: 100vh;
   background-color: var(--bg);
   font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.5rem;
   color: var(--text);
+  font-size: var(--font-size-base);
   margin: 0;
-  line-height: 1.55;
+  line-height: var(--line-height-body);
 }
 
 h1, h2, h3, p {
@@ -672,9 +698,9 @@ h1,
     h3,
     .hero-title {
   font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
 }
 
 input, select, textarea, button, .button {
@@ -704,9 +730,9 @@ input:focus, select:focus, textarea:focus {
 
 label {
   display: block;
-  font-size: 15px;
-  font-weight: 700;
   color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .app-shell {
@@ -771,8 +797,8 @@ label {
 .brand-logo-mark text {
   fill: var(--panel);
   font-family: var(--font-heading);
-  font-size: 25px;
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
 }
 
 .brand-copy {
@@ -781,29 +807,29 @@ label {
 
 .card-title {
   font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
 }
 
 h1 {
   margin-bottom: var(--space-1);
-  font-size: 26px;
+  font-size: var(--font-size-3xl);
 }
 
 h2 {
   margin-bottom: 0;
-  font-size: 23px;
+  font-size: var(--font-size-2xl);
 }
 
 h3 {
   margin-bottom: var(--space-1);
-  font-size: 21px;
+  font-size: var(--font-size-xl);
 }
 
 .subtitle {
   margin-bottom: 0;
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--font-size-md);
 }
 
 .user-pill {
@@ -815,8 +841,8 @@ h3 {
   min-height: 38px;
   max-height: 38px;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-none);
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -836,9 +862,9 @@ h3 {
   max-height: 38px;
   display: inline-flex;
   align-items: center;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
   white-space: nowrap;
 }
 
@@ -867,8 +893,8 @@ h3 {
 
 .confirm-dialog-message {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
 }
 
 .confirm-dialog-actions {
@@ -1032,7 +1058,7 @@ input[type="file"] {
   align-items: center;
   padding: var(--space-2);
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 input[type="file"]::file-selector-button {
@@ -1043,7 +1069,7 @@ input[type="file"]::file-selector-button {
   background: var(--panel);
   color: var(--text);
   font: inherit;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
   transition: background-color 160ms ease;
@@ -1055,7 +1081,7 @@ input[type="file"]::file-selector-button:hover {
 
 .field-hint {
   margin: var(--space-1) 0 0;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--muted);
 }
 
@@ -1070,7 +1096,7 @@ button, .button {
   color: var(--button-primary-text);
   padding: var(--space-3) var(--space-4);
   cursor: pointer;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   border-radius: var(--radius-sm);
   text-decoration: none;
   touch-action: manipulation;
@@ -1163,7 +1189,7 @@ button:focus-visible,
 .autocomplete-option {
   padding: var(--space-4);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   border-bottom: 1px solid var(--line);
   min-height: 48px;
   display: flex;
@@ -1182,7 +1208,7 @@ button:focus-visible,
 .autocomplete-empty {
   padding: var(--space-3) var(--space-4);
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--font-size-md);
 }
 
 .autocomplete-option-copy {
@@ -1192,7 +1218,7 @@ button:focus-visible,
 
 .autocomplete-option-meta {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .filter-bar {
@@ -1239,7 +1265,7 @@ button:focus-visible,
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--panel);
-  font-weight: normal;
+  font-weight: var(--font-weight-regular);
   transition: border-color 180ms ease, background-color 180ms ease;
 }
 
@@ -1273,7 +1299,7 @@ button:focus-visible,
   border-radius: var(--radius-sm);
   background: var(--panel);
   color: var(--text);
-  font-weight: normal;
+  font-weight: var(--font-weight-regular);
   text-align: left;
 }
 
@@ -1288,9 +1314,9 @@ button:focus-visible,
 .pick-row-add {
   flex-shrink: 0;
   color: var(--accent);
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-none);
 }
 
 .pick-select {
@@ -1351,9 +1377,9 @@ button:focus-visible,
 
 .card-title {
   margin-bottom: var(--space-1);
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 1.25;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
 }
 
 .card-meta {
@@ -1384,13 +1410,13 @@ button:focus-visible,
 
 .meta-label {
   color: var(--muted);
-  font-size: 14px;
-  font-weight: bold;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
 }
 
 .meta-value {
-  font-size: 16px;
+  font-size: var(--font-size-base);
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -1446,7 +1472,7 @@ button:focus-visible,
 
 .form-section-heading h3 {
   margin-bottom: 0;
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 .form-section-heading > div {
@@ -1462,7 +1488,7 @@ button:focus-visible,
 }
 
 .combat-quick-section .form-section-heading h3 {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
 }
 
 .form-grid > div,
@@ -1556,32 +1582,32 @@ button:focus-visible,
 
 .combat-stage {
   margin: 0 0 var(--space-1);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
   color: var(--accent);
 }
 
 .opponent-stance {
-  font-size: 13px;
-  font-weight: 400;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--muted);
 }
 
 .field-hint {
   margin: var(--space-2) 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.3;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
 .status-banner {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: var(--space-3) var(--space-3);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.35;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-relaxed);
 }
 
 .status-banner-warning {
@@ -1600,11 +1626,11 @@ button:focus-visible,
   background: var(--panel);
   color: var(--text);
   padding: var(--space-1) var(--space-3);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-none);
   text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 /* ── Combat results ── */
@@ -1616,7 +1642,7 @@ button:focus-visible,
   border-color: var(--success);
   color: var(--success);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-caps);
 }
 
 /* Défaite : pastel rouge — miroir de la victoire */
@@ -1626,7 +1652,7 @@ button:focus-visible,
   border-color: var(--danger);
   color: var(--danger);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-caps);
 }
 
 /* Égalité : pastel jaune — rare en judo */
@@ -1636,7 +1662,7 @@ button:focus-visible,
   border-color: var(--warning);
   color: var(--warning);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-caps);
 }
 
 /* Technique de victoire (ippon, waza-ari…) */
@@ -1746,8 +1772,8 @@ button:focus-visible,
   background: var(--accent-soft);
   color: var(--text);
   padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
-  font-size: 13px;
-  line-height: 1.3;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
 .competition-chip-remove {
@@ -1757,8 +1783,8 @@ button:focus-visible,
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 16px;
-  line-height: 1;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-none);
   padding: var(--space-1);
 }
 
@@ -1772,7 +1798,7 @@ button:focus-visible,
 .competition-suggestion {
   justify-content: flex-start;
   text-align: left;
-  font-weight: normal;
+  font-weight: var(--font-weight-regular);
   color: var(--text);
 }
 
@@ -1830,8 +1856,8 @@ button:focus-visible,
 .dashboard-summary-insight {
   margin: 0;
   color: var(--text);
-  font-weight: 700;
-  line-height: 1.35;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-relaxed);
 }
 
 .dashboard-filter-summary {
@@ -1860,9 +1886,9 @@ button:focus-visible,
   background: var(--surface);
   color: var(--text);
   padding: var(--space-1) var(--space-2);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
 }
 
 .section-heading h3 {
@@ -1934,8 +1960,8 @@ button:focus-visible,
   background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 0.8125rem;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
   letter-spacing: 0;
   cursor: pointer;
   border-radius: var(--radius-pill);
@@ -1994,8 +2020,8 @@ button:focus-visible,
 
 .dashboard-loading-label {
   color: var(--muted);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .dashboard-loading-grid {
@@ -2095,14 +2121,14 @@ button:focus-visible,
 
 .empty-action-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
   color: var(--text);
 }
 
 .empty-action-body {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--muted);
   max-width: 26rem;
 }
@@ -2130,8 +2156,8 @@ button:focus-visible,
   margin: 0;
   padding-left: var(--space-5);
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
 }
 
 .csv-checklist strong {
@@ -2151,7 +2177,7 @@ button:focus-visible,
 .list-summary-text {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .list-summary-actions {
@@ -2259,33 +2285,33 @@ button:focus-visible,
   }
 
   h1 {
-    font-size: 30px;
+    font-size: var(--font-size-4xl);
   }
 
   h2 {
-    font-size: 21px;
+    font-size: var(--font-size-xl);
   }
 
   h3 {
-    font-size: 18px;
+    font-size: var(--font-size-lg);
   }
 
   .subtitle,
       .user-pill,
       .meta-value {
-    font-size: 14px;
+    font-size: var(--font-size-md);
   }
 
   label {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
   }
 
   .card-title {
-    font-size: 16px;
+    font-size: var(--font-size-base);
   }
 
   .meta-label {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   .toolbar,
@@ -2441,7 +2467,7 @@ button:focus-visible,
       input,
       select,
       textarea {
-    font-size: 16px;
+    font-size: var(--font-size-base);
   }
 
   button {
@@ -2510,8 +2536,8 @@ button:focus-visible,
 
 .current-admin-note {
   color: var(--muted);
-  font-size: 14px;
-  font-weight: bold;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .tooltip,
@@ -2526,10 +2552,10 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   background: var(--soft);
   color: var(--muted);
-  font-size: 10px;
-  font-weight: bold;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
   font-style: italic;
-  line-height: 1;
+  line-height: var(--line-height-none);
   text-transform: none;
   letter-spacing: normal;
   vertical-align: middle;
@@ -2556,10 +2582,10 @@ button:focus-visible,
   border-radius: var(--radius);
   background: var(--text);
   color: var(--panel);
-  font-size: 12px;
-  font-weight: normal;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
   font-style: normal;
-  line-height: 1.35;
+  line-height: var(--line-height-relaxed);
   text-align: left;
   text-transform: none;
   letter-spacing: normal;
@@ -2614,9 +2640,9 @@ button:focus-visible,
   justify-content: center;
   background: var(--primary);
   color: var(--panel);
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 0.04em;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
   box-shadow: none;
 }
 
@@ -2627,9 +2653,9 @@ button:focus-visible,
 
 .hero-kicker {
   color: var(--hajime);
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 0.12em;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
@@ -2644,7 +2670,7 @@ button:focus-visible,
   padding-left: var(--space-3);
   padding-right: var(--space-3);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-caps);
 }
 
 /* ── Podium / classement (UI side — identiques aux classes core) ── */
@@ -2700,12 +2726,12 @@ button:focus-visible,
   padding: var(--space-3) var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-family: inherit;
   color: var(--text);
   background: var(--panel);
   resize: vertical;
-  line-height: 1.5;
+  line-height: var(--line-height-body);
 }
 
 .coach-assessment-textarea:focus {
@@ -2716,15 +2742,15 @@ button:focus-visible,
 .coach-assessment-text {
   margin: 0;
   color: var(--text);
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
   white-space: pre-wrap;
 }
 
 .coach-assessment-empty {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   font-style: italic;
 }
 
@@ -2732,8 +2758,8 @@ button:focus-visible,
 
 .coach-review-badge {
   display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   padding: var(--space-0-5) var(--space-2);
   border-radius: var(--radius);
   background: var(--accent-soft);
@@ -2754,8 +2780,8 @@ button:focus-visible,
 
 .agenda-uv-label {
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .agenda-card-uvs {
@@ -2765,8 +2791,8 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .agenda-month + .agenda-month {
@@ -2776,9 +2802,9 @@ button:focus-visible,
 .agenda-month-title {
   margin: 0 0 var(--space-3);
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
@@ -2809,20 +2835,20 @@ button:focus-visible,
 }
 
 .agenda-date-tile span {
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .agenda-date-tile strong {
-  font-size: 20px;
-  line-height: 1.1;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
 }
 
 .agenda-card-range {
   margin: 0;
   color: var(--accent);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .agenda-card-closing-pill {
@@ -2830,13 +2856,13 @@ button:focus-visible,
   margin: 0;
   padding: var(--space-0-5) var(--space-3);
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .agenda-card-closing-pill.agenda-card-closing {
   background: var(--pending-soft);
   color: var(--pending);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .agenda-card-closing-pill.agenda-card-closed {
@@ -2852,8 +2878,8 @@ button:focus-visible,
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .agenda-title-row {
@@ -2867,14 +2893,14 @@ button:focus-visible,
 
 .agenda-title-row h2 {
   margin: 0;
-  font-size: 1.375rem;
-  font-weight: 800;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .agenda-last-sync {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .agenda-filter-bar {
@@ -2893,8 +2919,8 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   background: var(--text);
   color: var(--on-accent);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .agenda-filter-toggle {
@@ -2905,8 +2931,8 @@ button:focus-visible,
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .agenda-filter-panel {
@@ -2931,21 +2957,21 @@ button:focus-visible,
 .agenda-card-date {
   margin: 0;
   color: var(--accent);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
   font-variant-numeric: tabular-nums;
 }
 
 .agenda-card-line {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   overflow-wrap: anywhere;
 }
 
 .agenda-card-closing {
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .agenda-card-closed {
@@ -2963,7 +2989,7 @@ button:focus-visible,
   border: 1px dashed var(--line);
   border-radius: var(--radius);
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .agenda-unlabeled p {
@@ -2976,7 +3002,7 @@ button:focus-visible,
   display: inline-flex;
   align-items: center;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-decoration: none;
 }
 
@@ -3091,7 +3117,7 @@ body {
 
 h1, h2, h3, h4, .hero-title, .card-title {
   font-family: var(--font-heading);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .app-shell {
@@ -3136,13 +3162,13 @@ h1, h2, h3, h4, .hero-title, .card-title {
 
 .brand-copy h1 {
   margin-bottom: 0;
-  font-size: clamp(1rem, 4.5vw, 1.25rem);
-  font-weight: 800;
+  font-size: var(--font-size-brand);
+  font-weight: var(--font-weight-extrabold);
   white-space: nowrap;
 }
 
 .brand-copy .subtitle {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .user-actions {
@@ -3162,9 +3188,9 @@ h1, h2, h3, h4, .hero-title, .card-title {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.3;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
   text-align: right;
   white-space: normal;
 }
@@ -3176,12 +3202,12 @@ h1, h2, h3, h4, .hero-title, .card-title {
 
 .user-pill strong {
   color: var(--text);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .user-pill-role {
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .user-actions .offline-status {
@@ -3222,9 +3248,9 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .panel-header > div:first-child > h2 {
-  font-size: clamp(1.6rem, 6vw, 2.1rem);
-  font-weight: 800;
-  line-height: 1.12;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-tight);
 }
 
 .panel-body {
@@ -3255,8 +3281,8 @@ h1, h2, h3, h4, .hero-title, .card-title {
   background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .mode-tabs .mode-tab:hover:not(:disabled) {
@@ -3269,7 +3295,7 @@ h1, h2, h3, h4, .hero-title, .card-title {
   border-bottom-color: var(--accent);
   background: transparent;
   color: var(--accent);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
 }
 
 /* Sections et titres, sans filet décoratif */
@@ -3287,8 +3313,8 @@ h1, h2, h3, h4, .hero-title, .card-title {
 .section-heading h3 {
   padding-left: 0;
   border-left: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .form-section {
@@ -3297,13 +3323,13 @@ h1, h2, h3, h4, .hero-title, .card-title {
 }
 
 .form-section-heading h3 {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .subtitle {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
 }
 
 label:not(.checkbox-row),
@@ -3315,8 +3341,8 @@ label:not(.checkbox-row),
   padding-left: 0;
   border-left: 0;
   color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
   text-transform: none;
 }
@@ -3327,9 +3353,9 @@ label:not(.checkbox-row),
   padding-left: 0;
   border-left: 0;
   color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
 }
 
 .field-hint {
@@ -3365,7 +3391,7 @@ input:focus,
 button,
   .button {
   border-radius: var(--radius);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .button-secondary,
@@ -3501,8 +3527,8 @@ button,
 }
 
 .card-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
 }
 
 .coach-review-badge,
@@ -3553,7 +3579,7 @@ button,
   border-radius: 0;
   background: var(--panel);
   color: var(--text);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: left;
 }
 
@@ -3565,7 +3591,7 @@ button,
 }
 
 .autocomplete-option-copy strong {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 /* Jour J coach : compétitions de la semaine en tête de l'accueil */
@@ -3636,7 +3662,7 @@ button,
   border-color: var(--accent);
   background: var(--accent);
   color: var(--panel);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .result-défaite,
@@ -3644,7 +3670,7 @@ button,
   border: 1.5px solid var(--muted);
   background: var(--panel);
   color: var(--text);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .result-egalité,
@@ -3653,7 +3679,7 @@ button,
   border-color: var(--accent-soft);
   background: var(--accent-soft);
   color: var(--accent);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .badge-technique,
@@ -3664,7 +3690,7 @@ button,
 }
 
 .classement-badge {
-  letter-spacing: 0.02em;
+  letter-spacing: var(--letter-spacing-wide);
   text-transform: none;
 }
 
@@ -3730,12 +3756,12 @@ button,
   }
 
   .brand-copy h1 {
-    font-size: 21px;
+    font-size: var(--font-size-xl);
   }
 
   .user-pill {
     max-width: 260px;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
   }
 
   .panel {
@@ -3863,7 +3889,7 @@ button,
   border: 0;
   background: transparent;
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: left;
 }
 
@@ -3901,8 +3927,8 @@ button,
   .choice-label {
   margin: 0;
   color: var(--text);
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .required-mark {
@@ -3940,13 +3966,13 @@ button,
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--text);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   box-shadow: none;
 }
 
 .choice-button {
   padding: var(--space-2) var(--space-2);
-  font-size: 0.92rem;
+  font-size: var(--font-size-md);
 }
 
 .choice-chip {
@@ -4020,8 +4046,8 @@ button,
 .field-error {
   margin: 0;
   color: var(--danger);
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 input[aria-invalid="true"],
@@ -4040,8 +4066,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--warning-soft);
   color: var(--text);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   box-shadow: none;
 }
 
@@ -4110,8 +4136,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text);
-  font-size: 0.86rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
@@ -4144,13 +4170,13 @@ input[aria-invalid="true"],
 
 .mini-stat-value {
   color: var(--text);
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .mini-stat-label {
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
 }
 
 /* COMBAT-4 : carte de combat cliquable, compacte. */
@@ -4218,7 +4244,7 @@ input[aria-invalid="true"],
 
 .autosave-status {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
 }
 
 .competition-ranking-section .choice-chips {
@@ -4271,7 +4297,7 @@ input[aria-invalid="true"],
   display: inline;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .account-menu > summary.user-pill .user-pill-role {
@@ -4280,8 +4306,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0;
 }
 
@@ -4329,7 +4355,7 @@ input[aria-invalid="true"],
   min-height: 56px;
   padding: 0 var(--space-0-5);
   border-bottom: 0;
-  font-size: 0.69rem;
+  font-size: var(--font-size-2xs);
   text-align: center;
 }
 
@@ -4373,7 +4399,7 @@ input[aria-invalid="true"],
     min-height: 44px;
     padding: var(--space-2) var(--space-1);
     border-bottom: 2px solid transparent;
-    font-size: 0.9rem;
+    font-size: var(--font-size-md);
   }
 
   .coach-sub-tabs .mode-tab-active,
@@ -4440,8 +4466,8 @@ input[aria-invalid="true"],
 
 .dashboard-title {
   margin: 0;
-  font-size: 1.375rem;
-  font-weight: 800;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .dashboard-filter-pill {
@@ -4458,8 +4484,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   text-align: left;
 }
 
@@ -4515,8 +4541,8 @@ input[aria-invalid="true"],
   align-items: center;
   min-width: 2.8em;
   padding: 0 var(--space-3);
-  font-size: 0.8125rem;
-  font-weight: 800;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
   white-space: nowrap;
 }
 
@@ -4538,8 +4564,8 @@ input[aria-invalid="true"],
 }
 
 .dashboard-h3-count {
-  font-size: 0.8125rem;
-  font-weight: 400;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--muted);
 }
 
@@ -4559,7 +4585,7 @@ input[aria-invalid="true"],
 .bar-list-inline .bar-row-value {
   grid-column: 3;
   grid-row: 1;
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
 }
 
 .bar-list-inline .bar-track {
@@ -4593,8 +4619,8 @@ input[aria-invalid="true"],
   margin-left: var(--space-2);
   padding: var(--space-0-5) var(--space-2);
   border-radius: var(--radius-pill);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
   vertical-align: 2px;
 }
 
@@ -4649,9 +4675,9 @@ input[aria-invalid="true"],
 .competition-side-heading {
   margin: var(--space-2) var(--space-1) var(--space-0-5);
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
@@ -4676,13 +4702,13 @@ input[aria-invalid="true"],
 }
 
 .competition-side-item strong {
-  font-size: 15px;
+  font-size: var(--font-size-md);
 }
 
 .competition-side-item span {
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .competition-side-item.is-current,
@@ -4731,13 +4757,13 @@ input[aria-invalid="true"],
   .admin-user-email {
   overflow: hidden;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .admin-user-email {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .admin-user-flag {
@@ -4746,8 +4772,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--pending-soft);
   color: var(--pending-strong);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 .admin-user-club-choice {
@@ -4797,16 +4823,16 @@ input[aria-invalid="true"],
 
 .home-todo-kicker {
   color: var(--pending);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
 .home-todo-question {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .home-todo-done {
@@ -4815,8 +4841,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius);
   background: var(--win-soft);
   color: var(--win);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
 }
 
 .child-pill-avatar {
@@ -4830,8 +4856,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .choice-active .child-pill-avatar {
@@ -4854,8 +4880,8 @@ input[aria-invalid="true"],
   width: 32px;
   height: 32px;
   border-radius: var(--radius-pill);
-  font-size: 14px;
-  font-weight: 800;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .combat-header > .combat-heading {
@@ -4877,8 +4903,8 @@ input[aria-invalid="true"],
   min-height: 36px;
   padding: var(--space-1) var(--space-8) var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  font-size: 0.86rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* ACCUEIL-2 : pastilles des enfants. */
@@ -4893,8 +4919,8 @@ input[aria-invalid="true"],
 }
 
 .chip-meta {
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   opacity: 0.8;
 }
 
@@ -4928,9 +4954,9 @@ input[aria-invalid="true"],
   .list-group-title {
   margin: 0 0 var(--space-2);
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
 }
 
@@ -4945,7 +4971,7 @@ input[aria-invalid="true"],
   border: 1px solid var(--line);
   background: var(--panel);
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-align: left;
   box-shadow: none;
 }
@@ -4968,8 +4994,8 @@ input[aria-invalid="true"],
 
 .agenda-item-meta {
   color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 /* LISTE-1 / LISTE-2 : cartes compactes groupées. */
@@ -5013,15 +5039,15 @@ input[aria-invalid="true"],
 
 .competition-card-date {
   color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .competition-card-facts {
   justify-content: flex-start;
   color: var(--text);
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .competition-card-now {
@@ -5040,7 +5066,7 @@ input[aria-invalid="true"],
   .pill.pill-todo {
   min-height: 26px;
   padding: var(--space-0-5) var(--space-3);
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
 }
 
 @media (min-width: 721px) {
@@ -5065,7 +5091,7 @@ input[aria-invalid="true"],
 .dashboard-summary-insight {
   margin: var(--space-3) 0 0;
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .bar-list {
@@ -5080,8 +5106,8 @@ input[aria-invalid="true"],
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .bar-row-value {
@@ -5112,7 +5138,7 @@ input[aria-invalid="true"],
 .dashboard-effectif {
   margin: var(--space-3) 0 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
 }
 
 /* Sous-partie d'un bloc (« Fin des combats », « Techniques qui gagnent »). */
@@ -5120,9 +5146,9 @@ input[aria-invalid="true"],
 .dashboard-subtitle {
   margin: var(--space-4) 0 var(--space-2);
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
 }
 
@@ -5176,7 +5202,7 @@ input[aria-invalid="true"],
   background: none;
   box-shadow: none;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -5190,8 +5216,8 @@ input[aria-invalid="true"],
 
 .choice-optional {
   color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .combat-decision-hint {
@@ -5213,8 +5239,8 @@ input[aria-invalid="true"],
 }
 
 .combat-score-mode-sub {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   opacity: 0.8;
 }
 
@@ -5241,14 +5267,14 @@ input[aria-invalid="true"],
 
 .combat-score-total-side {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
   text-transform: uppercase;
 }
 
 .combat-score-total-value {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .combat-point-add {
@@ -5278,7 +5304,7 @@ input[aria-invalid="true"],
   display: block;
   margin-top: var(--space-0-5);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
 }
 
@@ -5287,7 +5313,7 @@ input[aria-invalid="true"],
 .bar-row-detail {
   margin: var(--space-0-5) 0 0;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
 }
 
 /* INSCR-2 : judoka non réinscrit pour la saison. */
@@ -5299,8 +5325,8 @@ input[aria-invalid="true"],
   border-radius: var(--radius);
   background: var(--warning-soft);
   color: var(--warning);
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
 }
 
 .result-badge.badge-unregistered {
@@ -5374,7 +5400,7 @@ html,
 
 .season-switch-label {
   margin: 0;
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   text-align: center;
 }
 
@@ -5394,7 +5420,7 @@ html,
 }
 
 .technique-list li > span:first-child {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .technique-list li > .bar-row-value {
@@ -5441,7 +5467,7 @@ html,
   min-height: 44px;
   padding: var(--space-3) 0;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
 
@@ -5476,27 +5502,27 @@ html,
 .choice-chip-compact {
   min-width: 44px;
   padding: var(--space-2) var(--space-3);
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
 }
 
 /* Prises subies : distinguées des points marqués sur la carte du combat. */
 
 .combat-conceded-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   color: var(--danger);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 /* Prises faites : même lecture que les prises subies, en vert. */
 
 .combat-scored-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   color: var(--success);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .badge-scored {
@@ -5531,7 +5557,7 @@ html {
 }
 
 .combat-official-score-summary {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--muted);
 }
 
@@ -5543,7 +5569,7 @@ html {
   border: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   text-decoration: underline;
 }
 
@@ -5557,10 +5583,10 @@ html {
 
 .combat-official-score-side {
   text-align: center;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .combat-official-score-side.side-judoka {
@@ -5572,8 +5598,8 @@ html {
 }
 
 .combat-official-score-value-label {
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   color: var(--text);
 }
 
@@ -5596,8 +5622,8 @@ html {
   border-radius: 0;
   background: transparent;
   color: var(--text);
-  font-size: 1.2rem;
-  line-height: 1;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-none);
   box-shadow: none;
 }
 
@@ -5612,8 +5638,8 @@ html {
 
 .score-stepper-value {
   text-align: center;
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -5654,17 +5680,17 @@ html {
   background: var(--panel);
   border: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
   font-variant-numeric: tabular-nums;
 }
 
 .combat-point-badge {
   min-width: 0;
   overflow-wrap: anywhere;
-  line-height: 1.25;
-  font-size: 0.9rem;
-  font-weight: 800;
+  line-height: var(--line-height-snug);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
 }
 
 .combat-point-badge.is-judoka {
@@ -5695,7 +5721,7 @@ html {
 .combat-timeline-empty {
   margin: 0;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
 }
 
 /* SAISIE-1 : proposition d'issue tirée du score, à confirmer d'un toucher. */
@@ -5709,8 +5735,8 @@ html {
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   box-shadow: none;
 }
 
@@ -5735,14 +5761,14 @@ html {
 .combat-decision-choices .choice-button {
   padding-left: var(--space-0-5);
   padding-right: var(--space-0-5);
-  font-size: 0.86rem;
-  letter-spacing: -0.01em;
+  font-size: var(--font-size-md);
+  letter-spacing: var(--letter-spacing-tight);
   white-space: nowrap;
 }
 
 .score-stepper-value.is-unset {
   color: var(--muted);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .combat-official-score-value-label.is-penalty {
@@ -5760,17 +5786,17 @@ html {
 
 .combat-official-score-line-label {
   min-width: 4.5em;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .combat-official-score-line-value {
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 /* SHELL-3 : la police est servie par l'appli (woff2 variable), sans feuille tierce bloquante. */
