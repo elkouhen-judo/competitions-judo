@@ -6852,3 +6852,169 @@
     padding: 0;
   }
 }
+
+/* ── V4 lot 2 : formulaires en cartes (UIX-047) ── */
+@layer utilities {
+  /* Chaque bloc de formulaire est une carte, comme la saisie d'un combat. */
+  #clubCompetitionFormView .form-card,
+  #clubCompetitionDetailView .form-card,
+  #competitionFormView .form-section {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--panel);
+  }
+
+  #clubCompetitionFormView .form-card:first-of-type {
+    margin-top: 0;
+  }
+
+  #clubCompetitionFormView .form-card .section-title,
+  #clubCompetitionDetailView .form-card .section-title {
+    margin-bottom: var(--space-2);
+  }
+
+  #competitionFormView .form-section-heading h3 {
+    font-size: var(--font-size-lg);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  /* Date et catégorie côte à côte, dès 375 px. */
+  #clubCompetitionFormView .form-grid,
+  #clubCompetitionDetailView .form-card .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-3);
+  }
+
+  #clubCompetitionFormView .form-grid > .full-row,
+  #clubCompetitionDetailView .form-card .form-grid > .full-row,
+  #clubCompetitionDetailView .form-card .form-grid > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Champs hérités d'une compétition club : grisés. */
+  #competitionFormView input:disabled,
+  #competitionFormView select:disabled {
+    background: var(--soft);
+    color: var(--muted);
+  }
+
+  .status-banner-info {
+    border-color: transparent;
+    border-radius: var(--radius-card);
+    background: var(--accent-soft);
+    color: var(--text);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  /* « Tout ajouter » en lien, à droite du titre. */
+  #clubCompetitionSelectAll,
+  #clubDetailSelectAll {
+    flex: none;
+    white-space: nowrap;
+    width: auto;
+    min-height: var(--touch-min);
+    padding: 0 var(--space-1);
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--accent);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+  }
+
+  #clubCompetitionSelectAll:hover:not(:disabled),
+  #clubDetailSelectAll:hover:not(:disabled) {
+    background: none;
+    color: var(--primary);
+  }
+
+  #clubCompetitionFormView .form-card .section-heading,
+  #clubCompetitionDetailView .form-card .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  #clubCompetitionFormView .list-search,
+  #clubCompetitionDetailView .form-card .list-search {
+    padding: 0;
+  }
+
+  /* Judokas à ajouter : initiales, nom + ceinture, poids, « + ». */
+  .pick-row.pick-row-judoka {
+    justify-content: flex-start;
+    gap: var(--space-2);
+    min-height: 56px;
+    padding: var(--space-2) 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+    font-weight: var(--font-weight-bold);
+  }
+
+  .list > .pick-row.pick-row-judoka:last-child {
+    border-bottom: 0;
+  }
+
+  .pick-row.pick-row-judoka::before {
+    content: attr(data-initials);
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-right: var(--space-1);
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
+  }
+
+  .pick-row.pick-row-judoka .belt-swatch {
+    margin-left: 0;
+  }
+
+  .pick-row-meta {
+    color: var(--muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .pick-row.pick-row-judoka .pick-row-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-left: auto;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-size: var(--font-size-lg);
+  }
+
+  .pick-row.pick-row-judoka:hover:not(:disabled),
+  .pick-row.pick-row-judoka:focus-visible {
+    border-color: var(--line);
+    background: var(--hover-tint);
+  }
+
+  #clubCompetitionFormView .list,
+  #clubCompetitionDetailView .form-card .list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+@layer utilities {
+  #clubCompetitionFormView .form-card .field-hint,
+  #clubCompetitionDetailView .form-card .field-hint {
+    margin-top: var(--space-3);
+  }
+}

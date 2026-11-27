@@ -89,10 +89,10 @@
         </div>
 
         <template v-if="clubCompetitionDetailEditing">
-        <div class="section">
+        <div class="section form-card">
           <div class="section-heading">
             <div>
-              <h3>Informations</h3>
+              <h3 class="section-title">Informations</h3>
             </div>
           </div>
           <div class="form-grid">
@@ -143,11 +143,11 @@
           </div>
         </div>
 
-        <div class="section">
+        <div class="section form-card">
           <div class="section-heading">
             <div>
-              <h3>Ajouter des judokas
-                <span v-if="clubCompetitionNewJudokaIds.length" class="result-badge">{{ clubCompetitionNewJudokaIds.length }} à ajouter</span>
+              <h3 class="section-title">Ajouter des judokas
+                <span v-if="clubCompetitionNewJudokaIds.length" class="section-count-muted">{{ clubCompetitionNewJudokaIds.length }} à ajouter</span>
               </h3>
               <p class="subtitle">Ajoutez les judokas manquants de la même catégorie.</p>
             </div>
@@ -169,8 +169,10 @@
             <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun autre judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>
             <!-- UIX-043 : seuls les judokas pas encore choisis sont listés. -->
             <div v-else class="list">
-              <button v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" type="button" class="pick-row" :aria-label="'Ajouter ' + j.name" @click="addClubAvailableJudoka(j.judokaId)">
+              <button v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" type="button" class="pick-row pick-row-judoka" :data-initials="j.initials" :aria-label="'Ajouter ' + j.name" @click="addClubAvailableJudoka(j.judokaId)">
                 <span>{{ j.name }}</span>
+                <span v-if="j.beltBackground" class="belt-swatch" :style="{ background: j.beltBackground }" aria-hidden="true"></span>
+                <span v-if="j.weight" class="pick-row-meta">{{ j.weight }}</span>
                 <span class="pick-row-add" aria-hidden="true">+</span>
               </button>
             </div>

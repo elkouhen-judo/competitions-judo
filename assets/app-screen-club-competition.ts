@@ -15,6 +15,10 @@
     /** CLUB-001 : toutes les structures du judoka. */
     clubIds: string[];
     registrationSeason?: number | null;
+    /** V4 lot 2 : initiales, ceinture et poids sur la ligne à ajouter (UIX-044). */
+    initials: string;
+    beltBackground: string;
+    weight: string;
   }
 
   type CombatRecord = { total: number; wins: number; losses: number; draws: number };
@@ -143,7 +147,10 @@
         name: getJudokaDisplayName(j) || "Judoka",
         ageCategory: String(j.ageCategory || ""),
         clubIds: getJudokaClubIds(j),
-        registrationSeason: j.registrationSeason
+        registrationSeason: j.registrationSeason,
+        initials: ui.getJudokaInitials(j),
+        beltBackground: ui.getBeltBackground(j.beltColor),
+        weight: ui.formatWeight(j.weightCategory)
       };
     }
 

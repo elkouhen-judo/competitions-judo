@@ -14,8 +14,11 @@
           Vous n'êtes rattaché à aucun club. Demandez à un admin de vous ajouter à votre club pour créer une compétition club.
         </div>
         <template v-else>
+        <!-- V4 lot 2 : la compétition, puis les judokas inscrits, chacun dans sa carte. -->
+        <div class="form-card">
+        <h3 class="section-title">La compétition</h3>
         <div class="form-grid">
-          <div v-if="showClubCompetitionClubSelect">
+          <div v-if="showClubCompetitionClubSelect" class="full-row">
             <label for="club_competition_club">Club <span class="required-mark" aria-hidden="true">*</span></label>
             <select id="club_competition_club" v-model="clubCompetitionForm.clubId" :aria-invalid="clubCompetitionFormErrors.clubId ? 'true' : 'false'" @change="updateClubCompetitionClub()">
               <option value="">Sélectionnez un club</option>
@@ -23,7 +26,7 @@
             </select>
             <p v-if="clubCompetitionFormErrors.clubId" class="field-error" role="alert">{{ clubCompetitionFormErrors.clubId }}</p>
           </div>
-          <div>
+          <div class="full-row">
             <label for="club_competition_name">Nom <span class="required-mark" aria-hidden="true">*</span></label>
             <input id="club_competition_name" type="text" v-model.trim="clubCompetitionForm.name" aria-required="true" :aria-invalid="clubCompetitionFormErrors.name ? 'true' : 'false'" @input="clubCompetitionFormErrors.name = ''">
             <p v-if="clubCompetitionFormErrors.name" class="field-error" role="alert">{{ clubCompetitionFormErrors.name }}</p>
@@ -74,12 +77,13 @@
             <p v-if="clubCompetitionFormErrors.level" class="field-error" role="alert">{{ clubCompetitionFormErrors.level }}</p>
           </div>
         </div>
+        </div>
 
-        <div class="section">
+        <div class="section form-card">
           <div class="section-heading">
             <div>
-              <h3>Judokas inscrits <span class="required-mark" aria-hidden="true">*</span>
-                <span v-if="clubCompetitionForm.participantJudokaIds.length" class="result-badge">{{ clubCompetitionForm.participantJudokaIds.length }}</span>
+              <h3 class="section-title">Judokas inscrits <span class="required-mark" aria-hidden="true">*</span>
+                <span v-if="clubCompetitionForm.participantJudokaIds.length" class="section-count-muted">{{ clubCompetitionForm.participantJudokaIds.length }}</span>
               </h3>
             </div>
             <!-- CREA-4 : toute la liste affichée (club, catégorie, recherche) en un toucher. -->
@@ -104,8 +108,10 @@
             <div v-else-if="!clubCompetitionFormParticipantsFiltered.length" class="empty-state">{{ judokaSearchText ? "Aucun autre judoka ne correspond à cette recherche." : "Tous les judokas de cette catégorie sont inscrits." }}</div>
             <!-- UIX-043 : seuls les judokas à ajouter sont listés ; les inscrits sont dans les pastilles. -->
             <div v-else class="list">
-              <button v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" type="button" class="pick-row" :aria-label="'Ajouter ' + participant.name" @click="addClubCompetitionParticipant(participant.judokaId)">
+              <button v-for="participant in clubCompetitionFormParticipantsPage" :key="participant.judokaId" type="button" class="pick-row pick-row-judoka" :data-initials="participant.initials" :aria-label="'Ajouter ' + participant.name" @click="addClubCompetitionParticipant(participant.judokaId)">
                 <span>{{ participant.name }}</span>
+                <span v-if="participant.beltBackground" class="belt-swatch" :style="{ background: participant.beltBackground }" aria-hidden="true"></span>
+                <span v-if="participant.weight" class="pick-row-meta">{{ participant.weight }}</span>
                 <span class="pick-row-add" aria-hidden="true">+</span>
               </button>
             </div>
