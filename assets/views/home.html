@@ -80,16 +80,19 @@
 
         <!-- UIX-016e : sans judoka choisi, la liste des judokas du club ; la recherche la filtre. -->
         <div v-if="showJudokaRoster && isHomeReady" id="homeJudokaRoster" class="section">
-          <h3>{{ filterOptions.length }} judoka{{ filterOptions.length > 1 ? "s" : "" }}</h3>
+          <h3 class="section-title">Judokas <span class="section-count-muted">{{ filterOptions.length }}</span></h3>
           <p v-if="!filterOptions.length" class="empty-state">Aucun judoka ne correspond à cette recherche.</p>
-          <div v-else class="list">
+          <!-- V4 lot 1 : un judoka par ligne, initiales, ceinture, catégorie et poids. -->
+          <div v-else class="row-list">
             <article v-for="option in filterOptions.slice((judokaRosterPage - 1) * judokaRosterPageSize, judokaRosterPage * judokaRosterPageSize)" :key="option.judokaId" class="card competition-card">
               <button class="card-button competition-open-button" type="button" @click="selectFilterJudoka(option)">
-                <span class="competition-card-row">
-                  <span class="card-title">{{ option.name }}</span>
-                  <span v-if="option.isUnregistered" class="result-badge badge-unregistered">Non réinscrit</span>
+                <span class="avatar row-avatar" aria-hidden="true">{{ option.initials }}</span>
+                <span class="row-copy">
+                  <span class="card-title row-title">{{ option.name }}<span v-if="option.beltBackground" class="belt-swatch" :style="{ background: option.beltBackground }" aria-hidden="true"></span></span>
+                  <span v-if="option.details" class="competition-card-date row-meta">{{ option.details }}</span>
                 </span>
-                <span v-if="option.details" class="competition-card-date">{{ option.details }}</span>
+                <span v-if="option.isUnregistered" class="row-tag row-tag-pending badge-unregistered">Non réinscrit</span>
+                <svg class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
               </button>
             </article>
           </div>
@@ -231,20 +234,22 @@
               <p class="empty-action-body">{{ clubCompetitionsEmptyMessage }}</p>
             </div>
             <template v-else>
+              <!-- V4 lot 1 : « À venir » puis « Passées », une compétition par ligne. -->
               <div v-for="group in clubCompetitionGroups" :key="group.key" class="list-group">
-                <h3 class="list-group-title">{{ group.title }}</h3>
-                <div class="list">
+                <h3 class="section-title list-group-title">{{ group.title }} <span class="section-count-muted">{{ group.items.length }}</span></h3>
+                <div class="row-list">
                   <article v-for="cc in group.items" :key="cc.clubCompetitionId" class="card competition-card">
                     <button class="card-button competition-open-button" type="button" @click="openClubCompetition(cc.clubCompetitionId)">
-                      <span class="competition-card-row">
-                        <span class="card-title">{{ cc.name }}</span>
-                        <span v-if="cc.whenLabel" class="pill" :class="cc.isToday ? 'pill-now' : 'pill-accent'">{{ cc.whenLabel }}</span>
+                      <span v-if="cc.isUpcoming" class="medal-dot medal-dot-upcoming" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>
+                      <span v-else-if="cc.missingRankingCount" class="medal-dot medal-dot-pending" aria-hidden="true">?</span>
+                      <span v-else class="medal-dot" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20.5h7"/></svg></span>
+                      <span class="row-copy">
+                        <span class="card-title row-title">{{ cc.name }}</span>
+                        <span class="competition-card-date row-meta">{{ cc.dateLabel }}<template v-if="cc.clubName"> · <span class="club-name">{{ cc.clubName }}</span></template> · {{ cc.summary }}</span>
                       </span>
-                      <span class="competition-card-date">{{ cc.dateLabel }}<template v-if="cc.clubName"> · <span class="club-name">{{ cc.clubName }}</span></template></span>
-                      <span class="competition-card-row competition-card-facts">
-                        <span>{{ cc.summary }}</span>
-                        <span v-if="cc.missingRankingCount" class="pill pill-todo">{{ cc.missingRankingLabel }}</span>
-                      </span>
+                      <span v-if="cc.countdown" class="row-tag" :title="cc.whenLabel">{{ cc.countdown }}</span>
+                      <span v-else-if="cc.missingRankingCount" class="row-tag row-tag-pending">{{ cc.missingRankingLabel }}</span>
+                      <svg class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                     </button>
                   </article>
                 </div>

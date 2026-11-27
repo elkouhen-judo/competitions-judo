@@ -4577,21 +4577,7 @@
     font-weight: var(--font-weight-medium);
   }
 
-  .competition-card-facts {
-    justify-content: flex-start;
-    color: var(--text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-  }
-
-  .pill-now {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-
   .pill.pill-accent,
-  .pill.pill-now,
   .pill.pill-todo {
     min-height: 26px;
     padding: var(--space-0-5) var(--space-3);
@@ -6789,5 +6775,80 @@
   /* Les bulles « i » masquées ne doivent pas élargir l'écran à 375 px (elles se recalent à l'ouverture). */
   #coachDashboardView {
     overflow-x: clip;
+  }
+}
+
+/* ── V4 lot 1 : onglets coach « Judokas » et « Compétitions » en lignes (UIX-046) ── */
+@layer utilities {
+  #homeJudokaRoster .row-list > .competition-card,
+  #clubCompetitionsList .row-list > .competition-card {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  #homeJudokaRoster .row-list > .competition-card:last-child,
+  #clubCompetitionsList .row-list > .competition-card:last-child {
+    border-bottom: 0;
+  }
+
+  #homeJudokaRoster .competition-open-button,
+  #clubCompetitionsList .competition-open-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 60px;
+    padding: var(--space-2) 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--text);
+    text-align: left;
+  }
+
+  #homeJudokaRoster .competition-open-button:hover:not(:disabled),
+  #clubCompetitionsList .competition-open-button:hover:not(:disabled) {
+    background: none;
+    color: var(--accent);
+  }
+
+  #homeJudokaRoster .row-title,
+  #homeJudokaRoster .row-meta,
+  #clubCompetitionsList .row-title,
+  #clubCompetitionsList .row-meta {
+    margin: 0;
+  }
+
+  .row-avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-extrabold);
+  }
+
+  #clubCompetitionsList .list-group + .list-group {
+    margin-top: var(--space-5);
+  }
+
+  #clubCompetitionsList .list-group-title {
+    margin: 0 0 var(--space-2);
+  }
+
+  /* La recherche s'aligne sur les panneaux, comme sur l'onglet Judokas. */
+  #homeClubCompetitionsSection .list-search {
+    padding: 0;
   }
 }

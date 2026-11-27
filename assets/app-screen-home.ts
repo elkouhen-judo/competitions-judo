@@ -13,6 +13,9 @@
     /** UIX-016e : catégorie, poids et club, sans la mention « Non réinscrit ». */
     details: string;
     isUnregistered: boolean;
+    /** V4 lot 1 : initiales et ceinture sur la ligne du judoka (UIX-044). */
+    initials: string;
+    beltBackground: string;
     ageCategory: string;
     searchText: string;
   }
@@ -22,10 +25,10 @@
     name: string;
     dateLabel: string;
     whenLabel: string;
-    isToday: boolean;
     isUpcoming: boolean;
     summary: string;
     clubName: string;
+    countdown: string;
     missingRankingCount: number;
     missingRankingLabel: string;
   }
@@ -775,12 +778,12 @@
           name: formatCompetitionName(cc.name) || "Compétition",
           dateLabel: ui.formatDateLong(cc.competitionDate),
           whenLabel: getWhenLabel(cc.competitionDate, today),
-          isToday: cc.competitionDate === today,
           isUpcoming,
           summary,
           clubName: getListClubName(cc.clubId),
+          countdown: isUpcoming ? ui.formatCountdown(cc.competitionDate) : "",
           missingRankingCount: stats.missingRankingCount,
-          missingRankingLabel: `${ui.pluralize(stats.missingRankingCount, "classement")} à saisir`
+          missingRankingLabel: `${stats.missingRankingCount} à classer`
         };
       });
       return {
@@ -1020,6 +1023,8 @@
         meta: [details, isUnregistered ? "Non réinscrit" : ""].filter(Boolean).join(" · "),
         details,
         isUnregistered,
+        initials: ui.getJudokaInitials(judoka),
+        beltBackground: ui.getBeltBackground(judoka.beltColor),
         ageCategory: cleanText(judoka.ageCategory),
         searchText: `${getJudokaDisplayName(judoka)} ${judoka.ageCategory || ""}`.toLowerCase()
       };
