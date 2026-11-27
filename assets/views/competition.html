@@ -29,7 +29,9 @@
         </details>
       </div>
       <div class="panel-body competition-body" :class="{ 'competition-day-first': isCompetitionDayMode }">
+        <!-- V3 A : la ceinture du judoka, puis catégorie et niveau en une ligne (UIX-044). -->
         <div class="competition-summary-pills" aria-label="Informations de la compétition">
+          <span v-if="competitionOwnerBelt" class="belt-swatch" :style="{ background: competitionOwnerBelt }" aria-hidden="true"></span>
           <span v-if="competitionTiming.isUpcoming" id="competitionCountdown" class="pill pill-accent">{{ competitionTiming.relative }}</span>
           <span v-if="ageWeightLabel" id="competitionAgePoids" class="pill">{{ ageWeightLabel }}</span>
           <span v-if="competitionLevel" id="competitionNiveau" class="pill">{{ competitionLevel }}</span>
@@ -51,6 +53,7 @@
               type="button"
               role="radio"
               :aria-checked="competitionResult === option.value ? 'true' : 'false'"
+              :aria-label="option.value"
               :class="['choice-chip', option.medalClass, { 'choice-active': competitionResult === option.value }]"
               :disabled="isSubmitting"
               @click="saveCompetitionRanking(option.value)">
@@ -59,19 +62,17 @@
           </div>
         </div>
 
-        <!-- FICHE-6 : trois tuiles, combats, victoires, défaites. -->
-        <div v-if="hasCombats" class="competition-sport-summary competition-sport-summary-three" aria-label="Synthèse sportive">
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ competitionSportSummary.total }}</span>
-            <span class="mini-stat-label">{{ competitionSportSummary.totalLabel }}</span>
+        <!-- FICHE-6 : trois chiffres, combats, victoires, défaites, et la barre du bilan. -->
+        <div v-if="hasCombats" class="season-summary competition-sport-summary" aria-label="Synthèse sportive">
+          <div class="season-stats">
+            <span class="season-stat"><strong>{{ competitionSportSummary.total }}</strong><span>{{ competitionSportSummary.totalLabel }}</span></span>
+            <span class="season-stat"><strong class="mini-stat-value-win">{{ competitionSportSummary.wins }}</strong><span>{{ competitionSportSummary.winsLabel }}</span></span>
+            <span class="season-stat"><strong>{{ competitionSportSummary.losses }}</strong><span>{{ competitionSportSummary.lossesLabel }}</span></span>
           </div>
-          <div class="mini-stat">
-            <span class="mini-stat-value mini-stat-value-win">{{ competitionSportSummary.wins }}</span>
-            <span class="mini-stat-label">{{ competitionSportSummary.winsLabel }}</span>
-          </div>
-          <div class="mini-stat">
-            <span class="mini-stat-value">{{ competitionSportSummary.losses }}</span>
-            <span class="mini-stat-label">{{ competitionSportSummary.lossesLabel }}</span>
+          <div class="record-bar" aria-hidden="true">
+            <span v-if="competitionSportSummary.wins" class="record-bar-win" :style="{ flexGrow: competitionSportSummary.wins }"></span>
+            <span v-if="competitionSportSummary.draws" class="record-bar-draw" :style="{ flexGrow: competitionSportSummary.draws }"></span>
+            <span v-if="competitionSportSummary.losses" class="record-bar-loss" :style="{ flexGrow: competitionSportSummary.losses }"></span>
           </div>
         </div>
 
@@ -81,11 +82,7 @@
         </div>
 
         <div v-if="!competitionTiming.isUpcoming" class="section competition-combats-section">
-          <div class="section-heading">
-            <div>
-              <h3>Combats</h3>
-            </div>
-          </div>
+          <h3 class="section-title">Combats <span v-if="hasCombats" class="section-count-muted">{{ combats.length }}</span></h3>
           <div id="combatsList">
             <div v-if="isLoadingCombats" class="list" aria-label="Chargement des combats" aria-busy="true">
               <div class="sk-card">
@@ -106,7 +103,7 @@
               <p class="empty-action-title">Aucun combat</p>
               <p class="empty-action-body">{{ canManageCombat ? "Ajoutez le premier combat dès qu'il est terminé." : combatsEmptyMessage }}</p>
             </div>
-            <div v-else class="list">
+            <div v-else class="row-list combat-list">
               <article
                 v-for="combat in combats"
                 :key="combat.combatId"
@@ -117,45 +114,40 @@
                 :aria-label="combat.canEdit ? 'Modifier le combat contre ' + combat.opponent : null"
                 @click="combat.canEdit && showCombatForm(combat.combatId)"
                 @keydown.enter="combat.canEdit && showCombatForm(combat.combatId)">
-                <div class="combat-header">
-                  <!-- FICHE-7 : la lettre du résultat, lisible sans la couleur. -->
-                  <span :class="['combat-letter', combat.resultClass]" aria-hidden="true">{{ combat.resultLetter }}</span>
-                  <div class="combat-heading">
-                    <span v-if="combat.stage" class="combat-stage">{{ combat.stageLabel }}</span>
-                    <p class="card-title">{{ combat.opponent }}<span v-if="combat.opponentStance" class="opponent-stance"> · {{ combat.opponentStance }}</span></p>
-                  </div>
-                  <div class="combat-badges">
-                    <span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span>
-                    <span v-if="combat.victoryType" class="result-badge badge-technique">{{ combat.victoryType }}</span>
+                <!-- FICHE-7 : la lettre du résultat, lisible sans la couleur. -->
+                <span :class="['combat-letter', combat.resultClass]" aria-hidden="true">{{ combat.resultLetter }}</span>
+                <span class="sr-only"><span class="result-badge" :class="combat.resultClass">{{ combat.result }}</span></span>
+                <div class="combat-heading">
+                  <p class="card-title">{{ combat.opponent }}<span v-if="combat.opponentStance" class="opponent-stance"> · {{ combat.opponentStance }}</span></p>
+                  <span v-if="combat.stage" class="combat-stage">{{ combat.stageLabel }}</span>
+                  <p v-if="combat.officialScoreLabel" class="combat-official-score-line" :aria-label="'Score : ' + combat.officialScoreLabel">
+                    <span class="combat-official-score-line-label">Score</span>
+                    <span class="combat-official-score-line-value">{{ combat.officialScoreLabel }}</span>
+                  </p>
+                  <p v-if="combat.scoreLabels.length" class="combat-scores-line combat-scored-line" aria-label="Points marqués par le judoka">
+                    <span class="combat-scored-label">Marqué</span>
+                    <span v-for="(scoreLabel, scoreIndex) in combat.scoreLabels" :key="scoreIndex" class="result-badge badge-scored">{{ scoreLabel }}</span>
+                  </p>
+                  <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Points marqués par l'adversaire">
+                    <span class="combat-conceded-label">Subi</span>
+                    <span v-for="(scoreLabel, scoreIndex) in combat.concededScoreLabels" :key="scoreIndex" class="result-badge badge-conceded">{{ scoreLabel }}</span>
+                  </p>
+                  <p v-if="combat.notes" class="combat-comment">{{ combat.notes }}</p>
+                  <div v-if="combat.pendingSync" class="combat-pending">
+                    <span class="pill pill-todo">{{ combat.pendingError ? "Envoi en échec" : "En attente d'envoi" }}</span>
+                    <button v-if="combat.pendingOperationId" class="button-secondary compact-button" type="button" @click.stop="cancelPendingOperation(combat.pendingOperationId)">Annuler l'envoi</button>
                   </div>
                 </div>
-                <p v-if="combat.officialScoreLabel" class="combat-official-score-line" :aria-label="'Score : ' + combat.officialScoreLabel">
-                  <span class="combat-official-score-line-label">Score</span>
-                  <span class="combat-official-score-line-value">{{ combat.officialScoreLabel }}</span>
-                </p>
-                <p v-if="combat.scoreLabels.length" class="combat-scores-line combat-scored-line" aria-label="Points marqués par le judoka">
-                  <span class="combat-scored-label">Marqué</span>
-                  <span v-for="(scoreLabel, scoreIndex) in combat.scoreLabels" :key="scoreIndex" class="result-badge badge-scored">{{ scoreLabel }}</span>
-                </p>
-                <p v-if="combat.concededScoreLabels && combat.concededScoreLabels.length" class="combat-scores-line combat-conceded-line" aria-label="Points marqués par l'adversaire">
-                  <span class="combat-conceded-label">Subi</span>
-                  <span v-for="(scoreLabel, scoreIndex) in combat.concededScoreLabels" :key="scoreIndex" class="result-badge badge-conceded">{{ scoreLabel }}</span>
-                </p>
-                <p v-if="combat.notes" class="combat-comment">{{ combat.notes }}</p>
-                <div v-if="combat.pendingSync" class="combat-pending">
-                  <span class="pill pill-todo">{{ combat.pendingError ? "Envoi en échec" : "En attente d'envoi" }}</span>
-                  <button v-if="combat.pendingOperationId" class="button-secondary compact-button" type="button" @click.stop="cancelPendingOperation(combat.pendingOperationId)">Annuler l'envoi</button>
+                <div class="combat-badges">
+                  <span v-if="combat.victoryType" class="result-badge badge-technique" :class="combat.resultClass">{{ combat.victoryType }}</span>
                 </div>
+                <svg v-if="combat.canEdit" class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
               </article>
             </div>
           </div>
         </div>
         <div v-if="showCoachAssessment && !competitionTiming.isUpcoming" class="section coach-assessment-section">
-          <div class="section-heading">
-            <div>
-              <h3>Bilan coach</h3>
-            </div>
-          </div>
+          <h3 class="section-title">Bilan coach</h3>
           <div class="coach-assessment-block">
             <div class="coach-assessment-label-row">
               <span v-if="coachReviewStatus" class="autosave-status" role="status">{{ coachReviewStatus }}</span>

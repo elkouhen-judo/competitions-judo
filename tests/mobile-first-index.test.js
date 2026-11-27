@@ -455,11 +455,11 @@ test("coach dashboard exposes its core filters and readable metrics without a ch
   );
   assert.doesNotMatch(
     bundle,
-    /<h3>(Podiums|Activité|Ippon|Debout ou au sol|Selon les gardes|Tenue du score|Discipline)\b/
+    /<h3[^>]*>(Podiums|Activité|Ippon|Debout ou au sol|Selon les gardes|Tenue du score|Discipline)\b/
   );
   assert.match(
     bundle,
-    /<h3>Par niveau[\s\S]*<h3>Comment on gagne[\s\S]*<h3>Comment on perd[\s\S]*<h3>Évolution/
+    /<h3[^>]*>Par niveau[\s\S]*<h3[^>]*>Comment on gagne[\s\S]*<h3[^>]*>Comment on perd[\s\S]*<h3[^>]*>Évolution/
   );
   assert.match(bundle, /id="coachDashboardEngagement"/);
   assert.match(bundle, /Points marqués : \{\{ coachDashboardScoredGroundText \}\}/);

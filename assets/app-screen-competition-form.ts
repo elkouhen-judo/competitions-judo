@@ -121,17 +121,23 @@
       if (state.isLoadingCompetition) return "Chargement...";
       return formatCompetitionName(competitionDetailProjection.value?.competitionTitle) || "Compétition";
     });
+    const competitionOwner = window.Vue.computed(() => {
+      const ownerId = String(state.currentCompetition?.ownerJudokaId || "");
+      if (!ownerId) return null;
+      return (
+        state.judokas.find((judoka) => String(judoka.judokaId) === ownerId) ||
+        (String(state.currentUser?.judokaId || "") === ownerId ? state.currentUser : null)
+      );
+    });
     // Le sous-titre nomme le judoka concerné (coach et parent consultent plusieurs participations).
     const competitionSubtitle = window.Vue.computed(() => {
       const competition = state.currentCompetition;
       if (!competition || state.isLoadingCompetition) return "";
-      const ownerId = String(competition.ownerJudokaId || "");
-      const owner =
-        state.judokas.find((judoka) => String(judoka.judokaId) === ownerId) ||
-        (String(state.currentUser?.judokaId || "") === ownerId ? state.currentUser : null);
-      const ownerName = owner ? getJudokaDisplayName(owner) : "";
+      const ownerName = competitionOwner.value ? getJudokaDisplayName(competitionOwner.value) : "";
       return [ownerName, ui.formatDateLong(competition.competitionDate)].filter(Boolean).join(" · ");
     });
+    // UIX-044 : la ceinture du judoka en barrette, devant la catégorie.
+    const competitionOwnerBelt = window.Vue.computed(() => ui.getBeltBackground(competitionOwner.value?.beltColor));
     const competitionDate = window.Vue.computed(() => competitionDetailProjection.value?.competitionDate ?? "");
     const ageWeightLabel = window.Vue.computed(() => competitionDetailProjection.value?.ageWeightLabel ?? "");
     const competitionResult = window.Vue.computed(() => {
@@ -160,7 +166,8 @@
     const rankingOptions = window.Vue.computed(() =>
       ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
         value,
-        label: ui.formatCompetitionRanking(value),
+        // V3 A : « NC » tient sur la ligne des places, comme sur la compétition club.
+        label: value === "Non classé" ? "NC" : ui.formatCompetitionRanking(value),
         medalClass: ui.getClassementBadgeClass(value).replace("rank-finalist", "")
       }))
     );
@@ -193,8 +200,9 @@
       const total = state.currentCombats.length;
       const wins = state.currentCombats.filter((combat) => combat.result === "Victoire").length;
       const losses = state.currentCombats.filter((combat) => combat.result === "Défaite").length;
-      // FICHE-6 : trois tuiles, accordées au nombre.
+      // FICHE-6 : trois chiffres accordés au nombre ; les égalités complètent la barre.
       return {
+        draws: total - wins - losses,
         total,
         totalLabel: total > 1 ? "combats" : "combat",
         wins,
@@ -235,6 +243,7 @@
         {
           competitionTitle,
           competitionSubtitle,
+          competitionOwnerBelt,
           competitionDate,
           ageWeightLabel,
           competitionLevel,

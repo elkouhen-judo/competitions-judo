@@ -25,11 +25,13 @@
     judokaName: string;
     rawResult: string;
     record?: CombatRecord;
+    beltColor?: string;
   }
 
   interface ClubCompetitionParticipantCard {
     competitionId: string;
     judokaName: string;
+    beltBackground: string;
     rawResult: string;
     result: string;
     resultClass: string;
@@ -270,6 +272,7 @@
         return {
           competitionId: participant.competitionId,
           judokaName: participant.judokaName,
+          beltBackground: ui.getBeltBackground(participant.beltColor),
           rawResult,
           result: formatCompetitionRanking(rawResult) || "",
           resultClass: getClassementBadgeClass(rawResult),
@@ -278,6 +281,31 @@
           hasResult: Boolean(rawResult)
         };
       });
+    });
+    // V3 A : l'avancement du classement et le bilan du club sur la compétition.
+    const clubCompetitionProgress = window.Vue.computed(() => {
+      const participants = clubCompetitionCurrentParticipants.value;
+      const total = participants.length;
+      const ranked = participants.filter((p) => p.hasResult).length;
+      const podiums = participants.filter((p) => ["1er", "2e", "3e"].includes(p.rawResult)).length;
+      let wins = 0;
+      let losses = 0;
+      for (const participant of participants) {
+        const record = state.combatRecords[participant.competitionId];
+        wins += record ? Number(record.wins || 0) : 0;
+        losses += record ? Number(record.losses || 0) : 0;
+      }
+      const facts = [
+        podiums ? `${podiums} podium${podiums > 1 ? "s" : ""}` : "",
+        wins + losses ? `${wins} V · ${losses} D` : ""
+      ];
+      return {
+        title: `${ranked} classé${ranked > 1 ? "s" : ""} sur ${total}`,
+        remainingLabel: total - ranked ? `${total - ranked} à classer` : "Tous classés",
+        ranked,
+        pending: total - ranked,
+        facts: facts.filter(Boolean).join(" · ")
+      };
     });
 
     function openClubParticipantCompetition(competitionId: string) {
@@ -376,6 +404,7 @@
         {
           isSubmitting,
           canShowClubCompetitionStats,
+          clubCompetitionProgress,
           clubRankingOptions,
           clubCompetitionCurrentParticipants,
           clubCompetitionNewJudokas,
@@ -416,7 +445,11 @@
 
     // CLUB-1 : le classement de chaque participant se choisit sur sa ligne.
     const clubRankingOptions = window.Vue.computed(() =>
-      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({ value, label: value === "Non classé" ? "NC" : value }))
+      ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
+        value,
+        label: value === "Non classé" ? "NC" : value,
+        medalClass: getClassementBadgeClass(value).replace("rank-finalist", "")
+      }))
     );
 
     function setClubParticipantRanking(competitionId: string, result: string) {
@@ -744,15 +777,17 @@
                 judokaName: judoka ? getJudokaDisplayName(judoka) : String(p.ownerJudokaId),
                 rawResult: cleanText(p.result),
                 record: combatRecords[String(p.competitionId || "")],
+                beltColor: judoka ? String(judoka.beltColor || "") : "",
                 order: getRankingOrder(p.result)
               };
             })
             .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
-            .map(({ competitionId, judokaName, rawResult, record }) => ({
+            .map(({ competitionId, judokaName, rawResult, record, beltColor }) => ({
               competitionId,
               judokaName,
               rawResult,
-              record
+              record,
+              beltColor
             }));
           const serverParticipations = new Map(data.participations.map((p) => [String(p.competitionId), p]));
           state.competitions = state.competitions.map((competition) => {

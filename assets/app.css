@@ -1579,13 +1579,6 @@ button:focus-visible,
   margin: 0;
 }
 
-.combat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
 .combat-header .card-title {
   margin-bottom: 0;
   min-width: 0;
@@ -5529,10 +5522,6 @@ input[aria-invalid="true"],
 
 /* FICHE-6 : trois tuiles. */
 
-.competition-sport-summary-three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
 /* FICHE-7 : la lettre du résultat en pastille ronde, avant le tour et l'adversaire. */
 
 .combat-letter {
@@ -6408,6 +6397,489 @@ html {
   letter-spacing: var(--letter-spacing-wide);
 }
 
+.section-count-muted {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+}
+
+.record-bar-draw {
+  background: var(--draw);
+}
+
+.record-bar-pending {
+  background: var(--pending-line);
+}
+
+/* Compétition d'un judoka : ceinture, catégorie et niveau en une ligne. */
+
+#competitionView .competition-summary-pills {
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+#competitionView .competition-summary-pills .belt-swatch {
+  margin-left: 0;
+}
+
+#competitionView .competition-summary-pills .pill {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+
+#competitionView .competition-summary-pills .pill:not(.pill-accent):has(+ .pill)::after {
+  content: "·";
+  margin-left: var(--space-2);
+}
+
+#competitionView .competition-summary-pills .pill-accent {
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+#competitionView #competitionClassement {
+  color: var(--text);
+  font-weight: var(--font-weight-bold);
+}
+
+#competitionView .competition-ranking-section.ranking-pending {
+  border-style: dashed;
+}
+
+#competitionView .competition-sport-summary {
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: var(--space-4);
+}
+
+/* Classement d'un toucher : bord de médaille, médaille pleine une fois choisie (MEDAL-1). */
+
+.competition-ranking-section .choice-chip,
+  .participant-ranking .choice-chip {
+  min-width: var(--touch-min);
+  padding: 0 var(--space-3);
+}
+
+.competition-ranking-section .choice-chip::before,
+  .participant-ranking .choice-chip::before {
+  display: none;
+}
+
+.competition-ranking-section .choice-chip.rank-1,
+  .participant-ranking .choice-chip.rank-1 {
+  border-color: var(--medal-gold);
+}
+
+.competition-ranking-section .choice-chip.rank-2,
+  .participant-ranking .choice-chip.rank-2 {
+  border-color: var(--silver-line);
+}
+
+.competition-ranking-section .choice-chip.rank-3,
+  .participant-ranking .choice-chip.rank-3 {
+  border-color: var(--medal-bronze);
+}
+
+.competition-ranking-section .choice-chip.choice-active,
+  .competition-ranking-section .choice-chip.choice-active:hover:not(:disabled),
+  .competition-ranking-section .choice-chip.choice-active:focus,
+  .participant-ranking .choice-chip.choice-active,
+  .participant-ranking .choice-chip.choice-active:hover:not(:disabled),
+  .participant-ranking .choice-chip.choice-active:focus {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--button-primary-text);
+}
+
+.competition-ranking-section .choice-chip.rank-1.choice-active,
+  .competition-ranking-section .choice-chip.rank-1.choice-active:hover:not(:disabled),
+  .participant-ranking .choice-chip.rank-1.choice-active,
+  .participant-ranking .choice-chip.rank-1.choice-active:hover:not(:disabled) {
+  border: 2px solid var(--medal-gold);
+  background: var(--gold-soft);
+  color: var(--gold-text);
+}
+
+.competition-ranking-section .choice-chip.rank-2.choice-active,
+  .competition-ranking-section .choice-chip.rank-2.choice-active:hover:not(:disabled),
+  .participant-ranking .choice-chip.rank-2.choice-active,
+  .participant-ranking .choice-chip.rank-2.choice-active:hover:not(:disabled) {
+  border: 2px solid var(--silver-line);
+  background: var(--silver-soft);
+  color: var(--silver-text);
+}
+
+.competition-ranking-section .choice-chip.rank-3.choice-active,
+  .competition-ranking-section .choice-chip.rank-3.choice-active:hover:not(:disabled),
+  .participant-ranking .choice-chip.rank-3.choice-active,
+  .participant-ranking .choice-chip.rank-3.choice-active:hover:not(:disabled) {
+  border: 2px solid var(--medal-bronze);
+  background: var(--bronze-soft);
+  color: var(--bronze);
+}
+
+/* Combats en lignes : pastille V/D, adversaire, tour et points, fin du combat à droite. */
+
+#competitionView .combat-list .combat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+#competitionView .combat-list .combat-card:last-child {
+  border-bottom: 0;
+}
+
+#competitionView .combat-list .card-clickable:hover,
+  #competitionView .combat-list .card-clickable:focus-visible {
+  border-color: var(--line);
+  background: var(--hover-tint);
+}
+
+#competitionView .combat-list .combat-letter {
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  letter-spacing: 0;
+}
+
+#competitionView .combat-letter.result-victoire {
+  background: var(--win);
+  color: var(--on-accent);
+}
+
+#competitionView .combat-letter.result-défaite {
+  border-color: var(--loss);
+  background: var(--soft);
+  color: var(--text);
+}
+
+#competitionView .combat-letter.result-egalité {
+  background: var(--pending-soft);
+  color: var(--pending);
+}
+
+#competitionView .combat-list .combat-heading {
+  flex: 1;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+#competitionView .combat-list .card-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+#competitionView .combat-list .opponent-stance {
+  color: var(--muted);
+  font-weight: var(--font-weight-medium);
+}
+
+#competitionView .combat-list .combat-stage {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#competitionView .combat-list .combat-scores-line,
+  #competitionView .combat-list .combat-official-score-line {
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+#competitionView .combat-list .combat-scored-label,
+  #competitionView .combat-list .combat-conceded-label,
+  #competitionView .combat-list .combat-official-score-line-label {
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#competitionView .combat-list .combat-scores-line .result-badge {
+  padding: var(--space-0-5) var(--space-2);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0;
+}
+
+#competitionView .combat-list .combat-badges {
+  flex: none;
+  align-self: center;
+}
+
+#competitionView .combat-list .badge-technique {
+  padding: var(--space-0-5) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: var(--text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+}
+
+#competitionView .combat-list .badge-technique.result-victoire {
+  background: var(--win-soft);
+  color: var(--win);
+}
+
+#competitionView .combat-list .row-chevron {
+  align-self: center;
+}
+
+#competitionView .coach-assessment-block {
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+/* Compétition club : avancement du classement, statistiques en ligne, participants en lignes. */
+
+.club-progress {
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.club-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+.club-progress-head strong {
+  color: var(--text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.club-progress-facts {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+#clubCompetitionDetailView .club-competition-stats-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 64px;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  box-shadow: none;
+  color: var(--text);
+  text-align: left;
+}
+
+#clubCompetitionDetailView .club-competition-stats-button:hover:not(:disabled) {
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--text);
+}
+
+.club-stats-icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+#clubDetailParticipantsList .participant-list {
+  gap: 0;
+  padding: 0 var(--space-4);
+}
+
+#clubDetailParticipantsList .participant-card {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+#clubDetailParticipantsList .participant-card:last-child {
+  border-bottom: 0;
+}
+
+#clubDetailParticipantsList .competition-open-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text);
+  text-align: left;
+}
+
+#clubDetailParticipantsList .competition-open-button:hover:not(:disabled) {
+  background: none;
+  color: var(--accent);
+}
+
+#clubDetailParticipantsList .row-title {
+  margin: 0;
+}
+
+#clubDetailParticipantsList .row-meta {
+  margin: 0;
+}
+
+#clubDetailParticipantsList .participant-ranking,
+  #clubDetailParticipantsList .card-actions {
+  padding: 0;
+}
+
+/* Saisie d'un combat : titres de carte à 18 px, résultat en trois gros boutons. */
+
+#combatFormView .form-section-heading h3 {
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+#combat_resultat .choice-button {
+  min-height: var(--control-height);
+  border-radius: var(--radius);
+  font-size: var(--font-size-base);
+}
+
+#combatFormView .combat-outcome-proposal {
+  border: 0;
+  font-size: var(--font-size-sm);
+}
+
+/* Statistiques : chaque bloc est une carte, titres à 18 px, gagner en vert, perdre en gris. */
+
+#coachDashboardView .dashboard-card {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+#coachDashboardView .dashboard-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  color: var(--text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: none;
+}
+
+#coachDashboardView .dashboard-kpis .mini-stat {
+  padding: 0;
+  background: none;
+}
+
+#coachDashboardView .dashboard-kpis .mini-stat-value {
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-tight);
+}
+
+#coachDashboardView .dashboard-subtitle {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: var(--font-size-md);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#coachDashboardWinning .bar-list .bar-fill {
+  background: var(--win);
+}
+
+#coachDashboardLosing .bar-list .bar-fill {
+  background: var(--loss);
+}
+
+/* V3 A : points marqués et subis en texte, sur la ligne du combat. */
+
+#competitionView .combat-list .combat-scores-line .result-badge {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+#competitionView .combat-list .combat-scored-label::after,
+  #competitionView .combat-list .combat-conceded-label::after,
+  #competitionView .combat-list .combat-official-score-line-label::after {
+  content: " :";
+}
+
+#competitionView .combat-list .combat-scores-line,
+  #competitionView .combat-list .combat-official-score-line {
+  display: block;
+  color: var(--muted);
+}
+
+#competitionView .combat-list .combat-scores-line .result-badge + .result-badge::before {
+  content: ", ";
+}
+
+#competitionView .competition-ranking-section .choice-chips {
+  gap: var(--space-1);
+}
+
+#competitionView .competition-ranking-section .choice-chip {
+  padding: 0 var(--space-2);
+}
+
+#competitionView .combat-list .combat-scored-label,
+  #competitionView .combat-list .combat-conceded-label,
+  #competitionView .combat-list .combat-official-score-line-label {
+  margin-right: var(--space-1);
+}
+
+/* Les bulles « i » masquées ne doivent pas élargir l'écran à 375 px (elles se recalent à l'ouverture). */
+
+#coachDashboardView {
+  overflow-x: clip;
+}
+
 /* SHELL-3 : la police est servie par l'appli (woff2 variable), sans feuille tierce bloquante. */
 
 @font-face {
@@ -6458,3 +6930,5 @@ html {
 /* AGD : agenda FFJDA (lecture seule). */
 
 /* ── V2 A : accueils et fiche judoka (UIX-012, UIX-015, UIX-021) ── */
+
+/* ── V3 A : compétition d'un judoka, saisie d'un combat, compétition club, statistiques ── */

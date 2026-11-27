@@ -213,8 +213,13 @@
 
         <!-- SAISIE-9 : l'adversaire, sa garde et les notes, tous facultatifs. -->
         <div class="form-section combat-more-section">
+          <div class="form-section-heading">
+            <div>
+              <h3>Adversaire et notes <span class="choice-optional">facultatif</span></h3>
+            </div>
+          </div>
           <div class="choice-field">
-            <label for="combat_adversaire">Adversaire <span class="choice-optional">facultatif</span></label>
+            <label for="combat_adversaire">Nom</label>
             <input type="text" id="combat_adversaire" v-model.trim="combatForm.opponent" placeholder="Nom ou club adverse" autocomplete="off" list="combat_adversaire_suggestions" @input="applyKnownOpponentStance($event.target.value)">
             <datalist id="combat_adversaire_suggestions">
               <option v-for="opponent in combatOpponentSuggestions" :key="opponent" :value="opponent"></option>
