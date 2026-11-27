@@ -555,8 +555,8 @@ test("judoka profile exposes season statistics through a dedicated screen", () =
   assert.match(uiBundle, /function openHomeJudokaProfile\(\)/);
   assert.match(uiBundle, /Choisissez d'abord un judoka\./);
   assert.doesNotMatch(uiBundle, /votre périmètre/);
-  assert.match(uiBundle, /Fin des combats gagnés/);
-  assert.match(uiBundle, /Fin des combats perdus/);
+  assert.match(uiBundle, /Comment finissent ses combats/);
+  assert.match(uiBundle, /endings-head">Perdus/);
   assert.match(uiBundle, /Compétitions de la saison/);
   assert.match(uiBundle, /id="judokaSeasonCombatCount"/);
   assert.match(uiBundle, /id="judokaSeasonBalance"/);

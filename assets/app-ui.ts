@@ -242,6 +242,36 @@
     return "";
   }
 
+  // UI-TOK-006 : couleur de ceinture en fond CSS (tokens --belt-*), deux moitiés pour une ceinture bicolore.
+  const BELT_TOKENS: Record<string, string> = {
+    blanc: "--belt-white",
+    jaune: "--belt-yellow",
+    orange: "--belt-orange",
+    vert: "--belt-green",
+    bleu: "--belt-blue",
+    marron: "--belt-brown",
+    noir: "--belt-black"
+  };
+
+  function getBeltBackground(value: unknown) {
+    const parts = String(value || "")
+      .toLowerCase()
+      .split(/[\s-]+/)
+      .map((part) => BELT_TOKENS[part])
+      .filter(Boolean)
+      .slice(0, 2);
+    if (!parts.length) return "";
+    if (parts.length === 1) return `var(${parts[0]})`;
+    return `linear-gradient(90deg, var(${parts[0]}) 50%, var(${parts[1]}) 50%)`;
+  }
+
+  // Échéance courte : « J-4 », « J-J » le jour même ; "" pour une date passée.
+  function formatCountdown(value: unknown) {
+    const days = getDaysFromToday(value);
+    if (days === null || days < 0) return "";
+    return days === 0 ? "J-J" : `J-${days}`;
+  }
+
   function getJudokaInitials(judoka: Partial<Judoka> | null | undefined) {
     const firstName = normalizeDisplayName(judoka && judoka.firstName);
     const lastName = normalizeLastName(judoka && judoka.lastName);
@@ -350,6 +380,8 @@
     formatCompetitionRanking,
     formatResultat,
     getClassementBadgeClass,
+    getBeltBackground,
+    formatCountdown,
     getCompactJudokaLabel,
     getCurrentLocalDate,
     getSeasonStartYear,

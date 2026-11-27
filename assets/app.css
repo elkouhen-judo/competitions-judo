@@ -670,6 +670,15 @@ video {
   --medal-gold: #c99a12;
   --medal-silver: #8a94a3;
   --medal-bronze: #a8622b;
+  /* Couleurs de ceinture (UI-TOK-006) : barrette plate et anneau d'avatar, jamais seules. */
+  --belt-white: #f7f5ef;
+  --belt-yellow: #e9b824;
+  --belt-orange: #e2761b;
+  --belt-green: #2f8a4c;
+  --belt-blue: #2b5fd9;
+  --belt-brown: #7a4a26;
+  --belt-black: #1a1a1a;
+  --belt-edge: #c9d1dd;
 }
 
 html {
@@ -2648,25 +2657,6 @@ button:focus-visible,
   box-shadow: none;
 }
 
-.hero-copy {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.hero-kicker {
-  color: var(--hajime);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
-}
-
-.hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
 .classement-badge {
   min-width: 0;
   padding-left: var(--space-3);
@@ -2757,18 +2747,6 @@ button:focus-visible,
 }
 
 /* Badge "Bilan coach" dans la liste des compétitions */
-
-.coach-review-badge {
-  display: inline-block;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  padding: var(--space-0-5) var(--space-2);
-  border-radius: var(--radius);
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  margin-bottom: var(--space-1);
-}
 
 .agenda-filters {
   margin-bottom: var(--space-4);
@@ -3045,6 +3023,724 @@ button:focus-visible,
   .agenda-filters {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+.belt-swatch {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 5px;
+  margin-left: var(--space-2);
+  box-shadow: inset 0 0 0 1px var(--belt-edge);
+  vertical-align: middle;
+}
+
+.section .section-title,
+  .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  color: var(--text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: none;
+}
+
+.section-title-link {
+  color: var(--accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  background: none;
+  border: 0;
+  flex: none;
+  width: auto;
+  min-height: var(--touch-min);
+  padding: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.section-count {
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--pending-soft);
+  color: var(--pending);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+}
+
+.home-greeting {
+  display: grid;
+  gap: var(--space-0-5);
+  margin-bottom: var(--space-4);
+}
+
+.home-greeting p {
+  margin: 0;
+}
+
+.home-greeting-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-snug);
+}
+
+.home-greeting-meta {
+  color: var(--muted);
+  font-size: var(--font-size-md);
+}
+
+/* Carte héros bleu nuit : la prochaine compétition. */
+
+.next-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  gap: var(--space-4);
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--primary);
+  color: var(--button-primary-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.next-hero:hover:not(:disabled),
+  .next-hero:focus-visible {
+  background: var(--primary-hover);
+}
+
+.next-hero-head,
+  .next-hero-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.next-hero-foot {
+  align-items: center;
+}
+
+.next-hero-copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.next-hero-kicker {
+  color: var(--surface-veil);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.next-hero-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-snug);
+}
+
+.next-hero-meta {
+  color: var(--surface-veil);
+  font-size: var(--font-size-md);
+}
+
+.countdown-tile {
+  display: grid;
+  justify-items: center;
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.countdown-tile strong {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+}
+
+.countdown-tile span {
+  color: var(--muted);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.countdown-tile-soft {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.next-hero-people,
+  .next-hero-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.avatar-stack {
+  display: flex;
+}
+
+.avatar-stack .avatar,
+  .avatar-stack-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.avatar-stack > * + * {
+  margin-left: calc(-1 * var(--space-2));
+}
+
+.avatar-stack-more {
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* « À faire » : une ligne par compétition à classer. */
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+}
+
+.todo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--pending-soft);
+  color: var(--pending);
+}
+
+.todo-copy {
+  display: grid;
+  flex: 1;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.todo-meta {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.row-chevron {
+  flex: none;
+  color: var(--muted);
+}
+
+/* Lignes dans un panneau : podiums, compétitions passées, résultats de la fiche. */
+
+.row-list {
+  display: grid;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.podium-row,
+  .result-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-list > :last-child {
+  border-bottom: 0;
+}
+
+.podium-row:hover:not(:disabled),
+  .result-row:hover:not(:disabled),
+  .podium-row:focus-visible,
+  .result-row:focus-visible {
+  background: var(--hover-tint);
+  color: var(--text);
+}
+
+.podium-row:disabled,
+  .result-row:disabled {
+  background: none;
+  cursor: default;
+}
+
+.row-copy {
+  display: grid;
+  flex: 1;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.row-title {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.row-meta {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.row-tag {
+  flex: none;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.row-tag-pending {
+  background: var(--pending-soft);
+  color: var(--pending);
+}
+
+/* Médaille dessinée (MEDAL-1) : le chiffre dans un rond, jamais un emoji. */
+
+.medal-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.medal-1 {
+  border-color: var(--medal-gold);
+  background: var(--gold-soft);
+  color: var(--gold-text);
+}
+
+.medal-2 {
+  border-color: var(--silver-line);
+  background: var(--silver-soft);
+  color: var(--silver-text);
+}
+
+.medal-3 {
+  border-color: var(--medal-bronze);
+  background: var(--bronze-soft);
+  color: var(--bronze);
+}
+
+.medal-dot-pending {
+  border-style: dashed;
+  border-color: var(--pending-line);
+  background: none;
+  color: var(--pending);
+}
+
+.medal-dot-upcoming {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Accueil famille : une carte par enfant, sur deux colonnes. */
+
+.child-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.child-card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid transparent;
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.child-card:hover:not(:disabled),
+  .child-card:focus-visible {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.child-card-active,
+  .child-card-active:hover:not(:disabled),
+  .child-card-active:focus-visible {
+  border-color: var(--accent);
+}
+
+.child-card-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.child-card-active .child-card-avatar {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.child-card-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.child-card-name {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.child-card-meta {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+}
+
+/* La prochaine compétition de l'enfant ou du judoka. */
+
+.next-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  margin-bottom: var(--space-3);
+  color: var(--text);
+  text-align: left;
+}
+
+.next-card:hover:not(:disabled) {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.next-card-copy {
+  display: grid;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.next-card-kicker {
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+/* Bilan de la saison : trois chiffres et la barre victoires / défaites. */
+
+.season-summary {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.season-summary .section-title {
+  margin: 0;
+}
+
+.season-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.season-stat {
+  display: grid;
+}
+
+.season-stat strong {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-snug);
+}
+
+.season-stat span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+
+.record-bar-block {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.record-bar {
+  display: flex;
+  gap: var(--space-0-5);
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+.record-bar-win {
+  background: var(--win);
+}
+
+.record-bar-loss {
+  background: var(--loss);
+}
+
+.record-bar-legend {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.record-bar-legend-win {
+  color: var(--win);
+}
+
+/* Fiche judoka V2 A : identité, profil en quatre colonnes, saison en segmenté, fins de combat. */
+
+#judokaView .judoka-hero {
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: var(--space-3);
+}
+
+.judoka-hero .profile-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.judoka-hero .hero-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  padding: var(--space-1);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  box-sizing: border-box;
+}
+
+.judoka-hero .hero-avatar-belt {
+  background: var(--belt-ring, var(--accent-soft));
+  box-shadow: inset 0 0 0 1px var(--belt-edge);
+}
+
+.judoka-hero .hero-avatar span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: 0;
+}
+
+.profile-identity-copy {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  min-width: 0;
+}
+
+.profile-identity-copy h3 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-snug);
+}
+
+.profile-identity-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-md);
+}
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.profile-facts div {
+  display: grid;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.profile-facts dt {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+
+.profile-facts dd {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.season-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding: var(--space-1);
+  overflow-x: auto;
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.season-tab {
+  flex: 1 0 auto;
+  width: auto;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.season-tab:hover:not(:disabled) {
+  background: var(--hover-tint);
+  color: var(--text);
+}
+
+.season-tab-active,
+  .season-tab-active:hover:not(:disabled) {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.endings {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) 28px;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  font-size: var(--font-size-md);
+}
+
+.endings-head {
+  font-weight: var(--font-weight-bold);
+}
+
+.endings-win {
+  color: var(--win);
+}
+
+.endings-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+
+.endings-fill {
+  display: block;
+  height: 100%;
+}
+
+.endings-fill-win {
+  background: var(--win);
+}
+
+.endings-fill-loss {
+  background: var(--loss);
+}
+
+.endings-count {
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+}
+
+.endings-detail {
+  padding-left: var(--space-3);
+  color: var(--muted);
+}
+
+.endings-detail-count {
+  color: var(--muted);
+  text-align: right;
 }
 
 .sr-only {
@@ -3349,17 +4045,6 @@ label:not(.checkbox-row),
   text-transform: none;
 }
 
-.combat-section-kicker,
-  .coach-home-card-kicker,
-  .hero-kicker {
-  padding-left: 0;
-  border-left: 0;
-  color: var(--accent);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--letter-spacing-caps);
-}
-
 .field-hint {
   margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   color: var(--muted);
@@ -3531,11 +4216,6 @@ button,
 .card-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);
-}
-
-.coach-review-badge,
-  .coach-card-status {
-  justify-self: start;
 }
 
 /* Fiche compétition le jour J : les combats passent en premier. */
@@ -4847,25 +5527,6 @@ input[aria-invalid="true"],
   font-weight: var(--font-weight-bold);
 }
 
-.child-pill-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-left: calc(-1 * var(--space-2));
-  margin-right: var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-extrabold);
-}
-
-.choice-active .child-pill-avatar {
-  background: var(--panel);
-}
-
 /* FICHE-6 : trois tuiles. */
 
 .competition-sport-summary-three {
@@ -4915,17 +5576,6 @@ input[aria-invalid="true"],
   margin-bottom: var(--space-4);
 }
 
-.child-pills .choice-chip {
-  display: inline-flex;
-  gap: var(--space-2);
-}
-
-.chip-meta {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  opacity: 0.8;
-}
-
 /* ACCUEIL-1 : actions sur une ligne au-dessus de la liste. */
 
 .home-actions-row {
@@ -4952,8 +5602,7 @@ input[aria-invalid="true"],
   gap: var(--space-1);
 }
 
-.coach-agenda-group h3,
-  .list-group-title {
+.list-group-title {
   margin: 0 0 var(--space-2);
   color: var(--muted);
   font-size: var(--font-size-xs);
@@ -4981,23 +5630,6 @@ input[aria-invalid="true"],
 .agenda-item:hover:not(:disabled) {
   border-color: var(--accent);
   background: var(--panel);
-}
-
-.agenda-item-now {
-  border-color: var(--accent);
-  box-shadow: inset 4px 0 0 var(--accent);
-}
-
-.agenda-item-copy {
-  display: grid;
-  gap: var(--space-0-5);
-  min-width: 0;
-}
-
-.agenda-item-meta {
-  color: var(--muted);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
 }
 
 /* LISTE-1 / LISTE-2 : cartes compactes groupées. */
@@ -5050,11 +5682,6 @@ input[aria-invalid="true"],
   color: var(--text);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-}
-
-.competition-card-now {
-  border-color: var(--accent);
-  box-shadow: inset 4px 0 0 var(--accent);
 }
 
 .pill-now {
@@ -5392,20 +6019,6 @@ html,
 
 /* FICHE-5 : fiche de progression. */
 
-.season-switch {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.season-switch-label {
-  margin: 0;
-  font-weight: var(--font-weight-extrabold);
-  text-align: center;
-}
-
 .season-switch .icon-button:disabled {
   visibility: hidden;
 }
@@ -5437,12 +6050,6 @@ html,
   .hero-copy,
   .hero-badges {
   min-width: 0;
-}
-
-.hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 #judokaView .section h3 {
@@ -5849,3 +6456,5 @@ html {
    =================================================================== */
 
 /* AGD : agenda FFJDA (lecture seule). */
+
+/* ── V2 A : accueils et fiche judoka (UIX-012, UIX-015, UIX-021) ── */

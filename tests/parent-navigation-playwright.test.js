@@ -128,7 +128,7 @@ test("un compte parent choisit l'enfant en un geste, ne se voit pas parmi ses en
     await page.goto(url);
     await page.locator("#homeView").waitFor({ state: "visible" });
 
-    // ACCUEIL-2 : une pastille par enfant, le parent n'en fait pas partie, un enfant est déjà choisi.
+    // ACCUEIL-2 : une carte par enfant, le parent n'en fait pas partie, un enfant est déjà choisi.
     const pills = page.locator("#homeChildPills [role='radio']");
     await expect(pills).toHaveCount(2);
     const labels = await pills.allInnerTexts();
@@ -145,7 +145,9 @@ test("un compte parent choisit l'enfant en un geste, ne se voit pas parmi ses en
 
     await pills.filter({ hasText: "Nina" }).click();
     await expect(page.locator("#homeChildPills [aria-checked='true']")).toContainText("Nina");
-    await expect(page.locator("#openHomeJudokaProfileButton")).toContainText("Fiche de Nina");
+    // V2 A : la fiche s'ouvre depuis « La saison de Nina ».
+    await expect(page.locator("#homeSeasonSummaryTitle")).toContainText("La saison de Nina");
+    await expect(page.locator("#homeProfileLink")).toHaveText("Sa fiche");
 
     // Le dernier enfant choisi est mémorisé sur l'appareil.
     await page.evaluate(() => sessionStorage.clear());

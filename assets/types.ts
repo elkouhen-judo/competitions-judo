@@ -114,6 +114,8 @@ export interface KirokuUi {
   formatResultat(value: unknown): string;
   getDaysFromToday(value: unknown): number | null;
   getClassementBadgeClass(value: unknown): string;
+  getBeltBackground(value: unknown): string;
+  formatCountdown(value: unknown): string;
   getCompactJudokaLabel(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate(): string;
   getSeasonStartYear(dateValue: unknown): number | null;
@@ -584,11 +586,12 @@ export interface JudokaProfilePresentationHelpers {
   formatCompetitionName(value: unknown): string;
   formatCompetitionRanking(value: unknown): string;
   formatDate(value: unknown): string;
-  getClassementBadgeClass(value: unknown): string;
   getJudokaDisplayName(judoka: Partial<Judoka> | null | undefined): string;
   getJudokaInitials(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate?(): string;
   formatRelativeDay?(value: unknown): string;
+  formatCountdown?(value: unknown): string;
+  getBeltBackground?(value: unknown): string;
   isRegisteredForDate?(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
 }
 
@@ -624,21 +627,20 @@ export interface CompetitionFormHelpers {
 export interface JudokaProfileViewModel {
   profileTitle: string;
   profileSubtitle: string;
-  seasonLabel: string;
   seasonCompetitionCount: string;
   seasonCombatCount: string;
   seasonWins: string;
   seasonLosses: string;
   seasonDraws: string;
-  seasonRecord: string;
   victoryRate: string;
+  winShare: number;
+  lossShare: number;
+  heroBeltBackground: string;
   heroAvatar: string;
   heroName: string;
   heroSummary: string;
   heroCategory: string;
   heroWeightCategory: string;
-  heroBeltColor: string;
-  heroGender: string;
   heroYearInCategory: string;
   heroHandedness: string;
   heroUnregistered: string;
@@ -652,10 +654,12 @@ export interface JudokaProfileViewModel {
     name: string;
     date: string;
     result: string;
-    resultClass: string;
-    badgeClass: string;
+    needsRanking: boolean;
     combatRecord: string;
+    countdown: string;
     whenLabel: string;
+    rankDotLabel: string;
+    rankDotClass: string;
   }>;
   hasCompetitionResults: boolean;
 }

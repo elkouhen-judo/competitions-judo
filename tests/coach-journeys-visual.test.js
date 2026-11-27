@@ -255,9 +255,8 @@ for (const [name, viewport] of [
     await expect(page.getByRole("heading", { name: "Bilans à écrire" })).toHaveCount(0);
     await expect(page.locator("#homeView")).not.toContainText("à écrire");
     // COACH-6 : 8 compétitions à classer, 5 affichées, le reste annoncé.
-    const rankingsGroup = page
-      .locator(".coach-agenda-group")
-      .filter({ has: page.getByRole("heading", { name: "Classements à saisir" }) });
+    const rankingsGroup = page.locator("#coachTodo");
+    await expect(rankingsGroup.getByRole("heading", { name: /À faire/ })).toBeVisible();
     await expect(rankingsGroup.locator(".agenda-item")).toHaveCount(5);
     await expect(rankingsGroup.locator(".agenda-more")).toHaveText(
       "+ 3 autres dans « Compétitions »"

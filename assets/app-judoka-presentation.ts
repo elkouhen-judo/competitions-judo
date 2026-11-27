@@ -30,6 +30,27 @@
     return parts.filter(Boolean).join(" ");
   }
 
+  // V2 A : rond de tête de ligne. Médaille dessinée (MEDAL-1), place, « ? » à saisir, calendrier à venir.
+  const PODIUM_RESULTS = ["1er", "2e", "3e"];
+  const MEDAL_CLASSES = ["medal-1", "medal-2", "medal-3"];
+  function getRankDot(result: string, isUpcoming: boolean) {
+    if (isUpcoming) return { rankDotLabel: "", rankDotClass: "medal-dot-upcoming" };
+    if (!result) return { rankDotLabel: "?", rankDotClass: "medal-dot-pending" };
+    const podium = PODIUM_RESULTS.indexOf(result);
+    if (podium >= 0) return { rankDotLabel: result.replace(/\D/g, ""), rankDotClass: MEDAL_CLASSES[podium] };
+    return { rankDotLabel: /^\d/.test(result) ? result.replace(/\D/g, "") : "NC", rankDotClass: "" };
+  }
+
+  // « Ceinture blanche », « ceinture noire 1er dan » ; une bicolore garde ses couleurs (« blanc-jaune »).
+  const FEMININE_BELTS: Record<string, string> = { blanc: "blanche", vert: "verte", bleu: "bleue", noir: "noire" };
+  function formatBeltLabel(beltColor: string) {
+    const lower = beltColor.trim().toLowerCase();
+    if (!lower) return "";
+    if (lower.includes("-")) return `Ceinture ${lower}`;
+    const [first, ...rest] = lower.split(/\s+/);
+    return ["Ceinture", FEMININE_BELTS[first] || first, ...rest].join(" ");
+  }
+
   // STA-008 : « Dans 6 jours » pour une compétition pas encore disputée.
   function formatWhenLabel(dateValue: unknown, formatRelativeDay?: (value: unknown) => string) {
     const label = formatRelativeDay ? formatRelativeDay(dateValue) : "";
@@ -48,10 +69,11 @@
       formatCompetitionName,
       formatCompetitionRanking,
       formatDate,
-      getClassementBadgeClass,
       getJudokaDisplayName,
       getJudokaInitials,
-      formatRelativeDay
+      formatRelativeDay,
+      formatCountdown,
+      getBeltBackground
     } = helpers;
     const {
       judoka,
@@ -90,28 +112,27 @@
     const today = helpers.getCurrentLocalDate ? helpers.getCurrentLocalDate() : "";
     const unregistered = Boolean(today && helpers.isRegisteredForDate && !helpers.isRegisteredForDate(judoka, today));
 
+    const combats = Number(seasonCombatCount) || 0;
+    const toShare = (count: number) => (combats ? Math.round(((Number(count) || 0) / combats) * 100) : 0);
+
     return {
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
-      profileSubtitle: "Fiche et résultats de la saison",
-      seasonLabel: `Saison ${season.label}`,
+      // V2 A : « Ceinture orange · Homme » sous le nom ; le club est ajouté par l'écran.
+      profileSubtitle: [formatBeltLabel(beltColor), gender].filter(Boolean).join(" · "),
+      heroBeltBackground: getBeltBackground ? getBeltBackground(beltColor) : "",
+      winShare: toShare(seasonWins),
+      lossShare: toShare(seasonLosses),
       seasonCompetitionCount: String(seasonCompetitionCount || 0),
       seasonCombatCount: String(seasonCombatCount || 0),
       seasonWins: String(seasonWins || 0),
       seasonLosses: String(seasonLosses || 0),
       seasonDraws: String(seasonDraws || 0),
-      // Bilan sans compteurs à zéro : « 7V 1D ».
-      seasonRecord:
-        [seasonWins ? `${seasonWins}V` : "", seasonLosses ? `${seasonLosses}D` : "", seasonDraws ? `${seasonDraws}N` : ""]
-          .filter(Boolean)
-          .join(" ") || "—",
-      victoryRate: `${victoryRate || 0}%`,
+      victoryRate: `${victoryRate || 0} %`,
       heroAvatar: getJudokaInitials(judoka),
       heroName: getJudokaDisplayName(judoka) || "Judoka",
       heroSummary: `${seasonCompetitionCount || 0} compétitions · ${seasonCombatCount || 0} combats · ${victoryRate || 0}% victoires`,
-      heroCategory: ageCategory || "Catégorie non renseignée",
+      heroCategory: ageCategory,
       heroWeightCategory: String(weightCategory || "").trim().replace(/\s*kg$/i, " kg"),
-      heroBeltColor: beltColor,
-      heroGender: gender,
       heroYearInCategory: yearInCategory,
       heroHandedness: handedness,
       heroUnregistered: unregistered ? "Non réinscrit" : "",
@@ -121,16 +142,21 @@
       defeatsByDecisionType: buildDecisionTypeLines(defeatsByDecisionType, seasonLosses),
       topWinTechniques: topWinTechniques || [],
       hasTopWinTechniques: Boolean((topWinTechniques || []).length),
-      competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => ({
-        competitionId: result.competitionId || "",
-        name: formatCompetitionName(result.name) || "Compétition",
-        date: formatDate(result.competitionDate),
-        result: formatCompetitionRanking(result.result) || "Non classé",
-        resultClass: getClassementBadgeClass(result.result),
-        badgeClass: result.resultBadge ? result.resultBadge.className : "rank-unclassified",
-        combatRecord: formatCombatRecord(result.combatRecord),
-        whenLabel: result.isUpcoming ? formatWhenLabel(result.competitionDate, formatRelativeDay) : ""
-      })),
+      competitionResults: (competitionResults || []).map((result: JudokaProfile["competitionResults"][number]) => {
+        const ranking = formatCompetitionRanking(result.result);
+        const isUpcoming = Boolean(result.isUpcoming);
+        return {
+          competitionId: result.competitionId || "",
+          name: formatCompetitionName(result.name) || "Compétition",
+          date: formatDate(result.competitionDate),
+          result: ranking || (isUpcoming ? "" : "Classement à saisir"),
+          needsRanking: !isUpcoming && !ranking,
+          combatRecord: formatCombatRecord(result.combatRecord),
+          countdown: isUpcoming && formatCountdown ? formatCountdown(result.competitionDate) : "",
+          whenLabel: isUpcoming ? formatWhenLabel(result.competitionDate, formatRelativeDay) : "",
+          ...getRankDot(ranking, isUpcoming)
+        };
+      }),
       hasCompetitionResults: Boolean((competitionResults || []).length)
     };
   }

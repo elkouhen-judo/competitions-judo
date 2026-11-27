@@ -212,11 +212,16 @@ test("club competition creation keeps age category without weight category", () 
   assert.doesNotMatch(client, /clubCompetitionWeightCategoryOptions/);
 });
 
-test("family home shows one pill per child and remembers the last child", () => {
+test("family home shows one card per child and remembers the last child", () => {
   assert.match(
     bundle,
-    /id="homeChildPills" class="choice-chips child-pills" role="radiogroup" aria-label="Enfant suivi"/
+    /id="homeChildPills" class="child-cards" role="radiogroup" aria-label="Enfant suivi"/
   );
+  // V2 A : la ceinture en barrette plate à côté du prénom, la prochaine compétition, le bilan de la saison.
+  assert.match(bundle, /class="belt-swatch" :style="\{ background: child\.beltBackground \}"/);
+  assert.match(bundle, /id="homeNextCompetition"/);
+  assert.match(bundle, /id="homeSeasonSummary"/);
+  assert.match(bundle, /id="homeProfileLink"[^>]*@click="openHomeJudokaProfile\(\)"/);
   assert.match(bundle, /@click="selectFilterJudoka\(child\)"/);
   assert.match(client, /kiroku_last_child_/);
   assert.match(client, /function rememberChild\(judokaId\)/);
@@ -246,8 +251,11 @@ test("coach screens share the same five tabs and the home lists what is waiting"
   );
   assert.doesNotMatch(bundle, /label: "Gestion des accès"/);
   assert.match(bundle, /class="coach-agenda"/);
-  assert.match(client, /title: "Cette semaine"/);
-  assert.match(client, /title: "Classements à saisir"/);
+  // V2 A : la prochaine compétition en carte héros, « À faire », les derniers podiums.
+  assert.match(bundle, /id="coachNextCompetition"/);
+  assert.match(bundle, /id="coachTodo"/);
+  assert.match(bundle, /id="coachPodiums"/);
+  assert.match(client, /const coachHome = window\.Vue\.computed/);
   // Plus aucun rappel de bilan : ni groupe d'agenda, ni pastille sur les cartes ou les participants.
   assert.doesNotMatch(bundle, /[Bb]ilans? à écrire|missingCoachReview|needsCoachReview/);
   assert.match(bundle, /@click="openClubCompetition\(item\.clubCompetitionId\)"/);
@@ -282,20 +290,18 @@ test("admin management screen is available in the mobile action flow", () => {
 test("judoka profile reads as a season summary with bars and tappable results", () => {
   assert.match(bundle, /id="judokaView" class="panel hidden"/);
   assert.match(bundle, /id="judokaHero" class="judoka-hero"/);
+  // V2 A : la saison en contrôle segmenté, le bilan en barre victoires / défaites.
   assert.match(
     bundle,
-    /class="season-switch"[\s\S]*aria-label="Saison précédente"[\s\S]*id="judokaSeasonLabel"[\s\S]*aria-label="Saison suivante"/
+    /id="judokaSeasonTabs" class="season-tabs" role="radiogroup" aria-label="Saison"/
   );
-  // Bilan et victoires en une seule tuile.
-  assert.match(
-    bundle,
-    /<span class="mini-stat-label">Victoires<\/span>\s*<span v-if="Number\(seasonCombatCount\)" id="judokaSeasonBalance" class="mini-stat-detail">\{\{ seasonRecord \}\}/
-  );
+  assert.match(bundle, /@click="selectSeason\(season\.year\)"/);
+  assert.match(bundle, /id="judokaSeasonBalance" class="record-bar-legend"/);
   assert.match(bundle, /id="judokaSeasonCombatCount"/);
   assert.match(bundle, /id="judokaVictoryRate"/);
   assert.match(bundle, /v-if="Number\(seasonWins\)"/);
   assert.match(bundle, /v-if="Number\(seasonLosses\)"/);
-  assert.match(bundle, /<h3>Fin des combats gagnés<\/h3>[\s\S]*class="bar-list"/);
+  assert.match(bundle, /id="judokaCombatEndings"[\s\S]*Comment finissent ses combats/);
   assert.match(bundle, /id="judokaCompetitionResults"/);
   assert.match(bundle, /:key="result\.competitionId \|\|/);
   assert.match(bundle, /@click="openCompetitionFromProfile\(result\.competitionId\)"/);
@@ -309,7 +315,7 @@ test("judoka profile reads as a season summary with bars and tappable results", 
     /\(\) => state\.isCoach \|\| isOwnProfile\.value \|\| isManagedProfile\.value/
   );
   assert.match(judokaScreenClient, /formatCompetitionRanking/);
-  assert.match(bundle, /class="result-badge classement-badge"[\s\S]*\{\{ result\.result \}\}/);
+  assert.match(bundle, /class="medal-dot" :class="result\.rankDotClass"/);
   assert.doesNotMatch(bundle, /id="competition_classement"/);
 });
 
@@ -338,11 +344,12 @@ test("competition list cards open on a single tap and show ranking and record", 
   assert.match(bundle, /class="card competition-card"/);
   assert.match(bundle, /class="card-button competition-open-button"/);
   assert.doesNotMatch(bundle, /Ouvrir les combats|card-open-hint/);
-  assert.match(bundle, /\{\{ competition\.resultLabel \}\}/);
+  // V2 A : une compétition par ligne, médaille dessinée ou « ? » quand le classement manque.
+  assert.match(bundle, /class="medal-dot" :class="competition\.rankDotClass"/);
   assert.match(bundle, /\{\{ competition\.recordLabel \}\}/);
   assert.match(
     bundle,
-    /v-if="competition\.needsRanking" class="pill pill-todo">Classement à saisir/
+    /v-else-if="competition\.needsRanking" class="row-tag row-tag-pending">À saisir/
   );
   assert.match(client, /needsRanking: c\.competitionDate < today && !result/);
   assert.doesNotMatch(

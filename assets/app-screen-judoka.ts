@@ -7,7 +7,6 @@
     const {
       formatCompetitionName,
       formatCompetitionRanking,
-      getClassementBadgeClass,
       getJudokaDisplayName,
       getJudokaInitials,
       showView
@@ -44,20 +43,19 @@
       heroSummary: "",
       heroCategory: "",
       heroWeightCategory: "",
-      heroBeltColor: "",
-      heroGender: "",
       heroYearInCategory: "",
       heroHandedness: "",
       heroUnregistered: "",
       heroSeason: "",
-      seasonLabel: "",
       seasonCompetitionCount: "0",
       seasonCombatCount: "0",
       seasonWins: "0",
       seasonLosses: "0",
       seasonDraws: "0",
-      seasonRecord: "—",
-      victoryRate: "0%",
+      victoryRate: "0 %",
+      winShare: 0,
+      lossShare: 0,
+      heroBeltBackground: "",
       victoriesByDecisionType: [],
       defeatsByDecisionType: [],
       topWinTechniques: [],
@@ -76,11 +74,12 @@
           formatDate: ui.formatDateLong,
           formatCompetitionName,
           formatCompetitionRanking,
-          getClassementBadgeClass,
           getJudokaDisplayName,
           getJudokaInitials,
           getCurrentLocalDate: ui.getCurrentLocalDate,
           formatRelativeDay: ui.formatRelativeDay,
+          formatCountdown: ui.formatCountdown,
+          getBeltBackground: ui.getBeltBackground,
           isRegisteredForDate: ui.isRegisteredForDate
         }) ?? defaultJudokaProfile
       );
@@ -95,25 +94,29 @@
     );
 
     const profileTitle = window.Vue.computed(() => judokaProfile.value.profileTitle);
-    const profileSubtitle = window.Vue.computed(() => judokaProfile.value.profileSubtitle);
+    // V2 A : « Judo Club Nantes · Ceinture orange · Homme » sous le nom.
+    const profileSubtitle = window.Vue.computed(() => {
+      const judoka = state.currentJudokaProfile?.judoka;
+      const club = judoka ? state.clubs.find((candidate) => candidate.clubId === String(judoka.clubId || "")) : null;
+      return [club ? club.name : "", judokaProfile.value.profileSubtitle].filter(Boolean).join(" · ");
+    });
+    const heroBeltBackground = window.Vue.computed(() => judokaProfile.value.heroBeltBackground);
+    const winShare = window.Vue.computed(() => judokaProfile.value.winShare);
+    const lossShare = window.Vue.computed(() => judokaProfile.value.lossShare);
     const heroAvatar = window.Vue.computed(() => judokaProfile.value.heroAvatar);
     const heroName = window.Vue.computed(() => judokaProfile.value.heroName);
     const heroSummary = window.Vue.computed(() => judokaProfile.value.heroSummary);
     const heroCategory = window.Vue.computed(() => judokaProfile.value.heroCategory);
     const heroWeightCategory = window.Vue.computed(() => judokaProfile.value.heroWeightCategory);
-    const heroBeltColor = window.Vue.computed(() => judokaProfile.value.heroBeltColor);
-    const heroGender = window.Vue.computed(() => judokaProfile.value.heroGender);
     const heroYearInCategory = window.Vue.computed(() => judokaProfile.value.heroYearInCategory);
     const heroHandedness = window.Vue.computed(() => judokaProfile.value.heroHandedness);
     const heroUnregistered = window.Vue.computed(() => judokaProfile.value.heroUnregistered);
     const heroSeason = window.Vue.computed(() => judokaProfile.value.heroSeason);
-    const seasonLabel = window.Vue.computed(() => judokaProfile.value.seasonLabel);
     const seasonCompetitionCount = window.Vue.computed(
       () => judokaProfile.value.seasonCompetitionCount
     );
     const seasonCombatCount = window.Vue.computed(() => judokaProfile.value.seasonCombatCount);
     const seasonWins = window.Vue.computed(() => judokaProfile.value.seasonWins);
-    const seasonRecord = window.Vue.computed(() => judokaProfile.value.seasonRecord);
     const seasonLosses = window.Vue.computed(() => judokaProfile.value.seasonLosses);
     const seasonDraws = window.Vue.computed(() => judokaProfile.value.seasonDraws);
     const victoryRate = window.Vue.computed(() => judokaProfile.value.victoryRate);
@@ -173,11 +176,23 @@
     );
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
 
-    const canShowPreviousSeason = window.Vue.computed(() => Boolean(state.currentJudokaProfile));
-    const canShowNextSeason = window.Vue.computed(() => {
-      const displayed = getDisplayedSeasonStartYear();
-      if (displayed === null) return false;
-      return displayed < getCurrentSeasonStartYear();
+    // V2 A : la saison en contrôle segmenté, de la plus ancienne connue à la saison en cours.
+    const seasonOptions = window.Vue.computed(() => {
+      const current = getCurrentSeasonStartYear();
+      const displayed = getDisplayedSeasonStartYear() ?? current;
+      const judokaId = String(state.currentJudokaProfile?.judoka?.judokaId || "");
+      const knownYears = [
+        displayed,
+        current - 1,
+        ...state.competitions
+          .filter((competition) => String(competition.ownerJudokaId) === judokaId)
+          .map((competition) => ui.getSeasonStartYear(competition.competitionDate)),
+        state.oldestCompetitionDate ? ui.getSeasonStartYear(state.oldestCompetitionDate) : null
+      ].filter((year): year is number => typeof year === "number");
+      const oldest = Math.min(...knownYears);
+      const years = [];
+      for (let year = oldest; year <= current; year += 1) years.push(year);
+      return years.map((year) => ({ year, label: ui.formatSeasonLabel(year), isActive: year === displayed }));
     });
 
     function loadJudokaProfile(idJudoka: string, seasonStartYear?: number) {
@@ -202,16 +217,9 @@
       );
     }
 
-    function showPreviousSeason() {
-      const displayed = getDisplayedSeasonStartYear();
-      if (!currentJudokaId || displayed === null) return;
-      loadJudokaProfile(currentJudokaId, displayed - 1);
-    }
-
-    function showNextSeason() {
-      const displayed = getDisplayedSeasonStartYear();
-      if (!currentJudokaId || displayed === null) return;
-      loadJudokaProfile(currentJudokaId, displayed + 1);
+    function selectSeason(seasonStartYear: number) {
+      if (!currentJudokaId || seasonStartYear === getDisplayedSeasonStartYear()) return;
+      loadJudokaProfile(currentJudokaId, seasonStartYear);
     }
 
     function openCompetitionFromProfile(competitionId: string) {
@@ -274,8 +282,8 @@
           cancelProfileEdit: () => {
             judokaLocalState.profileEditing = false;
           },
-          showPreviousSeason,
-          showNextSeason,
+          selectSeason,
+          onChoiceKeydown: ui.onChoiceKeydown,
           showCompetitionResultsPreviousPage,
           showCompetitionResultsNextPage
         },
@@ -287,17 +295,13 @@
           heroSummary,
           heroCategory,
           heroWeightCategory,
-          heroBeltColor,
-          heroGender,
           heroYearInCategory,
           heroHandedness,
           heroUnregistered,
           heroSeason,
-          seasonLabel,
           seasonCompetitionCount,
           seasonCombatCount,
           seasonWins,
-          seasonRecord,
           seasonLosses,
           seasonDraws,
           victoryRate,
@@ -312,10 +316,13 @@
           competitionResultsTotalCount,
           competitionResultsCanShowPreviousPage,
           competitionResultsCanShowNextPage,
-          canShowPreviousSeason,
-          canShowNextSeason,
+          seasonOptions,
+          heroBeltBackground,
+          winShare,
+          lossShare,
           canEditJudokaInfo,
           isManagedProfile,
+          isOwnProfile,
           isSubmitting,
           weightCategoryOptions,
           yearInCategoryOptions

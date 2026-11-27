@@ -42,20 +42,22 @@
           <div class="sk-card"><div class="sk-row"><div class="sk-line sk-title" style="width:55%"></div></div><div class="sk-line sk-meta" style="width:30%"></div></div>
         </div>
 
-        <!-- ACCUEIL-2 : une pastille par enfant, le choix est mémorisé sur l'appareil. -->
+        <!-- ACCUEIL-2 (V2 A) : une carte par enfant, le choix est mémorisé sur l'appareil. -->
         <div v-if="showChildPills" class="child-pills-block">
-          <div id="homeChildPills" class="choice-chips child-pills" role="radiogroup" aria-label="Enfant suivi">
+          <div id="homeChildPills" class="child-cards" role="radiogroup" aria-label="Enfant suivi">
             <button
               v-for="child in childOptions"
               :key="child.judokaId"
               type="button"
               role="radio"
               :aria-checked="filterJudokaId === child.judokaId ? 'true' : 'false'"
-              :class="['choice-chip', { 'choice-active': filterJudokaId === child.judokaId }]"
+              :class="['child-card', { 'child-card-active': filterJudokaId === child.judokaId }]"
               @click="selectFilterJudoka(child)">
-              <span class="child-pill-avatar" aria-hidden="true">{{ child.initials }}</span>
-              {{ child.firstName }}
-              <span v-if="child.ageCategory" class="chip-meta">{{ child.ageCategory }}</span>
+              <span class="child-card-avatar" aria-hidden="true">{{ child.initials }}</span>
+              <span class="child-card-copy">
+                <span class="child-card-name">{{ child.firstName }}<span v-if="child.beltBackground" class="belt-swatch" :style="{ background: child.beltBackground }" aria-hidden="true"></span></span>
+                <span v-if="child.meta" class="child-card-meta">{{ child.meta }}</span>
+              </span>
             </button>
           </div>
         </div>
@@ -100,30 +102,70 @@
           </div>
         </div>
 
-        <!-- ACCUEIL-3 : ce qui attend le coach, chaque ligne ouvre l'écran où l'action se fait. -->
+        <!-- ACCUEIL-3 (V2 A) : la prochaine compétition, ce qui attend, les derniers podiums. -->
         <div v-if="showCoachHub && isHomeReady" class="coach-agenda">
-          <div v-for="group in coachAgenda" :key="group.key" class="section coach-agenda-group">
-            <h3>{{ group.title }}</h3>
+          <div id="coachGreeting" class="home-greeting">
+            <p class="home-greeting-title">{{ coachHome.greeting }}</p>
+            <p class="home-greeting-meta">{{ coachHome.summary }}</p>
+          </div>
+
+          <button v-if="coachHome.next" id="coachNextCompetition" type="button" class="next-hero" @click="openClubCompetition(coachHome.next.clubCompetitionId)">
+            <span class="next-hero-head">
+              <span class="next-hero-copy">
+                <span class="next-hero-kicker">Prochaine compétition</span>
+                <span class="next-hero-title">{{ coachHome.next.name }}</span>
+                <span class="next-hero-meta">{{ coachHome.next.dateLabel }}<template v-if="coachHome.next.clubName"> · {{ coachHome.next.clubName }}</template></span>
+              </span>
+              <span class="countdown-tile"><strong>{{ coachHome.next.countdown }}</strong><span>{{ coachHome.next.countdownCaption }}</span></span>
+            </span>
+            <span class="next-hero-foot">
+              <span class="next-hero-people">
+                <span v-if="coachHome.next.avatars.length" class="avatar-stack" aria-hidden="true">
+                  <span v-for="person in coachHome.next.avatars" :key="person.judokaId" class="avatar">{{ person.initials }}</span>
+                  <span v-if="coachHome.next.moreCount" class="avatar-stack-more">+{{ coachHome.next.moreCount }}</span>
+                </span>
+                <span>{{ coachHome.next.participantsLabel }}</span>
+              </span>
+              <span class="next-hero-link">Voir <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></span>
+            </span>
+          </button>
+
+          <section v-if="coachHome.todo.items.length" id="coachTodo" class="section coach-agenda-group" aria-labelledby="coachTodoTitle">
+            <h3 id="coachTodoTitle" class="section-title">À faire <span class="section-count">{{ coachHome.todo.total }}</span></h3>
             <div class="list">
               <button
-                v-for="item in group.items"
+                v-for="item in coachHome.todo.items"
                 :key="item.clubCompetitionId"
                 type="button"
-                class="card agenda-item"
-                :class="{ 'agenda-item-now': item.isToday }"
+                class="card agenda-item todo-row"
                 @click="openClubCompetition(item.clubCompetitionId)">
-                <span class="agenda-item-copy">
+                <span class="todo-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg></span>
+                <span class="todo-copy">
                   <span class="card-title">{{ item.name }}</span>
-                  <span class="agenda-item-meta">{{ item.dateLabel }}<template v-if="item.clubName"> · <span class="club-name">{{ item.clubName }}</span></template></span>
+                  <span class="todo-meta">{{ item.dateLabel }} · {{ item.detail }}<template v-if="item.clubName"> · <span class="club-name">{{ item.clubName }}</span></template></span>
                 </span>
-                <span class="pill" :class="item.pillClass">{{ item.detail }}</span>
+                <svg class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
               </button>
-              <button v-if="group.moreLabel" type="button" class="button-secondary agenda-more" @click="openCoachCompetitionsHub()">{{ group.moreLabel }}</button>
+              <button v-if="coachHome.todo.moreLabel" type="button" class="button-secondary agenda-more" @click="openCoachCompetitionsHub()">{{ coachHome.todo.moreLabel }}</button>
             </div>
-          </div>
-          <div v-if="!coachAgenda.length" class="empty-action">
+          </section>
+
+          <section v-if="coachHome.podiums.length" id="coachPodiums" class="section" aria-labelledby="coachPodiumsTitle">
+            <h3 id="coachPodiumsTitle" class="section-title">Derniers podiums</h3>
+            <div class="row-list">
+              <button v-for="podium in coachHome.podiums" :key="podium.competitionId" type="button" class="podium-row" @click="openCompetition(podium.competitionId)">
+                <span class="medal-dot" :class="podium.medalClass">{{ podium.rank }}</span>
+                <span class="row-copy">
+                  <span class="row-title">{{ podium.name }}<span v-if="podium.beltBackground" class="belt-swatch" :style="{ background: podium.beltBackground }" aria-hidden="true"></span></span>
+                  <span class="row-meta">{{ podium.detail }}</span>
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <div v-if="coachHome.isEmpty" class="empty-action">
             <p class="empty-action-title">Rien en attente</p>
-            <p class="empty-action-body">Aucune compétition cette semaine, et tous les classements sont saisis.</p>
+            <p class="empty-action-body">Aucune compétition à venir, et tous les classements sont saisis.</p>
             <div class="empty-action-actions">
               <button type="button" @click="openCoachCompetitionsHub()">Voir les compétitions</button>
             </div>
@@ -153,6 +195,31 @@
           {{ homeRankingSavedText }}
           <button class="button-link" type="button" @click="openCompetition(homeRankingSavedCompetitionId)">Voir la compétition</button>
         </p>
+
+        <!-- V2 A : la prochaine compétition de l'enfant choisi ou du judoka. -->
+        <button v-if="homeNextCompetition && isHomeReady" id="homeNextCompetition" type="button" class="card next-card" @click="openCompetition(homeNextCompetition.competitionId)">
+          <span class="next-card-copy">
+            <span class="next-card-kicker">À venir</span>
+            <span class="card-title">{{ homeNextCompetition.name }}</span>
+            <span class="todo-meta">{{ homeNextCompetition.dateLabel }}</span>
+          </span>
+          <span class="countdown-tile countdown-tile-soft"><strong>{{ homeNextCompetition.countdown }}</strong><span>{{ homeNextCompetition.whenLabel }}</span></span>
+        </button>
+
+        <!-- V2 A : le bilan de la saison en cours, et l'accès à la fiche. -->
+        <section v-if="homeSeasonSummary && isHomeReady" id="homeSeasonSummary" class="season-summary" aria-labelledby="homeSeasonSummaryTitle">
+          <h3 id="homeSeasonSummaryTitle" class="section-title">{{ homeSeasonSummary.title }} <button id="homeProfileLink" type="button" class="section-title-link" @click="openHomeJudokaProfile()">{{ homeSeasonSummary.linkLabel }}</button></h3>
+          <div v-if="homeSeasonSummary.hasCompetitions" class="season-stats">
+            <span v-for="stat in homeSeasonSummary.stats" :key="stat.key" class="season-stat"><strong>{{ stat.value }}</strong><span>{{ stat.label }}</span></span>
+          </div>
+          <div v-if="homeSeasonSummary.hasRecord" class="record-bar-block">
+            <div class="record-bar" aria-hidden="true">
+              <span v-if="homeSeasonSummary.wins" class="record-bar-win" :style="{ flexGrow: homeSeasonSummary.wins }"></span>
+              <span v-if="homeSeasonSummary.losses" class="record-bar-loss" :style="{ flexGrow: homeSeasonSummary.losses }"></span>
+            </div>
+            <p class="record-bar-legend"><span class="record-bar-legend-win">{{ homeSeasonSummary.winsLabel }}</span><span>{{ homeSeasonSummary.lossesLabel }}</span></p>
+          </div>
+        </section>
 
         <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
           <div class="list-search">
@@ -207,23 +274,18 @@
             </div>
             <template v-else>
               <div v-for="group in competitionGroups" :key="group.key" class="list-group">
-                <h3 class="list-group-title">{{ group.title }}</h3>
-                <div class="list">
-                  <article v-for="competition in group.items" :key="competition.competitionId" class="card competition-card" :class="{ 'competition-card-now': competition.isToday }">
-                    <button class="card-button competition-open-button" type="button" @click="openCompetition(competition.competitionId)">
-                      <span class="competition-card-row">
-                        <span class="card-title">{{ competition.name }}</span>
-                        <span v-if="competition.whenLabel" class="pill" :class="competition.isToday ? 'pill-now' : 'pill-accent'">{{ competition.whenLabel }}</span>
-                      </span>
-                      <span class="competition-card-date">{{ competition.dateLabel }}</span>
-                      <span v-if="competition.resultLabel || competition.recordLabel || competition.needsRanking || competition.hasCoachReview" class="competition-card-row competition-card-facts">
-                        <span v-if="competition.resultLabel" class="result-badge classement-badge" :class="competition.resultClass">{{ competition.resultLabel }}</span>
-                        <span v-if="competition.recordLabel">{{ competition.recordLabel }}</span>
-                        <span v-if="competition.needsRanking" class="pill pill-todo">Classement à saisir</span>
-                        <span v-if="competition.hasCoachReview" class="coach-review-badge">Bilan coach</span>
-                      </span>
-                    </button>
-                  </article>
+                <h3 class="section-title">{{ group.key === "past" ? "Compétitions passées" : "À venir" }}</h3>
+                <div class="row-list">
+                  <button v-for="competition in group.items" :key="competition.competitionId" type="button" class="result-row" @click="openCompetition(competition.competitionId)">
+                    <span class="medal-dot" :class="competition.rankDotClass" :aria-label="competition.needsRanking ? 'Classement à saisir' : competition.resultLabel || null" :role="competition.isUpcoming ? null : 'img'"><template v-if="competition.isUpcoming"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg></template><template v-else>{{ competition.rankDotLabel }}</template></span>
+                    <span class="row-copy">
+                      <span class="row-title">{{ competition.name }}</span>
+                      <span class="row-meta">{{ competition.dateLabel }}<template v-if="competition.recordLabel"> · {{ competition.recordLabel }}</template></span>
+                    </span>
+                    <span v-if="competition.whenLabel" class="row-tag">{{ competition.whenLabel }}</span>
+                    <span v-else-if="competition.needsRanking" class="row-tag row-tag-pending">À saisir</span>
+                    <span v-else-if="competition.hasCoachReview" class="row-tag">Bilan coach</span>
+                  </button>
                 </div>
               </div>
             </template>

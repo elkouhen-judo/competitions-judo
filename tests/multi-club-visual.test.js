@@ -227,12 +227,10 @@ for (const [name, viewport] of [
         fullPage: true,
         animations: "disabled"
       });
-    const agenda = page.locator(".coach-agenda .agenda-item");
     const clubFilter = page.locator("#homeClubFilter");
 
-    // MULTI-1 : sur « Tous mes clubs », l'agenda dit le club de chaque compétition.
-    await expect(agenda).toHaveCount(2);
-    await expect(agenda.locator(".club-name")).toHaveText([NANTES.name, RENNES.name]);
+    // MULTI-1 : sur « Tous mes clubs », la prochaine compétition dit son club.
+    await expect(page.locator("#coachNextCompetition .next-hero-meta")).toContainText(NANTES.name);
     await shot("01-agenda-all-clubs");
 
     await page.getByRole("button", { name: "Compétitions", exact: true }).click();
