@@ -46,6 +46,7 @@
             <ul v-else class="admin-user-list">
               <li v-for="managedUser in managedUsersPage" :key="managedUser.judokaId || managedUser.accountEmail" class="card admin-card admin-user-row">
                 <div class="admin-user-line">
+                  <span class="row-avatar" aria-hidden="true">{{ managedUser.initials }}</span>
                   <span class="admin-user-text">
                     <strong class="card-title">{{ managedUser.fullName }}</strong>
                     <span class="admin-user-meta">{{ managedUser.meta }}</span>
@@ -103,28 +104,21 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Admins</h3>
+              <h3 class="section-title">Admins</h3>
               <p class="subtitle">Droits d'administration actuellement accordés.</p>
             </div>
           </div>
           <div id="adminsList">
             <div v-if="!hasAdmins" class="empty-state">Aucun admin trouvé.</div>
             <div v-else class="list">
-              <article v-for="admin in adminsPage" :key="admin.judokaId" class="card admin-card">
-                <p class="card-title">{{ admin.fullName }}</p>
-                <div class="card-meta">
-                  <div class="meta-row">
-                    <span class="meta-label">E-mail</span>
-                    <span class="meta-value">{{ admin.accountEmail }}</span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <span v-if="admin.isCurrentAdmin" class="current-admin-note">Vous</span>
-                  <button v-else class="button-danger" type="button" :disabled="isSubmitting" @click="revokeAdminRole(admin.judokaId, admin.fullName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7 2.5-2.5"></path><path d="M16 16l6 6"></path><path d="M22 16l-6 6"></path></svg>
-                    Retirer les droits
-                  </button>
-                </div>
+              <article v-for="admin in adminsPage" :key="admin.judokaId" class="card admin-card admin-row">
+                <span class="row-avatar" aria-hidden="true">{{ getNameInitials(admin.fullName) }}</span>
+                <span class="row-copy">
+                  <span class="card-title row-title">{{ admin.fullName }}</span>
+                  <span class="row-meta">{{ admin.accountEmail }}</span>
+                </span>
+                <span v-if="admin.isCurrentAdmin" class="current-admin-note row-tag">Vous</span>
+                <button v-else class="button-danger admin-row-danger" type="button" :disabled="isSubmitting" @click="revokeAdminRole(admin.judokaId, admin.fullName)">Retirer les droits</button>
               </article>
             </div>
             <div v-if="adminsTotalPages > 1" class="list-summary">
@@ -137,10 +131,10 @@
           </div>
         </div>
 
-        <div class="section">
+        <div class="section admin-form-card">
           <div class="section-heading">
             <div>
-              <h3>Ajouter un admin</h3>
+              <h3 class="section-title">Ajouter un admin</h3>
               <p class="subtitle">Attribuer les droits à un compte existant.</p>
             </div>
           </div>
@@ -166,11 +160,11 @@
         <div class="section" id="clubsSection">
           <div class="section-heading">
             <div>
-              <h3>Clubs</h3>
+              <h3 class="section-title">Clubs</h3>
               <p class="subtitle">Un judoka peut appartenir à plusieurs clubs (club, pôle espoir…) ; un coach ne voit que les judokas des clubs qu'il coache.</p>
             </div>
           </div>
-          <div class="form-grid club-create-row">
+          <div class="form-grid club-create-row admin-form-card">
             <div>
               <label for="newClubName">Nouveau club</label>
               <input type="text" id="newClubName" autocomplete="off" placeholder="Ex : Judo Club Nantes" v-model="newClubName" @keyup.enter="createClub()">
@@ -192,27 +186,27 @@
                   </div>
                 </template>
                 <template v-else>
-                  <p class="card-title">{{ club.name }}</p>
-                  <div class="card-meta">
-                    <div class="meta-row">
-                      <span class="meta-label">Judokas</span>
-                      <span class="meta-value">{{ club.judokaLabel }}</span>
-                    </div>
-                    <div class="meta-row">
-                      <span class="meta-label">Coachs</span>
-                      <span class="meta-value">{{ club.coachLabel }}</span>
-                    </div>
-                  </div>
-                  <div class="card-actions">
-                    <button class="button-secondary" type="button" :disabled="isSubmitting" @click="startRenameClub(club.clubId, club.name)">Renommer</button>
-                    <button v-if="club.canDelete" class="button-danger" type="button" :disabled="isSubmitting" @click="deleteClub(club.clubId, club.name)">Supprimer</button>
+                  <div class="admin-row">
+                    <span class="row-avatar" aria-hidden="true">{{ getNameInitials(club.name) }}</span>
+                    <span class="row-copy">
+                      <span class="card-title row-title">{{ club.name }}</span>
+                      <span class="row-meta">{{ club.judokaLabel }} · {{ club.coachLabel }}</span>
+                    </span>
+                    <!-- V4 lot 3 : renommer et supprimer dans le menu du club. -->
+                    <details class="page-menu card-menu">
+                      <summary class="icon-button" :aria-label="'Actions pour ' + club.name" title="Actions"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></summary>
+                      <div class="page-menu-list" role="menu">
+                        <button type="button" role="menuitem" :disabled="isSubmitting" @click="startRenameClub(club.clubId, club.name)">Renommer</button>
+                        <button v-if="club.canDelete" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteClub(club.clubId, club.name)">Supprimer</button>
+                      </div>
+                    </details>
                   </div>
                 </template>
               </article>
             </div>
           </div>
           <div v-if="hasClubs && coachCards.length" id="coachClubsList" class="coach-clubs">
-            <h4>Clubs coachés</h4>
+            <h3 class="section-title">Clubs coachés</h3>
             <div class="list">
               <article v-for="coach in coachCards" :key="coach.judokaId" class="card admin-card">
                 <p class="card-title">{{ coach.fullName }}</p>
@@ -238,7 +232,7 @@
         <div class="section">
           <div class="section-heading">
             <div>
-              <h3>Invitations</h3>
+              <h3 class="section-title">Invitations</h3>
               <p class="subtitle">Invitations en attente.</p>
             </div>
           </div>
@@ -254,24 +248,19 @@
           <div id="accessInvitationsList">
             <div v-if="!hasAccessInvitations" class="empty-state">{{ accessInvitationsEmptyMessage }}</div>
             <div v-else class="list">
-              <article v-for="invitation in accessInvitationsPage" :key="invitation.accountEmail" class="card admin-card">
-                <p class="card-title">{{ invitation.fullName }}</p>
-                <div class="card-meta">
-                  <div class="meta-row">
-                    <span class="meta-label">E-mail</span>
-                    <span class="meta-value">{{ invitation.accountEmail }}</span>
+              <article v-for="invitation in accessInvitationsPage" :key="invitation.accountEmail" class="card admin-card admin-row">
+                <span class="row-avatar" aria-hidden="true">{{ getNameInitials(invitation.fullName) }}</span>
+                <span class="row-copy">
+                  <span class="card-title row-title">{{ invitation.fullName }}</span>
+                  <span class="row-meta">{{ invitation.roleLabel }}</span>
+                </span>
+                <!-- V4 lot 3 : annuler l'invitation depuis le menu de la ligne. -->
+                <details class="page-menu card-menu">
+                  <summary class="icon-button" :aria-label="'Actions pour ' + invitation.fullName" title="Actions"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></summary>
+                  <div class="page-menu-list" role="menu">
+                    <button type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="cancelInvitation(invitation.accountEmail, invitation.fullName)">Annuler l'invitation</button>
                   </div>
-                  <div class="meta-row">
-                    <span class="meta-label">Rôle</span>
-                    <span class="meta-value">{{ invitation.roleLabel }}</span>
-                  </div>
-                </div>
-                <div class="card-actions">
-                  <button class="button-danger" type="button" :disabled="isSubmitting" @click="cancelInvitation(invitation.accountEmail, invitation.fullName)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    Annuler l'invitation
-                  </button>
-                </div>
+                </details>
               </article>
             </div>
           </div>
@@ -279,10 +268,10 @@
 
         </div>
         <div v-show="adminTab === 'import'" class="admin-tab-panel">
-        <div class="section">
+        <div class="section admin-form-card">
           <div class="section-heading">
             <div>
-              <h3>Importer des profils (CSV)</h3>
+              <h3 class="section-title">Importer des profils (CSV)</h3>
               <p class="subtitle">Ajoutez ou mettez à jour les judokas et parents en lot.</p>
             </div>
           </div>

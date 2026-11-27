@@ -1398,38 +1398,11 @@ button:focus-visible,
   gap: var(--space-1);
 }
 
-.meta-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border-top: 1px solid var(--line);
-  padding: var(--space-2) 0;
-}
-
-.meta-row:first-of-type {
-  border-top: 0;
-  padding-top: 0;
-}
-
 /* Inside cards: no row dividers, compact rows */
 
 .card .card-meta .meta-row {
   border-top: 0;
   padding: var(--space-0-5) 0;
-}
-
-.meta-label {
-  color: var(--muted);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-}
-
-.meta-value {
-  font-size: var(--font-size-base);
-  text-align: right;
-  overflow-wrap: anywhere;
 }
 
 .card-actions {
@@ -4124,14 +4097,6 @@ button,
   .judoka-hero,
   .dashboard-summary-card {
   padding: var(--space-4);
-}
-
-.meta-row {
-  border-top: 1px solid var(--line);
-}
-
-.meta-row:first-of-type {
-  border-top: 0;
 }
 
 .card:hover,
@@ -7098,6 +7063,232 @@ html {
   margin-top: var(--space-3);
 }
 
+/* Agenda : un mois = un titre et un panneau, un événement par ligne. */
+
+#ffjudoAgendaView .agenda-month-title {
+  color: var(--text);
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: none;
+}
+
+#ffjudoAgendaView .agenda-month + .agenda-month {
+  margin-top: var(--space-5);
+}
+
+#ffjudoAgendaView .agenda-month > .list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+#ffjudoAgendaView .agenda-card {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+#ffjudoAgendaView .agenda-card:last-child {
+  border-bottom: 0;
+}
+
+#ffjudoAgendaView .agenda-date-tile {
+  min-height: 48px;
+}
+
+#ffjudoAgendaView .agenda-card-body {
+  gap: var(--space-1);
+}
+
+#ffjudoAgendaView .agenda-card .card-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+}
+
+#ffjudoAgendaView .agenda-card .card-meta {
+  gap: var(--space-1);
+}
+
+#ffjudoAgendaView .agenda-card-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+#ffjudoAgendaView .agenda-card-closing-pill {
+  border-radius: var(--radius-sm);
+}
+
+#ffjudoAgendaView .agenda-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+}
+
+#ffjudoAgendaView .agenda-create-button {
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+#ffjudoAgendaView .agenda-create-button:hover:not(:disabled) {
+  background: none;
+  color: var(--primary);
+}
+
+#ffjudoAgendaView .agenda-card-link {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Gestion des accès : onglets en sélecteur segmenté. */
+
+#adminsView .admin-sub-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+#adminsView .admin-sub-tabs .mode-tab {
+  min-height: var(--touch-min);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+#adminsView .admin-sub-tabs .mode-tab::after {
+  display: none;
+}
+
+#adminsView .admin-sub-tabs .mode-tab-active {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: var(--font-weight-extrabold);
+}
+
+#adminsView .list-search {
+  padding: 0;
+}
+
+/* Utilisateurs, admins, clubs, invitations : lignes d'un même panneau. */
+
+#adminsView .admin-user-list,
+  #adminsView #adminsList > .list,
+  #adminsView #clubsList > .list,
+  #adminsView #accessInvitationsList > .list,
+  #adminsView #coachClubsList > .list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+#adminsView .admin-card {
+  margin: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+#adminsView .admin-card:last-child {
+  border-bottom: 0;
+}
+
+#adminsView .admin-card .card-title {
+  padding-right: 0;
+  font-size: var(--font-size-md);
+}
+
+#adminsView .admin-row,
+  #adminsView .admin-card.admin-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+#adminsView .admin-row .row-title,
+  #adminsView .admin-row .row-meta {
+  margin: 0;
+}
+
+#adminsView .admin-row .row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#adminsView .admin-row .card-menu,
+  #adminsView .admin-user-row .card-menu {
+  position: static;
+  flex: none;
+}
+
+#adminsView .admin-row-danger {
+  flex: none;
+  width: auto;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+#adminsView .admin-row-danger:hover:not(:disabled) {
+  background: none;
+  color: var(--danger-hover);
+}
+
+#adminsView .current-admin-note.row-tag {
+  background: var(--soft);
+  color: var(--text);
+}
+
+/* Formulaires de la gestion des accès en cartes. */
+
+#adminsView .admin-form-card {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+#adminsView .club-create-row.admin-form-card {
+  margin: 0 0 var(--space-4);
+}
+
+#adminsView .coach-clubs {
+  margin-top: var(--space-5);
+}
+
+#adminsView #coachClubsList .admin-card {
+  display: grid;
+  gap: var(--space-2);
+}
+
 /* SHELL-3 : la police est servie par l'appli (woff2 variable), sans feuille tierce bloquante. */
 
 @font-face {
@@ -7154,3 +7345,5 @@ html {
 /* ── V4 lot 1 : onglets coach « Judokas » et « Compétitions » en lignes (UIX-046) ── */
 
 /* ── V4 lot 2 : formulaires en cartes (UIX-047) ── */
+
+/* ── V4 lot 3 : agenda FFJDA et gestion des accès en lignes (UIX-048) ── */

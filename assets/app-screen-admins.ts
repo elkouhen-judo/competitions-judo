@@ -90,6 +90,15 @@
     const adminsPaginationRefs = ui.createPaginationRefs(adminsPagination);
     const isSubmitting = window.Vue.computed(() => state.isSubmitting);
     // ADMIN-3 : une ligne par utilisateur : nom, puis rôle · catégorie · club.
+    // V4 lot 3 : les initiales d'un nom affiché, pour les lignes de la gestion des accès.
+    function getNameInitials(name: string) {
+      return cleanText(name)
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join("");
+    }
     const managedUsersPage = window.Vue.computed(() =>
       usersProjection.value.users.map((user) => {
         // CLUB-001 : le club principal d'abord, puis les autres structures.
@@ -99,7 +108,7 @@
           .map((club) => club.name)
           .join(", ");
         const meta = [user.roleLabel, user.ageCategory, clubNames].filter(Boolean).join(" · ");
-        return { ...user, meta };
+        return { ...user, meta, initials: getNameInitials(user.fullName) };
       })
     );
     const usersFilterOptions = window.Vue.computed(() => USERS_FILTER_OPTIONS);
@@ -178,6 +187,7 @@
         {
           cancelInvitation,
           deleteUser,
+          getNameInitials,
           handleImportUsersFileChange,
           importUsersCsv,
           resetAdminForm,
