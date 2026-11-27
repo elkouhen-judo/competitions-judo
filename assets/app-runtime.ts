@@ -84,6 +84,9 @@ function createInitialState(): KirokuAppState {
   interface HeaderViewModel {
     showHeader: boolean;
     userName: string;
+    /** V4 lot 4 : nom complet et initiales, dans le menu du compte. */
+    userFullName: string;
+    userInitials: string;
     roleLabel: string;
     showOfflineStatus: boolean;
     offlineStatusText: string;
@@ -1215,6 +1218,8 @@ function createInitialState(): KirokuAppState {
           ui.normalizeDisplayName(String(state.currentUser?.firstName || "").trim()) ||
           ui.getJudokaDisplayName(state.currentUser) ||
           "",
+        userFullName: ui.getJudokaDisplayName(state.currentUser) || "",
+        userInitials: ui.getJudokaInitials(state.currentUser),
         roleLabel,
         showOfflineStatus: state.isUsingCachedData || !state.isOnline || state.pendingOperations.length > 0,
         offlineStatusText: getOfflineStatusText()
@@ -1512,6 +1517,8 @@ function createInitialState(): KirokuAppState {
     const headerViewModel: HeaderViewModel = window.Vue.reactive({
       showHeader: false,
       userName: "",
+      userFullName: "",
+      userInitials: "",
       roleLabel: "",
       showOfflineStatus: false,
       offlineStatusText: ""

@@ -10,7 +10,7 @@
           </svg>
         </div>
         <div class="brand-copy">
-          <h1>Ayumi - 歩み</h1>
+          <h1>Ayumi</h1>
           <p v-if="!showHeader" class="subtitle">Suivi de compétitions</p>
         </div>
       </div>
@@ -21,9 +21,14 @@
           <summary id="userInfo" class="user-pill" aria-label="Menu du compte">
             <strong>{{ userName }}</strong>
             <span class="user-pill-role">{{ roleLabel }}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <span v-if="userInitials" class="user-pill-avatar" aria-hidden="true">{{ userInitials }}</span>
           </summary>
           <div class="page-menu-list" role="menu">
+            <!-- V4 lot 4 : le menu commence par l'identité du compte. -->
+            <div v-if="userFullName" class="account-menu-identity" role="presentation">
+              <span class="row-avatar" aria-hidden="true">{{ userInitials }}</span>
+              <span class="row-copy"><span class="row-title">{{ userFullName }}</span><span class="row-meta">{{ roleLabel }}</span></span>
+            </div>
             <button v-if="showPersonalSpaceLink" type="button" role="menuitem" @click="openPersonalSpace()">Mon espace</button>
             <button v-if="showFamilyLink" type="button" role="menuitem" @click="openFamilySpace()">Ma famille</button>
             <button v-if="showAdminLink" type="button" role="menuitem" @click="openAccessManagement()">Gestion des accès</button>

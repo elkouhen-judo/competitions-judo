@@ -7243,3 +7243,152 @@
     gap: var(--space-2);
   }
 }
+
+/* ── V4 lot 4 : écrans communs (UIX-049) ── */
+@layer utilities {
+  /* En-tête : initiales à droite du rôle ; menu du compte qui commence par l'identité. */
+  .account-menu > summary.user-pill {
+    padding-right: var(--space-1);
+  }
+
+  .user-pill-avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-extrabold);
+  }
+
+  .account-menu .page-menu-list {
+    min-width: 248px;
+  }
+
+  .account-menu-identity {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-1);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .account-menu-identity .row-title,
+  .account-menu-identity .row-meta {
+    margin: 0;
+  }
+
+  #logoutButton {
+    color: var(--danger);
+    font-weight: var(--font-weight-bold);
+  }
+
+  /* Connexion : une carte centrée. */
+  #loginView .login-container {
+    width: min(100%, 420px);
+    min-height: 0;
+    margin: var(--space-10) auto 0;
+    padding: var(--space-6) var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    box-sizing: border-box;
+  }
+
+  #loginView .login-container h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  #loginView .login-container p {
+    margin-bottom: var(--space-5);
+    font-size: var(--font-size-md);
+  }
+
+  #loginView .login-options {
+    width: 100%;
+  }
+
+  #loginView .button-google {
+    width: 100%;
+  }
+
+  #loginView .login-privacy-link {
+    margin: var(--space-4) 0 0;
+  }
+
+  /* Messages : succès en bleu nuit, erreur en rouge clair. */
+  .toast .success,
+  .toast .error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--touch-min) var(--space-3) var(--space-4);
+    border: 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-floating);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .toast .success {
+    background: var(--primary);
+    color: var(--button-primary-text);
+  }
+
+  .toast .error {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  /* Confirmation : « Annuler » à gauche, l'action à droite ; feuille en bas sur mobile. */
+  .confirm-dialog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 720px) {
+    .confirm-dialog {
+      margin: auto auto var(--space-4);
+    }
+  }
+
+  /* États vides : un panneau, sans pointillés. */
+  .empty-state,
+  .empty-action {
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--panel);
+  }
+
+  .card .empty-state,
+  .form-card .empty-state,
+  .admin-form-card .empty-state {
+    background: var(--soft);
+  }
+}
+
+@layer utilities {
+  .toast-success .toast-close {
+    color: var(--button-primary-text);
+  }
+
+  .toast-error .toast-close {
+    color: var(--danger);
+  }
+
+  .account-menu .page-menu-list > [role="menuitem"] {
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
+  }
+}
+
+@layer utilities {
+  /* Le menu du compte passe au-dessus des onglets et du contenu. */
+  #appHeader {
+    position: relative;
+    z-index: 50;
+  }
+}
