@@ -226,7 +226,7 @@ for (const [name, viewport] of [
       await expect(rows.locator(".belt-swatch")).toHaveCount(8);
       await expect(rows.locator(".row-tag-pending")).toHaveText(["Non réinscrit", "Non réinscrit"]);
       await expect(rows.first().locator(".row-avatar")).toHaveText("JR");
-      await expect(page.locator("#homeJudokaRoster .section-title")).toContainText("Judokas");
+      await expect(page.locator("#homeView .tab-title")).toHaveText("Judokas");
     }
     await shot(page, "01-judokas");
   });

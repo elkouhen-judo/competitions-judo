@@ -397,6 +397,15 @@ for (const [name, viewport] of [
       await expect(cards.first()).toContainText("Minime · Orange");
       await expect(cards.first().locator(".belt-swatch")).toHaveCount(1);
       await expect(page.locator("#homePendingRanking")).toContainText("Coupe de Loire-Atlantique");
+      // Revue A : mêmes places que sur la compétition, « NC » compris, sur une ligne.
+      const places = page.locator("#homePendingRanking .choice-chip");
+      await expect(places).toHaveText(["1er", "2e", "3e", "5e", "7e", "NC"]);
+      await expect(places.last()).toHaveAttribute("aria-label", "Non classé");
+      await expect(page.locator("#homePendingRanking")).toHaveCSS("border-top-style", "dashed");
+      const tops = await places.evaluateAll((els) =>
+        els.map((el) => el.getBoundingClientRect().top)
+      );
+      assert.equal(new Set(tops.map(Math.round)).size, 1);
       await expect(page.locator("#homeNextCompetition")).toContainText("J-4");
       const season = page.locator("#homeSeasonSummary");
       await expect(season).toContainText("La saison de Hugo");

@@ -3601,13 +3601,14 @@
     color: var(--text);
   }
 
+  /* Revue A : un choix actif est bleu nuit partout (UIX-050). */
   .choice-button.choice-active:hover,
   .choice-chip.choice-active:hover,
   .choice-button.choice-active:focus,
   .choice-chip.choice-active:focus {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--button-primary-text);
   }
 
   .choice-button.choice-win.choice-active:hover,
@@ -3624,9 +3625,9 @@
 
   .choice-button.choice-active,
   .choice-chip.choice-active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--button-primary-text);
   }
 
   .choice-button.choice-win.choice-active {
@@ -3847,7 +3848,8 @@
     font-size: var(--font-size-xs);
   }
 
-  .competition-ranking-section .choice-chips {
+  .competition-ranking-section .choice-chips ,
+  .home-todo .choice-chips {
     flex-wrap: wrap;
   }
 
@@ -6360,34 +6362,42 @@
 
   /* Classement d'un toucher : bord de médaille, médaille pleine une fois choisie (MEDAL-1). */
   .competition-ranking-section .choice-chip,
+  .home-todo .choice-chip,
   .participant-ranking .choice-chip {
     min-width: var(--touch-min);
     padding: 0 var(--space-3);
   }
 
   .competition-ranking-section .choice-chip::before,
+  .home-todo .choice-chip::before,
   .participant-ranking .choice-chip::before {
     display: none;
   }
 
   .competition-ranking-section .choice-chip.rank-1,
+  .home-todo .choice-chip.rank-1,
   .participant-ranking .choice-chip.rank-1 {
     border-color: var(--medal-gold);
   }
 
   .competition-ranking-section .choice-chip.rank-2,
+  .home-todo .choice-chip.rank-2,
   .participant-ranking .choice-chip.rank-2 {
     border-color: var(--silver-line);
   }
 
   .competition-ranking-section .choice-chip.rank-3,
+  .home-todo .choice-chip.rank-3,
   .participant-ranking .choice-chip.rank-3 {
     border-color: var(--medal-bronze);
   }
 
   .competition-ranking-section .choice-chip.choice-active,
+  .home-todo .choice-chip.choice-active,
   .competition-ranking-section .choice-chip.choice-active:hover:not(:disabled),
+  .home-todo .choice-chip.choice-active:hover:not(:disabled),
   .competition-ranking-section .choice-chip.choice-active:focus,
+  .home-todo .choice-chip.choice-active:focus,
   .participant-ranking .choice-chip.choice-active,
   .participant-ranking .choice-chip.choice-active:hover:not(:disabled),
   .participant-ranking .choice-chip.choice-active:focus {
@@ -6397,7 +6407,9 @@
   }
 
   .competition-ranking-section .choice-chip.rank-1.choice-active,
+  .home-todo .choice-chip.rank-1.choice-active,
   .competition-ranking-section .choice-chip.rank-1.choice-active:hover:not(:disabled),
+  .home-todo .choice-chip.rank-1.choice-active:hover:not(:disabled),
   .participant-ranking .choice-chip.rank-1.choice-active,
   .participant-ranking .choice-chip.rank-1.choice-active:hover:not(:disabled) {
     border: 2px solid var(--medal-gold);
@@ -6406,7 +6418,9 @@
   }
 
   .competition-ranking-section .choice-chip.rank-2.choice-active,
+  .home-todo .choice-chip.rank-2.choice-active,
   .competition-ranking-section .choice-chip.rank-2.choice-active:hover:not(:disabled),
+  .home-todo .choice-chip.rank-2.choice-active:hover:not(:disabled),
   .participant-ranking .choice-chip.rank-2.choice-active,
   .participant-ranking .choice-chip.rank-2.choice-active:hover:not(:disabled) {
     border: 2px solid var(--silver-line);
@@ -6415,7 +6429,9 @@
   }
 
   .competition-ranking-section .choice-chip.rank-3.choice-active,
+  .home-todo .choice-chip.rank-3.choice-active,
   .competition-ranking-section .choice-chip.rank-3.choice-active:hover:not(:disabled),
+  .home-todo .choice-chip.rank-3.choice-active:hover:not(:disabled),
   .participant-ranking .choice-chip.rank-3.choice-active,
   .participant-ranking .choice-chip.rank-3.choice-active:hover:not(:disabled) {
     border: 2px solid var(--medal-bronze);
@@ -7390,5 +7406,77 @@
   #appHeader {
     position: relative;
     z-index: 50;
+  }
+}
+
+/* ── Revue A : classement de l'accueil, choix actif, haut des onglets coach (UIX-050) ── */
+@layer utilities {
+  /* Le classement à saisir de l'accueil : même cadre que sur la compétition. */
+  .home-todo {
+    border: 2px dashed var(--pending-line);
+  }
+
+  .home-todo .choice-chips {
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+  }
+
+  .home-todo .choice-chip {
+    padding: 0 var(--space-2);
+  }
+}
+
+@layer utilities {
+  /* Haut des onglets coach : un titre à 22 px, l'action éventuelle à droite. */
+  .tab-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+  }
+
+  .tab-title,
+  .agenda-title-row h2,
+  .dashboard-title {
+    margin: 0;
+    color: var(--text);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .tab-title-action {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-1);
+    width: auto;
+    min-height: var(--touch-min);
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--button-primary-text);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .tab-title-action:hover:not(:disabled) {
+    background: var(--primary-hover);
+    color: var(--button-primary-text);
+  }
+
+  /* La recherche de l'onglet Judokas, sans encadré, comme celle des compétitions. */
+  #homeFilters.filter-bar-roster {
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  #homeClubCompetitionsSection {
+    margin-top: 0;
   }
 }

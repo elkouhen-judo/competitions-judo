@@ -62,8 +62,12 @@
           </div>
         </div>
 
-        <div v-if="canFilterByJudoka" id="homeFilters" class="filter-bar">
-          <label id="homeFilterLabel" for="filterJudokaText">{{ homeFilterLabel }}</label>
+        <div v-if="showJudokaRoster && isHomeReady" class="tab-title-row">
+          <h2 class="tab-title">Judokas</h2>
+          <span class="section-count-muted">{{ filterOptions.length }}</span>
+        </div>
+        <div v-if="canFilterByJudoka" id="homeFilters" class="filter-bar" :class="{ 'filter-bar-roster': showJudokaRoster }">
+          <label id="homeFilterLabel" for="filterJudokaText" :class="{ 'sr-only': showJudokaRoster }">{{ homeFilterLabel }}</label>
           <div class="autocomplete-wrapper">
             <input type="text" id="filterJudokaText" :placeholder="filterPlaceholder" autocomplete="off" v-model="filterJudokaText" @focus="showHomeFilterOptions()" @input="updateFilterJudokaText()" @blur="hideHomeFilterOptions()">
             <div class="autocomplete-dropdown" id="filterJudokaDropdown" v-show="showFilterOptions && !showJudokaRoster">
@@ -80,7 +84,6 @@
 
         <!-- UIX-016e : sans judoka choisi, la liste des judokas du club ; la recherche la filtre. -->
         <div v-if="showJudokaRoster && isHomeReady" id="homeJudokaRoster" class="section">
-          <h3 class="section-title">Judokas <span class="section-count-muted">{{ filterOptions.length }}</span></h3>
           <p v-if="!filterOptions.length" class="empty-state">Aucun judoka ne correspond à cette recherche.</p>
           <!-- V4 lot 1 : un judoka par ligne, initiales, ceinture, catégorie et poids. -->
           <div v-else class="row-list">
@@ -176,10 +179,6 @@
         </div>
 
         <div id="homeAdminActions" class="home-actions-row" v-show="showHomeActions">
-          <button id="addClubCompetitionButton" v-if="canCreateClubCompetition" class="home-context-action" @click="showClubCompetitionForm()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>Nouvelle compétition</span>
-          </button>
           <button id="openHomeJudokaProfileButton" v-if="canOpenJudokaProfile" class="button-secondary home-context-action" :disabled="actionDisabled" @click="openHomeJudokaProfile()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
             <span id="openHomeJudokaProfileButtonText">{{ profileButtonText }}</span>
@@ -191,7 +190,7 @@
           <span class="home-todo-kicker">À faire</span>
           <p id="homePendingRankingQuestion" class="home-todo-question">{{ homePendingRanking.question }}</p>
           <div class="choice-chips choice-chips-wrap" role="group" aria-labelledby="homePendingRankingQuestion">
-            <button v-for="option in homeRankingOptions" :key="option.value" type="button" :class="['choice-chip', option.medalClass]" :disabled="isSubmitting" @click="saveHomeRanking(homePendingRanking.competitionId, option.value)">{{ option.value }}</button>
+            <button v-for="option in homeRankingOptions" :key="option.value" type="button" :class="['choice-chip', option.medalClass]" :aria-label="option.value" :disabled="isSubmitting" @click="saveHomeRanking(homePendingRanking.competitionId, option.value)">{{ option.label }}</button>
           </div>
         </section>
         <p v-if="homeRankingSavedText" id="homeRankingSaved" class="home-todo-done" role="status">
@@ -225,6 +224,14 @@
         </section>
 
         <div v-if="showClubCompetitionsSection" id="homeClubCompetitionsSection" class="section">
+          <!-- Revue A : chaque onglet coach commence par son titre, l'action à droite. -->
+          <div class="tab-title-row">
+            <h2 class="tab-title">Compétitions</h2>
+            <button id="addClubCompetitionButton" v-if="canCreateClubCompetition" type="button" class="tab-title-action" @click="showClubCompetitionForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Nouvelle</span>
+            </button>
+          </div>
           <div class="list-search">
             <input type="search" id="clubCompetitionsSearch" aria-label="Rechercher une compétition" placeholder="Nom ou date" autocomplete="off" :value="clubCompetitionsSearchText" @input="updateClubCompetitionsSearch($event.target.value)">
           </div>

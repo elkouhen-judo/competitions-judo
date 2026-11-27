@@ -137,10 +137,9 @@
     const showClubCompetitionsSection = window.Vue.computed(() => getCurrentMode() === "coach");
     const showCoachHub = window.Vue.computed(() => getCurrentMode() === "coachHome");
     const showHomeHero = window.Vue.computed(() => showCoachSubTabs.value || showModeTabs.value);
+    // Revue A : « Nouvelle » est dans le titre de l'onglet Compétitions ; reste la fiche du judoka choisi.
     const showHomeActions = window.Vue.computed(
-      () =>
-        Boolean(state.currentUser) &&
-        (canCreateClubCompetition.value || canOpenJudokaProfile.value)
+      () => Boolean(state.currentUser) && canOpenJudokaProfile.value
     );
     const actionDisabled = window.Vue.computed(() => {
       const mode = getCurrentMode();
@@ -459,6 +458,8 @@
     const homeRankingOptions = window.Vue.computed(() =>
       ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
         value,
+        // Revue A : « NC » tient sur la ligne des places, comme sur la compétition.
+        label: value === "Non classé" ? "NC" : value,
         medalClass: ui.getClassementBadgeClass(value).replace("rank-finalist", "")
       }))
     );
