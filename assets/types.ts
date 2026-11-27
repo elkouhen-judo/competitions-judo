@@ -115,6 +115,7 @@ export interface KirokuUi {
   getDaysFromToday(value: unknown): number | null;
   getClassementBadgeClass(value: unknown): string;
   getBeltBackground(value: unknown): string;
+  getBeltColors(value: unknown): { first: string; second: string };
   formatCountdown(value: unknown): string;
   getCompactJudokaLabel(judoka: Partial<Judoka> | null | undefined): string;
   getCurrentLocalDate(): string;
@@ -591,7 +592,6 @@ export interface JudokaProfilePresentationHelpers {
   getCurrentLocalDate?(): string;
   formatRelativeDay?(value: unknown): string;
   formatCountdown?(value: unknown): string;
-  getBeltBackground?(value: unknown): string;
   isRegisteredForDate?(judoka: Partial<Judoka> | null | undefined, dateValue: unknown): boolean;
 }
 
@@ -635,7 +635,6 @@ export interface JudokaProfileViewModel {
   victoryRate: string;
   winShare: number;
   lossShare: number;
-  heroBeltBackground: string;
   heroAvatar: string;
   heroName: string;
   heroSummary: string;

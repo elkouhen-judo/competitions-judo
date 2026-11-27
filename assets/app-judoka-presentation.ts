@@ -72,8 +72,7 @@
       getJudokaDisplayName,
       getJudokaInitials,
       formatRelativeDay,
-      formatCountdown,
-      getBeltBackground
+      formatCountdown
     } = helpers;
     const {
       judoka,
@@ -119,7 +118,6 @@
       profileTitle: getJudokaDisplayName(judoka) || "Fiche judoka",
       // V2 A : « Ceinture orange · Homme » sous le nom ; le club est ajouté par l'écran.
       profileSubtitle: [formatBeltLabel(beltColor), gender].filter(Boolean).join(" · "),
-      heroBeltBackground: getBeltBackground ? getBeltBackground(beltColor) : "",
       winShare: toShare(seasonWins),
       lossShare: toShare(seasonLosses),
       seasonCompetitionCount: String(seasonCompetitionCount || 0),

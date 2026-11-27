@@ -55,7 +55,6 @@
       victoryRate: "0 %",
       winShare: 0,
       lossShare: 0,
-      heroBeltBackground: "",
       victoriesByDecisionType: [],
       defeatsByDecisionType: [],
       topWinTechniques: [],
@@ -79,7 +78,6 @@
           getCurrentLocalDate: ui.getCurrentLocalDate,
           formatRelativeDay: ui.formatRelativeDay,
           formatCountdown: ui.formatCountdown,
-          getBeltBackground: ui.getBeltBackground,
           isRegisteredForDate: ui.isRegisteredForDate
         }) ?? defaultJudokaProfile
       );
@@ -100,7 +98,8 @@
       const club = judoka ? state.clubs.find((candidate) => candidate.clubId === String(judoka.clubId || "")) : null;
       return [club ? club.name : "", judokaProfile.value.profileSubtitle].filter(Boolean).join(" · ");
     });
-    const heroBeltBackground = window.Vue.computed(() => judokaProfile.value.heroBeltBackground);
+    // UIX-044a : la ceinture du judoka, dessinée en haut de sa fiche.
+    const heroBeltColors = window.Vue.computed(() => ui.getBeltColors(state.currentJudokaProfile?.judoka?.beltColor));
     const winShare = window.Vue.computed(() => judokaProfile.value.winShare);
     const lossShare = window.Vue.computed(() => judokaProfile.value.lossShare);
     const heroAvatar = window.Vue.computed(() => judokaProfile.value.heroAvatar);
@@ -317,7 +316,7 @@
           competitionResultsCanShowPreviousPage,
           competitionResultsCanShowNextPage,
           seasonOptions,
-          heroBeltBackground,
+          heroBeltColors,
           winShare,
           lossShare,
           canEditJudokaInfo,

@@ -16,10 +16,22 @@
         </details>
       </div>
       <div class="panel-body">
+        <!-- UIX-044a : la ceinture du judoka traverse le haut de sa fiche, nouée à droite ; décorative, son nom est écrit sous le nom du judoka. -->
+        <div v-if="heroBeltColors.first" id="judokaBelt" class="judoka-belt" :style="{ '--belt-a': heroBeltColors.first, '--belt-b': heroBeltColors.second }" aria-hidden="true">
+          <svg class="judoka-belt-knot" viewBox="0 0 64 56" focusable="false">
+            <path class="judoka-belt-tail-a" d="M26 20 L16 52 L25 54 L33 24 Z"></path>
+            <path class="judoka-belt-tail-b" d="M38 20 L50 50 L41 53 L31 24 Z"></path>
+            <path class="judoka-belt-shade" d="M26 20 L16 52 L25 54 L33 24 Z"></path>
+            <rect class="judoka-belt-tail-a" x="21" y="6" width="22" height="20" rx="4"></rect>
+            <rect class="judoka-belt-half-b" x="32" y="6.5" width="10.5" height="19"></rect>
+            <rect class="judoka-belt-outline" x="21" y="6" width="22" height="20" rx="4"></rect>
+            <path class="judoka-belt-fold" d="M24 10 Q32 16 40 10 M24 22 Q32 16 40 22"></path>
+          </svg>
+        </div>
         <!-- V2 A : identité et profil sportif en quatre colonnes (UIX-022). -->
-        <div id="judokaHero" class="judoka-hero">
+        <div id="judokaHero" class="judoka-hero" :class="{ 'judoka-hero-belted': heroBeltColors.first }">
           <div class="profile-identity">
-            <div id="judokaHeroAvatar" class="hero-avatar" :class="{ 'hero-avatar-belt': heroBeltBackground }" :style="heroBeltBackground ? { '--belt-ring': heroBeltBackground } : null" aria-hidden="true"><span>{{ heroAvatar }}</span></div>
+            <div id="judokaHeroAvatar" class="hero-avatar" aria-hidden="true"><span>{{ heroAvatar }}</span></div>
             <div class="profile-identity-copy">
               <h3 id="judokaProfileTitle">{{ profileTitle }}</h3>
               <p v-if="profileSubtitle" id="judokaProfileSubtitle">{{ profileSubtitle }}</p>

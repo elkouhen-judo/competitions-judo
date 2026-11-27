@@ -253,16 +253,27 @@
     noir: "--belt-black"
   };
 
-  function getBeltBackground(value: unknown) {
-    const parts = String(value || "")
+  function getBeltTokens(value: unknown) {
+    return String(value || "")
       .toLowerCase()
       .split(/[\s-]+/)
       .map((part) => BELT_TOKENS[part])
       .filter(Boolean)
       .slice(0, 2);
+  }
+
+  function getBeltBackground(value: unknown) {
+    const parts = getBeltTokens(value);
     if (!parts.length) return "";
     if (parts.length === 1) return `var(${parts[0]})`;
     return `linear-gradient(90deg, var(${parts[0]}) 50%, var(${parts[1]}) 50%)`;
+  }
+
+  // UIX-044a : les deux moitiés d'une ceinture (la même couleur deux fois pour une ceinture unie), pour la dessiner.
+  function getBeltColors(value: unknown) {
+    const parts = getBeltTokens(value);
+    if (!parts.length) return { first: "", second: "" };
+    return { first: `var(${parts[0]})`, second: `var(${parts[parts.length - 1]})` };
   }
 
   // Échéance courte : « J-4 », « J-J » le jour même ; "" pour une date passée.
@@ -381,6 +392,7 @@
     formatResultat,
     getClassementBadgeClass,
     getBeltBackground,
+    getBeltColors,
     formatCountdown,
     getCompactJudokaLabel,
     getCurrentLocalDate,

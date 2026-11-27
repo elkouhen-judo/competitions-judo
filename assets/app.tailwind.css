@@ -6140,11 +6140,6 @@
     box-sizing: border-box;
   }
 
-  .judoka-hero .hero-avatar-belt {
-    background: var(--belt-ring, var(--accent-soft));
-    box-shadow: inset 0 0 0 1px var(--belt-edge);
-  }
-
   .judoka-hero .hero-avatar span {
     display: inline-flex;
     align-items: center;
@@ -7478,5 +7473,92 @@
 
   #homeClubCompetitionsSection {
     margin-top: 0;
+  }
+}
+
+/* ── Signature : la ceinture du judoka en haut de sa fiche (UIX-044a) ── */
+@layer utilities {
+  .judoka-belt {
+    position: relative;
+    z-index: 1;
+    height: 30px;
+    margin: var(--space-2) 0 0;
+    background: linear-gradient(90deg, var(--belt-a, var(--belt-edge)) 50%, var(--belt-b, var(--belt-a, var(--belt-edge))) 50%);
+    box-shadow: inset 0 0 0 1px var(--belt-edge);
+  }
+
+  /* Les coutures d'un vrai obi, visibles sur toutes les couleurs, noire comprise. */
+  .judoka-belt::before {
+    content: "";
+    position: absolute;
+    inset: 7px 0;
+    border-top: 1px dashed var(--belt-edge);
+    border-bottom: 1px dashed var(--belt-edge);
+    opacity: 0.8;
+  }
+
+  .judoka-belt-knot {
+    position: absolute;
+    top: -14px;
+    right: var(--space-8);
+    width: 92px;
+    height: 80px;
+    overflow: visible;
+  }
+
+  .judoka-belt-tail-a {
+    fill: var(--belt-a, var(--belt-edge));
+    stroke: var(--belt-edge);
+    stroke-width: 1;
+  }
+
+  .judoka-belt-tail-b {
+    fill: var(--belt-b, var(--belt-a, var(--belt-edge)));
+    stroke: var(--belt-edge);
+    stroke-width: 1;
+  }
+
+  .judoka-belt-half-b {
+    fill: var(--belt-b, var(--belt-a, var(--belt-edge)));
+  }
+
+  .judoka-belt-shade {
+    fill: var(--text);
+    opacity: 0.12;
+  }
+
+  .judoka-belt-outline {
+    fill: none;
+    stroke: var(--belt-edge);
+    stroke-width: 1;
+  }
+
+  .judoka-belt-fold {
+    fill: none;
+    stroke: var(--text);
+    stroke-opacity: 0.22;
+    stroke-width: 1.4;
+  }
+
+  /* La carte d'identité s'accroche à la ceinture. */
+  #judokaView .judoka-hero.judoka-hero-belted {
+    position: relative;
+    z-index: 0;
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    padding-top: var(--space-6);
+  }
+
+  /* Sur mobile, la ceinture va d'un bord de l'écran à l'autre. */
+  @media (max-width: 720px) {
+    .judoka-belt {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+    }
+
+    #judokaView .judoka-hero.judoka-hero-belted {
+      margin-top: 0;
+    }
   }
 }
