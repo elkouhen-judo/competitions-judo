@@ -553,18 +553,18 @@ test("clubs can only be assigned to coaches, and only existing clubs", async () 
     /Club introuvable/
   );
 
-  // CLUB-001 : plusieurs structures, le club principal parmi elles (le premier par défaut).
+  // CLUBADM-008 : un seul club en direct ; l'admin global inscrit ou change de club, jamais
+  // n'ajoute une seconde structure.
   await service.methods.setJudokaClubs("admin@example.com", "J1", ["NANTES"]);
-  await service.methods.setJudokaClubs(
-    "admin@example.com",
-    "J1",
-    ["NANTES", "RENNES", "NANTES"],
-    "RENNES"
+  await assert.rejects(
+    () => service.methods.setJudokaClubs("admin@example.com", "J1", ["NANTES", "RENNES"], "RENNES"),
+    /seconde structure s'ajoute par une demande/
   );
+  await service.methods.setJudokaClubs("admin@example.com", "J1", ["RENNES"], "RENNES");
   await service.methods.setJudokaClubs("admin@example.com", "J1", []);
   assert.deepEqual(calls.slice(1), [
     ["setClubs", "J1", ["NANTES"], "NANTES"],
-    ["setClubs", "J1", ["NANTES", "RENNES"], "RENNES"],
+    ["setClubs", "J1", ["RENNES"], "RENNES"],
     ["setClubs", "J1", [], null]
   ]);
   await assert.rejects(

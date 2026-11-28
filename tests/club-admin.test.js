@@ -367,7 +367,7 @@ test("CLUBADM-003 : l'import d'un admin de club rattache chaque judoka à son cl
   ].join("\n");
   const result = await admin.importUsersCsv("ca@example.com", csv, 2026);
   assert.equal(result.imported, 1);
-  assert.match(result.results[1].message, /inscrit dans un autre club/);
+  assert.match(result.results[1].message, /hors de votre club/);
   assert.match(result.results[2].message, /Club de la ligne différent/);
   const lina = store.judokas.find((row) => row.id_judoka === "IMPORT1");
   assert.deepEqual(lina.club_ids, ["NANTES"]);
@@ -447,5 +447,101 @@ test("CLUBADM-001 : l'admin global nomme et retire l'admin d'un club par son e-m
   assert.deepEqual(
     management.clubAdmins.map((person) => person.judokaId),
     ["CA1"]
+  );
+});
+
+test("CLUBADM-003 : un judoka sans club ou un homonyme d'un autre club n'est pas rattaché par l'import", async () => {
+  const { admin, store } = createServices();
+  const csv = [
+    "prenom,nom,email,profiletype",
+    "S1,Test,s1@example.com,JUDOKA",
+    "R1,Test,,JUDOKA",
+    "N2,Test,,JUDOKA"
+  ].join("\n");
+  const result = await admin.importUsersCsv("ca@example.com", csv, 2026);
+  assert.match(result.results[0].message, /hors de votre club/);
+  assert.match(result.results[1].message, /hors de votre club/);
+  assert.equal(result.results[2].success, true);
+  assert.deepEqual(store.judokas.find((row) => row.id_judoka === "S1").club_ids, []);
+  assert.deepEqual(
+    store.calls.filter(([name, id]) => name === "setClubs" && id !== "N2"),
+    []
+  );
+});
+
+test("CLUBADM-003 : un enfant n'est lié qu'à un parent connu du club ou créé par le même fichier", async () => {
+  const { admin, store } = createServices();
+  const csv = [
+    "prenom,nom,email,profiletype,parentEmail",
+    "Zoé,Ailleurs,,JUDOKA,p2@example.com",
+    "Max,Frère,,JUDOKA,p1@example.com",
+    "Nora,Nouvelle,nora.parent@example.com,PARENT,",
+    "Tom,Nouvelle,,JUDOKA,nora.parent@example.com",
+    "P2,Test,p2@example.com,PARENT,"
+  ].join("\n");
+  const result = await admin.importUsersCsv("ca@example.com", csv, 2026);
+  assert.match(result.results[0].message, /pas encore connu de votre club/);
+  assert.equal(result.results[1].success, true);
+  assert.equal(result.results[2].success, true);
+  assert.equal(result.results[3].success, true);
+  assert.match(result.results[4].message, /hors de votre club/);
+  const linkedParents = store.calls
+    .filter(([name]) => name === "link")
+    .map(([, link]) => link.id_parent);
+  assert.ok(!linkedParents.includes("P2"));
+  assert.ok(linkedParents.includes("P1"));
+});
+
+test("CLUBADM-008 : un admin de club ne crée jamais de seconde appartenance", async () => {
+  const store = createStore();
+  store.adminLinks.push({ id_admin: "CA1", id_club: "REZE" });
+  const { clubs } = createServices(store);
+  // N1 est à Nantes ; son admin, aussi admin de Rezé, ne peut pas l'inscrire en plus à Rezé.
+  await assert.rejects(
+    () => clubs.setJudokaClubs("ca@example.com", "N1", ["NANTES", "REZE"], "NANTES"),
+    /demande du judoka/
+  );
+  // D1 : Rezé principal et Nantes en second ; retirer Rezé ferait de Nantes son club.
+  await assert.rejects(
+    () => clubs.setJudokaClubs("ca@example.com", "D1", ["NANTES"], "NANTES"),
+    /admin global/
+  );
+});
+
+test("CLUBADM-008 : l'admin global change le club d'un judoka, sans double appartenance", async () => {
+  const { clubs, store } = createServices();
+  await clubs.setJudokaClubs("admin@example.com", "N1", ["REZE"], "REZE");
+  await assert.rejects(
+    () => clubs.setJudokaClubs("admin@example.com", "R1", ["REZE", "NANTES"], "REZE"),
+    /demande du judoka/
+  );
+  // Une double appartenance existante se retire.
+  await clubs.setJudokaClubs("admin@example.com", "D1", ["REZE"], "REZE");
+  assert.deepEqual(
+    store.calls.filter(([name]) => name === "setClubs"),
+    [
+      ["setClubs", "N1", ["REZE"], "REZE"],
+      ["setClubs", "D1", ["REZE"], "REZE"]
+    ]
+  );
+});
+
+test("CLUBADM-008 : l'import global fait coacher un club par un coach inscrit ailleurs, sans l'y inscrire", async () => {
+  const { admin, store } = createServices();
+  const csv = [
+    "prenom,nom,email,profiletype,role,club",
+    "D1,Test,d1@example.com,JUDOKA,COACH,Judo Club Nantes",
+    "R1,Test,r1@example.com,JUDOKA,,Judo Club Nantes"
+  ].join("\n");
+  const result = await admin.importUsersCsv("admin@example.com", csv, 2026);
+  assert.equal(result.results[0].success, true, result.results[0].message);
+  assert.match(result.results[1].message, /déjà inscrit dans un autre club/);
+  assert.deepEqual(
+    store.calls.filter(([name]) => name === "setClubs"),
+    []
+  );
+  assert.deepEqual(
+    store.coachLinks.filter((link) => link.id_coach === "D1").map((link) => link.id_club),
+    ["REZE", "NANTES"]
   );
 });

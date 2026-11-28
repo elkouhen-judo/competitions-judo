@@ -559,30 +559,35 @@
       viewModel.userClubDraft = { clubIds: isOpen ? [] : [...clubIds], mainClubId: isOpen ? "" : mainClubId };
     }
 
-    // Un club coché devient principal s'il est le seul ; décocher le principal passe au suivant.
+    // CLUBADM-008 : on retire une structure ; une seconde structure ne s'ajoute jamais ici.
     function toggleUserClubDraft(clubId: string) {
       if (!clubId) return;
       const draft = getAdminsViewModel().userClubDraft;
-      const clubIds = draft.clubIds.includes(clubId)
-        ? draft.clubIds.filter((id) => id !== clubId)
-        : [...draft.clubIds, clubId];
-      const mainClubId = clubIds.includes(draft.mainClubId) ? draft.mainClubId : clubIds[0] || "";
+      const clubIds = draft.clubIds.filter((id) => id !== clubId);
+      const mainClubId = clubIds.includes(draft.mainClubId) ? draft.mainClubId : "";
       getAdminsViewModel().userClubDraft = { clubIds, mainClubId };
     }
 
+    // CLUBADM-008 : l'admin global change le club du judoka ; le nouveau club remplace l'ancien,
+    // les autres structures restent.
     function setUserMainClubDraft(clubId: string) {
       const draft = getAdminsViewModel().userClubDraft;
-      if (draft.clubIds.includes(clubId)) draft.mainClubId = clubId;
+      const others = draft.clubIds.filter((id) => id !== draft.mainClubId && id !== clubId);
+      getAdminsViewModel().userClubDraft = clubId
+        ? { clubIds: [clubId, ...others], mainClubId: clubId }
+        : { clubIds: [], mainClubId: "" };
     }
 
-    function saveUserClubs(judokaId: string, fullName: string, previousClubIds: string[] = []) {
+    function saveUserClubs(judokaId: string, fullName: string, previousClubIds: string[] = [], previousMainClubId = "") {
       const { clubIds, mainClubId } = getAdminsViewModel().userClubDraft;
-      const names = clubIds.map((id) => (id === mainClubId && clubIds.length > 1 ? `${getClubName(id)} (principal)` : getClubName(id)));
       const removed = previousClubIds.filter((id) => !clubIds.includes(id)).map(getClubName).filter(Boolean);
-      const target = names.length ? `à ${names.join(", ")}` : "sans club";
       const warning = removed.length ? ` Les coachs de ${removed.join(", ")} ne le verront plus.` : "";
+      const isClubChange = Boolean(mainClubId) && mainClubId !== previousMainClubId;
+      let question = `Retirer ${fullName} de ${removed.join(", ")} ?`;
+      if (isClubChange) question = `Inscrire ${fullName} à ${getClubName(mainClubId)} ?`;
+      if (!isClubChange && !removed.length) question = `Enregistrer les clubs de ${fullName} ?`;
       app.confirmAndRun({
-        message: `Rattacher ${fullName} ${target} ?${warning}`,
+        message: `${question}${warning}`,
         confirmLabel: "Enregistrer les clubs",
         method: "setJudokaClubs",
         args: [judokaId, clubIds, mainClubId || null],

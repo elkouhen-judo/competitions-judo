@@ -3872,7 +3872,7 @@ test("importUsersCsv processes the bundled sample file: children link, the alrea
   assert.deepEqual(calls.coachClubs[0][1], ["NANTES"]);
 });
 
-test("importUsersCsv adds the club to a judoka's structures and keeps their main club (CLUB-007)", async () => {
+test("CLUBADM-008 : l'import n'inscrit pas dans un second club un judoka inscrit ailleurs (CLUB-007)", async () => {
   const { service, calls } = createTestAdminService({
     "lina@example.com": {
       id_judoka: "LINA",
@@ -3890,8 +3890,10 @@ test("importUsersCsv adds the club to a judoka's structures and keeps their main
 
   const summary = await service.methods.importUsersCsv("admin@example.com", csv);
 
-  assert.equal(summary.failed, 0, JSON.stringify(summary.results));
-  assert.deepEqual(calls.clubAssignments, [["LINA", "RENNES", ["RENNES", "NANTES"]]]);
+  assert.equal(summary.failed, 1);
+  assert.match(summary.results[0].message, /déjà inscrit dans un autre club/);
+  assert.deepEqual(calls.clubAssignments, []);
+  assert.deepEqual(calls.updated, []);
 });
 
 test("importUsersCsv rejects an unknown club or a club on a parent row without writing", async () => {

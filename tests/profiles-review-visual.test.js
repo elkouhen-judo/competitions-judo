@@ -229,36 +229,31 @@ for (const [name, viewport] of VIEWPORTS) {
     await page.locator("#usersKindFilter").getByRole("radio", { name: "Tous" }).click();
     await expect(cards).toHaveCount(5);
 
-    // ADMIN-3 / CLUB-001 : les clubs se choisissent par le menu (club et pôle), avec un club principal,
-    // puis une confirmation dans l'appli.
+    // CLUBADM-008 : l'admin global inscrit le judoka dans un seul club, puis confirme dans l'appli ;
+    // une autre structure ne s'ajoute pas ici.
     const row = (fullName) => cards.filter({ hasText: fullName });
     await row("Sam Test").locator(".card-menu summary").click();
-    await row("Sam Test").getByRole("menuitem", { name: "Modifier les clubs" }).click();
+    await row("Sam Test").getByRole("menuitem", { name: "Changer de club" }).click();
     const choice = row("Sam Test").locator(".admin-user-club-choice");
     await expect(choice.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
-    // UIX-043 : les clubs choisis en pastilles, les autres dans le menu « Ajouter un club… ».
-    const addClub = choice.getByRole("combobox", { name: "Ajouter un club à Sam Test" });
-    await addClub.selectOption({ label: "Judo Club Nantes" });
-    await expect(choice.locator(".competition-chip")).toHaveText(["Judo Club Nantes ×"]);
-    await expect(choice.getByRole("radiogroup", { name: "Club principal" })).toHaveCount(0);
-    await addClub.selectOption({ label: "Pôle Espoir" });
-    const main = choice.getByRole("radiogroup", { name: "Club principal" });
-    await expect(main.getByRole("radio", { name: "Judo Club Nantes" })).toHaveAttribute(
-      "aria-checked",
-      "true"
+    await expect(choice.getByRole("combobox", { name: "Ajouter un club à Sam Test" })).toHaveCount(
+      0
     );
-    await main.getByRole("radio", { name: "Pôle Espoir" }).click();
-    await expect(main.getByRole("radio", { name: "Pôle Espoir" })).toHaveAttribute(
-      "aria-checked",
-      "true"
-    );
+    const clubSelect = choice.getByRole("combobox", { name: "Club" });
+    await expect(clubSelect.locator("option")).toHaveText([
+      "Aucun club",
+      "Judo Club Nantes",
+      "Pôle Espoir"
+    ]);
+    await clubSelect.selectOption({ label: "Judo Club Nantes" });
+    await expect(choice).toContainText("Une autre structure s'ajoute par une demande");
     await page.screenshot({
       path: `output/playwright/profiles-admin-${name}-01b-clubs.png`,
       animations: "disabled"
     });
     await choice.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.locator("#confirmDialog")).toContainText(
-      "Rattacher Sam Test à Judo Club Nantes, Pôle Espoir (principal) ?"
+      "Inscrire Sam Test à Judo Club Nantes ?"
     );
     await page.screenshot({
       path: `output/playwright/profiles-admin-${name}-01c-confirmer-clubs.png`,
@@ -267,7 +262,7 @@ for (const [name, viewport] of VIEWPORTS) {
     await page.locator("#confirmDialogConfirm").click();
     await expect
       .poll(() => rpc.filter((r) => r.method === "setJudokaClubs").map((r) => r.args))
-      .toEqual([["j-sam", ["club-nantes", "pole-espoir"], "pole-espoir"]]);
+      .toEqual([["j-sam", ["club-nantes"], "club-nantes"]]);
 
     // UIX-043 : les clubs coachés en pastilles ; le menu ne propose que les autres clubs.
     await page.locator(".admin-sub-tabs").getByRole("button", { name: "Clubs" }).click();

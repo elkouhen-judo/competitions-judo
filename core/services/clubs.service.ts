@@ -196,16 +196,20 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     }
     let ids = [...new Set((clubIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
     let requestedMain = String(mainClubId || "").trim();
+    const current = getJudokaClubIds(judoka).map(String);
+    const currentMain = String(judoka.club_id || "") || current[0] || "";
     if (!scope.isGlobalAdmin) {
       // CLUBADM-006 : un admin de club ne change que ses clubs ; les autres clubs du judoka et
       // un club principal situé ailleurs restent tels quels.
-      const current = getJudokaClubIds(judoka).map(String);
       if (!current.some((id) => scope.clubIds.includes(id))) {
         throw new Error("Profil hors de vos clubs.");
       }
       const kept = current.filter((id) => !scope.clubIds.includes(id));
       ids = [...new Set([...kept, ...ids.filter((id) => scope.clubIds.includes(id))])];
-      const currentMain = String(judoka.club_id || "");
+      // Retirer le club principal ferait d'une seconde structure le club du judoka à son insu.
+      if (currentMain && scope.clubIds.includes(currentMain) && !ids.includes(currentMain) && ids.length) {
+        throw new Error("Ce judoka a aussi une autre structure : demandez à l'admin global de changer son club.");
+      }
       if (currentMain && !scope.clubIds.includes(currentMain) && ids.includes(currentMain)) {
         requestedMain = currentMain;
       } else if (requestedMain && !scope.clubIds.includes(requestedMain)) {
@@ -218,9 +222,23 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     if (requestedMain && !ids.includes(requestedMain)) {
       throw new Error("Le club principal doit faire partie des clubs du judoka.");
     }
-    const main = requestedMain || ids[0] || null;
+    const main = requestedMain || (ids.includes(currentMain) ? currentMain : ids[0]) || null;
+    // CLUBADM-008 : un judoka n'est inscrit directement que dans un club. Seul l'admin global
+    // l'inscrit dans un nouveau club, qui devient son club principal à la place de l'ancien ;
+    // une seconde structure ne s'ajoute que par une demande acceptée.
+    const added = ids.filter((id) => !current.includes(id));
+    const isClubChange =
+      scope.isGlobalAdmin && added.length === 1 && added[0] === main && !(currentMain && ids.includes(currentMain));
+    if (added.length && !isClubChange) {
+      throw new Error(
+        "Une seconde structure s'ajoute par une demande du judoka, acceptée par un admin de cette structure."
+      );
+    }
     await judokasRepository.setClubs(judoka.id_judoka, ids, main);
-    return { success: true, message: ids.length ? "Clubs du judoka mis à jour." : "Judoka retiré de ses clubs." };
+    return {
+      success: true,
+      message: isClubChange ? "Club du judoka changé." : ids.length ? "Clubs du judoka mis à jour." : "Judoka retiré de ses clubs."
+    };
   }
 
   // CLUBADM-001 : l'admin global nomme les admins d'un club, par l'e-mail de leur compte.

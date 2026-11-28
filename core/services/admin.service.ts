@@ -563,6 +563,20 @@ function createUserImportController(deps: UserImportControllerDeps) {
     return String(club.id_club);
   }
 
+  // CLUBADM-008 : l'import n'inscrit jamais un judoka déjà inscrit dans un autre club ; il pourra
+  // demander une seconde appartenance. Vérifié avant toute écriture de la ligne.
+  async function assertSingleDirectClub(row: Record<string, string>, clubId: string): Promise<void> {
+    if (!clubId) return;
+    const existing = await findImportedJudoka(row);
+    if (!existing || String(existing.profile_type || "") !== "JUDOKA") return;
+    const clubIds = getJudokaClubIds(existing).map(String);
+    if (!clubIds.length || clubIds.includes(clubId)) return;
+    const isCoach = cleanText(row.role).toUpperCase() === "COACH" || String(existing.role || "").toUpperCase() === "COACH";
+    if (!isCoach) {
+      throw new Error("Ce judoka est déjà inscrit dans un autre club : il peut demander une seconde appartenance.");
+    }
+  }
+
   async function findImportedJudoka(row: Record<string, string>): Promise<JudokaRow | null> {
     const rawEmail = cleanText(row.email);
     return rawEmail
@@ -599,10 +613,11 @@ function createUserImportController(deps: UserImportControllerDeps) {
     if (!judoka) {
       return;
     }
-    // CLUB-007 : le club du CSV s'ajoute aux structures du judoka ; il devient principal s'il n'en avait pas.
+    // CLUB-007 / CLUBADM-008 : un judoka sans club est inscrit dans le club du CSV. Inscrit ailleurs,
+    // seul un coach est accepté (assertSingleDirectClub) : il coache ce club sans y être inscrit.
     const clubIds = getJudokaClubIds(judoka);
-    if (!clubIds.includes(clubId)) {
-      await judokasRepository.setClubs(judoka.id_judoka, [...clubIds, clubId], String(judoka.club_id || "") || clubId);
+    if (!clubIds.length) {
+      await judokasRepository.setClubs(judoka.id_judoka, [clubId], clubId);
     }
     // Un coach importé avec un club coache ce club (en plus de ses clubs existants).
     if (clubsRepository && String(judoka.role || "").toUpperCase() === "COACH") {
@@ -625,11 +640,22 @@ function createUserImportController(deps: UserImportControllerDeps) {
     return club;
   }
 
+  // Un parent appartient au périmètre d'un club s'il y a au moins un enfant.
+  async function hasChildInClubs(parent: JudokaRow, clubIds: string[]): Promise<boolean> {
+    const links = await parentLinksRepository.listByParent(parent.id_judoka);
+    if (!links.length) return false;
+    const children = await judokasRepository.listByIds(links.map((link) => String(link.id_judoka)));
+    return children.some((child) => getJudokaClubIds(child).some((id) => clubIds.includes(String(id))));
+  }
+
+  // CLUBADM-003 : un admin de club ne touche qu'aux profils de son club. Un profil existant ailleurs
+  // (autre club, sans club, parent sans enfant au club) n'est ni modifié, ni rattaché, ni lié.
   async function assertRowInClubScope(
     forcedClub: { id_club: string; nom: string },
     scope: AccessScope,
-    row: Record<string, string>
-  ): Promise<void> {
+    row: Record<string, string>,
+    parentsCreatedByImport: Set<string>
+  ): Promise<{ existed: boolean }> {
     const clubName = cleanText(row.club);
     if (clubName && clubName.toLocaleLowerCase("fr") !== cleanText(forcedClub.nom).toLocaleLowerCase("fr")) {
       throw new Error(`Club de la ligne différent de ${forcedClub.nom}.`);
@@ -638,10 +664,25 @@ function createUserImportController(deps: UserImportControllerDeps) {
       throw new Error("Un profil PARENT n'appartient pas à un club.");
     }
     const existing = await findImportedJudoka(row);
-    const mainClubId = existing ? String(existing.club_id || "") : "";
-    if (existing && String(existing.profile_type || "") === "JUDOKA" && mainClubId && !scope.clubIds.includes(mainClubId)) {
-      throw new Error("Ce judoka est inscrit dans un autre club : votre club ne peut pas l'importer.");
+    if (existing) {
+      const inScope =
+        String(existing.profile_type || "") === "PARENT"
+          ? parentsCreatedByImport.has(normalizeEmail(existing.email)) || (await hasChildInClubs(existing, scope.clubIds))
+          : scope.clubIds.includes(String(existing.club_id || ""));
+      if (!inScope) {
+        throw new Error("Ce profil existe déjà hors de votre club : demandez à l'admin global de le rattacher.");
+      }
     }
+    const parentEmail = normalizeEmail(row.parentemail);
+    if (parentEmail && !parentsCreatedByImport.has(parentEmail)) {
+      const parent = await judokasRepository.getByEmail(parentEmail);
+      if (!parent || !(await hasChildInClubs(parent, scope.clubIds))) {
+        throw new Error(
+          "Ce parent n'est pas encore connu de votre club : ajoutez sa ligne PARENT dans le fichier, avant celles de ses enfants."
+        );
+      }
+    }
+    return { existed: Boolean(existing) };
   }
 
   async function importUsersCsv(email: string, csvContent: string, seasonStartYear?: number, clubId?: string) {
@@ -656,6 +697,7 @@ function createUserImportController(deps: UserImportControllerDeps) {
     const registeredIds = new Set<string>();
     const importedClubIds = new Set<string>();
     const importContext = createUserImportContext();
+    const parentsCreatedByImport = new Set<string>();
     const clubs = clubsRepository ? await clubsRepository.listAll() : [];
     const forcedClub = resolveForcedClub(scope, clubs, clubId);
     for (let index = 0; index < rows.length; index += 1) {
@@ -663,12 +705,21 @@ function createUserImportController(deps: UserImportControllerDeps) {
       const row = rows[index];
       const label = `${cleanText(row.prenom)} ${cleanText(row.nom)}`.trim() || `ligne ${rowNumber}`;
       try {
+        let createdParentEmail = "";
         if (forcedClub) {
-          await assertRowInClubScope(forcedClub, scope, row);
+          const { existed } = await assertRowInClubScope(forcedClub, scope, row, parentsCreatedByImport);
+          // Un parent créé par cet import peut recevoir ses enfants dans la suite du fichier.
+          if (!existed && createProfileType(row.profiletype) === "PARENT") {
+            createdParentEmail = normalizeEmail(row.email);
+          }
         }
         const isParentRow = createProfileType(row.profiletype) === "PARENT";
         const rowClubId = forcedClub ? (isParentRow ? "" : String(forcedClub.id_club)) : resolveImportClubId(clubs, row);
+        await assertSingleDirectClub(row, rowClubId);
         const outcome = await importUserRow(importContext, row);
+        if (createdParentEmail) {
+          parentsCreatedByImport.add(createdParentEmail);
+        }
         if (rowClubId) {
           await assignImportedJudokaToClub(row, rowClubId);
           importedClubIds.add(rowClubId);
