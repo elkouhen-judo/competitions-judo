@@ -63,6 +63,8 @@ export interface JudokaIdentity {
   user: JudokaRow;
   coachClubIds: string[];
   childJudokaIds: string[];
+  /** CLUBADM-001 : clubs dont le compte est admin. */
+  adminClubIds: string[];
 }
 
 export interface ClubRow {
@@ -72,6 +74,11 @@ export interface ClubRow {
 
 export interface CoachClubRow {
   id_coach: string;
+  id_club: string;
+}
+
+export interface ClubAdminRow {
+  id_admin: string;
   id_club: string;
 }
 

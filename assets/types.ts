@@ -472,6 +472,8 @@ export interface AppScreens {
 export interface KirokuAppState {
   currentUser: Judoka | null;
   isAdmin: boolean;
+  /** CLUBADM-001 : clubs administrés ; non vide, la gestion des accès est ouverte. */
+  adminClubIds: string[];
   isCoach: boolean;
   isParent: boolean;
   homeMode: "judoka" | "parentHome" | "coachHome" | "coach" | "coachJudoka" | "family";

@@ -739,6 +739,34 @@ revoke all on table public.coach_clubs from anon, authenticated;
 grant select, insert, update, delete on table public.clubs to service_role;
 grant select, insert, update, delete on table public.coach_clubs to service_role;
 
+-- CLUBADM : les admins d'un club gèrent les accès de leur club ; l'admin global les nomme.
+create table if not exists public.club_admins (
+  id_admin text not null,
+  id_club text not null,
+  primary key (id_admin, id_club),
+  constraint club_admins_id_admin_fkey
+    foreign key (id_admin) references public.judokas (id_judoka)
+    on update cascade on delete cascade,
+  constraint club_admins_id_club_fkey
+    foreign key (id_club) references public.clubs (id_club)
+    on update cascade on delete cascade
+);
+
+create index if not exists club_admins_id_club_idx on public.club_admins (id_club);
+
+alter table public.club_admins enable row level security;
+
+drop policy if exists "Service role access on club_admins" on public.club_admins;
+create policy "Service role access on club_admins"
+on public.club_admins
+for all
+to service_role
+using (true)
+with check (true);
+
+revoke all on table public.club_admins from anon, authenticated;
+grant select, insert, update, delete on table public.club_admins to service_role;
+
 -- STAT-17 : données du tableau de bord coach en un appel : les compétitions du périmètre
 -- (clubs du résultat ou judokas autorisés, dates, catégorie d'âge), les combats des compétitions choisies
 -- (toutes si aucune) et leurs points. Rien n'est calculé ici : les statistiques restent en

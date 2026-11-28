@@ -52,6 +52,7 @@ const PRIMARY_KEYS = {
 const EMBEDS = {
   judokas: {
     coach_clubs: (row) => db.coach_clubs.filter((link) => link.id_coach === row.id_judoka),
+    club_admins: (row) => (db.club_admins || []).filter((link) => link.id_admin === row.id_judoka),
     parent_judokas: (row) => db.parent_judokas.filter((link) => link.id_parent === row.id_judoka)
   },
   competitions: {
@@ -448,6 +449,7 @@ function resetDatabase() {
       { id_parent: "PARENT1", id_judoka: "N01" },
       { id_parent: "PARENT1", id_judoka: "N02" }
     ],
+    club_admins: [],
     clubs: [
       { id_club: "ANGERS", nom: "Judo Club Angers" },
       { id_club: "NANTES", nom: "Judo Club Nantes" },
@@ -606,7 +608,7 @@ test("CTX-1 : le contexte coûte 2 requêtes au plus, quel que soit le rôle", a
   assert.equal(coach.scope.requests, 2);
   assert.match(
     coach.requests[0].query,
-    /^select=\*,coach_clubs\(id_club\),parent_judokas!parent_judokas_id_parent_fkey\(id_judoka\)&email=ilike\.coach@example\.com&limit=1$/
+    /^select=\*,coach_clubs\(id_club\),club_admins\(id_club\),parent_judokas!parent_judokas_id_parent_fkey\(id_judoka\)&email=ilike\.coach@example\.com&limit=1$/
   );
   assert.match(coach.requests[1].query, /club_ids=ov\.\{NANTES,RENNES\}/);
   // Aucune requête séparée sur coach_clubs ni parent_judokas.

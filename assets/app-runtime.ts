@@ -26,6 +26,7 @@ function createInitialState(): KirokuAppState {
   return {
     currentUser: null,
     isAdmin: false,
+    adminClubIds: [],
     isCoach: false,
     isParent: false,
     homeMode: "judoka",
@@ -474,7 +475,7 @@ function createInitialState(): KirokuAppState {
         screens.competition.openClubCompetition(restored.clubCompetitionId);
         return;
       }
-      if (restored.viewId === "adminsView" && state.isAdmin) {
+      if (restored.viewId === "adminsView" && (state.isAdmin || state.adminClubIds.length > 0)) {
         screens.admins.showAdminsManagement(true);
         return;
       }
@@ -1184,6 +1185,7 @@ function createInitialState(): KirokuAppState {
     ) {
       state.currentUser = data.user;
       state.isAdmin = Boolean(data.isAdmin);
+      state.adminClubIds = Array.isArray(data.adminClubIds) ? data.adminClubIds.map(String) : [];
       state.isCoach = Boolean(data.isCoach);
       state.isParent = Boolean(data.isParent);
       state.isUsingCachedData = Boolean(cacheInfo.isCached);
@@ -1321,6 +1323,7 @@ function createInitialState(): KirokuAppState {
         {
           user: state.currentUser,
           isAdmin: state.isAdmin,
+          adminClubIds: state.adminClubIds,
           isCoach: state.isCoach,
           isParent: state.isParent,
           competitions,
@@ -1540,7 +1543,8 @@ function createInitialState(): KirokuAppState {
           () => state.isCoach && state.currentUser?.profileType !== "PARENT"
         ),
         showFamilyLink: window.Vue.computed(() => state.isCoach && state.isParent),
-        showAdminLink: window.Vue.computed(() => state.isAdmin)
+        // CLUBADM-001 : l'admin global ou l'admin d'au moins un club gère les accès.
+        showAdminLink: window.Vue.computed(() => state.isAdmin || state.adminClubIds.length > 0)
       }
     );
 

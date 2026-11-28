@@ -524,7 +524,7 @@ test("CSV import is the only way to create a user, no manual single-invite form 
   );
   assert.match(
     adminService,
-    /async function importUsersCsv\(email: string,\s*csvContent: string(?:,\s*seasonStartYear\?: number)?\)/
+    /async function importUsersCsv\(email: string,\s*csvContent: string(?:,\s*seasonStartYear\?: number)?(?:,\s*clubId\?: string)?\)/
   );
 });
 

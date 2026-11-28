@@ -29,6 +29,7 @@ Le fichier crée les tables :
 - `public.combat_scores`
 - `public.clubs`
 - `public.coach_clubs`
+- `public.club_admins`
 
 Les identifiants existants sont conservés en `text` pour simplifier l'import depuis Google Sheets :
 
@@ -52,6 +53,7 @@ Il crée aussi les fonctions appelables par le rôle service (`service_role`) un
 - `judokas.club_id` référence optionnellement `clubs.id_club` (`on delete restrict`) : le club principal du judoka (CLUB-003a).
 - `judokas.club_ids text[]` (index GIN) : tous les clubs du judoka (CLUB-001). La contrainte `judokas_main_club_member` impose `club_id` parmi `club_ids`, et `club_id` nul seulement si `club_ids` est vide. Les deux colonnes s'écrivent ensemble.
 - `club_competitions.club_id` référence `clubs.id_club` (`on delete restrict`) : le club propriétaire de la compétition club.
+- `club_admins (id_admin, id_club)` relie un admin de club (`judokas.id_judoka`) aux clubs qu'il administre (CLUBADM-001), avec `on delete cascade` des deux côtés.
 - `coach_clubs (id_coach, id_club)` relie un coach (`judokas.id_judoka`) aux clubs qu'il coache, avec `on delete cascade` des deux côtés.
 
 La cascade permet de supprimer automatiquement les combats d'une compétition supprimée, et les prises marquées d'un combat supprimé.

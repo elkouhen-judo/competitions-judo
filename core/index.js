@@ -382,6 +382,7 @@ async function loadInitialData(email, options = {}) {
     ...splitCompetitionsAndRecords(competitionRows),
     clubCompetitions: clubCompetitionRows.map(toClubCompetitionSummary),
     clubs: clubRows.map((club) => ({ clubId: club.id_club, name: club.nom })),
+    adminClubIds: identity.adminClubIds || [],
     judokas: admin || coach || parent ? judokas.map(toCanonicalJudoka) : [],
     loadedFrom,
     oldestCompetitionDate

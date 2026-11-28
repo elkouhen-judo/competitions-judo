@@ -16,6 +16,7 @@ export type JudokaPageFilter = "" | "noClub" | "notRegistered" | "coach";
 
 type JudokaIdentityRow = JudokaRow & {
   coach_clubs?: { id_club: string }[] | "";
+  club_admins?: { id_club: string }[] | "";
   parent_judokas?: { id_judoka: string }[] | "";
 };
 
@@ -47,6 +48,10 @@ export interface JudokasRepository {
     /** ADMIN-2 : judokas sans club, ou non réinscrits pour `seasonStartYear`. */
     filter?: JudokaPageFilter;
     seasonStartYear?: number;
+    /** ADMIN-3 : clubs dont le nom contient chaque mot de la recherche (mot en minuscules). */
+    clubIdsByWord?: Record<string, string[]>;
+    /** CLUBADM-002 : limite la page aux judokas de ces clubs et à ces profils (parents, coachs). */
+    scope?: { clubIds: string[]; judokaIds: string[] };
     limit: number;
   }): Promise<{ rows: JudokaRow[]; total: number }>;
   getById(idJudoka: string): Promise<JudokaRow | null>;
@@ -206,6 +211,7 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
     seasonStartYear?: number;
     /** ADMIN-3 : clubs dont le nom contient chaque mot de la recherche (mot en minuscules). */
     clubIdsByWord?: Record<string, string[]>;
+    scope?: { clubIds: string[]; judokaIds: string[] };
     limit: number;
   }): Promise<{ rows: JudokaRow[]; total: number }> {
     const filters: string[] = [];
@@ -233,6 +239,16 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
       const clubFilter = clubIds.length ? `,club_ids.ov.{${clubIds.map(quoteLogicValue).join(",")}}` : "";
       logicFilters.push(`or(nom.ilike.${pattern},prenom.ilike.${pattern},email.ilike.${pattern}${clubFilter})`);
     });
+    if (options.scope) {
+      const scopeClubIds = uniqueIds(options.scope.clubIds);
+      const scopeJudokaIds = uniqueIds(options.scope.judokaIds);
+      const conditions = [
+        ...(scopeClubIds.length ? [`club_ids.ov.{${scopeClubIds.map(quoteLogicValue).join(",")}}`] : []),
+        ...(scopeJudokaIds.length ? [`id_judoka.in.(${scopeJudokaIds.map(quoteLogicValue).join(",")})`] : [])
+      ];
+      // Un périmètre vide ne lit rien.
+      logicFilters.push(conditions.length ? `or(${conditions.join(",")})` : "id_judoka.is.null");
+    }
     if (logicFilters.length) {
       filters.push(`and=(${logicFilters.join(",")})`);
     }
@@ -265,16 +281,17 @@ export default function createJudokasRepository(deps: SupabaseRestDeps): Judokas
   async function getIdentityByEmail(email: string): Promise<JudokaIdentity | null> {
     const row = await supabaseSelectOne<JudokaIdentityRow>(
       "judokas",
-      `select=*,coach_clubs(id_club),parent_judokas!parent_judokas_id_parent_fkey(id_judoka)&email=ilike.${findEmailQueryValue(email)}`
+      `select=*,coach_clubs(id_club),club_admins(id_club),parent_judokas!parent_judokas_id_parent_fkey(id_judoka)&email=ilike.${findEmailQueryValue(email)}`
     );
     if (!row) {
       return null;
     }
-    const { coach_clubs: coachClubs, parent_judokas: parentLinks, ...user } = row;
+    const { coach_clubs: coachClubs, club_admins: adminLinks, parent_judokas: parentLinks, ...user } = row;
     return {
       user,
       coachClubIds: uniqueIds((coachClubs || []).map((link) => link.id_club)),
-      childJudokaIds: uniqueIds((parentLinks || []).map((link) => link.id_judoka))
+      childJudokaIds: uniqueIds((parentLinks || []).map((link) => link.id_judoka)),
+      adminClubIds: uniqueIds((adminLinks || []).map((link) => link.id_club))
     };
   }
 

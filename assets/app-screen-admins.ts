@@ -22,6 +22,8 @@
       importUsersFileName: "",
       importUsersCsvContent: "",
       importSeasonStartYear: 0,
+      // CLUBADM-003 : club de l'import choisi par un admin de plusieurs clubs.
+      importClubId: "",
       // ADMIN-1 : la gestion des accès s'organise en quatre onglets.
       adminTab: "users",
       newClubName: "",
@@ -34,9 +36,15 @@
     };
     // Clubs et coachs (gestion des clubs, réservée aux admins).
     const clubsData = window.Vue.reactive({
-      clubs: [] as Array<{ clubId: string; name: string; coachIds: string[]; judokaCount: number }>,
-      coaches: [] as Array<{ judokaId: string; firstName: string; lastName: string; accountEmail: string }>
+      clubs: [] as Array<{ clubId: string; name: string; coachIds: string[]; judokaCount: number; adminIds: string[] }>,
+      coaches: [] as Array<{ judokaId: string; firstName: string; lastName: string; accountEmail: string }>,
+      clubAdmins: [] as Array<{ judokaId: string; firstName: string; lastName: string; accountEmail: string }>,
+      // CLUBADM-001 : l'admin global voit tout ; un admin de club, ses clubs seulement.
+      isGlobalAdmin: true,
+      // E-mail saisi pour nommer un admin, par club.
+      adminEmailDrafts: {} as Record<string, string>
     });
+    const isGlobalAdmin = window.Vue.computed(() => clubsData.isGlobalAdmin);
     let adminsViewModel: (typeof defaultAdminsViewState) | null = null;
     // ADMIN-2 : filtre de la liste des utilisateurs, appliqué par le serveur ("" = tous).
     const usersFilterState = window.Vue.reactive({ value: "" as "" | "noClub" | "notRegistered" | "coach" });
@@ -104,14 +112,17 @@
         // CLUB-001 : le club principal d'abord, puis les autres structures.
         const clubNames = [user.clubId, ...user.clubIds.filter((id) => id !== user.clubId)]
           .map((id) => clubsData.clubs.find((option) => option.clubId === id))
-          .filter((club): club is { clubId: string; name: string; coachIds: string[]; judokaCount: number } => Boolean(club))
+          .filter((club): club is (typeof clubsData.clubs)[number] => Boolean(club))
           .map((club) => club.name)
           .join(", ");
         const meta = [user.roleLabel, user.ageCategory, clubNames].filter(Boolean).join(" · ");
         return { ...user, meta, initials: getNameInitials(user.fullName) };
       })
     );
-    const usersFilterOptions = window.Vue.computed(() => USERS_FILTER_OPTIONS);
+    // CLUBADM-002 : un admin de club ne voit pas les profils sans club.
+    const usersFilterOptions = window.Vue.computed(() =>
+      USERS_FILTER_OPTIONS.filter((option) => clubsData.isGlobalAdmin || option.value !== "noClub")
+    );
     const usersSearch = window.Vue.computed(() => state.usersSearch);
     const usersSummary = window.Vue.computed(() => usersProjection.value.usersSummary);
     const usersFilter = window.Vue.computed(() => usersFilterState.value);
@@ -163,7 +174,14 @@
           name: club.name,
           judokaLabel: `${club.judokaCount} judoka${club.judokaCount > 1 ? "s" : ""}`,
           coachLabel: coachNames.length ? coachNames.join(", ") : "Aucun coach",
-          canDelete: club.judokaCount === 0 && club.coachIds.length === 0
+          canDelete: clubsData.isGlobalAdmin && club.judokaCount === 0 && club.coachIds.length === 0,
+          admins: (club.adminIds || [])
+            .map((id) => clubsData.clubAdmins.find((person) => person.judokaId === id))
+            .filter((person): person is (typeof clubsData.clubAdmins)[number] => Boolean(person))
+            .map((person) => ({
+              judokaId: person.judokaId,
+              fullName: getJudokaDisplayName(person) || person.accountEmail
+            }))
         };
       })
     );
@@ -213,7 +231,10 @@
           saveUserClubs,
           toggleUserClubDraft,
           setUserMainClubDraft,
-          openUserClubChoice
+          openUserClubChoice,
+          addClubAdmin,
+          removeClubAdmin,
+          updateClubAdminEmail
         },
         {
           importSeasonOptions: window.Vue.computed(() => importSeasonOptions),
@@ -251,7 +272,10 @@
           userClubDraftOptions,
           clubCards,
           coachCards,
-          hasClubs
+          hasClubs,
+          isGlobalAdmin,
+          clubAdminEmailDrafts: window.Vue.computed(() => clubsData.adminEmailDrafts),
+          importClubName: window.Vue.computed(() => (clubOptions.value.length === 1 ? clubOptions.value[0].name : ""))
         }
       );
     }
@@ -294,9 +318,17 @@
       }
 
       const seasonStartYear = viewModel.importSeasonStartYear || currentSeasonStartYear;
+      // CLUBADM-003 : un admin de club importe pour un de ses clubs.
+      const importClubId = clubsData.isGlobalAdmin
+        ? undefined
+        : viewModel.importClubId || (clubOptions.value.length === 1 ? clubOptions.value[0].clubId : "");
+      if (importClubId === "") {
+        showError({ message: "Choisissez le club de l'import." });
+        return;
+      }
       app.runServer(
         "importUsersCsv",
-        [viewModel.importUsersCsvContent, seasonStartYear],
+        [viewModel.importUsersCsvContent, seasonStartYear, importClubId],
         (response) => {
           // INSCR-1 : le résumé dit qui est inscrit pour la saison et combien ne sont pas réinscrits.
           const seasonLabel = `${response.seasonStartYear}-${response.seasonStartYear + 1}`;
@@ -407,6 +439,10 @@
         (data) => {
           clubsData.clubs = Array.isArray(data.clubs) ? data.clubs : [];
           clubsData.coaches = Array.isArray(data.coaches) ? data.coaches : [];
+          clubsData.clubAdmins = Array.isArray(data.clubAdmins) ? data.clubAdmins : [];
+          clubsData.isGlobalAdmin = data.isGlobalAdmin !== false;
+          // L'admin global garde ses onglets ; « Sans club » n'existe pas pour un admin de club.
+          if (!clubsData.isGlobalAdmin && usersFilterState.value === "noClub") usersFilterState.value = "";
           if (onLoaded) onLoaded();
         },
         showError
@@ -414,7 +450,7 @@
     }
 
     // Après une modification de club, on recharge la gestion (utilisateurs et clubs) pour rester cohérent.
-    function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs">(
+    function runClubAction<M extends "saveClub" | "deleteClub" | "setCoachClubs" | "addClubAdmin" | "removeClubAdmin">(
       method: M,
       args: import("./types").RpcClientArgs<M>,
       onSuccess?: () => void
@@ -484,6 +520,30 @@
       const current = coach ? coach.clubIds : [];
       const next = checked ? [...new Set([...current, clubId])] : current.filter((id) => id !== clubId);
       runClubAction("setCoachClubs", [coachId, next]);
+    }
+
+    // CLUBADM-001 : l'admin global nomme un admin du club par l'e-mail de son compte.
+    function updateClubAdminEmail(clubId: string, value: string) {
+      clubsData.adminEmailDrafts = { ...clubsData.adminEmailDrafts, [clubId]: String(value || "") };
+    }
+
+    function addClubAdmin(clubId: string) {
+      const targetEmail = cleanText(clubsData.adminEmailDrafts[clubId]);
+      if (!targetEmail) {
+        showError({ message: "Saisissez l'e-mail du compte." });
+        return;
+      }
+      runClubAction("addClubAdmin", [clubId, targetEmail], () => updateClubAdminEmail(clubId, ""));
+    }
+
+    async function removeClubAdmin(clubId: string, judokaId: string, fullName: string) {
+      const confirmed = await notifications.confirmAction({
+        message: `Retirer ${fullName} des admins de ${getClubName(clubId)} ?`,
+        confirmLabel: "Retirer",
+        cancelLabel: "Annuler",
+        danger: true
+      });
+      if (confirmed) runClubAction("removeClubAdmin", [clubId, judokaId]);
     }
 
     function getClubName(clubId: string): string {
@@ -565,8 +625,11 @@
 
     function revokeCoachRole(judokaId: string, fullName: string) {
       app.confirmAndRun({
-        message: `Retirer le rôle coach de ${fullName} ? Ses clubs coachés lui seront retirés ; son profil et ses compétitions restent.`,
-        confirmLabel: "Retirer le rôle coach",
+        // CLUBADM-004 : un admin de club ne retire que ses clubs au coach.
+        message: clubsData.isGlobalAdmin
+          ? `Retirer le rôle coach de ${fullName} ? Ses clubs coachés lui seront retirés ; son profil et ses compétitions restent.`
+          : `${fullName} ne coachera plus vos clubs. S'il coache un autre club, il le garde ; son profil et ses compétitions restent.`,
+        confirmLabel: clubsData.isGlobalAdmin ? "Retirer le rôle coach" : "Retirer de vos clubs",
         method: "revokeCoachRole",
         args: [judokaId],
         onSuccess: (response) => {

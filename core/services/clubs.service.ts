@@ -1,4 +1,4 @@
-import { toCanonicalJudoka } from "./domain-adapters";
+import { getJudokaClubIds, toCanonicalJudoka } from "./domain-adapters";
 import type { ClubsRepository } from "../repositories/clubs.repository";
 import type { ClubCompetitionsRepository } from "../repositories/club-competitions.repository";
 import type { JudokasRepository } from "../repositories/judokas.repository";
@@ -7,7 +7,13 @@ import type { ClubsManagement, OperationResult, RpcMethods } from "../types";
 
 type ClubMethods = Pick<
   RpcMethods,
-  "getClubsManagement" | "saveClub" | "deleteClub" | "setCoachClubs" | "setJudokaClubs"
+  | "getClubsManagement"
+  | "saveClub"
+  | "deleteClub"
+  | "setCoachClubs"
+  | "setJudokaClubs"
+  | "addClubAdmin"
+  | "removeClubAdmin"
 >;
 
 export interface ClubsServiceDeps {
@@ -15,7 +21,7 @@ export interface ClubsServiceDeps {
   clubCompetitionsRepository: Pick<ClubCompetitionsRepository, "countByClub">;
   judokasRepository: Pick<
     JudokasRepository,
-    "getById" | "listCoaches" | "countByClub" | "setClubs"
+    "getById" | "getByEmail" | "listByIds" | "listCoaches" | "countByClub" | "setClubs"
   >;
   userContextService: Pick<UserContextService, "getIdentity">;
   isAdmin: (user: ReturnType<typeof toCanonicalJudoka> | null | undefined) => boolean;
@@ -45,14 +51,25 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
   } = deps;
 
   async function requireAdmin(email: string): Promise<void> {
-    // Le contrôle d'accès ne lit que le compte, pas les judokas du périmètre.
+    const scope = await requireClubManager(email);
+    if (!scope.isGlobalAdmin) {
+      throw new Error("Action réservée à l'admin global.");
+    }
+  }
+
+  // CLUBADM-001 : l'admin global gère tous les clubs, un admin de club les siens.
+  // Le contrôle d'accès ne lit que le compte, pas les judokas du périmètre.
+  async function requireClubManager(email: string): Promise<{ isGlobalAdmin: boolean; clubIds: string[] }> {
     const identity = await userContextService.getIdentity(email);
     if (!identity) {
       throw new Error(`Accès refusé pour : ${email}`);
     }
-    if (!isAdmin(toCanonicalJudoka(identity.user))) {
+    const isGlobalAdmin = isAdmin(toCanonicalJudoka(identity.user));
+    const clubIds = identity.adminClubIds || [];
+    if (!isGlobalAdmin && !clubIds.length) {
       throw new Error("Gestion des clubs réservée aux admins.");
     }
+    return { isGlobalAdmin, clubIds };
   }
 
   async function requireClub(idClub: unknown) {
@@ -65,43 +82,64 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
   }
 
   async function getClubsManagement(email: string): Promise<ClubsManagement> {
-    await requireAdmin(email);
+    const scope = await requireClubManager(email);
     // PAGE-3 : seuls les coachs sont lus ; l'effectif de chaque club est compté par la base.
-    const [clubs, links, coachRows] = await Promise.all([
-      clubsRepository.listAll(),
+    const [clubs, links, coachRows, adminLinks] = await Promise.all([
+      scope.isGlobalAdmin ? clubsRepository.listAll() : clubsRepository.listByIds(scope.clubIds),
       clubsRepository.listCoachLinks(),
-      judokasRepository.listCoaches()
+      judokasRepository.listCoaches(),
+      scope.isGlobalAdmin ? clubsRepository.listAdminLinks() : clubsRepository.listAdminLinks(scope.clubIds)
     ]);
-    const judokaCounts = await Promise.all(
-      clubs.map((club) => judokasRepository.countByClub(club.id_club))
-    );
-    const coaches = coachRows.map(toCanonicalJudoka);
+    const clubIds = new Set(clubs.map((club) => String(club.id_club)));
+    const clubLinks = links.filter((link) => clubIds.has(String(link.id_club)));
+    const coachIds = new Set(clubLinks.map((link) => String(link.id_coach)));
+    const [judokaCounts, adminRows] = await Promise.all([
+      Promise.all(clubs.map((club) => judokasRepository.countByClub(club.id_club))),
+      judokasRepository.listByIds([...new Set(adminLinks.map((link) => String(link.id_admin)))])
+    ]);
+    // Un admin de club ne voit que les coachs de ses clubs.
+    const coaches = coachRows
+      .map(toCanonicalJudoka)
+      .filter((coach) => scope.isGlobalAdmin || coachIds.has(String(coach.judokaId)));
     return {
+      isGlobalAdmin: scope.isGlobalAdmin,
       clubs: clubs.map((club, index) => ({
         clubId: club.id_club,
         name: club.nom,
-        coachIds: links
+        coachIds: clubLinks
           .filter((link) => String(link.id_club) === String(club.id_club))
           .map((link) => String(link.id_coach)),
-        judokaCount: judokaCounts[index] || 0
+        judokaCount: judokaCounts[index] || 0,
+        adminIds: adminLinks
+          .filter((link) => String(link.id_club) === String(club.id_club))
+          .map((link) => String(link.id_admin))
       })),
-      coaches: coaches.map((coach) => ({
-        judokaId: coach.judokaId,
-        firstName: coach.firstName,
-        lastName: coach.lastName,
-        accountEmail: coach.accountEmail
-      }))
+      coaches: coaches.map(toPersonSummary),
+      clubAdmins: adminRows.map(toCanonicalJudoka).map(toPersonSummary)
+    };
+  }
+
+  function toPersonSummary(person: ReturnType<typeof toCanonicalJudoka>) {
+    return {
+      judokaId: person.judokaId,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      accountEmail: person.accountEmail
     };
   }
 
   async function saveClub(email: string, input: { clubId?: string; name?: string }): Promise<OperationResult> {
-    await requireAdmin(email);
+    const scope = await requireClubManager(email);
+    const clubId = String((input && input.clubId) || "").trim();
+    // CLUBADM-005 : un admin de club renomme ses clubs ; seul l'admin global en crée.
+    if (!scope.isGlobalAdmin && (!clubId || !scope.clubIds.includes(clubId))) {
+      throw new Error(clubId ? "Club hors de vos clubs." : "Action réservée à l'admin global.");
+    }
     const name = normalizeClubName(input && input.name);
     if (!name) {
       throw new Error("Nom du club obligatoire.");
     }
     const clubs = await clubsRepository.listAll();
-    const clubId = String((input && input.clubId) || "").trim();
     if (clubs.some((club) => sameClubName(club.nom, name) && String(club.id_club) !== clubId)) {
       throw new Error("Un club porte déjà ce nom.");
     }
@@ -151,16 +189,32 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     clubIds: string[],
     mainClubId?: string | null
   ): Promise<OperationResult> {
-    await requireAdmin(email);
+    const scope = await requireClubManager(email);
     const judoka = await judokasRepository.getById(String(idJudoka || ""));
     if (!judoka) {
       throw new Error("Judoka introuvable.");
     }
-    const ids = [...new Set((clubIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
+    let ids = [...new Set((clubIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
+    let requestedMain = String(mainClubId || "").trim();
+    if (!scope.isGlobalAdmin) {
+      // CLUBADM-006 : un admin de club ne change que ses clubs ; les autres clubs du judoka et
+      // un club principal situé ailleurs restent tels quels.
+      const current = getJudokaClubIds(judoka).map(String);
+      if (!current.some((id) => scope.clubIds.includes(id))) {
+        throw new Error("Profil hors de vos clubs.");
+      }
+      const kept = current.filter((id) => !scope.clubIds.includes(id));
+      ids = [...new Set([...kept, ...ids.filter((id) => scope.clubIds.includes(id))])];
+      const currentMain = String(judoka.club_id || "");
+      if (currentMain && !scope.clubIds.includes(currentMain) && ids.includes(currentMain)) {
+        requestedMain = currentMain;
+      } else if (requestedMain && !scope.clubIds.includes(requestedMain)) {
+        requestedMain = "";
+      }
+    }
     for (const id of ids) {
       await requireClub(id);
     }
-    const requestedMain = String(mainClubId || "").trim();
     if (requestedMain && !ids.includes(requestedMain)) {
       throw new Error("Le club principal doit faire partie des clubs du judoka.");
     }
@@ -169,7 +223,42 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     return { success: true, message: ids.length ? "Clubs du judoka mis à jour." : "Judoka retiré de ses clubs." };
   }
 
+  // CLUBADM-001 : l'admin global nomme les admins d'un club, par l'e-mail de leur compte.
+  async function addClubAdmin(email: string, idClub: string, targetEmail: string): Promise<OperationResult> {
+    await requireAdmin(email);
+    const club = await requireClub(idClub);
+    const target = await judokasRepository.getByEmail(String(targetEmail || "").trim().toLowerCase());
+    if (!target || !String(target.email || "").trim()) {
+      throw new Error("Aucun compte trouvé avec cet e-mail.");
+    }
+    const links = await clubsRepository.listAdminLinks([club.id_club]);
+    if (links.some((link) => String(link.id_admin) === String(target.id_judoka))) {
+      throw new Error("Ce compte administre déjà ce club.");
+    }
+    await clubsRepository.addClubAdmin(target.id_judoka, club.id_club);
+    return { success: true, message: `Admin du club ${club.nom} ajouté.` };
+  }
+
+  async function removeClubAdmin(email: string, idClub: string, idAdmin: string): Promise<OperationResult> {
+    await requireAdmin(email);
+    const club = await requireClub(idClub);
+    const links = await clubsRepository.listAdminLinks([club.id_club]);
+    if (!links.some((link) => String(link.id_admin) === String(idAdmin || ""))) {
+      throw new Error("Admin du club introuvable.");
+    }
+    await clubsRepository.removeClubAdmin(String(idAdmin), club.id_club);
+    return { success: true, message: `Admin du club ${club.nom} retiré.` };
+  }
+
   return {
-    methods: { getClubsManagement, saveClub, deleteClub, setCoachClubs, setJudokaClubs }
+    methods: {
+      getClubsManagement,
+      saveClub,
+      deleteClub,
+      setCoachClubs,
+      setJudokaClubs,
+      addClubAdmin,
+      removeClubAdmin
+    }
   };
 }

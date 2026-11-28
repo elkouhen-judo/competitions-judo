@@ -435,11 +435,18 @@ function createClubsServiceFor({
   links = [],
   judokas = [],
   competitionsByClub = {},
-  calls = []
+  calls = [],
+  adminClubIds = [],
+  adminLinks = []
 } = {}) {
   return createClubsService({
     clubsRepository: {
       listAll: async () => clubs,
+      listByIds: async (ids) => clubs.filter((club) => ids.includes(club.id_club)),
+      listAdminLinks: async (ids) =>
+        ids === undefined ? adminLinks : adminLinks.filter((link) => ids.includes(link.id_club)),
+      addClubAdmin: async (idAdmin, idClub) => calls.push(["addClubAdmin", idAdmin, idClub]),
+      removeClubAdmin: async (idAdmin, idClub) => calls.push(["removeClubAdmin", idAdmin, idClub]),
       getById: async (id) => clubs.find((club) => club.id_club === id) || null,
       insert: async (club) => calls.push(["insert", club]),
       rename: async (id, nom) => calls.push(["rename", id, nom]),
@@ -451,6 +458,9 @@ function createClubsServiceFor({
     clubCompetitionsRepository: { countByClub: async (id) => competitionsByClub[id] || 0 },
     judokasRepository: {
       getById: async (id) => judokas.find((judoka) => judoka.id_judoka === id) || null,
+      getByEmail: async (email) =>
+        judokas.find((judoka) => String(judoka.email || "").toLowerCase() === email) || null,
+      listByIds: async (ids) => judokas.filter((judoka) => ids.includes(judoka.id_judoka)),
       listCoaches: async () => judokas.filter((judoka) => judoka.role === "COACH"),
       countByClub: async (id) => judokas.filter((judoka) => judoka.club_id === id).length,
       setClubs: async (id, clubIds, mainClubId) => calls.push(["setClubs", id, clubIds, mainClubId])
@@ -459,7 +469,7 @@ function createClubsServiceFor({
     userContextService: {
       getIdentity: async (email) => {
         const { user } = await context(email);
-        return { user, coachClubIds: [], childJudokaIds: [] };
+        return { user, coachClubIds: [], childJudokaIds: [], adminClubIds };
       }
     },
     isAdmin: permissions.isAdmin,
@@ -601,8 +611,8 @@ test("club management reads only coaches and per-club counts, never the whole ju
   const management = await service.methods.getClubsManagement("admin@example.com");
 
   assert.deepEqual(management.clubs, [
-    { clubId: "NANTES", name: "Nantes", coachIds: ["COACH1"], judokaCount: 2 },
-    { clubId: "RENNES", name: "Rennes", coachIds: [], judokaCount: 0 }
+    { clubId: "NANTES", name: "Nantes", coachIds: ["COACH1"], judokaCount: 2, adminIds: [] },
+    { clubId: "RENNES", name: "Rennes", coachIds: [], judokaCount: 0, adminIds: [] }
   ]);
   assert.deepEqual(
     management.coaches.map((coach) => coach.judokaId),

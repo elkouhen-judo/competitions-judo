@@ -182,11 +182,18 @@ export interface AdminsManagement extends UsersPage {
   user: Judoka;
   admins: Judoka[];
   accessInvitations: AccessInvitation[];
+  /** CLUBADM-002 : faux pour un admin de club, dont la vue est limitée à ses clubs. */
+  isGlobalAdmin: boolean;
+  adminClubIds: string[];
 }
 
 export interface ClubsManagement {
-  clubs: { clubId: string; name: string; coachIds: string[]; judokaCount: number }[];
+  clubs: { clubId: string; name: string; coachIds: string[]; judokaCount: number; adminIds: string[] }[];
   coaches: Pick<Judoka, "judokaId" | "firstName" | "lastName" | "accountEmail">[];
+  /** CLUBADM-001 : admins des clubs listés (noms et e-mails). */
+  clubAdmins: Pick<Judoka, "judokaId" | "firstName" | "lastName" | "accountEmail">[];
+  /** Vrai pour l'admin global ; faux pour un admin de club, qui ne voit que ses clubs. */
+  isGlobalAdmin: boolean;
 }
 
 export interface UserImportRowResult {
@@ -463,6 +470,8 @@ export interface InitialData {
   }[];
   /** Clubs coachés par l'utilisateur (vide si l'utilisateur n'est pas coach). */
   clubs?: Club[];
+  /** CLUBADM-001 : clubs administrés par l'utilisateur. */
+  adminClubIds?: string[];
   judokas: Judoka[];
   /** PAGE-2 : début de la période chargée (saison en cours) ; "" si tout l'historique est chargé. */
   loadedFrom?: string;
@@ -567,7 +576,17 @@ export interface RpcMethods {
     mainClubId?: string | null
   ) => Promise<OperationResult>;
   /** Importe des profils JUDOKA/PARENT en masse depuis un fichier CSV. */
-  importUsersCsv: (email: string, csvContent: string, seasonStartYear?: number) => Promise<UserImportSummary>;
+  importUsersCsv: (
+    email: string,
+    csvContent: string,
+    seasonStartYear?: number,
+    /** CLUBADM-003 : club de l'import, choisi par un admin de club. */
+    clubId?: string
+  ) => Promise<UserImportSummary>;
+  /** CLUBADM-001 : l'admin global nomme un admin du club par l'e-mail de son compte. */
+  addClubAdmin: (email: string, idClub: string, targetEmail: string) => Promise<OperationResult>;
+  /** CLUBADM-001 : l'admin global retire un admin du club. */
+  removeClubAdmin: (email: string, idClub: string, idAdmin: string) => Promise<OperationResult>;
   /** Supprime une compétition de club. */
   deleteClubCompetition: (email: string, idClubCompetition: string) => Promise<OperationResult>;
   /** Détache une participation personnelle d'une compétition de club. */

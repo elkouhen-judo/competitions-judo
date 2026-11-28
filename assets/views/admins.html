@@ -54,7 +54,7 @@
                   </span>
                   <span v-if="managedUser.flag" class="admin-user-flag">{{ managedUser.flag }}</span>
                   <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
-                  <details v-else-if="!managedUser.isAdmin || managedUser.isCoach || managedUser.canBeCoach || managedUser.canHaveClub" class="page-menu card-menu">
+                  <details v-else-if="(isGlobalAdmin && !managedUser.isAdmin) || managedUser.isCoach || managedUser.canBeCoach || (managedUser.canHaveClub && hasClubs)" class="page-menu card-menu">
                     <summary class="icon-button" :aria-label="'Actions pour ' + managedUser.fullName" title="Actions">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
                     </summary>
@@ -63,8 +63,8 @@
                       <!-- ADMIN-1 : le rôle coach se donne et se retire ici, sans import CSV. -->
                       <button v-if="managedUser.canBeCoach" type="button" role="menuitem" :disabled="isSubmitting" @click="grantCoachRole(managedUser.judokaId, managedUser.fullName)">Nommer coach</button>
                       <button v-if="managedUser.isCoach" type="button" role="menuitem" :disabled="isSubmitting" @click="revokeCoachRole(managedUser.judokaId, managedUser.fullName)">Retirer le rôle coach</button>
-                      <hr v-if="!managedUser.isAdmin" class="page-menu-separator">
-                      <button v-if="!managedUser.isAdmin" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">Supprimer le compte…</button>
+                      <hr v-if="isGlobalAdmin && !managedUser.isAdmin" class="page-menu-separator">
+                      <button v-if="isGlobalAdmin && !managedUser.isAdmin" type="button" role="menuitem" class="page-menu-danger" :disabled="isSubmitting" @click="deleteUser(managedUser.judokaId, managedUser.fullName)">Supprimer le compte…</button>
                     </div>
                   </details>
                 </div>
@@ -101,6 +101,8 @@
           </div>
         </div>
 
+        <!-- CLUBADM-001 : les droits d'admin global ne regardent que l'admin global. -->
+        <template v-if="isGlobalAdmin">
         <div class="section">
           <div class="section-heading">
             <div>
@@ -154,6 +156,7 @@
             </button>
           </div>
         </div>
+        </template>
 
         </div>
         <div v-show="adminTab === 'clubs'" class="admin-tab-panel">
@@ -161,10 +164,10 @@
           <div class="section-heading">
             <div>
               <h3 class="section-title">Clubs</h3>
-              <p class="subtitle">Un judoka peut appartenir à plusieurs clubs (club, pôle espoir…) ; un coach ne voit que les judokas des clubs qu'il coache.</p>
+              <p class="subtitle">{{ isGlobalAdmin ? "Un judoka peut appartenir à plusieurs clubs (club, pôle espoir…) ; un coach ne voit que les judokas des clubs qu'il coache." : "Les clubs que vous administrez." }}</p>
             </div>
           </div>
-          <div class="form-grid club-create-row admin-form-card">
+          <div v-if="isGlobalAdmin" class="form-grid club-create-row admin-form-card">
             <div>
               <label for="newClubName">Nouveau club</label>
               <input type="text" id="newClubName" autocomplete="off" placeholder="Ex : Judo Club Nantes" v-model="newClubName" @keyup.enter="createClub()">
@@ -201,11 +204,26 @@
                       </div>
                     </details>
                   </div>
+                  <!-- CLUBADM-001 : les admins du club ; l'admin global les nomme et les retire. -->
+                  <div v-if="isGlobalAdmin || club.admins.length" class="club-admins">
+                    <p class="club-admins-title">Admins du club</p>
+                    <div v-if="club.admins.length" class="competition-chip-list">
+                      <span v-for="person in club.admins" :key="person.judokaId" class="competition-chip">
+                        {{ person.fullName }}
+                        <button v-if="isGlobalAdmin" type="button" class="competition-chip-remove" :aria-label="'Retirer ' + person.fullName + ' des admins de ' + club.name" :disabled="isSubmitting" @click="removeClubAdmin(club.clubId, person.judokaId, person.fullName)">×</button>
+                      </span>
+                    </div>
+                    <p v-else class="field-hint">Aucun admin : seul l'admin global gère ce club.</p>
+                    <div v-if="isGlobalAdmin" class="club-admin-add">
+                      <input type="email" :id="'clubAdminEmail-' + club.clubId" autocomplete="off" placeholder="E-mail d'un compte existant" :aria-label="'E-mail du nouvel admin de ' + club.name" :value="clubAdminEmailDrafts[club.clubId] || ''" @input="updateClubAdminEmail(club.clubId, $event.target.value)" @keyup.enter="addClubAdmin(club.clubId)">
+                      <button type="button" class="button-secondary" :disabled="isSubmitting || !(clubAdminEmailDrafts[club.clubId] || '').trim()" @click="addClubAdmin(club.clubId)">Ajouter</button>
+                    </div>
+                  </div>
                 </template>
               </article>
             </div>
           </div>
-          <div v-if="hasClubs && coachCards.length" id="coachClubsList" class="coach-clubs">
+          <div v-if="isGlobalAdmin && hasClubs && coachCards.length" id="coachClubsList" class="coach-clubs">
             <h3 class="section-title">Clubs coachés</h3>
             <div class="list">
               <article v-for="coach in coachCards" :key="coach.judokaId" class="card admin-card">
@@ -286,6 +304,17 @@
               <li>Chaque judoka du fichier est réinscrit pour la saison choisie. Un judoka absent du fichier garde ses données mais ne peut plus être inscrit à une compétition de cette saison.</li>
             </ul>
           </details>
+          <!-- CLUBADM-003 : un admin de club importe pour un de ses clubs. -->
+          <template v-if="!isGlobalAdmin">
+            <template v-if="clubOptions.length > 1">
+              <label for="importClub">Club de l'import</label>
+              <select id="importClub" v-model="importClubId">
+                <option value="">Choisissez un club</option>
+                <option v-for="club in clubOptions" :key="club.clubId" :value="club.clubId">{{ club.name }}</option>
+              </select>
+            </template>
+            <p id="importClubHint" class="field-hint">{{ importClubName ? `Chaque judoka importé est rattaché à ${importClubName}.` : "Chaque judoka importé est rattaché au club choisi." }} Un judoka déjà inscrit dans un autre club n'est pas modifié.</p>
+          </template>
           <!-- INSCR-1 : la réinscription se fait pour une saison, celle en cours par défaut. -->
           <label for="importSeason">Saison de réinscription</label>
           <select id="importSeason" v-model.number="importSeasonStartYear">

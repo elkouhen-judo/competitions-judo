@@ -80,6 +80,7 @@ This specification does not define:
 - **ROL-002**: A `PARENT` profile can access and edit data of linked child judokas.
 - **ROL-003**: A `COACH` profile has access to the judokas of the clubs they coach, to those judokas' competitions, combats, and stats, and can manage the club competition events of those clubs and their linked sports data. They cannot manage invitations.
 - **ROL-004**: An `ADMIN` profile manages invitations, structural roles, and clubs only. Admin rights alone do not include coach sports permissions and shall not allow creating, updating, finalizing, or deleting competitions or combats.
+- **ROL-004b** (CLUBADM-001): A club admin manages access for the clubs they administer only (CLUBADM-*). It is a link between an account and a club, granted by the global `ADMIN`; it combines with any profile type and with the `COACH` role, and gives no sports permission by itself.
 - **ROL-004a**: Admin rights are a separate flag: a `COACH` can also be admin and then keeps all coach permissions for their clubs. Granting admin rights to a coach shall not remove the coach role.
 - **ROL-005**: `COACH` or `ADMIN` rights are structural roles granted on top of a user account without destroying the underlying profile type.
 - **ROL-006**: A user invited as `PARENT` or `JUDOKA` keeps that underlying profile type after registration.
@@ -92,10 +93,20 @@ This specification does not define:
 - **CLUB-003a** (MULTI-4): Statistics count a participation for the club where it was obtained: the club of its club competition. A participation detached from a deleted club competition (COMP-018) counts for the judoka's current main club. A transfer therefore moves access (CLUB-003), not past results; statistics stay free of any data specific to one judoka (DASH-026).
 - **CLUB-004**: A club competition belongs to exactly one club, fixed at creation. Only judokas belonging to that club (among their clubs) can be entered. A coach of a single club does not choose the club; a coach of several clubs must choose it.
 - **CLUB-005**: Any request on a judoka, competition, combat, club competition, or dashboard outside the coach's clubs shall be refused server-side (screens, API, and MCP alike); another club's club competition is reported as not found.
-- **CLUB-006**: Only admins manage clubs: create, rename (unique name, case-insensitive), assign coaches, set a judoka's clubs and main club (the first chosen by default; it must be one of their clubs). A club can only be deleted when it has no judoka, no coach, and no club competition.
+- **CLUB-006**: Only admins manage clubs (club admins within CLUBADM-*): create, rename (unique name, case-insensitive), assign coaches, set a judoka's clubs and main club (the first chosen by default; it must be one of their clubs). A club can only be deleted when it has no judoka, no coach, and no club competition.
 - **CLUB-007**: The CSV import accepts an optional `club` column holding an existing club name. A `JUDOKA` row adds that club to the judoka's clubs, as main club when they had none; existing clubs are kept. A coach row also coaches it. An unknown club or a club on a `PARENT` row fails that row without writing.
 - **CLUB-008**: A coach of several clubs gets a club filter ("Tous mes clubs" by default) on the coach home and the coach dashboard; it narrows club competitions, the judoka selector, and statistics. The home and the dashboard share one chosen club: changing it on one screen changes it on the other (MULTI-3). The chosen club is remembered on the device for that account; a club the coach no longer coaches falls back to "Tous mes clubs", and logging out forgets the choice (MULTI-2).
 - **CLUB-009** (MULTI-1): For a coach of several clubs, on "Tous mes clubs", the club name is shown on the club competition cards, the coach agenda lines, the "Judokas" suggestions and the dashboard competition suggestions and chips. It is not repeated when one club is chosen. The club competition detail always shows its club under the title. A coach of a single club sees no club name.
+
+### 3.2b Club admin rules
+
+- **CLUBADM-001**: In « Clubs », the global `ADMIN` names a club's admins by the e-mail of an existing account (« Admins du club », « Ajouter ») and removes them (« × », after confirmation). A club may have several admins and an account may administer several clubs. Only the global `ADMIN` creates or deletes a club, names admins (global or of a club), assigns coaches in « Clubs coachés » and deletes a user account.
+- **CLUBADM-002**: A club admin opens « Gestion des accès » from the account menu. « Utilisateurs » lists only the judokas of their clubs, the parents of those judokas and the coaches of their clubs; the filter « Sans club » and the « Admins » section are not offered. « Invitations » lists only the invitations of those people (account e-mail or awaited parent e-mail).
+- **CLUBADM-003**: A club admin imports a CSV for one of their clubs (chosen first when they administer several). Every `JUDOKA` row is attached to that club; a `club` column naming another club, or a row matching an existing judoka whose main club is another club, is refused for that row and changes nothing.
+- **CLUBADM-004**: A club admin names coach a judoka of their clubs (« Nommer coach »): the judoka becomes `COACH` and coaches those clubs. Removing the coach role (« Retirer de vos clubs ») only removes their clubs from the coach; the `COACH` role goes with the last coached club.
+- **CLUBADM-005**: In « Clubs », a club admin sees only their clubs with their admins, and renames them.
+- **CLUBADM-006**: « Modifier les clubs » of a judoka, for a club admin, only adds or removes their clubs: the judoka's other clubs, and a main club that is not theirs, stay unchanged.
+- **CLUBADM-007**: Every club admin request outside their clubs is refused server-side, whatever the screen or the direct call.
 
 ### 3.3 Competition rules
 

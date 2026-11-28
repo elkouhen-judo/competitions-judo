@@ -3770,6 +3770,35 @@ button:focus-visible,
   min-height: var(--touch-min);
 }
 
+.club-admins {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.club-admins-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.club-admins .field-hint {
+  margin: 0;
+}
+
+.club-admin-add {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.club-admin-add input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -7762,6 +7791,24 @@ html {
   margin-bottom: var(--space-4);
 }
 
+/* CLUBADM-001 : le champ prend la place, le bouton garde sa taille. */
+
+#adminsView .club-admin-add {
+  align-items: center;
+}
+
+#adminsView .club-admin-add input {
+  margin: 0;
+}
+
+#adminsView .club-admin-add button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: var(--touch-min);
+  margin: 0;
+  padding: 0 var(--space-4);
+}
+
 /* SHELL-3 : la police est servie par l'appli (woff2 variable), sans feuille tierce bloquante. */
 
 @font-face {
@@ -7830,3 +7877,5 @@ html {
 /* ── UIX-044b : l'anneau de ceinture, signature des avatars de judoka ── */
 
 /* ── CONV : convocation d'une compétition club et réponse de présence ── */
+
+/* ── CLUBADM : admins d'un club dans « Clubs » ── */

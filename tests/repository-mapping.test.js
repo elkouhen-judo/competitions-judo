@@ -803,13 +803,14 @@ test("CTX-1 : judokas repository reads the account with coached clubs and childr
     [
       "selectOne",
       "judokas",
-      `select=*,coach_clubs(id_club),parent_judokas!parent_judokas_id_parent_fkey(id_judoka)&email=ilike.${encodeURIComponent("coach+test@example.com")}`
+      `select=*,coach_clubs(id_club),club_admins(id_club),parent_judokas!parent_judokas_id_parent_fkey(id_judoka)&email=ilike.${encodeURIComponent("coach+test@example.com")}`
     ]
   ]);
   assert.deepEqual(identity, {
     user: { id_judoka: "COACH1", email: "coach@example.com", role: "COACH" },
     coachClubIds: ["NANTES", "RENNES"],
-    childJudokaIds: ["CHILD1"]
+    childJudokaIds: ["CHILD1"],
+    adminClubIds: []
   });
 
   const unknown = createJudokasRepository(createRepositoryDeps([]));
@@ -823,7 +824,8 @@ test("CTX-1 : judokas repository reads the account with coached clubs and childr
   assert.deepEqual(await alone.getIdentityByEmail("judoka@example.com"), {
     user: { id_judoka: "JUDO1" },
     coachClubIds: [],
-    childJudokaIds: []
+    childJudokaIds: [],
+    adminClubIds: []
   });
 });
 

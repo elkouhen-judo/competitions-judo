@@ -1,5 +1,5 @@
 import { inFilter, uniqueIds } from "../shared/query";
-import type { ClubRow, CoachClubRow, SupabaseRestDeps } from "./types";
+import type { ClubAdminRow, ClubRow, CoachClubRow, SupabaseRestDeps } from "./types";
 
 export interface ClubsRepository {
   listAll(): Promise<ClubRow[]>;
@@ -11,6 +11,10 @@ export interface ClubsRepository {
   listCoachLinks(): Promise<CoachClubRow[]>;
   listClubIdsByCoach(idCoach: string): Promise<string[]>;
   replaceCoachClubs(idCoach: string, clubIds: string[]): Promise<void>;
+  /** CLUBADM-001 : liens admin ↔ club, de tous les clubs ou des clubs donnés. */
+  listAdminLinks(clubIds?: string[]): Promise<ClubAdminRow[]>;
+  addClubAdmin(idAdmin: string, idClub: string): Promise<void>;
+  removeClubAdmin(idAdmin: string, idClub: string): Promise<void>;
 }
 
 export default function createClubsRepository(deps: SupabaseRestDeps): ClubsRepository {
@@ -64,7 +68,30 @@ export default function createClubsRepository(deps: SupabaseRestDeps): ClubsRepo
     }
   }
 
+  async function listAdminLinks(clubIds?: string[]): Promise<ClubAdminRow[]> {
+    const order = "order=id_club.asc,id_admin.asc";
+    if (clubIds === undefined) {
+      return supabaseSelect<ClubAdminRow>("club_admins", `select=id_admin,id_club&${order}`);
+    }
+    const ids = uniqueIds(clubIds);
+    if (!ids.length) {
+      return [];
+    }
+    return supabaseSelect<ClubAdminRow>("club_admins", `select=id_admin,id_club&${inFilter("id_club", ids)}&${order}`);
+  }
+
+  async function addClubAdmin(idAdmin: string, idClub: string): Promise<void> {
+    await supabaseInsert<ClubAdminRow>("club_admins", { id_admin: idAdmin, id_club: idClub });
+  }
+
+  async function removeClubAdmin(idAdmin: string, idClub: string): Promise<void> {
+    await supabaseDelete("club_admins", `${eqFilter("id_admin", idAdmin)}&${eqFilter("id_club", idClub)}`);
+  }
+
   return {
+    listAdminLinks,
+    addClubAdmin,
+    removeClubAdmin,
     listAll,
     listByIds,
     getById,
