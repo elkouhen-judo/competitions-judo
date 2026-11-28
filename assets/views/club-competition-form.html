@@ -141,7 +141,7 @@
               <label for="club_competition_deadline">Date limite de réponse</label>
               <input id="club_competition_deadline" type="date" :max="clubCompetitionForm.competitionDate || null" v-model="clubCompetitionForm.responseDeadline" aria-describedby="club_competition_deadline_hint" :aria-invalid="clubCompetitionFormErrors.responseDeadline ? 'true' : 'false'" @input="clubCompetitionFormErrors.responseDeadline = ''">
               <p v-if="clubCompetitionFormErrors.responseDeadline" class="field-error" role="alert">{{ clubCompetitionFormErrors.responseDeadline }}</p>
-              <p v-else id="club_competition_deadline_hint" class="field-hint field-hint-tight">Sans date limite, les familles répondent jusqu'à la veille.</p>
+              <p v-else id="club_competition_deadline_hint" class="field-hint field-hint-tight">Sans date limite, les familles répondent jusqu'au jour de la compétition.</p>
             </div>
             <div class="full-row">
               <label for="club_competition_message">Message du coach</label>

@@ -148,6 +148,8 @@ export interface OperationResult {
   competition?: Competition;
   /** ECRIT-2 : combat enregistré, tel que la fiche de compétition l'affiche. */
   combat?: CombatReadModel;
+  /** COMP-018 : les participations de la compétition club supprimée l'ont été aussi. */
+  participationsDeleted?: boolean;
   /** ECRIT-2 : compétition club enregistrée et ses participations. */
   clubCompetition?: InitialData["clubCompetitions"][number];
   competitions?: Competition[];

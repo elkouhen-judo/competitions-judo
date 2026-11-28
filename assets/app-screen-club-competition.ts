@@ -343,7 +343,7 @@
         message: cleanText(form.convocationMessage),
         deadlineLabel: form.responseDeadline
           ? `Réponse attendue au plus tard le ${ui.formatDateLong(form.responseDeadline)}.`
-          : "Réponse possible jusqu'à la veille de la compétition."
+          : "Réponse possible jusqu'au jour de la compétition."
       };
     });
     // V3 A : l'avancement du classement et le bilan du club sur la compétition.
@@ -1067,13 +1067,19 @@
     }
 
     function confirmDeleteClubCompetitionById(clubCompetitionId: string, name?: string) {
+      // COMP-018 : une compétition à venir disparaît aussi chez les judokas ; dès le jour J, leurs
+      // participations restent, détachées, avec combats et classements.
+      const event = state.clubCompetitions.find((cc) => String(cc.clubCompetitionId) === String(clubCompetitionId));
+      const isUpcoming = Boolean(event && event.competitionDate > getCurrentLocalDate());
       app.confirmAndRun({
-        message: `Supprimer la compétition club « ${name} » ? Les participations individuelles seront détachées et leurs combats seront conservés.`,
+        message: isUpcoming
+          ? `Supprimer la compétition club « ${name} » ? Elle n'a pas encore eu lieu : elle disparaîtra aussi de l'espace de chaque judoka inscrit.`
+          : `Supprimer la compétition club « ${name} » ? Les participations individuelles seront détachées et leurs combats seront conservés.`,
         method: "deleteClubCompetition",
         args: [clubCompetitionId],
         onSuccess: (response) => {
           showSuccess(response.message);
-          app.local.removeClubCompetition(clubCompetitionId);
+          app.local.removeClubCompetition(clubCompetitionId, Boolean(response.participationsDeleted));
           app.showHome && app.showHome();
         }
       });

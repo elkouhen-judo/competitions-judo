@@ -29,6 +29,7 @@ export interface CompetitionsRepository {
   getById(idCompetition: string): Promise<CompetitionRow | null>;
   insert(competition: CompetitionModel, idCompetition: string): Promise<CompetitionRow | null>;
   detachAllFromClubCompetition(idClubCompetition: string): Promise<void>;
+  removeAllFromClubCompetition(idClubCompetition: string): Promise<void>;
   getOldestDate(scope: CompetitionScopeFilter): Promise<string>;
   insertMany(
     competitions: { competition: CompetitionModel; idCompetition: string }[]
@@ -321,6 +322,11 @@ export default function createCompetitionsRepository(
     );
   }
 
+  // COMP-018 : les participations d'une compétition club à venir partent avec elle (combats en cascade).
+  async function removeAllFromClubCompetition(idClubCompetition: string): Promise<void> {
+    return supabaseDelete("competitions", eqFilter("club_competition_id", idClubCompetition));
+  }
+
   async function remove(idCompetition: string): Promise<void> {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
@@ -331,6 +337,7 @@ export default function createCompetitionsRepository(
 
   return {
     detachAllFromClubCompetition,
+    removeAllFromClubCompetition,
     existsForJudoka,
     getById,
     getOldestDate,

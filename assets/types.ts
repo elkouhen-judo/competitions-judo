@@ -548,7 +548,7 @@ export interface LocalDataApi {
     clubCompetition: InitialData["clubCompetitions"][number],
     competitions: Competition[]
   ): void;
-  removeClubCompetition(clubCompetitionId: string): void;
+  removeClubCompetition(clubCompetitionId: string, participationsDeleted?: boolean): void;
   /** PAGE-2 : ajoute une saison passée chargée à la demande. */
   addSeason(season: SeasonCompetitions): void;
 }

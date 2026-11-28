@@ -1439,12 +1439,13 @@ function createInitialState(): KirokuAppState {
     }
 
     // La suppression d'une compétition club garde les compétitions des judokas, détachées.
-    function removeClubCompetitionLocally(clubCompetitionId: string) {
+    function removeClubCompetitionLocally(clubCompetitionId: string, participationsDeleted = false) {
       const id = String(clubCompetitionId);
       state.clubCompetitions = state.clubCompetitions.filter((cc) => String(cc.clubCompetitionId) !== id);
-      state.competitions = state.competitions.map((c) =>
-        String(c.clubCompetitionId || "") === id ? { ...c, clubCompetitionId: null } : c
-      );
+      // COMP-018 : les participations d'une compétition à venir sont supprimées, sinon détachées.
+      state.competitions = participationsDeleted
+        ? state.competitions.filter((c) => String(c.clubCompetitionId || "") !== id)
+        : state.competitions.map((c) => (String(c.clubCompetitionId || "") === id ? { ...c, clubCompetitionId: null } : c));
       persistLocalData();
     }
 

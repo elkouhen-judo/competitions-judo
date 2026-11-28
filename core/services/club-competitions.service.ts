@@ -254,12 +254,23 @@ export default function createClubCompetitionsService(
   async function deleteClubCompetition(email: string, idClubCompetition: string) {
     const { domainUser, coachClubIds = [] } = await userContextService.getDomainUserContext(email);
     assertCanManage(domainUser);
-    await getAccessibleEvent(idClubCompetition, coachClubIds);
-    // ECRIT-3 : toutes les participations sont détachées en une requête.
+    const event = await getAccessibleEvent(idClubCompetition, coachClubIds);
+    // COMP-018 : à venir, la compétition disparaît chez les judokas ; dès le jour J, leurs
+    // participations restent, détachées. ECRIT-3 : une requête pour toutes les participations.
+    if (!isCompetitionFinished(event)) {
+      await competitionsRepository.removeAllFromClubCompetition(idClubCompetition);
+      await clubCompetitionsRepository.remove(idClubCompetition);
+      return {
+        success: true,
+        participationsDeleted: true,
+        message: "Compétition club supprimée, y compris chez les judokas inscrits."
+      };
+    }
     await competitionsRepository.detachAllFromClubCompetition(idClubCompetition);
     await clubCompetitionsRepository.remove(idClubCompetition);
     return {
       success: true,
+      participationsDeleted: false,
       message: "Compétition club supprimée sans supprimer les compétitions et combats des judokas associés."
     };
   }

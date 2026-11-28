@@ -1106,14 +1106,16 @@ test("ECRIT-3 : enregistrer une compétition club de 30 judokas coûte 5 écritu
     linked.every((row) => row.nom === "Coupe de printemps (report)" && row.niveau === "National")
   );
 
-  // Suppression : toutes les participations sont détachées en une requête.
+  // Suppression (COMP-018) : en une requête, les participations sont supprimées si la
+  // compétition est à venir, détachées sinon.
+  const isUpcoming = inSeason("04-19") > new Date().toISOString().slice(0, 10);
   const deletion = await measureWithoutReset(() =>
     methods.deleteClubCompetition("coach@example.com", clubCompetitionId)
   );
   assert.deepEqual(
     writes(deletion.requests).map((request) => [request.method, request.table]),
     [
-      ["PATCH", "competitions"],
+      [isUpcoming ? "DELETE" : "PATCH", "competitions"],
       ["DELETE", "club_competitions"]
     ]
   );
@@ -1123,7 +1125,7 @@ test("ECRIT-3 : enregistrer une compétition club de 30 judokas coûte 5 écritu
   );
   assert.equal(
     db.competitions.filter((row) => row.nom === "Coupe de printemps (report)").length,
-    30
+    isUpcoming ? 0 : 30
   );
 });
 

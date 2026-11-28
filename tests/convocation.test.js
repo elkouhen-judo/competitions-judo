@@ -222,16 +222,16 @@ test("CONV-002 : après la date limite, la famille ne peut plus répondre", asyn
   assert.equal(calls.presence.length, 0);
 });
 
-test("CONV-002 : sans date limite, la famille répond jusqu'à la veille de la compétition", async () => {
+test("CONV-002 : sans date limite, la famille répond jusqu'au jour de la compétition inclus", async () => {
   const event = { ...EVENT, date_limite_reponse: null };
-  const open = createService({ event, getDomainUserContext: parentContext(), today: "2026-12-05" });
+  const open = createService({ event, getDomainUserContext: parentContext(), today: "2026-12-06" });
   await open.service.methods.savePresence("parent@example.com", "COMP1", "PRESENT");
   assert.equal(open.calls.presence.length, 1);
 
   const closed = createService({
     event,
     getDomainUserContext: parentContext(),
-    today: "2026-12-06"
+    today: "2026-12-07"
   });
   await assert.rejects(
     () => closed.service.methods.savePresence("parent@example.com", "COMP1", "PRESENT"),
@@ -286,4 +286,45 @@ test("CONV-003 : le détail d'une compétition embarque sa convocation", async (
   const detail = await service.methods.getCompetitionDetail("parent@example.com", "COMP1");
   assert.equal(detail.competition.convocation.message, "Judogi blanc et licence.");
   assert.equal(detail.competition.presence, "");
+});
+
+const createClubCompetitionsService = require("../core/services/club-competitions.service");
+
+function createDeletionService(eventDate) {
+  const calls = [];
+  const service = createClubCompetitionsService({
+    clubCompetitionsRepository: {
+      getById: async () => ({ ...EVENT, date: eventDate }),
+      remove: async (id) => calls.push(["removeClub", id])
+    },
+    competitionsRepository: {
+      detachAllFromClubCompetition: async (id) => calls.push(["detachAll", id]),
+      removeAllFromClubCompetition: async (id) => calls.push(["removeAll", id])
+    },
+    userContextService: { getDomainUserContext: coachContext() },
+    canManageClubCompetition: permissions.canManageClubCompetition,
+    getCurrentDate: () => "2026-11-28"
+  });
+  return { service, calls };
+}
+
+test("COMP-018 : supprimer une compétition club à venir la supprime chez les judokas", async () => {
+  const { service, calls } = createDeletionService("2026-11-29");
+  const result = await service.methods.deleteClubCompetition("coach@example.com", "CC1");
+  assert.deepEqual(calls, [
+    ["removeAll", "CC1"],
+    ["removeClub", "CC1"]
+  ]);
+  assert.equal(result.participationsDeleted, true);
+  assert.match(result.message, /y compris chez les judokas/);
+});
+
+test("COMP-018 : dès le jour J, la suppression garde les participations détachées", async () => {
+  const { service, calls } = createDeletionService("2026-11-28");
+  const result = await service.methods.deleteClubCompetition("coach@example.com", "CC1");
+  assert.deepEqual(calls, [
+    ["detachAll", "CC1"],
+    ["removeClub", "CC1"]
+  ]);
+  assert.equal(result.participationsDeleted, false);
 });

@@ -348,8 +348,8 @@ export default function createCompetitionsService(
     return { success: true, competitionId: idCompetition, message: "Bilan enregistré." };
   }
 
-  // CONV-002 : une famille répond jusqu'à la date limite incluse, ou jusqu'à la veille de la
-  // compétition sans date limite ; un coach du club de la compétition corrige à tout moment.
+  // CONV-002 : une famille répond jusqu'à la date limite incluse, ou jusqu'au jour de la
+  // compétition inclus sans date limite ; un coach du club de la compétition corrige à tout moment.
   async function savePresence(email: string, idCompetition: string, presence: string) {
     if (presence !== "PRESENT" && presence !== "ABSENT") {
       throw new Error("Réponse de présence invalide.");
@@ -392,7 +392,7 @@ export default function createCompetitionsService(
     if (deadline) {
       return today <= deadline;
     }
-    return today < String(event.date || "");
+    return today <= String(event.date || "");
   }
 
   async function deleteCompetition(email: string, idCompetition: string) {

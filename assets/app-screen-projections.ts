@@ -486,7 +486,7 @@
   }
 
   // CONV-002 : même règle que le serveur. Une famille répond jusqu'à la date limite incluse, ou
-  // jusqu'à la veille sans date limite ; le coach du club corrige à tout moment.
+  // jusqu'au jour de la compétition inclus sans date limite ; le coach du club corrige à tout moment.
   function projectPresence(
     competition: Pick<Competition, "clubCompetitionId" | "competitionDate" | "presence" | "convocation"> | null | undefined,
     today: string,
@@ -497,7 +497,7 @@
       return { isAsked: false, isOpen: false, canAnswer: false, presence: "", responseDeadline: "" };
     }
     const deadline = convocation.responseDeadline;
-    const isOpen = deadline ? today <= deadline : today < competition.competitionDate;
+    const isOpen = deadline ? today <= deadline : today <= competition.competitionDate;
     return {
       isAsked: true,
       isOpen,

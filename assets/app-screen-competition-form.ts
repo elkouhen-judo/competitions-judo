@@ -241,11 +241,14 @@
       if (!projection.isAsked) return null;
       const convocation = competition.convocation;
       const place = cleanConvocationText(convocation && convocation.place);
+      const message = cleanConvocationText(convocation && convocation.message);
+      // CONV-003 : rien à lire ni à répondre, rien à montrer à la famille.
+      if (!isClubCoach && !place && !message && !projection.canAnswer) return null;
       const deadline = projection.responseDeadline;
       return {
         place,
         mapUrl: place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}` : "",
-        message: cleanConvocationText(convocation && convocation.message),
+        message,
         deadlineLabel: deadline ? `Réponse attendue au plus tard le ${ui.formatDateLong(deadline)}.` : "",
         presence: projection.presence,
         statusLabel: getPresenceStatusLabel(projection.presence),
