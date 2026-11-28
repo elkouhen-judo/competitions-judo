@@ -3446,10 +3446,8 @@ button:focus-visible,
 
 .next-card-kicker {
   color: var(--accent);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 /* Bilan de la saison : trois chiffres et la barre victoires / défaites. */
@@ -5317,10 +5315,8 @@ input[aria-invalid="true"],
 .competition-side-heading {
   margin: var(--space-2) var(--space-1) var(--space-0-5);
   color: var(--muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .competition-side-item {
@@ -5465,10 +5461,8 @@ input[aria-invalid="true"],
 
 .home-todo-kicker {
   color: var(--pending);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--letter-spacing-caps);
-  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .home-todo-question {
