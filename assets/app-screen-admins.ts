@@ -116,7 +116,9 @@
           .map((club) => club.name)
           .join(", ");
         const meta = [user.roleLabel, user.ageCategory, clubNames].filter(Boolean).join(" · ");
-        return { ...user, meta, initials: getNameInitials(user.fullName) };
+        // CLUBADM-009 : un admin de club n'agit pas sur un admin global.
+        const isProtected = !clubsData.isGlobalAdmin && user.isAdmin;
+        return { ...user, meta, isProtected, initials: getNameInitials(user.fullName) };
       })
     );
     // CLUBADM-002 : un admin de club ne voit pas les profils sans club.

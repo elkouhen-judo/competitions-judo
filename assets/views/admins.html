@@ -54,7 +54,7 @@
                   </span>
                   <span v-if="managedUser.flag" class="admin-user-flag">{{ managedUser.flag }}</span>
                   <span v-if="managedUser.isCurrentUser" class="current-admin-note">Vous</span>
-                  <details v-else-if="(isGlobalAdmin && !managedUser.isAdmin) || managedUser.isCoach || managedUser.canBeCoach || (managedUser.canHaveClub && hasClubs)" class="page-menu card-menu">
+                  <details v-else-if="!managedUser.isProtected && ((isGlobalAdmin && !managedUser.isAdmin) || managedUser.isCoach || managedUser.canBeCoach || (managedUser.canHaveClub && hasClubs))" class="page-menu card-menu">
                     <summary class="icon-button" :aria-label="'Actions pour ' + managedUser.fullName" title="Actions">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
                     </summary>

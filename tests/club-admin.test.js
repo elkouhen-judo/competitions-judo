@@ -545,3 +545,33 @@ test("CLUBADM-008 : l'import global fait coacher un club par un coach inscrit ai
     ["REZE", "NANTES"]
   );
 });
+
+test("CLUBADM-009 : un admin de club ne retire ni le rôle coach ni le club d'un admin global", async () => {
+  const store = createStore();
+  store.judokas.push(
+    person("G1", {
+      email: "g1@example.com",
+      role: "COACH",
+      is_admin: true,
+      club_id: "NANTES",
+      club_ids: ["NANTES"]
+    })
+  );
+  store.coachLinks.push({ id_coach: "G1", id_club: "NANTES" });
+  const { admin, clubs } = createServices(store);
+  await assert.rejects(() => admin.revokeCoachRole("ca@example.com", "G1"), /admin global/);
+  await assert.rejects(
+    () => clubs.setJudokaClubs("ca@example.com", "G1", [], null),
+    /admin global/
+  );
+  assert.deepEqual(
+    store.calls.filter(([name]) => name === "replaceCoachClubs" || name === "setClubs"),
+    []
+  );
+  // L'admin global, lui, garde la main.
+  await clubs.setJudokaClubs("admin@example.com", "G1", [], null);
+  assert.deepEqual(
+    store.calls.filter(([name]) => name === "setClubs"),
+    [["setClubs", "G1", [], null]]
+  );
+});

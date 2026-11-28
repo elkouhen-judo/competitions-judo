@@ -1063,6 +1063,10 @@ export default function createAdminService(deps: AdminServiceDeps): AdminService
 
   // CLUBADM-004 : un admin de club retire seulement ses clubs ; le rôle part avec le dernier club coaché.
   async function revokeClubCoachRole(scope: AccessScope, target: JudokaRow) {
+    // CLUBADM-009 : un admin de club ne touche pas aux droits d'un admin global.
+    if (createJudoka(toCanonicalJudoka(target)).isAdmin()) {
+      throw new Error("Ce compte est admin global : seul un admin global peut modifier ses droits.");
+    }
     if (!clubsRepository) throw new Error("Gestion des clubs indisponible.");
     const coachClubIds = await clubsRepository.listClubIdsByCoach(target.id_judoka);
     if (!coachClubIds.some((id) => scope.clubIds.includes(String(id)))) {

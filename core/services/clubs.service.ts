@@ -199,6 +199,10 @@ export default function createClubsService(deps: ClubsServiceDeps): ClubsService
     const current = getJudokaClubIds(judoka).map(String);
     const currentMain = String(judoka.club_id || "") || current[0] || "";
     if (!scope.isGlobalAdmin) {
+      // CLUBADM-009 : un admin de club ne retire pas un admin global de ses clubs.
+      if (isAdmin(toCanonicalJudoka(judoka))) {
+        throw new Error("Ce compte est admin global : seul un admin global peut changer ses clubs.");
+      }
       // CLUBADM-006 : un admin de club ne change que ses clubs ; les autres clubs du judoka et
       // un club principal situé ailleurs restent tels quels.
       if (!current.some((id) => scope.clubIds.includes(id))) {
