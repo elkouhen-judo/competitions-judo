@@ -841,7 +841,8 @@
           participantsLabel: `${count} inscrit${count > 1 ? "s" : ""}`,
           avatars: entrants.slice(0, 3).map((judoka) => ({
             judokaId: String(judoka.judokaId),
-            initials: ui.getJudokaInitials(judoka)
+            initials: ui.getJudokaInitials(judoka),
+            beltBackground: ui.getBeltBackground(judoka.beltColor)
           })),
           moreCount: Math.max(0, count - 3)
         };

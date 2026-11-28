@@ -223,7 +223,7 @@ for (const [name, viewport] of [
     if (ASSERT) {
       const rows = page.locator("#homeJudokaRoster .row-list > .competition-card");
       await expect(rows).toHaveCount(9);
-      await expect(rows.locator(".belt-swatch")).toHaveCount(8);
+      await expect(rows.locator(".row-avatar.belt-ring[style*='--belt-ring']")).toHaveCount(8);
       await expect(rows.locator(".row-tag-pending")).toHaveText(["Non réinscrit", "Non réinscrit"]);
       await expect(rows.first().locator(".row-avatar")).toHaveText("JR");
       await expect(page.locator("#homeView .tab-title")).toHaveText("Judokas");

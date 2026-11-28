@@ -254,7 +254,7 @@ for (const [name, viewport] of [
       const rows = form.locator("#clubCompetitionParticipants .pick-row-judoka");
       await expect(rows).toHaveCount(2);
       await expect(rows.first()).toHaveAttribute("data-initials", "MG");
-      await expect(rows.first().locator(".belt-swatch")).toHaveCount(1);
+      await expect(rows.first()).toHaveAttribute("style", /--belt-ring/);
       await expect(rows.first().locator(".pick-row-meta")).toHaveText("-50 kg");
       await expect(
         form.locator("#clubCompetitionSelectedParticipants .competition-chip")

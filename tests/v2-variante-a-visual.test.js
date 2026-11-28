@@ -395,7 +395,9 @@ for (const [name, viewport] of [
       await expect(cards).toHaveCount(2);
       await expect(cards.first()).toContainText("Hugo");
       await expect(cards.first()).toContainText("Minime · Orange");
-      await expect(cards.first().locator(".belt-swatch")).toHaveCount(1);
+      await expect(cards.first().locator(".child-card-avatar[style*='--belt-ring']")).toHaveCount(
+        1
+      );
       await expect(page.locator("#homePendingRanking")).toContainText("Coupe de Loire-Atlantique");
       // Revue A : mêmes places que sur la compétition, « NC » compris, sur une ligne.
       const places = page.locator("#homePendingRanking .choice-chip");
@@ -427,7 +429,10 @@ for (const [name, viewport] of [
       await expect(page.locator("#homeSeasonSummary")).toContainText("La saison de Léa");
       await expect(page.locator("#homeSeasonSummary .season-stats")).toHaveCount(0);
       await expect(
-        page.locator("#homeChildPills [role='radio']").nth(1).locator(".belt-swatch")
+        page
+          .locator("#homeChildPills [role='radio']")
+          .nth(1)
+          .locator(".child-card-avatar[style*='--belt-ring']")
       ).toHaveCount(1);
       await expect(page.locator("#competitionsList .empty-action-title")).toHaveText(
         "Aucune compétition"

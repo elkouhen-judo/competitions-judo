@@ -217,8 +217,11 @@ test("family home shows one card per child and remembers the last child", () => 
     bundle,
     /id="homeChildPills" class="child-cards" role="radiogroup" aria-label="Enfant suivi"/
   );
-  // V2 A : la ceinture en barrette plate à côté du prénom, la prochaine compétition, le bilan de la saison.
-  assert.match(bundle, /class="belt-swatch" :style="\{ background: child\.beltBackground \}"/);
+  // UIX-044b : la ceinture en anneau autour des initiales, la prochaine compétition, le bilan de la saison.
+  assert.match(
+    bundle,
+    /class="child-card-avatar belt-ring" :style="child\.beltBackground \? \{ '--belt-ring': child\.beltBackground \} : null"/
+  );
   assert.match(bundle, /id="homeNextCompetition"/);
   assert.match(bundle, /id="homeSeasonSummary"/);
   assert.match(bundle, /id="homeProfileLink"[^>]*@click="openHomeJudokaProfile\(\)"/);

@@ -73,9 +73,9 @@
           </div>
         </section>
 
-        <section v-if="Number(seasonWins) || Number(seasonLosses)" id="judokaCombatEndings" class="season-summary">
+        <section v-if="Number(seasonWins) || Number(seasonLosses)" id="judokaCombatEndings" class="section">
           <h3 class="section-title">{{ isOwnProfile ? "Comment finissent mes combats" : "Comment finissent ses combats" }}</h3>
-          <div class="endings">
+          <div class="endings season-summary">
             <template v-if="Number(seasonWins)">
               <span class="endings-head endings-win">Gagnés</span>
               <span class="endings-track" aria-hidden="true"><span class="endings-fill endings-fill-win" :style="{ width: winShare + '%' }"></span></span>

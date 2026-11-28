@@ -3433,6 +3433,7 @@
   }
 
   .page-header .page-title h2 {
+    padding-top: calc((var(--touch-min) - 1lh) / 2);
     overflow-wrap: anywhere;
   }
 
@@ -3685,10 +3686,11 @@
     width: 100%;
   }
 
-  /* BARRE-1 : une seule ligne, action principale large. */
+  /* BARRE-1 : une seule ligne, action principale large ; un nom trop long passe le « Suivant » au-dessus. */
   .mobile-action-bar.action-bar-inline {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
   }
@@ -3699,13 +3701,21 @@
   }
 
   .action-bar-inline > .action-bar-primary {
-    flex: 1;
+    flex: 1 0 auto;
+    white-space: nowrap;
   }
 
   .action-bar-inline > .button-secondary {
-    flex: none;
+    flex: 1 1 auto;
+    max-width: 100%;
     padding-left: var(--space-4);
     padding-right: var(--space-4);
+  }
+
+  .action-bar-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   #combatFormView .mobile-action-bar.action-bar-inline {
@@ -4200,12 +4210,14 @@
   /* FICHE-5 : le classement non saisi est mis en avant ; son état est écrit. */
   .competition-ranking-section {
     margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    border: 2px solid transparent;
+    border-radius: var(--radius-card);
+    background: var(--panel);
   }
 
   .competition-ranking-section.ranking-pending {
-    padding: var(--space-4);
-    border: 2px solid var(--pending-line);
-    border-radius: var(--radius-card);
+    border-color: var(--pending-line);
     background: var(--pending-bg);
   }
 
@@ -4923,8 +4935,10 @@
   .technique-list {
     display: grid;
     gap: var(--space-2);
-    margin: var(--space-2) 0 0;
-    padding-left: var(--space-5);
+    margin: 0;
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-8);
+    border-radius: var(--radius-card);
+    background: var(--panel);
   }
 
   .technique-list li {
@@ -5622,15 +5636,6 @@
     cursor: pointer;
   }
 
-  .section-count {
-    padding: var(--space-0-5) var(--space-2);
-    border-radius: var(--radius-sm);
-    background: var(--pending-soft);
-    color: var(--pending);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0;
-  }
 
   .home-greeting {
     display: grid;
@@ -5696,10 +5701,8 @@
 
   .next-hero-kicker {
     color: var(--surface-veil);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-extrabold);
-    letter-spacing: var(--letter-spacing-caps);
-    text-transform: uppercase;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
   }
 
   .next-hero-title {
@@ -5778,7 +5781,11 @@
     color: var(--text);
   }
 
-  /* « À faire » : une ligne par compétition à classer. */
+  /* « À faire » : une ligne par compétition à classer, en pleine largeur. */
+  #coachTodo .list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .todo-row {
     display: flex;
     align-items: center;
@@ -6212,7 +6219,7 @@
   }
 
   .season-tab {
-    flex: 1 0 auto;
+    flex: 1 1 0;
     width: auto;
     min-height: var(--touch-min);
     padding: 0 var(--space-3);
@@ -6291,6 +6298,8 @@
 
 /* ── V3 A : compétition d'un judoka, saisie d'un combat, compétition club, statistiques ── */
 @layer utilities {
+  /* Compteur de section : un seul style neutre ; la couleur reste aux actions (« 1 à classer »). */
+  .section-count,
   .section-count-muted {
     color: var(--muted);
     font-size: var(--font-size-sm);
@@ -7560,5 +7569,34 @@
     #judokaView .judoka-hero.judoka-hero-belted {
       margin-top: 0;
     }
+  }
+}
+
+/* ── UIX-044b : l'anneau de ceinture, signature des avatars de judoka ── */
+@layer utilities {
+  /* Anneau plat de la couleur de la ceinture (deux moitiés pour une ceinture bicolore), gris sans ceinture.
+     Le fond intérieur suit --ring-fill ; un filet --belt-edge garde lisible la ceinture blanche. */
+  .belt-ring,
+  .avatar-stack .avatar.belt-ring,
+  .child-card-active .child-card-avatar.belt-ring,
+  .pick-row.pick-row-judoka::before {
+    border: 3px solid transparent;
+    background:
+      linear-gradient(var(--ring-fill, var(--panel)), var(--ring-fill, var(--panel))) padding-box,
+      var(--belt-ring, var(--line)) border-box;
+    box-shadow:
+      0 0 0 1px var(--belt-edge),
+      inset 0 0 0 1px var(--belt-edge);
+    color: var(--text);
+  }
+
+  .child-card-active .child-card-avatar.belt-ring {
+    --ring-fill: var(--accent-soft);
+  }
+
+  /* Sur la carte bleu nuit, un liseré sépare les anneaux qui se chevauchent. */
+  .avatar-stack .avatar.belt-ring {
+    border-width: 2px;
+    box-shadow: 0 0 0 2px var(--primary);
   }
 }

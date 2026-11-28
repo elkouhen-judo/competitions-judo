@@ -53,9 +53,9 @@
               :aria-checked="filterJudokaId === child.judokaId ? 'true' : 'false'"
               :class="['child-card', { 'child-card-active': filterJudokaId === child.judokaId }]"
               @click="selectFilterJudoka(child)">
-              <span class="child-card-avatar" aria-hidden="true">{{ child.initials }}</span>
+              <span class="child-card-avatar belt-ring" :style="child.beltBackground ? { '--belt-ring': child.beltBackground } : null" aria-hidden="true">{{ child.initials }}</span>
               <span class="child-card-copy">
-                <span class="child-card-name">{{ child.firstName }}<span v-if="child.beltBackground" class="belt-swatch" :style="{ background: child.beltBackground }" aria-hidden="true"></span></span>
+                <span class="child-card-name">{{ child.firstName }}</span>
                 <span v-if="child.meta" class="child-card-meta">{{ child.meta }}</span>
               </span>
             </button>
@@ -89,9 +89,9 @@
           <div v-else class="row-list">
             <article v-for="option in filterOptions.slice((judokaRosterPage - 1) * judokaRosterPageSize, judokaRosterPage * judokaRosterPageSize)" :key="option.judokaId" class="card competition-card">
               <button class="card-button competition-open-button" type="button" @click="selectFilterJudoka(option)">
-                <span class="avatar row-avatar" aria-hidden="true">{{ option.initials }}</span>
+                <span class="avatar row-avatar belt-ring" :style="option.beltBackground ? { '--belt-ring': option.beltBackground } : null" aria-hidden="true">{{ option.initials }}</span>
                 <span class="row-copy">
-                  <span class="card-title row-title">{{ option.name }}<span v-if="option.beltBackground" class="belt-swatch" :style="{ background: option.beltBackground }" aria-hidden="true"></span></span>
+                  <span class="card-title row-title">{{ option.name }}</span>
                   <span v-if="option.details" class="competition-card-date row-meta">{{ option.details }}</span>
                 </span>
                 <span v-if="option.isUnregistered" class="row-tag row-tag-pending badge-unregistered">Non réinscrit</span>
@@ -127,7 +127,7 @@
             <span class="next-hero-foot">
               <span class="next-hero-people">
                 <span v-if="coachHome.next.avatars.length" class="avatar-stack" aria-hidden="true">
-                  <span v-for="person in coachHome.next.avatars" :key="person.judokaId" class="avatar">{{ person.initials }}</span>
+                  <span v-for="person in coachHome.next.avatars" :key="person.judokaId" class="avatar belt-ring" :style="person.beltBackground ? { '--belt-ring': person.beltBackground } : null">{{ person.initials }}</span>
                   <span v-if="coachHome.next.moreCount" class="avatar-stack-more">+{{ coachHome.next.moreCount }}</span>
                 </span>
                 <span>{{ coachHome.next.participantsLabel }}</span>

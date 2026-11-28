@@ -169,9 +169,8 @@
             <div v-else-if="!clubCompetitionAvailableJudokasFiltered.length" class="empty-state">{{ judokaAvailableSearchText ? "Aucun autre judoka ne correspond à cette recherche." : "Aucun autre judoka de cette catégorie." }}</div>
             <!-- UIX-043 : seuls les judokas pas encore choisis sont listés. -->
             <div v-else class="list">
-              <button v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" type="button" class="pick-row pick-row-judoka" :data-initials="j.initials" :aria-label="'Ajouter ' + j.name" @click="addClubAvailableJudoka(j.judokaId)">
+              <button v-for="j in clubCompetitionAvailableJudokasPage" :key="j.judokaId" type="button" class="pick-row pick-row-judoka" :data-initials="j.initials" :style="j.beltBackground ? { '--belt-ring': j.beltBackground } : null" :aria-label="'Ajouter ' + j.name" @click="addClubAvailableJudoka(j.judokaId)">
                 <span>{{ j.name }}</span>
-                <span v-if="j.beltBackground" class="belt-swatch" :style="{ background: j.beltBackground }" aria-hidden="true"></span>
                 <span v-if="j.weight" class="pick-row-meta">{{ j.weight }}</span>
                 <span class="pick-row-add" aria-hidden="true">+</span>
               </button>
