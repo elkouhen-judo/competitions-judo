@@ -102,7 +102,26 @@ export function toCanonicalCompetition(competition: SourceRecord = {}): Competit
     weightCategory: String(pick(competition, "weightCategory", "categorie_poids") || ""),
     level: String(pick(competition, "level", "niveau") || ""),
     result: (pick(competition, "result", "classement") || null) as string | null,
-    coachReview: String(pick(competition, "coachReview", "coach_review") || "")
+    coachReview: String(pick(competition, "coachReview", "coach_review") || ""),
+    presence: toPresence(pick(competition, "presence", "presence")),
+    convocation: toConvocation(pick(competition, "convocation", "club_competitions"))
+  };
+}
+
+// CONV-002 : toute autre valeur se lit « Sans réponse ».
+function toPresence(value: unknown): Competition["presence"] {
+  const presence = String(value || "");
+  return presence === "PRESENT" || presence === "ABSENT" ? presence : "";
+}
+
+// CONV-003 : la convocation vient de la compétition club, embarquée à la lecture.
+function toConvocation(value: unknown): Competition["convocation"] {
+  if (!value || typeof value !== "object") return null;
+  const source = value as SourceRecord;
+  return {
+    place: String(pick(source, "place", "lieu") || ""),
+    responseDeadline: String(pick(source, "responseDeadline", "date_limite_reponse") || ""),
+    message: String(pick(source, "message", "message_convocation") || "")
   };
 }
 

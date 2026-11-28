@@ -30,6 +30,8 @@
     rawResult: string;
     record?: CombatRecord;
     beltColor?: string;
+    /** CONV-002 : "", "PRESENT" ou "ABSENT". */
+    presence: string;
   }
 
   interface ClubCompetitionParticipantCard {
@@ -42,7 +44,17 @@
     combatSummary: string;
     hasCombats: boolean;
     hasResult: boolean;
+    presence: string;
+    presenceLabel: string;
+    presenceClass: string;
   }
+
+  // CONV-002 : le mot porte l'état de la réponse ; la couleur le confirme.
+  const PRESENCE_TAGS: Record<string, { label: string; className: string }> = {
+    PRESENT: { label: "Présent", className: "row-tag-done" },
+    ABSENT: { label: "Absent", className: "row-tag-muted" },
+    "": { label: "Sans réponse", className: "row-tag-pending" }
+  };
 
   // Ordre d'affichage des participants : podium d'abord, puis places suivantes, non classés en dernier.
   const RANKING_ORDER: Record<string, number> = {
@@ -51,6 +63,12 @@
 
   function getRankingOrder(value: unknown): number {
     return RANKING_ORDER[String(value || "").trim().toLowerCase()] || 99;
+  }
+
+  // CONV-001 : la date limite de réponse tombe au plus tard le jour de la compétition.
+  function getResponseDeadlineError(deadline: string, competitionDate: string): string {
+    if (!deadline || !competitionDate || deadline <= competitionDate) return "";
+    return "Choisissez une date limite au plus tard le jour de la compétition.";
   }
 
   function formatCombatSummary(record: CombatRecord | undefined) {
@@ -83,6 +101,7 @@
       competitionDate: "",
       ageCategory: "",
       level: "",
+      responseDeadline: "",
       participants: ""
     };
     const clubCompetitionLevelOptions = window.Vue.computed(() => ["Départemental", "Régional", "National", "International"]);
@@ -99,6 +118,9 @@
         ageCategory: "",
         level: "",
         clubId: "",
+        place: "",
+        responseDeadline: "",
+        convocationMessage: "",
         participantJudokaIds: [] as string[]
       }
     };
@@ -111,8 +133,12 @@
         name: "",
         competitionDate: "",
         ageCategory: "",
-        level: ""
+        level: "",
+        place: "",
+        responseDeadline: "",
+        convocationMessage: ""
       },
+      clubCompetitionDetailDeadlineError: "",
       clubCompetitionParticipantsRaw: [] as ClubCompetitionParticipant[],
       clubCompetitionAvailableJudokas: [] as ClubCompetitionJudokaOption[],
       clubCompetitionParticipantsLocked: false,
@@ -285,9 +311,40 @@
           resultClass: getClassementBadgeClass(rawResult),
           combatSummary: formatCombatSummary(record),
           hasCombats,
-          hasResult: Boolean(rawResult)
+          hasResult: Boolean(rawResult),
+          ...toPresenceCard(known ? known.presence || "" : participant.presence)
         };
       });
+    });
+
+    function toPresenceCard(presence: string) {
+      const tag = PRESENCE_TAGS[presence] || PRESENCE_TAGS[""];
+      return { presence: PRESENCE_TAGS[presence] ? presence : "", presenceLabel: tag.label, presenceClass: tag.className };
+    }
+
+    // CONV-002 : avant le jour J, le coach voit qui vient et peut corriger une réponse.
+    const clubCompetitionPresenceSummary = window.Vue.computed(() => {
+      const participants = clubCompetitionCurrentParticipants.value;
+      const count = (presence: string) => participants.filter((p) => p.presence === presence).length;
+      const present = count("PRESENT");
+      const absent = count("ABSENT");
+      const missing = count("");
+      return [
+        `${present} présent${present > 1 ? "s" : ""}`,
+        `${absent} absent${absent > 1 ? "s" : ""}`,
+        `${missing} sans réponse`
+      ].join(" · ");
+    });
+    // CONV-003 : la convocation telle que les familles la lisent.
+    const clubCompetitionConvocation = window.Vue.computed(() => {
+      const form = clubCompetitionDetailViewModel.clubCompetitionDetailForm;
+      return {
+        place: cleanText(form.place),
+        message: cleanText(form.convocationMessage),
+        deadlineLabel: form.responseDeadline
+          ? `Réponse attendue au plus tard le ${ui.formatDateLong(form.responseDeadline)}.`
+          : "Réponse possible jusqu'à la veille de la compétition."
+      };
     });
     // V3 A : l'avancement du classement et le bilan du club sur la compétition.
     const clubCompetitionProgress = window.Vue.computed(() => {
@@ -401,6 +458,7 @@
           showClubCompetitionAvailableJudokasPreviousPage,
           showClubCompetitionAvailableJudokasNextPage,
           setClubParticipantRanking,
+          setClubParticipantPresence,
           showClubCompetitionStats,
           selectClubCompetitionDetailLevel,
           addAllClubAvailableJudokas,
@@ -412,6 +470,8 @@
           isSubmitting,
           canShowClubCompetitionStats,
           clubCompetitionProgress,
+          clubCompetitionPresenceSummary,
+          clubCompetitionConvocation,
           clubRankingOptions,
           clubCompetitionCurrentParticipants,
           clubCompetitionNewJudokas,
@@ -472,6 +532,29 @@
           participant.rawResult = result;
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
+          );
+          if (response.competition) {
+            app.local.saveCompetition(response.competition);
+          }
+        },
+        showError
+      );
+    }
+
+    // CONV-002 : le coach corrige une réponse reçue par un autre moyen, à tout moment.
+    function setClubParticipantPresence(competitionId: string, presence: "PRESENT" | "ABSENT") {
+      const participant = clubCompetitionDetailViewModel.clubCompetitionParticipantsRaw.find(
+        (candidate) => candidate.competitionId === competitionId
+      );
+      const displayed = clubCompetitionCurrentParticipants.value.find((candidate) => candidate.competitionId === competitionId);
+      if (!participant || !displayed || displayed.presence === presence) return;
+      app.runServer(
+        "savePresence",
+        [competitionId, presence],
+        (response) => {
+          participant.presence = presence;
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, presence } : competition
           );
           if (response.competition) {
             app.local.saveCompetition(response.competition);
@@ -633,6 +716,9 @@
         ageCategory: prefill?.ageCategory || "",
         level: prefill?.level || "",
         clubId: defaultClubId,
+        place: "",
+        responseDeadline: "",
+        convocationMessage: "",
         participantJudokaIds: []
       });
       state.clubCompetitionFormParticipantsCurrentPage = 1;
@@ -681,6 +767,7 @@
       errors.competitionDate = form.competitionDate ? "" : "Indiquez la date.";
       errors.ageCategory = form.ageCategory ? "" : "Choisissez la catégorie d'âge.";
       errors.level = form.level ? "" : "Choisissez le niveau.";
+      errors.responseDeadline = getResponseDeadlineError(form.responseDeadline, form.competitionDate);
       errors.participants = form.participantJudokaIds.length ? "" : "Ajoutez au moins un judoka.";
       const fieldByError: Array<[string, string]> = [
         [errors.clubId, "club_competition_club"],
@@ -688,7 +775,8 @@
         [errors.competitionDate, "club_competition_date"],
         [errors.ageCategory, "club_competition_categorie_age"],
         [errors.level, "club_competition_niveau"],
-        [errors.participants, "clubCompetitionParticipants"]
+        [errors.participants, "clubCompetitionParticipants"],
+        [errors.responseDeadline, "club_competition_deadline"]
       ];
       const firstInvalidField = fieldByError.find(([error]) => error)?.[1] || "";
       if (firstInvalidField) {
@@ -750,8 +838,12 @@
             name: cc.nom || "",
             competitionDate: cc.date || "",
             ageCategory: cc.categorie_age || "",
-            level: cc.niveau || ""
+            level: cc.niveau || "",
+            place: cc.lieu || "",
+            responseDeadline: cc.date_limite_reponse || "",
+            convocationMessage: cc.message_convocation || ""
           });
+          clubCompetitionDetailViewModel.clubCompetitionDetailDeadlineError = "";
           clubCompetitionDetailViewModel.clubCompetitionDetailTitle = formatCompetitionName(cc.nom) || "Compétition club";
           clubCompetitionStatsTarget = {
             clubCompetitionId: String(cc.id_club_competition || id),
@@ -785,21 +877,25 @@
                 rawResult: cleanText(p.result),
                 record: combatRecords[String(p.competitionId || "")],
                 beltColor: judoka ? String(judoka.beltColor || "") : "",
+                presence: String(p.presence || ""),
                 order: getRankingOrder(p.result)
               };
             })
             .sort((a, b) => a.order - b.order || a.judokaName.localeCompare(b.judokaName, "fr"))
-            .map(({ competitionId, judokaName, rawResult, record, beltColor }) => ({
+            .map(({ competitionId, judokaName, rawResult, record, beltColor, presence }) => ({
               competitionId,
               judokaName,
               rawResult,
               record,
-              beltColor
+              beltColor,
+              presence
             }));
           const serverParticipations = new Map(data.participations.map((p) => [String(p.competitionId), p]));
           state.competitions = state.competitions.map((competition) => {
             const fresh = serverParticipations.get(String(competition.competitionId));
-            return fresh ? { ...competition, result: fresh.result, coachReview: fresh.coachReview } : competition;
+            return fresh
+              ? { ...competition, result: fresh.result, coachReview: fresh.coachReview, presence: fresh.presence }
+              : competition;
           });
           clubCompetitionDetailViewModel.clubCompetitionParticipantsLocked =
             Boolean(cc.date) && String(cc.date) <= getCurrentLocalDate();
@@ -827,6 +923,12 @@
     function saveClubCompetitionDetails() {
       ensureClubCompetitionDetailViewModel();
       const form = clubCompetitionDetailViewModel.clubCompetitionDetailForm;
+      const deadlineError = getResponseDeadlineError(form.responseDeadline, form.competitionDate);
+      clubCompetitionDetailViewModel.clubCompetitionDetailDeadlineError = deadlineError;
+      if (deadlineError) {
+        window.Vue.nextTick(() => document.getElementById("club_detail_deadline")?.focus());
+        return;
+      }
       app.runServer(
         "saveClubCompetition",
         [
@@ -836,6 +938,9 @@
             competitionDate: form.competitionDate,
             ageCategory: form.ageCategory,
             level: form.level,
+            place: form.place,
+            responseDeadline: form.responseDeadline,
+            convocationMessage: form.convocationMessage,
             participantJudokaIds: clubCompetitionDetailViewModel.clubCompetitionNewJudokaIds
           }
         ],

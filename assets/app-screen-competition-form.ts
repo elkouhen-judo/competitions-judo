@@ -18,6 +18,23 @@
   // review field, and finalization status. Returns `openCompetition` so the
   // form controller (and the finalization glue in the main factory) can navigate back
   // into the detail view after a save.
+  // CONV-002 : le mot porte l'état de la réponse.
+  function getPresenceStatusLabel(presence: string): string {
+    if (presence === "PRESENT") return "Présent";
+    if (presence === "ABSENT") return "Absent";
+    return "Sans réponse";
+  }
+
+  const PRESENCE_STATUS_CLASSES = {
+    PRESENT: "ranking-status-done",
+    ABSENT: "ranking-status-muted",
+    "": "ranking-status-todo"
+  };
+
+  function cleanConvocationText(value: unknown): string {
+    return String(value || "").trim();
+  }
+
   function createCompetitionDetailController(
     app: KirokuApp,
     deps: {
@@ -212,6 +229,32 @@
       };
     });
 
+    // CONV-003 : la convocation de la compétition club et la réponse de présence du judoka.
+    const competitionConvocation = window.Vue.computed(() => {
+      const competition = state.currentCompetition;
+      const timing = competitionTiming.value;
+      if (!competition || state.isLoadingCompetition || (!timing.isUpcoming && !timing.isToday)) {
+        return null;
+      }
+      const isClubCoach = state.isCoach && canEditCompetition.value;
+      const projection = window.KirokuScreenProjections.projectPresence(competition, ui.getCurrentLocalDate(), isClubCoach);
+      if (!projection.isAsked) return null;
+      const convocation = competition.convocation;
+      const place = cleanConvocationText(convocation && convocation.place);
+      const deadline = projection.responseDeadline;
+      return {
+        place,
+        mapUrl: place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}` : "",
+        message: cleanConvocationText(convocation && convocation.message),
+        deadlineLabel: deadline ? `Réponse attendue au plus tard le ${ui.formatDateLong(deadline)}.` : "",
+        presence: projection.presence,
+        statusLabel: getPresenceStatusLabel(projection.presence),
+        statusClass: PRESENCE_STATUS_CLASSES[projection.presence],
+        canAnswer: canEditCompetition.value && projection.canAnswer,
+        closedLabel: projection.isOpen ? "" : "La date limite de réponse est passée : contactez le coach pour changer la réponse."
+      };
+    });
+
     const showCoachAssessment = window.Vue.computed(() =>
       Boolean(
         state.currentCompetition &&
@@ -235,6 +278,7 @@
           editCurrentCompetition,
           navigateBackFromCompetition,
           saveCompetitionRanking,
+          saveCompetitionPresence,
           showCombatForm,
           saveCoachReview,
           openNextClubParticipant,
@@ -269,6 +313,7 @@
           canEditCoachAssessment,
           nextClubParticipant,
           competitionSideList,
+          competitionConvocation,
         }
       );
     }
@@ -314,6 +359,29 @@
           }
           state.competitions = state.competitions.map((competition) =>
             String(competition.competitionId) === String(competitionId) ? { ...competition, result } : competition
+          );
+          if (response.competition) {
+            app.local.saveCompetition(response.competition);
+          }
+        },
+        showError
+      );
+    }
+
+    // CONV-002 : la réponse part en ligne seulement ; hors connexion, l'erreur habituelle s'affiche.
+    function saveCompetitionPresence(presence: "PRESENT" | "ABSENT") {
+      if (!state.currentCompetition || state.currentCompetition.presence === presence) return;
+      const competitionId = state.currentCompetition.competitionId;
+      app.runServer(
+        "savePresence",
+        [competitionId, presence],
+        (response) => {
+          showSuccess(response.message);
+          if (state.currentCompetition && String(state.currentCompetition.competitionId) === String(competitionId)) {
+            state.currentCompetition = { ...state.currentCompetition, presence };
+          }
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, presence } : competition
           );
           if (response.competition) {
             app.local.saveCompetition(response.competition);

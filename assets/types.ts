@@ -217,8 +217,23 @@ export interface PendingOfflineOperation {
   summary: string;
 }
 
+export interface PresenceProjection {
+  /** La participation appartient à une compétition club qui demande une réponse. */
+  isAsked: boolean;
+  /** La famille peut encore répondre (date limite non passée). */
+  isOpen: boolean;
+  canAnswer: boolean;
+  presence: "" | "PRESENT" | "ABSENT";
+  responseDeadline: string;
+}
+
 export interface ScreenProjections {
   formatCombatStage(stage: unknown): string;
+  projectPresence(
+    competition: Pick<Competition, "clubCompetitionId" | "competitionDate" | "presence" | "convocation"> | null | undefined,
+    today: string,
+    isClubCoach: boolean
+  ): PresenceProjection;
   getWeightCategoryOptions(ageCategory: string, gender?: string): string[];
   getYearInCategoryOptions(ageCategory: string): string[];
   mergePendingCombatCards(
@@ -463,7 +478,7 @@ export interface KirokuAppState {
   competitions: Competition[];
   /** Bilan des combats par compétition, pour les cartes de l'accueil. */
   combatRecords: Record<string, { total: number; wins: number; losses: number; draws: number }>;
-  clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string; clubId?: string }>;
+  clubCompetitions: Array<{ clubCompetitionId: string; name: string; competitionDate: string; clubId?: string; responseDeadline?: string }>;
   /** Clubs coachés par l'utilisateur connecté (vide si non coach). */
   clubs: Array<{ clubId: string; name: string }>;
   /** Club choisi pour filtrer l'espace coach ("" = tous ses clubs). */

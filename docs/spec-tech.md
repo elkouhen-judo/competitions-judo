@@ -127,6 +127,8 @@ This specification does not redefine product behavior already described in `docs
 - **DAT-031**: Result values in `combats` shall use the strict canonical labels `Victoire`, `Défaite`, or `Egalité`. Legacy values or complex scoring states are deprecated for the MVP baseline.
 - **DAT-032**: `combat_scores` shall store the repeatable list of scoring techniques for a combat (one row per score), each referencing `combats.id_combat` with cascade delete, and an explicit `ordre` column preserving entry order.
 - **DAT-033**: Judoka season statistics shall be computed on a season running from September 1st to August 31st.
+- **DAT-036** (CONV-001): `club_competitions` stores the convocation in `lieu` (text, `''` by default), `date_limite_reponse` (date, nullable) and `message_convocation` (text, `''` by default).
+- **DAT-037** (CONV-002): `competitions` stores the presence answer in `presence` (`''`, `PRESENT` or `ABSENT`, checked by `competitions_presence_valid`) and its time in `presence_repondue_le` (timestamptz, nullable). Participation reads embed the convocation through `competitions_club_competition_id_fkey`; the `savePresence` RPC checks the scope, the club coach and the deadline server-side.
 - **DAT-034**: `ffjudo_events` stores the FFJDA agenda keyed by `event_key` (`fed:<federal id>`, `loc:<host>:<site id>`, `nat:<slug>:<start date>`), with dates, type, place, town, postal code, organiser, resolved ligue, source URL, organiser website, `sources` (hosts that listed it) and `synced_at`. It has no contact nor FFJDA level column.
 - **DAT-035**: `ffjudo_sync_runs` journals each synchronisation: start and end, status among `ok`, `partial`, `error`, per-source status and count, distinct event count.
 

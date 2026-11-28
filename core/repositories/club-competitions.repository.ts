@@ -21,6 +21,9 @@ function toClubCompetitionRecord(event: ClubCompetitionModel): Record<string, un
     date: event.competitionDate,
     categorie_age: event.ageCategory || "",
     niveau: event.level || "",
+    lieu: event.place || "",
+    date_limite_reponse: event.responseDeadline || null,
+    message_convocation: event.convocationMessage || "",
     // N'écrit le club que s'il est connu : une mise à jour sans club ne doit jamais le détacher.
     ...(event.clubId ? { club_id: event.clubId } : {})
   };

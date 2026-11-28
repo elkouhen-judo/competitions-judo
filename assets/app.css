@@ -3694,6 +3694,82 @@ button:focus-visible,
   text-align: right;
 }
 
+.convocation-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.convocation-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.convocation-map-link {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--accent);
+}
+
+.convocation-message {
+  margin: 0;
+  color: var(--text);
+  white-space: pre-line;
+}
+
+.convocation-presence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.convocation-presence:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.convocation-question {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+.convocation-presence .field-hint {
+  margin: 0;
+}
+
+.ranking-status-muted,
+  .row-tag-muted {
+  background: var(--soft);
+  color: var(--muted);
+}
+
+.row-tag-done {
+  background: var(--win-soft);
+  color: var(--win);
+}
+
+.participant-presence {
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.home-todo .home-todo-link {
+  justify-self: start;
+}
+
+.participant-presence .choice-chip {
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -7671,6 +7747,21 @@ html {
   box-shadow: 0 0 0 2px var(--primary);
 }
 
+/* CONV-001 : l'aide de la date limite colle à son champ ; l'intro de la carte précède ses champs. */
+
+#clubCompetitionFormView .form-card .field-hint-tight,
+  #clubCompetitionDetailView .form-card .field-hint-tight {
+  margin: var(--space-1) 0 var(--space-4);
+}
+
+#clubCompetitionFormView .form-card .form-card-intro {
+  margin: 0 0 var(--space-3);
+}
+
+#competitionConvocation {
+  margin-bottom: var(--space-4);
+}
+
 /* SHELL-3 : la police est servie par l'appli (woff2 variable), sans feuille tierce bloquante. */
 
 @font-face {
@@ -7737,3 +7828,5 @@ html {
 /* ── Signature : la ceinture du judoka en haut de sa fiche (UIX-044a) ── */
 
 /* ── UIX-044b : l'anneau de ceinture, signature des avatars de judoka ── */
+
+/* ── CONV : convocation d'une compétition club et réponse de présence ── */

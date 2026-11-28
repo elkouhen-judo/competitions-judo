@@ -141,6 +141,15 @@ This specification does not define:
 - **COMP-041** (FICHE-7): The combats are rows of one panel. Each row starts with a round « V », « D » or « N » letter, so the result reads without colour, then the opponent and guard, the round, the points scored and conceded in text (« Marqué : », « Subi : »), and the combat ending as a tag on the right. The « Bilan coach » section comes after the combats; when empty, parents and judokas read « Le coach n'a pas encore écrit de bilan. ».
 - **COMP-042** (FICHE-8): From 1100 px wide, the competition screen lists on its left the other competitions of the same judoka, under « À venir » (soonest first) and « Passées » (latest first), each with its date and its ranking or « Classement à saisir ». The open competition is highlighted; touching another opens it in place, keeping the back destination. The list is hidden below 1100 px and when the judoka has a single competition.
 
+### 3.3a Convocation rules
+
+- **CONV-001**: A club competition may carry a convocation: a place (200 characters at most), a response deadline and a coach message (1000 characters at most), all optional. They are set on « Nouvelle compétition » and changed with « Modifier ou ajouter des judokas ». The response deadline falls on the competition day at the latest.
+- **CONV-002**: Each participation in a club competition holds a presence answer: « Sans réponse » (default, also for a judoka added later), « Présent » or « Absent ». A `PARENT` answers for their children, a `JUDOKA` for themselves, until the response deadline included, or until the day before the competition without a deadline. A `COACH` of the competition's club changes an answer at any time. Every other answer is refused server-side; a participation detached from its club competition asks for no answer.
+- **CONV-003**: Until the competition day included, the competition screen shows « Convocation »: the place with « Voir sur la carte », the coach message, the answer status and the deadline, then « Présent » and « Absent » while an answer is still possible. After the deadline, the family reads « La date limite de réponse est passée : contactez le coach pour changer la réponse. ».
+- **CONV-004**: The family home (for the chosen child) and the judoka home show « À faire » for the soonest club competition with a response deadline not yet passed and no answer: « Confirmez la présence de <Prénom> à <compétition> » (« Confirmez votre présence à <compétition> » for the judoka), the date and deadline, « Présent », « Absent » and « Voir la convocation ». A club competition without a deadline creates no task.
+- **CONV-005**: Before the competition day, the club competition detail shows « Convocation » with the place, the message, « N présents · N absents · N sans réponse » and the deadline. Each participant row carries its answer and « Présent » / « Absent » to correct it. From 3 days before a response deadline until that deadline, the coach home « À faire » lists the club competition with « N réponses manquantes avant le <date> ».
+- **CONV-006**: An « Absent » answer removes nothing: the judoka stays entered until the coach removes them (COMP-027). Presence answers require a connection (OFF-003).
+
 ### 3.4 Combat rules
 
 - **CBT-001**: A combat must include a parent competition, a judoka, and a result.
@@ -303,7 +312,7 @@ This specification does not define:
 
 - **OFF-001**: After a first successful connected load, the application shall remain openable offline and shall display the latest locally available data for the connected user's known scope.
 - **OFF-002**: Offline data shall be clearly identified in one global status area as data from the latest successful load; entities shall not each carry a stale or unsynchronized badge.
-- **OFF-003**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, and club competition creation or update shall be unavailable offline.
+- **OFF-003**: Initial Google login, admin invitation management, CSV import, competition or combat deletion, club competition participant management, club competition creation or update, and presence answers (CONV-002) shall be unavailable offline.
 - **OFF-004**: Coach dashboard results shall require a connected backend call unless the screen explicitly labels a locally cached read-only snapshot.
 - **OFF-005**: A `JUDOKA`, `PARENT`, or `COACH` may create or update combats offline only inside the locally known authorized scope.
 - **OFF-006**: A `JUDOKA`, `PARENT`, or `COACH` may save a final ranking offline for an individual competition inside the locally known authorized scope.

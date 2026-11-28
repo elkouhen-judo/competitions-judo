@@ -37,11 +37,24 @@
           Saisie après coup possible : ajoutez les judokas oubliés. Un participant ne se retire que s'il n'a ni combat ni classement.
         </div>
 
+        <!-- CONV-003 : avant le jour J, la convocation et les réponses des familles. -->
+        <div v-if="!clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing && clubCompetitionCurrentParticipants.length" id="clubCompetitionConvocation" class="section">
+          <h3 class="section-title">Convocation</h3>
+          <div class="convocation-card">
+            <p v-if="clubCompetitionConvocation.place" class="convocation-line">{{ clubCompetitionConvocation.place }}</p>
+            <p v-if="clubCompetitionConvocation.message" class="convocation-message">{{ clubCompetitionConvocation.message }}</p>
+            <div class="convocation-presence">
+              <p id="clubCompetitionPresenceSummary" class="convocation-question">{{ clubCompetitionPresenceSummary }}</p>
+              <p class="field-hint">{{ clubCompetitionConvocation.deadlineLabel }}</p>
+            </div>
+          </div>
+        </div>
+
         <div class="section">
           <div class="section-heading">
             <div>
               <h3 class="section-title">Participants <span class="section-count-muted">{{ clubCompetitionCurrentParticipants.length }}</span></h3>
-              <p class="subtitle">{{ clubCompetitionParticipantsLocked ? "Touchez une place pour classer, un nom pour saisir les combats et le bilan." : "Touchez un judoka pour ouvrir sa participation." }}</p>
+              <p class="subtitle">{{ clubCompetitionParticipantsLocked ? "Touchez une place pour classer, un nom pour saisir les combats et le bilan." : "Corrigez une réponse reçue par téléphone, ou touchez un judoka pour ouvrir sa participation." }}</p>
             </div>
           </div>
           <div id="clubDetailParticipantsList">
@@ -55,6 +68,7 @@
                   </span>
                   <span v-if="p.result && !clubCompetitionParticipantsLocked" class="result-badge classement-badge" :class="p.resultClass">{{ p.result }}</span>
                   <span v-if="clubCompetitionParticipantsLocked && !p.hasResult" class="row-tag row-tag-pending">À classer</span>
+                  <span v-if="!clubCompetitionParticipantsLocked" class="row-tag participant-presence-tag" :class="p.presenceClass">{{ p.presenceLabel }}</span>
                   <svg class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
                 </button>
                 <div v-if="clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing" class="choice-chips participant-ranking" role="radiogroup" :aria-label="'Classement de ' + p.judokaName">
@@ -70,6 +84,10 @@
                     @click="setClubParticipantRanking(p.competitionId, option.value)">
                     {{ option.label }}
                   </button>
+                </div>
+                <div v-if="!clubCompetitionParticipantsLocked && !clubCompetitionDetailEditing" class="choice-chips participant-presence" role="radiogroup" :aria-label="'Présence de ' + p.judokaName">
+                  <button type="button" role="radio" :aria-checked="p.presence === 'PRESENT' ? 'true' : 'false'" :class="['choice-chip', 'choice-chip-compact', { 'choice-active': p.presence === 'PRESENT' }]" :disabled="isSubmitting" @click="setClubParticipantPresence(p.competitionId, 'PRESENT')">Présent</button>
+                  <button type="button" role="radio" :aria-checked="p.presence === 'ABSENT' ? 'true' : 'false'" :class="['choice-chip', 'choice-chip-compact', { 'choice-active': p.presence === 'ABSENT' }]" :disabled="isSubmitting" @click="setClubParticipantPresence(p.competitionId, 'ABSENT')">Absent</button>
                 </div>
                 <div v-if="clubCompetitionDetailEditing && (!clubCompetitionParticipantsLocked || (!p.hasCombats && !p.hasResult))" class="card-actions">
                   <button class="button-danger" type="button" :disabled="isSubmitting" @click="confirmDetachClubParticipant(clubCompetitionDetailForm.clubCompetitionId, p.competitionId, p.judokaName)">
@@ -139,6 +157,21 @@
                   {{ option }}
                 </button>
               </div>
+            </div>
+            <!-- CONV-001 : la convocation se modifie avec la compétition. -->
+            <div class="full-row">
+              <label for="club_detail_place">Lieu</label>
+              <input id="club_detail_place" type="text" maxlength="200" autocomplete="off" placeholder="Gymnase et adresse" v-model.trim="clubCompetitionDetailForm.place">
+            </div>
+            <div class="full-row">
+              <label for="club_detail_deadline">Date limite de réponse</label>
+              <input id="club_detail_deadline" type="date" :max="clubCompetitionDetailForm.competitionDate || null" v-model="clubCompetitionDetailForm.responseDeadline" :aria-invalid="clubCompetitionDetailDeadlineError ? 'true' : 'false'" @input="clubCompetitionDetailDeadlineError = ''">
+              <p v-if="clubCompetitionDetailDeadlineError" class="field-error" role="alert">{{ clubCompetitionDetailDeadlineError }}</p>
+              <p v-else class="field-hint field-hint-tight">Sans date limite, les familles répondent jusqu'à la veille.</p>
+            </div>
+            <div class="full-row">
+              <label for="club_detail_message">Message du coach</label>
+              <textarea id="club_detail_message" rows="3" maxlength="1000" placeholder="Judogi, licence, heure de rendez-vous…" v-model="clubCompetitionDetailForm.convocationMessage"></textarea>
             </div>
           </div>
         </div>

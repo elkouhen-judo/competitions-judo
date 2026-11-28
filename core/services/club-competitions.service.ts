@@ -190,6 +190,11 @@ export default function createClubCompetitionsService(
           idCompetition: buildCompetitionId()
         }))
     );
+    const convocation = {
+      lieu: event.place,
+      date_limite_reponse: event.responseDeadline || null,
+      message_convocation: event.convocationMessage
+    };
     const updated: CompetitionRow[] = existing.map((participation) => ({
       ...participation,
       nom: event.name,
@@ -207,9 +212,13 @@ export default function createClubCompetitionsService(
         clubCompetitionId,
         name: event.name,
         competitionDate: event.competitionDate,
-        clubId
+        clubId,
+        responseDeadline: event.responseDeadline
       },
-      competitions: [...updated, ...created].map(toCanonicalCompetition)
+      // CONV-003 : chaque participation garde la convocation à jour dans le navigateur.
+      competitions: [...updated, ...created].map((row) =>
+        toCanonicalCompetition({ ...row, club_competitions: convocation })
+      )
     };
   }
 

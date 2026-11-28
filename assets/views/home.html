@@ -185,6 +185,17 @@
           </button>
         </div>
 
+        <!-- CONV-004 : la prochaine convocation sans réponse, avant sa date limite. -->
+        <section v-if="homePendingPresence && isHomeReady" id="homePendingPresence" class="home-todo" aria-labelledby="homePendingPresenceQuestion">
+          <span class="home-todo-kicker">À faire</span>
+          <p id="homePendingPresenceQuestion" class="home-todo-question">{{ homePendingPresence.question }}</p>
+          <p class="field-hint">{{ homePendingPresence.deadlineLabel }}</p>
+          <div class="choice-chips choice-chips-wrap" role="group" aria-labelledby="homePendingPresenceQuestion">
+            <button type="button" class="choice-chip" :disabled="isSubmitting" @click="saveHomePresence(homePendingPresence.competitionId, 'PRESENT')">Présent</button>
+            <button type="button" class="choice-chip" :disabled="isSubmitting" @click="saveHomePresence(homePendingPresence.competitionId, 'ABSENT')">Absent</button>
+          </div>
+          <button id="homePendingPresenceOpen" type="button" class="button-link home-todo-link" @click="openCompetition(homePendingPresence.competitionId)">Voir la convocation</button>
+        </section>
         <!-- ACCUEIL-5 : la dernière compétition passée sans classement se classe d'ici. -->
         <section v-if="homePendingRanking && isHomeReady" id="homePendingRanking" class="home-todo" aria-labelledby="homePendingRankingQuestion">
           <span class="home-todo-kicker">À faire</span>

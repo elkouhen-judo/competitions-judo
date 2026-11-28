@@ -46,6 +46,17 @@ export interface Competition {
   level: string;
   result: string | null;
   coachReview: string;
+  /** CONV-002 : réponse de présence ; "" = sans réponse. */
+  presence: "" | "PRESENT" | "ABSENT";
+  /** CONV-003 : convocation de la compétition club ; null hors compétition club ou non lue. */
+  convocation: CompetitionConvocation | null;
+}
+
+export interface CompetitionConvocation {
+  place: string;
+  /** "" sans date limite. */
+  responseDeadline: string;
+  message: string;
 }
 
 export interface CombatScore {
@@ -440,7 +451,14 @@ export interface InitialData {
   competitions: Competition[];
   /** Bilan des combats saisis, indexé par identifiant de compétition. */
   combatRecords?: Record<string, { total: number; wins: number; losses: number; draws: number }>;
-  clubCompetitions: { clubCompetitionId: string; name: string; competitionDate: string; clubId?: string }[];
+  clubCompetitions: {
+    clubCompetitionId: string;
+    name: string;
+    competitionDate: string;
+    clubId?: string;
+    /** CONV-001 : "" sans date limite. */
+    responseDeadline?: string;
+  }[];
   /** Clubs coachés par l'utilisateur (vide si l'utilisateur n'est pas coach). */
   clubs?: Club[];
   judokas: Judoka[];
@@ -577,6 +595,12 @@ export interface RpcMethods {
   saveCompetition: (email: string, competition: Record<string, unknown>) => Promise<OperationResult>;
   /** Enregistre le bilan post-compétition rédigé par le coach. */
   saveCoachReview: (email: string, idCompetition: string, review: string) => Promise<OperationResult>;
+  /** CONV-002 : réponse « Présent » ou « Absent » d'une participation à une compétition club. */
+  savePresence: (
+    email: string,
+    idCompetition: string,
+    presence: "PRESENT" | "ABSENT"
+  ) => Promise<OperationResult & { competition?: Competition }>;
   /** Met à jour la catégorie d'âge, le poids, la ceinture, le genre, l'année dans la catégorie et la garde d'un judoka. */
   saveJudokaInfo: (
     email: string,

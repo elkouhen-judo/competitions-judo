@@ -523,7 +523,10 @@ test("repositories map club competitions and participation links", async () => {
       nom: "Tournoi Nantes",
       date: "2026-06-14",
       categorie_age: "Minime",
-      niveau: "Régional"
+      niveau: "Régional",
+      lieu: "",
+      date_limite_reponse: null,
+      message_convocation: ""
     }
   ]);
 });
@@ -740,7 +743,10 @@ test("club competitions repository maps update without overwriting the id and re
         nom: "Tournoi Nantes 2",
         date: "2026-06-15",
         categorie_age: "Cadet",
-        niveau: "National"
+        niveau: "National",
+        lieu: "",
+        date_limite_reponse: null,
+        message_convocation: ""
       }
     ],
     ["delete", "club_competitions", "id_club_competition=eq.CLUB1"]
@@ -976,12 +982,12 @@ test("PAGE-4 : competitions repository filters a coach scope by club, not by a l
     [
       "select",
       "competitions",
-      `select=*,combats(resultat),judokas!inner(club_ids)&judokas.club_ids=ov.{NANTES,RENNES}&date=gte.2026-09-01&${order}`
+      `select=*,combats(resultat),club_competitions(lieu,date_limite_reponse,message_convocation),judokas!inner(club_ids)&judokas.club_ids=ov.{NANTES,RENNES}&date=gte.2026-09-01&${order}`
     ],
     [
       "select",
       "competitions",
-      `select=*,combats(resultat)&id_judoka=in.(COACH1)&date=gte.2026-09-01&${order}`
+      `select=*,combats(resultat),club_competitions(lieu,date_limite_reponse,message_convocation)&id_judoka=in.(COACH1)&date=gte.2026-09-01&${order}`
     ]
   ]);
   // Les deux lectures sont fusionnées sans doublon, triées par date décroissante, sans la jointure.

@@ -173,6 +173,21 @@ alter table public.competitions
 alter table public.competitions
   add column if not exists ai_analysis text not null default '';
 
+-- CONV : convocation d'une compétition club et réponse de présence de chaque participant.
+alter table public.club_competitions
+  add column if not exists lieu text not null default '',
+  add column if not exists date_limite_reponse date,
+  add column if not exists message_convocation text not null default '';
+
+alter table public.competitions
+  add column if not exists presence text not null default '',
+  add column if not exists presence_repondue_le timestamptz;
+
+alter table public.competitions
+  drop constraint if exists competitions_presence_valid;
+alter table public.competitions
+  add constraint competitions_presence_valid check (presence in ('', 'PRESENT', 'ABSENT'));
+
 alter table public.judokas
   drop constraint if exists judokas_role_check;
 

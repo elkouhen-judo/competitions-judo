@@ -317,7 +317,8 @@ function toClubCompetitionSummary(row) {
     clubCompetitionId: row.id_club_competition,
     name: row.nom,
     competitionDate: row.date,
-    clubId: row.club_id || ""
+    clubId: row.club_id || "",
+    responseDeadline: row.date_limite_reponse || ""
   };
 }
 

@@ -2,7 +2,7 @@
 title: Ayumi Product Requirements Document
 version: 1.1
 date_created: 2026-06-17
-last_updated: 2026-06-18
+last_updated: 2026-11-28
 owner: competitions-judo
 tags:
   - product
@@ -44,15 +44,15 @@ The product is built around two primary views:
 
 Primary usage loop:
 
-1. **Entry**: the coach creates the club competition with its participants; a parent logs their child's combats, one at a time.
+1. **Entry**: the coach creates the club competition with its participants and its convocation (place, response deadline, message); each family confirms in the app whether the judoka will be there; a parent logs their child's combats, one at a time.
 2. **Aggregation**: the system automatically updates the relevant judoka's profile and feeds the global Competition view.
 3. **Consultation**: the coach opens Ayumi to debrief the weekend or prepare a class.
 4. **Feedback**: the coach and judoka discuss concrete data on the mat.
 
 What Ayumi is not:
-- A club administration tool (memberships, dues, attendance).
+- A club administration tool (memberships, dues, training attendance).
 - A social network or video analysis tool.
-- A messaging system.
+- A messaging system: the competition convocation is read and answered inside the app only.
 
 ## Implementation Decisions
 
@@ -72,13 +72,13 @@ What Ayumi is not:
 
 ## Out of Scope
 
-- Club administrative management (memberships/licenses, dues, attendance tracking).
+- Club administrative management (memberships/licenses, dues, training attendance tracking). Presence at a club competition (« Présent » / « Absent ») is in scope (CONV-*).
 - Social networking features or video analysis tooling.
-- A messaging/communication system between users.
-- Competition location and actual weigh-in fields.
+- A messaging/communication system between users. The coach's convocation message is one text shown on the club competition, without replies or threads.
+- Actual weigh-in fields (measured weight, weigh-in time). The place of a club competition is in scope (CONV-001).
 - Scoreboard clock, golden score and penalty reasons as structured fields (they may be written in the combat notes). The official score, shidos and point timeline are recorded, folded under the combat detail.
 - Coach objectives per competition.
-- Reminders or messages sent to families.
+- Reminders or messages sent to families outside the app (e-mail, push, SMS).
 - Storing judoka birth years (a deliberate privacy decision).
 - Password-based and magic-link authentication.
 

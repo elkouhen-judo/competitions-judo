@@ -128,6 +128,28 @@
           <p v-if="clubCompetitionFormUnregisteredText" id="clubCompetitionUnregistered" class="field-hint">{{ clubCompetitionFormUnregisteredText }}</p>
         </div>
 
+        <!-- CONV-001 : la convocation lue par les familles, entièrement facultative. -->
+        <div class="section form-card">
+          <h3 class="section-title">Convocation</h3>
+          <p class="subtitle form-card-intro">Facultatif. Les familles la lisent dans l'appli et confirment la présence.</p>
+          <div class="form-grid">
+            <div class="full-row">
+              <label for="club_competition_place">Lieu</label>
+              <input id="club_competition_place" type="text" maxlength="200" autocomplete="off" placeholder="Gymnase et adresse" v-model.trim="clubCompetitionForm.place">
+            </div>
+            <div class="full-row">
+              <label for="club_competition_deadline">Date limite de réponse</label>
+              <input id="club_competition_deadline" type="date" :max="clubCompetitionForm.competitionDate || null" v-model="clubCompetitionForm.responseDeadline" aria-describedby="club_competition_deadline_hint" :aria-invalid="clubCompetitionFormErrors.responseDeadline ? 'true' : 'false'" @input="clubCompetitionFormErrors.responseDeadline = ''">
+              <p v-if="clubCompetitionFormErrors.responseDeadline" class="field-error" role="alert">{{ clubCompetitionFormErrors.responseDeadline }}</p>
+              <p v-else id="club_competition_deadline_hint" class="field-hint field-hint-tight">Sans date limite, les familles répondent jusqu'à la veille.</p>
+            </div>
+            <div class="full-row">
+              <label for="club_competition_message">Message du coach</label>
+              <textarea id="club_competition_message" rows="3" maxlength="1000" placeholder="Judogi, licence, heure de rendez-vous…" v-model="clubCompetitionForm.convocationMessage"></textarea>
+            </div>
+          </div>
+        </div>
+
         <div class="form-actions mobile-action-bar action-bar-inline">
           <button id="saveClubCompetitionButton" class="action-bar-primary" type="button" :disabled="isSubmitting" @click="saveClubCompetition()">Enregistrer</button>
         </div>

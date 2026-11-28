@@ -56,7 +56,10 @@ const EMBEDS = {
   },
   competitions: {
     combats: (row) => db.combats.filter((combat) => combat.id_competition === row.id_competition),
-    judokas: (row) => db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka) || null
+    judokas: (row) => db.judokas.find((judoka) => judoka.id_judoka === row.id_judoka) || null,
+    club_competitions: (row) =>
+      db.club_competitions.find((event) => event.id_club_competition === row.club_competition_id) ||
+      null
   },
   combats: {
     combat_scores: (row) =>

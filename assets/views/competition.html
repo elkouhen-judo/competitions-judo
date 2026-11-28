@@ -38,6 +38,27 @@
           <span v-if="competitionResult" id="competitionClassement" class="pill" :class="competitionResultClass">{{ competitionResultLabel }}</span>
         </div>
 
+        <!-- CONV-003 : la convocation de la compétition club et la réponse de présence. -->
+        <div v-if="competitionConvocation" id="competitionConvocation" class="section">
+          <h3 class="section-title">Convocation</h3>
+          <div class="convocation-card">
+            <p v-if="competitionConvocation.place" id="competitionConvocationPlace" class="convocation-line">
+              <span>{{ competitionConvocation.place }}</span>
+              <a class="convocation-map-link" :href="competitionConvocation.mapUrl" target="_blank" rel="noopener">Voir sur la carte</a>
+            </p>
+            <p v-if="competitionConvocation.message" id="competitionConvocationMessage" class="convocation-message">{{ competitionConvocation.message }}</p>
+            <div class="convocation-presence">
+              <p id="competitionPresenceQuestion" class="convocation-question">Présence <span id="competitionPresenceStatus" :class="['ranking-status', competitionConvocation.statusClass]">{{ competitionConvocation.statusLabel }}</span></p>
+              <p v-if="competitionConvocation.deadlineLabel" class="field-hint">{{ competitionConvocation.deadlineLabel }}</p>
+              <div v-if="competitionConvocation.canAnswer" id="competitionPresenceChoices" class="choice-segmented choice-segmented-2" role="radiogroup" aria-labelledby="competitionPresenceQuestion">
+                <button type="button" role="radio" :aria-checked="competitionConvocation.presence === 'PRESENT' ? 'true' : 'false'" :class="['choice-button', { 'choice-active': competitionConvocation.presence === 'PRESENT' }]" :disabled="isSubmitting" @click="saveCompetitionPresence('PRESENT')">Présent</button>
+                <button type="button" role="radio" :aria-checked="competitionConvocation.presence === 'ABSENT' ? 'true' : 'false'" :class="['choice-button', { 'choice-active': competitionConvocation.presence === 'ABSENT' }]" :disabled="isSubmitting" @click="saveCompetitionPresence('ABSENT')">Absent</button>
+              </div>
+              <p v-else-if="competitionConvocation.closedLabel" class="field-hint">{{ competitionConvocation.closedLabel }}</p>
+            </div>
+          </div>
+        </div>
+
         <!-- FICHE-5 : le classement en premier, mis en avant tant qu'il n'est pas saisi. -->
         <div v-if="showRankingSection" id="competitionRankingSection" class="section competition-ranking-section" :class="{ 'ranking-pending': !competitionResult }">
           <div class="section-heading">

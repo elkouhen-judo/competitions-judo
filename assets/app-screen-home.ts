@@ -455,6 +455,52 @@
         question: mode === "judoka" ? `Quelle place à ${name} ?` : `Quelle place pour ${firstName} à ${name} ?`
       };
     });
+    // CONV-004 : la prochaine compétition qui attend la réponse de la famille, avant sa date limite.
+    const homePendingPresence = window.Vue.computed(() => {
+      const mode = getCurrentMode();
+      if (mode !== "family" && mode !== "judoka") return null;
+      const owner = mode === "judoka" ? state.currentUser : getHomeActiveJudoka();
+      if (!owner) return null;
+      const ownerId = String(owner.judokaId || "");
+      const today = getTodayStr();
+      const pending = state.competitions
+        .filter((competition) => {
+          const deadline = competition.convocation ? competition.convocation.responseDeadline : "";
+          return (
+            String(competition.ownerJudokaId) === ownerId &&
+            Boolean(competition.clubCompetitionId) &&
+            Boolean(deadline) &&
+            today <= deadline &&
+            !competition.presence
+          );
+        })
+        .sort((a, b) => a.competitionDate.localeCompare(b.competitionDate))[0];
+      if (!pending || !pending.convocation) return null;
+      const name = formatCompetitionName(pending.name) || "cette compétition";
+      const firstName = ui.normalizeDisplayName(cleanText(owner.firstName)) || getJudokaDisplayName(owner);
+      return {
+        competitionId: String(pending.competitionId),
+        question:
+          mode === "judoka" ? `Confirmez votre présence à ${name}` : `Confirmez la présence de ${firstName} à ${name}`,
+        deadlineLabel: `${ui.formatDateLong(pending.competitionDate)} · réponse au plus tard le ${ui.formatDateLong(pending.convocation.responseDeadline)}.`
+      };
+    });
+
+    function saveHomePresence(competitionId: string, presence: "PRESENT" | "ABSENT") {
+      app.runServer(
+        "savePresence",
+        [competitionId, presence],
+        (response) => {
+          showSuccess(response.message);
+          state.competitions = state.competitions.map((competition) =>
+            String(competition.competitionId) === String(competitionId) ? { ...competition, presence } : competition
+          );
+          if (response.competition) app.local.saveCompetition(response.competition);
+        },
+        showError
+      );
+    }
+
     const homeRankingOptions = window.Vue.computed(() =>
       ["1er", "2e", "3e", "5e", "7e", "Non classé"].map((value) => ({
         value,
@@ -817,6 +863,34 @@
       return state.judokas.find((j) => String(j.judokaId) === String(judokaId));
     }
 
+    // CONV-004 : à 3 jours ou moins de la date limite, les réponses manquantes passent dans « À faire ».
+    const PRESENCE_REMINDER_DAYS = 3;
+    function getPresenceReminders(events: ReturnType<typeof getClubCompetitionsInSelectedClub>, today: string) {
+      return events
+        .filter((cc) => {
+          const days = cc.responseDeadline ? ui.getDaysFromToday(cc.responseDeadline) : null;
+          return days !== null && days >= 0 && days <= PRESENCE_REMINDER_DAYS && cc.competitionDate >= today;
+        })
+        .sort((a, b) => String(a.responseDeadline).localeCompare(String(b.responseDeadline)))
+        .map((cc) => {
+          const missing = state.competitions.filter(
+            (c) => String(c.clubCompetitionId || "") === String(cc.clubCompetitionId) && !c.presence
+          ).length;
+          const answersLabel = `${ui.pluralize(missing, "réponse")} ${missing > 1 ? "manquantes" : "manquante"}`;
+          return {
+            missing,
+            item: {
+              clubCompetitionId: cc.clubCompetitionId || "",
+              name: formatCompetitionName(cc.name) || "Compétition",
+              dateLabel: ui.formatDateLong(cc.competitionDate),
+              clubName: getListClubName(cc.clubId),
+              detail: `${answersLabel} avant le ${ui.formatDateLong(cc.responseDeadline)}`
+            }
+          };
+        })
+        .filter((reminder) => reminder.missing > 0);
+    }
+
     const coachHome = window.Vue.computed(() => {
       const today = getTodayStr();
       const events = getClubCompetitionsInSelectedClub();
@@ -856,16 +930,19 @@
         .map((cc) => ({ cc, stats: getClubCompetitionStats(cc.clubCompetitionId, cc.competitionDate, today) }))
         .filter(({ stats }) => stats.missingRankingCount > 0);
       const missingTotal = rankingsAll.reduce((sum, { stats }) => sum + stats.missingRankingCount, 0);
-      const more = rankingsAll.length - AGENDA_LIMIT;
+      const presenceReminders = getPresenceReminders(events, today);
+      const missingAnswers = presenceReminders.reduce((sum, reminder) => sum + reminder.missing, 0);
+      const more = presenceReminders.length + rankingsAll.length - AGENDA_LIMIT;
+      const rankingItems = rankingsAll.map(({ cc, stats }) => ({
+        clubCompetitionId: cc.clubCompetitionId || "",
+        name: formatCompetitionName(cc.name) || "Compétition",
+        dateLabel: cc.competitionDate === today ? "Aujourd'hui" : ui.formatDateLong(cc.competitionDate),
+        clubName: getListClubName(cc.clubId),
+        detail: `${ui.pluralize(stats.missingRankingCount, "classement")} à saisir`
+      }));
       const todo = {
-        total: missingTotal,
-        items: rankingsAll.slice(0, AGENDA_LIMIT).map(({ cc, stats }) => ({
-          clubCompetitionId: cc.clubCompetitionId || "",
-          name: formatCompetitionName(cc.name) || "Compétition",
-          dateLabel: cc.competitionDate === today ? "Aujourd'hui" : ui.formatDateLong(cc.competitionDate),
-          clubName: getListClubName(cc.clubId),
-          detail: `${ui.pluralize(stats.missingRankingCount, "classement")} à saisir`
-        })),
+        total: missingTotal + missingAnswers,
+        items: [...presenceReminders.map((reminder) => reminder.item), ...rankingItems].slice(0, AGENDA_LIMIT),
         moreLabel: more > 0 ? `+ ${more} ${more > 1 ? "autres" : "autre"} dans « Compétitions »` : ""
       };
 
@@ -916,6 +993,7 @@
         openHomeJudokaProfile,
         selectFilterJudoka,
         saveHomeRanking,
+        saveHomePresence,
         setHomeMode,
         handleModeTabClick,
         isPrimaryModeActive,
@@ -949,6 +1027,7 @@
         showChildPills,
         showJudokaRoster,
         homePendingRanking,
+        homePendingPresence,
         homeRankingOptions,
         homeNextCompetition,
         homeSeasonSummary,

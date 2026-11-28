@@ -27,6 +27,7 @@ type CompetitionMethods = Pick<
   | "getCompetitionDetail"
   | "saveCompetition"
   | "saveCoachReview"
+  | "savePresence"
 >;
 
 export interface CompetitionsServiceDeps {
@@ -67,6 +68,7 @@ export interface CompetitionsServiceDeps {
   ) => string;
   createCompetition: typeof createCompetition;
   createPersistedCompetition: typeof createPersistedCompetition;
+  getCurrentDate?: () => string;
 }
 
 export interface CompetitionsService {
@@ -88,7 +90,8 @@ export default function createCompetitionsService(
     resolveJudokaDataAccess,
     resolveCompetitionOwnerId,
     createCompetition,
-    createPersistedCompetition
+    createPersistedCompetition,
+    getCurrentDate = () => new Date().toISOString().slice(0, 10)
   } = deps;
 
   // COMBAT-SUGG : adversaires déjà rencontrés et techniques déjà marquées par le judoka, du plus
@@ -141,6 +144,8 @@ export default function createCompetitionsService(
     if (!competitionRecord) {
       throw new Error("Compétition introuvable.");
     }
+
+    // CONV-003 : la participation est lue avec la convocation de sa compétition club.
     const domainCompetition = toCanonicalCompetition(competitionRecord);
 
     assertCanAccessCompetition(
@@ -343,6 +348,53 @@ export default function createCompetitionsService(
     return { success: true, competitionId: idCompetition, message: "Bilan enregistré." };
   }
 
+  // CONV-002 : une famille répond jusqu'à la date limite incluse, ou jusqu'à la veille de la
+  // compétition sans date limite ; un coach du club de la compétition corrige à tout moment.
+  async function savePresence(email: string, idCompetition: string, presence: string) {
+    if (presence !== "PRESENT" && presence !== "ABSENT") {
+      throw new Error("Réponse de présence invalide.");
+    }
+    const [{ managedJudokaScope, domainUser, coachClubIds = [] }, competition] = await Promise.all([
+      userContextService.getDomainUserContext(email),
+      competitionsRepository.getById(idCompetition)
+    ]);
+    if (!competition) {
+      throw new Error("Compétition introuvable.");
+    }
+    assertCanManageCompetition(
+      domainUser,
+      toCanonicalCompetition(competition),
+      managedJudokaScope,
+      "Réponse de présence non autorisée."
+    );
+    const event = competition.club_competition_id ? competition.club_competitions : null;
+    if (!event) {
+      throw new Error("Cette compétition n'attend pas de réponse de présence.");
+    }
+    const isClubCoach =
+      domainUser.accessRole === "COACH" && coachClubIds.map(String).includes(String(event.club_id || ""));
+    if (!isClubCoach && !isPresenceOpen(event)) {
+      throw new Error("La date limite de réponse est passée : contactez le coach.");
+    }
+    const updated = await competitionsRepository.updatePresence(idCompetition, presence);
+    const saved = updated ? toCanonicalCompetition({ ...updated, club_competitions: event }) : null;
+    return {
+      success: true,
+      competitionId: idCompetition,
+      message: presence === "PRESENT" ? "Présence confirmée." : "Absence enregistrée.",
+      ...(saved && saved.competitionId ? { competition: saved } : {})
+    };
+  }
+
+  function isPresenceOpen(event: { date?: unknown; date_limite_reponse?: unknown }): boolean {
+    const today = getCurrentDate();
+    const deadline = String(event.date_limite_reponse || "");
+    if (deadline) {
+      return today <= deadline;
+    }
+    return today < String(event.date || "");
+  }
+
   async function deleteCompetition(email: string, idCompetition: string) {
     const { managedJudokaScope, domainUser } = await userContextService.getDomainUserContext(email);
 
@@ -376,7 +428,8 @@ export default function createCompetitionsService(
       getCombatSuggestions,
       getCompetitionDetail,
       saveCompetition,
-      saveCoachReview
+      saveCoachReview,
+      savePresence
     }
   };
 }

@@ -45,6 +45,7 @@ export interface CompetitionsRepository {
   removeByJudoka(idJudoka: string): Promise<void>;
   update(idCompetition: string, competition: CompetitionModel): Promise<CompetitionRow | null>;
   updateCoachReview(idCompetition: string, review: string): Promise<CompetitionRow | null>;
+  updatePresence(idCompetition: string, presence: string): Promise<CompetitionRow | null>;
   updateResult(
     idCompetition: string,
     finalization: CompetitionFinalization
@@ -65,6 +66,11 @@ export default function createCompetitionsRepository(
   } = deps;
 
   const COMPETITION_ORDER = "order=date.desc,id_competition.asc";
+  // CONV-003 : la convocation de la compétition club part avec la participation.
+  const CONVOCATION_EMBED = "club_competitions(lieu,date_limite_reponse,message_convocation)";
+  // CONV-002 : la réponse de présence vérifie aussi le club et la date de la compétition club.
+  const CONVOCATION_EMBED_WITH_EVENT =
+    "club_competitions(club_id,date,lieu,date_limite_reponse,message_convocation)";
 
   function toCompetitionRecord(competition: CompetitionModel): Record<string, unknown> {
     const draft = competition && competition.draft;
@@ -169,7 +175,7 @@ export default function createCompetitionsRepository(
   async function listInScopeWithResults(
     scope: CompetitionScopeFilter
   ): Promise<CompetitionWithResultsRow[]> {
-    return selectInScope<CompetitionWithResultsRow>(scope, "*,combats(resultat)");
+    return selectInScope<CompetitionWithResultsRow>(scope, `*,combats(resultat),${CONVOCATION_EMBED}`);
   }
 
   // PAGE-2 : date de la plus ancienne compétition du périmètre ("" s'il est vide).
@@ -210,7 +216,7 @@ export default function createCompetitionsRepository(
   async function getById(idCompetition: string): Promise<CompetitionRow | null> {
     return supabaseSelectOne<CompetitionRow>(
       "competitions",
-      `select=*&${eqFilter("id_competition", idCompetition)}`
+      `select=*,${CONVOCATION_EMBED_WITH_EVENT}&${eqFilter("id_competition", idCompetition)}`
     );
   }
 
@@ -307,6 +313,14 @@ export default function createCompetitionsRepository(
     );
   }
 
+  async function updatePresence(idCompetition: string, presence: string): Promise<CompetitionRow | null> {
+    return supabasePatch<CompetitionRow>(
+      "competitions",
+      eqFilter("id_competition", idCompetition),
+      { presence, presence_repondue_le: presence ? new Date().toISOString() : null }
+    );
+  }
+
   async function remove(idCompetition: string): Promise<void> {
     return supabaseDelete("competitions", eqFilter("id_competition", idCompetition));
   }
@@ -331,6 +345,7 @@ export default function createCompetitionsRepository(
     update,
     updateClubCompetitionFields,
     updateCoachReview,
+    updatePresence,
     updateResult
   };
 }

@@ -161,7 +161,8 @@ test("coach creates a club competition with linked judoka participations", async
     clubCompetitionId: "CLUB1",
     name: "Tournoi Nantes",
     competitionDate: "2026-06-14",
-    clubId: "NANTES"
+    clubId: "NANTES",
+    responseDeadline: ""
   });
   assert.deepEqual(
     result.competitions.map((competition) => [
@@ -271,7 +272,10 @@ test("editing a club competition resynchronizes existing linked participations",
       ageCategory: "Minime",
       level: "National",
       clubId: "NANTES",
-      participantJudokaIds: ["J1"]
+      participantJudokaIds: ["J1"],
+      place: "",
+      responseDeadline: "",
+      convocationMessage: ""
     }
   ]);
   // ECRIT-3 : une seule requête, filtrée sur la compétition club, propage les champs hérités.

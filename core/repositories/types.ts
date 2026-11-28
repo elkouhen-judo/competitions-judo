@@ -87,6 +87,14 @@ export interface CompetitionRow {
   classement: string;
   coach_review: string;
   ai_analysis: string;
+  /** CONV-002 : "", "PRESENT" ou "ABSENT" ; absent des anciennes lignes. */
+  presence?: string;
+  presence_repondue_le?: string | null;
+  /** CONV-003 : convocation de la compétition club, embarquée à la lecture. */
+  club_competitions?:
+    | (Pick<ClubCompetitionRow, "lieu" | "date_limite_reponse" | "message_convocation"> &
+        Partial<Pick<ClubCompetitionRow, "club_id" | "date">>)
+    | null;
   /** MULTI-4 : club auquel la participation compte, lu par coach_dashboard_data seulement. */
   stats_club_id?: string | null;
 }
@@ -136,6 +144,9 @@ export interface ClubCompetitionRow {
   categorie_age: string;
   niveau: string;
   club_id?: string | null;
+  lieu?: string;
+  date_limite_reponse?: string | null;
+  message_convocation?: string;
 }
 
 export interface AccessInvitationRow {

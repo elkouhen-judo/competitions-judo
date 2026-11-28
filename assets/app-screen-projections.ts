@@ -7,6 +7,7 @@
   type ManagedAdminCard = import("./types").ManagedAdminCard;
   type ManagedUserCard = import("./types").ManagedUserCard;
   type PendingOfflineOperation = import("./types").PendingOfflineOperation;
+  type PresenceProjection = import("./types").PresenceProjection;
 
   /**
    * FFJDA weight categories (2025-2026 season), mirroring
@@ -484,8 +485,31 @@
     return merged;
   }
 
+  // CONV-002 : même règle que le serveur. Une famille répond jusqu'à la date limite incluse, ou
+  // jusqu'à la veille sans date limite ; le coach du club corrige à tout moment.
+  function projectPresence(
+    competition: Pick<Competition, "clubCompetitionId" | "competitionDate" | "presence" | "convocation"> | null | undefined,
+    today: string,
+    isClubCoach: boolean
+  ): PresenceProjection {
+    const convocation = competition && competition.clubCompetitionId ? competition.convocation : null;
+    if (!competition || !convocation) {
+      return { isAsked: false, isOpen: false, canAnswer: false, presence: "", responseDeadline: "" };
+    }
+    const deadline = convocation.responseDeadline;
+    const isOpen = deadline ? today <= deadline : today < competition.competitionDate;
+    return {
+      isAsked: true,
+      isOpen,
+      canAnswer: isOpen || isClubCoach,
+      presence: competition.presence || "",
+      responseDeadline: deadline
+    };
+  }
+
   window.KirokuScreenProjections = {
     formatCombatStage,
+    projectPresence,
     getWeightCategoryOptions,
     getYearInCategoryOptions,
     mergePendingCombatCards,
